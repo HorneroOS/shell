@@ -1,0 +1,14 @@
+# Qt / QML / CMake
+build/
+*.o
+*.so
+moc_*
+qrc_*
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# Qt Creator
+*.pro.user
+*.qmlproject.user

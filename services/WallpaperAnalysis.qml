@@ -2,6 +2,7 @@ pragma Singleton
 
 import Hornero
 import QtQuick
+import Quickshell
 
 // Native wallpaper color analysis (issue #2, migration step (b)).
 //

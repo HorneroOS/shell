@@ -22,7 +22,10 @@ Singleton {
     readonly property M3Palette current: M3Palette {}
     readonly property M3Palette preview: M3Palette {}
     readonly property Transparency transparency: Transparency {}
+    // Native wallpaper analysis (issue #2, step (b)): luminance and dominant
+    // colour come straight from the ImageAnalyser plugin — no CLI involved.
     readonly property alias wallLuminance: analyser.luminance
+    readonly property alias wallDominantColour: analyser.dominantColour
 
     function getLuminance(c: color): real {
         if (c.r == 0 && c.g == 0 && c.b == 0)

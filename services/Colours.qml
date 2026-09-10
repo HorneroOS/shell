@@ -76,6 +76,8 @@ Singleton {
         }
     }
 
+    // TODO(hornero-compat): dots-color-scheme is an external runtime CLI;
+    // see docs/COMPAT.md (disposition A).
     function setMode(mode: string): void {
         Quickshell.execDetached(["dots-color-scheme", "mode", mode]);
     }

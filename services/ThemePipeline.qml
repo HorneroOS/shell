@@ -14,6 +14,8 @@ Singleton {
     readonly property string picturesWallpapers: `${Paths.pictures}/Wallpapers`
     readonly property string wallpaperPointer: Paths.wallpaperPointer
     // Prefer dots-m3-colors so pyenv shims do not hide Arch python-materialyoucolor.
+    // TODO(hornero-compat): dots-m3-colors / dots-gtk-theme / dots-color-scheme
+    // are external runtime CLIs; see docs/COMPAT.md (disposition A).
     readonly property string m3Bin: `${Quickshell.env("HOME")}/.local/bin/dots-m3-colors`
     readonly property string schemeJson: `${Paths.cache}/smart-colors/scheme.json`
 
@@ -549,13 +551,13 @@ fi
     Process {
         id: notifyProc
         property string themeName: ""
-        command: ["notify-send", "HorneroConfig", `${notifyProc.themeName} theme applied`]
+        command: ["notify-send", "Hornero Shell", `${notifyProc.themeName} theme applied`]
     }
 
     Process {
         id: notifyFailProc
         property string message: ""
-        command: ["notify-send", "-u", "critical", "HorneroConfig", notifyFailProc.message || "Appearance apply failed"]
+        command: ["notify-send", "-u", "critical", "Hornero Shell", notifyFailProc.message || "Appearance apply failed"]
     }
 
     IpcHandler {

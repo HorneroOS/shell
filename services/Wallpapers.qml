@@ -79,6 +79,8 @@ Searcher {
         }
     }
 
+    // TODO(hornero-compat): dots-wallpaper-current is an external runtime CLI
+    // with a FileView pointer fallback below; see docs/COMPAT.md (A, B).
     Process {
         id: resolveProc
 

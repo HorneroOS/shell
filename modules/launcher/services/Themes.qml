@@ -57,6 +57,8 @@ Searcher {
         Theme {}
     }
 
+    // TODO(hornero-compat): route theme listing through a dots-* CLI instead
+    // of bare python3 + list-themes.py; see docs/COMPAT.md (disposition G).
     Process {
         id: loadProc
 

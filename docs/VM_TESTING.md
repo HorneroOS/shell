@@ -38,6 +38,20 @@ sudo pacman -S --needed qemu-desktop curl openssh jq python3 cdrtools
 The guest installs everything else itself (`provision.sh`): Hyprland,
 Quickshell (AUR), `grim`, `wf-recorder`, Qt6 modules, and fonts.
 
+## Image verification
+
+`boot.sh` verifies the cloud image against its published SHA256 sidecar on
+every run, including cached images (`VM_CLOUD_IMAGE_SHA256_URL`, default
+`<image-url>.SHA256`). A mismatch deletes the untrusted image and aborts;
+`VM_ALLOW_UNVERIFIED_IMAGE=1` bypasses with a loud warning (not recommended).
+The mirror also publishes a GPG `.sig` next to the image; verifying it is a
+manual opt-in until the harness pins a signing key:
+
+```bash
+curl -fSLO https://geo.mirror.pkgbuild.com/images/latest/Arch-Linux-x86_64-cloudimg.qcow2.sig
+gpg --verify Arch-Linux-x86_64-cloudimg.qcow2.sig arch-cloudimg.qcow2
+```
+
 ## Runbook
 
 Full pipeline (first run provisions, later runs reuse the cached image):

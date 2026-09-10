@@ -59,9 +59,11 @@ Dispositions:
 
 | dots-* reference | Call sites (representative) | Disposition | Notes |
 |---|---|---|---|
-| `dots-gtk-theme` | `services/ThemePipeline.qml`, `modules/controlcenter/appearance/**` | A, E | Canonical appearance CLI. Only sanctioned GTK path; never `gtk-theme-manager.sh` directly |
-| `dots-m3-colors` | `services/ThemePipeline.qml`, `services/Wallpapers.qml`, `modules/controlcenter/appearance/AppearancePane.qml` | A, E | Canonical Material-3 color CLI. Never bare `python3 generate-m3-colors` |
-| `dots-color-scheme` | `services/ThemePipeline.qml`, `services/Colours.qml`, `modules/launcher/services/Schemes.qml`, `AppearancePane.qml` | A, E | Scheme list/set/mode/variant operations |
+| `dots-gtk-theme` | `services/GtkSettings.qml` (compat fallback), `modules/controlcenter/appearance/**` (list + yielding live queries) | A, E | Native-first since issue #2: `services/GtkSettings.qml` applies via gsettings; CLI kept for theme-pack ids, listings, and hosts without gsettings. Never `gtk-theme-manager.sh` directly |
+| `dots-m3-colors` | `services/ThemePipeline.qml`, `services/Wallpapers.qml`, `modules/controlcenter/appearance/AppearancePane.qml` | A, E | Full M3 palette generation stays CLI; instant tone is native (`services/WallpaperAnalysis.qml`, `Colours.wallLuminance`/`wallDominantColour`, `AppearancePane.previewAnalyser`). Never bare `python3 generate-m3-colors` |
+| `dots-color-scheme` | `services/ThemePipeline.qml`, `services/Colours.qml`, `modules/launcher/services/Schemes.qml`, `AppearancePane.qml` | A, E | Scheme list/set/mode/variant operations; no native palette store yet, stays compat |
+| native `gsettings` application | `services/GtkSettings.qml` ← `services/ThemePipeline.qml`, `AppearancePane.qml` | D | HorneroOS-native path (issue #2, step a): deterministic GTK/icon/color-scheme writes + live reads |
+| native `ImageAnalyser` analysis | `services/WallpaperAnalysis.qml`, `services/Colours.qml`, `services/Wallpapers.qml`, `AppearancePane.qml` | D | HorneroOS-native path (issue #2, step b): dominantColour/luminance without shelling out |
 | `dots-accent-override` | `modules/controlcenter/appearance/sections/ColorVariantSection.qml` | A, E | Accent set/clear |
 | `dots-quickshell` | `modules/layoutpicker/PresetGrid.qml` (`preset list/apply`) | A, C, E | Listing has local fallback data: `presets/*.json` |
 | `dots-wallpaper-current` | `services/Wallpapers.qml` (`resolveProc`) | A, B | `FileView` pointer fallback keeps UI non-empty when absent |

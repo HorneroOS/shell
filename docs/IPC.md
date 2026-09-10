@@ -47,8 +47,14 @@ Compositor-side bindings live in HorneroOS/config, not here.
 
 The shell also *spawns* processes; the stable outbound contracts are:
 
-- Appearance: `dots-m3-colors …`, `dots-gtk-theme -q …`,
-  `dots-color-scheme …` (see `docs/COMPAT.md`, disposition A).
+- Appearance (native first, see `docs/NATIVE-APPEARANCE.md`):
+  `gsettings set/get org.gnome.desktop.interface …` (via
+  `services/GtkSettings.qml`) and the native `ImageAnalyser` plugin
+  (`dominantColour`/`luminance`, via `services/WallpaperAnalysis.qml` and
+  `Colours.wallLuminance`/`wallDominantColour`).
+- Appearance compat fallbacks (thin, debt-marked, disposition A):
+  `dots-m3-colors …`, `dots-gtk-theme -q …`, `dots-color-scheme …`
+  (see `docs/COMPAT.md`).
 - Optional integrations: `dots-recorder start/stop/pause`,
   `dots-wallpaper-current`, `dots-wallpaper-set …`,
   `dots-quickshell preset list/apply`, `dots-night-mode toggle`,

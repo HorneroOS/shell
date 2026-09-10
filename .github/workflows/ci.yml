@@ -35,6 +35,7 @@ jobs:
             -t /usr/local/include/cava/input/
           sudo install -Dm644 /tmp/cava/include/cava/output/common.h \
             -t /usr/local/include/cava/output/
+          sudo mkdir -p /usr/local/lib/pkgconfig
           sudo tee /usr/local/lib/pkgconfig/libcava.pc > /dev/null <<'EOF'
           prefix=/usr/local
           libdir=${prefix}/lib

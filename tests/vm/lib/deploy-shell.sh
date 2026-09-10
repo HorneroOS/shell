@@ -38,6 +38,8 @@ git ls-files -co --exclude-standard | tar cf - -T - 2> /dev/null \
     | vm_ssh 'rm -rf ~/.config/quickshell && mkdir -p ~/.config/quickshell && tar xf - -C ~/.config/quickshell'
 
 echo "==> installing harness Hyprland config (test session only)"
+# Fresh cloud images have no ~/.config/hypr yet and scp cannot create it.
+vm_ssh 'mkdir -p ~/.config/hypr'
 vm_scp "${VM_DIR}/guest/hyprland.conf" "${VM_SSH_USER}@127.0.0.1:~/.config/hypr/hyprland.conf"
 
 echo "==> verifying the deployed shell"

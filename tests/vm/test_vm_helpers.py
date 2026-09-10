@@ -5,7 +5,9 @@ are synthesized with the standard library and the harness scripts are
 exercised through --dry-run and --help only.
 """
 
+import hashlib
 import os
+import shutil
 import struct
 import subprocess
 import sys
@@ -16,6 +18,7 @@ import pytest
 
 VM_DIR = Path(__file__).resolve().parent
 LIB_DIR = VM_DIR / "lib"
+VERIFY_IMAGE = LIB_DIR / "verify-image.sh"
 CHECK = LIB_DIR / "check_screenshot.py"
 PPM_TO_PNG = LIB_DIR / "ppm_to_png.py"
 SMOKE = VM_DIR / "scenarios" / "vm-smoke.sh"
@@ -258,3 +261,81 @@ def test_stage_dry_runs_without_hypervisor(stage):
     )
     assert proc.returncode == 0, proc.stderr
     assert "dry-run:" in proc.stdout
+
+
+def _write_image_with_sidecar(tmp_path, payload):
+    image = tmp_path / "image.qcow2"
+    image.write_bytes(payload)
+    digest = hashlib.sha256(payload).hexdigest()
+    sidecar = tmp_path / "image.qcow2.SHA256"
+    sidecar.write_text("%s  image.qcow2\n" % digest)
+    return image, "file://%s" % sidecar
+
+
+def _needs_verification_tools():
+    return shutil.which("curl") and shutil.which("sha256sum")
+
+
+def test_verify_image_accepts_matching_digest(tmp_path):
+    if not _needs_verification_tools():
+        pytest.skip("curl/sha256sum required")
+    image, url = _write_image_with_sidecar(tmp_path, os.urandom(1024))
+    proc = subprocess.run(
+        ["bash", str(VERIFY_IMAGE), str(image), url],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "verified:" in proc.stdout
+
+
+def test_verify_image_rejects_tampered_image(tmp_path):
+    if not _needs_verification_tools():
+        pytest.skip("curl/sha256sum required")
+    image, url = _write_image_with_sidecar(tmp_path, os.urandom(1024))
+    with image.open("ab") as handle:
+        handle.write(b"tampered")
+    proc = subprocess.run(
+        ["bash", str(VERIFY_IMAGE), str(image), url],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 1
+    assert "mismatch" in proc.stderr
+
+
+def test_verify_image_fails_without_sidecar(tmp_path):
+    if not _needs_verification_tools():
+        pytest.skip("curl/sha256sum required")
+    image = tmp_path / "image.qcow2"
+    image.write_bytes(os.urandom(64))
+    proc = subprocess.run(
+        ["bash", str(VERIFY_IMAGE), str(image), "file:///nonexistent.SHA256"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 1
+
+
+def test_verify_image_usage_is_exit_two():
+    proc = subprocess.run(
+        ["bash", str(VERIFY_IMAGE)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 2
+
+
+def test_boot_dry_run_mentions_verification():
+    proc = subprocess.run(
+        ["bash", str(LIB_DIR / "boot.sh"), "--dry-run"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "would verify" in proc.stdout

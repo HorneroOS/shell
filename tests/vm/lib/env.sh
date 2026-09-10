@@ -31,6 +31,12 @@ VM_MEM="${VM_MEM:-3072}"
 VM_SMP="${VM_SMP:-2}"
 VM_CLOUD_IMAGE_URL="${VM_CLOUD_IMAGE_URL:-https://geo.mirror.pkgbuild.com/images/latest/Arch-Linux-x86_64-cloudimg.qcow2}"
 VM_CLOUD_IMAGE="${VM_CLOUD_IMAGE:-${VM_CACHE_DIR}/arch-cloudimg.qcow2}"
+# Checksum sidecar (sha256sum format) published next to the image. Verified on
+# every run, including cached images. The mirror also publishes a GPG .sig
+# next to the image; see docs/VM_TESTING.md for optional manual verification.
+VM_CLOUD_IMAGE_SHA256_URL="${VM_CLOUD_IMAGE_SHA256_URL:-${VM_CLOUD_IMAGE_URL}.SHA256}"
+# Set to 1 to boot with a failed verification (loud warning, not recommended).
+VM_ALLOW_UNVERIFIED_IMAGE="${VM_ALLOW_UNVERIFIED_IMAGE:-0}"
 VM_SEED_ISO="${VM_SEED_ISO:-${VM_CACHE_DIR}/seed.iso}"
 
 # Recording knobs (mirror the dotfiles e2e defaults the harness is based on).
@@ -44,6 +50,7 @@ export VM_DIR SHELL_ROOT
 export VM_SSH_PORT VM_SSH_USER VM_SSH_DIR VM_SSH_KEY
 export VM_ARTIFACTS_DIR VM_CACHE_DIR VM_SHARED_DIR VM_PID_FILE
 export VM_MEM VM_SMP VM_CLOUD_IMAGE_URL VM_CLOUD_IMAGE VM_SEED_ISO
+export VM_CLOUD_IMAGE_SHA256_URL VM_ALLOW_UNVERIFIED_IMAGE
 export VM_FPS VM_RECORDING_REMOTE VM_DRY_RUN
 
 vm_is_dry_run() {

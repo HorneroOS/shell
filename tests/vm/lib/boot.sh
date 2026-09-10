@@ -33,6 +33,7 @@ rm -f "${VM_PID_FILE}"
 if vm_is_dry_run; then
     echo "dry-run: would generate SSH key at ${VM_SSH_KEY} (if missing)"
     echo "dry-run: would download ${VM_CLOUD_IMAGE_URL} to ${VM_CLOUD_IMAGE} (if missing)"
+    echo "dry-run: would verify ${VM_CLOUD_IMAGE} against ${VM_CLOUD_IMAGE_SHA256_URL}"
     echo "dry-run: would build seed ISO at ${VM_SEED_ISO} (if stale)"
     echo "dry-run: would start qemu (mem=${VM_MEM}MB smp=${VM_SMP} ssh=localhost:${VM_SSH_PORT})"
     exit 0
@@ -50,10 +51,20 @@ if [[ ! -f "${VM_SSH_KEY}" ]]; then
 fi
 VM_SSH_PUBKEY="$(cat "${VM_SSH_KEY}.pub")"
 
-# --- cloud image (cached after the first download) ---------------------------
+# --- cloud image (cached after the first download, verified every run) -----
 if [[ ! -f "${VM_CLOUD_IMAGE}" ]]; then
     echo "==> downloading Arch cloud image (cached after first run)"
     curl -fSL --retry 3 -o "${VM_CLOUD_IMAGE}" "${VM_CLOUD_IMAGE_URL}"
+fi
+if ! "${VM_LIB_DIR}/verify-image.sh" "${VM_CLOUD_IMAGE}" "${VM_CLOUD_IMAGE_SHA256_URL}"; then
+    if [[ "${VM_ALLOW_UNVERIFIED_IMAGE}" == "1" ]]; then
+        echo "warning: image verification failed, continuing because VM_ALLOW_UNVERIFIED_IMAGE=1" >&2
+    else
+        echo "error: image verification failed; deleting untrusted image" >&2
+        rm -f "${VM_CLOUD_IMAGE}"
+        echo "hint: set VM_ALLOW_UNVERIFIED_IMAGE=1 to bypass (not recommended)" >&2
+        exit 1
+    fi
 fi
 
 # --- cloud-init seed (binds the current SSH key into the VM) -----------------

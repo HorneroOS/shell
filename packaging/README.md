@@ -19,12 +19,16 @@ makepkg -s
 ```
 
 The `-s` flag resolves the remaining `depends` via pacman where available.
-Two dependencies live only on the AUR and must be installed first with an
-AUR helper (or `makepkg` by hand):
+`quickshell` is available in Arch `extra`, so only `libcava` lives on the
+AUR (on stock Arch) and must be installed first with an AUR helper (or
+`makepkg` by hand):
 
 ```bash
-paru -S quickshell-git libcava
+paru -S libcava
 ```
+
+Any package providing the `quickshell` name (such as AUR
+`quickshell-git`) also satisfies that dependency.
 
 Then install the built package:
 

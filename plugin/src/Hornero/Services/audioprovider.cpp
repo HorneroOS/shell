@@ -2,6 +2,7 @@
 
 #include "audiocollector.hpp"
 #include "service.hpp"
+#include <QMetaObject>
 #include <qdebug.h>
 #include <qthread.h>
 

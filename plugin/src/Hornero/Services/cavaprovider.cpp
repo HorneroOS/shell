@@ -2,6 +2,8 @@
 
 #include "audiocollector.hpp"
 #include "audioprovider.hpp"
+#include <QMetaObject>
+#include <QVector>
 #include <cava/cavacore.h>
 #include <cstddef>
 #include <qdebug.h>

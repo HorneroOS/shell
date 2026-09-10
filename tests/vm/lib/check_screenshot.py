@@ -103,10 +103,13 @@ def luminance(pixel, channels):
 def assess(path, min_colors, min_stddev, min_bytes):
     import os
 
+    # Parse first: an unparseable artifact is a harness error (the caller
+    # reports exit 2), while a parseable but empty frame is a product
+    # failure (exit 1).
+    width, height, channels, pixels = parse_png(path)
     size = os.path.getsize(path)
     if size < min_bytes:
         return False, f"only {size} bytes (minimum {min_bytes})"
-    width, height, channels, pixels = parse_png(path)
     total = width * height
     step = max(1, total // MAX_SAMPLES)
     colors, total_luma, total_sq, count = set(), 0.0, 0.0, 0

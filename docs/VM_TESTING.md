@@ -36,7 +36,21 @@ sudo pacman -S --needed qemu-desktop curl openssh jq python3 cdrtools
 | Network access | first run downloads the Arch cloud image (cached afterwards) |
 
 The guest installs everything else itself (`provision.sh`): Hyprland,
-Quickshell (AUR), `grim`, `wf-recorder`, Qt6 modules, and fonts.
+Quickshell (AUR), `grim`, `wf-recorder`, Qt6 modules, `cmake`, and fonts.
+`provision.sh` fails fast when the guest has less than
+`VM_MIN_GUEST_FREE_GB` GB free (default 6); `boot.sh` grows the cloud image
+to `VM_MIN_IMAGE_GB` GiB virtual size (default 14) when `qemu-img` is
+available.
+
+## Native plugin in the guest
+
+`deploy-shell.sh` builds the shell's native QML plugin from the deployed
+checkout with the guest's `cmake` + Qt6, installing to a user prefix
+(`VM_GUEST_PREFIX`, default guest `~/.local`, no sudo), and
+`start-session.sh` exposes it via `QML2_IMPORT_PATH`. Rebuilds happen only
+when the working tree changed (marker in the guest cache); a failed build
+warns and continues without `Hornero.*` modules so the smoke run still
+reports honestly instead of hanging.
 
 ## Image verification
 

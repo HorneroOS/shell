@@ -23,7 +23,8 @@ if [[ "${1:-}" == "--dry-run" ]]; then
 fi
 
 if vm_is_dry_run; then
-    echo "dry-run: would install guest packages (pacman + AUR quickshell)"
+    echo "dry-run: would check guest free disk space (fail fast below ${VM_MIN_GUEST_FREE_GB} GB)"
+    echo "dry-run: would install guest packages (pacman incl. cmake + AUR quickshell)"
     echo "dry-run: would enable seatd and grant seat/video/render groups"
     echo "dry-run: would write the provision marker when done"
     exit 0
@@ -33,6 +34,15 @@ vm_ssh_ready || {
     echo "error: VM SSH is not up. Run lib/boot.sh + lib/wait-ssh.sh first." >&2
     exit 1
 }
+
+echo "==> checking guest free disk space (need ${VM_MIN_GUEST_FREE_GB} GB)"
+# shellcheck disable=SC2016
+guest_free_kb="$(vm_ssh 'df --output=avail -k / | tail -n 1' | tr -d '[:space:]')"
+if [[ "${guest_free_kb}" -lt "$((VM_MIN_GUEST_FREE_GB * 1024 * 1024))" ]]; then
+    echo "error: guest has only $((guest_free_kb / 1024)) MB free, need ${VM_MIN_GUEST_FREE_GB} GB." >&2
+    echo "hint: enlarge the image with: qemu-img resize <image> +12G (see boot.sh capacity step)" >&2
+    exit 1
+fi
 
 if vm_ssh 'test -f ~/.cache/vm-harness-provisioned' > /dev/null 2>&1; then
     echo "==> VM already provisioned"
@@ -48,7 +58,8 @@ vm_ssh 'sudo pacman -Sy --noconfirm --needed --overwrite "/usr/lib/*" \
     seatd polkit \
     grim slurp wf-recorder \
     kitty qt6-base qt6-declarative qt6-svg qt6-multimedia qt6-wayland \
-    base-devel git curl jq \
+    base-devel cmake git curl jq \
+    pipewire-jack aubio \
     noto-fonts noto-fonts-emoji ttf-jetbrains-mono-nerd'
 
 echo "==> bootstrapping yay for AUR packages (quickshell)"

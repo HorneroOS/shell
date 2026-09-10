@@ -339,3 +339,37 @@ def test_boot_dry_run_mentions_verification():
     )
     assert proc.returncode == 0, proc.stderr
     assert "would verify" in proc.stdout
+    assert "would grow" in proc.stdout
+
+
+def test_provision_dry_run_mentions_disk_precheck():
+    proc = subprocess.run(
+        ["bash", str(LIB_DIR / "provision.sh"), "--dry-run"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "disk space" in proc.stdout
+
+
+def test_deploy_dry_run_mentions_plugin_build():
+    proc = subprocess.run(
+        ["bash", str(LIB_DIR / "deploy-shell.sh"), "--dry-run"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "native QML plugin" in proc.stdout
+
+
+def test_session_dry_run_mentions_qml_import_path():
+    proc = subprocess.run(
+        ["bash", str(LIB_DIR / "start-session.sh"), "--dry-run"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "QML2_IMPORT_PATH" in proc.stdout

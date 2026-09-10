@@ -34,6 +34,7 @@ if vm_is_dry_run; then
     echo "dry-run: would generate SSH key at ${VM_SSH_KEY} (if missing)"
     echo "dry-run: would download ${VM_CLOUD_IMAGE_URL} to ${VM_CLOUD_IMAGE} (if missing)"
     echo "dry-run: would verify ${VM_CLOUD_IMAGE} against ${VM_CLOUD_IMAGE_SHA256_URL}"
+    echo "dry-run: would grow ${VM_CLOUD_IMAGE} to ${VM_MIN_IMAGE_GB} GiB virtual size (if smaller)"
     echo "dry-run: would build seed ISO at ${VM_SEED_ISO} (if stale)"
     echo "dry-run: would start qemu (mem=${VM_MEM}MB smp=${VM_SMP} ssh=localhost:${VM_SSH_PORT})"
     exit 0
@@ -65,6 +66,19 @@ if ! "${VM_LIB_DIR}/verify-image.sh" "${VM_CLOUD_IMAGE}" "${VM_CLOUD_IMAGE_SHA25
         echo "hint: set VM_ALLOW_UNVERIFIED_IMAGE=1 to bypass (not recommended)" >&2
         exit 1
     fi
+fi
+
+# --- image capacity (the stock cloud image is too small for the stack) ------
+if command -v qemu-img > /dev/null; then
+    img_bytes="$(qemu-img info --output=json "${VM_CLOUD_IMAGE}" 2> /dev/null | jq -r '.["virtual-size"] // 0')"
+    img_bytes="${img_bytes//[^0-9]/}"
+    img_bytes="${img_bytes:-0}"
+    if [[ "${img_bytes}" -lt "$((VM_MIN_IMAGE_GB * 1024 * 1024 * 1024))" ]]; then
+        echo "==> growing cloud image to ${VM_MIN_IMAGE_GB} GiB virtual size"
+        qemu-img resize "${VM_CLOUD_IMAGE}" "${VM_MIN_IMAGE_GB}G"
+    fi
+else
+    echo "warning: qemu-img not found, skipping capacity check (provision may run out of disk)" >&2
 fi
 
 # --- cloud-init seed (binds the current SSH key into the VM) -----------------

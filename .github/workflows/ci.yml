@@ -1,0 +1,64 @@
+name: CI
+
+"on":
+  push:
+    branches: [main, 'feat/**', 'fix/**']
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Qt6 + native deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cmake ninja-build pkg-config \
+            qt6-base-dev qt6-declarative-dev qt6-declarative-dev-tools \
+            libqalculate-dev libpipewire-0.3-dev libaubio-dev libcava-dev
+      - name: Configure
+        run: cmake -S . -B build -D DISTRIBUTOR="ci"
+      - name: Build
+        run: cmake --build build
+
+  qml:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install qmllint
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends qt6-declarative-dev-tools
+      - name: QML/import validation
+        run: ./scripts/lint_qml.sh
+
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pytest
+        run: pip install pytest
+      - name: Test suite
+        run: python3 -m pytest tests/ -q
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: shellcheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends shellcheck
+          shellcheck scripts/*.sh assets/wrap_term_launch.sh
+      - name: markdown lint
+        run: npx --yes markdownlint-cli2 "**/*.md"
+      - name: yaml lint
+        run: pip install yamllint && yamllint .
+      - name: personal-data guard
+        run: ./scripts/check_personal_data.sh
+      - name: forbidden-path scan
+        run: ./scripts/check_forbidden_paths.sh

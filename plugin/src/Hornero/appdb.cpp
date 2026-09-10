@@ -1,6 +1,6 @@
 #include "appdb.hpp"
 
-#include <qmetaproperty.h>
+#include <QMetaProperty>
 #include <qsqldatabase.h>
 #include <qsqlquery.h>
 #include <quuid.h>

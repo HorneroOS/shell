@@ -54,7 +54,11 @@ pre-commit run --all-files          # portable lint subset (see below)
 ## Run
 
 ```bash
-qs -p <install-prefix>/share/hornero-shell   # or: hornero-shell (nix wrapper)
+# CMake install (default INSTALL_QSCONFDIR=etc/xdg/quickshell/hornero):
+QML2_IMPORT_PATH=<install-prefix>/usr/lib/qt6/qml \
+  qs -p <install-prefix>/etc/xdg/quickshell/hornero
+# Nix layout installs the QML tree to <prefix>/share/hornero-shell
+# instead — or just run the `hornero-shell` wrapper.
 qs ipc call <target> <fn> …                  # see docs/IPC.md
 ```
 

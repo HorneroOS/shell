@@ -124,8 +124,10 @@ void CavaProvider::setBars(int bars) {
     emit barsChanged();
     emit valuesChanged();
 
-    QMetaObject::invokeMethod(
-        static_cast<CavaProcessor*>(m_processor), &CavaProcessor::setBars, Qt::QueuedConnection, bars);
+    // NOTE: Qt < 6.5 has no invokeMethod overload for member pointers with
+    // arguments, so route through an argument-free lambda (same semantics).
+    auto* processor = static_cast<CavaProcessor*>(m_processor);
+    QMetaObject::invokeMethod(processor, [processor, bars]() { processor->setBars(bars); }, Qt::QueuedConnection);
 }
 
 QVector<double> CavaProvider::values() const {

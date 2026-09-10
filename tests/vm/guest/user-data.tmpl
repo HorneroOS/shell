@@ -1,0 +1,22 @@
+#cloud-config
+# Template used by lib/boot.sh. The placeholder __VM_SSH_PUBKEY__ is replaced
+# with the ephemeral harness SSH public key before building the seed ISO.
+users:
+  - name: hornero
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    lock_passwd: false
+ssh_pwauth: false
+disable_root: true
+write_files:
+  - path: /home/hornero/.ssh/authorized_keys
+    content: |
+      __VM_SSH_PUBKEY__
+    owner: hornero:hornero
+    permissions: '0600'
+runcmd:
+  - chown -R hornero:hornero /home/hornero/.ssh
+  - chmod 700 /home/hornero/.ssh
+  - chmod 600 /home/hornero/.ssh/authorized_keys
+  - systemctl enable sshd
+  - systemctl restart sshd

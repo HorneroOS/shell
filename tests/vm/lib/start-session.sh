@@ -21,6 +21,7 @@ fi
 if vm_is_dry_run; then
     echo "dry-run: would restart Hyprland (DRM backend) in the guest"
     echo "dry-run: would start the deployed shell with qs (fallback: quickshell)"
+    echo "dry-run: would expose the native plugin via QML2_IMPORT_PATH=${VM_GUEST_PREFIX}/lib/qt6/qml"
     echo "dry-run: would verify Hyprland plus shell processes are alive"
     exit 0
 fi
@@ -65,7 +66,13 @@ else
     echo "==> starting the shell from the deployed checkout"
     # The checkout root is the Quickshell config dir. Guest-side variables
     # stay escaped so they expand inside the VM, not on the host.
+    # The native plugin (built by deploy-shell.sh into the guest prefix) is
+    # exposed through QML2_IMPORT_PATH; an absent dir is harmless.
+    # shellcheck disable=SC2016 # remote $HOME must expand inside the guest
+    guest_home="$(vm_ssh 'printf %s "$HOME"')"
+    guest_qml_path="${VM_GUEST_PREFIX//\$HOME/${guest_home}}/lib/qt6/qml"
     vm_ssh_bg "$(vm_hypr_env)
+export QML2_IMPORT_PATH=${guest_qml_path}:\$QML2_IMPORT_PATH
 if command -v qs > /dev/null; then QS_BIN=qs; else QS_BIN=quickshell; fi
 cd \$HOME/.config/quickshell && nohup \$QS_BIN > /tmp/qs.log 2>&1 < /dev/null & disown"
     sleep 10

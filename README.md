@@ -6,6 +6,10 @@ The official HorneroOS desktop shell, built with
 lock screen, wallpaper/theme pipeline, and a native `Hornero` C++ plugin
 for performance-critical work (image analysis, audio, calculator).
 
+![Hornero desktop](docs/assets/desktop-hero.png)
+
+*Pre-release snapshot from the graphical test VM (1280×720).*
+
 ## Position in HorneroOS
 
 - **This repo owns**: the shell runtime (`shell.qml`, `modules/`,

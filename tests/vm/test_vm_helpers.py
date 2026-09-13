@@ -419,6 +419,14 @@ def test_provision_installs_native_plugin_deps():
     assert "libqalculate" in provision
 
 
+def test_provision_installs_shell_icon_font():
+    # The shell's MaterialIcon ligatures need the Material Symbols font;
+    # without it the guest renders icon names as text (proven in the
+    # Preview 1 E2E: "sentiment_stressed" instead of the glyph).
+    provision = (LIB_DIR / "provision.sh").read_text()
+    assert "ttf-material-symbols-variable" in provision
+
+
 def test_provision_repairs_guest_dns_when_broken():
     body = (LIB_DIR / "provision.sh").read_text()
     assert "getent hosts" in body

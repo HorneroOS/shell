@@ -25,7 +25,7 @@ fi
 if vm_is_dry_run; then
     echo "dry-run: would pin guest DNS to ${VM_GUEST_DNS} when DHCP DNS does not resolve"
     echo "dry-run: would check guest free disk space (fail fast below ${VM_MIN_GUEST_FREE_GB} GB)"
-    echo "dry-run: would install guest packages (pacman incl. cmake + AUR quickshell)"
+    echo "dry-run: would install guest packages (pacman incl. cmake, libqalculate + AUR quickshell)"
     echo "dry-run: would enable seatd and grant seat/video/render groups"
     echo "dry-run: would write the provision marker when done"
     exit 0
@@ -97,7 +97,7 @@ vm_ssh 'sudo pacman -Sy --noconfirm --needed --overwrite "/usr/lib/*" \
     grim slurp wf-recorder \
     kitty qt6-base qt6-declarative qt6-svg qt6-multimedia qt6-wayland \
     base-devel cmake git curl jq \
-    pipewire-jack aubio \
+    pipewire-jack aubio libqalculate \
     noto-fonts noto-fonts-emoji ttf-jetbrains-mono-nerd'
 
 echo "==> bootstrapping yay for AUR packages (quickshell)"

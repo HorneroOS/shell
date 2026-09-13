@@ -412,6 +412,13 @@ def test_smoke_report_carries_composition_block():
     assert "screenshot_nonblank" in body
 
 
+def test_provision_installs_native_plugin_deps():
+    # deploy-shell.sh builds the QML plugin in the guest; its CMake
+    # requires libqalculate, so provision.sh must install it.
+    provision = (LIB_DIR / "provision.sh").read_text()
+    assert "libqalculate" in provision
+
+
 def test_provision_repairs_guest_dns_when_broken():
     body = (LIB_DIR / "provision.sh").read_text()
     assert "getent hosts" in body

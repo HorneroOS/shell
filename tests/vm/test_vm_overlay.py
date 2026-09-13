@@ -113,6 +113,13 @@ def test_verify_stays_fail_closed_on_base():
     assert 'rm -f "${VM_CLOUD_IMAGE}" "${VM_OVERLAY}"' in body
 
 
+def test_qemu_advertises_guest_dns_over_dhcp():
+    # The guest must not depend on the host LAN resolver: slirp proxies
+    # guest DNS to the host's first nameserver, which may be LAN-only.
+    body = _read_boot()
+    assert "dns=${VM_GUEST_DNS}" in body
+
+
 def test_missing_overlay_probe_does_not_abort_boot():
     # First boot has no overlay yet: qemu-img info exits 1, and with
     # `set -euo pipefail` that probe must not kill boot.sh before the

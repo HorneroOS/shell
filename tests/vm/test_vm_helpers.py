@@ -351,6 +351,19 @@ def test_provision_dry_run_mentions_disk_precheck():
     )
     assert proc.returncode == 0, proc.stderr
     assert "disk space" in proc.stdout
+    assert "guest DNS" in proc.stdout
+
+
+def test_provision_repairs_guest_dns_when_broken():
+    body = (LIB_DIR / "provision.sh").read_text()
+    assert "getent hosts" in body
+    assert "resolvectl dns eth0" in body
+    # The repair must survive guest reboots (overlay reuse) as a .d/
+    # override on the managing .network file: a standalone file loses to
+    # cloud-init's 10-cloud-init-eth0.network and would be ignored.
+    assert "Network File" in body
+    assert "UseDNS=no" in body
+    assert "10-harness-dns-override.conf" in body
 
 
 def test_deploy_dry_run_mentions_plugin_build():

@@ -196,6 +196,7 @@ All knobs are environment variables (see `tests/vm/lib/env.sh`):
 | `VM_ARTIFACTS_DIR` | `tests/vm/artifacts` | Capture and report output |
 | `VM_CACHE_DIR` | `tests/vm/cache` | Base image, overlay, seed, and pidfile |
 | `VM_DRY_RUN` | `0` | `1` prints the plan without side effects |
+| `VM_GUEST_DNS` | `1.1.1.1` | DNS server advertised to the guest over DHCP; `provision.sh` also pins it in the guest when the DHCP resolver does not answer |
 
 ## Continuous integration
 
@@ -214,6 +215,7 @@ exactly the checks that are deterministic without hardware:
 | Symptom | Fix |
 |---|---|
 | `SSH did not come up` | check `artifacts/console.log`; first boot plus cloud-init needs minutes |
+| `pacman: Could not resolve host` in the guest | host LAN DNS is unreachable from slirp: `provision.sh` probes and pins `VM_GUEST_DNS` automatically; override the knob on filtered networks |
 | Hyprland fails to start | `seatd` must run and the user needs the `seat` group (`provision.sh` does both); inspect `artifacts/logs/hyprland.log` |
 | `grim` probe hangs | expected on some virtio stacks; the scenario falls back to `qemu-screenshot.sh` automatically |
 | Recording is header-only | `wlr-screencopy` emits frames on damage only; the scenario switches workspaces while recording, do the same when driving `record.sh` manually |

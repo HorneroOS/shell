@@ -106,7 +106,7 @@ vm_ssh 'sudo pacman -Sy --noconfirm --needed --overwrite "/usr/lib/*" \
     kitty qt6-base qt6-declarative qt6-svg qt6-multimedia qt6-wayland \
     base-devel cmake git curl jq \
     pipewire-jack aubio libqalculate \
-    noto-fonts noto-fonts-emoji ttf-jetbrains-mono-nerd'
+    noto-fonts noto-fonts-emoji ttf-jetbrains-mono-nerd ttf-material-symbols-variable'
 
 echo "==> bootstrapping yay for AUR packages (quickshell)"
 # shellcheck disable=SC2016

@@ -11,9 +11,6 @@ import QtQuick
 Searcher {
     id: root
 
-    readonly property string themesDir: `${Quickshell.env("HOME")}/.local/share/dots/themes`
-    readonly property string loaderScript: `${Quickshell.env("HOME")}/.local/lib/dots/list-themes.py`
-
     function transformSearch(search: string): string {
         const prefix = Config.launcher.actionPrefix;
         for (const cmd of ["theme", "appearance"]) {
@@ -57,13 +54,15 @@ Searcher {
         Theme {}
     }
 
-    // TODO(hornero-compat): route theme listing through a dots-* CLI instead
-    // of bare python3 + list-themes.py; see docs/COMPAT.md (disposition G).
+    // TODO(hornero-compat): theme listing stays on the dots-appearance compat
+    // adapter (theme-pack registry owned by dots tooling; THEMES_DIR resolved
+    // CLI-side via DOTS_THEMES_DIR, empty-model fallback when absent).
+    // See docs/COMPAT.md (disposition A) and docs/GTK-PACK-OWNERSHIP.md.
     Process {
         id: loadProc
 
         running: true
-        command: ["python3", root.loaderScript, root.themesDir]
+        command: ["dots-appearance", "theme", "list"]
 
         stdout: StdioCollector {
             onStreamFinished: {

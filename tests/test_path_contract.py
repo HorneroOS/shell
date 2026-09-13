@@ -113,3 +113,46 @@ def test_arch_documents_path_contract():
     assert "PATH_CONTRACT" in text, "ARCHITECTURE.md must cite the binding contract"
     assert "hornero/*" in text and "dots/*" in text
     assert "dataFallback" in text and "stateFallback" in text and "cacheFallback" in text
+
+
+# Namespace audit (Preview 1 Worker B): every remaining dots/DOTS reference in
+# QML classifies as path (canonical hornero/*-first + dots/* fallback, asserted
+# above), binary-name (dots-* executable names stay, out of scope), or
+# third-party (quickshell namespace stays as-is). No QML may point users at a
+# legacy-only path literal: user-facing hints must name the canonical
+# hornero/* location first.
+
+LEGACY_PATH_LITERAL_RES = [
+    "share/dots",
+    "state/dots",
+    "cache/dots",
+    "config/dots",
+]
+
+
+def _all_qml():
+    files = []
+    for dirname in ("modules", "services", "config", "utils", "components"):
+        files.extend((ROOT / dirname).rglob("*.qml"))
+    return files
+
+
+def test_no_legacy_only_path_literals_in_qml():
+    hits = []
+    for path in _all_qml():
+        # utils/Paths.qml builds fallbacks from XDG vars ("${dataHome}/dots");
+        # it carries no legacy-root literal and is the single exemption.
+        if path.name == "Paths.qml":
+            continue
+        text = path.read_text()
+        for lit in LEGACY_PATH_LITERAL_RES:
+            if lit in text:
+                hits.append(f"{path.relative_to(ROOT)}: {lit}")
+    assert not hits, f"legacy-only path literals in QML: {hits}"
+
+
+def test_preset_empty_state_names_canonical_path():
+    text = (ROOT / "modules" / "layoutpicker" / "PresetGrid.qml").read_text()
+    assert "hornero/shell-presets" in text, \
+        "PresetGrid empty state must point at the canonical presets dir (row 2)"
+    assert "share/dots" not in text

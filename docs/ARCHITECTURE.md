@@ -54,9 +54,19 @@ System defaults vs user overrides:
 - **System defaults** ship under the Quickshell config dir
   (`INSTALL_QSCONFDIR`, default `etc/xdg/quickshell/hornero`): QML tree,
   `presets/`, `LICENSE.GPL-3.0`, `NOTICE`.
-- **User overrides** live outside this repo: per-user `shell.json`-style
-  settings under the config dir above and theme/wallpaper data under the
-  data dir. The shell watches them (`FileView`, `watchFiles`) and
+- **Factory settings** live in this repo at `config/shell.default.json`:
+  its content equals what `Config.qml` `serializeConfig()` persists with
+  pristine defaults (values from the per-area `*Config.qml` initializers;
+  see `tests/test_factory_config.py` for the key-by-key proof and the
+  three intentionally unset runtime-resolved keys). HorneroOS/config
+  packages that file to `/etc/xdg/hornero/shell.json` (path contract
+  row 6, system default); this repo never installs it there itself.
+- **User overrides** live outside this repo at
+  `$XDG_CONFIG_HOME/hornero/shell.json` (`Paths.config`), plus
+  theme/wallpaper data under the data dir. Load order is user file first,
+  system default as fallback; a missing user file is not an error —
+  compiled defaults apply (`Config.qml` `onLoadFailed` tolerates
+  `FileNotFound`). The shell watches them (`FileView`, `watchFiles`) and
   live-reloads; a preset apply deep-merges into the user file, never into
   the shipped tree.
 - `assets/pam.d/*` are **host-integration samples**, not installed to

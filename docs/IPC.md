@@ -23,7 +23,7 @@ other HorneroOS components script against; renames must update
 
 | Target | Defined in | Functions |
 |---|---|---|
-| `drawers` | `modules/Shortcuts.qml` | `toggle(drawer)`, `list()` |
+| `drawers` | `modules/Shortcuts.qml` | `toggle(drawer)`, `list()`, `state(drawer)` |
 | `controlCenter` | `modules/Shortcuts.qml` | `open()` |
 | `toaster` | `modules/Shortcuts.qml` | `info/success/warn/error(title, message, icon)` |
 | `picker` | `modules/areapicker/AreaPicker.qml` | `open()`, `openFreeze()` (+ close variants per file) |
@@ -33,7 +33,8 @@ other HorneroOS components script against; renames must update
 Drawer names accepted by `drawers toggle` are the boolean keys of
 `Visibilities` for the active monitor (e.g. `launcher`, `dashboard`,
 `controlCenter`, `session`, `sidebar`, `utilities`, `layoutPicker`);
-`drawers list` prints them. Unknown names log `[IPC] Drawer "…" does not
+`drawers list` prints them, `drawers state <name>` prints `true`/`false`
+(`""` for an unknown name). Unknown names log `[IPC] Drawer "…" does not
 exist` and are ignored. Toggles for `launcher`/`session`/`dashboard` are
 suppressed while a fullscreen window has focus.
 

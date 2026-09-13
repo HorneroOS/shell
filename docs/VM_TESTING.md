@@ -38,9 +38,9 @@ sudo pacman -S --needed qemu-desktop curl openssh jq python3 cdrtools
 The guest installs everything else itself (`provision.sh`): Hyprland,
 Quickshell (AUR), `grim`, `wf-recorder`, Qt6 modules, `cmake`, and fonts.
 `provision.sh` fails fast when the guest has less than
-`VM_MIN_GUEST_FREE_GB` GB free (default 6); `boot.sh` grows the cloud image
-to `VM_MIN_IMAGE_GB` GiB virtual size (default 14) when `qemu-img` is
-available.
+`VM_MIN_GUEST_FREE_GB` GB free (default 6); `boot.sh` grows the ephemeral
+boot overlay to `VM_MIN_IMAGE_GB` GiB virtual size (default 14). The
+verified base image is never resized (see `Image verification`).
 
 ## Native plugin in the guest
 
@@ -54,9 +54,10 @@ reports honestly instead of hanging.
 
 ## Image verification
 
-`boot.sh` verifies the cloud image against its published SHA256 sidecar on
-every run, including cached images (`VM_CLOUD_IMAGE_SHA256_URL`, default
-`<image-url>.SHA256`). A mismatch deletes the untrusted image and aborts;
+`boot.sh` verifies the base cloud image against its published SHA256
+sidecar on every run, including cached images
+(`VM_CLOUD_IMAGE_SHA256_URL`, default `<image-url>.SHA256`). A mismatch
+deletes the untrusted base image (plus its overlay) and aborts;
 `VM_ALLOW_UNVERIFIED_IMAGE=1` bypasses with a loud warning (not recommended).
 The mirror also publishes a GPG `.sig` next to the image; verifying it is a
 manual opt-in until the harness pins a signing key:
@@ -64,6 +65,38 @@ manual opt-in until the harness pins a signing key:
 ```bash
 curl -fSLO https://geo.mirror.pkgbuild.com/images/latest/Arch-Linux-x86_64-cloudimg.qcow2.sig
 gpg --verify Arch-Linux-x86_64-cloudimg.qcow2.sig arch-cloudimg.qcow2
+```
+
+## Boot overlay design (issue #12)
+
+Repro: `boot.sh` used to attach the verified cache read-write, so a first
+run's guest writes dirtied `cache/arch-cloudimg.qcow2` and the next run's
+fail-closed verify failed on a legitimately dirty image.
+
+Fix: QEMU boots an ephemeral qcow2 overlay (`VM_OVERLAY`, default
+`cache/vm-overlay.qcow2`) with the verified base as its backing file, so
+all guest writes land in the overlay and the cache stays pristine:
+
+```bash
+qemu-img create -f qcow2 -F qcow2 -b cache/arch-cloudimg.qcow2 cache/vm-overlay.qcow2
+```
+
+`boot.sh` rebuilds the overlay when it is missing, when the base is newer
+(re-downloaded), or when its recorded backing file no longer points at the
+base, then grows the overlay (never the base) to `VM_MIN_IMAGE_GB` GiB and
+passes the overlay as the QEMU system disk. The verify gate still runs on
+the base on every boot, so a swapped or bitrotted cache is caught before
+any VM starts. To reset the VM without re-downloading, delete the overlay:
+
+```bash
+rm tests/vm/cache/vm-overlay.qcow2
+```
+
+Dry-run proof (no KVM needed):
+
+```bash
+./tests/vm/lib/boot.sh --dry-run
+python3 -m pytest tests/vm/test_vm_overlay.py -q
 ```
 
 ## Runbook
@@ -140,9 +173,11 @@ artifacts/
     └── shell.log
 ```
 
-The disk image (`cache/arch-cloudimg.qcow2`) and cloud-init seed are
-cached: later runs boot in seconds. SSH keys are ephemeral per checkout
-(`ssh/`, gitignored) and baked into a fresh seed ISO automatically.
+The base image (`cache/arch-cloudimg.qcow2`, verified every run and never
+written), the boot overlay (`cache/vm-overlay.qcow2`, all guest writes),
+and the cloud-init seed are cached: later runs boot in seconds. SSH keys
+are ephemeral per checkout (`ssh/`, gitignored) and baked into a fresh
+seed ISO automatically.
 
 ## Configuration
 
@@ -156,8 +191,10 @@ All knobs are environment variables (see `tests/vm/lib/env.sh`):
 | `VM_SMP` | `2` | VM vCPUs |
 | `VM_FPS` | `10` | Recording frame rate |
 | `VM_CLOUD_IMAGE_URL` | Arch geo mirror | Cloud image source |
+| `VM_CLOUD_IMAGE` | `tests/vm/cache/arch-cloudimg.qcow2` | Pristine verified base (never booted directly) |
+| `VM_OVERLAY` | `tests/vm/cache/vm-overlay.qcow2` | Ephemeral boot disk (backing file = base) |
 | `VM_ARTIFACTS_DIR` | `tests/vm/artifacts` | Capture and report output |
-| `VM_CACHE_DIR` | `tests/vm/cache` | Image, seed, and pidfile |
+| `VM_CACHE_DIR` | `tests/vm/cache` | Base image, overlay, seed, and pidfile |
 | `VM_DRY_RUN` | `0` | `1` prints the plan without side effects |
 
 ## Continuous integration

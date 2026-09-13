@@ -25,20 +25,28 @@ Imported from `ulises-jeremias/dotfiles@b26db04`; see `MIGRATION.md`.
 
 ## Runtime / config path model
 
+Binding interface: `HorneroOS/hornero` `docs/PATH_CONTRACT.md` is the
+canonical record of every runtime path the session reads or writes; this
+repo does not redefine paths. The rule: **new writes go to `hornero/*`**;
+readers check the canonical `hornero/*` location first and fall back to
+the legacy `dots/*` location (**reads only**, never written) for one
+migration window.
+
 No chezmoi, no hardcoded home layouts. Resolution order everywhere is
 **explicit env override → XDG → `$HOME` default**, centralized in
-`utils/Paths.qml` (singleton, `qs.utils`):
+`utils/Paths.qml` (singleton, `qs.utils`). The `DOTS_*_DIR` overrides pin
+the legacy `dots/*` roots only:
 
-| Path | Override | Default |
+| Path | Canonical (writes) | Legacy fallback (reads only) |
 |---|---|---|
-| Shell data (themes, wallpapers) | `DOTS_DATA_DIR` | `$XDG_DATA_HOME/dots` → `~/.local/share/dots` |
-| Shell state (wallpaper pointer) | `DOTS_STATE_DIR` | `$XDG_STATE_HOME/dots` → `~/.local/state/dots` |
-| Shell cache (smart-colors, imagecache) | `DOTS_CACHE_DIR` | `$XDG_CACHE_HOME/dots` → `~/.cache/dots` |
-| Shell user config | `DOTS_CONFIG_DIR` | `$XDG_CONFIG_HOME/hornero` → `~/.config/hornero` |
+| Shell data: theme packs `themes/<id>/theme.json` (row 1), installed wallpapers `wallpapers/` (row 11) | `$XDG_DATA_HOME/hornero` (`Paths.data`) | `$XDG_DATA_HOME/dots` (`Paths.dataFallback`, `DOTS_DATA_DIR` override) |
+| Shell state: wallpaper pointer `wallpaper/path` (row 9), `notifs.json` (row 10) | `$XDG_STATE_HOME/hornero` (`Paths.state`, `Paths.wallpaperPointer`) | `$XDG_STATE_HOME/dots` (`Paths.stateFallback`, `Paths.wallpaperPointerFallback`, `DOTS_STATE_DIR` override) |
+| Shell cache: `smart-colors/scheme.json` (row 4), `imagecache[/notifs]` (row 10) | `$XDG_CACHE_HOME/hornero` (`Paths.cache`, `Paths.imagecache`) | `$XDG_CACHE_HOME/dots` (`Paths.cacheFallback`, `Paths.imagecacheFallback`, `DOTS_CACHE_DIR` override) |
+| Shell user config: `shell.json` (row 6, no fallback — already canonical) | `$XDG_CONFIG_HOME/hornero` (`Paths.config`, `DOTS_CONFIG_DIR` override) | none |
 | Pictures / videos | `XDG_PICTURES_DIR` / `XDG_VIDEOS_DIR` | `~/Pictures`, `~/Videos` |
 | Wallpapers dir | `HORNERO_WALLPAPERS_DIR` | `Config.paths.wallpaperDir` (absolute-resolved) |
 | Recordings dir | `HORNERO_RECORDINGS_DIR` | `~/Videos/Recordings` |
-| Native helper lib | `DOTS_LIB_DIR` / `HORNERO_LIB_DIR` | `/usr/lib/hornero` |
+| Native helper lib (row 12) | `/usr/lib/hornero` | `DOTS_LIB_DIR` / `HORNERO_LIB_DIR` lookup |
 | XKB rules (dev/nix) | `HORNERO_XKB_RULES_PATH` | system xkeyboard-config |
 
 System defaults vs user overrides:
@@ -63,8 +71,14 @@ reload) and shells out **only** to the canonical CLIs `dots-m3-colors`
 `gtk-theme-manager.sh` directly and never runs bare
 `python3 generate-m3-colors` (enforced by
 `tests/test_appearance_consistency.py`). Theme data resolves from
-`Paths.data/themes`, wallpapers from `Paths.data/wallpapers`, with
-`Paths.pictures/Wallpapers` as the user-content root.
+`Paths.data/themes` (canonical) with `Paths.dataFallback/themes` as the
+legacy read fallback, wallpapers from `Paths.data/wallpapers`
+(+ `Paths.dataFallback` fallback), and the scheme from
+`Paths.cache/smart-colors/scheme.json` (+ `Paths.cacheFallback`
+fallback), with `Paths.pictures/Wallpapers` as the user-content root.
+Notification state reads `Paths.state/notifs.json` (+
+`Paths.stateFallback` fallback); image caches write to the canonical
+`Paths.imagecache` and regenerate on miss.
 
 ## External coupling
 

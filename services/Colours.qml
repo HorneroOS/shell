@@ -86,8 +86,14 @@ Singleton {
     }
 
     function reloadFromDisk(): void {
+        root._schemeFallbackActive = false;
         schemeFileView.reload();
     }
+
+    // Runtime path contract row 4: canonical hornero/* scheme.json first,
+    // legacy dots/* fallback (reads only). The fallback applies only after
+    // the canonical read fails, so a migrated install never regresses.
+    property bool _schemeFallbackActive: false
 
     FileView {
         id: schemeFileView
@@ -95,7 +101,29 @@ Singleton {
         path: `${Paths.cache}/smart-colors/scheme.json`
         watchChanges: true
         onFileChanged: reload()
-        onLoaded: root.load(text(), false)
+        onLoaded: {
+            root._schemeFallbackActive = false;
+            root.load(text(), false);
+        }
+        onLoadFailed: err => {
+            if (err === FileViewError.FileNotFound && !root._schemeFallbackActive) {
+                root._schemeFallbackActive = true;
+                schemeFileViewFallback.reload();
+            }
+        }
+    }
+
+    FileView {
+        id: schemeFileViewFallback
+
+        path: `${Paths.cacheFallback}/smart-colors/scheme.json`
+        onLoaded: {
+            if (root._schemeFallbackActive)
+                root.load(text(), false);
+        }
+        onLoadFailed: {
+            root._schemeFallbackActive = false;
+        }
     }
 
     IpcHandler {

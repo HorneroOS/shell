@@ -429,6 +429,11 @@ def test_provision_repairs_guest_dns_when_broken():
     assert "Network File" in body
     assert "UseDNS=no" in body
     assert "10-harness-dns-override.conf" in body
+    # The drop-in must apply via reload, never a networkd restart: a full
+    # restart drops the slirp DHCP lease and never recovers (proven on a
+    # filtered network: runtime pin resolves, post-restart probe fails).
+    assert "networkctl reload" in body
+    assert "restart systemd-networkd" not in body
 
 
 def test_deploy_dry_run_mentions_plugin_build():

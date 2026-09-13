@@ -1,9 +1,10 @@
-"""Appearance consistency (issue #2): QML applies theming through native
-layers first — GtkSettings (gsettings) for GTK application and the
+"""Appearance consistency (issue #2, track 3a): QML applies theming through
+native layers first — GtkSettings (gsettings) for GTK application and the
 ImageAnalyser plugin for wallpaper tone analysis. dots-gtk-theme /
 dots-m3-colors remain only as thin, debt-marked compat fallbacks; QML must
-never call gtk-theme-manager.sh directly nor bare
-`python3 generate-m3-colors`."""
+never call gtk-theme-manager.sh directly, never run bare
+`python3 generate-m3-colors`, and never spawn bare `python3` for theme
+listing (theme packs list via `dots-appearance theme list`)."""
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -34,6 +35,22 @@ def test_canonical_cli_calls_present():
     m3 = _hits("dots-m3-colors")
     assert gtk, "expected dots-gtk-theme compat-fallback calls in QML"
     assert m3, "expected dots-m3-colors compat-fallback calls in QML"
+
+
+def test_no_bare_python_theme_loader():
+    py_hits = [p for p in _qml_files()
+               if '"python3"' in p.read_text() or "'python3'" in p.read_text()]
+    assert not py_hits, f"bare python3 spawn in QML: {py_hits}"
+    loader_hits = _hits("list-themes")
+    assert not loader_hits, f"list-themes.py references in QML: {loader_hits}"
+
+
+def test_theme_listing_uses_cli():
+    hits = _hits("dots-appearance")
+    assert hits, "expected dots-appearance theme-list calls in QML"
+    list_hits = [p for p in hits
+                 if '"theme"' in p.read_text() and '"list"' in p.read_text()]
+    assert list_hits, f"dots-appearance callers missing theme list args: {hits}"
 
 
 def test_native_gtk_layer_present():
@@ -68,6 +85,7 @@ def test_compat_fallbacks_marked_debt():
     for path in _qml_files():
         text = path.read_text()
         if ("dots-gtk-theme" in text or "dots-m3-colors" in text
-                or "dots-color-scheme" in text) and "TODO(hornero-compat)" not in text:
+                or "dots-color-scheme" in text
+                or "dots-appearance" in text) and "TODO(hornero-compat)" not in text:
             unmarked.append(str(path.relative_to(ROOT)))
     assert not unmarked, f"compat call sites missing debt markers: {unmarked}"

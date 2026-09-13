@@ -9,7 +9,10 @@ contrast/hover/focus/disabled/selection states of the shared controls.
 """
 import json
 import re
+import sys
 from pathlib import Path
+
+import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 COLOURS = ROOT / "services" / "Colours.qml"
@@ -226,3 +229,18 @@ def test_state_colours_stay_on_tokens():
             if re.search(r"#[0-9a-fA-F]{3,8}", line):
                 offenders.append(f"{path.name}:{i}:{line.strip()}")
     assert not offenders, f"literal colours in controls: {offenders}"
+
+
+def test_gen_stability():
+    # Flagship tables are generated from the config brand seeds
+    # (scripts/gen-flagship-m3.py); committed tables must match, or the
+    # cross-repo hue contract has drifted.
+    import subprocess
+    proc = subprocess.run(
+        [sys.executable, str(ROOT / "scripts" / "gen-flagship-m3.py"),
+         "--check"],
+        capture_output=True, text=True, check=False)
+    if "SKIP:" in proc.stdout:
+        pytest.skip("materialyoucolor not installed")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "OK:" in proc.stdout

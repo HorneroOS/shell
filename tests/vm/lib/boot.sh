@@ -42,7 +42,7 @@ if vm_is_dry_run; then
     echo "dry-run: would create overlay ${VM_OVERLAY} with backing file ${VM_CLOUD_IMAGE} (if missing or stale)"
     echo "dry-run: would grow ${VM_OVERLAY} to ${VM_MIN_IMAGE_GB} GiB virtual size (if smaller)"
     echo "dry-run: would build seed ISO at ${VM_SEED_ISO} (if stale)"
-    echo "dry-run: would start qemu with overlay ${VM_OVERLAY} (mem=${VM_MEM}MB smp=${VM_SMP} ssh=localhost:${VM_SSH_PORT})"
+    echo "dry-run: would start qemu with overlay ${VM_OVERLAY} (mem=${VM_MEM}MB smp=${VM_SMP} ssh=localhost:${VM_SSH_PORT} dns=${VM_GUEST_DNS})"
     exit 0
 fi
 
@@ -83,7 +83,9 @@ command -v qemu-img > /dev/null || {
     echo "error: qemu-img is required for the boot overlay (Arch: pacman -S qemu-desktop)" >&2
     exit 1
 }
-overlay_backing="$(qemu-img info --output=json "${VM_OVERLAY}" 2> /dev/null | jq -r '.["backing-filename"] // ""')"
+# A missing overlay is the normal first-boot case: qemu-img exits 1 and
+# pipefail would abort the script, so tolerate the probe failure here.
+overlay_backing="$(qemu-img info --output=json "${VM_OVERLAY}" 2> /dev/null | jq -r '.["backing-filename"] // ""' || true)"
 if [[ ! -f "${VM_OVERLAY}" || "${VM_CLOUD_IMAGE}" -nt "${VM_OVERLAY}" || "${overlay_backing}" != "${VM_CLOUD_IMAGE}" ]]; then
     echo "==> creating boot overlay with backing file ${VM_CLOUD_IMAGE}"
     rm -f "${VM_OVERLAY}"
@@ -137,7 +139,7 @@ qemu-system-x86_64 \
     -device virtio-vga \
     -drive "file=${VM_OVERLAY},format=qcow2,if=virtio" \
     -drive "file=${VM_SEED_ISO},format=raw,if=virtio,media=cdrom,read-only=on" \
-    -netdev "user,id=net0,hostfwd=tcp::${VM_SSH_PORT}-:22" \
+    -netdev "user,id=net0,hostfwd=tcp::${VM_SSH_PORT}-:22,dns=${VM_GUEST_DNS}" \
     -device virtio-net-pci,netdev=net0 \
     -display none \
     -serial "file:${VM_ARTIFACTS_DIR}/console.log" \

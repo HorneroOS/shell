@@ -25,6 +25,11 @@ if vm_is_dry_run; then
     echo "dry-run: would copy ${SHELL_ROOT} working tree to guest ~/.config/quickshell"
     echo "dry-run: would install tests/vm/guest/hyprland.conf to guest ~/.config/hypr/hyprland.conf"
     echo "dry-run: would build the native QML plugin in the guest (prefix ${VM_GUEST_PREFIX}, skipped when unchanged)"
+    if [[ -n "${HX_CONFIG_PIN}" || -n "${HX_MATERIALIZE_BIN}" ]]; then
+        echo "dry-run: would materialize the config pin (${HX_CONFIG_PIN:-override}) in the guest"
+        echo "dry-run: would validate the guest root with horneroctl (${HX_HOREROCTL_BIN:-absent: script-only})"
+        echo "dry-run: would refuse a guest ulises-jeremias/dotfiles clone"
+    fi
     exit 0
 fi
 
@@ -81,5 +86,121 @@ cmake --install ~/.cache/hornero-shell-build"; then
     else
         echo "warning: native plugin build failed; the shell starts without Hornero.* QML modules" >&2
     fi
+fi
+
+# --- pinned composition (opt-in via HX_CONFIG_PIN / HX_MATERIALIZE_BIN) -----
+# Materializes the HorneroOS/config pin inside the guest and validates it
+# with horneroctl. The guest never clones the personal dotfiles repository:
+# the pin travels as a file copy and the guard below fails the deploy when
+# any guest checkout carries that origin.
+if [[ -n "${HX_CONFIG_PIN}" || -n "${HX_MATERIALIZE_BIN}" ]]; then
+    echo "==> resolving the config pin for the guest composition"
+    if [[ -n "${HX_MATERIALIZE_BIN}" ]]; then
+        [[ -x "${HX_MATERIALIZE_BIN}" ]] || {
+            echo "error: HX_MATERIALIZE_BIN is not executable: ${HX_MATERIALIZE_BIN}" >&2
+            exit 1
+        }
+        HX_CONFIG_SRC="$(cd "$(dirname "${HX_MATERIALIZE_BIN}")/.." && pwd)"
+        [[ -x "${HX_CONFIG_SRC}/scripts/materialize.sh" ]] || {
+            echo "error: HX_MATERIALIZE_BIN must live in <config-checkout>/scripts/: ${HX_MATERIALIZE_BIN}" >&2
+            exit 1
+        }
+        echo "==> using config checkout at ${HX_CONFIG_SRC}"
+    else
+        read -r HX_PIN_REPO HX_PIN_SHA <<< "${HX_CONFIG_PIN}"
+        [[ "${HX_PIN_SHA:-}" =~ ^[0-9a-f]{40}$ ]] || {
+            echo "error: HX_CONFIG_PIN must be '<repo-url> <40-hex-sha>', got: '${HX_CONFIG_PIN}'" >&2
+            exit 1
+        }
+        HX_CONFIG_SRC="${VM_CACHE_DIR}/hx-config-pin"
+        if [[ -d "${HX_CONFIG_SRC}/.git" && "$(git -C "${HX_CONFIG_SRC}" rev-parse HEAD 2> /dev/null)" == "${HX_PIN_SHA}" ]]; then
+            echo "==> config pin already at ${HX_PIN_SHA:0:8}"
+        else
+            echo "==> fetching config pin ${HX_PIN_SHA:0:8}"
+            rm -rf "${HX_CONFIG_SRC}"
+            git init -q "${HX_CONFIG_SRC}"
+            git -C "${HX_CONFIG_SRC}" remote add origin "${HX_PIN_REPO}"
+            git -C "${HX_CONFIG_SRC}" fetch -q --depth 1 origin "${HX_PIN_SHA}"
+            git -C "${HX_CONFIG_SRC}" checkout -q "${HX_PIN_SHA}"
+            [[ "$(git -C "${HX_CONFIG_SRC}" rev-parse HEAD)" == "${HX_PIN_SHA}" ]] || {
+                echo "error: config pin checkout mismatch" >&2
+                exit 1
+            }
+        fi
+    fi
+
+    echo "==> copying the config pin into the guest (~/hx-config)"
+    tar cf - --exclude=.git -C "${HX_CONFIG_SRC}" . \
+        | vm_ssh 'rm -rf ~/hx-config ~/hx-root && mkdir -p ~/hx-config && tar xf - -C ~/hx-config'
+    # shellcheck disable=SC2016
+    vm_ssh 'test -x ~/hx-config/scripts/materialize.sh' || {
+        echo "error: config pin is missing scripts/materialize.sh" >&2
+        exit 1
+    }
+
+    if [[ -n "${HX_HOREROCTL_BIN}" ]]; then
+        [[ -x "${HX_HOREROCTL_BIN}" ]] || {
+            echo "error: HX_HOREROCTL_BIN is not executable: ${HX_HOREROCTL_BIN}" >&2
+            exit 1
+        }
+        echo "==> copying horneroctl into the guest"
+        vm_scp "${HX_HOREROCTL_BIN}" "${VM_SSH_USER}@127.0.0.1:~/horneroctl"
+        # shellcheck disable=SC2016
+        vm_ssh 'test -x ~/horneroctl' || {
+            echo "error: horneroctl did not land executable in the guest" >&2
+            exit 1
+        }
+        echo "==> materializing the composition in the guest"
+        # shellcheck disable=SC2016
+        vm_ssh 'HORNERO_MATERIALIZE_BIN=$HOME/hx-config/scripts/materialize.sh $HOME/horneroctl config materialize --dest $HOME/hx-root --yes' || {
+            echo "error: guest composition materialize failed" >&2
+            exit 1
+        }
+        echo "==> validating the materialized root in the guest"
+        # shellcheck disable=SC2016
+        vm_ssh 'CTL=$HOME/horneroctl
+export HOME=$HOME/hx-root
+unset XDG_CONFIG_HOME XDG_DATA_HOME XDG_STATE_HOME XDG_CACHE_HOME
+"$CTL" config paths > /dev/null && "$CTL" config validate' || {
+            echo "error: guest composition validation failed" >&2
+            exit 1
+        }
+        # shell.json is user-created; seed an empty object so `config show`
+        # exercises the parse path without faking user content.
+        # shellcheck disable=SC2016
+        vm_ssh 'CTL=$HOME/horneroctl
+export HOME=$HOME/hx-root
+unset XDG_CONFIG_HOME XDG_DATA_HOME XDG_STATE_HOME XDG_CACHE_HOME
+mkdir -p $HOME/.config/hornero
+printf "{}\n" > $HOME/.config/hornero/shell.json
+"$CTL" config show > /dev/null' || {
+            echo "error: guest composition show failed" >&2
+            exit 1
+        }
+        echo "==> guest composition materialized and validated"
+    else
+        echo "warning: HX_HOREROCTL_BIN is unset; materializing via the script without horneroctl validation" >&2
+        # shellcheck disable=SC2016
+        vm_ssh 'bash ~/hx-config/scripts/materialize.sh --dest ~/hx-root' || {
+            echo "error: guest composition materialize failed" >&2
+            exit 1
+        }
+    fi
+
+    echo "==> verifying the guest never cloned the personal dotfiles"
+    vm_ssh 'test ! -e ~/dotfiles' || {
+        echo "error: ~/dotfiles exists in the guest: refusing" >&2
+        exit 1
+    }
+    # Only clone origins count: config files may mention the migration
+    # source in comments, so content greps would false-positive.
+    # shellcheck disable=SC2016
+    if vm_ssh 'test -n "$(find ~ -maxdepth 5 -path "*/.git/config" -exec grep -l "ulises-jeremias/dotfiles" {} + 2> /dev/null)"'; then
+        echo "error: the guest holds a ulises-jeremias/dotfiles clone:" >&2
+        # shellcheck disable=SC2016
+        vm_ssh 'find ~ -maxdepth 5 -path "*/.git/config" -exec grep -l "ulises-jeremias/dotfiles" {} + 2> /dev/null' >&2 || true
+        exit 1
+    fi
+    echo "==> guest composition is dotfiles-clone free"
 fi
 echo "==> shell deployed"

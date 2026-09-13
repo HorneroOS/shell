@@ -62,6 +62,13 @@ VM_SEED_ISO="${VM_SEED_ISO:-${VM_CACHE_DIR}/seed.iso}"
 VM_FPS="${VM_FPS:-10}"
 VM_RECORDING_REMOTE="${VM_RECORDING_REMOTE:-/tmp/vm-recording.mp4}"
 
+# DNS server advertised to the guest over DHCP (QEMU user-net `dns=`).
+# QEMU slirp proxies guest DNS to the host's first nameserver, which may be
+# a LAN-only resolver that answers the host (via fallbacks) but never the
+# guest. A public default keeps provisioning deterministic; override for
+# offline or filtered networks.
+VM_GUEST_DNS="${VM_GUEST_DNS:-1.1.1.1}"
+
 # Set to 1 to print what a script would do without touching the VM.
 VM_DRY_RUN="${VM_DRY_RUN:-0}"
 
@@ -71,7 +78,22 @@ export VM_ARTIFACTS_DIR VM_CACHE_DIR VM_SHARED_DIR VM_PID_FILE
 export VM_MEM VM_SMP VM_CLOUD_IMAGE_URL VM_CLOUD_IMAGE VM_OVERLAY VM_SEED_ISO
 export VM_MIN_IMAGE_GB VM_MIN_GUEST_FREE_GB VM_GUEST_PREFIX
 export VM_CLOUD_IMAGE_SHA256_URL VM_ALLOW_UNVERIFIED_IMAGE
-export VM_FPS VM_RECORDING_REMOTE VM_DRY_RUN
+# Pinned composition (opt-in; empty by default keeps shell-local behavior).
+# HX_CONFIG_PIN is "<repo-url> <full-sha>" for the HorneroOS/config pin,
+# fetched with the same discipline as hornero scripts/compose.sh (a shallow
+# fetch at the exact SHA into the harness cache). HX_MATERIALIZE_BIN points
+# at a materialize.sh directly (default: the fetched pin's script) and
+# HX_HOREROCTL_BIN at a horneroctl binary used to validate the materialized
+# root in the guest (when unset, deploy materializes via the script and
+# skips horneroctl validation with a warning). HX_MANIFEST names the
+# composition manifest recorded in the assertions report.
+HX_CONFIG_PIN="${HX_CONFIG_PIN:-}"
+HX_MATERIALIZE_BIN="${HX_MATERIALIZE_BIN:-}"
+HX_HOREROCTL_BIN="${HX_HOREROCTL_BIN:-}"
+HX_MANIFEST="${HX_MANIFEST:-shell-local}"
+
+export VM_FPS VM_RECORDING_REMOTE VM_DRY_RUN VM_GUEST_DNS
+export HX_CONFIG_PIN HX_MATERIALIZE_BIN HX_HOREROCTL_BIN HX_MANIFEST
 
 vm_is_dry_run() {
     [[ "${VM_DRY_RUN}" == "1" ]]

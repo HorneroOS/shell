@@ -23,8 +23,9 @@ if [[ "${1:-}" == "--dry-run" ]]; then
 fi
 
 if vm_is_dry_run; then
+    echo "dry-run: would pin guest DNS to ${VM_GUEST_DNS} when DHCP DNS does not resolve"
     echo "dry-run: would check guest free disk space (fail fast below ${VM_MIN_GUEST_FREE_GB} GB)"
-    echo "dry-run: would install guest packages (pacman incl. cmake + AUR quickshell)"
+    echo "dry-run: would install guest packages (pacman incl. cmake, libqalculate + AUR quickshell)"
     echo "dry-run: would enable seatd and grant seat/video/render groups"
     echo "dry-run: would write the provision marker when done"
     exit 0
@@ -34,6 +35,43 @@ vm_ssh_ready || {
     echo "error: VM SSH is not up. Run lib/boot.sh + lib/wait-ssh.sh first." >&2
     exit 1
 }
+
+echo "==> ensuring guest DNS resolves (needs ${VM_GUEST_DNS} when DHCP DNS is LAN-only)"
+if vm_ssh 'getent hosts archlinux.org > /dev/null 2>&1'; then
+    echo "==> guest DNS already resolves"
+else
+    echo "==> guest DNS broken, pinning ${VM_GUEST_DNS} (runtime plus persistent)"
+    # Remote expansions below must happen on the guest, except VM_GUEST_DNS
+    # which is a host-side harness knob baked into the drop-in. Persistence
+    # is a .d/ override on the .network file that actually manages eth0
+    # (cloud-init's 10-cloud-init-eth0.network outranks any standalone
+    # file we could add, so a standalone file would be silently ignored).
+    # shellcheck disable=SC2016
+    vm_ssh "sudo resolvectl dns eth0 ${VM_GUEST_DNS} && \
+        sudo rm -f /etc/systemd/network/10-harness-dns.network && \
+        netfile=\$(networkctl status eth0 --no-pager 2>/dev/null | awk -F': ' '/Network File:/{ print \$2 }' | xargs -r basename) && \
+        if [ -n \"\$netfile\" ]; then \
+            sudo mkdir -p /etc/systemd/network/\"\${netfile}.d\" && \
+            printf '[Network]\nDNS=${VM_GUEST_DNS}\n\n[DHCPv4]\nUseDNS=no\n' | \
+            sudo tee /etc/systemd/network/\"\${netfile}.d\"/10-harness-dns-override.conf > /dev/null; \
+        else \
+            sudo mkdir -p /etc/systemd/network && \
+            printf '[Match]\nName=eth0\n\n[Network]\nDHCP=yes\nDNS=${VM_GUEST_DNS}\n\n[DHCPv4]\nUseDNS=no\n' | \
+            sudo tee /etc/systemd/network/05-harness-dns.network > /dev/null; \
+        fi && \
+        sudo systemctl restart systemd-networkd" || true
+    for _ in $(seq 1 12); do
+        # shellcheck disable=SC2016
+        vm_ssh 'getent hosts archlinux.org > /dev/null 2>&1' && break
+        sleep 5
+    done
+    # shellcheck disable=SC2016
+    vm_ssh 'getent hosts archlinux.org > /dev/null 2>&1' || {
+        echo "error: guest DNS still broken after pinning ${VM_GUEST_DNS}" >&2
+        exit 1
+    }
+    echo "==> guest DNS resolves via ${VM_GUEST_DNS}"
+fi
 
 echo "==> checking guest free disk space (need ${VM_MIN_GUEST_FREE_GB} GB)"
 # shellcheck disable=SC2016
@@ -59,7 +97,7 @@ vm_ssh 'sudo pacman -Sy --noconfirm --needed --overwrite "/usr/lib/*" \
     grim slurp wf-recorder \
     kitty qt6-base qt6-declarative qt6-svg qt6-multimedia qt6-wayland \
     base-devel cmake git curl jq \
-    pipewire-jack aubio \
+    pipewire-jack aubio libqalculate \
     noto-fonts noto-fonts-emoji ttf-jetbrains-mono-nerd'
 
 echo "==> bootstrapping yay for AUR packages (quickshell)"

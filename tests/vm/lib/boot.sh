@@ -83,7 +83,9 @@ command -v qemu-img > /dev/null || {
     echo "error: qemu-img is required for the boot overlay (Arch: pacman -S qemu-desktop)" >&2
     exit 1
 }
-overlay_backing="$(qemu-img info --output=json "${VM_OVERLAY}" 2> /dev/null | jq -r '.["backing-filename"] // ""')"
+# A missing overlay is the normal first-boot case: qemu-img exits 1 and
+# pipefail would abort the script, so tolerate the probe failure here.
+overlay_backing="$(qemu-img info --output=json "${VM_OVERLAY}" 2> /dev/null | jq -r '.["backing-filename"] // ""' || true)"
 if [[ ! -f "${VM_OVERLAY}" || "${VM_CLOUD_IMAGE}" -nt "${VM_OVERLAY}" || "${overlay_backing}" != "${VM_CLOUD_IMAGE}" ]]; then
     echo "==> creating boot overlay with backing file ${VM_CLOUD_IMAGE}"
     rm -f "${VM_OVERLAY}"

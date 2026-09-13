@@ -14,6 +14,32 @@ Singleton {
     property bool showPreview
     property string scheme
     property string flavour
+    // Canonical first-class themes (P2 appearance tokens): hornero-dark /
+    // hornero-light are fully described by the built-in semantic tables
+    // below, so the shell is coherent before any external scheme.json
+    // arrives and switches mode without light/dark leakage.
+    property string themeId: "hornero-dark"
+
+    function isBuiltInTheme(id: string): bool {
+        return id === "hornero-dark" || id === "hornero-light";
+    }
+
+    function applyBuiltInTheme(id: string): void {
+        if (!isBuiltInTheme(id))
+            return;
+        const table = id === "hornero-light" ? _horneroLight : _horneroDark;
+        for (const [name, colour] of Object.entries(table)) {
+            const propName = name.startsWith("term") ? name : `m3${name}`;
+            if (current.hasOwnProperty(propName))
+                current[propName] = colour;
+        }
+        themeId = id;
+        scheme = id;
+        flavour = "tonal-spot";
+        currentLight = id === "hornero-light";
+        // A live built-in supersedes any wallpaper-preview palette.
+        showPreview = false;
+    }
     readonly property bool light: showPreview ? previewLight : currentLight
     property bool currentLight
     property bool previewLight
@@ -22,6 +48,162 @@ Singleton {
     readonly property M3Palette current: M3Palette {}
     readonly property M3Palette preview: M3Palette {}
     readonly property Transparency transparency: Transparency {}
+    // Canonical semantic token tables. Keys mirror scheme.json colour names
+    // (the `m3` / `term` prefix mapping matches load()). _horneroDark is
+    // byte-identical to the M3Palette defaults above; fixed colours are
+    // mode-independent per M3 and shared by both tables.
+    readonly property var _horneroDark: ({
+        "primary_paletteKeyColor": "#a8627b",
+        "secondary_paletteKeyColor": "#8e6f78",
+        "tertiary_paletteKeyColor": "#986e4c",
+        "neutral_paletteKeyColor": "#807477",
+        "neutral_variant_paletteKeyColor": "#837377",
+        "background": "#191114",
+        "onBackground": "#efdfe2",
+        "surface": "#191114",
+        "surfaceDim": "#191114",
+        "surfaceBright": "#403739",
+        "surfaceContainerLowest": "#130c0e",
+        "surfaceContainerLow": "#22191c",
+        "surfaceContainer": "#261d20",
+        "surfaceContainerHigh": "#31282a",
+        "surfaceContainerHighest": "#3c3235",
+        "onSurface": "#efdfe2",
+        "surfaceVariant": "#514347",
+        "onSurfaceVariant": "#d5c2c6",
+        "inverseSurface": "#efdfe2",
+        "inverseOnSurface": "#372e30",
+        "outline": "#9e8c91",
+        "outlineVariant": "#514347",
+        "shadow": "#000000",
+        "scrim": "#000000",
+        "surfaceTint": "#ffb0ca",
+        "primary": "#ffb0ca",
+        "onPrimary": "#541d34",
+        "primaryContainer": "#6f334a",
+        "onPrimaryContainer": "#ffd9e3",
+        "inversePrimary": "#8b4a62",
+        "secondary": "#e2bdc7",
+        "onSecondary": "#422932",
+        "secondaryContainer": "#5a3f48",
+        "onSecondaryContainer": "#ffd9e3",
+        "tertiary": "#f0bc95",
+        "onTertiary": "#48290c",
+        "tertiaryContainer": "#b58763",
+        "onTertiaryContainer": "#000000",
+        "error": "#ffb4ab",
+        "onError": "#690005",
+        "errorContainer": "#93000a",
+        "onErrorContainer": "#ffdad6",
+        "success": "#B5CCBA",
+        "onSuccess": "#213528",
+        "successContainer": "#374B3E",
+        "onSuccessContainer": "#D1E9D6",
+        "primaryFixed": "#ffd9e3",
+        "primaryFixedDim": "#ffb0ca",
+        "onPrimaryFixed": "#39071f",
+        "onPrimaryFixedVariant": "#6f334a",
+        "secondaryFixed": "#ffd9e3",
+        "secondaryFixedDim": "#e2bdc7",
+        "onSecondaryFixed": "#2b151d",
+        "onSecondaryFixedVariant": "#5a3f48",
+        "tertiaryFixed": "#ffdcc3",
+        "tertiaryFixedDim": "#f0bc95",
+        "onTertiaryFixed": "#2f1500",
+        "onTertiaryFixedVariant": "#623f21",
+        "term0": "#353434",
+        "term1": "#ff4c8a",
+        "term2": "#ffbbb7",
+        "term3": "#ffdedf",
+        "term4": "#b3a2d5",
+        "term5": "#e98fb0",
+        "term6": "#ffba93",
+        "term7": "#eed1d2",
+        "term8": "#b39e9e",
+        "term9": "#ff80a3",
+        "term10": "#ffd3d0",
+        "term11": "#fff1f0",
+        "term12": "#dcbc93",
+        "term13": "#f9a8c2",
+        "term14": "#ffd1c0",
+        "term15": "#ffffff"
+    })
+    readonly property var _horneroLight: ({
+        "primary_paletteKeyColor": "#a8627b",
+        "secondary_paletteKeyColor": "#8e6f78",
+        "tertiary_paletteKeyColor": "#986e4c",
+        "neutral_paletteKeyColor": "#807477",
+        "neutral_variant_paletteKeyColor": "#837377",
+        "background": "#fff8f8",
+        "onBackground": "#221114",
+        "surface": "#fff8f8",
+        "surfaceDim": "#e3d5d7",
+        "surfaceBright": "#fff8f8",
+        "surfaceContainerLowest": "#ffffff",
+        "surfaceContainerLow": "#faf0f1",
+        "surfaceContainer": "#f4e8e9",
+        "surfaceContainerHigh": "#eee1e2",
+        "surfaceContainerHighest": "#e8d5d7",
+        "onSurface": "#221114",
+        "surfaceVariant": "#e9dcde",
+        "onSurfaceVariant": "#504346",
+        "inverseSurface": "#372e30",
+        "inverseOnSurface": "#fdedf0",
+        "outline": "#857376",
+        "outlineVariant": "#d6c2c6",
+        "shadow": "#000000",
+        "scrim": "#000000",
+        "surfaceTint": "#8b4a62",
+        "primary": "#8b4a62",
+        "onPrimary": "#ffffff",
+        "primaryContainer": "#ffd9e3",
+        "onPrimaryContainer": "#39071f",
+        "inversePrimary": "#ffb0ca",
+        "secondary": "#71515a",
+        "onSecondary": "#ffffff",
+        "secondaryContainer": "#ffd9e3",
+        "onSecondaryContainer": "#2b151d",
+        "tertiary": "#8a5a33",
+        "onTertiary": "#ffffff",
+        "tertiaryContainer": "#ffdcc3",
+        "onTertiaryContainer": "#2f1500",
+        "error": "#ba1a1a",
+        "onError": "#ffffff",
+        "errorContainer": "#ffdad6",
+        "onErrorContainer": "#410002",
+        "success": "#406836",
+        "onSuccess": "#ffffff",
+        "successContainer": "#c2f0b9",
+        "onSuccessContainer": "#072100",
+        "primaryFixed": "#ffd9e3",
+        "primaryFixedDim": "#ffb0ca",
+        "onPrimaryFixed": "#39071f",
+        "onPrimaryFixedVariant": "#6f334a",
+        "secondaryFixed": "#ffd9e3",
+        "secondaryFixedDim": "#e2bdc7",
+        "onSecondaryFixed": "#2b151d",
+        "onSecondaryFixedVariant": "#5a3f48",
+        "tertiaryFixed": "#ffdcc3",
+        "tertiaryFixedDim": "#f0bc95",
+        "onTertiaryFixed": "#2f1500",
+        "onTertiaryFixedVariant": "#623f21",
+        "term0": "#3f3b3d",
+        "term1": "#b3261e",
+        "term2": "#2e7d32",
+        "term3": "#8a5a00",
+        "term4": "#2f6fed",
+        "term5": "#7b1fa2",
+        "term6": "#0d7d8c",
+        "term7": "#f5f0f0",
+        "term8": "#7a6f72",
+        "term9": "#e4695e",
+        "term10": "#4caf50",
+        "term11": "#c99700",
+        "term12": "#669df6",
+        "term13": "#ba68c8",
+        "term14": "#4dd0e1",
+        "term15": "#ffffff"
+    })
     // Native wallpaper analysis (issue #2, step (b)): luminance and dominant
     // colour come straight from the ImageAnalyser plugin — no CLI involved.
     readonly property alias wallLuminance: analyser.luminance
@@ -66,6 +248,8 @@ Singleton {
             root.scheme = scheme.name;
             flavour = scheme.flavour;
             currentLight = scheme.mode === "light";
+            if (root.isBuiltInTheme(scheme.name))
+                themeId = scheme.name;
             // Live scheme from disk supersedes any wallpaper-preview palette.
             showPreview = false;
         } else {

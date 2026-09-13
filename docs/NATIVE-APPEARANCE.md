@@ -67,6 +67,22 @@ is absent).
 | Wallpaper tone for translucency | `Colours.wallLuminance` (already native) plus new `wallDominantColour` |
 | Wallpaper preview tone | `WallpaperAnalysis` (`Wallpapers`) and `previewAnalyser` (`AppearancePane`) |
 
+## First-class built-in themes (P2 appearance tokens)
+
+`hornero-dark` / `hornero-light` are fully described by the canonical
+semantic tables in `services/Colours.qml` (`_horneroDark` / `_horneroLight`;
+dark is byte-identical to the compiled palette defaults, fixed colours are
+shared mode-independent per M3). `ThemePipeline.applyTheme` short-circuits
+these ids natively — no wallpaper, `wal`, or `dots-m3-colors` round-trip —
+then follows GTK color-scheme policy through `GtkSettings.applyFull` with
+an empty theme id (stays off the dots-owned registry path). The launcher
+`Themes` model always lists both first, even when the dots registry is
+absent. The default theme id lives in `config/AppearanceConfig.qml`
+(`theme: "hornero-dark"`), persisted via `serializeAppearance()` and pinned
+in `config/shell.default.json`. Switching writes the whole table, so there
+is no light/dark leakage; text pairs are covered by contrast tests in
+`tests/test_appearance_tokens.py`.
+
 ## Remaining compat adapters (with reasons)
 
 | Call site | CLI | Reason native is not yet deterministic |

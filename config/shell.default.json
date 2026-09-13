@@ -1,5 +1,6 @@
 {
   "appearance": {
+    "theme": "hornero-dark",
     "rounding": {
       "scale": 1
     },

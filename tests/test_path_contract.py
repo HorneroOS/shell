@@ -88,6 +88,8 @@ def test_consumers_read_canonical_first_with_fallback():
     notifs = (ROOT / "services" / "Notifs.qml").read_text()
     assert "stateFallback" in notifs, "Notifs.qml missing notifs.json fallback"
     assert "storageFallback" in notifs, "Notifs fallback FileView missing"
+    grid = (ROOT / "modules" / "controlcenter" / "components" / "WallpaperGrid.qml").read_text()
+    assert "scopeDataPathFallback" in grid, "WallpaperGrid.qml missing wallpapers fallback (row 11)"
 
 
 def test_fallbacks_never_written():

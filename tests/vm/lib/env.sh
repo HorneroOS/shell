@@ -29,9 +29,10 @@ VM_PID_FILE="${VM_CACHE_DIR}/qemu.pid"
 # VM sizing. Keep modest so the harness can run next to a full desktop.
 VM_MEM="${VM_MEM:-3072}"
 VM_SMP="${VM_SMP:-2}"
-# Minimum virtual disk size (GiB) for the cloud image; boot.sh grows the
-# image when qemu-img reports less. Minimum guest free space (GiB) required
-# by provision.sh before the package install starts.
+# Minimum virtual disk size (GiB) for the boot overlay; boot.sh grows the
+# overlay (never the verified base) when qemu-img reports less. Minimum
+# guest free space (GiB) required by provision.sh before the package
+# install starts.
 VM_MIN_IMAGE_GB="${VM_MIN_IMAGE_GB:-14}"
 VM_MIN_GUEST_FREE_GB="${VM_MIN_GUEST_FREE_GB:-6}"
 # User-local install prefix for the shell's native QML plugin in the guest.
@@ -42,7 +43,13 @@ if [[ -z "${VM_GUEST_PREFIX:-}" ]]; then
     VM_GUEST_PREFIX='$HOME/.local'
 fi
 VM_CLOUD_IMAGE_URL="${VM_CLOUD_IMAGE_URL:-https://geo.mirror.pkgbuild.com/images/latest/Arch-Linux-x86_64-cloudimg.qcow2}"
+# Pristine verified base image (read-only after download: never resized,
+# never attached to QEMU). Every boot runs through VM_OVERLAY below so the
+# cache stays clean and runs are reproducible (see docs/VM_TESTING.md).
 VM_CLOUD_IMAGE="${VM_CLOUD_IMAGE:-${VM_CACHE_DIR}/arch-cloudimg.qcow2}"
+# Ephemeral qcow2 overlay with the base image as its backing file. All guest
+# writes land here; delete it to reset the VM without re-downloading.
+VM_OVERLAY="${VM_OVERLAY:-${VM_CACHE_DIR}/vm-overlay.qcow2}"
 # Checksum sidecar (sha256sum format) published next to the image. Verified on
 # every run, including cached images. The mirror also publishes a GPG .sig
 # next to the image; see docs/VM_TESTING.md for optional manual verification.
@@ -61,7 +68,7 @@ VM_DRY_RUN="${VM_DRY_RUN:-0}"
 export VM_DIR SHELL_ROOT
 export VM_SSH_PORT VM_SSH_USER VM_SSH_DIR VM_SSH_KEY
 export VM_ARTIFACTS_DIR VM_CACHE_DIR VM_SHARED_DIR VM_PID_FILE
-export VM_MEM VM_SMP VM_CLOUD_IMAGE_URL VM_CLOUD_IMAGE VM_SEED_ISO
+export VM_MEM VM_SMP VM_CLOUD_IMAGE_URL VM_CLOUD_IMAGE VM_OVERLAY VM_SEED_ISO
 export VM_MIN_IMAGE_GB VM_MIN_GUEST_FREE_GB VM_GUEST_PREFIX
 export VM_CLOUD_IMAGE_SHA256_URL VM_ALLOW_UNVERIFIED_IMAGE
 export VM_FPS VM_RECORDING_REMOTE VM_DRY_RUN

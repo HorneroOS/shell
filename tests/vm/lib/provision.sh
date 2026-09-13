@@ -46,6 +46,9 @@ else
     # is a .d/ override on the .network file that actually manages eth0
     # (cloud-init's 10-cloud-init-eth0.network outranks any standalone
     # file we could add, so a standalone file would be silently ignored).
+    # Applied with `networkctl reload`, never a networkd restart: a full
+    # restart drops the DHCP lease and never recovers under QEMU slirp,
+    # while reload re-reads the drop-in on the live link.
     # shellcheck disable=SC2016
     vm_ssh "sudo resolvectl dns eth0 ${VM_GUEST_DNS} && \
         sudo rm -f /etc/systemd/network/10-harness-dns.network && \
@@ -59,7 +62,7 @@ else
             printf '[Match]\nName=eth0\n\n[Network]\nDHCP=yes\nDNS=${VM_GUEST_DNS}\n\n[DHCPv4]\nUseDNS=no\n' | \
             sudo tee /etc/systemd/network/05-harness-dns.network > /dev/null; \
         fi && \
-        sudo systemctl restart systemd-networkd" || true
+        sudo networkctl reload" || true
     for _ in $(seq 1 12); do
         # shellcheck disable=SC2016
         vm_ssh 'getent hosts archlinux.org > /dev/null 2>&1' && break

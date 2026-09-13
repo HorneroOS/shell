@@ -77,7 +77,7 @@ is absent).
 | `GtkThemeSection` / `IconThemeSection` listings | `dots-gtk-theme -p list/icons` | Native directory scan needs index.theme parsing plus de-dup across system/user roots |
 | `AppearancePane` live queries (fallback branch) | `dots-gtk-theme -p current*` | Hosts without `gsettings` |
 | `ThemePipeline` side effects | `dots-snappy-switcher`, `dots-hyprlock-theme` | Dots-owned tooling with no native equivalent |
-| `Themes.qml` loader | bare `python3 …/list-themes.py` | Pre-existing disposition-G debt, out of scope for issue #2 |
+| `Themes.qml` loader | `dots-appearance theme list` (CLI wraps the dots-owned registry; empty-model fallback when absent) | Disposition-G debt resolved track 3a: bare-`python3` dropped, registry ownership still dots-side (see `docs/GTK-PACK-OWNERSHIP.md`) |
 
 Out of scope for issue #2 (unchanged): `dots-accent-override`,
 `dots-quickshell`, `dots-wallpaper-current` / `dots-wallpaper-set`,

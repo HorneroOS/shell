@@ -16,8 +16,11 @@ defined in `docs/MIGRATION.md` §2.
    (wallpaper pointer), empty-model fallbacks (theme/scheme lists), or
    error signals (`ThemePipeline.lastError`).
 3. Appearance path is fixed: QML calls **only** `dots-gtk-theme` /
-   `dots-m3-colors`. Never `gtk-theme-manager.sh` directly, never bare
-   `python3 generate-m3-colors` (`tests/test_appearance_consistency.py`).
+   `dots-m3-colors` for GTK/M3 application, `dots-color-scheme` for scheme
+   ops, and `dots-appearance theme list` for theme-pack listing. Never
+   `gtk-theme-manager.sh` directly, never bare `python3 generate-m3-colors`,
+   never bare `python3` for theme listing
+   (`tests/test_appearance_consistency.py`).
 4. Markers: coupling points carry `TODO(hornero-compat)` pointing here.
 
 ## Per-CLI notes
@@ -35,12 +38,14 @@ defined in `docs/MIGRATION.md` §2.
 | `dots-recorder` | Recording actions no-op | `services/Recorder.qml` |
 | `dots-snappy-switcher`, `dots-hyprlock-theme` | Theme side effects skipped (`\|\| true` semantics) | `services/ThemePipeline.qml` |
 | `dots-theme-selector`, `dots-settings-gui`, `dots-lockscreen`, `dots-screenshooter`, `dots-sysupdate`, `dots-keyboard-help` | Launched actions fail silently in terminal/launcher | `SystemPane.qml`, `LauncherConfig.qml` |
-| bare `python3 …/list-themes.py` | **Debt (G)**: theme search list stays empty without the dotfiles script | `modules/launcher/services/Themes.qml` (`TODO(hornero-compat)`) |
+| `dots-appearance theme list` | Theme search list renders empty when absent (JSON-parse fallback) | `modules/launcher/services/Themes.qml` (`TODO(hornero-compat)`) |
 
 ## Debt to resolve in follow-ups
 
-- (G) `Themes.qml` loader: move theme listing behind a `dots-*` CLI (or a
-  HorneroOS-owned data source) and drop the bare-`python3` call.
+- (G, resolved track 3a) `Themes.qml` loader: theme listing moved behind the
+  `dots-appearance theme list` CLI (bare-`python3` call dropped). The
+  theme-pack registry itself is still dots-owned tooling; a HorneroOS-owned
+  data source remains a follow-up (see `docs/GTK-PACK-OWNERSHIP.md`).
 - Normalize the two legacy `$HOME/.local/bin` absolute CLI paths to bare
   names once `$PATH` guarantees hold on HorneroOS images.
 - Promote this table into versioned per-CLI contracts with the owning

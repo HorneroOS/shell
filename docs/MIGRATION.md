@@ -78,7 +78,7 @@ Dispositions:
 | `dots-screenshooter` | `modules/controlcenter/system/SystemPane.qml` | A | Launched, not embedded |
 | `dots-sysupdate` | `modules/controlcenter/system/SystemPane.qml` (via `foot -e sh -c`) | A | Terminal wrapper, optional |
 | `dots-keyboard-help` | `modules/controlcenter/system/SystemPane.qml` (`DOTS_BYPASS_QUICKSHELL=1 …`) | A | Launched, not embedded |
-| `~/.local/lib/dots/list-themes.py` via bare `python3` | `modules/launcher/services/Themes.qml` | G | Only bare-`python3` call left; `TODO(hornero-compat)` added; must move behind a `dots-*` CLI later |
+| `dots-appearance theme list` | `modules/launcher/services/Themes.qml` | A, E | Track 3a: theme-pack listing moved behind this CLI; bare-`python3` dropped. Registry ownership still dots-side (see `docs/GTK-PACK-OWNERSHIP.md`) |
 | `Paths.data/state/cache/config` (`DOTS_*_DIR` / XDG) | `utils/Paths.qml` | D | No chezmoi-managed paths; overrides via env documented in `docs/ARCHITECTURE.md` |
 | chezmoi-managed `~/Pictures/Wallpapers` symlink assumption | `modules/controlcenter/appearance/sections/ThemesSection.qml` (comment) | D | Comment reworded; runtime path is `Paths.wallsdir` (`HORNERO_WALLPAPERS_DIR` override) |
 | `notify-send "HorneroConfig"` titles | `services/ThemePipeline.qml` | D | Rebranded to `Hornero Shell` |

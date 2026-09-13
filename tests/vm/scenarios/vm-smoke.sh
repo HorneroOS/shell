@@ -155,12 +155,25 @@ vm_ssh 'cat /tmp/qs.log' > "${VM_ARTIFACTS_DIR}/logs/shell.log" 2> /dev/null || 
 
 # 8. Report --------------------------------------------------------------------
 GIT_SHA="$(git -C "${SHELL_ROOT}" rev-parse --short HEAD 2> /dev/null || echo unknown)"
+GIT_SHA_FULL="$(git -C "${SHELL_ROOT}" rev-parse HEAD 2> /dev/null || echo unknown)"
 TS="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 REC_OK=false
 [[ -n "${RECORDING}" && -s "${RECORDING}" ]] && REC_OK=true
+# Composition provenance (additive): shell-local runs record no manifest
+# and no config pin; composed runs carry both for traceability.
+HX_CONFIG_SHA="none"
+if [[ -n "${HX_CONFIG_PIN:-}" ]]; then
+    HX_CONFIG_SHA="${HX_CONFIG_PIN##* }"
+elif [[ -n "${HX_MATERIALIZE_BIN:-}" ]]; then
+    HX_CONFIG_SRC_REPORT="$(cd "$(dirname "${HX_MATERIALIZE_BIN}")/.." && pwd)"
+    HX_CONFIG_SHA="$(git -C "${HX_CONFIG_SRC_REPORT}" rev-parse HEAD 2> /dev/null || echo unknown)"
+fi
 jq -n \
     --arg ts "${TS}" \
     --arg sha "${GIT_SHA}" \
+    --arg shell_full "${GIT_SHA_FULL}" \
+    --arg manifest "${HX_MANIFEST:-shell-local}" \
+    --arg config_sha "${HX_CONFIG_SHA}" \
     --arg kernel "${KERNEL}" \
     --arg monitor "${MONITOR}" \
     --arg reserved "${RESERVED}" \
@@ -170,6 +183,11 @@ jq -n \
         timestamp: $ts,
         git_sha: $sha,
         scenario: "vm-smoke",
+        composition: {
+            manifest: $manifest,
+            shell_sha: $shell_full,
+            config_sha: $config_sha
+        },
         assertions: {
             vm_booted: true,
             ssh_accessible: true,

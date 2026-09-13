@@ -197,6 +197,23 @@ All knobs are environment variables (see `tests/vm/lib/env.sh`):
 | `VM_CACHE_DIR` | `tests/vm/cache` | Base image, overlay, seed, and pidfile |
 | `VM_DRY_RUN` | `0` | `1` prints the plan without side effects |
 | `VM_GUEST_DNS` | `1.1.1.1` | DNS server advertised to the guest over DHCP; `provision.sh` also pins it in the guest when the DHCP resolver does not answer |
+| `HX_CONFIG_PIN` | empty (shell-local) | `"<repo-url> <sha>"` HorneroOS/config pin, fetched like `hornero scripts/compose.sh`, then materialized in the guest |
+| `HX_MATERIALIZE_BIN` | empty | Direct path to a `materialize.sh` (default: the fetched pin's script) |
+| `HX_HOREROCTL_BIN` | empty | `horneroctl` binary copied to the guest for composition validation (unset: script-only materialize with a warning) |
+| `HX_MANIFEST` | `shell-local` | Manifest name recorded in the `composition` block of `assertions.json` |
+
+## Pinned composition
+
+Unset `HX_*` keeps the shell-local loop: only this checkout is deployed.
+Set `HX_CONFIG_PIN` (or `HX_MATERIALIZE_BIN`) and `deploy-shell.sh`
+additionally copies the config pin to `~/hx-config` in the guest,
+materializes it to `~/hx-root`, validates the root with `horneroctl`
+(`config paths/validate/show`, mirroring `hornero scripts/compose.sh`),
+and fails when the guest holds a personal dotfiles clone (no `~/dotfiles`
+directory, no checkout with that origin; the pin travels as a file copy,
+never a clone). `vm-smoke.sh` records the pins in the `composition`
+block (`manifest`, `shell_sha`, `config_sha`) of `assertions.json`;
+existing keys are unchanged.
 
 ## Continuous integration
 

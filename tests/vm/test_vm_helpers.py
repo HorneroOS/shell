@@ -354,6 +354,64 @@ def test_provision_dry_run_mentions_disk_precheck():
     assert "guest DNS" in proc.stdout
 
 
+def test_deploy_dry_run_without_pin_stays_shell_local():
+    proc = subprocess.run(
+        ["bash", str(LIB_DIR / "deploy-shell.sh"), "--dry-run"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "working tree to guest" in proc.stdout
+    assert "materialize the config pin" not in proc.stdout
+
+
+def test_deploy_dry_run_with_pin_mentions_composition():
+    env = dict(
+        os.environ,
+        HX_CONFIG_PIN="https://example.invalid/config 0123456789abcdef0123456789abcdef01234567",
+    )
+    proc = subprocess.run(
+        ["bash", str(LIB_DIR / "deploy-shell.sh"), "--dry-run"],
+        capture_output=True,
+        text=True,
+        check=False,
+        env=env,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "materialize the config pin" in proc.stdout
+    assert "validate the guest root with horneroctl" in proc.stdout
+    assert "refuse a guest ulises-jeremias/dotfiles clone" in proc.stdout
+
+
+def test_harness_never_clones_dotfiles():
+    # The guard in deploy-shell.sh names the repo in refusal messages;
+    # what must never exist is a git operation pointing at it.
+    for script in list(LIB_DIR.glob("*.sh")) + [SMOKE]:
+        for line in script.read_text().splitlines():
+            if "ulises-jeremias/dotfiles" in line:
+                # Refusal messages may say "clone"; git operations may not.
+                assert "git clone" not in line, (script.name, line)
+                assert "fetch" not in line, (script.name, line)
+
+
+def test_deploy_guards_guest_against_dotfiles_clone():
+    body = (LIB_DIR / "deploy-shell.sh").read_text()
+    assert ".git/config" in body
+    assert "~/dotfiles" in body
+
+
+def test_smoke_report_carries_composition_block():
+    body = SMOKE.read_text()
+    assert "composition" in body
+    assert "shell_sha" in body
+    assert "config_sha" in body
+    assert "manifest" in body
+    # Additive only: the existing report keys stay untouched.
+    assert "git_sha" in body
+    assert "screenshot_nonblank" in body
+
+
 def test_provision_repairs_guest_dns_when_broken():
     body = (LIB_DIR / "provision.sh").read_text()
     assert "getent hosts" in body

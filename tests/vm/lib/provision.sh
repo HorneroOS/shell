@@ -49,30 +49,35 @@ else
     # Applied with `networkctl reload`, never a networkd restart: a full
     # restart drops the DHCP lease and never recovers under QEMU slirp,
     # while reload re-reads the drop-in on the live link.
-    # shellcheck disable=SC2016
-    vm_ssh "sudo resolvectl dns eth0 ${VM_GUEST_DNS} && \
-        sudo rm -f /etc/systemd/network/10-harness-dns.network && \
-        netfile=\$(networkctl status eth0 --no-pager 2>/dev/null | awk -F': ' '/Network File:/{ print \$2 }' | xargs -r basename) && \
-        if [ -n \"\$netfile\" ]; then \
-            sudo mkdir -p /etc/systemd/network/\"\${netfile}.d\" && \
-            printf '[Network]\nDNS=${VM_GUEST_DNS}\n\n[DHCPv4]\nUseDNS=no\n' | \
-            sudo tee /etc/systemd/network/\"\${netfile}.d\"/10-harness-dns-override.conf > /dev/null; \
-        else \
-            sudo mkdir -p /etc/systemd/network && \
-            printf '[Match]\nName=eth0\n\n[Network]\nDHCP=yes\nDNS=${VM_GUEST_DNS}\n\n[DHCPv4]\nUseDNS=no\n' | \
-            sudo tee /etc/systemd/network/05-harness-dns.network > /dev/null; \
-        fi && \
-        sudo networkctl reload" || true
-    for _ in $(seq 1 12); do
+    # The pin itself is retried: right after SSH comes up resolved may
+    # not be ready yet, so a single-shot pin can miss and the probe loop
+    # alone would never recover (proven: no drop-in written, retries
+    # failed against the still-broken link DNS).
+    pinned=0
+    for _ in $(seq 1 6); do
         # shellcheck disable=SC2016
-        vm_ssh 'getent hosts archlinux.org > /dev/null 2>&1' && break
+        vm_ssh "sudo resolvectl dns eth0 ${VM_GUEST_DNS} && \
+            sudo rm -f /etc/systemd/network/10-harness-dns.network && \
+            netfile=\$(networkctl status eth0 --no-pager 2>/dev/null | awk -F': ' '/Network File:/{ print \$2 }' | xargs -r basename) && \
+            if [ -n \"\$netfile\" ]; then \
+                sudo mkdir -p /etc/systemd/network/\"\${netfile}.d\" && \
+                printf '[Network]\nDNS=${VM_GUEST_DNS}\n\n[DHCPv4]\nUseDNS=no\n' | \
+                sudo tee /etc/systemd/network/\"\${netfile}.d\"/10-harness-dns-override.conf > /dev/null; \
+            else \
+                sudo mkdir -p /etc/systemd/network && \
+                printf '[Match]\nName=eth0\n\n[Network]\nDHCP=yes\nDNS=${VM_GUEST_DNS}\n\n[DHCPv4]\nUseDNS=no\n' | \
+                sudo tee /etc/systemd/network/05-harness-dns.network > /dev/null; \
+            fi && \
+            sudo networkctl reload" || true
+        sleep 5
+        # shellcheck disable=SC2016
+        if vm_ssh 'getent hosts archlinux.org > /dev/null 2>&1'; then pinned=1; break; fi
         sleep 5
     done
-    # shellcheck disable=SC2016
-    vm_ssh 'getent hosts archlinux.org > /dev/null 2>&1' || {
+    if [[ "${pinned}" != 1 ]]; then
         echo "error: guest DNS still broken after pinning ${VM_GUEST_DNS}" >&2
         exit 1
-    }
+    fi
     echo "==> guest DNS resolves via ${VM_GUEST_DNS}"
 fi
 

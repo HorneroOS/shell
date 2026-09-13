@@ -9,8 +9,13 @@ import QtQuick
 Singleton {
     id: root
 
+    // Runtime path contract rows 1/11: canonical hornero/* first, legacy
+    // dots/* fallback (reads only). Writes (schemeJson output, wallpaper
+    // pointer) always target the canonical location.
     readonly property string themesDir: `${Paths.data}/themes`
+    readonly property string themesDirFallback: `${Paths.dataFallback}/themes`
     readonly property string wallpapersDir: `${Paths.data}/wallpapers`
+    readonly property string wallpapersDirFallback: `${Paths.dataFallback}/wallpapers`
     readonly property string picturesWallpapers: `${Paths.pictures}/Wallpapers`
     readonly property string wallpaperPointer: Paths.wallpaperPointer
     // Prefer dots-m3-colors so pyenv shims do not hide Arch python-materialyoucolor.
@@ -21,7 +26,9 @@ Singleton {
     // external runtime CLIs; see docs/COMPAT.md (disposition A) and
     // docs/NATIVE-APPEARANCE.md.
     readonly property string m3Bin: `${Quickshell.env("HOME")}/.local/bin/dots-m3-colors`
+    // Contract row 4: canonical scheme.json (written by m3Proc below).
     readonly property string schemeJson: `${Paths.cache}/smart-colors/scheme.json`
+    readonly property string schemeJsonFallback: `${Paths.cacheFallback}/smart-colors/scheme.json`
 
     readonly property bool busy: _busy || _queue.length > 0
     property bool _busy: false
@@ -187,6 +194,7 @@ Singleton {
             _pendingThemeId = job.themeId || "";
             themeLoader.themeId = job.themeId;
             themeLoader.wallpaperOverride = job.wallpaper || "";
+            themeLoader.fallbackRunning = false;
             themeLoader.running = true;
         } else if (job.kind === "wallpaper") {
             _pendingWallpaper = job.wallpaper;
@@ -250,8 +258,41 @@ Singleton {
         property string themeId: ""
         property string wallpaperOverride: ""
         property bool running: false
+        property bool fallbackRunning: false
         property string resolvedWallpaper: ""
         property var pendingConfig: ({})
+    }
+
+    // Shared theme.json handling for the canonical and fallback FileViews.
+    function _handleThemeText(rawText: string): void {
+        themeLoader.running = false;
+        themeLoader.fallbackRunning = false;
+
+        let cfg = {};
+        try {
+            cfg = JSON.parse(rawText);
+        } catch (e) {
+            root._finishJob(false, `invalid theme.json for ${themeLoader.themeId}`);
+            return;
+        }
+
+        themeLoader.pendingConfig = cfg;
+        root._pendingSchemeType = cfg.schemeType || "tonal-spot";
+        root._pendingDarkMode = cfg.darkMode !== undefined ? !!cfg.darkMode : true;
+        root._pendingGtkTheme = cfg.gtkTheme || "";
+        root._pendingIconTheme = cfg.iconTheme || "";
+        root._pendingThemeName = cfg.name || themeLoader.themeId;
+        root._pendingGtkPreferDark = root.resolveGtkPreferDark(cfg, root._pendingDarkMode);
+        root._pendingGtkColorScheme = root.resolveGtkColorScheme(cfg, root._pendingDarkMode);
+
+        const wp = themeLoader.wallpaperOverride;
+        if (wp) {
+            themeLoader.resolvedWallpaper = wp;
+            root._pendingWallpaper = wp;
+            root._startWalFromTheme();
+        } else {
+            resolveWallpaperProc.running = true;
+        }
     }
 
     FileView {
@@ -268,37 +309,39 @@ Singleton {
                 root._finishJob(false, `failed to read theme.json for ${themeLoader.themeId}`);
                 return;
             }
-            themeLoader.running = false;
+            root._handleThemeText(rawText);
+        }
 
-            let cfg = {};
+        onLoadFailed: err => {
+            themeLoader.running = false;
+            if (err === FileViewError.FileNotFound && !themeLoader.fallbackRunning) {
+                themeLoader.fallbackRunning = true;
+            } else {
+                root._finishJob(false, `theme.json not found for ${themeLoader.themeId}`);
+            }
+        }
+    }
+
+    // Legacy dots/* theme packs (contract row 1, fallback read only).
+    FileView {
+        id: themeFileViewFallback
+        path: themeLoader.fallbackRunning ? `${root.themesDirFallback}/${themeLoader.themeId}/theme.json` : ""
+
+        onLoaded: {
+            let rawText = "";
             try {
-                cfg = JSON.parse(rawText);
+                rawText = text();
             } catch (e) {
-                root._finishJob(false, `invalid theme.json for ${themeLoader.themeId}`);
+                console.warn("ThemePipeline: failed to read fallback theme.json for", themeLoader.themeId, e);
+                themeLoader.fallbackRunning = false;
+                root._finishJob(false, `failed to read theme.json for ${themeLoader.themeId}`);
                 return;
             }
-
-            themeLoader.pendingConfig = cfg;
-            root._pendingSchemeType = cfg.schemeType || "tonal-spot";
-            root._pendingDarkMode = cfg.darkMode !== undefined ? !!cfg.darkMode : true;
-            root._pendingGtkTheme = cfg.gtkTheme || "";
-            root._pendingIconTheme = cfg.iconTheme || "";
-            root._pendingThemeName = cfg.name || themeLoader.themeId;
-            root._pendingGtkPreferDark = root.resolveGtkPreferDark(cfg, root._pendingDarkMode);
-            root._pendingGtkColorScheme = root.resolveGtkColorScheme(cfg, root._pendingDarkMode);
-
-            const wp = themeLoader.wallpaperOverride;
-            if (wp) {
-                themeLoader.resolvedWallpaper = wp;
-                root._pendingWallpaper = wp;
-                root._startWalFromTheme();
-            } else {
-                resolveWallpaperProc.running = true;
-            }
+            root._handleThemeText(rawText);
         }
 
         onLoadFailed: {
-            themeLoader.running = false;
+            themeLoader.fallbackRunning = false;
             root._finishJob(false, `theme.json not found for ${themeLoader.themeId}`);
         }
     }
@@ -308,13 +351,14 @@ Singleton {
         command: ["sh", "-c", `
 cfg_default="$DOTS_DEFAULT"
 theme_dir="$DOTS_WALLPAPER_DIR"
-for base in "$DOTS_PIC/$theme_dir" "$DOTS_DATA/$theme_dir"; do
+// Contract row 11: canonical hornero/* wallpapers first, legacy dots/* fallback.
+for base in "$DOTS_PIC/$theme_dir" "$DOTS_DATA/$theme_dir" "$DOTS_DATA_FALLBACK/$theme_dir"; do
   if [ -n "$cfg_default" ] && [ -f "$base/$cfg_default" ]; then
     readlink -f "$base/$cfg_default"
     exit 0
   fi
 done
-for base in "$DOTS_PIC/$theme_dir" "$DOTS_DATA/$theme_dir"; do
+for base in "$DOTS_PIC/$theme_dir" "$DOTS_DATA/$theme_dir" "$DOTS_DATA_FALLBACK/$theme_dir"; do
   [ -d "$base" ] || continue
   find -L "$base" -maxdepth 1 \\( -type f -o -type l \\) \\( \
     -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.webp" \
@@ -327,7 +371,8 @@ done
             "DOTS_DEFAULT": themeLoader.pendingConfig.defaultWallpaper || "",
             "DOTS_WALLPAPER_DIR": themeLoader.pendingConfig.wallpaperDir || themeLoader.themeId,
             "DOTS_PIC": root.picturesWallpapers,
-            "DOTS_DATA": root.wallpapersDir
+            "DOTS_DATA": root.wallpapersDir,
+            "DOTS_DATA_FALLBACK": root.wallpapersDirFallback
         })
 
         stdout: StdioCollector {

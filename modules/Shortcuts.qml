@@ -121,6 +121,15 @@ Scope {
             const visibilities = Visibilities.getForActive();
             return Object.keys(visibilities).filter(k => typeof visibilities[k] === "boolean").join("\n");
         }
+
+        // Read-only: "true"/"false" for a known drawer, "" otherwise.
+        function state(drawer: string): string {
+            if (list().split("\n").includes(drawer)) {
+                const visibilities = Visibilities.getForActive();
+                return visibilities[drawer] ? "true" : "false";
+            }
+            return "";
+        }
     }
 
     IpcHandler {

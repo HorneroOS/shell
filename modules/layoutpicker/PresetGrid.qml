@@ -200,7 +200,8 @@ Item {
     StyledText {
         anchors.centerIn: parent
         visible: root.count === 0
-        text: qsTr("No presets found — check ~/.local/share/dots/shell-presets")
+        // Path contract row 2: canonical hornero/* first, legacy dots/* fallback.
+        text: qsTr("No presets found — check ~/.local/share/hornero/shell-presets")
         color: Colours.palette.m3onSurfaceVariant
     }
 

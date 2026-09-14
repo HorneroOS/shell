@@ -192,6 +192,10 @@ Singleton {
         if (job.kind === "theme") {
             _runThemeSideEffects = true;
             _pendingThemeId = job.themeId || "";
+            if (Colours.isBuiltInTheme(job.themeId || "")) {
+                root._applyBuiltInTheme(job.themeId, job.wallpaper || "");
+                return;
+            }
             themeLoader.themeId = job.themeId;
             themeLoader.wallpaperOverride = job.wallpaper || "";
             themeLoader.fallbackRunning = false;
@@ -218,6 +222,36 @@ Singleton {
         } else {
             _finishJob(false, "unknown job kind");
         }
+    }
+
+    // First-class built-in themes (hornero-dark / hornero-light): the full
+    // semantic palette lives in Colours, so apply needs no wallpaper, wal,
+    // or dots-m3-colors round-trip — correct switching with no light/dark
+    // leakage. GTK follows natively (empty themeId keeps GtkSettings off
+    // the dots-owned registry path); only the color-scheme policy applies.
+    // dots-owned extras (snappy switcher packs) are skipped for built-ins.
+    function _applyBuiltInTheme(id: string, wallpaper: string): void {
+        const darkMode = id !== "hornero-light";
+        Colours.applyBuiltInTheme(id);
+        _pendingThemeName = darkMode ? "Hornero Dark" : "Hornero Light";
+        _pendingSchemeType = "tonal-spot";
+        _pendingDarkMode = darkMode;
+        _pendingGtkTheme = "";
+        _pendingIconTheme = "";
+        _pendingGtkPreferDark = darkMode ? "true" : "false";
+        _pendingGtkColorScheme = darkMode ? "prefer-dark" : "prefer-light";
+        if (wallpaper) {
+            _pendingWallpaper = wallpaper;
+            writeWallpaperPointer.running = true;
+        }
+        hyprlockProc.running = true;
+        hyprReloadProc.running = true;
+        if (_pendingThemeName) {
+            notifyProc.themeName = _pendingThemeName;
+            notifyProc.running = true;
+        }
+        _awaitingGtk = true;
+        GtkSettings.applyFull("", "", "", _pendingGtkColorScheme, _pendingDarkMode);
     }
 
     function _finishJob(ok: bool, err: string): void {

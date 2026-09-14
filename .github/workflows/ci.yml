@@ -73,7 +73,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install pytest
-        run: pip install pytest
+        run: pip install pytest materialyoucolor==3.0.4
       - name: Test suite
         run: python3 -m pytest tests/ -q
 

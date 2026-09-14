@@ -190,6 +190,7 @@ def test_factory_values_match_code_defaults():
     bar_src = (ROOT / "config" / "BarConfig.qml").read_text()
     cases = [
         # appearance (AppearanceConfig.qml; anim literals mirror the adapter)
+        ("appearance.theme", "hornero-dark"),
         ("appearance.rounding.scale", 1),
         ("appearance.font.family.sans", "Rubik"),
         ("appearance.font.family.mono", "CaskaydiaCove NF"),

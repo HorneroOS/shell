@@ -29,6 +29,9 @@ if vm_is_dry_run; then
         echo "dry-run: would materialize the config pin (${HX_CONFIG_PIN:-override}) in the guest"
         echo "dry-run: would validate the guest root with horneroctl (${HX_HOREROCTL_BIN:-absent: script-only})"
         echo "dry-run: would refuse a guest ulises-jeremias/dotfiles clone"
+        echo "dry-run: would install factory defaults into the guest session (fresh-boot simulation)"
+        echo "dry-run: would render factory wallpapers on the host and set the dark pointer"
+        echo "dry-run: would re-install the harness Hyprland config over factory defaults"
     fi
     exit 0
 fi
@@ -202,5 +205,34 @@ printf "{}\n" > $HOME/.config/hornero/shell.json
         exit 1
     fi
     echo "==> guest composition is dotfiles-clone free"
+    echo "==> installing factory defaults into the guest session"
+    # Fresh-boot simulation: the product installer would materialize factory
+    # defaults; the harness reproduces that state (GTK dark, kitty dark,
+    # recolor, factory record) so the session shows the intentional desktop.
+    # shellcheck disable=SC2016
+    vm_ssh 'bash ~/hx-config/scripts/materialize.sh' || {
+        echo "error: guest factory install failed" >&2
+        exit 1
+    }
+    echo "==> rendering factory wallpapers and setting the dark pointer"
+    if command -v rsvg-convert > /dev/null 2>&1 && [[ -x "${HX_CONFIG_SRC}/scripts/render-brand-assets.sh" ]]; then
+        WALLS_DIR="$(mktemp -d)"
+        "${HX_CONFIG_SRC}/scripts/render-brand-assets.sh" --wallpapers "$WALLS_DIR" > /dev/null || {
+            echo "error: host wallpaper render failed" >&2
+            exit 1
+        }
+        tar cf - -C "$WALLS_DIR" . \
+            | vm_ssh 'mkdir -p ~/.local/share/hornero/wallpapers ~/.local/state/hornero/wallpaper && tar xf - -C ~/.local/share/hornero/wallpapers'
+        rm -rf "$WALLS_DIR"
+        # shellcheck disable=SC2016
+        vm_ssh 'printf "%s\n" "$HOME/.local/share/hornero/wallpapers/hornero-dark/hornero-dark-01.png" > ~/.local/state/hornero/wallpaper/path' || {
+            echo "error: guest wallpaper pointer failed" >&2
+            exit 1
+        }
+    else
+        echo "warning: rsvg-convert or render-brand-assets.sh absent; guest keeps the missing-wallpaper empty state" >&2
+    fi
+    echo "==> re-installing the harness Hyprland config over factory defaults"
+    vm_scp "${VM_DIR}/guest/hyprland.conf" "${VM_SSH_USER}@127.0.0.1:~/.config/hypr/hyprland.conf"
 fi
 echo "==> shell deployed"

@@ -382,6 +382,9 @@ def test_deploy_dry_run_with_pin_mentions_composition():
     assert "materialize the config pin" in proc.stdout
     assert "validate the guest root with horneroctl" in proc.stdout
     assert "refuse a guest ulises-jeremias/dotfiles clone" in proc.stdout
+    assert "factory defaults into the guest session" in proc.stdout
+    assert "render factory wallpapers" in proc.stdout
+    assert "harness Hyprland config over factory defaults" in proc.stdout
 
 
 def test_harness_never_clones_dotfiles():

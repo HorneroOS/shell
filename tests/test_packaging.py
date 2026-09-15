@@ -57,6 +57,20 @@ def test_documented_qml_modules_exist():
         assert uri in readme, f"{uri} not documented in packaging/README.md"
 
 
+def test_quickshell_dependency_is_stable_release():
+    # The shell must depend on the official Arch package, not the AUR VCS
+    # package: only long-stable Quickshell QML modules are used and no
+    # Quickshell C++ API is linked (verified against quickshell 0.3.1).
+    text = PKGBUILD.read_text()
+    match = re.search(r"^depends=\((.*?)\)", text, re.MULTILINE | re.DOTALL)
+    assert match, "depends array not found"
+    depends = match.group(1)
+    assert "quickshell-git" not in depends, "must not force the VCS package"
+    assert re.search(r"'quickshell>=[0-9.]+'", depends), (
+        "must pin a minimum official quickshell version"
+    )
+
+
 def test_printsrcinfo_parses():
     if shutil.which("makepkg") is None:
         pytest.skip("makepkg not available")

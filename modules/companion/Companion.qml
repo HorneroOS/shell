@@ -78,6 +78,45 @@ Singleton {
         return root.resolve(skin, animation).file;
     }
 
+    // Full animation reel for the player: every frame file plus timing,
+    // loop, and chaining metadata. Same fallback rules as resolve(), so
+    // partial skins transparently play the inlined default frames the
+    // generator wrote into the manifest. Never throws and never returns
+    // an empty reel: worst case is the single default idle frame.
+    function reel(skin: string, animation: string): var {
+        const s = root.isKnownSkin(skin) ? skin.toString() : root.defaultSkin;
+        const a = root.isKnownAnimation(animation) ? animation.toString() : root.defaultAnimation;
+        const entry = (root.skins[s] !== undefined && root.skins[s][a] !== undefined)
+            ? root.skins[s][a]
+            : null;
+        const files = [];
+        let frameMs = 900;
+        let loop = true;
+        let next = "idle";
+        if (entry !== null && Array.isArray(entry.frames) && entry.frames.length > 0) {
+            for (const frame of entry.frames) {
+                if (frame !== null && typeof frame === "object" && typeof frame.file === "string")
+                    files.push(`${root.manifestDir}/${frame.file}`);
+            }
+            if (typeof entry.frameMs === "number" && entry.frameMs > 0)
+                frameMs = entry.frameMs;
+            if (typeof entry.loop === "boolean")
+                loop = entry.loop;
+            if (typeof entry.next === "string")
+                next = entry.next;
+        }
+        if (files.length === 0)
+            files.push(`${root.manifestDir}/frames/default-idle.png`);
+        return {
+            "skin": s,
+            "animation": a,
+            "files": files,
+            "frameMs": frameMs,
+            "loop": loop,
+            "next": next
+        };
+    }
+
     function stateSource(state: string): string {
         const animation = root.assistantStates[(state ?? "").toString()] ?? root.defaultAnimation;
         return root.frameSource(root.defaultSkin, animation);

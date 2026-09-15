@@ -29,6 +29,7 @@ other HorneroOS components script against; renames must update
 | `toaster` | `modules/Shortcuts.qml` | `info/success/warn/error(title, message, icon)` |
 | `picker` | `modules/areapicker/AreaPicker.qml` | `open()`, `openFreeze()` (+ close variants per file) |
 | `lock` | `modules/lock/Lock.qml` | `lock()`, `unlock()` |
+| `companion` | `modules/companion/CompanionHost.qml` | `show()`, `hide()`, `toggle()`, `say(text, timeoutMs)`, `tip()`, `play(animation)`, `setState(state)`, `setSkin(skin)`, `resetPosition()`, `status()` |
 | `debug` | `modules/drawers/Drawers.qml` | `borders()`, `dump()` (debug only) |
 
 Drawer names accepted by `drawers toggle` are the boolean keys of
@@ -50,6 +51,17 @@ Every opening records the session sighting, so a shell reload in the
 same session never auto-reopens. The Welcome window state
 itself lives in HorneroOS/hornero (`horneroctl welcome …`); see
 `docs/adr/001-welcome.md`.
+
+`companion say <text> [timeoutMs]` shows a timed speech bubble (280
+chars max, 6 s default); `tip` shows the next Welcome-linked tip and
+also returns it; `play <animation>` one-shots a known animation
+(`idle`/`walk`/`fly`/`greet`, unknown names warn and play `idle`);
+`setState <state>` requests a behavior state (unknown states warn and
+are ignored) including the reserved future assistant states, which
+only change the animation — no backend exists behind them;
+`setSkin` keeps the current skin on unknown names; `status()` prints
+JSON (`{"enabled", "state", "skin", "animation", "suppressed",
+"bubbleOpen"}`). See `docs/COMPANION.md`.
 
 ## Global shortcuts
 

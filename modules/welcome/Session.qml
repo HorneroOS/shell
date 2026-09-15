@@ -40,11 +40,27 @@ Singleton {
 
     readonly property bool shouldAutoOpen: State.ready && root.markerKnown && State.showOnLogin && !root.markerExists && !root._noted
 
+    // The runtime marker is shell-owned ephemeral plumbing (PATH_CONTRACT
+    // row 13): `install -D` creates missing parents without a shell, and
+    // the empty file is a pure presence flag (the session rides in the
+    // name). A failed write only degrades to the in-memory guard for this
+    // process and is logged, never fatal.
     function noteAlreadySeen(): void {
         if (root._noted)
             return;
         root._noted = true;
+        markerWrite.command = ["install", "-D", "/dev/null", root.markerPath];
+        markerWrite.running = true;
         State.markSeen();
+    }
+
+    Process {
+        id: markerWrite
+
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode !== 0 || exitStatus !== 0)
+                console.warn(`[welcome] Could not write session marker ${root.markerPath} (exit ${exitCode}); in-memory guard only`);
+        }
     }
 
     FileView {

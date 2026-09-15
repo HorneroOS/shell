@@ -23,6 +23,10 @@ Singleton {
         if (p !== "" && !root.pageValid(p))
             console.warn(`[welcome] Unknown page "${page}" — opening start`);
         root.currentPage = root.pageValid(p) ? p : "start";
+        // Every opening (automatic or manual) records the session sighting,
+        // so a later shell reload in the same session never auto-reopens.
+        // Idempotent per process via Session.
+        Session.noteAlreadySeen();
         if (root._win !== null) {
             root.opened = true;
             return;
@@ -59,7 +63,8 @@ Singleton {
     function status(): var {
         return {
             open: root.opened,
-            page: root.currentPage
+            page: root.currentPage,
+            showOnLogin: State.showOnLogin
         };
     }
 }

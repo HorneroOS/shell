@@ -34,9 +34,7 @@ QtObject {
         if (!State.ready || !Session.markerKnown)
             return;
         root._done = true;
-        if (Session.shouldAutoOpen) {
-            Session.noteAlreadySeen();
+        if (Session.shouldAutoOpen)
             Welcome.open("start");
-        }
     }
 }

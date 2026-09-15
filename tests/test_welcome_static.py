@@ -86,13 +86,18 @@ def test_startup_hook_single_shot():
     startup = (WELCOME / "Startup.qml").read_text()
     assert "State.ready" in startup
     assert "Session.markerKnown" in startup
-    assert "Session.noteAlreadySeen" in startup
+    assert "Session.shouldAutoOpen" in startup
     assert 'Welcome.open("start")' in startup
     assert "_done" in startup, "startup evaluation must be single-shot"
     # The startup path itself spawns nothing and reads no CLI.
     assert "execDetached" not in startup
     assert "Process" not in startup
     assert "horneroctl" not in startup
+    # Session sighting happens inside Welcome.open() so that EVERY opening
+    # (automatic or manual) suppresses later same-session auto-opens.
+    welcome = (WELCOME / "Welcome.qml").read_text()
+    assert "Session.noteAlreadySeen" in welcome, \
+        "Welcome.open must record the session sighting"
 
 
 def test_launcher_picks_up_system_desktop_entries():

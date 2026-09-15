@@ -45,7 +45,9 @@ and opens the default pane, never crashes). `welcome open [page]`
 opens the Welcome Center (`start`, `navigate`, `shell`, `workspaces`,
 `personalize`, `tools`, `system`, `learn`; unknown pages open `start`
 with a warning); `welcome close()` closes it; `welcome status()`
-prints JSON (`{"open": bool, "page": string}`). The Welcome window state
+prints JSON (`{"open": bool, "page": string, "showOnLogin": bool}`).
+Every opening records the session sighting, so a shell reload in the
+same session never auto-reopens. The Welcome window state
 itself lives in HorneroOS/hornero (`horneroctl welcome …`); see
 `docs/adr/001-welcome.md`.
 

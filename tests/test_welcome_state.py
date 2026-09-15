@@ -189,7 +189,11 @@ def test_session_qml_guard_shape():
     assert "noteAlreadySeen" in text
     assert "showOnLogin" in text
     assert "[^A-Za-z0-9_-]" in text, "sanitize character class must match the tested mirror"
-    # No process spawning and no state writes from the guard.
+    # The guard's only process use is the queued runtime-marker writer
+    # (touch/install of a session-scoped file under $XDG_RUNTIME_DIR).
+    # No shell evaluation, no destructive commands, no horneroctl writes.
     assert "execDetached" not in text
-    assert "Process" not in text
+    assert "Process" in text, "marker write requires the queued Process writer"
+    for banned in ("rm ", "rm\"", "sudo", "sh -c", "bash -c", "eval ", "$("):
+        assert banned not in text, f"Session.qml must not run {banned!r}"
     assert "horneroctl" not in text

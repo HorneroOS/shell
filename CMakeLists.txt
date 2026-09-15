@@ -79,4 +79,7 @@ if("shell" IN_LIST ENABLE_MODULES)
     endforeach()
     install(FILES shell.qml LICENSE.GPL-3.0 NOTICE DESTINATION "${INSTALL_QSCONFDIR}")
     install(DIRECTORY presets DESTINATION "${INSTALL_QSCONFDIR}")
+    # Welcome Center launcher entry; picked up by the launcher through the
+    # system DesktopEntries service (no shell-side registration needed).
+    install(FILES assets/hornero-welcome.desktop DESTINATION "share/applications")
 endif()

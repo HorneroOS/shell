@@ -24,7 +24,8 @@ other HorneroOS components script against; renames must update
 | Target | Defined in | Functions |
 |---|---|---|
 | `drawers` | `modules/Shortcuts.qml` | `toggle(drawer)`, `list()`, `state(drawer)` |
-| `controlCenter` | `modules/Shortcuts.qml` | `open()` |
+| `controlCenter` | `modules/Shortcuts.qml` | `open([pane])` |
+| `welcome` | `modules/Shortcuts.qml` (controller `modules/welcome/Welcome.qml`) | `open([page])`, `close()`, `status()` |
 | `toaster` | `modules/Shortcuts.qml` | `info/success/warn/error(title, message, icon)` |
 | `picker` | `modules/areapicker/AreaPicker.qml` | `open()`, `openFreeze()` (+ close variants per file) |
 | `lock` | `modules/lock/Lock.qml` | `lock()`, `unlock()` |
@@ -37,6 +38,16 @@ Drawer names accepted by `drawers toggle` are the boolean keys of
 (`""` for an unknown name). Unknown names log `[IPC] Drawer "…" does not
 exist` and are ignored. Toggles for `launcher`/`session`/`dashboard` are
 suppressed while a fullscreen window has focus.
+
+`controlCenter open [pane]` deep-links into a Control Center pane
+(validated against the pane registry: an unknown pane logs a warning
+and opens the default pane, never crashes). `welcome open [page]`
+opens the Welcome Center (`start`, `navigate`, `shell`, `workspaces`,
+`personalize`, `tools`, `system`, `learn`; unknown pages open `start`
+with a warning); `welcome close()` closes it; `welcome status()`
+prints JSON (`{"open": bool, "page": string}`). The Welcome window state
+itself lives in HorneroOS/hornero (`horneroctl welcome …`); see
+`docs/adr/001-welcome.md`.
 
 ## Global shortcuts
 

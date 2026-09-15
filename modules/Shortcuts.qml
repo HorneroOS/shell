@@ -1,5 +1,6 @@
 import qs.components.misc
 import qs.modules.controlcenter
+import qs.modules.welcome
 import qs.services
 import Hornero
 import Quickshell
@@ -135,8 +136,36 @@ Scope {
     IpcHandler {
         target: "controlCenter"
 
-        function open(): void {
-            WindowFactory.create();
+        function open(pane: string): void {
+            const id = (pane ?? "").toString().trim();
+            if (id === "") {
+                WindowFactory.create();
+                return;
+            }
+            if (PaneRegistry.getById(id)) {
+                WindowFactory.create(null, {
+                    pane: id
+                });
+            } else {
+                console.warn(`[IPC] Unknown control-center pane "${id}" — opening default`);
+                WindowFactory.create();
+            }
+        }
+    }
+
+    IpcHandler {
+        target: "welcome"
+
+        function open(page: string): void {
+            Welcome.open((page ?? "").toString());
+        }
+
+        function close(): void {
+            Welcome.close();
+        }
+
+        function status(): string {
+            return JSON.stringify(Welcome.status());
         }
     }
 

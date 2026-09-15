@@ -86,3 +86,41 @@ def test_bash_syntax():
     proc = subprocess.run(["bash", "-n", str(PKGBUILD)],
                           capture_output=True, text=True, timeout=60)
     assert proc.returncode == 0, proc.stderr
+
+
+def test_no_nested_makepkg_checkout():
+    # packaging/hornero-shell/ is the named git-source checkout dir
+    # ($srcdir/<name> for "<name>::git+..."); it is gitignored and must
+    # never be committed. Guard both the working tree and the index.
+    nested = PKGDIR / "hornero-shell"
+    tracked = []
+    if shutil.which("git") is not None:
+        proc = subprocess.run(["git", "ls-files", "packaging/hornero-shell"],
+                              cwd=ROOT, capture_output=True, text=True,
+                              timeout=60)
+        if proc.returncode == 0:
+            tracked = [l for l in proc.stdout.splitlines() if l.strip()]
+    assert not tracked, f"nested checkout tracked in git: {tracked[:5]}"
+    if nested.exists():
+        assert any("hornero-shell" in line
+                   for line in (PKGDIR / ".gitignore").read_text().splitlines()), (
+            "packaging/hornero-shell/ exists on disk but is not gitignored"
+        )
+
+
+def test_welcome_desktop_entry_packaged():
+    desktop = ROOT / "assets" / "hornero-welcome.desktop"
+    assert desktop.is_file(), "assets/hornero-welcome.desktop missing"
+    entries = {}
+    for line in desktop.read_text().splitlines():
+        if "=" in line and not line.startswith("["):
+            key, _, value = line.partition("=")
+            entries[key.strip()] = value.strip()
+    assert entries.get("Type") == "Application"
+    assert entries.get("Name") == "Hornero Welcome"
+    assert entries.get("Exec") == "horneroctl welcome open"
+    assert entries.get("NoDisplay") == "false"
+    assert "Settings" in entries.get("Categories", "")
+    cmake = (ROOT / "CMakeLists.txt").read_text()
+    assert "assets/hornero-welcome.desktop" in cmake
+    assert "share/applications" in cmake

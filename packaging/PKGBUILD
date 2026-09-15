@@ -14,7 +14,7 @@ depends=(
   'pipewire'
   'qt6-base'
   'qt6-declarative'
-  'quickshell'
+  'quickshell-git'
 )
 makedepends=(
   'cmake'

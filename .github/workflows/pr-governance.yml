@@ -1,3 +1,4 @@
+---
 # Thin caller for the shared HorneroOS PR-governance engine.
 #
 # The engine lives in HorneroOS/.github (`governance/danger`) and is
@@ -15,9 +16,12 @@ name: PR governance
 
 jobs:
   governance:
-    uses: HorneroOS/.github/.github/workflows/pr-governance.yml@4e3354bcdec64196a2a516e39ce384a6bb5027d5 # governance-v1.4
+    # yamllint disable rule:line-length
+    uses: HorneroOS/.github/.github/workflows/pr-governance.yml@4e3354bcdec64196a2a516e39ce384a6bb5027d5  # governance-v1.4
+    # yamllint enable rule:line-length
     with:
-      engine-ref: 4e3354bcdec64196a2a516e39ce384a6bb5027d5 # governance-v1.4
+      # Same engine pin as `uses:` above.
+      engine-ref: 4e3354bcdec64196a2a516e39ce384a6bb5027d5
     permissions:
       contents: read
       pull-requests: write

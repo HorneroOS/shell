@@ -131,3 +131,18 @@ def test_pages_are_translatable():
         assert len(re.findall(r"qsTr\(", text)) >= 2, f"{page.name}: needs qsTr copy"
         # Titles/descriptions arrive pre-translated; cards take plain strings.
         assert "required property string title" in _read(WELCOME / "ActionCard.qml")
+
+
+def test_page_set_matches_nav():
+    stems = [p.stem for p in PAGE_FILES]
+    assert sorted(stems) == sorted(EXPECTED_PAGES), \
+        f"pages/ must be exactly {EXPECTED_PAGES}, got {stems}"
+    window = _read(WELCOME / "Window.qml")
+    assert "StubPage" not in window, "Window.qml must not reference stubs anymore"
+    stack = window.split("StackLayout", 1)[1]
+    order = re.findall(r"^\s{16}([A-Z][A-Za-z]*Page)\s*\{\s*\}", stack, re.MULTILINE)
+    assert order == EXPECTED_PAGES, f"StackLayout order must follow nav, got {order}"
+    nav_ids = re.findall(r'id:\s*"([a-z]+)"', window.split("navPages", 1)[1].split("]", 1)[0])
+    assert nav_ids == ["start", "navigate", "shell", "workspaces",
+                       "personalize", "tools", "system", "learn"]
+

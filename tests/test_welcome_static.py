@@ -31,7 +31,13 @@ def test_no_network_at_render():
 
 
 def test_only_horneroctl_spawns():
+    # State/session singletons keep the single-writer rule: any process
+    # argv they build must target horneroctl. Actions.qml owns the ONE
+    # other spawn (openTerminal, app2unit shape), covered by
+    # test_actions_allowlist_shape in test_welcome_content.py.
     for rel, text in _read_all().items():
+        if rel.name == "Actions.qml":
+            continue
         assert "execDetached" not in text, f"execDetached in {rel} (use the State writer)"
         for match in re.finditer(r"command\s*:\s*(\[.*?\])", text, re.DOTALL):
             assert "horneroctl" in match.group(1), f"non-horneroctl argv in {rel}"

@@ -26,8 +26,8 @@ FloatingWindow {
         CAnim {}
     }
 
-    // Placeholder nav entries for the foundation. Real content, icons and
-    // copy for each section land in part 2; labels stay translatable.
+    // Nav entries in StackLayout order. Labels stay translatable; page
+    // content lives in pages/*.qml and actions in Actions.qml.
     readonly property var navPages: [
         {
             id: "start",
@@ -233,41 +233,13 @@ FloatingWindow {
                 currentIndex: win.pageIndex(Welcome.currentPage)
 
                 StartPage {}
-
-                StubPage {
-                    icon: "explore"
-                    title: qsTr("Navigate")
-                }
-
-                StubPage {
-                    icon: "terminal"
-                    title: qsTr("Shell")
-                }
-
-                StubPage {
-                    icon: "dashboard"
-                    title: qsTr("Workspaces")
-                }
-
-                StubPage {
-                    icon: "palette"
-                    title: qsTr("Personalize")
-                }
-
-                StubPage {
-                    icon: "handyman"
-                    title: qsTr("Tools")
-                }
-
-                StubPage {
-                    icon: "settings"
-                    title: qsTr("System")
-                }
-
-                StubPage {
-                    icon: "school"
-                    title: qsTr("Learn")
-                }
+                NavigatePage {}
+                ShellPage {}
+                WorkspacesPage {}
+                PersonalizePage {}
+                ToolsPage {}
+                SystemPage {}
+                LearnPage {}
             }
         }
 

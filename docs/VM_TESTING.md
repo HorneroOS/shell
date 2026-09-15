@@ -134,6 +134,33 @@ Validate the harness without any hypervisor (used by CI too):
 python3 -m pytest tests/vm/ -q
 ```
 
+## Welcome scenario
+
+`./tests/vm/scenarios/vm-welcome.sh` proves the Welcome Center end to end
+on a fresh-boot simulation (state wiped, installer factory state): first
+login auto-opens on `start`, a repeat login auto-opens again, a same-session
+shell reload stays silent, `horneroctl welcome set-show-on-login false`
+survives a new login, and manual reopen (`horneroctl welcome open` plus
+`qs ipc call welcome open`) lands on the requested page. It also captures
+the dark/light/Pampa matrix by swapping `scheme.json` live
+(`tests/vm/lib/welcome-schemes.py` derives light from the built-in M3
+tables and Pampa from `profiles/themes/pampa/theme.json`; unit-tested in
+`tests/vm/test_welcome_schemes.py`).
+
+Login sessions are simulated with `XDG_SESSION_ID`, the same key the shell
+uses for its once-per-session marker. Requires the composed guest
+(`HX_MATERIALIZE_BIN` for `shortcuts.json` badges, `HX_HOREROCTL_BIN` for
+opt-out writes):
+
+```bash
+HX_MATERIALIZE_BIN=<config-checkout>/scripts/materialize.sh \
+HX_HOREROCTL_BIN=<hornero-checkout>/cli/build/horneroctl \
+./tests/vm/scenarios/vm-welcome.sh [--skip-provision]
+```
+
+`VM_CACHE_DIR` relocates the base image, overlay, seed, and SSH keys when
+the checkout lives on a small filesystem (defaults to `tests/vm/cache`).
+
 Every stage script also accepts `--dry-run` and `--help` individually.
 
 ## What is asserted

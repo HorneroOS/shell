@@ -17,7 +17,7 @@ name: PR governance
 jobs:
   governance:
     # yamllint disable rule:line-length
-    uses: HorneroOS/.github/.github/workflows/pr-governance.yml@23c634b3c5587dc336fb11dfaee4f6ad0779e300 # governance-v1.5
+    uses: HorneroOS/.github/.github/workflows/pr-governance.yml@23c634b3c5587dc336fb11dfaee4f6ad0779e300  # governance-v1.5
     # yamllint enable rule:line-length
     with:
       # Same engine pin as `uses:` above.

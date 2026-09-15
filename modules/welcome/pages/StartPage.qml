@@ -1,55 +1,25 @@
-import qs.components
-import qs.components.controls
-import qs.services
-import qs.config
 import qs.modules.welcome
-import QtQuick
-import QtQuick.Layouts
+import ".."
 
-// Start stub page: proves the nav -> content pipeline. Real copy, actions
-// and feature status arrive in part 2 (content catalog + VM scenarios).
-ColumnLayout {
-    id: root
-
-    spacing: Appearance.spacing.large
-
-    Item {
-        Layout.fillHeight: true
+PageView {
+    PageHeader {
+        icon: "waving_hand"
+        title: qsTr("Welcome to Hornero")
+        subtitle: qsTr("Your desktop is ready. Open the launcher to start anything, or take the tour below — and switch off automatic opening at the bottom whenever you like.")
     }
 
-    MaterialIcon {
-        Layout.alignment: Qt.AlignHCenter
-        text: "waving_hand"
-        color: Colours.palette.m3primary
-        font.pointSize: Appearance.font.size.large * 3
+    ActionCard {
+        icon: "explore"
+        title: qsTr("Take the tour")
+        description: qsTr("Eight short sections: navigation, shell, workspaces, look and feel, tools, system and learning.")
+        onActivated: Actions.openWelcome("navigate")
     }
 
-    StyledText {
-        Layout.alignment: Qt.AlignHCenter
-        Layout.fillWidth: true
-        text: qsTr("Welcome to Hornero")
-        font.pointSize: Appearance.font.size.large * 2
-        font.weight: 600
-        horizontalAlignment: Text.AlignHCenter
-    }
-
-    StyledText {
-        Layout.alignment: Qt.AlignHCenter
-        Layout.fillWidth: true
-        Layout.maximumWidth: 520
-        text: qsTr("Your desktop is ready. Take a short tour, or explore on your own — this window stops opening automatically as soon as you switch that off below.")
-        color: Colours.palette.m3onSurfaceVariant
-        wrapMode: Text.WordWrap
-        horizontalAlignment: Text.AlignHCenter
-    }
-
-    TextButton {
-        Layout.alignment: Qt.AlignHCenter
-        text: qsTr("Take the tour")
-        onClicked: Welcome.open("navigate")
-    }
-
-    Item {
-        Layout.fillHeight: true
+    ActionCard {
+        icon: "apps"
+        title: qsTr("Open the launcher")
+        description: qsTr("Every app, action and setting, one key away.")
+        shortcutId: "exec-launcher"
+        onActivated: Actions.openLauncher()
     }
 }

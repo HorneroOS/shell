@@ -227,3 +227,30 @@ def test_host_click_ignores_drag_release_and_contains_menu():
     assert "x: win.flipped" not in HOST
     assert "anchors.top: parent.top" not in HOST
     assert "implicitWidth: 190" in HOST
+
+
+PANE = (ROOT / "modules" / "controlcenter" / "companion" / "CompanionPane.qml").read_text()
+REGISTRY = (ROOT / "modules" / "controlcenter" / "PaneRegistry.qml").read_text()
+
+
+def test_settings_pane_registered():
+    assert '"companion"' in REGISTRY
+    assert '"companion/CompanionPane.qml"' in REGISTRY
+    # Deep link validation keeps working: unknown panes warn + default.
+    assert "PaneRegistry.getById" in (ROOT / "modules" / "Shortcuts.qml").read_text()
+
+
+def test_settings_pane_covers_every_setting():
+    # enable / character / size / idle / tips / edge / theme / reset.
+    for key in ("CompanionStore.enabled", "CompanionStore.tipsEnabled",
+                "CompanionStore.reducedMotion", "CompanionStore.sizeScale",
+                "CompanionStore.sleepMinutes", "CompanionStore.setSkin",
+                "CompanionStore.edge", "CompanionStore.bubbleTheme",
+                "CompanionStore.resetPosition", "CompanionStore.summon"):
+        assert key in PANE, f"settings pane missing {key}"
+    assert "Companion.knownSkins" in PANE
+    assert 'required property Session session' in PANE
+
+
+def test_menu_settings_opens_companion_pane():
+    assert 'pane: "companion"' in HOST

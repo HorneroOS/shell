@@ -4,24 +4,22 @@ import qs.config
 import QtQuick
 import QtQuick.Layouts
 
-// Generic placeholder for sections whose real content lands in part 2.
-// Callers pass an already-translated title (qsTr at the call site).
+// Shared hero header for Welcome pages: icon, title, subtitle.
+// Callers pass already-translated strings (qsTr at the call site).
 ColumnLayout {
     id: root
 
     required property string icon
     required property string title
+    required property string subtitle
 
-    spacing: Appearance.spacing.normal
-
-    Item {
-        Layout.fillHeight: true
-    }
+    Layout.fillWidth: true
+    spacing: Appearance.spacing.small
 
     MaterialIcon {
         Layout.alignment: Qt.AlignHCenter
         text: root.icon
-        color: Colours.palette.m3onSurfaceVariant
+        color: Colours.palette.m3primary
         font.pointSize: Appearance.font.size.large * 2
     }
 
@@ -37,14 +35,10 @@ ColumnLayout {
     StyledText {
         Layout.alignment: Qt.AlignHCenter
         Layout.fillWidth: true
-        Layout.maximumWidth: 480
-        text: qsTr("Real content for this section arrives in part 2.")
+        Layout.maximumWidth: 520
+        text: root.subtitle
         color: Colours.palette.m3onSurfaceVariant
         wrapMode: Text.WordWrap
         horizontalAlignment: Text.AlignHCenter
-    }
-
-    Item {
-        Layout.fillHeight: true
     }
 }

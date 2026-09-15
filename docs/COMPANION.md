@@ -89,7 +89,8 @@ wired in `shell.qml`):
   assistant states (`listening`/`thinking`/`acting`/`success`/
   `warning`/`error`) accepted and mapped to animations only —
   reserved for a future assistant daemon, with no backend behind
-  them today.
+  them today (see `docs/COMPANION_ASSISTANT.md` and
+  `docs/adr/002-companion-assistant-boundary.md`).
 - `CompanionHost.qml` — the overlay: hybrid frames-plus-transforms
   (idle bob, takeoff/fly/landing, landing bounce), drag with
   monitor-aware persisted position (screen-relative fractions plus

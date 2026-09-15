@@ -28,8 +28,17 @@ jobs:
           ver="${tag#v}"
           pkgbuild=packaging/PKGBUILD
           repo_url="git+https://github.com/HorneroOS/shell.git"
-          sed -i "s/^pkgver=.*/pkgver=${ver}/" "${pkgbuild}"
-          sed -i "s|${repo_url}|${repo_url}#tag=${tag}|" "${pkgbuild}"
+          # Exactly one mutation target each: fail loudly otherwise.
+          [ "$(grep -c '^pkgver=' "${pkgbuild}")" -eq 1 ]
+          [ "$(grep -Fc "${repo_url}" "${pkgbuild}")" -eq 1 ]
+          if grep -Fq '#tag=' "${pkgbuild}"; then
+            grep -Fq "${repo_url}#tag=${tag}" "${pkgbuild}" \
+              || { echo "STAMP-FAIL: already stamped with a different tag" >&2; exit 1; }
+            echo "stamp: already at ${tag}, skipping"
+          else
+            sed -i "s/^pkgver=.*/pkgver=${ver}/" "${pkgbuild}"
+            sed -i "s|${repo_url}|${repo_url}#tag=${tag}|" "${pkgbuild}"
+          fi
           grep -E '^(pkgver|source)=' "${pkgbuild}"
       - name: Publish AUR package
         # yamllint disable rule:line-length

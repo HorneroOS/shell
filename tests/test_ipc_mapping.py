@@ -40,7 +40,8 @@ def test_documented_targets_exist():
     orphans = [
         t
         for t in ("wallpaper", "appearance", "mpris", "notifs", "hypr",
-                  "gameMode", "colours", "brightness", "drawers", "lock")
+                  "gameMode", "colours", "brightness", "drawers", "lock",
+                  "welcome")
         if t not in known
     ]
     assert not orphans, f"documented IPC targets missing from QML: {orphans}"

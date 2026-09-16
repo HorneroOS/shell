@@ -254,3 +254,14 @@ def test_settings_pane_covers_every_setting():
 
 def test_menu_settings_opens_companion_pane():
     assert 'pane: "companion"' in HOST
+
+
+def test_assistant_boundary_docs():
+    mapping = (ROOT / "docs" / "COMPANION_ASSISTANT.md").read_text()
+    adr = (ROOT / "docs" / "adr" / "002-companion-assistant-boundary.md").read_text()
+    for state in FUTURE_STATES:
+        assert state in mapping, f"mapping doc missing {state}"
+        assert state in STORE, f"store missing reserved state {state}"
+    assert "presentation" in adr.lower()
+    assert "COMPANION_ASSISTANT" in adr or "assistant" in adr.lower()
+    assert "002-companion-assistant-boundary" in (ROOT / "docs" / "COMPANION.md").read_text()

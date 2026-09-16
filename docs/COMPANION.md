@@ -70,4 +70,52 @@ Image {
 `Companion.resolve(skin, animation)` returns file, anchor, anchorPx,
 frameMs, loop, next, and whether the frame fell back. A missing or
 malformed manifest degrades to the default idle frame; UI should hide
-the sprite until `Companion.ready`.
+the sprite until `Companion.ready`. `Companion.reel(skin, animation)`
+returns the full frame-file list plus timing/loop/next for the
+animation player, with the same fallback rules.
+
+## Runtime
+
+`modules/companion/` hosts exactly one companion (`CompanionHost`,
+wired in `shell.qml`):
+
+- `Player.qml` — reusable frame player on a single `Timer` core
+  (timing, loop, `finished()`, fallback frame, pause). Single-frame
+  reels never run the timer, so an idling companion costs nothing.
+- `CompanionStore.qml` — behavior state machine plus persisted
+  settings and position (`PersistentProperties`, id `companion`):
+  `hidden`/`peeking`/`entering`/`idle`/`hovering`/`talking`/
+  `excited`/`dragging`/`leaving`/`sleeping`, with the future
+  assistant states (`listening`/`thinking`/`acting`/`success`/
+  `warning`/`error`) accepted and mapped to animations only —
+  reserved for a future assistant daemon, with no backend behind
+  them today.
+- `CompanionHost.qml` — the overlay: hybrid frames-plus-transforms
+  (idle bob, takeoff/fly/landing, landing bounce), drag with
+  monitor-aware persisted position (screen-relative fractions plus
+  monitor name, following the focused monitor when unplaced),
+  speech bubble, right-click menu (tip / skin / reset / hide /
+  settings), edge-summon peek/fly-in, and sleep after a long idle
+  (default 10 min, any interaction wakes).
+- `Bubble.qml` — wrapping text, 240 px max width, edge flipping,
+  timed dismissal, `dark`/`light`/`pampa` themes (`auto` follows the
+  shell theme).
+
+Walk is a greeting motion, never locomotion: the companion only ever
+moves for takeoff/fly/landing transitions and drags — it never
+wanders on its own.
+
+Suppression (all automatic): session lock, fullscreen windows, game
+mode, and the area picker hide the companion; disabling it in
+settings unloads every surface and timer (zero cost). The window is
+an `Overlay`-layer, `Ignore`-exclusion surface with no keyboard focus
+sized to the sprite, so it never steals clicks or input. Reduced
+motion replaces bob/bounce/fly transitions with jump cuts.
+
+Control Center › Companion exposes enable, character, size,
+idle-to-sleep, tips, edge, bubble theme, summon, and position reset.
+Everything is also adjustable over IPC (`qs ipc call companion …`):
+`summon`/`hide`/`toggle`/`say`/`tip`/`play`/`setState`/`setSkin`/
+`resetPosition`/`status` — see `docs/IPC.md`. (`summon`, not `show`: an
+IPC function literally named `show` is unreachable through
+`qs ipc call` — the token is swallowed as the `ipc show` subcommand.)

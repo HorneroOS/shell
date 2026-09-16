@@ -54,6 +54,10 @@ def test_animation_mapping_covers_all_states():
 
 
 def test_store_persists_without_hand_rolled_writes():
+    # Two-layer durability (guest-proven): PersistentProperties carries
+    # in-process reloads; the versioned JSON snapshot under the canonical
+    # Paths.state root carries process restarts (upstream
+    # PersistentProperties never touches disk).
     assert "PersistentProperties" in STORE
     assert 'reloadableId: "companion"' in STORE
     for key in ("enabled", "skin", "sizeScale", "tipsEnabled", "edge",
@@ -61,6 +65,18 @@ def test_store_persists_without_hand_rolled_writes():
                 "posX", "posY", "screenName"):
         assert key in STORE, f"store missing persisted key {key}"
     assert "sanitize" in STORE
+    assert "companion/state.json" in STORE
+    assert "stateSchemaVersion" in STORE
+    assert "function serialize()" in STORE
+    assert "function restore(" in STORE
+    assert "markDirty" in STORE
+    assert "commitToStore" in (ROOT / "modules" / "companion" / "CompanionHost.qml").read_text()
+    persist = (COMPANION / "CompanionPersist.qml").read_text()
+    assert "CompanionStore.serialize()" in persist
+    assert "CompanionStore.restore(" in persist
+    assert "CompanionStore.clearDirty" in persist
+    assert "CompanionStore.adoptCurrent" in persist
+    assert "CompanionPersist" in (ROOT / "modules" / "companion" / "CompanionHost.qml").read_text()
 
 
 def test_player_single_timer_core():

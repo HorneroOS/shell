@@ -73,6 +73,10 @@ Scope {
         onTriggered: CompanionStore.checkIdle()
     }
 
+    // Restart durability for the store (snapshot file I/O lives here,
+    // never in the store itself).
+    CompanionPersist {}
+
     Variants {
         model: CompanionStore.enabled ? Quickshell.screens : []
 
@@ -116,6 +120,7 @@ Scope {
                 CompanionStore.posX = (win.px + win.sizePx / 2) / win.screenW;
                 CompanionStore.posY = (win.py + win.sizePx) / win.screenH;
                 CompanionStore.screenName = win.modelData.name;
+                CompanionStore.markDirty();
             }
 
             // Takeoff: hop to the edge, fly to the stored perch, land

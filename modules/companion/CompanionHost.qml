@@ -570,8 +570,16 @@ Scope {
     IpcHandler {
         target: "companion"
 
-        function show(): void {
-            CompanionStore.show();
+        // NOTE: this entry is `summon`, not `show`: a function literally
+        // named `show` can never be invoked through `qs ipc call`
+        // (upstream CLI quirk, guest-proven — the `show` token is
+        // swallowed as the `ipc show` subcommand and the call prints the
+        // target listing instead of dispatching; `qs ipc call companion
+        // -- show` is the only spelling that reaches it). `summon` wakes
+        // from hidden AND sleeping into the edge peek, which is the
+        // useful "show me the bird" semantic over IPC.
+        function summon(): void {
+            CompanionStore.summon();
         }
 
         function hide(): void {

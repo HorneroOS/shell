@@ -112,8 +112,10 @@ an `Overlay`-layer, `Ignore`-exclusion surface with no keyboard focus
 sized to the sprite, so it never steals clicks or input. Reduced
 motion replaces bob/bounce/fly transitions with jump cuts.
 
-Everything is adjustable at runtime — enable, skin, size,
-idle-to-sleep, tips, edge, bubble theme, position reset — and over
-IPC (`qs ipc call companion …`): `show`/`hide`/`toggle`/`say`/
-`tip`/`play`/`setState`/`setSkin`/`resetPosition`/`status` — see
-`docs/IPC.md`.
+Control Center › Companion exposes enable, character, size,
+idle-to-sleep, tips, edge, bubble theme, summon, and position reset.
+Everything is also adjustable over IPC (`qs ipc call companion …`):
+`summon`/`hide`/`toggle`/`say`/`tip`/`play`/`setState`/`setSkin`/
+`resetPosition`/`status` — see `docs/IPC.md`. (`summon`, not `show`: an
+IPC function literally named `show` is unreachable through
+`qs ipc call` — the token is swallowed as the `ipc show` subcommand.)

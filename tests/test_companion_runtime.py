@@ -19,7 +19,7 @@ BEHAVIOR_STATES = ["hidden", "peeking", "entering", "idle", "hovering",
                    "talking", "excited", "dragging", "leaving", "sleeping"]
 FUTURE_STATES = ["listening", "thinking", "acting",
                  "success", "warning", "error"]
-IPC_FNS = ["show(", "hide(", "toggle(", "say(", "tip(", "play(",
+IPC_FNS = ["summon(", "hide(", "toggle(", "say(", "tip(", "play(",
            "setState(", "setSkin(", "resetPosition("]
 
 
@@ -163,6 +163,16 @@ def test_companion_ipc_target():
         assert f"function {fn}" in HOST, f"companion IPC missing {fn}"
     doc = (ROOT / "docs" / "IPC.md").read_text()
     assert "companion" in doc, "docs/IPC.md must document the companion target"
+
+
+def test_companion_ipc_names_avoid_cli_subcommand_collision():
+    # Guest-proven: `qs ipc call companion show` never dispatches (the
+    # `show` token is swallowed as the `ipc show` subcommand). No IPC
+    # function on any target may reuse a qs subcommand name.
+    reserved = {"show", "call", "wait", "listen", "prop", "msg", "kill", "list"}
+    names = set(re.findall(r"function (\w+)\(", HOST))
+    clash = names & reserved
+    assert not clash, f"IPC names collide with qs subcommands: {clash}"
 
 
 def test_shell_wires_host():

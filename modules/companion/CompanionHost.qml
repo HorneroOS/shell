@@ -285,6 +285,12 @@ Scope {
             margins.top: win.py + Math.round(win.bobY)
             margins.left: win.px
 
+            // Explicit surface size from the content column: the layer
+            // surface ignores implicit-size changes, so popups sized only
+            // implicitly get clipped.
+            width: stack.implicitWidth
+            height: stack.implicitHeight
+
             visible: win.isMine && CompanionStore.visible
 
             Component.onCompleted: {
@@ -302,7 +308,11 @@ Scope {
                     id: bubble
 
                     visible: CompanionStore.bubbleOpen
-                    width: Math.min(maxWidth, stack.width)
+                    // Content-sized (natural width up to maxWidth, at
+                    // least the sprite width): binding to stack.width
+                    // starves the box because the window in turn sizes
+                    // from the column, clipping the sprite out.
+                    width: Math.min(bubble.maxWidth, Math.max(bubble.implicitWidth, win.sizePx))
                     text: CompanionStore.bubbleText
                     theme: win.resolvedTheme
                     flip: win.flipped
@@ -319,8 +329,14 @@ Scope {
 
                     // Peek mode: a slim on-edge sliver instead of the
                     // full sprite, so summoning never covers content.
+                    // Plain Items report zero implicit size, so mirror
+                    // the explicit size: the window sizes from the
+                    // column's implicit size and would otherwise clip
+                    // the sprite out entirely.
                     width: win.peekMode ? 28 : win.sizePx
                     height: win.sizePx
+                    implicitWidth: win.peekMode ? 28 : win.sizePx
+                    implicitHeight: win.sizePx
                     clip: true
 
                     Player {
@@ -336,8 +352,10 @@ Scope {
 
                         width: win.sizePx
                         height: win.sizePx
-                        // Peek sliver shows the edge-facing slice.
-                        x: win.peekMode ? (CompanionStore.edge === "left" ? 0 : win.sizePx - 28) : 0
+                        // Peek sliver shows the middle slice: centered
+                        // portraits stay visible while the edge-facing
+                        // slice is transparent padding on most skins.
+                        x: win.peekMode ? -Math.round((win.sizePx - 28) / 2) : 0
                         source: player.currentFrame
                         fillMode: Image.PreserveAspectFit
                         cache: true
@@ -355,10 +373,15 @@ Scope {
 
                         property int lastX: 0
                         property int lastY: 0
+                        // Set once the pointer actually moves: a
+                        // drag-release also emits clicked, which must not
+                        // misfire the excited-plus-tip path.
+                        property bool moved: false
 
                         onPressed: function (ev) {
                             if (ev.button === Qt.RightButton)
                                 return;
+                            mouse.moved = false;
                             CompanionStore.markActive();
                             if (CompanionStore.state === "peeking") {
                                 CompanionStore.summon();
@@ -374,8 +397,12 @@ Scope {
                         onPositionChanged: function (ev) {
                             if (!win.dragging)
                                 return;
-                            win.px = win.px + Math.round(ev.x - mouse.lastX);
-                            win.py = win.py + Math.round(ev.y - mouse.lastY);
+                            const dx = Math.round(ev.x - mouse.lastX);
+                            const dy = Math.round(ev.y - mouse.lastY);
+                            if (dx !== 0 || dy !== 0)
+                                mouse.moved = true;
+                            win.px = win.px + dx;
+                            win.py = win.py + dy;
                             win.clampPos();
                         }
                         onReleased: function (ev) {
@@ -395,7 +422,7 @@ Scope {
                                 return;
                             }
                             // Plain click (no drag): excited + a tip.
-                            if (!win.dragging && CompanionStore.state !== "peeking") {
+                            if (!win.dragging && !mouse.moved && CompanionStore.state !== "peeking") {
                                 CompanionStore.requestState("excited");
                                 const t = CompanionStore.tip();
                                 if (t !== "")
@@ -414,100 +441,104 @@ Scope {
                         }
                     }
                 }
-            }
 
-            // Right-click menu: tip, skin, reset, hide, settings.
-            Rectangle {
-                id: menu
+                // Right-click menu: tip, skin, reset, hide, settings.
+                // Lives inside the column (below the sprite) so the window
+                // always contains it: as a direct window child it escaped
+                // the surface bounds (negative x when flipped) and the
+                // compositor clipped its entries. Hidden menus take no
+                // space in a positioner, and the sprite never moves.
+                Rectangle {
+                    id: menu
 
-                visible: false
-                width: 190
-                height: menuCol.implicitHeight + 16
-                color: win.resolvedTheme === "light" ? "#fffdf7" : win.resolvedTheme === "pampa" ? "#faf3e3" : "#211d17"
-                border.color: win.resolvedTheme === "pampa" ? "#74acdf" : "#4a4438"
-                border.width: 1
-                radius: 10
-                anchors.top: parent.top
-                anchors.topMargin: 8
-                x: win.flipped ? -190 + win.sizePx : 0
-                z: 10
+                    visible: false
+                    width: 190
+                    height: menuCol.implicitHeight + 16
+                    implicitWidth: 190
+                    implicitHeight: menuCol.implicitHeight + 16
+                    color: win.resolvedTheme === "light" ? "#fffdf7" : win.resolvedTheme === "pampa" ? "#faf3e3" : "#211d17"
+                    border.color: win.resolvedTheme === "pampa" ? "#74acdf" : "#4a4438"
+                    border.width: 1
+                    radius: 10
+                    z: 10
 
-                function open(): void {
-                    menu.visible = true;
-                }
-                function close(): void {
-                    menu.visible = false;
-                }
-
-                function fg(): color {
-                    return win.resolvedTheme === "dark" ? "#f5f1e8" : "#201d18";
-                }
-
-                Column {
-                    id: menuCol
-
-                    anchors.fill: parent
-                    anchors.margins: 8
-                    spacing: 2
-
-                    component Entry: Text {
-                        required property string label
-                        signal chosen()
-                        width: menuCol.width
-                        leftPadding: 8
-                        rightPadding: 8
-                        topPadding: 6
-                        bottomPadding: 6
-                        text: label
-                        color: menu.fg()
-                        font.pixelSize: 13
-                        MouseArea {
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            onEntered: parent.opacity = 0.6
-                            onExited: parent.opacity = 1.0
-                            onClicked: parent.chosen()
-                        }
+                    function open(): void {
+                        menu.visible = true;
+                    }
+                    function close(): void {
+                        menu.visible = false;
                     }
 
-                    Entry {
-                        label: qsTr("Show a tip")
-                        onChosen: {
-                            menu.close();
-                            const t = CompanionStore.tip();
-                            if (t !== "")
-                                CompanionStore.say(t, 7000);
-                        }
+                    function fg(): color {
+                        return win.resolvedTheme === "dark" ? "#f5f1e8" : "#201d18";
                     }
-                    Entry {
-                        label: qsTr("Try another skin")
-                        onChosen: {
-                            menu.close();
-                            CompanionStore.nextSkin();
-                            CompanionStore.play("greet");
+
+                    Column {
+                        id: menuCol
+
+                        anchors.fill: parent
+                        anchors.margins: 8
+                        spacing: 2
+
+                        component Entry: Text {
+                            required property string label
+                            signal chosen()
+                            width: menuCol.width
+                            leftPadding: 8
+                            rightPadding: 8
+                            topPadding: 6
+                            bottomPadding: 6
+                            text: label
+                            color: menu.fg()
+                            font.pixelSize: 13
+                            MouseArea {
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onEntered: parent.opacity = 0.6
+                                onExited: parent.opacity = 1.0
+                                onClicked: parent.chosen()
+                            }
                         }
-                    }
-                    Entry {
-                        label: qsTr("Reset position")
-                        onChosen: {
-                            menu.close();
-                            CompanionStore.resetPosition();
+
+                        Entry {
+                            label: qsTr("Show a tip")
+                            onChosen: {
+                                menu.close();
+                                const t = CompanionStore.tip();
+                                if (t !== "")
+                                    CompanionStore.say(t, 7000);
+                            }
                         }
-                    }
-                    Entry {
-                        label: qsTr("Take a break")
-                        onChosen: {
-                            menu.close();
-                            CompanionStore.hide();
+                        Entry {
+                            label: qsTr("Try another skin")
+                            onChosen: {
+                                menu.close();
+                                CompanionStore.nextSkin();
+                                CompanionStore.play("greet");
+                            }
                         }
-                    }
-                    Entry {
-                        label: qsTr("Companion settings")
-                        onChosen: {
-                            menu.close();
-                            WindowFactory.create(null, {
-                                pane: "companion"
-                            });
+                        Entry {
+                            label: qsTr("Reset position")
+                            onChosen: {
+                                menu.close();
+                                CompanionStore.resetPosition();
+                            }
+                        }
+                        Entry {
+                            label: qsTr("Take a break")
+                            onChosen: {
+                                menu.close();
+                                CompanionStore.hide();
+                            }
+                        }
+                        Entry {
+                            label: qsTr("Companion settings")
+                            onChosen: {
+                                menu.close();
+                                WindowFactory.create(null, {
+                                    pane: "companion"
+                                });
+                            }
                         }
                     }
                 }

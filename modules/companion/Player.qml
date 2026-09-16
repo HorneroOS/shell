@@ -36,6 +36,11 @@ Item {
         root.frameMs = (frameMs ?? 0) > 0 ? frameMs : 900;
         root.loop = loop ?? true;
         root.restart();
+        // Single-frame (or empty) non-looping reels never run the timer,
+        // so finished() would never fire and a one-shot override would
+        // stick forever. Complete asynchronously instead.
+        if (!root.loop && root.frames.length <= 1)
+            Qt.callLater(root.finished);
     }
 
     Timer {

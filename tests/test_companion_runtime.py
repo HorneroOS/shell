@@ -142,3 +142,51 @@ def test_shell_wires_host():
     shell = (ROOT / "shell.qml").read_text()
     assert "CompanionHost" in shell
     assert "modules/companion" in shell
+
+
+def test_bubble_sizes_from_unwrapped_measure():
+    # Circular-wrap guard: the wrapped label shrinks to the bubble width,
+    # so the natural width must come from an unwrapped measure probe.
+    assert "id: measure" in BUBBLE
+    assert "measure.implicitWidth" in BUBBLE
+    assert "label.implicitWidth + 24" not in BUBBLE
+
+
+def test_store_active_animation_avoids_root_persist():
+    # `root.persist` fails at startup (TypeError) and sticks the animation.
+    m = re.search(r"activeAnimation:(.*)", STORE)
+    assert m, "store must expose activeAnimation"
+    assert "root.persist" not in m.group(1)
+
+
+def test_player_completes_single_frame_one_shots():
+    # Non-looping single-frame reels never run the timer; without an async
+    # finished() the host's one-shot override never clears.
+    assert "Qt.callLater" in PLAYER and "finished" in PLAYER
+    assert "setReel" in PLAYER
+
+
+def test_host_window_tracks_content_size():
+    # Layer surfaces ignore implicit-size changes: the window needs an
+    # explicit size bound to the content column.
+    assert "width: stack.implicitWidth" in HOST
+    assert "height: stack.implicitHeight" in HOST
+
+
+def test_host_content_sizes_without_clipping():
+    assert "Math.max(bubble.implicitWidth, win.sizePx)" in HOST
+    assert "implicitWidth: win.peekMode ? 28 : win.sizePx" in HOST
+    assert "implicitHeight: win.sizePx" in HOST
+
+
+def test_host_peek_shows_middle_slice():
+    assert "-Math.round((win.sizePx - 28) / 2)" in HOST
+
+
+def test_host_click_ignores_drag_release_and_contains_menu():
+    assert "mouse.moved" in HOST
+    # Menu lives inside the content column: no window-child anchors and no
+    # negative-x flipped placement that escapes the surface.
+    assert "x: win.flipped" not in HOST
+    assert "anchors.top: parent.top" not in HOST
+    assert "implicitWidth: 190" in HOST

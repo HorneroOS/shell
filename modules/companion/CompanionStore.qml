@@ -116,7 +116,10 @@ Singleton {
     property alias overrideAnim: persist.overrideAnim
 
     // The animation the player should show right now.
-    readonly property string activeAnimation: root.persist.overrideAnim !== "" ? root.persist.overrideAnim : root.animationFor(root.persist.state)
+    // NOTE: bare `persist` (not `root.persist`): qualified access through
+    // the Singleton root fails at startup (TypeError) and leaves the
+    // animation stuck on the fallback.
+    readonly property string activeAnimation: persist.overrideAnim !== "" ? persist.overrideAnim : root.animationFor(persist.state)
 
     function sanitize(): void {
         if (!root.isKnownState(persist.state))

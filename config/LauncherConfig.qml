@@ -32,6 +32,16 @@ JsonObject {
 
     property list<var> actions: [
         {
+            name: "Welcome",
+            icon: "waving_hand",
+            description: "Open the Hornero Welcome Center",
+            // Explicit "start": the welcome IPC handler requires its
+            // page argument (open with no args is rejected).
+            command: ["quickshell", "ipc", "call", "welcome", "open", "start"],
+            enabled: true,
+            dangerous: false
+        },
+        {
             name: "Calculator",
             icon: "calculate",
             description: "Do simple math equations (powered by Qalc)",

@@ -30,11 +30,27 @@ Scope {
 
     readonly property bool hasFullscreen: Hypr.focusedWorkspace?.toplevels.values.some(t => t.lastIpcObject.fullscreen === 2) ?? false
 
-    Binding {
-        target: CompanionStore
-        property: "suppressLocked"
-        value: root.lock !== null && root.lock !== undefined && root.lock.locked
+    // Session-lock suppression without a Binding: upstream quickshell
+    // emits lockedChanged on lock but never on unlock (guest-proven with
+    // an onLockedChanged probe), so a Binding restores never. Both edges
+    // are synced explicitly instead: lockedChanged covers locking, and
+    // the WlSessionLock unlock signal — emitted on every unlock path
+    // (IPC, shortcut, PAM) — is the restore edge.
+    function syncLocked(): void {
+        CompanionStore.suppressLocked = root.lock !== null && root.lock !== undefined && root.lock.locked;
     }
+
+    Connections {
+        target: root.lock
+        function onLockedChanged(): void {
+            root.syncLocked();
+        }
+        function onUnlock(): void {
+            CompanionStore.suppressLocked = false;
+        }
+    }
+
+    Component.onCompleted: root.syncLocked()
 
     Binding {
         target: CompanionStore

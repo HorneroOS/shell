@@ -97,6 +97,17 @@ def test_host_suppression_inputs():
         (ROOT / "modules" / "areapicker" / "AreaPicker.qml").read_text()
 
 
+def test_host_lock_suppression_restores_on_unlock_signal():
+    # Upstream quickshell emits lockedChanged on lock but never on
+    # unlock (guest-proven): the host must sync both edges explicitly
+    # and treat the WlSessionLock unlock signal as the restore edge.
+    # A Binding on lock.locked alone restores never.
+    assert "function onUnlock()" in HOST, \
+        "host must handle the unlock signal as the suppression restore edge"
+    assert "syncLocked" in HOST
+    assert "suppressLocked" in HOST
+
+
 def test_host_drag_and_persisted_position():
     assert "commitToStore" in HOST
     assert "screenName" in HOST

@@ -110,7 +110,6 @@ Item {
         required property string icon
         required property string label
         required property string action
-        required property bool destructive
 
         Layout.fillWidth: true
         radius: Appearance.rounding.normal

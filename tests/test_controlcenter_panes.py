@@ -1,0 +1,74 @@
+"""Control-center pane contract: PaneRegistry entries must resolve to real
+pane files, every registered pane must accept the shared Session, and no
+pane may invoke a retired dots-* wrapper (live config-owned CLIs like
+dots-gtk-theme stay; dead ones like dots-quickshell must not)."""
+import re
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+CC = ROOT / "modules" / "controlcenter"
+REGISTRY = CC / "PaneRegistry.qml"
+
+# Wrappers superseded by horneroctl verbs. Live config-owned CLIs
+# (dots-gtk-theme, dots-m3-colors, dots-accent-override, dots-appearance,
+# dots-night-mode, dots-wallpaper-*) are not in this list.
+DEAD_WRAPPERS = [
+    "dots-quickshell",
+    "dots-launcher",
+    "dots-power-menu",
+    "dots-clipboard",
+    "dots-snappy-switcher",
+    "dots-hypr-layout",
+    "dots-hyprland-plugins",
+    "dots-battery-monitor",
+    "dots-keyboard-help",
+    "dots-keyboard-layout",
+    "dots-lockscreen",
+    "dots-screenshooter",
+    "dots-sysupdate",
+    "dots-theme-selector",
+]
+
+
+def _registry_entries():
+    text = REGISTRY.read_text()
+    return re.findall(
+        r'readonly property string id:\s*"([^"]+)"\s*\n'
+        r'\s*readonly property string label:\s*"([^"]+)"\s*\n'
+        r'\s*readonly property string icon:\s*"([^"]+)"\s*\n'
+        r'\s*readonly property string component:\s*"([^"]+)"',
+        text,
+    )
+
+
+def test_registry_components_exist():
+    entries = _registry_entries()
+    assert entries, "no panes parsed from PaneRegistry.qml"
+    for pid, _label, _icon, component in entries:
+        assert (CC / component).is_file(), f"pane {pid}: missing {component}"
+
+
+def test_registry_ids_unique_and_labels_sane():
+    entries = _registry_entries()
+    ids = [e[0] for e in entries]
+    assert len(ids) == len(set(ids)), f"duplicate pane ids: {ids}"
+    for _pid, label, _icon, _component in entries:
+        assert re.fullmatch(r"[a-z]+", label), f"bad pane label: {label}"
+
+
+def test_registered_panes_take_shared_session():
+    for pid, _label, _icon, component in _registry_entries():
+        text = (CC / component).read_text()
+        assert "required property Session session" in text, (
+            f"pane {pid}: must declare `required property Session session`"
+        )
+
+
+def test_no_dead_wrappers_in_panes():
+    hits = []
+    for path in CC.rglob("*.qml"):
+        text = path.read_text()
+        for dead in DEAD_WRAPPERS:
+            if dead in text:
+                hits.append(f"{path.relative_to(ROOT)}: {dead}")
+    assert not hits, f"retired wrappers invoked by panes:\n" + "\n".join(hits)

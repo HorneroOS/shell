@@ -319,14 +319,14 @@ Item {
                             icon: "lock"
                             label: qsTr("Lock screen")
                             description: qsTr("Activate hyprlock immediately")
-                            action: () => root.run(["dots-lockscreen", "--lock"])
+                            action: () => root.run(["horneroctl", "lock", "now", "--yes"])
                         }
 
                         ActionTile {
                             icon: "screenshot_monitor"
                             label: qsTr("Screenshot")
                             description: qsTr("Capture the screen with selection")
-                            action: () => root.run(["dots-screenshooter"])
+                            action: () => root.run(["horneroctl", "capture", "screenshot", "--region", "--yes"])
                         }
 
                         ActionTile {
@@ -347,14 +347,14 @@ Item {
                             icon: "dark_mode"
                             label: qsTr("Night mode")
                             description: qsTr("Toggle blue-light filter")
-                            action: () => root.run(["dots-night-mode", "toggle"])
+                            action: () => root.run(["horneroctl", "appearance", "night-mode", "toggle", "--yes"])
                         }
 
                         ActionTile {
                             icon: "system_update_alt"
-                            label: qsTr("Check updates")
-                            description: qsTr("Open terminal with system update")
-                            action: () => root.run(["foot", "-e", "sh", "-c", "dots-sysupdate"])
+                            label: qsTr("System updates")
+                            description: qsTr("Pending updates and backups")
+                            action: () => Actions.openControlCenter("updates")
                         }
                     }
                 }
@@ -397,14 +397,14 @@ Item {
                             icon: "palette"
                             label: qsTr("GTK theme")
                             description: qsTr("Open Appearance to pick GTK theme and icons")
-                            action: () => root.run(["dots-theme-selector"])
+                            action: () => Actions.openControlCenter("appearance")
                         }
 
                         ActionTile {
                             icon: "keyboard"
                             label: qsTr("Keyboard shortcuts")
                             description: qsTr("Show current keybinding reference")
-                            action: () => root.run(["foot", "-e", "sh", "-c", "DOTS_BYPASS_QUICKSHELL=1 dots-keyboard-help"])
+                            action: () => root.run(["horneroctl", "hardware", "keyboard", "keys"])
                         }
                     }
                 }

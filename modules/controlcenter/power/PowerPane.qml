@@ -204,35 +204,30 @@ Item {
                     icon: "lock"
                     label: qsTr("Lock screen")
                     action: "lock"
-                    destructive: false
                 }
 
                 PowerTile {
                     icon: "logout"
                     label: qsTr("Log out")
                     action: "logout"
-                    destructive: true
                 }
 
                 PowerTile {
                     icon: "bedtime"
                     label: qsTr("Suspend")
                     action: "suspend"
-                    destructive: true
                 }
 
                 PowerTile {
                     icon: "restart_alt"
                     label: qsTr("Reboot")
                     action: "reboot"
-                    destructive: true
                 }
 
                 PowerTile {
                     icon: "power_settings_new"
                     label: qsTr("Shut down")
                     action: "shutdown"
-                    destructive: true
                 }
 
                 // ── Last action result ───────────────────────────────

@@ -124,7 +124,7 @@ Item {
 
                 Pane {
                     index: 6
-                    sourceComponent: Keys {}
+                    sourceComponent: Keybindings {}
                 }
             }
 

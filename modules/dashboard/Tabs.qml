@@ -59,6 +59,11 @@ Item {
             iconName: "dashboard_customize"
             text: qsTr("Layout")
         }
+
+        Tab {
+            iconName: "keyboard"
+            text: qsTr("Keys")
+        }
     }
 
     Item {

@@ -65,7 +65,7 @@ Dispositions:
 | native `gsettings` application | `services/GtkSettings.qml` ← `services/ThemePipeline.qml`, `AppearancePane.qml` | D | HorneroOS-native path (issue #2, step a): deterministic GTK/icon/color-scheme writes + live reads |
 | native `ImageAnalyser` analysis | `services/WallpaperAnalysis.qml`, `services/Colours.qml`, `services/Wallpapers.qml`, `AppearancePane.qml` | D | HorneroOS-native path (issue #2, step b): dominantColour/luminance without shelling out |
 | `dots-accent-override` | `modules/controlcenter/appearance/sections/ColorVariantSection.qml` | A, E | Accent set/clear |
-| `dots-quickshell` | `modules/layoutpicker/PresetGrid.qml` (`preset list/apply`) | A, C, E | Listing has local fallback data: `presets/*.json` |
+| `horneroctl shell preset list --full` / `apply --yes` | `modules/layoutpicker/PresetGrid.qml` | D | Migrated: enriched `--full` JSON feeds the grid directly; list/apply failures and stale `current` pointers fall back to the empty state / no selection (never a wrong badge) |
 | `dots-wallpaper-current` | `services/Wallpapers.qml` (`resolveProc`) | A, B | `FileView` pointer fallback keeps UI non-empty when absent |
 | `dots-wallpaper-set` | `config/LauncherConfig.qml` (random-wallpaper action) | A | Optional launcher action only |
 | `dots-night-mode` | `modules/dashboard/dash/QuickToggles.qml`, `modules/controlcenter/system/SystemPane.qml` | A | Toggle only |
@@ -126,8 +126,8 @@ Scanned before import with the repo's guard
   `GIT_REVISION` fall back to `0.0.0` / `unknown` with a warning, and
   `extras`/`plugin` entries are skipped gracefully if their directories
   are absent (they are present in this extraction).
-- `presets/*.json` are installed alongside the shell config dir so
-  `dots-quickshell preset list` has a vendored fallback dataset.
+- `presets/*.json` are installed alongside the shell config dir as the
+  dataset `horneroctl shell preset list` serves.
 - `flake.lock` is kept for reproducibility; `nix/hm-module.nix` is
   unchanged apart from provenance comments.
 

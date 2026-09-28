@@ -83,5 +83,5 @@ The shell also *spawns* processes; the stable outbound contracts are:
   (see `docs/COMPAT.md`).
 - Optional integrations: `dots-recorder start/stop/pause`,
   `dots-wallpaper-current`, `dots-wallpaper-set …`,
-  `dots-quickshell preset list/apply`, `dots-night-mode toggle`,
+  `horneroctl shell preset apply --yes`, `dots-night-mode toggle`,
   `notify-send …`, `systemctl …`, `foot -e sh -c …`.

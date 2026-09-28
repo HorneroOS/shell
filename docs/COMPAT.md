@@ -31,7 +31,7 @@ defined in `docs/MIGRATION.md` §2.
 | `dots-m3-colors` | Preview/apply colours fail the job; cached `scheme.json` still loads | `services/ThemePipeline.qml`, `services/Wallpapers.qml` |
 | `dots-color-scheme` | Scheme lists render empty; mode/variant actions no-op | `services/Colours.qml`, `services/ThemePipeline.qml` |
 | `dots-accent-override` | Accent section actions no-op | `ColorVariantSection.qml` |
-| `dots-quickshell` | `presets/*.json` vendored dataset is the fallback list | `modules/layoutpicker/PresetGrid.qml` |
+| `horneroctl` (missing/failed `shell preset list`) | Grid falls back to the empty state with the store-path hint; stale `current` pointers select nothing | `modules/layoutpicker/PresetGrid.qml` |
 | `dots-wallpaper-current` | `FileView` on `Paths.wallpaperPointer` seeds `actualCurrent` | `services/Wallpapers.qml` |
 | `dots-wallpaper-set` | Random-wallpaper launcher action no-ops | `config/LauncherConfig.qml` |
 | `dots-night-mode` | Quick-toggle action no-ops | `QuickToggles.qml`, `SystemPane.qml` |

@@ -21,7 +21,7 @@ Imported from `ulises-jeremias/dotfiles@b26db04`; see `MIGRATION.md`.
 | Helpers | `utils/` | `Paths`, `SysInfo`, `Icons`, `Images`, `Searcher`, `Strings`, `NetworkConnection`, JS (`fuzzysort.js`, `fzf.js`) |
 | Assets | `assets/` | Logo, gifs, shaders, `wrap_term_launch.sh`, `pam.d/` samples |
 | Native | `plugin/`, `extras/` | `Hornero` QML plugin (C++: image analysis, audio, calculator, models) + `version` helper |
-| Data | `presets/` | 11 vendored layout presets (fallback for `dots-quickshell preset list`) |
+| Data | `presets/` | 11 vendored layout presets (installed alongside the shell; the dataset `horneroctl shell preset list` serves) |
 
 ## Runtime / config path model
 

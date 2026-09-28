@@ -5,10 +5,12 @@ import "../components"
 import qs.components
 import qs.components.controls
 import qs.components.containers
+import qs.components.effects
 import qs.services
 import qs.config
 import Quickshell
 import Quickshell.Io
+import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
 
@@ -242,5 +244,12 @@ Item {
                 }
             }
         }
+    }
+
+    InnerBorder {
+        id: border
+
+        leftThickness: 0
+        rightThickness: Appearance.padding.normal
     }
 }

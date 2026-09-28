@@ -5,10 +5,12 @@ import "../components"
 import qs.components
 import qs.components.controls
 import qs.components.containers
+import qs.components.effects
 import qs.services
 import qs.config
 import Quickshell
 import Quickshell.Io
+import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
 
@@ -29,6 +31,11 @@ Item {
     property string updatesError: ""
     property string backupsError: ""
     property var backupList: []
+    // The CLI exits nonzero on empty/error states it already reports as
+    // JSON (ok:false + message): stdout wins over the exit code, so a
+    // an answered query never shows a spurious "(exit N)" error.
+    property bool updatesAnswered: false
+    property bool backupsAnswered: false
     property bool busy: false
     property string lastAction: ""
     property string lastResult: ""
@@ -49,6 +56,8 @@ Item {
             return;
         root.updatesError = "";
         root.backupsError = "";
+        root.updatesAnswered = false;
+        root.backupsAnswered = false;
         updatesProc.running = true;
         backupsProc.running = true;
     }
@@ -77,6 +86,7 @@ Item {
         stdout: StdioCollector {
             onStreamFinished: {
                 const env = root.envelope(text);
+                root.updatesAnswered = env !== null;
                 if (!env || env.ok !== true) {
                     root.updatesError = (env && env.message) ? env.message : qsTr("Could not read pending updates.");
                     root.pendingCount = -1;
@@ -92,7 +102,7 @@ Item {
             }
         }
         onExited: (exitCode, exitStatus) => {
-            if (exitCode !== 0 || exitStatus !== 0) {
+            if ((exitCode !== 0 || exitStatus !== 0) && !root.updatesAnswered) {
                 root.updatesError = qsTr("Update check failed (exit %1).").arg(exitCode);
                 root.pendingCount = -1;
             }
@@ -106,6 +116,7 @@ Item {
         stdout: StdioCollector {
             onStreamFinished: {
                 const env = root.envelope(text);
+                root.backupsAnswered = env !== null;
                 if (!env || env.ok !== true) {
                     // No backups yet is a state, not an error: the CLI says
                     // so in message, and the empty state below explains it.
@@ -118,7 +129,7 @@ Item {
             }
         }
         onExited: (exitCode, exitStatus) => {
-            if (exitCode !== 0 || exitStatus !== 0)
+            if ((exitCode !== 0 || exitStatus !== 0) && !root.backupsAnswered)
                 root.backupsError = qsTr("Backup list failed (exit %1).").arg(exitCode);
         }
     }
@@ -235,8 +246,7 @@ Item {
                     title: qsTr("Pending packages (%1)").arg(root.pendingList.length)
 
                     ColumnLayout {
-                        anchors.left: parent.left
-                        anchors.right: parent.right
+                        Layout.fillWidth: true
                         spacing: 2
 
                         Repeater {
@@ -337,5 +347,12 @@ Item {
                 }
             }
         }
+    }
+
+    InnerBorder {
+        id: border
+
+        leftThickness: 0
+        rightThickness: Appearance.padding.normal
     }
 }

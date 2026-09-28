@@ -121,6 +121,11 @@ Item {
                     index: 5
                     sourceComponent: LayoutPickerView {}
                 }
+
+                Pane {
+                    index: 6
+                    sourceComponent: Keys {}
+                }
             }
 
             Behavior on contentX {

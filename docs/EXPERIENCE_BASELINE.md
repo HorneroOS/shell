@@ -24,9 +24,11 @@ updates, vpn.
 
 Settings is a **floating Hyprland window** (`org.quickshell`, title
 "Hornero Settings - \<Pane\>"), not a layer-shell drawer. Closed via WM
-close (`hyprctl dispatch closewindow 'title:Hornero Settings.*'`). There
-is **no IPC close** for it, and `ControlCenter.qml close()` is an empty
-stub (see §5.1).
+close (`hyprctl dispatch closewindow 'title:Hornero Settings.*'`),
+`Escape` (window shortcut), or `qs ipc call controlCenter close`
+(`WindowFactory.closeAll`). The dead empty `ControlCenter.qml close()`
+stub was removed; the real close path is `WindowFactory` plus
+`FloatingWindow` teardown.
 
 ## 2. Baseline screenshot set
 
@@ -106,6 +108,12 @@ providers, dock layouts, copying any bar/sidebar geometry.
 ## 5. UX problems (evidence-backed, with reproduction)
 
 ### 5.1 Settings has no programmatic close; `close()` is a stub
+
+> **Fixed** (slice: companion yield PR, `WindowFactory` suppression
+> work): `qs ipc call controlCenter close` dismisses via
+> `WindowFactory.closeAll`, `Escape` closes the window, and the dead
+> empty `ControlCenter.qml close()` stub was removed. Original finding
+> kept below for the record.
 
 `ControlCenter.qml:28` — `function close(): void {}` (empty). The only IPC
 verb is `controlCenter open <pane>`. Dismissal today requires WM close

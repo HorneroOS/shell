@@ -32,8 +32,14 @@ Singleton {
         const open = windows;
         windows = [];
         for (let i = 0; i < open.length; ++i) {
-            if (open[i])
-                open[i].destroy();
+            // Tracked refs can outlive their window across engine reloads
+            // or teardown; never let a dead ref break the close path.
+            try {
+                if (open[i])
+                    open[i].destroy();
+            } catch (e) {
+                console.warn(`[WindowFactory] dropping dead settings window: ${e}`);
+            }
         }
     }
 

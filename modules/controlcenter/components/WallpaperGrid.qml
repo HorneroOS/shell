@@ -319,7 +319,7 @@ Item {
             anchors.rightMargin: Appearance.padding.normal + Appearance.spacing.normal / 2
             anchors.bottomMargin: Appearance.padding.normal
 
-            text: modelData.name
+            text: Strings.wallpaperDisplayName(modelData.name)
             font.pointSize: Appearance.font.size.smaller
             font.weight: 500
             color: isCurrent ? Colours.palette.m3primary : Colours.palette.m3onSurface

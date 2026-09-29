@@ -79,13 +79,6 @@ StyledRect {
         }
     }
 
-    function basename(path: string): string {
-        if (!path)
-            return "";
-        const parts = path.split("/");
-        return parts[parts.length - 1] || path;
-    }
-
     function gtkThumbnailCandidates(theme: string): var {
         if (!theme || theme === "auto")
             return [];
@@ -341,7 +334,7 @@ StyledRect {
                                 visible: !!root.wallpaperLabel || !!root.wallpaperPath
                                 icon: "wallpaper"
                                 label: qsTr("Wallpaper")
-                                value: root.wallpaperLabel || root.basename(root.wallpaperPath)
+                                value: root.wallpaperLabel || Strings.wallpaperDisplayName(root.wallpaperPath)
                             }
                         }
 
@@ -384,7 +377,7 @@ StyledRect {
                             RecipeRow {
                                 icon: "wallpaper"
                                 label: qsTr("Default wallpaper")
-                                value: root.wallpaperLabel || root.basename(root.wallpaperPath) || "—"
+                                value: root.wallpaperLabel || Strings.wallpaperDisplayName(root.wallpaperPath) || "—"
                             }
 
                             RecipeRow {

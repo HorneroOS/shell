@@ -24,7 +24,7 @@ other HorneroOS components script against; renames must update
 | Target | Defined in | Functions |
 |---|---|---|
 | `drawers` | `modules/Shortcuts.qml` | `toggle(drawer)`, `list()`, `state(drawer)` |
-| `controlCenter` | `modules/Shortcuts.qml` | `open([pane])` |
+| `controlCenter` | `modules/Shortcuts.qml` | `open([pane])`, `close()` |
 | `welcome` | `modules/Shortcuts.qml` (controller `modules/welcome/Welcome.qml`) | `open([page])`, `close()`, `status()` |
 | `toaster` | `modules/Shortcuts.qml` | `info/success/warn/error(title, message, icon)` |
 | `picker` | `modules/areapicker/AreaPicker.qml` | `open()`, `openFreeze()` (+ close variants per file) |
@@ -47,6 +47,12 @@ opens the Welcome Center (`start`, `navigate`, `shell`, `workspaces`,
 `personalize`, `tools`, `system`, `learn`, `shortcuts`; unknown pages open `start`
 with a warning); `welcome close()` closes it; `welcome status()`
 prints JSON (`{"open": bool, "page": string, "showOnLogin": bool}`).
+`controlCenter close()` destroys every open Settings window (a no-op when
+none is open). Repeated `controlCenter open` calls reuse the single
+window and switch its pane instead of stacking duplicates, and the
+`controlCenter` custom shortcut toggles the window. The floating window
+also closes on `Escape`.
+
 Every opening records the session sighting, so a shell reload in the
 same session never auto-reopens. The Welcome window state
 itself lives in HorneroOS/hornero (`horneroctl welcome …`); see

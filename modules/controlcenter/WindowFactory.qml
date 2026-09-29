@@ -9,8 +9,40 @@ import QtQuick
 Singleton {
     id: root
 
+    // Tracked floating Settings windows. IPC `controlCenter close`
+    // destroys all of them; `create` reuses the first one so repeated
+    // opens never stack duplicate windows.
+    property var windows: []
+
     function create(parent: Item, props: var): void {
-        controlCenter.createObject(parent ?? dummy, props);
+        prune();
+        if (windows.length > 0) {
+            const existing = windows[0];
+            const pane = props?.pane?.toString() ?? "";
+            if (pane !== "" && PaneRegistry.getById(pane))
+                existing.active = pane;
+            return;
+        }
+        const win = controlCenter.createObject(parent ?? dummy, props);
+        if (win)
+            windows.push(win);
+    }
+
+    function closeAll(): void {
+        const open = windows;
+        windows = [];
+        for (let i = 0; i < open.length; ++i) {
+            if (open[i])
+                open[i].destroy();
+        }
+    }
+
+    function forget(win: Item): void {
+        windows = windows.filter(w => w && w !== win);
+    }
+
+    function prune(): void {
+        windows = windows.filter(w => w);
     }
 
     QtObject {
@@ -39,6 +71,16 @@ Singleton {
             onVisibleChanged: {
                 if (!visible)
                     destroy();
+            }
+
+            Component.onDestruction: root.forget(win)
+
+            // Keyboard round-trip: Escape dismisses Settings, matching
+            // the Welcome window precedent.
+            Shortcut {
+                sequences: ["Escape"]
+                context: Qt.WindowShortcut
+                onActivated: win.destroy()
             }
 
             implicitWidth: cc.implicitWidth

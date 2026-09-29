@@ -14,8 +14,13 @@ Scope {
 
     CustomShortcut {
         name: "controlCenter"
-        description: "Open control center"
-        onPressed: WindowFactory.create()
+        description: "Toggle control center"
+        onPressed: {
+            if (WindowFactory.windows.length > 0)
+                WindowFactory.closeAll();
+            else
+                WindowFactory.create();
+        }
     }
 
     CustomShortcut {
@@ -150,6 +155,10 @@ Scope {
                 console.warn(`[IPC] Unknown control-center pane "${id}" — opening default`);
                 WindowFactory.create();
             }
+        }
+
+        function close(): void {
+            WindowFactory.closeAll();
         }
     }
 

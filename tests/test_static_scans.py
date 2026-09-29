@@ -42,3 +42,31 @@ def test_licensing_intact():
     assert "caelestia-dots/shell" in notice
     assert "HorneroOS modifications" in notice or "HorneroOS" in notice
     assert (ROOT / "docs" / "MIGRATION.md").exists()
+
+
+def test_no_undefined_per_area_saveconfig():
+    """Config areas expose no saveConfig(); the only writer is Config.save().
+
+    Regression: NotificationsPane called Config.notifs/utilities.saveConfig(),
+    which do not exist, so those toggles threw at runtime and never persisted.
+    """
+    import re
+    hits = []
+    for p in _code_files():
+        if p.suffix != ".qml":
+            continue
+        for i, line in enumerate(p.read_text(errors="ignore").splitlines(), 1):
+            if re.search(r"Config\.\w+\.saveConfig\(\)", line):
+                hits.append(f"{p.relative_to(ROOT)}:{i}")
+    assert not hits, f"calls to undefined per-area saveConfig(): {hits}"
+
+
+def test_lock_notifdock_hides_content():
+    """The lock-screen notification list must be gated on hideNotifs.
+
+    Regression: NotifDock rendered full summary+body pre-auth while
+    Config.lock.hideNotifs only changed the empty-state label.
+    """
+    dock = (ROOT / "modules" / "lock" / "NotifDock.qml").read_text()
+    assert "hideNotifs" in dock, "NotifDock must consult Config.lock.hideNotifs"
+    assert "visible: !root.contentHidden" in dock, "lock list must hide with the flag"

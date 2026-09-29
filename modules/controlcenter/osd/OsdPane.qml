@@ -81,7 +81,7 @@ Item {
                             checked: Config.osd.enabled
                             onToggled: checked => {
                                 Config.osd.enabled = checked;
-                                Config.osd.saveConfig();
+                                Config.save();
                             }
                         }
 
@@ -90,7 +90,7 @@ Item {
                             checked: Config.osd.enableBrightness
                             onToggled: checked => {
                                 Config.osd.enableBrightness = checked;
-                                Config.osd.saveConfig();
+                                Config.save();
                             }
                         }
 
@@ -99,7 +99,7 @@ Item {
                             checked: Config.osd.enableMicrophone
                             onToggled: checked => {
                                 Config.osd.enableMicrophone = checked;
-                                Config.osd.saveConfig();
+                                Config.save();
                             }
                         }
                     }
@@ -141,7 +141,7 @@ Item {
                             parseValueFunction: text => parseInt(text)
                             onValueModified: val => {
                                 Config.osd.hideDelay = Math.round(val);
-                                Config.osd.saveConfig();
+                                Config.save();
                             }
                         }
                     }
@@ -183,7 +183,7 @@ Item {
                             parseValueFunction: text => parseInt(text)
                             onValueModified: val => {
                                 Config.osd.sizes.sliderWidth = Math.round(val);
-                                Config.osd.saveConfig();
+                                Config.save();
                             }
                         }
 
@@ -204,7 +204,7 @@ Item {
                             parseValueFunction: text => parseInt(text)
                             onValueModified: val => {
                                 Config.osd.sizes.sliderHeight = Math.round(val);
-                                Config.osd.saveConfig();
+                                Config.save();
                             }
                         }
                     }

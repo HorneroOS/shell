@@ -20,9 +20,13 @@ ColumnLayout {
 
     spacing: Appearance.spacing.smaller
 
+    // Privacy boundary: while locked, notification bodies stay hidden and
+    // even the count is withheld — only the neutral placeholder shows.
+    readonly property bool contentHidden: Config.lock.hideNotifs
+
     StyledText {
         Layout.fillWidth: true
-        text: Notifs.list.length > 0 ? qsTr("%1 notification%2").arg(Notifs.list.length).arg(Notifs.list.length === 1 ? "" : "s") : qsTr("Notifications")
+        text: !root.contentHidden && Notifs.list.length > 0 ? qsTr("%1 notification%2").arg(Notifs.list.length).arg(Notifs.list.length === 1 ? "" : "s") : qsTr("Notifications")
         color: Colours.palette.m3outline
         font.family: Appearance.font.family.mono
         font.weight: 500
@@ -41,7 +45,7 @@ ColumnLayout {
         Loader {
             anchors.centerIn: parent
             active: opacity > 0
-            opacity: Notifs.list.length > 0 ? 0 : 1
+            opacity: root.contentHidden || Notifs.list.length === 0 ? 1 : 0
 
             sourceComponent: ColumnLayout {
                 spacing: Appearance.spacing.large
@@ -79,6 +83,7 @@ ColumnLayout {
         StyledListView {
             anchors.fill: parent
 
+            visible: !root.contentHidden
             spacing: Appearance.spacing.small
             clip: true
 

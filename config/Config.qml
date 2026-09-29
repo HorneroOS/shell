@@ -419,6 +419,7 @@ Singleton {
     function serializeLock(): var {
         return {
             recolourLogo: lock.recolourLogo,
+            hideNotifs: lock.hideNotifs,
             enableFprint: lock.enableFprint,
             maxFprintTries: lock.maxFprintTries,
             sizes: {

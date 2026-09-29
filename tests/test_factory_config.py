@@ -256,6 +256,7 @@ def test_factory_values_match_code_defaults():
         ("session.sizes.button", 80),
         ("winfo.sizes.detailsWidth", 500),
         ("lock.maxFprintTries", 3),
+        ("lock.hideNotifs", True),
         ("lock.sizes.centerWidth", 600),
         ("utilities.maxToasts", 4),
         ("utilities.toasts.nowPlaying", False),

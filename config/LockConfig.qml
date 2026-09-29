@@ -2,7 +2,9 @@ import Quickshell.Io
 
 JsonObject {
     property bool recolourLogo: false
-    property bool hideNotifs: false
+    // Privacy default: lock screen shows the notification placeholder,
+    // never bodies. Reversible in Settings > Notifications.
+    property bool hideNotifs: true
     property bool enableFprint: true
     property int maxFprintTries: 3
     property Sizes sizes: Sizes {}

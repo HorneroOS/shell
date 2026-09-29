@@ -3,6 +3,7 @@ import qs.components.effects
 import qs.components.images
 import qs.services
 import qs.config
+import qs.utils
 import Hornero.Models
 import Quickshell
 import QtQuick
@@ -82,9 +83,9 @@ Item {
 
         width: image.width - Appearance.padding.normal * 2
         horizontalAlignment: Text.AlignHCenter
-        elide: Text.ElideRight
+        elide: Text.ElideMiddle
         renderType: Text.QtRendering
-        text: root.modelData.relativePath
+        text: Strings.wallpaperDisplayName(root.modelData.name)
         font.pointSize: Appearance.font.size.normal
     }
 

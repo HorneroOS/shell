@@ -85,4 +85,7 @@ if("shell" IN_LIST ENABLE_MODULES)
     # Welcome Center launcher entry; picked up by the launcher through the
     # system DesktopEntries service (no shell-side registration needed).
     install(FILES assets/hornero-welcome.desktop DESTINATION "share/applications")
+    # Brand icon for the entry above; Icon=hornero-welcome in the .desktop.
+    install(FILES assets/logo.svg DESTINATION "share/icons/hicolor/scalable/apps"
+        RENAME hornero-welcome.svg)
 endif()

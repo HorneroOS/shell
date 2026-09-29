@@ -67,13 +67,13 @@ Dispositions:
 | `dots-accent-override` | `modules/controlcenter/appearance/sections/ColorVariantSection.qml` | A, E | Accent set/clear |
 | `horneroctl shell preset list --full` / `apply --yes` | `modules/layoutpicker/PresetGrid.qml` | D | Migrated: enriched `--full` JSON feeds the grid directly; list/apply failures and stale `current` pointers fall back to the empty state / no selection (never a wrong badge) |
 | `dots-wallpaper-current` | `services/Wallpapers.qml` (`resolveProc`) | A, B | `FileView` pointer fallback keeps UI non-empty when absent |
-| `dots-wallpaper-set` | `config/LauncherConfig.qml` (random-wallpaper action) | A | Optional launcher action only |
+| `horneroctl wallpaper set --yes` | `config/LauncherConfig.qml` (random-wallpaper action) | D | Migrated from `dots-wallpaper-set` |
 | `dots-night-mode` | `modules/dashboard/dash/QuickToggles.qml`, `modules/controlcenter/system/SystemPane.qml` | A | Toggle only |
 | `dots-recorder` | `services/Recorder.qml` (`start/stop/pause`) | A, E | Screen-recording backend |
-| `dots-snappy-switcher` | `services/ThemePipeline.qml` (`apply-theme-pack`) | A | Theme-pack side effect |
-| `dots-hyprlock-theme` | `services/ThemePipeline.qml` | A | Lock-screen theme side effect |
+| `horneroctl apps switcher apply-theme-pack --yes` | `services/ThemePipeline.qml` (`apply-theme-pack`) | D | Migrated from `dots-snappy-switcher` (backend shim-pinned via `HORNERO_SNAPPY_BIN`) |
+| `horneroctl appearance hyprlock --yes` | `services/ThemePipeline.qml` | D | Migrated from `dots-hyprlock-theme` |
 | `dots-theme-selector` | `modules/controlcenter/system/SystemPane.qml` | A | Launched, not embedded |
-| `dots-settings-gui` | `config/LauncherConfig.qml` | A | Launched, not embedded |
+| `horneroctl config gui` | `config/LauncherConfig.qml` | D | Migrated from `dots-settings-gui` (backend shim-pinned via `HORNERO_SETTINGS_GUI_BIN`) |
 | `dots-lockscreen` | `modules/controlcenter/system/SystemPane.qml` | A | `--lock` action |
 | `dots-screenshooter` | `modules/controlcenter/system/SystemPane.qml` | A | Launched, not embedded |
 | `dots-sysupdate` | `modules/controlcenter/system/SystemPane.qml` (via `foot -e sh -c`) | A | Terminal wrapper, optional |

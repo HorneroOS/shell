@@ -107,14 +107,15 @@ outside the generated roles.
 | `GtkSettings` full-mode with theme-pack id | `dots-gtk-theme theme` | Theme-pack id resolution is dots-owned tooling |
 | `GtkThemeSection` / `IconThemeSection` listings | `dots-gtk-theme -p list/icons` | Native directory scan needs index.theme parsing plus de-dup across system/user roots |
 | `AppearancePane` live queries (fallback branch) | `dots-gtk-theme -p current*` | Hosts without `gsettings` |
-| `ThemePipeline` side effects | `dots-snappy-switcher`, `dots-hyprlock-theme` | Dots-owned tooling with no native equivalent |
+| `ThemePipeline` side effects | `horneroctl apps switcher apply-theme-pack --yes`, `horneroctl appearance hyprlock --yes` | Native backends (host shim-pinned via `HORNERO_SNAPPY_BIN` / `HORNERO_SETTINGS_GUI_BIN`) |
 | `Themes.qml` loader | `dots-appearance theme list` (CLI wraps the dots-owned registry; empty-model fallback when absent) | Disposition-G debt resolved track 3a: bare-`python3` dropped, registry ownership still dots-side (see `docs/GTK-PACK-OWNERSHIP.md`) |
 
 Out of scope for issue #2 (unchanged): `dots-accent-override`,
-`dots-wallpaper-current` / `dots-wallpaper-set`,
-`dots-night-mode`, `dots-recorder`, and launcher-only actions
-(`dots-theme-selector`, `dots-settings-gui`, `dots-lockscreen`,
+`dots-wallpaper-current`, `dots-night-mode`, `dots-recorder`, and
+launcher-only actions (`dots-theme-selector`, `dots-lockscreen`,
 `dots-screenshooter`, `dots-sysupdate`, `dots-keyboard-help`).
+(Retired here: `dots-wallpaper-set`, `dots-settings-gui`,
+`dots-snappy-switcher`, `dots-hyprlock-theme` — all `horneroctl` now.)
 
 ## Contracts and checks
 

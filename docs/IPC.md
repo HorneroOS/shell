@@ -82,6 +82,6 @@ The shell also *spawns* processes; the stable outbound contracts are:
   `dots-m3-colors …`, `dots-gtk-theme -q …`, `dots-color-scheme …`
   (see `docs/COMPAT.md`).
 - Optional integrations: `dots-recorder start/stop/pause`,
-  `dots-wallpaper-current`, `dots-wallpaper-set …`,
+  `dots-wallpaper-current`, `horneroctl wallpaper set --yes`,
   `horneroctl shell preset apply --yes`, `dots-night-mode toggle`,
   `notify-send …`, `systemctl …`, `foot -e sh -c …`.

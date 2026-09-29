@@ -235,6 +235,9 @@ def test_factory_values_match_code_defaults():
         # controlCenter / lock ratios are 16/9 in code (ControlCenterConfig,
         # LockConfig.qml)
         ("controlCenter.sizes.ratio", 16 / 9),
+        # Appearance disclosure default exposes Themes first run
+        # (ControlCenterConfig.qml appearanceExpandedSections).
+        ("controlCenter.appearanceExpandedSections", ["themes"]),
         ("launcher.maxShown", 7),
         ("launcher.specialPrefix", "@"),
         ("launcher.useFuzzy.wallpapers", False),

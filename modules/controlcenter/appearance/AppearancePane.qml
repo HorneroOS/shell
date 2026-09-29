@@ -41,6 +41,51 @@ Item {
     property real borderRounding: Config.border.rounding ?? 1
     property real borderThickness: Config.border.thickness ?? 1
 
+    // Section disclosure: which sections start expanded. Persisted in
+    // Config.controlCenter.appearanceExpandedSections (default: Themes).
+    // _sectionsReady guards write-back while initial state is restored.
+    property bool _sectionsReady: false
+    readonly property var _sectionKeys: ["themes", "themeMode", "colorVariant", "colorScheme", "gtkTheme", "gtkColorScheme", "iconTheme", "fonts", "animations", "scales", "transparency", "border", "background"]
+
+    function isSectionExpanded(key: string): bool {
+        return Config.controlCenter.appearanceExpandedSections.indexOf(key) !== -1;
+    }
+
+    function persistSection(key: string, expanded: bool): void {
+        if (!root._sectionsReady)
+            return;
+        const list = Config.controlCenter.appearanceExpandedSections.slice();
+        const i = list.indexOf(key);
+        if (expanded && i === -1)
+            list.push(key);
+        if (!expanded && i !== -1)
+            list.splice(i, 1);
+        Config.controlCenter.appearanceExpandedSections = list;
+        Config.save();
+    }
+
+    function setAllSections(expand: bool): void {
+        root._sectionsReady = false;
+        themesSection.expanded = expand;
+        themeModeSection.expanded = expand;
+        colorVariantSection.expanded = expand;
+        colorSchemeSection.expanded = expand;
+        gtkThemeSection.expanded = expand;
+        gtkColorSchemeSection.expanded = expand;
+        iconThemeSection.expanded = expand;
+        fontsSection.expanded = expand;
+        animationsSection.expanded = expand;
+        scalesSection.expanded = expand;
+        transparencySection.expanded = expand;
+        borderSection.expanded = expand;
+        backgroundSection.expanded = expand;
+        root._sectionsReady = true;
+        Config.controlCenter.appearanceExpandedSections = expand ? root._sectionKeys.slice() : [];
+        Config.save();
+    }
+
+    Component.onCompleted: root._sectionsReady = true
+
     property bool desktopClockEnabled: Config.background.desktopClock.enabled ?? false
     property real desktopClockScale: Config.background.desktopClock.scale ?? 1
     property string desktopClockPosition: Config.background.desktopClock.position ?? "bottom-right"
@@ -865,19 +910,9 @@ Item {
                             type: IconButton.Text
                             label.animate: true
                             onClicked: {
-                                const shouldExpand = !sidebarLayout.allSectionsExpanded;
-                                themesSection.expanded = shouldExpand;
-                                themeModeSection.expanded = shouldExpand;
-                                colorVariantSection.expanded = shouldExpand;
-                                colorSchemeSection.expanded = shouldExpand;
-                                gtkThemeSection.expanded = shouldExpand;
-                                gtkColorSchemeSection.expanded = shouldExpand;
-                                iconThemeSection.expanded = shouldExpand;
-                                fontsSection.expanded = shouldExpand;
-                                animationsSection.expanded = shouldExpand;
-                                scalesSection.expanded = shouldExpand;
-                                transparencySection.expanded = shouldExpand;
-                                borderSection.expanded = shouldExpand;
+                                // Assigns all sections + persists once. The
+                                // allSectionsExpanded binding refreshes the icon.
+                                root.setAllSections(!sidebarLayout.allSectionsExpanded);
                                 backgroundSection.expanded = shouldExpand;
                             }
                         }
@@ -887,72 +922,98 @@ Item {
                         id: themesSection
                         session: root.session
                         previewController: root
+                        Component.onCompleted: expanded = root.isSectionExpanded("themes")
+                        onExpandedChanged: root.persistSection("themes", expanded)
                     }
 
                     ThemeModeSection {
                         id: themeModeSection
                         session: root.session
                         previewController: root
+                        Component.onCompleted: expanded = root.isSectionExpanded("themeMode")
+                        onExpandedChanged: root.persistSection("themeMode", expanded)
                     }
 
                     ColorVariantSection {
                         id: colorVariantSection
                         session: root.session
                         previewController: root
+                        Component.onCompleted: expanded = root.isSectionExpanded("colorVariant")
+                        onExpandedChanged: root.persistSection("colorVariant", expanded)
                     }
 
                     ColorSchemeSection {
                         id: colorSchemeSection
                         session: root.session
                         previewController: root
+                        Component.onCompleted: expanded = root.isSectionExpanded("colorScheme")
+                        onExpandedChanged: root.persistSection("colorScheme", expanded)
                     }
 
                     GtkThemeSection {
                         id: gtkThemeSection
                         session: root.session
                         previewController: root
+                        Component.onCompleted: expanded = root.isSectionExpanded("gtkTheme")
+                        onExpandedChanged: root.persistSection("gtkTheme", expanded)
                     }
 
                     GtkColorSchemeSection {
                         id: gtkColorSchemeSection
                         session: root.session
                         previewController: root
+                        Component.onCompleted: expanded = root.isSectionExpanded("gtkColorScheme")
+                        onExpandedChanged: root.persistSection("gtkColorScheme", expanded)
                     }
 
                     IconThemeSection {
                         id: iconThemeSection
                         session: root.session
                         previewController: root
+                        Component.onCompleted: expanded = root.isSectionExpanded("iconTheme")
+                        onExpandedChanged: root.persistSection("iconTheme", expanded)
                     }
 
                     FontsSection {
                         id: fontsSection
                         rootPane: sidebarFlickable.rootPane
+                        Component.onCompleted: expanded = root.isSectionExpanded("fonts")
+                        onExpandedChanged: root.persistSection("fonts", expanded)
                     }
 
                     AnimationsSection {
                         id: animationsSection
                         rootPane: sidebarFlickable.rootPane
+                        Component.onCompleted: expanded = root.isSectionExpanded("animations")
+                        onExpandedChanged: root.persistSection("animations", expanded)
                     }
 
                     ScalesSection {
                         id: scalesSection
                         rootPane: sidebarFlickable.rootPane
+                        Component.onCompleted: expanded = root.isSectionExpanded("scales")
+                        onExpandedChanged: root.persistSection("scales", expanded)
                     }
 
                     TransparencySection {
                         id: transparencySection
                         rootPane: sidebarFlickable.rootPane
+                        Component.onCompleted: expanded = root.isSectionExpanded("transparency")
+                        onExpandedChanged: root.persistSection("transparency", expanded)
                     }
 
                     BorderSection {
                         id: borderSection
                         rootPane: sidebarFlickable.rootPane
+                        Component.onCompleted: expanded = root.isSectionExpanded("border")
+                        onExpandedChanged: root.persistSection("border", expanded)
                     }
 
                     BackgroundSection {
                         id: backgroundSection
                         rootPane: sidebarFlickable.rootPane
+                        Component.onCompleted: expanded = root.isSectionExpanded("background")
+                        onExpandedChanged: root.persistSection("background", expanded)
                     }
 
                     RowLayout {

@@ -221,7 +221,8 @@
     "sizes": {
       "heightMult": 0.7,
       "ratio": 1.7777777777777777
-    }
+    },
+    "appearanceExpandedSections": ["themes"]
   },
   "launcher": {
     "enabled": true,

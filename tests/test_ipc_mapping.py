@@ -46,3 +46,31 @@ def test_documented_targets_exist():
     ]
     assert not orphans, f"documented IPC targets missing from QML: {orphans}"
     assert known & doc_targets, "no overlap between QML targets and IPC.md"
+
+
+def _handler_functions(source, target):
+    m = re.search(r'target:\s*"' + re.escape(target) + r'"(.*?)(?=target:\s*"|\Z)',
+                  source, re.S)
+    assert m, f"no IpcHandler for target {target!r}"
+    return set(re.findall(r'function\s+(\w+)\s*\(', m.group(1)))
+
+
+def test_controlcenter_keyboard_roundtrip():
+    """Settings must open AND close programmatically.
+
+    Regression: `controlCenter` only exposed `open([pane])`, so every
+    open stacked a new floating window nothing could dismiss except the
+    WM. `open` + `close` + single-window reuse close the loop.
+    """
+    shortcuts = (ROOT / "modules" / "Shortcuts.qml").read_text()
+    funcs = _handler_functions(shortcuts, "controlCenter")
+    assert {"open", "close"} <= funcs, (
+        f"controlCenter IPC must expose open+close, found: {sorted(funcs)}"
+    )
+
+    factory = (ROOT / "modules" / "controlcenter" / "WindowFactory.qml").read_text()
+    assert "function closeAll()" in factory, "WindowFactory must track and close windows"
+    assert 'sequences: ["Escape"]' in factory, "Settings window must close on Escape"
+
+    doc = (ROOT / "docs" / "IPC.md").read_text()
+    assert "controlCenter close" in doc, "IPC.md must document controlCenter close"

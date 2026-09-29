@@ -25,7 +25,10 @@ Item {
         anchors.right: parent.right
         anchors.top: parent.top
 
-        currentIndex: root.state.currentTab
+        // Clamp: dashboardState.currentTab survives in-process config
+        // reloads via reloadableId and may still name a removed trailing
+        // tab (ADR 003).
+        currentIndex: Math.min(root.state.currentTab, bar.count - 1)
         background: null
 
         onCurrentIndexChanged: root.state.currentTab = currentIndex
@@ -53,11 +56,6 @@ Item {
         Tab {
             iconName: "workspaces"
             text: qsTr("Workspaces")
-        }
-
-        Tab {
-            iconName: "dashboard_customize"
-            text: qsTr("Layout")
         }
     }
 

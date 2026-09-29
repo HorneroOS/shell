@@ -48,7 +48,10 @@ Item {
         Flickable {
             id: view
 
-            readonly property int currentIndex: root.state.currentTab
+            // Clamp: dashboardState.currentTab survives in-process config
+            // reloads via reloadableId and may still name a removed
+            // trailing tab (ADR 003).
+            readonly property int currentIndex: Math.min(root.state.currentTab, row.children.length - 1)
             readonly property Item currentItem: row.children[currentIndex]
 
             anchors.fill: parent
@@ -115,11 +118,6 @@ Item {
                 Pane {
                     index: 4
                     sourceComponent: Workspaces {}
-                }
-
-                Pane {
-                    index: 5
-                    sourceComponent: LayoutPickerView {}
                 }
             }
 

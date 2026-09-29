@@ -75,9 +75,9 @@ System defaults vs user overrides:
 ## Theming pipeline
 
 `services/ThemePipeline.qml` serializes appearance jobs (theme / wallpaper /
-reload) and shells out **only** to the canonical CLIs `dots-m3-colors`
-(color generation) and `dots-gtk-theme` (GTK apply), plus
-`dots-color-scheme` (scheme state). It never invokes
+reload) and shells out **only** to the canonical `horneroctl` verbs
+(`appearance colors m3` for color generation, `appearance gtk` for GTK
+apply, `scheme` for scheme state). It never invokes
 `gtk-theme-manager.sh` directly and never runs bare
 `python3 generate-m3-colors` (enforced by
 `tests/test_appearance_consistency.py`). Theme data resolves from
@@ -92,8 +92,8 @@ Notification state reads `Paths.state/notifs.json` (+
 
 ## External coupling
 
-All `dots-*` runtime CLI dependencies, their dispositions (A–G), fallback
-behavior, and debt markers are inventoried in `docs/COMPAT.md`.
+All external runtime CLI dependencies, their dispositions (A–G), and
+fallback behavior are inventoried in `docs/COMPAT.md`.
 The Quickshell IPC surface (targets other components script against) is in
 `docs/IPC.md`. Contributor rules for QML/Qt/IPC/Process usage are in
 `AGENTS.md`.

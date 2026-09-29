@@ -33,7 +33,7 @@ Searcher {
     }
 
     // First-class built-in themes (P2 appearance tokens): always listed
-    // first, even when the dots-owned registry is absent. Full palettes
+    // first, even when the registry is absent. Full palettes
     // live in Colours; ThemePipeline applies these ids natively.
     function _withBuiltIns(items: var): var {
         const builtIns = [
@@ -80,15 +80,14 @@ Searcher {
         Theme {}
     }
 
-    // TODO(hornero-compat): theme listing stays on the dots-appearance compat
-    // adapter (theme-pack registry owned by dots tooling; THEMES_DIR resolved
-    // CLI-side via DOTS_THEMES_DIR, empty-model fallback when absent).
-    // See docs/COMPAT.md (disposition A) and docs/GTK-PACK-OWNERSHIP.md.
+    // Native theme-pack listing (--full prints the JSON manifest array the
+    // launcher parses; pack source resolves CLI-side, empty-model fallback
+    // when absent). See docs/GTK-PACK-OWNERSHIP.md.
     Process {
         id: loadProc
 
         running: true
-        command: ["dots-appearance", "theme", "list"]
+        command: ["horneroctl", "appearance", "theme", "list", "--full"]
 
         stdout: StdioCollector {
             onStreamFinished: {

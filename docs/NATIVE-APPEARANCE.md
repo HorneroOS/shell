@@ -1,9 +1,9 @@
 # Native appearance layers — HorneroOS/shell issue #2
 
-QML applies theming through native layers first and keeps `dots-*` CLIs
-only as thin, debt-marked compat adapters. Every remaining compat call site
-carries a `TODO(hornero-compat)` marker pointing here or at
-`docs/COMPAT.md`.
+QML applies theming through native layers first (`gsettings`,
+`ImageAnalyser`, `horneroctl` verbs owned by `HorneroOS/hornero`) and
+reaches outside the repo only through `horneroctl`. No `dots-*` wrapper
+remains in the runtime tree.
 
 ## Native layers
 
@@ -11,7 +11,7 @@ carries a `TODO(hornero-compat)` marker pointing here or at
 
 Applies GTK themes, icon themes, and color-scheme policy through the
 deterministic `gsettings` desktop APIs before falling back to
-`dots-gtk-theme`.
+`horneroctl appearance gtk`.
 
 Policy mapping (`toGsettingsScheme`, input normalized by
 `ThemePipeline.normalizeGtkColorScheme`):
@@ -33,13 +33,14 @@ Native writes:
 
 Live queries (`refreshLive`) read the same three keys back into
 `liveGtkTheme` / `liveIconTheme` / `liveColorScheme`. When `gsettings` is
-absent (exit 99) the layer falls through to the `dots-gtk-theme` compat
-adapter (`_compatFor`); theme-pack ids with no explicit GTK theme always
-use the compat path because id resolution is dots-owned tooling.
+absent (exit 99) the layer falls through to the `horneroctl appearance gtk`
+fallback (`_compatFor`); theme-pack ids with no explicit GTK theme always
+use the fallback path because id resolution lives in the shared theme
+registry.
 
 Consumers: `ThemePipeline` (queued gtk/gtk-color-scheme/icons jobs and the
 pipeline finalize step via `applyFull`), `AppearancePane` (live seeding via
-`refreshLive` plus change connections; its `dots-gtk-theme` live queries
+`refreshLive` plus change connections; its `horneroctl gtk` live queries
 yield whenever a native value exists).
 
 ### WallpaperAnalysis (`services/WallpaperAnalysis.qml`) — migration step (b)
@@ -59,11 +60,11 @@ is absent).
 
 | Former call site | Native replacement |
 |---|---|
-| `ThemePipeline` finalize script (`dots-gtk-theme theme/apply/set-icons/color-scheme/sync-color-scheme`) | `GtkSettings.applyFull` |
-| `ThemePipeline` standalone `dots-gtk-theme apply` | `GtkSettings.applyGtkTheme` |
-| `ThemePipeline` standalone `dots-gtk-theme color-scheme` | `GtkSettings.applyColorScheme` |
-| `ThemePipeline` standalone `dots-gtk-theme set-icons` (`iconOnlyProc`, removed) | `GtkSettings.applyIconTheme` |
-| `AppearancePane` live current GTK/icon/color-scheme queries | `GtkSettings.refreshLive` first; `dots-gtk-theme` queries yield when native values exist |
+| `ThemePipeline` finalize script (`horneroctl appearance gtk theme/apply/set-icons/color-scheme/sync-color-scheme`) | `GtkSettings.applyFull` |
+| `ThemePipeline` standalone gtk apply | `GtkSettings.applyGtkTheme` |
+| `ThemePipeline` standalone gtk color-scheme | `GtkSettings.applyColorScheme` |
+| `ThemePipeline` standalone gtk set-icons | `GtkSettings.applyIconTheme` |
+| `AppearancePane` live current GTK/icon/color-scheme queries | `GtkSettings.refreshLive` first; `horneroctl gtk` queries yield when native values exist |
 | Wallpaper tone for translucency | `Colours.wallLuminance` (already native) plus new `wallDominantColour` |
 | Wallpaper preview tone | `WallpaperAnalysis` (`Wallpapers`) and `previewAnalyser` (`AppearancePane`) |
 
@@ -73,10 +74,10 @@ is absent).
 semantic tables in `services/Colours.qml` (`_horneroDark` / `_horneroLight`;
 dark is byte-identical to the compiled palette defaults, fixed colours are
 shared mode-independent per M3). `ThemePipeline.applyTheme` short-circuits
-these ids natively — no wallpaper, `wal`, or `dots-m3-colors` round-trip —
+these ids natively — no wallpaper, `wal`, or M3 round-trip —
 then follows GTK color-scheme policy through `GtkSettings.applyFull` with
-an empty theme id (stays off the dots-owned registry path). The launcher
-`Themes` model always lists both first, even when the dots registry is
+an empty theme id (stays off the legacy registry path). The launcher
+`Themes` model always lists both first, even when the registry is
 absent. The default theme id lives in `config/AppearanceConfig.qml`
 (`theme: "hornero-dark"`), persisted via `serializeAppearance()` and pinned
 in `config/shell.default.json`. Switching writes the whole table, so there
@@ -98,34 +99,29 @@ that primary, update the seed here and re-run; `test_gen_stability`
 fails CI on drift. `scrim`/`shadow`/`success*`/`term*` are hand-owned extras
 outside the generated roles.
 
-## Remaining compat adapters (with reasons)
+## External CLI surface (all horneroctl)
 
-| Call site | CLI | Reason native is not yet deterministic |
+| Call site | Command | Notes |
 |---|---|---|
-| `ThemePipeline.m3Proc`, `Wallpapers` preview colours, `AppearancePane.previewPaletteProc` | `dots-m3-colors` | Full M3 palette generation needs materialyoucolor, which lives outside this repo |
-| `ThemePipeline` scheme regenerate/sync-state; `Colours.setMode`; `Schemes` list/current/set; `M3Variants`; `AppearancePane` scheme/mode commits | `dots-color-scheme` | Owns scheme persistence and the palette store; no native store exists yet |
-| `GtkSettings` full-mode with theme-pack id | `dots-gtk-theme theme` | Theme-pack id resolution is dots-owned tooling |
-| `GtkThemeSection` / `IconThemeSection` listings | `dots-gtk-theme -p list/icons` | Native directory scan needs index.theme parsing plus de-dup across system/user roots |
-| `AppearancePane` live queries (fallback branch) | `dots-gtk-theme -p current*` | Hosts without `gsettings` |
+| `ThemePipeline.m3Proc`, `Wallpapers` preview colours, `AppearancePane.previewPaletteProc` | `horneroctl appearance colors m3 --yes -- …` | Passthrough to the M3 backend script (materialyoucolor lives outside this repo); same stdout payload as before |
+| `ThemePipeline` scheme regenerate/sync-state; `Colours.setMode`; `Schemes` list/current/set-variant; `M3Variants`; `AppearancePane` scheme/mode commits | `horneroctl scheme …` | Scheme persistence runs natively in `HorneroOS/hornero` |
+| `GtkSettings` full-mode with theme-pack id | `horneroctl appearance gtk theme …` | Theme-pack id resolution lives in the shared theme registry |
+| `GtkThemeSection` / `IconThemeSection` listings | `horneroctl appearance gtk list/icons` | Catalogue parsing plus de-dup across system/user roots |
+| `AppearancePane` live queries (fallback branch) | `horneroctl appearance gtk current*` | Hosts without `gsettings` |
 | `ThemePipeline` side effects | `horneroctl apps switcher apply-theme-pack --yes`, `horneroctl appearance hyprlock --yes` | Native backends (host shim-pinned via `HORNERO_SNAPPY_BIN` / `HORNERO_SETTINGS_GUI_BIN`) |
-| `Themes.qml` loader | `dots-appearance theme list` (CLI wraps the dots-owned registry; empty-model fallback when absent) | Disposition-G debt resolved track 3a: bare-`python3` dropped, registry ownership still dots-side (see `docs/GTK-PACK-OWNERSHIP.md`) |
-
-Out of scope for issue #2 (unchanged): `dots-accent-override`,
-`dots-wallpaper-current`, `dots-night-mode`, `dots-recorder`, and
-launcher-only actions (`dots-theme-selector`, `dots-lockscreen`,
-`dots-screenshooter`, `dots-sysupdate`, `dots-keyboard-help`).
-(Retired here: `dots-wallpaper-set`, `dots-settings-gui`,
-`dots-snappy-switcher`, `dots-hyprlock-theme` — all `horneroctl` now.)
+| `Themes.qml` loader | `horneroctl appearance theme list --full` | JSON manifest array; empty-model fallback when absent (see `docs/GTK-PACK-OWNERSHIP.md`) |
+| `ColorVariantSection.qml` accent set/clear | `horneroctl appearance accent …` | Was `dots-accent-override` |
+| `Wallpapers.resolveProc` | `horneroctl wallpaper current` | Was `dots-wallpaper-current`; `FileView` pointer fallback kept |
+| `QuickToggles` / `SystemPane` night toggle | `horneroctl appearance night-mode toggle --yes` | Was `dots-night-mode` |
+| `Recorder.qml` start/stop/pause | `horneroctl capture record … --yes` | Was `dots-recorder`; `-r`/`-s`/`-sr` translate to `--region`/`--sound`/`--sr` |
 
 ## Contracts and checks
 
-- `gtk-theme-manager.sh` is never called from QML and bare
-  `python3 generate-m3-colors` never runs — enforced by
-  `tests/test_appearance_consistency.py` and
-  `scripts/check_forbidden_paths.sh`.
+- `gtk-theme-manager.sh` is never called from QML, bare
+  `python3 generate-m3-colors` never runs, and no retired `dots-*` wrapper
+  name appears in QML — enforced by `tests/test_appearance_consistency.py`
+  and `scripts/check_forbidden_paths.sh`.
 - The same test file requires both native layers to exist and every
-  remaining `dots-gtk-theme` / `dots-m3-colors` / `dots-color-scheme` QML
-  call site to carry a `TODO(hornero-compat)` marker.
-- Outbound process contracts are documented in `docs/IPC.md`; the `dots-*`
-  dependency table in `docs/MIGRATION.md` §2 records the native-first
-  status per CLI.
+  appearance call site to go through `horneroctl`.
+- Outbound process contracts are documented in `docs/IPC.md`; the
+  per-CLI table in `docs/MIGRATION.md` §2 records the migration status.

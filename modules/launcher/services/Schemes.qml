@@ -25,6 +25,13 @@ Searcher {
         getCurrent.running = true;
     }
 
+    // Mirror the scheme backend's normalize_variant: the hyphenated
+    // "tonal-spot" flavour addresses the "tonalspot" variant; every other
+    // flavour is already its own variant name.
+    function flavourToVariant(flavour: string): string {
+        return (flavour ?? "").toLowerCase() === "tonal-spot" ? "tonalspot" : (flavour ?? "");
+    }
+
     list: schemes.instances
     useFuzzy: Config.launcher.useFuzzy.schemes
     keys: ["name", "flavour"]
@@ -36,14 +43,14 @@ Searcher {
         Scheme {}
     }
 
-    // TODO(hornero-compat): scheme list/current/set ops are owned by
-    // dots-color-scheme; no native palette store exists yet in HorneroOS.
-    // Thin compat adapter; see docs/NATIVE-APPEARANCE.md.
+    // Native scheme store: list/current read the canonical state, set runs
+    // through `scheme set-variant` (flavour maps to its variant; name is
+    // kept server-side). See docs/NATIVE-APPEARANCE.md.
     Process {
         id: getSchemes
 
         running: true
-        command: ["dots-color-scheme", "list"]
+        command: ["horneroctl", "scheme", "list"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const schemeData = JSON.parse(text);
@@ -67,7 +74,7 @@ Searcher {
         id: getCurrent
 
         running: true
-        command: ["dots-color-scheme", "current"]
+        command: ["horneroctl", "scheme", "current"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const [name, flavour, variant] = text.trim().split("\n");
@@ -85,7 +92,10 @@ Searcher {
 
         function onClicked(list: AppList): void {
             list.visibilities.launcher = false;
-            Quickshell.execDetached(["dots-color-scheme", "set", "-n", name, "-f", flavour]);
+            // set-variant persists variant + derived flavour and regenerates,
+            // which is exactly what `set -n <name> -f <flavour>` did; the
+            // single "dynamic" scheme name is kept server-side.
+            Quickshell.execDetached(["horneroctl", "scheme", "set-variant", root.flavourToVariant(flavour), "--yes"]);
         }
     }
 }

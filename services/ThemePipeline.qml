@@ -18,14 +18,12 @@ Singleton {
     readonly property string wallpapersDirFallback: `${Paths.dataFallback}/wallpapers`
     readonly property string picturesWallpapers: `${Paths.pictures}/Wallpapers`
     readonly property string wallpaperPointer: Paths.wallpaperPointer
-    // Prefer dots-m3-colors so pyenv shims do not hide Arch python-materialyoucolor.
-    // GTK application is native-first via GtkSettings (gsettings); the
-    // dots-gtk-theme compat fallback lives there. Remaining dots-* calls
-    // below are thin compat adapters for tooling this repo does not own yet.
-    // TODO(hornero-compat): dots-m3-colors / dots-color-scheme remain
-    // external runtime CLIs; see docs/COMPAT.md (disposition A) and
-    // docs/NATIVE-APPEARANCE.md.
-    readonly property string m3Bin: `${Quickshell.env("HOME")}/.local/bin/dots-m3-colors`
+    // M3 palette generation runs through horneroctl (its backend resolves
+    // the python synthesizer via HORNERO_M3_PYTHON_BIN / HORNERO_M3_SCRIPT,
+    // so pyenv shims cannot hide Arch python-materialyoucolor).
+    // GTK application is native-first via GtkSettings (gsettings) with the
+    // horneroctl gtk fallback there. See docs/NATIVE-APPEARANCE.md.
+    readonly property var m3Base: ["horneroctl", "appearance", "colors", "m3", "--yes", "--"]
     // Contract row 4: canonical scheme.json (written by m3Proc below).
     readonly property string schemeJson: `${Paths.cache}/smart-colors/scheme.json`
     readonly property string schemeJsonFallback: `${Paths.cacheFallback}/smart-colors/scheme.json`
@@ -226,10 +224,10 @@ Singleton {
 
     // First-class built-in themes (hornero-dark / hornero-light): the full
     // semantic palette lives in Colours, so apply needs no wallpaper, wal,
-    // or dots-m3-colors round-trip — correct switching with no light/dark
-    // leakage. GTK follows natively (empty themeId keeps GtkSettings off
-    // the dots-owned registry path); only the color-scheme policy applies.
-    // dots-owned extras (snappy switcher packs) are skipped for built-ins.
+    // or M3 round-trip — correct switching with no light/dark leakage. GTK
+    // follows natively (empty themeId keeps GtkSettings off the legacy
+    // registry path); only the color-scheme policy applies. Legacy theme
+    // extras (snappy switcher packs) are skipped for built-ins.
     function _applyBuiltInTheme(id: string, wallpaper: string): void {
         const darkMode = id !== "hornero-light";
         Colours.applyBuiltInTheme(id);
@@ -276,11 +274,10 @@ Singleton {
         });
     }
 
-    // TODO(hornero-compat): dots-color-scheme owns scheme persistence; no
-    // native equivalent yet. Thin compat adapter; see docs/NATIVE-APPEARANCE.md.
+    // Native scheme persistence: M3 regenerate from the wallpaper pointer.
     Process {
         id: ensureSchemeProc
-        command: ["dots-color-scheme", "regenerate"]
+        command: ["horneroctl", "scheme", "regenerate", "--yes"]
         onExited: (exitCode, exitStatus) => {
             if (exitCode !== 0)
                 console.warn("ThemePipeline: scheme regeneration failed (exit", exitCode, ")");
@@ -482,8 +479,8 @@ done
         }
     }
 
-    // TODO(hornero-compat): full M3 palette generation needs materialyoucolor
-    // via dots-m3-colors; the native ImageAnalyser layer (WallpaperAnalysis,
+    // Full M3 palette generation runs through horneroctl (materialyoucolor
+    // backend); the native ImageAnalyser layer (WallpaperAnalysis,
     // Colours.wallLuminance/wallDominantColour) covers instant tone analysis.
     Process {
         id: m3Proc
@@ -491,7 +488,7 @@ done
         readonly property string mode: root._pendingDarkMode ? "dark" : "light"
         readonly property string schemeType: root._pendingSchemeType || "tonal-spot"
         command: [
-            root.m3Bin,
+            ...root.m3Base,
             "--image", image,
             "--scheme-type", schemeType,
             "--mode", mode,
@@ -506,11 +503,10 @@ done
         }
     }
 
-    // TODO(hornero-compat): dots-color-scheme owns scheme persistence; no
-    // native equivalent yet. Thin compat adapter; see docs/NATIVE-APPEARANCE.md.
+    // Native scheme persistence: adopt the live scheme meta into state.
     Process {
         id: syncStateProc
-        command: ["dots-color-scheme", "sync-state"]
+        command: ["horneroctl", "scheme", "sync-state", "--yes"]
         onExited: (exitCode, exitStatus) => {
             if (exitCode !== 0) {
                 root._finishJob(false, `sync-state failed (exit ${exitCode})`);
@@ -519,7 +515,7 @@ done
             touchSchemeProc.running = true;
             root._runSideEffects();
             // Finalize GTK through the native GtkSettings layer (gsettings
-            // first, dots-gtk-theme compat fallback inside). Completes via
+            // first, horneroctl gtk fallback inside). Completes via
             // the GtkSettings connection below.
             root._awaitingGtk = true;
             GtkSettings.applyFull(root._runThemeSideEffects ? (root._pendingGtkTheme || "") : "", root._runThemeSideEffects ? (root._pendingIconTheme || "") : "", root._runThemeSideEffects ? (root._pendingThemeId || "") : "", root._runThemeSideEffects ? (root._pendingGtkColorScheme || "") : "", root._pendingDarkMode);
@@ -532,7 +528,7 @@ done
     }
 
     // GTK applies run through the native GtkSettings layer (gsettings first,
-    // dots-gtk-theme compat fallback inside) and complete via its signal.
+    // horneroctl gtk fallback inside) and complete via its signal.
     Connections {
         target: GtkSettings
 

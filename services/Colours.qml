@@ -270,10 +270,9 @@ Singleton {
         }
     }
 
-    // TODO(hornero-compat): dots-color-scheme is an external runtime CLI;
-    // see docs/COMPAT.md (disposition A).
+    // Native light/dark switch: persist + M3 regenerate + GTK follow-push.
     function setMode(mode: string): void {
-        Quickshell.execDetached(["dots-color-scheme", "mode", mode]);
+        Quickshell.execDetached(["horneroctl", "scheme", "set-mode", mode, "--yes"]);
     }
 
     function reloadFromDisk(): void {

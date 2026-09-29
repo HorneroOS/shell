@@ -29,14 +29,13 @@ CollapsibleSection {
 
     Component.onCompleted: reloadThemes()
 
-    // TODO(hornero-compat): theme listing stays on the dots-gtk-theme compat
-    // adapter. A native directory scan is not yet deterministic (index.theme
-    // parsing plus de-dup across /usr/share/themes, ~/.local/share/themes,
-    // ~/.themes); see docs/NATIVE-APPEARANCE.md.
+    // Theme listing via the native GTK catalogue (index.theme parsing plus
+    // de-dup across /usr/share/themes, ~/.local/share/themes, ~/.themes);
+    // see docs/NATIVE-APPEARANCE.md.
     Process {
         id: listProc
 
-        command: ["dots-gtk-theme", "-q", "-p", "list"]
+        command: ["horneroctl", "appearance", "gtk", "list"]
         stdout: StdioCollector {
             onStreamFinished: {
                 root.themeNames = text.split("\n").map(line => line.trim()).filter(line => line.length > 0);

@@ -86,7 +86,7 @@ SectionContainer {
                     const normalized = text.trim();
                     if (normalized !== Config.services.weatherLocation) {
                         Config.services.weatherLocation = normalized;
-                        Config.services.saveConfig();
+                        Config.save();
                     }
                 }
             }

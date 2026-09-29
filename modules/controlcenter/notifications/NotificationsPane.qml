@@ -128,7 +128,7 @@ Item {
                             checked: Config.notifs.expire
                             onToggled: checked => {
                                 Config.notifs.expire = checked;
-                                Config.notifs.saveConfig();
+                                Config.save();
                             }
                         }
 
@@ -149,7 +149,7 @@ Item {
                             parseValueFunction: text => parseInt(text)
                             onValueModified: val => {
                                 Config.notifs.defaultExpireTimeout = Math.round(val);
-                                Config.notifs.saveConfig();
+                                Config.save();
                             }
                         }
 
@@ -158,7 +158,38 @@ Item {
                             checked: Config.notifs.actionOnClick
                             onToggled: checked => {
                                 Config.notifs.actionOnClick = checked;
-                                Config.notifs.saveConfig();
+                                Config.save();
+                            }
+                        }
+                    }
+                }
+
+                // ── Lock screen ────────────────────────────────────────────
+                StyledRect {
+                    Layout.fillWidth: true
+                    radius: Appearance.rounding.normal
+                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    implicitHeight: lockCol.implicitHeight + Appearance.padding.large * 2
+
+                    ColumnLayout {
+                        id: lockCol
+
+                        anchors.fill: parent
+                        anchors.margins: Appearance.padding.large
+                        spacing: Appearance.spacing.small
+
+                        StyledText {
+                            text: qsTr("Lock screen")
+                            font.pointSize: Appearance.font.size.normal
+                            font.weight: 500
+                        }
+
+                        SwitchRow {
+                            label: qsTr("Hide notifications on lock screen")
+                            checked: Config.lock.hideNotifs
+                            onToggled: checked => {
+                                Config.lock.hideNotifs = checked;
+                                Config.save();
                             }
                         }
                     }
@@ -189,7 +220,7 @@ Item {
                             checked: Config.utilities.toasts.chargingChanged
                             onToggled: checked => {
                                 Config.utilities.toasts.chargingChanged = checked;
-                                Config.utilities.saveConfig();
+                                Config.save();
                             }
                         }
 
@@ -198,7 +229,7 @@ Item {
                             checked: Config.utilities.toasts.audioOutputChanged
                             onToggled: checked => {
                                 Config.utilities.toasts.audioOutputChanged = checked;
-                                Config.utilities.saveConfig();
+                                Config.save();
                             }
                         }
 
@@ -207,7 +238,7 @@ Item {
                             checked: Config.utilities.toasts.audioInputChanged
                             onToggled: checked => {
                                 Config.utilities.toasts.audioInputChanged = checked;
-                                Config.utilities.saveConfig();
+                                Config.save();
                             }
                         }
 
@@ -216,7 +247,7 @@ Item {
                             checked: Config.utilities.toasts.kbLayoutChanged
                             onToggled: checked => {
                                 Config.utilities.toasts.kbLayoutChanged = checked;
-                                Config.utilities.saveConfig();
+                                Config.save();
                             }
                         }
 
@@ -225,7 +256,7 @@ Item {
                             checked: Config.utilities.toasts.capsLockChanged
                             onToggled: checked => {
                                 Config.utilities.toasts.capsLockChanged = checked;
-                                Config.utilities.saveConfig();
+                                Config.save();
                             }
                         }
 
@@ -234,7 +265,7 @@ Item {
                             checked: Config.utilities.toasts.numLockChanged
                             onToggled: checked => {
                                 Config.utilities.toasts.numLockChanged = checked;
-                                Config.utilities.saveConfig();
+                                Config.save();
                             }
                         }
 
@@ -243,7 +274,7 @@ Item {
                             checked: Config.utilities.toasts.vpnChanged
                             onToggled: checked => {
                                 Config.utilities.toasts.vpnChanged = checked;
-                                Config.utilities.saveConfig();
+                                Config.save();
                             }
                         }
 
@@ -252,7 +283,7 @@ Item {
                             checked: Config.utilities.toasts.gameModeChanged
                             onToggled: checked => {
                                 Config.utilities.toasts.gameModeChanged = checked;
-                                Config.utilities.saveConfig();
+                                Config.save();
                             }
                         }
 
@@ -261,7 +292,7 @@ Item {
                             checked: Config.utilities.toasts.dndChanged
                             onToggled: checked => {
                                 Config.utilities.toasts.dndChanged = checked;
-                                Config.utilities.saveConfig();
+                                Config.save();
                             }
                         }
 
@@ -270,7 +301,7 @@ Item {
                             checked: Config.utilities.toasts.nowPlaying
                             onToggled: checked => {
                                 Config.utilities.toasts.nowPlaying = checked;
-                                Config.utilities.saveConfig();
+                                Config.save();
                             }
                         }
 
@@ -279,7 +310,7 @@ Item {
                             checked: Config.utilities.toasts.configLoaded
                             onToggled: checked => {
                                 Config.utilities.toasts.configLoaded = checked;
-                                Config.utilities.saveConfig();
+                                Config.save();
                             }
                         }
                     }

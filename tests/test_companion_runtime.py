@@ -113,13 +113,16 @@ def test_host_suppression_inputs():
         (ROOT / "modules" / "areapicker" / "AreaPicker.qml").read_text()
 
 
-def test_host_lock_suppression_restores_on_unlock_signal():
-    # Upstream quickshell emits lockedChanged on lock but never on
-    # unlock (guest-proven): the host must sync both edges explicitly
-    # and treat the WlSessionLock unlock signal as the restore edge.
-    # A Binding on lock.locked alone restores never.
-    assert "function onUnlock()" in HOST, \
-        "host must handle the unlock signal as the suppression restore edge"
+def test_host_lock_suppression_follows_lock_state_signal():
+    # Upstream WlSessionLock.locked notifies via `lockStateChanged`
+    # (there is no `lockedChanged` signal — a handler by that name
+    # silently never fires, leaving the sprite visible over the lock
+    # screen). The notify fires on both edges, so one handler covers
+    # lock and unlock.
+    assert "function onLockStateChanged()" in HOST, \
+        "host must sync suppression from the upstream lock-state signal"
+    assert "function onLockedChanged()" not in HOST, \
+        "stale handler name never fires upstream and must not come back"
     assert "syncLocked" in HOST
     assert "suppressLocked" in HOST
 

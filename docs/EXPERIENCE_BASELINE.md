@@ -106,6 +106,7 @@ providers, dock layouts, copying any bar/sidebar geometry.
 ## 5. UX problems (evidence-backed, with reproduction)
 
 ### 5.1 Settings has no programmatic close; `close()` is a stub
+
 `ControlCenter.qml:28` — `function close(): void {}` (empty). The only IPC
 verb is `controlCenter open <pane>`. Dismissal today requires WM close
 (X button / `hyprctl closewindow`). Any keyboard-first or scripted flow
@@ -113,12 +114,14 @@ that opens Settings cannot close it. Repro: `qs ipc call controlCenter
 open appearance`, then no IPC call dismisses it.
 
 ### 5.2 Lock screen shows full notification content
+
 `welcome.png` (accidental lock capture): "14 notifications" with complete
 bodies ("Smart Float Window: 1400x864" x14) visible pre-auth. Privacy gap:
 notification content on lock screen should be hidden or redacted by
 default.
 
 ### 5.3 Welcome Shortcuts exposes raw compositor internals
+
 `welcome-shortcuts.png`, Windows group: "Centerwindow unnamed",
 "Killactive unnamed", "Layoutmsg fit active", "Layoutmsg colresize conf".
 These are Hyprland dispatcher names, not user actions. A new user cannot
@@ -126,16 +129,19 @@ map them to intent. The manifest is authoritative for bindings; the
 *labels* need a human-readable layer.
 
 ### 5.4 `horneroctl appearance status` disagrees with live shell
+
 After `appearance theme apply hornero-light --yes`: `colours mode` →
 `light`, launcher rendered light, but `appearance status` still reported
 `mode: dark`. State file vs live shell drift. (Restored to dark/dark
 after capture; both agree again.)
 
 ### 5.5 Wallpaper filenames truncate to unreadability
+
 `cc-appearance.png`: `wallhaven-...0x1080.png` x6. Users cannot
 distinguish wallpapers by name; thumbnails carry the whole burden.
 
 ### 5.6 Appearance sections all collapse by default
+
 `cc-appearance.png`: Themes, Theme mode, Generation mode, Saved
 palettes, GTK theme, GTK color scheme, Icon theme, Fonts, Animations,
 Scales, Transparency — every section collapsed. First-run discoverability
@@ -143,11 +149,13 @@ relies entirely on Preview hover. No evidence yet whether state persists
 per-section.
 
 ### 5.7 Companion renders above Settings windows
+
 `companion.png`, `cc-audio.png`: summoned Companion sprite paints over
 the floating Settings window. Z-order policy for Companion vs windows is
 undefined (or explicitly always-on-top — either way, undocumented).
 
 ### 5.8 Session drawer avatar block is unexplained
+
 `session.png`: an anime character tile sits between "Shut down" and
 "Hibernate" in the power menu with no label. Origin (user avatar?
 Companion skin? placeholder?) unknown — needs code read before judging.
@@ -221,4 +229,3 @@ Per slice: implement → `horneroctl shell restart --yes` → interact →
 iterate. Gates unchanged: `pytest tests/ --ignore=tests/vm` (172 green
 at baseline), `lint_qml.sh`, `check_forbidden_paths.sh`, full CI per PR.
 No release cut until slices land; Preview 4 stays immutable.
-

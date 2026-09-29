@@ -121,13 +121,6 @@ Item {
                     index: 5
                     sourceComponent: LayoutPickerView {}
                 }
-
-                Pane {
-                    index: 6
-                    sourceComponent: Keybindings {
-                        isCurrent: view.currentIndex === 6
-                    }
-                }
             }
 
             Behavior on contentX {

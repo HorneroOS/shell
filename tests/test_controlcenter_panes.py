@@ -59,9 +59,24 @@ def test_registry_ids_unique_and_labels_sane():
 def test_registered_panes_take_shared_session():
     for pid, _label, _icon, component in _registry_entries():
         text = (CC / component).read_text()
-        assert "required property Session session" in text, (
-            f"pane {pid}: must declare `required property Session session`"
+        assert ("required property Session session" in text
+                or "required property CC.Session session" in text), (
+            f"pane {pid}: must declare `required property [CC.]Session session`"
         )
+
+
+def test_session_type_never_shadowed():
+    # `import qs.modules.welcome` brings a second `Session` name (its
+    # singleton) into scope. A pane that imports it must qualify the
+    # session property (`CC.Session`); unqualified, the loader's session
+    # value fails assignment and the pane renders blank (system pane).
+    for _pid, _label, _icon, component in _registry_entries():
+        text = (CC / component).read_text()
+        if "import qs.modules.welcome" in text:
+            assert "required property CC.Session session" in text, (
+                f"pane {_pid}: imports qs.modules.welcome, so the session "
+                "property must be qualified as `CC.Session`"
+            )
 
 
 def test_no_dead_wrappers_in_panes():

@@ -95,3 +95,19 @@ def test_appearance_sections_disclosure_wired():
         assert re.search(
             rf'isSectionExpanded\("{key}"\)', pane), (
             f"section {key!r} restores but never reads persisted state")
+
+
+def test_notify_roles_documented():
+    # §39 roles doc first: OSD/toast/notification each get exactly one
+    # voice, with an admission test for new messages.
+    doc = (ROOT / "docs" / "NOTIFICATIONS.md").read_text()
+    for section in ("## OSD", "## Toast", "## Notification",
+                    "## Admission test"):
+        assert section in doc, f"roles doc missing {section}"
+    for rule in ("Trigger rule", "Caller rule", "Source rule"):
+        assert rule in doc, f"roles doc missing {rule}"
+    # Baseline §5.1 stays a dated record: the fix note names the real
+    # close path instead of silently rewriting the finding.
+    base = (ROOT / "docs" / "EXPERIENCE_BASELINE.md").read_text()
+    assert "WindowFactory.closeAll" in base
+    assert "`function close(): void {}` (empty)" in base

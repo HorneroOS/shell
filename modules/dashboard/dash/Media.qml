@@ -140,7 +140,8 @@ Item {
 
         animate: true
         horizontalAlignment: Text.AlignHCenter
-        text: (Players.active?.trackAlbum ?? qsTr("No media")) || qsTr("Unknown album")
+        visible: !!Players.active
+        text: Players.active?.trackAlbum || qsTr("Unknown album")
         color: Colours.palette.m3outline
         font.pointSize: Appearance.font.size.small
 
@@ -151,13 +152,16 @@ Item {
     StyledText {
         id: artist
 
-        anchors.top: album.bottom
+        // Collapse the gap left by the hidden album line when no player
+        // is active (manual anchors, unlike the Media tab's layouts).
+        anchors.top: album.visible ? album.bottom : title.bottom
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.topMargin: Appearance.spacing.small
 
         animate: true
         horizontalAlignment: Text.AlignHCenter
-        text: (Players.active?.trackArtist ?? qsTr("No media")) || qsTr("Unknown artist")
+        text: (Players.active?.trackArtist ?? qsTr("Play some music for stuff to show up here!")) || qsTr("Unknown artist")
+        wrapMode: Players.active ? Text.NoWrap : Text.WordWrap
         color: Colours.palette.m3secondary
 
         width: parent.implicitWidth - Appearance.padding.large * 2

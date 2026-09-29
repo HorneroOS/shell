@@ -39,8 +39,8 @@ Singleton {
 
     property var badges: ({})
     // Full entry list for the Shortcuts reference page: every valid
-    // global binding as { id, dispatcher, mods, key }. Badges stay the
-    // curated first-wins view; entries feed the filterable cheatsheet.
+    // global binding as { id, dispatcher, args, mods, key }. Badges stay
+    // the curated first-wins view; entries feed the filterable cheatsheet.
     property var entries: []
     property bool ready: false
 
@@ -79,7 +79,7 @@ Singleton {
                         out[e.id] = parts.join(" + ");
                     if (typeof e.submap === "string" && e.submap !== "")
                         continue;
-                    all.push({ id: e.id, dispatcher: typeof e.dispatcher === "string" ? e.dispatcher : "", mods: parts.slice(0, -1), key: e.key });
+                    all.push({ id: e.id, dispatcher: typeof e.dispatcher === "string" ? e.dispatcher : "", args: typeof e.args === "string" ? e.args : "", mods: parts.slice(0, -1), key: e.key });
                 }
             }
         } catch (e) {

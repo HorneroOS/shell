@@ -101,7 +101,7 @@ JsonObject {
             name: "Random",
             icon: "casino",
             description: "Switch to a random wallpaper",
-            command: ["sh", "-c", "f=\"$(find -L \"$HOME/Pictures/Wallpapers\" -type f | shuf -n 1)\"; [ -n \"$f\" ] && dots-wallpaper-set \"$f\""],
+            command: ["sh", "-c", "f=\"$(find -L \"$HOME/Pictures/Wallpapers\" -type f | shuf -n 1)\"; [ -n \"$f\" ] && horneroctl wallpaper set --yes \"$f\""],
             enabled: true,
             dangerous: false
         },
@@ -165,7 +165,7 @@ JsonObject {
             name: "Settings",
             icon: "settings",
             description: "Configure the shell",
-            command: ["dots-settings-gui", "menu"],
+            command: ["horneroctl", "config", "gui"],
             enabled: true,
             dangerous: false
         }

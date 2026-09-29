@@ -33,11 +33,11 @@ defined in `docs/MIGRATION.md` §2.
 | `dots-accent-override` | Accent section actions no-op | `ColorVariantSection.qml` |
 | `horneroctl` (missing/failed `shell preset list`) | Grid falls back to the empty state with the store-path hint; stale `current` pointers select nothing | `modules/layoutpicker/PresetGrid.qml` |
 | `dots-wallpaper-current` | `FileView` on `Paths.wallpaperPointer` seeds `actualCurrent` | `services/Wallpapers.qml` |
-| `dots-wallpaper-set` | Random-wallpaper launcher action no-ops | `config/LauncherConfig.qml` |
+| `horneroctl wallpaper set --yes` | Random-wallpaper launcher action fails if `horneroctl` is missing (shell cannot run without it) | `config/LauncherConfig.qml` |
 | `dots-night-mode` | Quick-toggle action no-ops | `QuickToggles.qml`, `SystemPane.qml` |
 | `dots-recorder` | Recording actions no-op | `services/Recorder.qml` |
-| `dots-snappy-switcher`, `dots-hyprlock-theme` | Theme side effects skipped (`\|\| true` semantics) | `services/ThemePipeline.qml` |
-| `dots-theme-selector`, `dots-settings-gui`, `dots-lockscreen`, `dots-screenshooter`, `dots-sysupdate`, `dots-keyboard-help` | Launched actions fail silently in terminal/launcher | `SystemPane.qml`, `LauncherConfig.qml` |
+| `horneroctl apps switcher apply-theme-pack`, `horneroctl appearance hyprlock` | Theme side effects fail without failing the apply job (fire-and-forget processes) (`\|\| true` semantics) | `services/ThemePipeline.qml` |
+| `dots-theme-selector`, `dots-lockscreen`, `dots-screenshooter`, `dots-sysupdate`, `dots-keyboard-help` | Launched actions fail silently in terminal/launcher | `SystemPane.qml`, `LauncherConfig.qml` |
 | `dots-appearance theme list` | Theme search list renders empty when absent (JSON-parse fallback) | `modules/launcher/services/Themes.qml` (`TODO(hornero-compat)`) |
 
 ## Debt to resolve in follow-ups

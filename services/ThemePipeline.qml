@@ -564,19 +564,16 @@ done
         command: ["hyprctl", "reload"]
     }
 
-    // TODO(hornero-compat): dots-snappy-switcher is a dots-owned side effect
-    // with no native equivalent yet; see docs/NATIVE-APPEARANCE.md.
+    // Snappy theme side effect runs through horneroctl (backend-owned).
     Process {
         id: snappyProc
         property string themeId: ""
-        command: ["dots-snappy-switcher", "apply-theme-pack", snappyProc.themeId]
+        command: ["horneroctl", "apps", "switcher", "apply-theme-pack", snappyProc.themeId, "--yes"]
     }
 
-    // TODO(hornero-compat): dots-hyprlock-theme is a dots-owned side effect
-    // with no native equivalent yet; see docs/NATIVE-APPEARANCE.md.
     Process {
         id: hyprlockProc
-        command: ["dots-hyprlock-theme"]
+        command: ["horneroctl", "appearance", "hyprlock", "--yes"]
     }
 
     Process {

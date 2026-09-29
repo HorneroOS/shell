@@ -1,6 +1,6 @@
 pragma ComponentBehavior: Bound
 
-import ".."
+import ".." as CC
 import "../components"
 import qs.components
 import qs.components.controls
@@ -19,7 +19,10 @@ import QtQuick.Layouts
 Item {
     id: root
 
-    required property Session session
+    // Qualified: `import qs.modules.welcome` below also brings a `Session`
+    // name into scope (its singleton); unqualified, the loader's session
+    // value fails assignment and the pane stays blank.
+    required property CC.Session session
 
     anchors.fill: parent
 

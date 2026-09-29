@@ -25,7 +25,7 @@ Searcher {
     }
 
     // Instant native tone analysis for the preview path (issue #2, step
-    // (b)). The full M3 preview palette below still needs dots-m3-colors.
+    // (b)). The full M3 preview palette below runs through horneroctl.
     readonly property color previewDominantColour: WallpaperAnalysis.dominantColour
     readonly property real previewLuminance: WallpaperAnalysis.luminance
     readonly property bool previewNativeReady: WallpaperAnalysis.ready
@@ -49,7 +49,7 @@ Searcher {
         resolveProc.running = true;
     }
 
-    /** Raw pointer file content; avoids empty UI if dots-wallpaper-current fails (env/PATH). */
+    /** Raw pointer file content; avoids empty UI if the wallpaper query fails (env/PATH). */
     function applyPointerFromFileView(pointerReadout: string): void {
         let t = pointerReadout.trim();
         if (!t.length)
@@ -86,12 +86,11 @@ Searcher {
         }
     }
 
-    // TODO(hornero-compat): dots-wallpaper-current is an external runtime CLI
-    // with a FileView pointer fallback below; see docs/COMPAT.md (A, B).
+    // Native current-wallpaper read; FileView pointer fallback below.
     Process {
         id: resolveProc
 
-        command: [`${Quickshell.env("HOME")}/.local/bin/dots-wallpaper-current`]
+        command: ["horneroctl", "wallpaper", "current"]
         running: false
         stdout: StdioCollector {
             onStreamFinished: {
@@ -130,15 +129,19 @@ Searcher {
 
     Component.onCompleted: Qt.callLater(() => reloadWallpaperPath())
 
-    // TODO(hornero-compat): full M3 preview palette needs materialyoucolor
-    // via dots-m3-colors; native dominant/luminance comes from
-    // WallpaperAnalysis above. Thin compat adapter; see
-    // docs/NATIVE-APPEARANCE.md.
+    // M3 preview palette via the horneroctl passthrough (same backend
+    // script, same stdout payload Colours.load parses); native
+    // dominant/luminance comes from WallpaperAnalysis above.
     Process {
         id: getPreviewColoursProc
 
         command: [
-            `${Quickshell.env("HOME")}/.local/bin/dots-m3-colors`,
+            "horneroctl",
+            "appearance",
+            "colors",
+            "m3",
+            "--yes",
+            "--",
             "--image",
             root.previewPath,
             "--mode",
@@ -146,6 +149,12 @@ Searcher {
         ]
         stdout: StdioCollector {
             onStreamFinished: {
+                // horneroctl prints the backend payload on success; anything
+                // else is a failure report, not a palette.
+                if (!text.trim().startsWith("{")) {
+                    console.warn("Wallpapers: M3 preview failed:", text.trim().slice(0, 160));
+                    return;
+                }
                 Colours.load(text, true);
                 Colours.showPreview = true;
             }

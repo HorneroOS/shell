@@ -1,7 +1,7 @@
 """Control-center pane contract: PaneRegistry entries must resolve to real
 pane files, every registered pane must accept the shared Session, and no
-pane may invoke a retired dots-* wrapper (live config-owned CLIs like
-dots-gtk-theme stay; dead ones like dots-quickshell must not)."""
+pane may invoke a retired dots-* wrapper (all of them are retired now —
+appearance included — every call goes through horneroctl)."""
 import re
 from pathlib import Path
 
@@ -9,9 +9,8 @@ ROOT = Path(__file__).resolve().parent.parent
 CC = ROOT / "modules" / "controlcenter"
 REGISTRY = CC / "PaneRegistry.qml"
 
-# Wrappers superseded by horneroctl verbs. Live config-owned CLIs
-# (dots-gtk-theme, dots-m3-colors, dots-accent-override, dots-appearance,
-# dots-night-mode, dots-wallpaper-*) are not in this list.
+# Every dots-* wrapper the shell ever invoked, all superseded by horneroctl
+# verbs (see docs/MIGRATION.md). None may appear in pane QML.
 DEAD_WRAPPERS = [
     "dots-quickshell",
     "dots-launcher",
@@ -27,6 +26,17 @@ DEAD_WRAPPERS = [
     "dots-screenshooter",
     "dots-sysupdate",
     "dots-theme-selector",
+    "dots-gtk-theme",
+    "dots-m3-colors",
+    "dots-color-scheme",
+    "dots-appearance",
+    "dots-accent-override",
+    "dots-night-mode",
+    "dots-wallpaper-current",
+    "dots-wallpaper-set",
+    "dots-recorder",
+    "dots-settings-gui",
+    "dots-hyprlock-theme",
 ]
 
 

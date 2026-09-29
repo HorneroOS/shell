@@ -117,7 +117,7 @@ Item {
     property string previewGenSchemeType: "tonal-spot"
     // Native instant tone for the palette-generation input (issue #2, step
     // (b)): dominant colour + luminance straight from the ImageAnalyser
-    // plugin. The full generated palette below still needs dots-m3-colors.
+    // plugin. The full generated palette below runs through horneroctl.
     readonly property color previewNativeDominant: previewAnalyser.dominantColour
     readonly property real previewNativeLuminance: previewAnalyser.luminance
     readonly property bool previewNativeReady: previewAnalyser.luminance > 0
@@ -127,7 +127,7 @@ Item {
     property string previewRequestKey: ""
     property string previewRunningKey: ""
     property int previewQuality: 8
-    readonly property string m3ScriptPath: `${Quickshell.env("HOME")}/.local/bin/dots-m3-colors`
+    readonly property var m3Base: ["horneroctl", "appearance", "colors", "m3", "--yes", "--"]
 
     anchors.fill: parent
 
@@ -435,14 +435,16 @@ Item {
         } else {
             if (schemeDirty && pendingSchemeKey) {
                 const parts = pendingSchemeKey.split(" ");
-                const name = parts[0] || "dynamic";
                 const flavour = parts.slice(1).join(" ") || pendingVariant;
-                session.runAction(["dots-color-scheme", "set", "-n", name, "-f", flavour]);
+                // set-variant persists variant + derived flavour and
+                // regenerates (the legacy `set -n <name> -f` shape); the
+                // single "dynamic" scheme name is kept server-side.
+                session.runAction(["horneroctl", "scheme", "set-variant", root.normalizeVariantKey(flavour), "--yes"]);
             } else if (variantDirty && pendingVariant) {
-                session.runAction(["dots-color-scheme", "variant", pendingVariant]);
+                session.runAction(["horneroctl", "scheme", "set-variant", pendingVariant, "--yes"]);
             }
             if (modeDirty && pendingMode)
-                session.runAction(["dots-color-scheme", "mode", pendingMode]);
+                session.runAction(["horneroctl", "scheme", "set-mode", pendingMode, "--yes"]);
         }
 
         if (gtkDirty && pendingGtkTheme) {
@@ -499,7 +501,7 @@ Item {
             return;
         const mode = deferredMode;
         deferredMode = "";
-        session.runAction(["dots-color-scheme", "mode", mode]);
+        session.runAction(["horneroctl", "scheme", "set-mode", mode, "--yes"]);
     }
 
     function _flushDeferredPipelineExtras(): void {
@@ -623,8 +625,8 @@ Item {
         gtkColorSchemeDirty = false;
         // Seed live GTK/icon so section checkmarks reflect current state.
         // Do not overwrite a user-staged selection if a previous seed is still in flight.
-        // Native gsettings reads first (GtkSettings); the dots-gtk-theme
-        // queries below are compat fallbacks that yield when native wins.
+        // Native gsettings reads first (GtkSettings); the horneroctl gtk
+        // queries below are fallbacks that yield when native wins.
         GtkSettings.refreshLive();
         liveGtkProc.running = true;
         liveIconProc.running = true;
@@ -778,14 +780,13 @@ Item {
         source: root.previewGenWallpaper
     }
 
-    // TODO(hornero-compat): full M3 preview palettes need materialyoucolor
-    // via dots-m3-colors; native dominant/luminance comes from
-    // previewAnalyser above. Thin compat adapter; see
-    // docs/NATIVE-APPEARANCE.md.
+    // Full M3 preview palettes run through horneroctl (materialyoucolor
+    // backend); native dominant/luminance comes from previewAnalyser above.
+    // See docs/NATIVE-APPEARANCE.md.
     Process {
         id: previewPaletteProc
         command: [
-            root.m3ScriptPath,
+            ...root.m3Base,
             "--image",
             root.previewGenWallpaper,
             "--mode",
@@ -1003,11 +1004,11 @@ Item {
         rightContent: appearanceRightContentComponent
     }
 
-    // TODO(hornero-compat): dots-gtk-theme live-query compat fallback. Yields
-    // to the native GtkSettings reads; kept for hosts without gsettings.
+    // horneroctl gtk live-query fallback. Yields to the native GtkSettings
+    // reads; kept for hosts without gsettings.
     Process {
         id: liveGtkProc
-        command: ["dots-gtk-theme", "-q", "-p", "current"]
+        command: ["horneroctl", "appearance", "gtk", "current"]
         stdout: StdioCollector {
             onStreamFinished: {
                 // Never clobber a staged GTK selection with a late live-seed result.
@@ -1023,10 +1024,10 @@ Item {
         }
     }
 
-    // TODO(hornero-compat): dots-gtk-theme live-query compat fallback; see above.
+    // horneroctl gtk live-query fallback; see above.
     Process {
         id: liveIconProc
-        command: ["dots-gtk-theme", "-q", "-p", "current-icon"]
+        command: ["horneroctl", "appearance", "gtk", "current-icon"]
         stdout: StdioCollector {
             onStreamFinished: {
                 if (root.iconDirty)
@@ -1040,10 +1041,10 @@ Item {
         }
     }
 
-    // TODO(hornero-compat): dots-gtk-theme live-query compat fallback; see above.
+    // horneroctl gtk live-query fallback; see above.
     Process {
         id: liveGtkColorSchemeProc
-        command: ["dots-gtk-theme", "-q", "-p", "current-color-scheme"]
+        command: ["horneroctl", "appearance", "gtk", "current-color-scheme"]
         stdout: StdioCollector {
             onStreamFinished: {
                 if (root.gtkColorSchemeDirty)

@@ -26,7 +26,11 @@ if grep -rn 'ulises-jeremias\|HorneroConfig' "${CODE[@]}" --include='*.qml' \
     report "personal provenance string in code"
 fi
 
-# Appearance must go through dots-gtk-theme / dots-m3-colors only.
+# Appearance must go through horneroctl only: no direct gtk-theme-manager.sh
+# or generate-m3-colors calls, and no retired dots-* wrapper names, in QML.
+if grep -rn 'dots-gtk-theme\|dots-m3-colors\|dots-color-scheme\|dots-appearance\|dots-accent-override\|dots-night-mode\|dots-wallpaper-current\|dots-recorder' --include='*.qml' "${CODE[@]}" 2>/dev/null; then
+    report "retired dots-* wrapper reference in QML"
+fi
 if grep -rn 'gtk-theme-manager\.sh' --include='*.qml' "${CODE[@]}" 2>/dev/null; then
     report "direct gtk-theme-manager.sh call in QML"
 fi

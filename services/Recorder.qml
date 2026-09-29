@@ -31,6 +31,26 @@ Singleton {
         checkProc.running = true;
     }
 
+    // horneroctl capture record speaks --region/--sound/--sr; translate the
+    // legacy gpu-screen-recorder short flags callers still pass. Long flags
+    // go through untouched; anything else is dropped loudly, never silently.
+    function _recordArgs(extra: var): var {
+        const out = [];
+        for (const a of (extra ?? [])) {
+            if (a === "-r")
+                out.push("--region");
+            else if (a === "-s")
+                out.push("--sound");
+            else if (a === "-sr")
+                out.push("--sr");
+            else if (typeof a === "string" && a.startsWith("--"))
+                out.push(a);
+            else
+                console.warn("Recorder: dropping unsupported record flag:", a);
+        }
+        return out;
+    }
+
     PersistentProperties {
         id: props
 
@@ -51,17 +71,15 @@ Singleton {
 
             if (code === 0) {
                 if (root.needsStop) {
-                    Quickshell.execDetached(["dots-recorder", "stop"]);
+                    Quickshell.execDetached(["horneroctl", "capture", "record", "stop", "--yes"]);
                     props.running = false;
                     props.paused = false;
                 } else if (root.needsPause) {
-                    Quickshell.execDetached(["dots-recorder", "pause"]);
+                    Quickshell.execDetached(["horneroctl", "capture", "record", "pause", "--yes"]);
                     props.paused = !props.paused;
                 }
             } else if (root.needsStart) {
-                // TODO(hornero-compat): dots-recorder is an external runtime CLI;
-                // see docs/COMPAT.md (disposition A).
-                Quickshell.execDetached(["dots-recorder", "start", ...root.startArgs]);
+                Quickshell.execDetached(["horneroctl", "capture", "record", "start", ...root._recordArgs(root.startArgs), "--yes"]);
                 props.running = true;
                 props.paused = false;
                 props.elapsed = 0;

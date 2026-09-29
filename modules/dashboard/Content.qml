@@ -124,9 +124,7 @@ Item {
 
                 Pane {
                     index: 6
-                    sourceComponent: Keybindings {
-                        isCurrent: view.currentIndex === 6
-                    }
+                    sourceComponent: Keybindings {}
                 }
             }
 

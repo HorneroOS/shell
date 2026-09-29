@@ -76,13 +76,18 @@ Singleton {
 
     // Suppression inputs. The host binds these to live shell state
     // (session lock, fullscreen, game mode); AreaPicker sets
-    // areaPickerOpen directly while open.
+    // areaPickerOpen directly while open, and the Control Center
+    // WindowFactory sets controlCenterOpen while a Settings window
+    // exists. Settings is a focused configuration surface: the
+    // Overlay-layer companion would otherwise paint above it (see
+    // docs/COMPANION.md z-order policy), so it yields while open.
     property bool suppressLocked: false
     property bool suppressFullscreen: false
     property bool suppressGameMode: false
     property bool areaPickerOpen: false
+    property bool controlCenterOpen: false
 
-    readonly property bool suppressed: root.suppressLocked || root.suppressFullscreen || root.suppressGameMode || root.areaPickerOpen
+    readonly property bool suppressed: root.suppressLocked || root.suppressFullscreen || root.suppressGameMode || root.areaPickerOpen || root.controlCenterOpen
     readonly property bool visible: persist.enabled && !root.suppressed && persist.state !== "hidden"
 
     property string bubbleText: ""

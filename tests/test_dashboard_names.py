@@ -68,3 +68,15 @@ def test_dash_media_empty_state_says_no_media_once():
         "dash media album line must hide when no player is active"
     assert "Play some music for stuff to show up here!" in text, \
         "dash media artist line must show the friendly empty hint"
+
+
+def test_dashboard_role_statement_exists():
+    # ADR 004: the dashboard acts on the live session, never on
+    # persisted configuration. The statement must exist, stay proposed
+    # until reviewed, and name all five tabs with the admission test.
+    adr = (ROOT / "docs" / "adr" / "004-dashboard-roles.md").read_text()
+    assert "Status: proposed" in adr
+    for tab in ("Media", "Performance", "Weather", "Workspaces"):
+        assert tab in adr, f"ADR 004 missing tab role: {tab}"
+    assert "persisted configuration" in adr
+    assert "admission test" in adr.lower()

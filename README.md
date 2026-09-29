@@ -19,17 +19,18 @@ for performance-critical work (image analysis, audio, calculator).
 - **Does not own**: compositor/terminal/app defaults
   ([HorneroOS/config](https://github.com/HorneroOS/config)), distribution
   composition ([HorneroOS/hornero](https://github.com/HorneroOS/hornero)),
-  user overrides (`~/.config/hornero`, theme/wallpaper data), or the
-  `dots-*` helper CLIs it shells out to (external runtime contracts, see
-  `docs/COMPAT.md`).
+  user overrides (`~/.config/hornero`, theme/wallpaper data), or external
+  CLIs: the shell calls `horneroctl` by bare name and nothing else
+  (external runtime contracts, see `docs/COMPAT.md`).
 
 ## Status
 
-Initial extraction from `ulises-jeremias/dotfiles@b26db04`
-(`feat/initial-shell-extraction`). Functional parity with the dotfiles
-shell minus personal-workstation assumptions. Known debt: `dots-*`
-compat adapters (`docs/COMPAT.md`), bare-`python3` theme loader
-(`modules/launcher/services/Themes.qml`).
+Under active development; shell changes ship through the
+HorneroOS/hornero preview candidates. The `dots-*` compat adapters
+are retired (external coupling is `horneroctl`-only, see
+`docs/COMPAT.md`), and the appearance path never shells out to bare
+`python3` (`tests/test_appearance_consistency.py` enforces this).
+Extraction history lives under Provenance below.
 
 ## Build
 

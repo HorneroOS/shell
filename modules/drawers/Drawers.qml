@@ -56,10 +56,7 @@ Variants {
             screen: scope.modelData
             name: "drawers"
             WlrLayershell.exclusionMode: ExclusionMode.Ignore
-            // Dashboard joins the focus set: its Keys tab (and workspace
-            // rename field) take real text input, which never receives
-            // keystrokes while the surface stays at keyboardFocus None.
-            WlrLayershell.keyboardFocus: visibilities.launcher || visibilities.session || visibilities.layoutPicker || visibilities.dashboard ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+            WlrLayershell.keyboardFocus: visibilities.launcher || visibilities.session || visibilities.layoutPicker ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
             mask: Region {
                 regions: win.hasFullscreen ? [] : inputRegions.instances

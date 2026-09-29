@@ -38,6 +38,24 @@ def test_dashboard_content_references_resolve_to_files():
     assert not missing, f"dashboard references without a same-dir file: {missing}"
 
 
+def test_dashboard_layout_tab_removed_per_adr003():
+    # ADR 003: layout presets keep two homes (drawer quick picker +
+    # Control Center pane); the dashboard tab duplicated them with no
+    # unique value. currentTab survives in-process reloads via
+    # reloadableId and may still name the old trailing index, so both
+    # consumers must clamp.
+    tabs = (DASH / "Tabs.qml").read_text()
+    assert "dashboard_customize" not in tabs, "Layout tab must be gone"
+    assert "LayoutPickerView" not in CONTENT.read_text(), "Layout pane must be gone"
+    assert not (DASH / "LayoutPickerView.qml").exists(), "dead view file must be gone"
+    for path in (DASH / "Tabs.qml", CONTENT):
+        assert "Math.min(root.state.currentTab" in path.read_text(), \
+            f"{path.name} must clamp a stale persisted tab index"
+    pane_ids = re.findall(r"index:\s*(\d+)", CONTENT.read_text())
+    assert sorted(pane_ids) == ["0", "1", "2", "3", "4"], \
+        f"dashboard panes must be 0-4 contiguous, got {pane_ids}"
+
+
 def test_dash_media_empty_state_says_no_media_once():
     # Empty players must read as one deliberate placeholder, not three
     # repeated "No media" lines (website showroom caught the triple).

@@ -37,7 +37,7 @@ ColumnLayout {
                 byName[g] = [];
                 order.push(g);
             }
-            const label = root.humanize(e.id);
+            const label = root.describe(e);
             if (!byName[g].some(r => r.keys === keys && r.label === label))
                 byName[g].push({ keys, parts: root.chips(e), label });
         }
@@ -99,6 +99,116 @@ ColumnLayout {
         return String(id).replace(/^(exec|ipc|app)-/, "").replace(/[-_:]+/g, " ").replace(/^./, c => c.toUpperCase());
     }
 
+    // Keycap glyphs: the manifest carries raw XKB key names, so the
+    // cheatsheet translates symbolic ones here into what is printed on
+    // the key. Unknown names pass through untouched (never blank).
+    function keyGlyph(key: string): string {
+        const glyphs = {
+            "apostrophe": "'",
+            "comma": ",",
+            "period": ".",
+            "minus": "-",
+            "equal": "=",
+            "slash": "/",
+            "question": "?",
+            "Return": "Enter",
+            "return": "Enter",
+            "escape": "Esc",
+            "left": "←",
+            "right": "→",
+            "up": "↑",
+            "down": "↓",
+            "mouse:272": "Left click",
+            "mouse:273": "Right click",
+            "mouse_down": "Scroll down",
+            "mouse_up": "Scroll up"
+        };
+        if (glyphs[key] !== undefined)
+            return glyphs[key];
+        if (key.indexOf("XF86") === 0)
+            return key.substring(4).replace(/([a-z])([A-Z])/g, "$1 $2");
+        return key;
+    }
+
+    // Human-readable action labels. The manifest only carries machine ids
+    // (dispatcher + args), so the cheatsheet translates them here using the
+    // exact wording of the HorneroOS/config keybindings.conf comments.
+    // Unknown pairs fall back to a prettified dispatcher + args and are
+    // never hidden or left as raw machine ids.
+    function describe(entry: var): string {
+        const disp = String(entry.dispatcher || "");
+        const args = String(entry.args || "").trim();
+        const exact = {
+            "killactive|": "Close active window",
+            "centerwindow|": "Move window to center",
+            "togglefloating|": "Toggle floating",
+            "fullscreen|0": "Toggle fullscreen",
+            "fullscreen|1": "Toggle maximize",
+            "pin|": "Pin window (all workspaces)",
+            "exit|": "Exit Hyprland",
+            "focuscurrentorlast|": "Focus current or last window",
+            "togglegroup|": "Toggle group",
+            "lockactivegroup|toggle": "Toggle group lock",
+            "changegroupactive|f": "Focus next window in group",
+            "changegroupactive|b": "Focus previous window in group",
+            "togglespecialworkspace|magic": "Toggle scratchpad",
+            "movewindow|": "Drag to move window",
+            "resizewindow|": "Drag to resize window",
+            "submap|resize": "Window-resize keys",
+            "submap|reset": "Reset keys",
+            "scrolloverview:overview|toggle": "Toggle overview",
+            "scrolloverview:overview|select": "Select in overview",
+            "scrolloverview:overview|off": "Hide overview",
+            "layoutmsg|promote": "Promote focused window into its own column",
+            "layoutmsg|togglefit": "Toggle focus fit behavior (center/fit)",
+            "layoutmsg|move -col": "Move viewport left one column",
+            "layoutmsg|move +col": "Move viewport right one column",
+            "layoutmsg|swapcol l": "Swap column with left neighbor",
+            "layoutmsg|swapcol r": "Swap column with right neighbor",
+            "layoutmsg|colresize +conf": "Widen column",
+            "layoutmsg|colresize -conf": "Narrow column",
+            "layoutmsg|colresize +0.05": "Widen column (fine)",
+            "layoutmsg|colresize -0.05": "Narrow column (fine)",
+            "layoutmsg|fit active": "Fit active window to column",
+            "layoutmsg|fit visible": "Fit all visible columns"
+        };
+        if (exact[disp + "|" + args] !== undefined)
+            return exact[disp + "|" + args];
+
+        const dir = {
+            "l": "left",
+            "r": "right",
+            "u": "up",
+            "d": "down"
+        };
+        if (disp === "workspace") {
+            if (args === "e+1")
+                return "Next workspace";
+            if (args === "e-1")
+                return "Previous workspace";
+            return "Go to workspace " + args;
+        }
+        if (disp === "movetoworkspace") {
+            if (args === "special:magic")
+                return "Move window to scratchpad";
+            return "Move window to workspace " + args;
+        }
+        if (disp === "movetoworkspacesilent")
+            return "Move window to workspace " + args + " (silent)";
+        if ((disp === "movefocus" || disp === "movewindow") && dir[args] !== undefined)
+            return (disp === "movefocus" ? "Focus window " : "Move window ") + dir[args];
+        if (disp === "resizeactive")
+            return "Resize active window (" + args.split(/\s+/).join(", ") + ")";
+        if (disp === "scrolloverview:navigate")
+            return "Navigate overview " + args;
+        if (/^(exec|ipc|app)-/.test(String(entry.id || "")))
+            return root.humanize(String(entry.id));
+
+        // Generic fallback: prettified dispatcher plus raw args.
+        const pretty = disp.replace(/[-_:]+/g, " ").replace(/^./, c => c.toUpperCase());
+        return args === "" ? pretty : pretty + ": " + args;
+    }
+
     function chips(entry: var): var {
         const parts = [];
         for (const m of (entry.mods || [])) {
@@ -106,7 +216,7 @@ ColumnLayout {
                 parts.push(m);
         }
         if (typeof entry.key === "string" && entry.key !== "")
-            parts.push(entry.key);
+            parts.push(root.keyGlyph(entry.key));
         return parts;
     }
 

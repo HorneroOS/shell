@@ -84,3 +84,59 @@ def test_learn_page_links_shortcuts():
 def test_ipc_docs_list_shortcuts_page():
     text = IPCDOC.read_text()
     assert "shortcuts" in text, "docs/IPC.md welcome pages must list shortcuts"
+
+
+def test_shortcut_labels_are_human_readable():
+    """Cheatsheet rows must describe actions, not dispatcher internals.
+
+    Regression: rows rendered raw manifest ids (Centerwindow unnamed,
+    Killactive unnamed, Layoutmsg colresize conf). describe() translates
+    dispatcher+args using the config keybindings wording; unknown pairs
+    fall back to a prettified dispatcher, never a raw id.
+    """
+    text = SHORTCUT_LIST.read_text()
+    assert "function describe(entry" in text, "ShortcutList needs describe()"
+    assert "root.describe(e)" in text, "rows must render describe(), not humanize(id)"
+    for label in ("Close active window", "Move window to center",
+                  "Toggle floating", "Toggle maximize",
+                  "Promote focused window into its own column",
+                  "Swap column with left neighbor",
+                  "Swap column with right neighbor",
+                  "Move viewport left one column",
+                  "Narrow column", "Widen column (fine)",
+                  "Fit active window to column",
+                  "Drag to move window", "Drag to resize window",
+                  "Go to workspace ",
+                  "Move window to workspace ", "Focus window ",
+                  "Toggle scratchpad"):
+        assert label in text, f"cheatsheet missing label: {label}"
+    assert "unnamed" not in text.lower(), "raw :unnamed ids must not leak into labels"
+
+
+def test_shortcut_entries_keep_manifest_args():
+    """ShortcutHints.entries must carry manifest args, not drop them.
+
+    Regression: parse() built entries as {id, dispatcher, mods, key},
+    so describe() saw empty args and every layoutmsg/fullscreen row
+    fell back to a bare dispatcher label ("Layoutmsg", "Fullscreen").
+    """
+    hints = (WELCOME / "ShortcutHints.qml").read_text()
+    assert re.search(r"all\.push\(\{[^}]*\bargs\b", hints), (
+        "entries must forward the manifest args field to the cheatsheet")
+
+
+def test_shortcut_keycaps_use_printed_glyphs():
+    """Keycap chips show what is printed on the key, not XKB names.
+
+    Regression: pills rendered raw XKB names ("SUPER apostrophe",
+    "SUPER comma", "SUPER minus"). keyGlyph() translates symbolic key
+    names; unknown names pass through (never blank).
+    """
+    text = SHORTCUT_LIST.read_text()
+    assert "function keyGlyph(key" in text, "ShortcutList needs keyGlyph()"
+    assert "root.keyGlyph(entry.key)" in text, "chips must render keyGlyph(), not raw key"
+    for pair in ('"apostrophe": "\'"', '"comma": ","', '"minus": "-"',
+                 '"equal": "="', '"slash": "/"', '"question": "?"',
+                 '"escape": "Esc"', '"mouse:272": "Left click"'):
+        assert pair in text, f"keycap glyph missing: {pair}"
+    assert "XF86" in text, "media keys must prettify the XF86 prefix"

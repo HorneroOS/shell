@@ -44,7 +44,7 @@ suppressed while a fullscreen window has focus.
 (validated against the pane registry: an unknown pane logs a warning
 and opens the default pane, never crashes). `welcome open [page]`
 opens the Welcome Center (`start`, `navigate`, `shell`, `workspaces`,
-`personalize`, `tools`, `system`, `learn`; unknown pages open `start`
+`personalize`, `tools`, `system`, `learn`, `shortcuts`; unknown pages open `start`
 with a warning); `welcome close()` closes it; `welcome status()`
 prints JSON (`{"open": bool, "page": string, "showOnLogin": bool}`).
 Every opening records the session sighting, so a shell reload in the

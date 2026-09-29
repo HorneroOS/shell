@@ -2,6 +2,7 @@ pragma Singleton
 
 import qs.components
 import qs.services
+import qs.modules.companion
 import qs.modules.controlcenter
 import Quickshell
 import QtQuick
@@ -14,6 +15,14 @@ Singleton {
     // opens never stack duplicate windows.
     property var windows: []
 
+    // Companion yield: a Settings window is a focused configuration
+    // surface, and the Overlay-layer companion paints above every
+    // toplevel (docs/COMPANION.md z-order policy). Report open state
+    // so the companion hides while Settings is up and returns after.
+    function syncCompanion(): void {
+        CompanionStore.controlCenterOpen = windows.length > 0;
+    }
+
     function create(parent: Item, props: var): void {
         prune();
         if (windows.length > 0) {
@@ -21,16 +30,19 @@ Singleton {
             const pane = props?.pane?.toString() ?? "";
             if (pane !== "" && PaneRegistry.getById(pane))
                 existing.active = pane;
+            root.syncCompanion();
             return;
         }
         const win = controlCenter.createObject(parent ?? dummy, props);
         if (win)
             windows.push(win);
+        root.syncCompanion();
     }
 
     function closeAll(): void {
         const open = windows;
         windows = [];
+        root.syncCompanion();
         for (let i = 0; i < open.length; ++i) {
             // Tracked refs can outlive their window across engine reloads
             // or teardown; never let a dead ref break the close path.
@@ -45,6 +57,7 @@ Singleton {
 
     function forget(win: Item): void {
         windows = windows.filter(w => w && w !== win);
+        root.syncCompanion();
     }
 
     function prune(): void {

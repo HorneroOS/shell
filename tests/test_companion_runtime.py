@@ -268,3 +268,36 @@ def test_assistant_boundary_docs():
     assert "presentation" in adr.lower()
     assert "COMPANION_ASSISTANT" in adr or "assistant" in adr.lower()
     assert "002-companion-assistant-boundary" in (ROOT / "docs" / "COMPANION.md").read_text()
+
+
+def test_settings_open_suppresses_companion():
+    # The Overlay-layer companion paints above the floating Settings
+    # window by structure, so an open Settings window must suppress it
+    # like the other focused configuration surface (area picker).
+    assert "property bool controlCenterOpen: false" in STORE
+    assert "|| root.controlCenterOpen" in STORE
+
+
+def test_window_factory_syncs_companion_open_state():
+    factory = (ROOT / "modules" / "controlcenter" / "WindowFactory.qml").read_text()
+    assert "import qs.modules.companion" in factory
+    assert "CompanionStore.controlCenterOpen = windows.length > 0" in factory
+    # Every mutation of the tracked window list re-syncs: open, reuse,
+    # close-all, and window destruction (via forget).
+    assert factory.count("syncCompanion()") >= 4
+
+
+def test_z_order_policy_documented():
+    doc = (ROOT / "docs" / "COMPANION.md").read_text()
+    assert "## Z-order policy" in doc
+    assert "controlCenterOpen" in doc
+    assert "areaPickerOpen" in doc
+    assert "non-goals" in doc.lower()
+
+
+def test_control_center_dead_close_stub_removed():
+    # ControlCenter.qml carried an empty close() no caller ever used;
+    # the real close path is WindowFactory (closeAll) plus FloatingWindow
+    # teardown. The stub must not come back.
+    cc = (ROOT / "modules" / "controlcenter" / "ControlCenter.qml").read_text()
+    assert "function close()" not in cc

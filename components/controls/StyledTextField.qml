@@ -18,6 +18,24 @@ TextField {
     renderType: echoMode === TextField.Password ? TextField.QtRendering : TextField.NativeRendering
     cursorVisible: !readOnly
 
+    // Tab stays inside the keyboard-holding drawer (FocusMode, #84).
+    // Qt runs onTabPressed before onPressed, so fields that route Tab
+    // themselves (launcher vim mode) must opt out with trapTab: false.
+    property bool trapTab: true
+
+    Keys.onTabPressed: event => {
+        if (root.trapTab)
+            FocusMode.handleTab(root, event, false);
+        else
+            event.accepted = false;
+    }
+    Keys.onBacktabPressed: event => {
+        if (root.trapTab)
+            FocusMode.handleTab(root, event, true);
+        else
+            event.accepted = false;
+    }
+
     background: null
 
     cursorDelegate: StyledRect {

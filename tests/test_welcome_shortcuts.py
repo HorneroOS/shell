@@ -57,9 +57,13 @@ def test_drawers_keep_dashboard_keyboard_focus():
     text = DRAWERS.read_text()
     m = re.search(r"WlrLayershell\.keyboardFocus:\s*(.+)", text)
     assert m, "keyboardFocus binding missing in Drawers.qml"
-    assert "visibilities.dashboard" in m.group(1), (
-        "dashboard must stay in the OnDemand keyboard-focus set for "
-        "its text inputs")
+    # keyboardFocus follows the focus grab (#84); the dashboard reaches
+    # OnDemand through the grab on explicit opens and on a click inside
+    # a hover-opened dashboard (its rename field).
+    assert "focusGrab.active" in m.group(1)
+    grab = next(line for line in text.splitlines() if line.strip().startswith("active:"))
+    assert "visibilities.dashboard" in grab, (
+        "dashboard must stay in the focus-grab set for its text inputs")
 
 
 def test_shortcuts_cozy_visual_contract():

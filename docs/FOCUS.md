@@ -72,13 +72,41 @@ the newly keyboard-holding surface. If Qt ever strands keys (no
 focusable accepts Tab), that is a bug in the surface, fixed there,
 not with global focus hacks.
 
-## Window activation (open problem, #84)
+## Window activation and Tab scope (#84)
 
-Tab/arrows/typing need Qt window activation, and nothing tried so
-far produces it on the drawers layer surface: the S4 Exclusive
-attempt was reverted (the compositor clears the focus grab when
-the surface takes Exclusive, bouncing every open), and Exclusive
-alone delivers keys but no `activeFocusItem`. Until #84 lands a
-redesign, Tab traversal stays dead as pre-S4; the `Interactive` /
-`FocusRing` / `FocusMode` foundation and the `debug focusState`
-probe stay in place as the observability base for that work.
+Keyboard delivery and Qt activation are one mechanism on the drawers
+layer surface: the compositor gives it keyboard focus, and QtWayland
+activates the window on `wl_keyboard.enter` whatever its shell role.
+
+- Explicit opens (shortcut, IPC, action, or a click inside a
+  hover-opened drawer) activate `HyprlandFocusGrab`, and the surface's
+  `keyboardFocus` is `OnDemand` exactly while that grab is active. The
+  grab hands the surface the keyboard; `activeFocusItem`, Tab and
+  typing all work.
+- Hover opens keep `keyboardFocus: None`. With `follow_mouse = 1`
+  Hyprland gives an on-demand layer under the pointer the keyboard,
+  so any other value would steal typing from the focused app.
+- Never `Exclusive`: Hyprland clears the focus grab when a mapped
+  surface commits `exclusive` (`LayerSurface.cpp`, no `accepts()`
+  check on that path), which is the "bounce" the reverted S4 attempt
+  hit.
+- The bar and every drawer share one window, and Qt's tab chain spans
+  the whole window; `FocusScope` does not confine it. `FocusMode`
+  therefore holds `currentRoot` (the topmost keyboard-holding drawer,
+  published by `Drawers` while its grab is active) and every
+  focusable delegates `Tab`/`Shift+Tab` to `FocusMode.handleTab`,
+  which steps through the chain inside that root only. A Tab that no
+  focusable handles (Qt focus still outside the drawer) reaches the
+  drawers root handler, which enters the drawer at its first stop.
+
+Read activation through the attached `Window` property of an item in
+the window (`win.contentItem.Window.active` / `.activeFocusItem`);
+`PanelWindow` itself has no `active` or `activeFocusItem` property.
+Surfaces with their own arrow/Tab handling (session buttons via
+`KeyNavigation`, the layout-picker grid, bar popout text fields) keep
+it; they do not route through `FocusMode`. Launcher vim mode opts its
+search field out of the trap (`trapTab: false`) to use Tab for the
+result list.
+
+`qs ipc call debug focusState` reports window activation, the grab,
+keyboard intent, the Tab root and whether focus is inside it.

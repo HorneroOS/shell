@@ -11,6 +11,8 @@ Slider {
         if (activeFocus)
             FocusMode.reportFocus(root.pressed);
     }
+    Keys.onTabPressed: event => FocusMode.handleTab(root, event, false)
+    Keys.onBacktabPressed: event => FocusMode.handleTab(root, event, true)
 
     opacity: root.enabled ? 1 : 0.5
 

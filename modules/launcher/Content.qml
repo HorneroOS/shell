@@ -71,6 +71,9 @@ Item {
         StyledTextField {
             id: search
 
+            // Vim mode routes Tab/Shift+Tab to the result list.
+            trapTab: !Config.launcher.vimKeybinds
+
             anchors.left: searchIcon.right
             anchors.right: clearIcon.left
             anchors.leftMargin: Appearance.spacing.small
@@ -118,11 +121,11 @@ Item {
                         list.currentList?.decrementCurrentIndex();
                         event.accepted = true;
                     }
-                } else if (event.key === Qt.Key_Tab) {
-                    list.currentList?.incrementCurrentIndex();
-                    event.accepted = true;
                 } else if (event.key === Qt.Key_Backtab || (event.key === Qt.Key_Tab && (event.modifiers & Qt.ShiftModifier))) {
                     list.currentList?.decrementCurrentIndex();
+                    event.accepted = true;
+                } else if (event.key === Qt.Key_Tab) {
+                    list.currentList?.incrementCurrentIndex();
                     event.accepted = true;
                 }
             }

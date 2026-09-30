@@ -27,16 +27,17 @@ def test_central_handler_covers_all_drawers():
     assert "visibilities.osd = false" in src
 
 
-def test_focus_set_covers_all_drawers():
-    """keyboardFocus must include every drawer or Escape never arrives."""
+def test_keyboard_focus_follows_grab():
+    """keyboardFocus is OnDemand exactly while the focus grab is active
+    (#84): the grab covers every cascade drawer, and hover opens stay
+    None so follow_mouse=1 never hands them the keyboard. Exclusive
+    is banned: committing it on a mapped surface clears the grab."""
     src = DRAWERS.read_text()
     focus_line = next(
-        line
-        for line in src.splitlines()
-        if "WlrLayershell.keyboardFocus" in line and "visibilities" in line
+        line for line in src.splitlines() if "WlrLayershell.keyboardFocus:" in line
     )
-    for vis in ("launcher", "session", "layoutPicker", "dashboard", "sidebar", "utilities"):
-        assert f"visibilities.{vis}" in focus_line, f"{vis} missing from focus set"
+    assert "focusGrab.active ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None" in focus_line
+    assert "WlrKeyboardFocus.Exclusive" not in src
 
 
 def test_click_outside_covers_utilities():
@@ -89,8 +90,29 @@ def test_dashboard_grab_is_explicit_only():
     grab_line = next(
         line for line in src.splitlines() if line.strip().startswith("active:")
     )
-    assert "interactions.dashboardShortcutActive" in grab_line
+    assert "interactions.dashboardKeyboardIntent" in grab_line
     assert "!Config.dashboard.showOnHover" in grab_line
+
+
+def test_utilities_grab_is_explicit_only():
+    """Utilities opens on bottom-edge hover like the dashboard, so it
+    follows the same rule: hover opens never take the keyboard."""
+    src = DRAWERS.read_text()
+    grab_line = next(
+        line for line in src.splitlines() if line.strip().startswith("active:")
+    )
+    assert "interactions.utilitiesKeyboardIntent && visibilities.utilities" in grab_line
+
+
+def test_click_inside_promotes_keyboard_intent():
+    """A click inside a hover-opened drawer is keyboard intent (rename
+    field); intent survives the shortcut->hover hand-off and clears
+    when the drawer closes."""
+    src = (ROOT / "modules" / "drawers" / "Interactions.qml").read_text()
+    for name in ("dashboard", "utilities"):
+        assert f"property bool {name}KeyboardIntent" in src
+        assert f"{name}KeyboardIntent = true" in src
+        assert f"root.{name}KeyboardIntent = false" in src
 
 
 def test_shortcut_active_inferred_from_mouse():

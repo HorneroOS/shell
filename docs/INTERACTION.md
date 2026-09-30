@@ -19,22 +19,22 @@ Standalone OSD keeps timer-only dismissal on purpose: giving it
 keyboard focus would steal focus on every volume or brightness
 change. Toasts likewise expire by timer (hover pauses expiry).
 
-## Key delivery: the grab, not Qt focus
+## Key delivery: the grab
 
 Physical keys reach the drawers surface through the
-`HyprlandFocusGrab` in `Drawers.qml` — Qt `forceActiveFocus()`
-handoffs were proven inert in nested validation (Qt focus never
-sticks without compositor keyboard focus, and grabbed keys arrive
-regardless of which item holds it). Every drawer the cascade must
+`HyprlandFocusGrab` in `Drawers.qml`, and the surface's keyboard
+interactivity follows that grab exactly (`OnDemand` while grabbed,
+`None` otherwise; see `FOCUS.md`). Every drawer the cascade must
 dismiss therefore needs grab coverage on its keyboard-driven opens.
 
-Dashboard hover opens stay grab-free on purpose: an edge touch must
-never steal typing from other apps. Explicit opens — shortcut, IPC,
-action — grab instead. The two are told apart at open time
-(`Interactions.onDashboardChanged`): flag flips while the mouse is
-outside the area mean keyboard-driven, so `dashboardShortcutActive`
-is set and the grab engages; hovering over a shortcut-opened
-dashboard hands control back to hover and releases the grab. With
+Dashboard and utilities hover opens stay grab-free on purpose: an
+edge touch must never steal typing from other apps. Explicit opens —
+shortcut, IPC, action — set keyboard intent and grab instead. The two
+are told apart at open time (`Interactions.on*Changed`): a flag flip
+while the mouse is outside the area means keyboard-driven. A click
+inside a hover-opened drawer is also keyboard intent (the dashboard
+rename field needs it). Intent survives the shortcut-to-hover
+hand-off and clears when the drawer closes. With
 `showOnHover: false` the dashboard can only open explicitly, so it
 always grabs.
 
@@ -48,9 +48,9 @@ Escape — it must authenticate), and the companion menu below.
 |---|---|---|---|
 | Launcher | closes (central) | focus grab clears | re-issue shortcut |
 | Session | disarm, then close | focus grab clears | re-issue shortcut |
-| Dashboard | closes (central, explicit opens grab) | grab clears, else hover-leave | rename takes first Escape |
+| Dashboard | closes (central, explicit opens and clicks grab) | grab clears, else hover-leave | rename takes first Escape |
 | Sidebar | closes (central) | focus grab clears | re-issue shortcut |
-| Utilities | closes (central) | focus grab clears | hover-leave also hides |
+| Utilities | closes when opened explicitly or clicked into; hover opens close on leave | grab clears (explicit/clicked), else hover-leave | a shortcut while the pointer already rests in the area counts as hover |
 | Layout picker | closes (central) | focus grab clears | re-issue shortcut |
 | Bar popouts | closes (own handler) | own grab clears | re-click trigger |
 | OSD | clears with a drawer | — | timer |

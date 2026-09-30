@@ -38,6 +38,13 @@ dashboard hands control back to hover and releases the grab. With
 `showOnHover: false` the dashboard can only open explicitly, so it
 always grabs.
 
+The grab delivers keys but never activates the Qt window: `Tab`
+traversal, arrows and typing additionally need a real
+`wl_keyboard` enter, which S4 provides via `WlrKeyboardFocus`
+`Exclusive` on explicit opens only (same `*ShortcutActive`
+inference; see `FOCUS.md`). Hover opens stay `OnDemand` so edge
+touches never steal typing.
+
 Separate windows keep their own handlers: Settings and Welcome
 floating windows, the area picker, the session lock (which ignores
 Escape — it must authenticate), and the companion menu below.

@@ -25,18 +25,6 @@ Item {
     implicitHeight: 0
     implicitWidth: sidebar.visible ? sidebar.width : Config.utilities.sizes.width
 
-    // Same loader-race focus handoff as the dashboard wrapper (the
-    // content Loader gates on a startup timer here too).
-    focus: true
-    onVisibleChanged: {
-        if (visible) {
-            if (content.item)
-                content.item.forceActiveFocus();
-            else
-                root.forceActiveFocus();
-        }
-    }
-
     onStateChanged: {
         if (state === "visible" && timer.running) {
             timer.triggered();

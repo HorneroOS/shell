@@ -199,7 +199,13 @@ Variants {
             HyprlandFocusGrab {
                 id: focusGrab
 
-                active: (visibilities.launcher && Config.launcher.enabled) || (visibilities.session && Config.session.enabled) || (visibilities.sidebar && Config.sidebar.enabled) || (!Config.dashboard.showOnHover && visibilities.dashboard && Config.dashboard.enabled) || (visibilities.utilities && Config.utilities.enabled) || visibilities.layoutPicker || (panels.popouts.currentName.startsWith("traymenu") && panels.popouts.current?.depth > 1)
+                // The grab (not Qt item focus) is what routes physical keys
+                // to this surface, so every drawer the Escape cascade must
+                // dismiss needs grab coverage on its keyboard-driven opens.
+                // Dashboard hover opens stay grab-free so edge touches never
+                // steal typing from other apps; explicit opens (shortcut, IPC,
+                // action — mouse outside the area, see Interactions) grab.
+                active: (visibilities.launcher && Config.launcher.enabled) || (visibilities.session && Config.session.enabled) || (visibilities.sidebar && Config.sidebar.enabled) || ((!Config.dashboard.showOnHover || interactions.dashboardShortcutActive) && visibilities.dashboard && Config.dashboard.enabled) || (visibilities.utilities && Config.utilities.enabled) || visibilities.layoutPicker || (panels.popouts.currentName.startsWith("traymenu") && panels.popouts.current?.depth > 1)
                 windows: [win]
                 onCleared: {
                     visibilities.launcher = false;
@@ -375,6 +381,8 @@ Variants {
             }
 
             Interactions {
+                id: interactions
+
                 enabled: !win.hasFullscreen
                 screen: scope.modelData
                 popouts: panels.popouts

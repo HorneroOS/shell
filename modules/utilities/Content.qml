@@ -13,14 +13,9 @@ Item {
     implicitWidth: layout.implicitWidth
     implicitHeight: layout.implicitHeight
 
-    // Take focus while open so window-level Escape reaches the
-    // central cascade (S4 will move this to focusable controls).
-    // Deferred to visibility: focusing while still hidden fails.
+    // Focusable root for S4 keyboard navigation. Escape delivery
+    // comes from the HyprlandFocusGrab, not Qt item focus (INTERACTION.md).
     focus: true
-    onVisibleChanged: {
-        if (visible && root.visibilities.utilities)
-            root.forceActiveFocus();
-    }
 
     ColumnLayout {
         id: layout

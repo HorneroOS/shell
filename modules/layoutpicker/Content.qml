@@ -19,11 +19,6 @@ Item {
 
     focus: true
     // Escape handled centrally (Drawers.dismissTopmost).
-    // Deferred to visibility: focusing while still hidden fails.
-    onVisibleChanged: {
-        if (visible && root.visibilities.layoutPicker)
-            root.forceActiveFocus();
-    }
 
     StyledClippingRect {
         anchors.fill: parent

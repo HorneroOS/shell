@@ -69,28 +69,66 @@ def test_inner_state_handlers_retained():
     assert "armedAction" in session
 
 
-def test_drawer_contents_take_focus():
-    """Dashboard/sidebar/utilities grab focus on open for key delivery."""
+def test_grab_covers_all_cascade_drawers():
+    """Physical keys reach the surface via HyprlandFocusGrab, not Qt
+    item focus — so every drawer dismissTopmost() can close needs a
+    grab term (nested-proven: grab-less dashboard never saw Escape)."""
+    src = DRAWERS.read_text()
+    grab_line = next(
+        line for line in src.splitlines() if line.strip().startswith("active:")
+    )
+    for vis in ("launcher", "session", "sidebar", "dashboard", "utilities", "layoutPicker"):
+        assert f"visibilities.{vis}" in grab_line, f"{vis} missing from grab"
+
+
+def test_dashboard_grab_is_explicit_only():
+    """Hover-opened dashboard must not steal typing from other apps;
+    only explicit opens (shortcut/IPC/action, mouse outside the area)
+    grab. The showOnHover=false config keeps its unconditional grab."""
+    src = DRAWERS.read_text()
+    grab_line = next(
+        line for line in src.splitlines() if line.strip().startswith("active:")
+    )
+    assert "interactions.dashboardShortcutActive" in grab_line
+    assert "!Config.dashboard.showOnHover" in grab_line
+
+
+def test_shortcut_active_inferred_from_mouse():
+    """Explicit vs hover is inferred at open time: flag flips while the
+    mouse is outside the area means keyboard-driven (grab); hovering
+    over a shortcut-opened drawer hands control back to hover."""
+    src = (ROOT / "modules" / "drawers" / "Interactions.qml").read_text()
+    assert "property bool dashboardShortcutActive" in src
+    assert "root.dashboardShortcutActive = true" in src
+    assert "id: interactions" in DRAWERS.read_text()
+
+
+def test_no_qt_focus_handoffs_in_drawers():
+    """forceActiveFocus() handoffs do not deliver Escape (proven inert
+    in nested validation: Qt focus never sticks without compositor
+    keyboard focus) and must not creep back into drawer open paths."""
+    for rel in (
+        "modules/dashboard/Content.qml",
+        "modules/dashboard/Wrapper.qml",
+        "modules/sidebar/Content.qml",
+        "modules/utilities/Content.qml",
+        "modules/utilities/Wrapper.qml",
+        "modules/layoutpicker/Content.qml",
+    ):
+        src = (ROOT / rel).read_text()
+        assert "forceActiveFocus()" not in src, f"{rel} regained a focus handoff"
+
+
+def test_drawer_roots_stay_focusable_for_s4():
+    """Content roots keep focus:true as S4 keyboard-navigation seeds;
+    the grab (not these flags) delivers S3 Escape today."""
     for rel in (
         "modules/dashboard/Content.qml",
         "modules/sidebar/Content.qml",
         "modules/utilities/Content.qml",
     ):
         src = (ROOT / rel).read_text()
-        assert "forceActiveFocus()" in src, f"{rel} never takes focus"
-
-
-def test_loader_gated_wrappers_take_focus():
-    """Dashboard/utilities wrappers focus on show: their content Loader
-    instantiates around open, so the always-present wrapper hands focus
-    to the content once materialized (or holds it itself)."""
-    for rel in (
-        "modules/dashboard/Wrapper.qml",
-        "modules/utilities/Wrapper.qml",
-    ):
-        src = (ROOT / rel).read_text()
-        assert "content.item.forceActiveFocus()" in src, f"{rel} never hands focus"
-        assert "root.forceActiveFocus()" in src, f"{rel} has no fallback focus"
+        assert "focus: true" in src, f"{rel} lost its focusable root"
 
 
 def test_companion_menu_dismiss_paths():

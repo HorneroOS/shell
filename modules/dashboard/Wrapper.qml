@@ -36,21 +36,6 @@ Item {
     property int contentHeight: 0
 
     visible: height > 0
-
-    // Wrapper-level focus for the Escape cascade: the content Loader
-    // instantiates asynchronously around open, so the wrapper (which
-    // always exists) takes focus when shown and hands it to the
-    // content once materialized. S4 replaces this with real control
-    // focus.
-    focus: true
-    onVisibleChanged: {
-        if (visible) {
-            if (content.item)
-                content.item.forceActiveFocus();
-            else
-                root.forceActiveFocus();
-        }
-    }
     implicitHeight: 0
     implicitWidth: content.implicitWidth
 

@@ -55,7 +55,7 @@ multi-monitor. To be covered in implementation slices.
 
 | Dimension | Hornero (main) | Ryoku (`Ryoku-dev/ryoku`, GPL-3.0) | Caelestia (`caelestia-dots/shell`, GPL-3.0) | DMS (`AvengeMedia/DankMaterialShell`, MIT) |
 |---|---|---|---|---|
-| Settings IA | one window, 21 panes, nav rail | distro repo; shell under `ryoku/shell/quickshell` | **no settings module in shell**; config via `caelestia-cli` (separate repo) | **split**: `Settings/` tabbed window (`*Tab.qml`) + `ControlCenter/` popout (Widgets+Details) |
+| Settings IA | one window, 15 panes, nav rail | distro repo; shell under `ryoku/shell/quickshell` | **no settings module in shell**; config via `caelestia-cli` (separate repo) | **split**: `Settings/` tabbed window (`*Tab.qml`) + `ControlCenter/` popout (Widgets+Details) |
 | Dashboard | tabs: Dashboard/Media/Performance/Weather/Workspaces/Layout | `ryoku/shell` has `welcome`, `keys`, `keys-hint`, `reload-cover`, `ryopin`, `ryoshot` | modules: bar/dashboard/launcher/lock/notifications/osd/session/sidebar/utilities/drawers/areapicker/background/windowinfo/**nexus** | `DankDash/` tabbed popout (Media, Notifications, Overview, Wallpaper, Weather tabs) |
 | Launcher | centered panel, app list, `>` command mode | — (deeper read pending) | `launcher` module (deeper read pending) | `AppDrawer` module separate from dash |
 | Onboarding | Welcome Center (Start/Navigate/Shell/Workspaces/Personalize/Tools/System/Learn/Shortcuts) | has `welcome` module | none in shell | `Greetd` module; onboarding via greeter |
@@ -65,7 +65,7 @@ multi-monitor. To be covered in implementation slices.
 Lessons (concepts, not copies):
 
 1. **DMS's Settings-vs-ControlCenter split** directly addresses Hornero's
-   21-pane single-window scaling question. Hornero already separates
+   15-pane single-window scaling question. Hornero already separates
    drawers (quick) from Settings (full), but the Settings window keeps
    growing; a popout-vs-window rule would make the boundary principled.
 2. **Caelestia's CLI-owned settings** is the far end of the same spectrum
@@ -172,11 +172,12 @@ Companion skin? placeholder?) unknown — needs code read before judging.
 
 - **Launcher**: app search + favorites + `>` command mode. Role: *do*.
   Clear.
-- **Dashboard**: tabs Dashboard/Media/Performance/Weather/Workspaces/
-  **Layout**. Role: *glance + switch*. Layout presets (bar geometry!)
-  inside Dashboard is the outlier — bar layout is Settings-grade
-  configuration wearing a dashboard tab.
-- **Control Center ("Hornero Settings")**: 21 panes mixing **state**
+- **Dashboard**: tabs Dashboard/Media/Performance/Weather/Workspaces.
+  Role: *glance + switch*. (The former Layout tab — presets are
+  Settings-grade configuration, not glanceable status — was removed
+  by ADR 003; presets live in the drawer picker + Settings layout
+  pane.)
+- **Control Center ("Hornero Settings")**: 15 panes mixing **state**
   (network, audio, system resources) and **configuration** (appearance,
   taskbar, OSD). No in-window search observed. Scales by rail growth.
 - **Welcome**: 9 sections incl. Shortcuts reference. Role: *learn*.
@@ -212,6 +213,12 @@ human language; lock screen redacts notification bodies; every drawer and
 window dismisses from keyboard; Dashboard's Layout tab either justifies
 itself in writing or moves to Settings; light mode stays first-class
 (already is); Companion z-order is documented and predictable.
+
+> Status 2026-09-30: several §8 items have since landed — central
+> drawer Escape (S3, PR #75), Settings single-window reuse + Escape
+> (#62), lock notification privacy default (#63), readable shortcut
+> labels (#64), companion z-order (#69), dashboard Layout-tab removal
+> (ADR 003). This section stays as the directional vision.
 
 ## 9. Implementation map (slices, each a small PR with before/after)
 

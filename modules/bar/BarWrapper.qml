@@ -14,18 +14,25 @@ Item {
     required property BarPopouts.Wrapper popouts
     required property bool disabled
     required property bool frameVisible
+    // Resolved bar spec (Config.bar.barsFor): edge, style, reserve, margin,
+    // thickness, density, groups.
+    required property var spec
 
     readonly property string screenName: screen.name
-    readonly property string position: Config.bar.positionFor(screenName)
-    readonly property bool vertical: Config.bar.isVerticalFor(screenName)
-    readonly property bool floating: Config.bar.isFloatingFor(screenName)
-    readonly property bool reserves: Config.bar.reservesSpaceFor(screenName)
+    readonly property string position: spec.edge
+    readonly property string style: spec.style
+    readonly property bool vertical: position === "left" || position === "right"
+    readonly property bool floating: style !== "attached"
+    readonly property bool reserves: spec.reserve
     readonly property int frameInset: frameVisible ? Config.border.thickness : 0
     readonly property int padding: Math.max(Appearance.padding.smaller, Config.border.thickness)
-    // Size of the bar across its screen edge (including the float gap when floating)
-    readonly property int thickness: Config.bar.sizes.innerWidth + padding * 2
+    // Gap between a floating pill and the screen edge; part of the strip so
+    // the reservation and panel insets include it.
+    readonly property int gap: floating ? spec.margin : 0
+    // Size of the bar across its screen edge (including the float gap)
+    readonly property int thickness: spec.thickness + padding * 2 + gap
     readonly property int contentWidth: thickness // kept for external references
-    readonly property int exclusiveZone: reserves && !disabled && (Config.bar.persistent || visibilities.bar) ? thickness + (floating ? Config.bar.floatingMargin : 0) : frameInset
+    readonly property int exclusiveZone: reserves && !disabled && (Config.bar.persistent || visibilities.bar) ? thickness : frameInset
     readonly property bool shouldBeVisible: !disabled && (Config.bar.persistent || visibilities.bar || isHovered)
     property bool isHovered
 
@@ -38,6 +45,13 @@ Item {
     readonly property real visualY: y + (visualItem?.y ?? 0)
     readonly property real visualWidth: visualItem?.width ?? 0
     readonly property real visualHeight: visualItem?.height ?? 0
+    // Every visible island, in the parent's (drawers window) coordinates
+    readonly property var visualRects: visible ? (content.item?.visualRects ?? []).map(r => ({
+                x: x + r.x,
+                y: y + r.y,
+                width: r.width,
+                height: r.height
+            })) : []
 
     // Shell panels avoid the visible bar even when a floating bar overlays clients.
     readonly property int marginLeft: position === "left" ? currentThickness : frameInset
@@ -51,22 +65,22 @@ Item {
     readonly property int reservedTop: position === "top" ? exclusiveZone : frameInset
     readonly property int reservedBottom: position === "bottom" ? exclusiveZone : frameInset
 
-    function containsVisualPoint(x: real, y: real): bool {
-        if (!visualItem || !root.visible)
+    function containsVisualPoint(px: real, py: real): bool {
+        if (!root.visible || !content.item)
             return false;
-        return x >= visualX && x <= visualX + visualWidth && y >= visualY && y <= visualY + visualHeight;
+        return content.item.containsPoint(px - x, py - y);
     }
 
     function closeTray(): void {
         content.item?.closeTray();
     }
 
-    function checkPopout(pos: real): void {
-        content.item?.checkPopout(pos);
+    function checkPopoutAt(px: real, py: real): void {
+        content.item?.checkPopoutAt(px - x, py - y);
     }
 
-    function handleWheel(pos: real, angleDelta: point): void {
-        content.item?.handleWheel(pos, angleDelta);
+    function handleWheelAt(px: real, py: real, angleDelta: point): void {
+        content.item?.handleWheelAt(px - x, py - y, angleDelta);
     }
 
     visible: (vertical ? width : height) > frameInset
@@ -130,6 +144,7 @@ Item {
             screen: root.screen
             visibilities: root.visibilities
             popouts: root.popouts
+            spec: root.spec
         }
     }
 }

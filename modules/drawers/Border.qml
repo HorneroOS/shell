@@ -41,10 +41,10 @@ Item {
         // so the pill floats over the wallpaper instead of a solid frame strip
         Rectangle {
             anchors.fill: parent
-            anchors.leftMargin: root.barPosition === "left" && root.barFloating ? 0 : root.bar.marginLeft
-            anchors.rightMargin: root.barPosition === "right" && root.barFloating ? 0 : root.bar.marginRight
-            anchors.topMargin: root.barPosition === "top" && root.barFloating ? 0 : root.bar.marginTop
-            anchors.bottomMargin: root.barPosition === "bottom" && root.barFloating ? 0 : root.bar.marginBottom
+            anchors.leftMargin: root.bar.floatingOn("left") ? 0 : root.bar.marginLeft
+            anchors.rightMargin: root.bar.floatingOn("right") ? 0 : root.bar.marginRight
+            anchors.topMargin: root.bar.floatingOn("top") ? 0 : root.bar.marginTop
+            anchors.bottomMargin: root.bar.floatingOn("bottom") ? 0 : root.bar.marginBottom
             radius: Config.border.rounding
         }
     }

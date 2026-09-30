@@ -193,15 +193,14 @@ Variants {
                         }
                     );
 
-                    if (bar.visible && bar.visualWidth > 0 && bar.visualHeight > 0) {
+                    for (const r of bar.visualRects)
                         rects.push({
-                            x: bar.visualX,
-                            y: bar.visualY,
-                            width: bar.visualWidth,
-                            height: bar.visualHeight,
-                            isEdge: true
+                            isEdge: true,
+                            x: r.x,
+                            y: r.y,
+                            width: r.width,
+                            height: r.height
                         });
-                    }
 
                     // Panels as live Items for reactive geometry during animations
                     for (const p of panels.children)
@@ -381,6 +380,23 @@ Variants {
                     });
                 }
 
+                function bars(): string {
+                    return JSON.stringify(bar.bars.map(b => ({
+                                    edge: b.position,
+                                    style: b.style,
+                                    geom: [b.x, b.y, b.width, b.height],
+                                    visible: b.visible,
+                                    shouldBeVisible: b.shouldBeVisible,
+                                    rects: b.visualRects,
+                                    islands: (b.children[0]?.item?.islands ?? []).map(i => ({
+                                                align: i.align,
+                                                geom: [i.x, i.y, i.width, i.height],
+                                                visible: i.visible,
+                                                groups: i.groupItems.map(g => [g.name, g.visible, g.width, g.height, g.x, g.y])
+                                            }))
+                                })));
+                }
+
                 function dump(): string {
                     const panelsDump = [];
                     for (const p of panels.children)
@@ -490,19 +506,10 @@ Variants {
                     }
                 }
 
-                BarWrapper {
+                BarSet {
                     id: bar
 
-                    anchors.left: (!bar.vertical || bar.position === "left") ? parent.left : undefined
-                    anchors.right: (!bar.vertical || bar.position === "right") ? parent.right : undefined
-                    anchors.top: (bar.vertical || bar.position === "top") ? parent.top : undefined
-                    anchors.bottom: (bar.vertical || bar.position === "bottom") ? parent.bottom : undefined
-
-                    // Floating bars: gap between the bar and the screen edge
-                    anchors.topMargin: (bar.position === "top" && bar.floating) ? Config.bar.floatingMargin : 0
-                    anchors.bottomMargin: (bar.position === "bottom" && bar.floating) ? Config.bar.floatingMargin : 0
-                    anchors.leftMargin: (bar.position === "left" && bar.floating) ? Config.bar.floatingMargin : 0
-                    anchors.rightMargin: (bar.position === "right" && bar.floating) ? Config.bar.floatingMargin : 0
+                    anchors.fill: parent
 
                     screen: scope.modelData
                     visibilities: visibilities

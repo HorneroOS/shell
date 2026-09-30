@@ -37,26 +37,31 @@ CustomMouseArea {
     // Hidden bars retain a small edge trigger without reserving client space.
     function inBarRevealArea(x: real, y: real): bool {
         const trigger = Math.max(Config.border.thickness, 1);
-        switch (Config.bar.positionFor(screen.name)) {
-        case "right":
-            return x > width - trigger;
-        case "top":
-            return y < trigger;
-        case "bottom":
-            return y > height - trigger;
-        default:
-            return x < trigger;
+        for (const spec of bar.specs) {
+            switch (spec.edge) {
+            case "right":
+                if (x > width - trigger)
+                    return true;
+                break;
+            case "top":
+                if (y < trigger)
+                    return true;
+                break;
+            case "bottom":
+                if (y > height - trigger)
+                    return true;
+                break;
+            default:
+                if (x < trigger)
+                    return true;
+            }
         }
-    }
-
-    // Main-axis coordinate of a point along the bar (y for vertical bars, x for horizontal)
-    function barAxisPos(x: real, y: real): real {
-        return Config.bar.isVerticalFor(screen.name) ? y : x;
+        return false;
     }
 
     // Whether a point is inside the popout panel growing from the bar's edge
     function inPopoutPanel(x: real, y: real): bool {
-        switch (Config.bar.positionFor(screen.name)) {
+        switch (popouts.ownerEdge) {
         case "right":
             return inRightPanel(panels.popouts, x, y);
         case "top":
@@ -96,7 +101,7 @@ CustomMouseArea {
 
     function onWheel(event: WheelEvent): void {
         if (inBarArea(event.x, event.y)) {
-            bar.handleWheel(barAxisPos(event.x, event.y), event.angleDelta);
+            bar.handleWheel(event.x, event.y, event.angleDelta);
         }
     }
 
@@ -160,7 +165,8 @@ CustomMouseArea {
 
         // Show/hide bar on drag (cross-axis drag from the bar's edge)
         if (pressed && (inBarArea(dragStart.x, dragStart.y) || (!bar.shouldBeVisible && inBarRevealArea(dragStart.x, dragStart.y)))) {
-            const crossDrag = Config.bar.isVerticalFor(screen.name) ? (Config.bar.positionFor(screen.name) === "left" ? dragX : -dragX) : (Config.bar.positionFor(screen.name) === "top" ? dragY : -dragY);
+            const dragEdge = (bar.barAt(dragStart.x, dragStart.y) ?? bar.primary)?.position ?? "left";
+            const crossDrag = dragEdge === "left" ? dragX : dragEdge === "right" ? -dragX : dragEdge === "top" ? dragY : -dragY;
             if (crossDrag > Config.bar.dragThreshold)
                 visibilities.bar = true;
             else if (crossDrag < -Config.bar.dragThreshold)
@@ -278,7 +284,7 @@ CustomMouseArea {
 
         // Show popouts on hover
         if (inBarArea(x, y)) {
-            bar.checkPopout(barAxisPos(x, y));
+            bar.checkPopout(x, y);
         } else if ((!popouts.currentName.startsWith("traymenu") || (popouts.current?.depth ?? 0) <= 1) && !inPopoutPanel(x, y)) {
             popouts.hasCurrent = false;
             bar.closeTray();

@@ -16,7 +16,9 @@ Item {
     required property ShellScreen screen
     readonly property HyprlandMonitor monitor: Hypr.monitorFor(screen)
     readonly property string activeSpecial: (Config.bar.workspaces.perMonitorWorkspaces ? monitor : Hypr.focusedMonitor)?.lastIpcObject?.specialWorkspace?.name ?? ""
-    readonly property bool vertical: Config.bar.isVerticalFor(screen.name)
+    // Orientation of the owning bar (set by Bar.qml); defaults to the
+    // primary bar for standalone use.
+    property bool vertical: Config.bar.isVerticalFor(screen.name)
 
     layer.enabled: true
     layer.effect: OpacityMask {

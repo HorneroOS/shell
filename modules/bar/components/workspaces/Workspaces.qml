@@ -13,7 +13,9 @@ StyledClippingRect {
 
     required property ShellScreen screen
 
-    readonly property bool vertical: Config.bar.isVerticalFor(screen.name)
+    // Orientation of the owning bar (set by Bar.qml); defaults to the
+    // primary bar for standalone use.
+    property bool vertical: Config.bar.isVerticalFor(screen.name)
     readonly property bool onSpecial: (Config.bar.workspaces.perMonitorWorkspaces ? Hypr.monitorFor(screen) : Hypr.focusedMonitor)?.lastIpcObject?.specialWorkspace?.name !== ""
     readonly property int activeWsId: Config.bar.workspaces.perMonitorWorkspaces ? (Hypr.monitorFor(screen).activeWorkspace?.id ?? 1) : Hypr.activeWsId
 
@@ -52,6 +54,7 @@ StyledClippingRect {
 
             sourceComponent: OccupiedBg {
                 screen: root.screen
+                vertical: root.vertical
                 workspaces: workspaces
                 occupied: root.occupied
                 groupOffset: root.groupOffset
@@ -75,6 +78,8 @@ StyledClippingRect {
 
                 Workspace {
                     screen: root.screen
+
+                    vertical: root.vertical
                     activeWsId: root.activeWsId
                     occupied: root.occupied
                     groupOffset: root.groupOffset
@@ -90,6 +95,7 @@ StyledClippingRect {
 
             sourceComponent: ActiveIndicator {
                 screen: root.screen
+                vertical: root.vertical
                 activeWsId: root.activeWsId
                 workspaces: workspaces
                 mask: layout
@@ -129,6 +135,7 @@ StyledClippingRect {
 
         sourceComponent: SpecialWorkspaces {
             screen: root.screen
+            vertical: root.vertical
         }
 
         Behavior on scale {

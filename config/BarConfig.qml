@@ -20,11 +20,16 @@ JsonObject {
     readonly property var barEdges: ["top", "bottom", "left", "right"]
     readonly property var barStyles: ["attached", "inset", "floating", "islands", "dock"]
 
-    function normalizeEntries(list: var): var {
-        if (!Array.isArray(list))
+    // QML list<var> values are not JS Arrays; copy them first.
+    function toArray(v: var): var {
+        if (!v || typeof v !== "object" || typeof v.length !== "number")
             return [];
+        return Array.from(v);
+    }
+
+    function normalizeEntries(list: var): var {
         const out = [];
-        for (const e of list) {
+        for (const e of toArray(list)) {
             const entry = typeof e === "string" ? {id: e, enabled: true} : e;
             if (!entry || typeof entry.id !== "string" || entry.id === "spacer")
                 continue;
@@ -36,7 +41,7 @@ JsonObject {
     // v1 entries split at enabled spacers: before the first -> start, between
     // first and last -> center, after the last -> end.
     function splitLegacyEntries(list: var): var {
-        const src = Array.isArray(list) ? list : [];
+        const src = toArray(list);
         const cuts = [];
         for (let i = 0; i < src.length; i++)
             if (src[i] && src[i].id === "spacer" && src[i].enabled !== false)
@@ -93,10 +98,10 @@ JsonObject {
     // the legacy bar so the user always keeps desktop chrome.
     function barsFor(screenName: string): var {
         const o = getOverride(screenName);
-        const src = (o && Array.isArray(o.bars) && o.bars.length > 0) ? o.bars : bars;
+        const src = (o && toArray(o.bars).length > 0) ? toArray(o.bars) : toArray(bars);
         const out = [];
         const seen = [];
-        for (const b of (src ?? [])) {
+        for (const b of src) {
             const n = normalizeBar(b);
             if (!n || seen.includes(n.edge))
                 continue;
@@ -106,15 +111,15 @@ JsonObject {
         return out.length > 0 ? out : [legacyBarFor(screenName)];
     }
 
+    // perScreen is a QML list<var>: Array.isArray() is false for it, which
+    // silently disabled every per-screen override before.
     function getOverride(screenName: string): var {
-        if (!perScreen || !Array.isArray(perScreen))
-            return null;
-        for (let i = 0; i < perScreen.length; i++) {
-            if (perScreen[i] && perScreen[i].screen === screenName)
-                return perScreen[i];
-        }
+        for (const o of toArray(perScreen))
+            if (o && o.screen === screenName)
+                return o;
         return null;
     }
+
 
     // Primary (first) bar of the resolved set, for consumers that only
     // need one anchor edge (desktop clock, visualiser).

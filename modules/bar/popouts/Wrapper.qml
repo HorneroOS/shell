@@ -19,9 +19,13 @@ Item {
     readonly property real nonAnimHeight: children.find(c => c.shouldBeActive)?.implicitHeight ?? content.implicitHeight
     readonly property Item current: content.item?.current ?? null
 
-    readonly property bool barVertical: Config.bar.isVerticalFor(screen.name)
-    readonly property string barPosition: Config.bar.positionFor(screen.name)
-    readonly property bool usesConnectedBackground: Config.border.frameEnabled && Config.bar.style === "attached" && barVertical
+    // The bar that opened the current popout (set by Bar.claimPopouts); the
+    // popout grows from that bar's edge. Defaults to the primary bar.
+    property string ownerEdge: Config.bar.positionFor(screen.name)
+    property string ownerStyle: Config.bar.styleFor(screen.name)
+    readonly property bool barVertical: ownerEdge === "left" || ownerEdge === "right"
+    readonly property string barPosition: ownerEdge
+    readonly property bool usesConnectedBackground: Config.border.frameEnabled && ownerStyle === "attached" && barVertical
 
     property string currentName
     property real currentCenter

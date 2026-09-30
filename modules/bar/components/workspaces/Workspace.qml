@@ -16,7 +16,9 @@ GridLayout {
     required property var occupied
     required property int groupOffset
 
-    readonly property bool vertical: Config.bar.isVerticalFor(screen.name)
+    // Orientation of the owning bar (set by Bar.qml); defaults to the
+    // primary bar for standalone use.
+    property bool vertical: Config.bar.isVerticalFor(screen.name)
     readonly property bool isWorkspace: true // Flag for finding workspace children
     // Unanimated prop for others to use as reference (main-axis size)
     readonly property int size: (vertical ? implicitHeight : implicitWidth) + (hasWindows ? Appearance.padding.small : 0)

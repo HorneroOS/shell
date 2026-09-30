@@ -50,7 +50,6 @@ Item {
         hasCurrent = false;
         currentName = "";
         currentCenter = 0;
-        animCurve = Appearance.anim.curves.emphasizedAccel;
         animLength = Appearance.anim.durations.normal;
         detachedMode = "";
         animCurve = Appearance.anim.curves.emphasized;

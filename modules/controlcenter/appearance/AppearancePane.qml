@@ -84,7 +84,14 @@ Item {
         Config.save();
     }
 
-    Component.onCompleted: root._sectionsReady = true
+    // Single root completion handler: enabling section write-back
+    // and resetting staged selections. (Two handlers here is a
+    // compile error — "Property value set multiple times" — which
+    // fails the whole pane load with a blank page.)
+    Component.onCompleted: {
+        root._sectionsReady = true;
+        resetPendingSelections();
+    }
 
     property bool desktopClockEnabled: Config.background.desktopClock.enabled ?? false
     property real desktopClockScale: Config.background.desktopClock.scale ?? 1
@@ -913,7 +920,6 @@ Item {
                                 // Assigns all sections + persists once. The
                                 // allSectionsExpanded binding refreshes the icon.
                                 root.setAllSections(!sidebarLayout.allSectionsExpanded);
-                                backgroundSection.expanded = shouldExpand;
                             }
                         }
                     }
@@ -1179,5 +1185,4 @@ Item {
     }
 
     Component.onDestruction: clearPreview()
-    Component.onCompleted: resetPendingSelections()
 }

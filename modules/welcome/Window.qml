@@ -100,12 +100,12 @@ FloatingWindow {
         onActivated: Welcome.close()
     }
 
+    // NOTE: nav sync runs first and unconditionally. FloatingWindow has
+    // no x/y (the compositor positions it), so any client-side centering
+    // throws and would abort this block before _navReady is set — which
+    // silently disables ALL sidebar navigation (see onCurrentIndexChanged
+    // guard). Do not add fallible statements above the _navReady line.
     Component.onCompleted: {
-        const s = win.screen;
-        if (s && win.width > 0 && win.height > 0) {
-            win.x = Math.max(0, Math.round((s.width - win.width) / 2));
-            win.y = Math.max(0, Math.round((s.height - win.height) / 2));
-        }
         navList.currentIndex = win.pageIndex(Welcome.currentPage);
         win._navReady = true;
         navList.forceActiveFocus();

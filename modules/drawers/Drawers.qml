@@ -323,6 +323,32 @@ Variants {
                     return debugBorders.visible ? "borders ON" : "borders OFF";
                 }
 
+                // S4 focus observability (docs/FOCUS.md): window
+                // activation, input modality, grab state and the
+                // active-focus chain. Graphical/agentic tests assert
+                // on this instead of guessing from pixels. Kept
+                // across the Exclusive revert: the keyboard-focus
+                // redesign needs runtime observability.
+                function focusState(): string {
+                    const chain = [];
+                    let it = win.activeFocusItem;
+                    let guard = 0;
+                    while (it && guard++ < 10) {
+                        let tag = "?";
+                        try {
+                            tag = String(it).split("(")[0].split("_")[0];
+                        } catch (e) {}
+                        chain.push(`${tag}:${it.objectName || "?"}` + (it.activeFocus ? "*" : ""));
+                        it = it.parent;
+                    }
+                    return JSON.stringify({
+                        winActive: win.active,
+                        keyboard: FocusMode.keyboard,
+                        grab: focusGrab.active,
+                        chain: chain.join(" < ") || "(null)"
+                    });
+                }
+
                 function dump(): string {
                     const panelsDump = [];
                     for (const p of panels.children)

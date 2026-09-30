@@ -120,3 +120,11 @@ def test_contract_documented():
     assert "Interactive.qml" in doc
     assert "FocusMode" in doc
     assert "focusRing" in doc
+
+
+def test_debug_focus_state_observable():
+    src = (ROOT / "modules" / "drawers" / "Drawers.qml").read_text()
+    assert "function focusState(): string" in src
+    assert "win.activeFocusItem" in src
+    assert "FocusMode.keyboard" in src
+    assert "focusGrab.active" in src

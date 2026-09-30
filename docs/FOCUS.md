@@ -71,3 +71,14 @@ nowhere until the next `Tab` — which must land on the first stop of
 the newly keyboard-holding surface. If Qt ever strands keys (no
 focusable accepts Tab), that is a bug in the surface, fixed there,
 not with global focus hacks.
+
+## Window activation (open problem, #84)
+
+Tab/arrows/typing need Qt window activation, and nothing tried so
+far produces it on the drawers layer surface: the S4 Exclusive
+attempt was reverted (the compositor clears the focus grab when
+the surface takes Exclusive, bouncing every open), and Exclusive
+alone delivers keys but no `activeFocusItem`. Until #84 lands a
+redesign, Tab traversal stays dead as pre-S4; the `Interactive` /
+`FocusRing` / `FocusMode` foundation and the `debug focusState`
+probe stay in place as the observability base for that work.

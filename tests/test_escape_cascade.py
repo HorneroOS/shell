@@ -30,13 +30,14 @@ def test_central_handler_covers_all_drawers():
 def test_focus_set_covers_all_drawers():
     """keyboardFocus must include every drawer or Escape never arrives."""
     src = DRAWERS.read_text()
-    focus_line = next(
+    focus_blob = "\n".join(
         line
         for line in src.splitlines()
-        if "WlrLayershell.keyboardFocus" in line and "visibilities" in line
+        if "keyboardExclusive" in line or "keyboardAnyVisible" in line
     )
+    assert focus_blob, "focus predicates missing in Drawers.qml"
     for vis in ("launcher", "session", "layoutPicker", "dashboard", "sidebar", "utilities"):
-        assert f"visibilities.{vis}" in focus_line, f"{vis} missing from focus set"
+        assert f"visibilities.{vis}" in focus_blob, f"{vis} missing from focus set"
 
 
 def test_click_outside_covers_utilities():

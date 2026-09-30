@@ -125,6 +125,39 @@ def test_contract_documented():
 def test_debug_focus_state_observable():
     src = (ROOT / "modules" / "drawers" / "Drawers.qml").read_text()
     assert "function focusState(): string" in src
-    assert "win.activeFocusItem" in src
+    # PanelWindow has no active/activeFocusItem properties: reading them
+    # returned undefined and made #84 look like an activation failure.
+    assert "win.contentItem.Window.activeFocusItem" in src
+    assert "win.contentItem.Window.active" in src
+    assert "win.activeFocusItem" not in src
+    assert "win.active," not in src
     assert "FocusMode.keyboard" in src
     assert "focusGrab.active" in src
+
+
+def test_tab_trap_in_every_focusable():
+    """Tab stays inside the keyboard-holding drawer (#84): the bar and
+    all drawers share one window and FocusScope does not confine Qt's
+    tab chain, so each focusable delegates to FocusMode.handleTab."""
+    for name in (
+        "Interactive.qml",
+        "StyledSwitch.qml",
+        "StyledSlider.qml",
+        "FilledSlider.qml",
+        "StyledRadioButton.qml",
+        "StyledTextField.qml",
+    ):
+        src = (CONTROLS / name).read_text()
+        assert "Keys.onTabPressed: event => FocusMode.handleTab(root, event, false)" in src, name
+        assert "Keys.onBacktabPressed: event => FocusMode.handleTab(root, event, true)" in src, name
+
+
+def test_focus_mode_scopes_tab_to_current_root():
+    src = (ROOT / "services" / "FocusMode.qml").read_text()
+    assert "property Item currentRoot" in src
+    assert "function step(from: Item, forward: bool): bool" in src
+    assert "nextItemInFocusChain(forward)" in src
+    drawers = (ROOT / "modules" / "drawers" / "Drawers.qml").read_text()
+    assert "FocusMode.currentRoot = win.keyboardRoot" in drawers
+    assert "onActiveChanged: win.syncFocusRoot()" in drawers
+    assert "FocusMode.enter(" in drawers

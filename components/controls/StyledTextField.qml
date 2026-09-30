@@ -18,6 +18,12 @@ TextField {
     renderType: echoMode === TextField.Password ? TextField.QtRendering : TextField.NativeRendering
     cursorVisible: !readOnly
 
+    // Tab stays inside the keyboard-holding drawer (FocusMode, #84).
+    // Fields that route Tab themselves (launcher search) accept it in
+    // Keys.onPressed first, so this never runs for them.
+    Keys.onTabPressed: event => FocusMode.handleTab(root, event, false)
+    Keys.onBacktabPressed: event => FocusMode.handleTab(root, event, true)
+
     background: null
 
     cursorDelegate: StyledRect {

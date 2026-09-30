@@ -14,6 +14,8 @@ Switch {
         if (activeFocus)
             FocusMode.reportFocus(root.pressed);
     }
+    Keys.onTabPressed: event => FocusMode.handleTab(root, event, false)
+    Keys.onBacktabPressed: event => FocusMode.handleTab(root, event, true)
 
     implicitWidth: implicitIndicatorWidth
     implicitHeight: implicitIndicatorHeight

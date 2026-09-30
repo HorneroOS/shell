@@ -58,11 +58,28 @@ Variants {
             screen: scope.modelData
             name: "drawers"
             WlrLayershell.exclusionMode: ExclusionMode.Ignore
-            // Every drawer joins the focus set: without keyboard focus
-            // the surface never sees Escape and the central cascade
-            // below cannot run. Dashboard additionally needs focus for
-            // its workspace rename field.
-            WlrLayershell.keyboardFocus: visibilities.launcher || visibilities.session || visibilities.layoutPicker || visibilities.dashboard || visibilities.sidebar || visibilities.utilities ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+            // Keyboard interactivity follows the focus grab exactly
+            // (#84): explicit opens take OnDemand + grab, which is what
+            // delivers wl_keyboard.enter and Qt window activation. Hover
+            // opens stay None — with follow_mouse=1 Hyprland hands an
+            // OnDemand layer under the pointer the keyboard, which would
+            // steal typing from the focused app. Never Exclusive: a mapped
+            // surface committing Exclusive clears the grab (bounce).
+            WlrLayershell.keyboardFocus: focusGrab.active ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+
+            // Topmost keyboard-holding drawer, same order as
+            // dismissTopmost(): Tab stays inside it (FocusMode.step).
+            readonly property Item keyboardRoot: visibilities.layoutPicker ? panels.layoutPicker : visibilities.session ? panels.session : visibilities.launcher ? panels.launcher : visibilities.dashboard ? panels.dashboard : visibilities.sidebar ? panels.sidebar : visibilities.utilities ? panels.utilities : null
+
+            // One writer per window: publish this screen's root while its
+            // grab holds the keyboard, clear it only if it is still ours.
+            function syncFocusRoot(): void {
+                if (focusGrab.active)
+                    FocusMode.currentRoot = win.keyboardRoot;
+                else if (FocusMode.currentRoot && FocusMode.contains(win.contentItem, FocusMode.currentRoot))
+                    FocusMode.currentRoot = null;
+            }
+            onKeyboardRootChanged: syncFocusRoot()
 
             // Central Escape cascade (docs/INTERACTION.md). Content with
             // transient inner state (rename field, armed session action)
@@ -199,14 +216,16 @@ Variants {
             HyprlandFocusGrab {
                 id: focusGrab
 
-                // The grab (not Qt item focus) is what routes physical keys
-                // to this surface, so every drawer the Escape cascade must
-                // dismiss needs grab coverage on its keyboard-driven opens.
-                // Dashboard hover opens stay grab-free so edge touches never
-                // steal typing from other apps; explicit opens (shortcut, IPC,
-                // action — mouse outside the area, see Interactions) grab.
-                active: (visibilities.launcher && Config.launcher.enabled) || (visibilities.session && Config.session.enabled) || (visibilities.sidebar && Config.sidebar.enabled) || ((!Config.dashboard.showOnHover || interactions.dashboardShortcutActive) && visibilities.dashboard && Config.dashboard.enabled) || (visibilities.utilities && Config.utilities.enabled) || visibilities.layoutPicker || (panels.popouts.currentName.startsWith("traymenu") && panels.popouts.current?.depth > 1)
+                // The grab is what gives this surface compositor keyboard
+                // focus (and with it Qt activation), so every drawer the
+                // Escape cascade must dismiss needs grab coverage on its
+                // keyboard-driven opens. Dashboard and utilities hover opens
+                // stay grab-free so edge touches never steal typing; explicit
+                // opens (shortcut, IPC, action — mouse outside the area) and
+                // a click inside a hover-opened drawer set keyboard intent.
+                active: (visibilities.launcher && Config.launcher.enabled) || (visibilities.session && Config.session.enabled) || (visibilities.sidebar && Config.sidebar.enabled) || ((!Config.dashboard.showOnHover || interactions.dashboardKeyboardIntent) && visibilities.dashboard && Config.dashboard.enabled) || (interactions.utilitiesKeyboardIntent && visibilities.utilities && Config.utilities.enabled) || visibilities.layoutPicker || (panels.popouts.currentName.startsWith("traymenu") && panels.popouts.current?.depth > 1)
                 windows: [win]
+                onActiveChanged: win.syncFocusRoot()
                 onCleared: {
                     visibilities.launcher = false;
                     visibilities.session = false;
@@ -331,7 +350,7 @@ Variants {
                 // redesign needs runtime observability.
                 function focusState(): string {
                     const chain = [];
-                    let it = win.activeFocusItem;
+                    let it = win.contentItem.Window.activeFocusItem;
                     let guard = 0;
                     while (it && guard++ < 10) {
                         let tag = "?";
@@ -342,9 +361,12 @@ Variants {
                         it = it.parent;
                     }
                     return JSON.stringify({
-                        winActive: win.active,
+                        winActive: win.contentItem.Window.active,
+                        inRoot: FocusMode.currentRoot ? FocusMode.contains(FocusMode.currentRoot, win.contentItem.Window.activeFocusItem) : null,
+                        root: FocusMode.currentRoot ? (FocusMode.currentRoot.objectName || String(FocusMode.currentRoot).split("(")[0]) : null,
                         keyboard: FocusMode.keyboard,
                         grab: focusGrab.active,
+                        intent: { dashboard: interactions.dashboardKeyboardIntent, utilities: interactions.utilitiesKeyboardIntent },
                         chain: chain.join(" < ") || "(null)"
                     });
                 }
@@ -419,6 +441,11 @@ Variants {
                 // Central Escape cascade endpoint: unhandled Escape from
                 // any drawer content bubbles here (docs/INTERACTION.md).
                 Keys.onEscapePressed: win.dismissTopmost()
+                // Tab that no focusable handled (Qt focus still outside the
+                // keyboard-holding drawer, e.g. after a click promoted a
+                // hover open) enters the drawer at its first/last stop.
+                Keys.onTabPressed: event => event.accepted = FocusMode.enter(!(event.modifiers & Qt.ShiftModifier))
+                Keys.onBacktabPressed: event => event.accepted = FocusMode.enter(false)
 
                 Panels {
                     id: panels
@@ -426,6 +453,29 @@ Variants {
                     screen: scope.modelData
                     visibilities: visibilities
                     bar: bar
+
+                    // A click inside a hover-opened drawer is keyboard
+                    // intent (#84). Drawer content consumes presses before
+                    // parents see them, so a transparent overlay on top
+                    // observes them with a passive PointHandler, which
+                    // never blocks delivery to the controls beneath.
+                    Item {
+                        anchors.fill: parent
+                        z: 1000
+
+                        PointHandler {
+                            acceptedButtons: Qt.AllButtons
+                            onActiveChanged: {
+                                if (!active)
+                                    return;
+                                const p = panels.mapToItem(interactions, point.position.x, point.position.y);
+                                if (visibilities.dashboard && interactions.inTopPanel(panels.dashboard, p.x, p.y))
+                                    interactions.dashboardKeyboardIntent = true;
+                                if (visibilities.utilities && interactions.inBottomPanel(panels.utilities, p.x, p.y))
+                                    interactions.utilitiesKeyboardIntent = true;
+                            }
+                        }
+                    }
                 }
 
                 BarWrapper {

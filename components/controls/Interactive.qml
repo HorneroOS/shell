@@ -24,6 +24,9 @@ StateLayer {
             FocusMode.reportPointer();
     }
 
+    Keys.onTabPressed: event => FocusMode.handleTab(root, event, false)
+    Keys.onBacktabPressed: event => FocusMode.handleTab(root, event, true)
+
     Keys.onReturnPressed: {
         if (!root.disabled)
             root.clicked();

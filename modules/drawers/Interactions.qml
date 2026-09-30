@@ -17,6 +17,11 @@ CustomMouseArea {
     property bool dashboardShortcutActive
     property bool osdShortcutActive
     property bool utilitiesShortcutActive
+    // Keyboard intent (#84): the drawer may hold the keyboard. Set by
+    // explicit opens and by a click inside a hover-opened drawer;
+    // survives the shortcut->hover hand-off below and clears on close.
+    property bool dashboardKeyboardIntent
+    property bool utilitiesKeyboardIntent
     // Previous hover-eval inside-state per auto drawer. Hover acts on
     // EDGES (enter opens, leave closes) so an explicit keyboard or
     // shortcut dismissal sticks while the mouse sits still inside the
@@ -100,6 +105,12 @@ CustomMouseArea {
 
     onPressed: event => {
         dragStart = Qt.point(event.x, event.y);
+        // Clicking into a hover-opened drawer signals keyboard intent
+        // (e.g. the workspace rename field) and engages the grab.
+        if (visibilities.dashboard && inTopPanel(panels.dashboard, event.x, event.y))
+            dashboardKeyboardIntent = true;
+        if (visibilities.utilities && inBottomPanel(panels.utilities, event.x, event.y))
+            utilitiesKeyboardIntent = true;
         // Clicking outside a detached popout (and outside the bar) closes it
         if (popouts.isDetached && !inPopoutPanel(event.x, event.y) && !inBarArea(event.x, event.y))
             popouts.close();
@@ -305,10 +316,12 @@ CustomMouseArea {
                 const inDashboardArea = root.inTopPanel(root.panels.dashboard, root.mouseX, root.mouseY);
                 if (!inDashboardArea) {
                     root.dashboardShortcutActive = true;
+                    root.dashboardKeyboardIntent = true;
                 }
             } else {
-                // Dashboard hidden, clear shortcut flag
+                // Dashboard hidden, clear shortcut and intent flags
                 root.dashboardShortcutActive = false;
+                root.dashboardKeyboardIntent = false;
             }
         }
 
@@ -331,10 +344,12 @@ CustomMouseArea {
                 const inUtilitiesArea = root.inBottomPanel(root.panels.utilities, root.mouseX, root.mouseY);
                 if (!inUtilitiesArea) {
                     root.utilitiesShortcutActive = true;
+                    root.utilitiesKeyboardIntent = true;
                 }
             } else {
-                // Utilities hidden, clear shortcut flag
+                // Utilities hidden, clear shortcut and intent flags
                 root.utilitiesShortcutActive = false;
+                root.utilitiesKeyboardIntent = false;
             }
         }
     }

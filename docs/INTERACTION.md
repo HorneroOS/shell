@@ -41,5 +41,7 @@ Escape — it must authenticate), and the companion menu below.
 | Welcome window | closes | n/a (real window) | X / Done buttons |
 | Area picker | cancels | — | complete a selection |
 
-Hover-revealed drawers may re-show on the next mouse move after an
-Escape dismissal; the keyboard state itself is always cleared.
+Hover is edge-triggered for the dashboard and utilities: entering
+the area opens, leaving closes. An Escape/shortcut dismissal sticks
+while the mouse sits still — only leaving and re-entering (fresh
+hover intent) reopens. Hover feel for pure mouse users is unchanged.

@@ -100,3 +100,17 @@ def test_policy_documented():
     doc = (ROOT / "docs" / "INTERACTION.md").read_text()
     assert "dismissTopmost" in doc
     assert "Companion menu" in doc
+
+
+def test_hover_is_edge_triggered():
+    """Hover may only open on enter-edge and close on leave-edge.
+
+    Level-triggered hover (`visibilities.x = showX`) reopens a drawer
+    right after an explicit Escape dismissal while the mouse sits
+    still inside the area.
+    """
+    src = (ROOT / "modules" / "drawers" / "Interactions.qml").read_text()
+    assert "dashboardHoverInside" in src
+    assert "utilitiesHoverInside" in src
+    assert "visibilities.dashboard = showDashboard" not in src
+    assert "visibilities.utilities = showUtilities" not in src

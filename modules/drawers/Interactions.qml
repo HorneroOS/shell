@@ -17,6 +17,12 @@ CustomMouseArea {
     property bool dashboardShortcutActive
     property bool osdShortcutActive
     property bool utilitiesShortcutActive
+    // Previous hover-eval inside-state per auto drawer. Hover acts on
+    // EDGES (enter opens, leave closes) so an explicit keyboard or
+    // shortcut dismissal sticks while the mouse sits still inside the
+    // area; only fresh hover intent reopens (docs/INTERACTION.md).
+    property bool dashboardHoverInside
+    property bool utilitiesHoverInside
 
     // Whether a point is over the visible bar surface.
     function inBarArea(x: real, y: real): bool {
@@ -108,9 +114,11 @@ CustomMouseArea {
 
             if (!dashboardShortcutActive)
                 visibilities.dashboard = false;
+            dashboardHoverInside = false;
 
             if (!utilitiesShortcutActive)
                 visibilities.utilities = false;
+            utilitiesHoverInside = false;
 
             if (!popouts.currentName.startsWith("traymenu") || (popouts.current?.depth ?? 0) <= 1) {
                 popouts.hasCurrent = false;
@@ -217,16 +225,21 @@ CustomMouseArea {
                 visibilities.launcher = false;
         }
 
-        // Show dashboard on hover (bar area takes priority)
-        const showDashboard = Config.dashboard.showOnHover && !inBar && inTopPanel(panels.dashboard, x, y);
+        // Show dashboard on hover (bar area takes priority). Edge
+        // triggered: only a fresh enter opens, only a leave closes, so
+        // Escape/shortcut dismissal survives a parked mouse.
+        const inDashboardArea = Config.dashboard.showOnHover && !inBar && inTopPanel(panels.dashboard, x, y);
 
-        // Always update visibility based on hover if not in shortcut mode
         if (!dashboardShortcutActive) {
-            visibilities.dashboard = showDashboard;
-        } else if (showDashboard) {
+            if (inDashboardArea && !dashboardHoverInside)
+                visibilities.dashboard = true;
+            else if (!inDashboardArea && dashboardHoverInside)
+                visibilities.dashboard = false;
+        } else if (inDashboardArea) {
             // If hovering over dashboard area while in shortcut mode, transition to hover control
             dashboardShortcutActive = false;
         }
+        dashboardHoverInside = inDashboardArea;
 
         // Show/hide dashboard on drag (for touchscreen devices)
         if (pressed && inTopPanel(panels.dashboard, dragStart.x, dragStart.y) && withinPanelWidth(panels.dashboard, x, y)) {
@@ -236,16 +249,21 @@ CustomMouseArea {
                 visibilities.dashboard = false;
         }
 
-        // Show utilities on hover (bar area takes priority)
-        const showUtilities = !inBar && inBottomPanel(panels.utilities, x, y);
+        // Show utilities on hover (bar area takes priority). Edge
+        // triggered like the dashboard above: explicit dismissal
+        // survives a parked mouse; only fresh hover reopens.
+        const inUtilitiesArea = !inBar && inBottomPanel(panels.utilities, x, y);
 
-        // Always update visibility based on hover if not in shortcut mode
         if (!utilitiesShortcutActive) {
-            visibilities.utilities = showUtilities;
-        } else if (showUtilities) {
+            if (inUtilitiesArea && !utilitiesHoverInside)
+                visibilities.utilities = true;
+            else if (!inUtilitiesArea && utilitiesHoverInside)
+                visibilities.utilities = false;
+        } else if (inUtilitiesArea) {
             // If hovering over utilities area while in shortcut mode, transition to hover control
             utilitiesShortcutActive = false;
         }
+        utilitiesHoverInside = inUtilitiesArea;
 
         // Show popouts on hover
         if (inBarArea(x, y)) {

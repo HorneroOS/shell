@@ -26,6 +26,9 @@ is `Toast.Info` / `Success` / `Warning` / `Error`, also over IPC
 - Caller rule: shell internals only — never external applications.
 - Auto-dismiss, no history, no actions. If the user must act on it
   later, it is not a toast.
+- Click rule: left/middle dismisses (no history); right-click is
+  ignored (D6, mirroring notifications). Hover does not pause
+  expiry yet (C++ singleShot; pausable timer is I6).
 - Gray areas, named not migrated: battery-critical and VPN-drop
   toasts arguably deserve notification promotion (history + DND).
   That migration is a code slice of its own; this doc only records

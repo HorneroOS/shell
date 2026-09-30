@@ -18,7 +18,7 @@ Scope {
             return;
 
         if (action === "lock")
-            lock.lock.locked = true;
+            lock.requestLock();
         else if (action === "unlock")
             lock.lock.locked = false;
         else if (typeof action === "string")
@@ -30,9 +30,9 @@ Scope {
     LogindManager {
         onAboutToSleep: {
             if (Config.general.idle.lockBeforeSleep)
-                root.lock.lock.locked = true;
+                root.lock.requestLock();
         }
-        onLockRequested: root.lock.lock.locked = true
+        onLockRequested: root.lock.requestLock()
         onUnlockRequested: root.lock.lock.unlock()
     }
 

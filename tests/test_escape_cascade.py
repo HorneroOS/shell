@@ -1,0 +1,167 @@
+"""Escape cascade: one central dismissal point (Phase 3 S3).
+
+Inner content with transient state (rename, armed session action,
+dialogs) keeps its own handler; every drawer-level close routes
+through Drawers.dismissTopmost().
+"""
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+DRAWERS = ROOT / "modules" / "drawers" / "Drawers.qml"
+
+
+def test_central_handler_covers_all_drawers():
+    src = DRAWERS.read_text()
+    assert "function dismissTopmost()" in src
+    assert "Keys.onEscapePressed" in src
+    for vis in (
+        "visibilities.layoutPicker",
+        "visibilities.session",
+        "visibilities.launcher",
+        "visibilities.dashboard",
+        "visibilities.sidebar",
+        "visibilities.utilities",
+    ):
+        assert vis in src, f"{vis} missing from Drawers.qml"
+    # OSD clears alongside any central dismissal.
+    assert "visibilities.osd = false" in src
+
+
+def test_focus_set_covers_all_drawers():
+    """keyboardFocus must include every drawer or Escape never arrives."""
+    src = DRAWERS.read_text()
+    focus_line = next(
+        line
+        for line in src.splitlines()
+        if "WlrLayershell.keyboardFocus" in line and "visibilities" in line
+    )
+    for vis in ("launcher", "session", "layoutPicker", "dashboard", "sidebar", "utilities"):
+        assert f"visibilities.{vis}" in focus_line, f"{vis} missing from focus set"
+
+
+def test_click_outside_covers_utilities():
+    src = DRAWERS.read_text()
+    grab_line = next(
+        line for line in src.splitlines() if line.strip().startswith("active:")
+    )
+    assert "visibilities.utilities" in grab_line
+    assert src.count("visibilities.utilities = false") >= 2  # grab + cascade
+
+
+def test_no_per_drawer_escape_handlers():
+    """Launcher/layoutPicker must not handle Escape; central owns it.
+
+    (Direct visibility writes for launch/close-button actions stay —
+    only the Escape path is centralized.)
+    """
+    launcher = (ROOT / "modules" / "launcher" / "Content.qml").read_text()
+    assert "onEscapePressed" not in launcher
+    picker = (ROOT / "modules" / "layoutpicker" / "Content.qml").read_text()
+    assert "onEscapePressed" not in picker
+
+
+def test_inner_state_handlers_retained():
+    """Two-stage dismiss: rename and armed-session keep first Escape."""
+    rename = (ROOT / "modules" / "dashboard" / "dash" / "WsActionsBar.qml").read_text()
+    assert "Keys.onEscapePressed" in rename
+    session = (ROOT / "modules" / "session" / "Content.qml").read_text()
+    assert "Keys.onEscapePressed" in session
+    assert "armedAction" in session
+
+
+def test_grab_covers_all_cascade_drawers():
+    """Physical keys reach the surface via HyprlandFocusGrab, not Qt
+    item focus — so every drawer dismissTopmost() can close needs a
+    grab term (nested-proven: grab-less dashboard never saw Escape)."""
+    src = DRAWERS.read_text()
+    grab_line = next(
+        line for line in src.splitlines() if line.strip().startswith("active:")
+    )
+    for vis in ("launcher", "session", "sidebar", "dashboard", "utilities", "layoutPicker"):
+        assert f"visibilities.{vis}" in grab_line, f"{vis} missing from grab"
+
+
+def test_dashboard_grab_is_explicit_only():
+    """Hover-opened dashboard must not steal typing from other apps;
+    only explicit opens (shortcut/IPC/action, mouse outside the area)
+    grab. The showOnHover=false config keeps its unconditional grab."""
+    src = DRAWERS.read_text()
+    grab_line = next(
+        line for line in src.splitlines() if line.strip().startswith("active:")
+    )
+    assert "interactions.dashboardShortcutActive" in grab_line
+    assert "!Config.dashboard.showOnHover" in grab_line
+
+
+def test_shortcut_active_inferred_from_mouse():
+    """Explicit vs hover is inferred at open time: flag flips while the
+    mouse is outside the area means keyboard-driven (grab); hovering
+    over a shortcut-opened drawer hands control back to hover."""
+    src = (ROOT / "modules" / "drawers" / "Interactions.qml").read_text()
+    assert "property bool dashboardShortcutActive" in src
+    assert "root.dashboardShortcutActive = true" in src
+    assert "id: interactions" in DRAWERS.read_text()
+
+
+def test_no_qt_focus_handoffs_in_drawers():
+    """forceActiveFocus() handoffs do not deliver Escape (proven inert
+    in nested validation: Qt focus never sticks without compositor
+    keyboard focus) and must not creep back into drawer open paths."""
+    for rel in (
+        "modules/dashboard/Content.qml",
+        "modules/dashboard/Wrapper.qml",
+        "modules/sidebar/Content.qml",
+        "modules/utilities/Content.qml",
+        "modules/utilities/Wrapper.qml",
+        "modules/layoutpicker/Content.qml",
+    ):
+        src = (ROOT / rel).read_text()
+        assert "forceActiveFocus()" not in src, f"{rel} regained a focus handoff"
+
+
+def test_drawer_roots_stay_focusable_for_s4():
+    """Content roots keep focus:true as S4 keyboard-navigation seeds;
+    the grab (not these flags) delivers S3 Escape today."""
+    for rel in (
+        "modules/dashboard/Content.qml",
+        "modules/sidebar/Content.qml",
+        "modules/utilities/Content.qml",
+    ):
+        src = (ROOT / rel).read_text()
+        assert "focus: true" in src, f"{rel} lost its focusable root"
+
+
+def test_companion_menu_dismiss_paths():
+    """Companion menu: Escape + click-outside + bubble right-click."""
+    src = (ROOT / "modules" / "companion" / "CompanionHost.qml").read_text()
+    assert "Keys.onEscapePressed" in src
+    assert "HyprlandFocusGrab" in src
+    assert "menu.close()" in src
+    assert "Qt.LeftButton | Qt.RightButton" in src
+
+
+def test_fullscreen_clears_drawers():
+    src = DRAWERS.read_text()
+    handler = src.split("onHasFullscreenChanged")[1].split("}")[0]
+    for vis in ("launcher", "session", "dashboard", "sidebar", "utilities", "layoutPicker"):
+        assert vis in handler, f"{vis} survives fullscreen"
+
+
+def test_policy_documented():
+    doc = (ROOT / "docs" / "INTERACTION.md").read_text()
+    assert "dismissTopmost" in doc
+    assert "Companion menu" in doc
+
+
+def test_hover_is_edge_triggered():
+    """Hover may only open on enter-edge and close on leave-edge.
+
+    Level-triggered hover (`visibilities.x = showX`) reopens a drawer
+    right after an explicit Escape dismissal while the mouse sits
+    still inside the area.
+    """
+    src = (ROOT / "modules" / "drawers" / "Interactions.qml").read_text()
+    assert "dashboardHoverInside" in src
+    assert "utilitiesHoverInside" in src
+    assert "visibilities.dashboard = showDashboard" not in src
+    assert "visibilities.utilities = showUtilities" not in src

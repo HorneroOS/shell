@@ -20,6 +20,12 @@ Item {
     implicitWidth: nonAnimWidth
     implicitHeight: nonAnimHeight
 
+    // Focusable root for S4 keyboard navigation. Escape delivery
+    // does NOT depend on Qt item focus: the HyprlandFocusGrab (see
+    // Drawers.qml) routes physical keys to this surface on explicit
+    // opens, and the central cascade handles them (INTERACTION.md).
+    focus: true
+
     Tabs {
         id: tabs
 

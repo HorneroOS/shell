@@ -10,6 +10,10 @@ Item {
     required property Props props
     required property var visibilities
 
+    // Focusable root for S4 keyboard navigation. Escape delivery
+    // comes from the HyprlandFocusGrab, not Qt item focus (INTERACTION.md).
+    focus: true
+
     ColumnLayout {
         id: layout
 

@@ -50,16 +50,42 @@ Variants {
                 visibilities.launcher = false;
                 visibilities.session = false;
                 visibilities.dashboard = false;
+                visibilities.sidebar = false;
+                visibilities.utilities = false;
                 visibilities.layoutPicker = false;
             }
 
             screen: scope.modelData
             name: "drawers"
             WlrLayershell.exclusionMode: ExclusionMode.Ignore
-            // Dashboard joins the focus set: its workspace rename field
-            // takes real text input, which never receives keystrokes
-            // while the surface stays at keyboardFocus None.
-            WlrLayershell.keyboardFocus: visibilities.launcher || visibilities.session || visibilities.layoutPicker || visibilities.dashboard ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+            // Every drawer joins the focus set: without keyboard focus
+            // the surface never sees Escape and the central cascade
+            // below cannot run. Dashboard additionally needs focus for
+            // its workspace rename field.
+            WlrLayershell.keyboardFocus: visibilities.launcher || visibilities.session || visibilities.layoutPicker || visibilities.dashboard || visibilities.sidebar || visibilities.utilities ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+
+            // Central Escape cascade (docs/INTERACTION.md). Content with
+            // transient inner state (rename field, armed session action)
+            // accepts the first Escape itself; anything unhandled lands
+            // here and dismisses the topmost drawer. OSD clears
+            // alongside: after Escape the surface holds no transient UI.
+            function dismissTopmost(): void {
+                if (visibilities.layoutPicker)
+                    visibilities.layoutPicker = false;
+                else if (visibilities.session && Config.session.enabled)
+                    visibilities.session = false;
+                else if (visibilities.launcher && Config.launcher.enabled)
+                    visibilities.launcher = false;
+                else if (visibilities.dashboard && Config.dashboard.enabled)
+                    visibilities.dashboard = false;
+                else if (visibilities.sidebar && Config.sidebar.enabled)
+                    visibilities.sidebar = false;
+                else if (visibilities.utilities && Config.utilities.enabled)
+                    visibilities.utilities = false;
+                else
+                    return;
+                visibilities.osd = false;
+            }
 
             mask: Region {
                 regions: win.hasFullscreen ? [] : inputRegions.instances
@@ -173,13 +199,20 @@ Variants {
             HyprlandFocusGrab {
                 id: focusGrab
 
-                active: (visibilities.launcher && Config.launcher.enabled) || (visibilities.session && Config.session.enabled) || (visibilities.sidebar && Config.sidebar.enabled) || (!Config.dashboard.showOnHover && visibilities.dashboard && Config.dashboard.enabled) || visibilities.layoutPicker || (panels.popouts.currentName.startsWith("traymenu") && panels.popouts.current?.depth > 1)
+                // The grab (not Qt item focus) is what routes physical keys
+                // to this surface, so every drawer the Escape cascade must
+                // dismiss needs grab coverage on its keyboard-driven opens.
+                // Dashboard hover opens stay grab-free so edge touches never
+                // steal typing from other apps; explicit opens (shortcut, IPC,
+                // action — mouse outside the area, see Interactions) grab.
+                active: (visibilities.launcher && Config.launcher.enabled) || (visibilities.session && Config.session.enabled) || (visibilities.sidebar && Config.sidebar.enabled) || ((!Config.dashboard.showOnHover || interactions.dashboardShortcutActive) && visibilities.dashboard && Config.dashboard.enabled) || (visibilities.utilities && Config.utilities.enabled) || visibilities.layoutPicker || (panels.popouts.currentName.startsWith("traymenu") && panels.popouts.current?.depth > 1)
                 windows: [win]
                 onCleared: {
                     visibilities.launcher = false;
                     visibilities.session = false;
                     visibilities.sidebar = false;
                     visibilities.dashboard = false;
+                    visibilities.utilities = false;
                     visibilities.layoutPicker = false;
                     panels.popouts.hasCurrent = false;
                     bar.closeTray();
@@ -348,12 +381,18 @@ Variants {
             }
 
             Interactions {
+                id: interactions
+
                 enabled: !win.hasFullscreen
                 screen: scope.modelData
                 popouts: panels.popouts
                 visibilities: visibilities
                 panels: panels
                 bar: bar
+
+                // Central Escape cascade endpoint: unhandled Escape from
+                // any drawer content bubbles here (docs/INTERACTION.md).
+                Keys.onEscapePressed: win.dismissTopmost()
 
                 Panels {
                     id: panels

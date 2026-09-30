@@ -23,10 +23,22 @@ Item {
     // Take focus while open so window-level Escape reaches the
     // central cascade (S4 will move this to focusable controls).
     // Deferred to visibility: focusing while still hidden fails.
+    // Two shots: the bool flip and the visibility flip land at
+    // different times around the loader/animation, and the first
+    // open needs the later one.
     focus: true
     onVisibleChanged: {
         if (visible && root.visibilities.dashboard)
             root.forceActiveFocus();
+    }
+
+    Connections {
+        target: root.visibilities
+
+        function onDashboardChanged(): void {
+            if (root.visibilities.dashboard && root.visible)
+                root.forceActiveFocus();
+        }
     }
 
     Tabs {

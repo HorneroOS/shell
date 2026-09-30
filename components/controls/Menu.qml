@@ -16,6 +16,73 @@ Elevation {
 
     signal itemSelected(item: MenuItem)
 
+    // Single tab stop while open; items stay mouse-driven (roving
+    // active index, not N tab stops). Escape closes before the S3
+    // drawer cascade (inner-state-first); focus entering on open
+    // preserves the trigger's input modality.
+    activeFocusOnTab: root.expanded
+
+    property bool internalProgrammaticFocus
+    onExpandedChanged: {
+        if (expanded) {
+            // Entering on open preserves the trigger's modality
+            // (mouse-opened menus show no ring); Tab arrivals report
+            // keyboard below.
+            root.internalProgrammaticFocus = true;
+            root.forceActiveFocus();
+        }
+    }
+    onActiveFocusChanged: {
+        if (activeFocus) {
+            if (root.internalProgrammaticFocus)
+                root.internalProgrammaticFocus = false;
+            else
+                FocusMode.reportFocus(false);
+        }
+    }
+
+    function moveActive(delta: int): void {
+        if (root.items.length === 0)
+            return;
+        const i = root.items.indexOf(root.active);
+        const next = (i < 0 ? (delta > 0 ? 0 : root.items.length - 1) : (i + delta + root.items.length) % root.items.length);
+        root.active = root.items[next];
+    }
+
+    function selectActive(): void {
+        if (root.active) {
+            root.itemSelected(root.active);
+            root.expanded = false;
+        }
+    }
+
+    Keys.onUpPressed: {
+        if (root.expanded)
+            root.moveActive(-1);
+    }
+    Keys.onDownPressed: {
+        if (root.expanded)
+            root.moveActive(1);
+    }
+    Keys.onReturnPressed: {
+        if (root.expanded)
+            root.selectActive();
+    }
+    Keys.onEnterPressed: {
+        if (root.expanded)
+            root.selectActive();
+    }
+    Keys.onSpacePressed: {
+        if (root.expanded)
+            root.selectActive();
+    }
+    Keys.onEscapePressed: event => {
+        if (root.expanded) {
+            root.expanded = false;
+            event.accepted = true;
+        }
+    }
+
     radius: Appearance.rounding.small / 2
     level: 2
 
@@ -109,5 +176,9 @@ Elevation {
             duration: Appearance.anim.durations.expressiveDefaultSpatial
             easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
         }
+    }
+
+    FocusRing {
+        radius: root.radius + 2
     }
 }

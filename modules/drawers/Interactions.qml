@@ -17,6 +17,7 @@ CustomMouseArea {
     property bool dashboardShortcutActive
     property bool osdShortcutActive
     property bool utilitiesShortcutActive
+    property bool launcherShortcutActive
     // Previous hover-eval inside-state per auto drawer. Hover acts on
     // EDGES (enter opens, leave closes) so an explicit keyboard or
     // shortcut dismissal sticks while the mouse sits still inside the
@@ -279,6 +280,19 @@ CustomMouseArea {
         target: root.visibilities
 
         function onLauncherChanged() {
+            if (root.visibilities.launcher) {
+                // Launcher became visible: explicit (shortcut/IPC/drag)
+                // opens hold the mouse outside the panel area, exactly
+                // like dashboard/osd/utilities above. S4 gates Exclusive
+                // keyboard focus on this so hover opens never steal
+                // typing (docs/FOCUS.md).
+                const inLauncherArea = root.inBottomPanel(root.panels.launcher, root.mouseX, root.mouseY);
+                if (!inLauncherArea) {
+                    root.launcherShortcutActive = true;
+                }
+            } else {
+                root.launcherShortcutActive = false;
+            }
             // If launcher is hidden, clear shortcut flags for dashboard and OSD
             if (!root.visibilities.launcher) {
                 root.dashboardShortcutActive = false;

@@ -44,6 +44,11 @@ Singleton {
     property bool currentLight
     property bool previewLight
     readonly property M3Palette palette: showPreview ? preview : current
+    // Semantic keyboard-focus ring color (S4 contract, docs/FOCUS.md).
+    // Primary by design: theme-derived, so Dark / Light / Pampa follow
+    // automatically. The ring floats 2 px off-shape, so it never sits
+    // on a primary fill — no per-control color special-casing.
+    readonly property color focusRing: palette.m3primary
     readonly property M3TPalette tPalette: M3TPalette {}
     readonly property M3Palette current: M3Palette {}
     readonly property M3Palette preview: M3Palette {}

@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import ".."
+import qs.components.controls
 import qs.services
 import qs.config
 import QtQuick
@@ -91,7 +92,7 @@ RowLayout {
         implicitWidth: implicitHeight
         implicitHeight: upIcon.implicitHeight + Appearance.padding.small * 2
 
-        StateLayer {
+        Interactive {
             id: upState
 
             color: Colours.palette.m3onPrimary
@@ -126,7 +127,7 @@ RowLayout {
         implicitWidth: implicitHeight
         implicitHeight: downIcon.implicitHeight + Appearance.padding.small * 2
 
-        StateLayer {
+        Interactive {
             id: downState
 
             color: Colours.palette.m3onPrimary

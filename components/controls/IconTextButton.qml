@@ -1,4 +1,5 @@
 import ".."
+import qs.components.controls
 import qs.services
 import qs.config
 import QtQuick
@@ -42,7 +43,7 @@ StyledRect {
     implicitWidth: row.implicitWidth + horizontalPadding * 2
     implicitHeight: row.implicitHeight + verticalPadding * 2
 
-    StateLayer {
+    Interactive {
         id: stateLayer
 
         color: root.internalChecked ? root.activeOnColour : root.inactiveOnColour

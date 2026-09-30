@@ -1,4 +1,5 @@
 import ".."
+import qs.components.controls
 import qs.services
 import qs.config
 import QtQuick
@@ -44,7 +45,7 @@ Row {
         implicitWidth: textRow.implicitWidth + root.horizontalPadding * 2
         implicitHeight: expandBtn.implicitHeight
 
-        StateLayer {
+        Interactive {
             id: stateLayer
 
             rect.topRightRadius: parent.topRightRadius
@@ -106,7 +107,7 @@ Row {
         implicitWidth: implicitHeight
         implicitHeight: expandIcon.implicitHeight + root.verticalPadding * 2
 
-        StateLayer {
+        Interactive {
             id: expandStateLayer
 
             rect.topLeftRadius: parent.topLeftRadius

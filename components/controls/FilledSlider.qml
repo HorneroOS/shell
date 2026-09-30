@@ -8,6 +8,11 @@ import QtQuick.Templates
 Slider {
     id: root
 
+    onActiveFocusChanged: {
+        if (activeFocus)
+            FocusMode.reportFocus(root.pressed);
+    }
+
     required property string icon
     property real oldValue
     property bool initialized
@@ -144,5 +149,8 @@ Slider {
         Anim {
             duration: Appearance.anim.durations.large
         }
+    }
+    FocusRing {
+        radius: Appearance.rounding.full
     }
 }

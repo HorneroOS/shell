@@ -7,6 +7,11 @@ import QtQuick.Templates
 Slider {
     id: root
 
+    onActiveFocusChanged: {
+        if (activeFocus)
+            FocusMode.reportFocus(root.pressed);
+    }
+
     opacity: root.enabled ? 1 : 0.5
 
     background: Item {
@@ -55,5 +60,8 @@ Slider {
             acceptedButtons: Qt.NoButton
             cursorShape: Qt.PointingHandCursor
         }
+    }
+    FocusRing {
+        radius: Appearance.rounding.full
     }
 }

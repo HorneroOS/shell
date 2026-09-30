@@ -19,10 +19,22 @@ TextField {
     cursorVisible: !readOnly
 
     // Tab stays inside the keyboard-holding drawer (FocusMode, #84).
-    // Fields that route Tab themselves (launcher search) accept it in
-    // Keys.onPressed first, so this never runs for them.
-    Keys.onTabPressed: event => FocusMode.handleTab(root, event, false)
-    Keys.onBacktabPressed: event => FocusMode.handleTab(root, event, true)
+    // Qt runs onTabPressed before onPressed, so fields that route Tab
+    // themselves (launcher vim mode) must opt out with trapTab: false.
+    property bool trapTab: true
+
+    Keys.onTabPressed: event => {
+        if (root.trapTab)
+            FocusMode.handleTab(root, event, false);
+        else
+            event.accepted = false;
+    }
+    Keys.onBacktabPressed: event => {
+        if (root.trapTab)
+            FocusMode.handleTab(root, event, true);
+        else
+            event.accepted = false;
+    }
 
     background: null
 

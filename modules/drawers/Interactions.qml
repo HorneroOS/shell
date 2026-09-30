@@ -285,7 +285,9 @@ CustomMouseArea {
         }
     }
 
-    // Monitor individual visibility changes
+    // Monitor individual visibility changes. mouseX/mouseY go stale once the
+    // pointer leaves through a region outside the input mask, so a flag flip
+    // only counts as hover when the pointer is actually over this surface.
     Connections {
         target: root.visibilities
 
@@ -297,8 +299,8 @@ CustomMouseArea {
                 root.utilitiesShortcutActive = false;
 
                 // Also hide dashboard and OSD if they're not being hovered
-                const inDashboardArea = root.inTopPanel(root.panels.dashboard, root.mouseX, root.mouseY);
-                const inOsdArea = root.inRightPanel(root.panels.osd, root.mouseX, root.mouseY);
+                const inDashboardArea = root.containsMouse && root.inTopPanel(root.panels.dashboard, root.mouseX, root.mouseY);
+                const inOsdArea = root.containsMouse && root.inRightPanel(root.panels.osd, root.mouseX, root.mouseY);
 
                 if (!inDashboardArea) {
                     root.visibilities.dashboard = false;
@@ -313,7 +315,7 @@ CustomMouseArea {
         function onDashboardChanged() {
             if (root.visibilities.dashboard) {
                 // Dashboard became visible, immediately check if this should be shortcut mode
-                const inDashboardArea = root.inTopPanel(root.panels.dashboard, root.mouseX, root.mouseY);
+                const inDashboardArea = root.containsMouse && root.inTopPanel(root.panels.dashboard, root.mouseX, root.mouseY);
                 if (!inDashboardArea) {
                     root.dashboardShortcutActive = true;
                     root.dashboardKeyboardIntent = true;
@@ -328,7 +330,7 @@ CustomMouseArea {
         function onOsdChanged() {
             if (root.visibilities.osd) {
                 // OSD became visible, immediately check if this should be shortcut mode
-                const inOsdArea = root.inRightPanel(root.panels.osd, root.mouseX, root.mouseY);
+                const inOsdArea = root.containsMouse && root.inRightPanel(root.panels.osd, root.mouseX, root.mouseY);
                 if (!inOsdArea) {
                     root.osdShortcutActive = true;
                 }
@@ -341,7 +343,7 @@ CustomMouseArea {
         function onUtilitiesChanged() {
             if (root.visibilities.utilities) {
                 // Utilities became visible, immediately check if this should be shortcut mode
-                const inUtilitiesArea = root.inBottomPanel(root.panels.utilities, root.mouseX, root.mouseY);
+                const inUtilitiesArea = root.containsMouse && root.inBottomPanel(root.panels.utilities, root.mouseX, root.mouseY);
                 if (!inUtilitiesArea) {
                     root.utilitiesShortcutActive = true;
                     root.utilitiesKeyboardIntent = true;

@@ -36,6 +36,22 @@ Singleton {
         return false;
     }
 
+    // Whether an item is actually on screen inside scope: loaded but
+    // clipped-away content (e.g. neighbouring dashboard panes inside a
+    // clipping Flickable) reports visible === true and must be skipped.
+    function shown(scope: Item, item: Item): bool {
+        if (!item.visible || !item.enabled || item.width <= 0 || item.height <= 0)
+            return false;
+        for (let a = item.parent; a && a !== scope.parent; a = a.parent) {
+            if (!a.clip)
+                continue;
+            const r = item.mapToItem(a, 0, 0);
+            if (r.x + item.width <= 0 || r.y + item.height <= 0 || r.x >= a.width || r.y >= a.height)
+                return false;
+        }
+        return true;
+    }
+
     // Moves focus to the next/previous tab stop inside currentRoot.
     // Returns false when no trap applies (no root, or the item lives
     // outside it) so Qt's default traversal runs.
@@ -48,7 +64,7 @@ Singleton {
             it = it.nextItemInFocusChain(forward);
             if (!it || it === from)
                 break;
-            if (it.visible && it.enabled && contains(scope, it)) {
+            if (contains(scope, it) && shown(scope, it)) {
                 it.forceActiveFocus(forward ? Qt.TabFocusReason : Qt.BacktabFocusReason);
                 root.keyboard = true;
                 return true;
@@ -70,7 +86,7 @@ Singleton {
             it = it.nextItemInFocusChain(forward);
             if (!it || it === scope)
                 break;
-            if (it.visible && it.enabled && it.activeFocusOnTab && contains(scope, it)) {
+            if (it.activeFocusOnTab && contains(scope, it) && shown(scope, it)) {
                 it.forceActiveFocus(forward ? Qt.TabFocusReason : Qt.BacktabFocusReason);
                 root.keyboard = true;
                 return true;

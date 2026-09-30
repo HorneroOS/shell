@@ -145,11 +145,16 @@ def test_tab_trap_in_every_focusable():
         "StyledSlider.qml",
         "FilledSlider.qml",
         "StyledRadioButton.qml",
-        "StyledTextField.qml",
     ):
         src = (CONTROLS / name).read_text()
         assert "Keys.onTabPressed: event => FocusMode.handleTab(root, event, false)" in src, name
         assert "Keys.onBacktabPressed: event => FocusMode.handleTab(root, event, true)" in src, name
+
+
+def test_text_field_tab_trap():
+    src = (CONTROLS / "StyledTextField.qml").read_text()
+    assert "FocusMode.handleTab(root, event, false)" in src
+    assert "FocusMode.handleTab(root, event, true)" in src
 
 
 def test_focus_mode_scopes_tab_to_current_root():
@@ -161,3 +166,43 @@ def test_focus_mode_scopes_tab_to_current_root():
     assert "FocusMode.currentRoot = win.keyboardRoot" in drawers
     assert "onActiveChanged: win.syncFocusRoot()" in drawers
     assert "FocusMode.enter(" in drawers
+
+
+def test_click_intent_overlay_stays_out_of_input_mask():
+    """The input mask is built from panels.children; a full-size child of
+    Panels would make the drawers layer swallow every desktop click
+    (PR #87 review). The click-intent overlay must be a sibling."""
+    src = (ROOT / "modules" / "drawers" / "Drawers.qml").read_text()
+    start = src.index("                Panels {")
+    end = src.index("\n                }\n", start)
+    assert "PointHandler" not in src[start:end]
+    assert "anchors.fill: parent" not in src[start:end]
+    assert "anchors.fill: panels" in src
+    assert "for (const p of panels.children)" in src
+
+
+def test_launcher_vim_tab_opts_out_of_trap():
+    """Qt runs onTabPressed before onPressed; vim-mode list navigation on
+    Tab needs the search field to opt out of the drawer Tab trap."""
+    field = (CONTROLS / "StyledTextField.qml").read_text()
+    assert "property bool trapTab: true" in field
+    launcher = (ROOT / "modules" / "launcher" / "Content.qml").read_text()
+    assert "trapTab: !Config.launcher.vimKeybinds" in launcher
+    # Shift+Tab must be matched before plain Tab.
+    assert launcher.index("Qt.Key_Backtab") < launcher.index("event.key === Qt.Key_Tab) {")
+
+
+def test_tab_skips_clipped_offscreen_items():
+    src = (ROOT / "services" / "FocusMode.qml").read_text()
+    assert "function shown(scope: Item, item: Item): bool" in src
+    assert "a.clip" in src
+
+
+def test_keyboard_root_matches_grab_owner():
+    """Tab must not be trapped in a hover-opened drawer that never asked
+    for the keyboard while another drawer holds the grab."""
+    src = (ROOT / "modules" / "drawers" / "Drawers.qml").read_text()
+    line = next(l for l in src.splitlines() if "readonly property Item keyboardRoot:" in l)
+    assert "interactions.dashboardKeyboardIntent" in line
+    assert "interactions.utilitiesKeyboardIntent" in line
+    assert "traymenu" in line

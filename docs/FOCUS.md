@@ -102,5 +102,11 @@ activates the window on `wl_keyboard.enter` whatever its shell role.
 Read activation through the attached `Window` property of an item in
 the window (`win.contentItem.Window.active` / `.activeFocusItem`);
 `PanelWindow` itself has no `active` or `activeFocusItem` property.
+Surfaces with their own arrow/Tab handling (session buttons via
+`KeyNavigation`, the layout-picker grid, bar popout text fields) keep
+it; they do not route through `FocusMode`. Launcher vim mode opts its
+search field out of the trap (`trapTab: false`) to use Tab for the
+result list.
+
 `qs ipc call debug focusState` reports window activation, the grab,
 keyboard intent, the Tab root and whether focus is inside it.

@@ -50,7 +50,7 @@ Escape — it must authenticate), and the companion menu below.
 | Session | disarm, then close | focus grab clears | re-issue shortcut |
 | Dashboard | closes (central, explicit opens and clicks grab) | grab clears, else hover-leave | rename takes first Escape |
 | Sidebar | closes (central) | focus grab clears | re-issue shortcut |
-| Utilities | closes (central, explicit opens and clicks grab) | grab clears, else hover-leave | — |
+| Utilities | closes when opened explicitly or clicked into; hover opens close on leave | grab clears (explicit/clicked), else hover-leave | a shortcut while the pointer already rests in the area counts as hover |
 | Layout picker | closes (central) | focus grab clears | re-issue shortcut |
 | Bar popouts | closes (own handler) | own grab clears | re-click trigger |
 | OSD | clears with a drawer | — | timer |

@@ -66,36 +66,19 @@ lands; Tab arrives unpressed. Verified in nested validation.)
 
 No competing Escape system: drawers close through S3
 `dismissTopmost()`; menus and dialogs accept their own Escape first
-(inner-state-first, as in `INTERACTION.md`). Closing drops
-`keyboardExclusive` (below), so the compositor re-focuses the
-previously keyboard-holding client itself — restoration needs no
-focus hacks in the shell. If Qt ever strands keys (no focusable
-accepts Tab), that is a bug in the surface, fixed there.
+(inner-state-first, as in `INTERACTION.md`). After close, focus is
+nowhere until the next `Tab` — which must land on the first stop of
+the newly keyboard-holding surface. If Qt ever strands keys (no
+focusable accepts Tab), that is a bug in the surface, fixed there,
+not with global focus hacks.
 
-## Window activation (Exclusive, explicit opens only)
+## Window activation (open problem, #84)
 
-`HyprlandFocusGrab` routes physical keys to the surface but never
-activates the Qt window: with a held grab and `OnDemand`, `Tab`
-arrives yet `win.activeFocusItem` stays null and no traversal
-runs (proven in VM validation — screenshots + `focusState`
-probe). So the drawer surface takes `WlrKeyboardFocus.Exclusive`
-while an explicitly-opened keyboard drawer is visible:
-
-- `modules/drawers/Drawers.qml`: `keyboardExclusive` = launcher
-  (explicit) | session | sidebar | dashboard (explicit) |
-  utilities (explicit) | layoutPicker | tray submenu
-  (depth > 1). Hover-only opens stay `OnDemand` so edge
-  touches never steal typing; no drawer visible stays `None`.
-- Explicitness reuses the S3 mouse-position inference
-  (`Interactions.qml` `*ShortcutActive`: visible + mouse outside
-  the panel area = shortcut/IPC/drag open). Launcher gains
-  `launcherShortcutActive` mirroring dashboard/osd/utilities.
-- Per-drawer initial focus (launcher search, session logout,
-  …) already calls `forceActiveFocus()` on open; it only takes
-  effect once the window actually activates — which is what
-  this rule provides.
-
-Observability: `qs ipc call debug focusState` reports window
-activation, `FocusMode.keyboard`, grab state, the Exclusive
-predicate and the `activeFocusItem` chain. Graphical and
-agentic tests assert on it instead of guessing from pixels.
+Tab/arrows/typing need Qt window activation, and nothing tried so
+far produces it on the drawers layer surface: the S4 Exclusive
+attempt was reverted (the compositor clears the focus grab when
+the surface takes Exclusive, bouncing every open), and Exclusive
+alone delivers keys but no `activeFocusItem`. Until #84 lands a
+redesign, Tab traversal stays dead as pre-S4; the `Interactive` /
+`FocusRing` / `FocusMode` foundation and the `debug focusState`
+probe stay in place as the observability base for that work.

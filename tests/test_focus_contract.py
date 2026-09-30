@@ -122,35 +122,9 @@ def test_contract_documented():
     assert "focusRing" in doc
 
 
-def test_exclusive_follows_explicit_opens_only():
-    """Tab/arrows need a real wl_keyboard enter (Exclusive). Hover
-    opens must stay OnDemand so edge touches never steal typing."""
-    src = (ROOT / "modules" / "drawers" / "Drawers.qml").read_text()
-    assert "readonly property bool keyboardExclusive" in src
-    assert "WlrKeyboardFocus.Exclusive" in src
-    assert "WlrKeyboardFocus.OnDemand" in src
-    # Hoverable drawers gate on their ShortcutActive inference...
-    assert "interactions.dashboardShortcutActive" in src
-    assert "interactions.utilitiesShortcutActive" in src
-    assert "interactions.launcherShortcutActive" in src
-    # ...while drag/shortcut-only drawers go Exclusive when visible.
-    assert "(visibilities.session && Config.session.enabled)" in src
-    assert "(visibilities.sidebar && Config.sidebar.enabled)" in src
-    assert "visibilities.layoutPicker" in src
-    # Tray submenus need arrows: same term as the S3 grab.
-    assert 'panels.popouts.currentName.startsWith("traymenu")' in src
-
-
-def test_launcher_shortcut_inference_mirrors_dashboard():
-    src = (ROOT / "modules" / "drawers" / "Interactions.qml").read_text()
-    assert "property bool launcherShortcutActive" in src
-    assert "inBottomPanel(root.panels.launcher, root.mouseX, root.mouseY)" in src
-
-
 def test_debug_focus_state_observable():
     src = (ROOT / "modules" / "drawers" / "Drawers.qml").read_text()
     assert "function focusState(): string" in src
     assert "win.activeFocusItem" in src
     assert "FocusMode.keyboard" in src
     assert "focusGrab.active" in src
-    assert "keyboardExclusive" in src

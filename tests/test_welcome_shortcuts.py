@@ -55,14 +55,11 @@ def test_shortcuts_search_typeable():
 
 def test_drawers_keep_dashboard_keyboard_focus():
     text = DRAWERS.read_text()
-    m = re.search(r"readonly property bool keyboardExclusive:\s*(.+)", text)
-    assert m, "keyboardExclusive predicate missing in Drawers.qml"
+    m = re.search(r"WlrLayershell\.keyboardFocus:\s*(.+)", text)
+    assert m, "keyboardFocus binding missing in Drawers.qml"
     assert "visibilities.dashboard" in m.group(1), (
-        "dashboard must keep keyboard focus (Exclusive on explicit "
-        "open) for its text inputs")
-    assert "dashboardShortcutActive" in m.group(1), (
-        "dashboard Exclusive must gate on explicit opens so hover "
-        "never steals typing")
+        "dashboard must stay in the OnDemand keyboard-focus set for "
+        "its text inputs")
 
 
 def test_shortcuts_cozy_visual_contract():

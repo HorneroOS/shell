@@ -54,6 +54,10 @@ Item {
         Flickable {
             id: view
 
+            // Real clip (the rounded ClippingRectangle clips by shader and
+            // leaves clip false): FocusMode skips off-screen neighbour panes.
+            clip: true
+
             // Clamp: dashboardState.currentTab survives in-process config
             // reloads via reloadableId and may still name a removed
             // trailing tab (ADR 003).

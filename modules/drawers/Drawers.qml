@@ -74,8 +74,15 @@ Variants {
             // One writer per window: publish this screen's root while its
             // grab holds the keyboard, clear it only if it is still ours.
             function syncFocusRoot(): void {
-                if (focusGrab.active)
+                if (focusGrab.active) {
                     FocusMode.currentRoot = win.keyboardRoot;
+                    // Qt focus may still sit in another (hidden) drawer, e.g.
+                    // the launcher search field; seed the new root so typed
+                    // keys land in the drawer that holds the keyboard.
+                    const current = win.contentItem.Window.activeFocusItem;
+                    if (win.keyboardRoot && !(current && FocusMode.contains(win.keyboardRoot, current)))
+                        Qt.callLater(() => FocusMode.enter(true));
+                }
                 else if (FocusMode.currentRoot && FocusMode.contains(win.contentItem, FocusMode.currentRoot))
                     FocusMode.currentRoot = null;
             }
@@ -364,6 +371,7 @@ Variants {
                         winActive: win.contentItem.Window.active,
                         inRoot: FocusMode.currentRoot ? FocusMode.contains(FocusMode.currentRoot, win.contentItem.Window.activeFocusItem) : null,
                         shown: FocusMode.currentRoot && win.contentItem.Window.activeFocusItem ? FocusMode.shown(FocusMode.currentRoot, win.contentItem.Window.activeFocusItem) : null,
+                        focused: String(win.contentItem.Window.activeFocusItem ?? "none"),
                         root: FocusMode.currentRoot ? (FocusMode.currentRoot.objectName || String(FocusMode.currentRoot).split("(")[0]) : null,
                         keyboard: FocusMode.keyboard,
                         grab: focusGrab.active,

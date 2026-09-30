@@ -196,6 +196,9 @@ def test_tab_skips_clipped_offscreen_items():
     src = (ROOT / "services" / "FocusMode.qml").read_text()
     assert "function shown(scope: Item, item: Item): bool" in src
     assert "a.clip" in src
+    dash = (ROOT / "modules" / "dashboard" / "Content.qml").read_text()
+    view = dash[dash.index("id: view\n"):]
+    assert "clip: true" in view[:400], "dashboard view must clip for FocusMode.shown"
 
 
 def test_keyboard_root_matches_grab_owner():

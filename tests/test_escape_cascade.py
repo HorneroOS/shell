@@ -80,6 +80,19 @@ def test_drawer_contents_take_focus():
         assert "forceActiveFocus()" in src, f"{rel} never takes focus"
 
 
+def test_loader_gated_wrappers_take_focus():
+    """Dashboard/utilities wrappers focus on show: their content Loader
+    instantiates around open, so the always-present wrapper hands focus
+    to the content once materialized (or holds it itself)."""
+    for rel in (
+        "modules/dashboard/Wrapper.qml",
+        "modules/utilities/Wrapper.qml",
+    ):
+        src = (ROOT / rel).read_text()
+        assert "content.item.forceActiveFocus()" in src, f"{rel} never hands focus"
+        assert "root.forceActiveFocus()" in src, f"{rel} has no fallback focus"
+
+
 def test_companion_menu_dismiss_paths():
     """Companion menu: Escape + click-outside + bubble right-click."""
     src = (ROOT / "modules" / "companion" / "CompanionHost.qml").read_text()

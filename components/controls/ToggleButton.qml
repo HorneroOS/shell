@@ -45,7 +45,7 @@ StyledRect {
     color: toggled ? Colours.palette[`m3${accent.toLowerCase()}`] : Colours.palette[`m3${accent.toLowerCase()}Container`]
     opacity: root.disabled ? 0.5 : 1
 
-    StateLayer {
+    Interactive {
         id: toggleStateLayer
 
         color: root.toggled ? Colours.palette[`m3on${root.accent}`] : Colours.palette[`m3on${root.accent}Container`]

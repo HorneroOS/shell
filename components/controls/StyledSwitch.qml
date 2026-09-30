@@ -10,6 +10,11 @@ Switch {
 
     property int cLayer: 1
 
+    onActiveFocusChanged: {
+        if (activeFocus)
+            FocusMode.reportFocus(root.pressed);
+    }
+
     implicitWidth: implicitIndicatorWidth
     implicitHeight: implicitIndicatorHeight
 
@@ -149,5 +154,9 @@ Switch {
         duration: Appearance.anim.durations.normal
         easing.type: Easing.BezierSpline
         easing.bezierCurve: Appearance.anim.curves.standard
+    }
+
+    FocusRing {
+        radius: Appearance.rounding.full
     }
 }

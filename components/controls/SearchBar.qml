@@ -1,5 +1,6 @@
 import QtQuick
 import qs.components
+import qs.components.controls
 import qs.services
 import qs.config
 
@@ -54,7 +55,7 @@ StyledTextField {
         color: Colours.palette.m3onSurfaceVariant
         text: "close"
 
-        StateLayer {
+        Interactive {
             radius: Appearance.rounding.full
 
             onClicked: root.clear()

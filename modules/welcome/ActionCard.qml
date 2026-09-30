@@ -1,4 +1,5 @@
 import qs.components
+import qs.components.controls
 import qs.services
 import qs.config
 import QtQuick
@@ -23,20 +24,7 @@ StyledRect {
     implicitHeight: Math.max(88, content.implicitHeight + Appearance.padding.normal * 2)
 
     radius: Appearance.rounding.normal
-    color: root.interactive && cardMouse.containsMouse ? Colours.layer(Colours.palette.m3surfaceContainerHigh, 1) : Colours.layer(Colours.palette.m3surfaceContainer, 1)
-    border.width: root.activeFocus ? 2 : 0
-    border.color: Colours.palette.m3primary
-
-    activeFocusOnTab: root.interactive
-
-    Keys.onReturnPressed: {
-        if (root.interactive)
-            root.activated();
-    }
-    Keys.onSpacePressed: {
-        if (root.interactive)
-            root.activated();
-    }
+    color: root.interactive && cardState.containsMouse ? Colours.layer(Colours.palette.m3surfaceContainerHigh, 1) : Colours.layer(Colours.palette.m3surfaceContainer, 1)
 
     Behavior on color {
         CAnim {}
@@ -103,12 +91,12 @@ StyledRect {
         }
     }
 
-    MouseArea {
-        id: cardMouse
+    Interactive {
+        id: cardState
 
-        anchors.fill: parent
-        hoverEnabled: root.interactive
-        enabled: root.interactive
+        disabled: !root.interactive
+        // The card signals hover with its own background shift.
+        showHoverBackground: false
         onClicked: root.activated()
     }
 }

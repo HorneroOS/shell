@@ -7,6 +7,11 @@ import QtQuick.Templates
 RadioButton {
     id: root
 
+    onActiveFocusChanged: {
+        if (activeFocus)
+            FocusMode.reportFocus(root.pressed);
+    }
+
     font.pointSize: Appearance.font.size.smaller
     opacity: root.enabled ? 1 : 0.5
 
@@ -54,5 +59,8 @@ RadioButton {
         anchors.verticalCenter: parent.verticalCenter
         anchors.left: outerCircle.right
         anchors.leftMargin: Appearance.spacing.smaller
+    }
+    FocusRing {
+        radius: Appearance.rounding.full
     }
 }

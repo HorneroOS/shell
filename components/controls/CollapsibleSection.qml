@@ -1,6 +1,7 @@
 import ".."
 import qs.components
 import qs.components.effects
+import qs.components.controls
 import qs.services
 import qs.config
 import QtQuick
@@ -58,7 +59,7 @@ ColumnLayout {
             }
         }
 
-        StateLayer {
+        Interactive {
             anchors.fill: parent
             color: Colours.palette.m3onSurface
             radius: Appearance.rounding.normal

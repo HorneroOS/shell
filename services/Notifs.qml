@@ -18,6 +18,13 @@ Singleton {
     readonly property list<Notif> popups: list.filter(n => n.popup)
     property alias dnd: props.dnd
 
+    // S12: hard bound on live notifications. A spammy sender must
+    // not grow memory, the center list, or the persisted JSON
+    // without limit; legitimate flows never hold this many live
+    // at once. Overflow closes oldest-first (locked ones are
+    // marked closed and drop on unlock, via Notif.close()).
+    readonly property int maxListSize: 100
+
     property bool loaded
 
     // Runtime path contract row 10: canonical hornero/* notifs.json first,
@@ -96,6 +103,9 @@ Singleton {
                 notification: notif
             });
             root.list = [comp, ...root.list];
+            if (root.list.length > root.maxListSize)
+                for (const old of root.list.slice(root.maxListSize))
+                    old.close();
         }
     }
 

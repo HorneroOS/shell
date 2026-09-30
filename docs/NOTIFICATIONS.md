@@ -45,6 +45,10 @@ presence without content).
   its own messages here.
 - Urgency and expiry come from the sender; the shell never invents
   either.
+- Ingress bound (S12): at most `maxListSize` (100) live
+  notifications; overflow closes oldest-first so a spammy sender
+  cannot grow memory or the persisted log without limit.
+  Rate-limit/dedup rules are deferred to the test phase.
 
 ## Admission test
 

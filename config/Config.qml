@@ -147,8 +147,18 @@ Singleton {
                 }
             },
             anim: {
-                mediaGifSpeedAdjustment: 300,
-                sessionGifSpeed: 0.7,
+                mediaGifSpeedAdjustment: appearance.anim.mediaGifSpeedAdjustment,
+                sessionGifSpeed: appearance.anim.sessionGifSpeed,
+                curves: {
+                    emphasized: appearance.anim.curves.emphasized,
+                    emphasizedAccel: appearance.anim.curves.emphasizedAccel,
+                    emphasizedDecel: appearance.anim.curves.emphasizedDecel,
+                    standard: appearance.anim.curves.standard,
+                    standardAccel: appearance.anim.curves.standardAccel,
+                    standardDecel: appearance.anim.curves.standardDecel,
+                    expressiveFastSpatial: appearance.anim.curves.expressiveFastSpatial,
+                    expressiveDefaultSpatial: appearance.anim.curves.expressiveDefaultSpatial
+                },
                 durations: {
                     scale: appearance.anim.durations.scale
                 }
@@ -208,6 +218,13 @@ Singleton {
                 blur: background.visualiser.blur,
                 rounding: background.visualiser.rounding,
                 spacing: background.visualiser.spacing
+            },
+            video: {
+                enabled: background.video.enabled,
+                pauseOnFullscreen: background.video.pauseOnFullscreen,
+                pauseOnGameMode: background.video.pauseOnGameMode,
+                batteryLimitEnabled: background.video.batteryLimitEnabled,
+                batteryLimit: background.video.batteryLimit
             }
         };
     }
@@ -233,6 +250,7 @@ Singleton {
             },
             workspaces: {
                 shown: bar.workspaces.shown,
+                maxWindowIcons: bar.workspaces.maxWindowIcons,
                 activeIndicator: bar.workspaces.activeIndicator,
                 occupiedBg: bar.workspaces.occupiedBg,
                 showWindows: bar.workspaces.showWindows,
@@ -245,11 +263,15 @@ Singleton {
                 capitalisation: bar.workspaces.capitalisation,
                 specialWorkspaceIcons: bar.workspaces.specialWorkspaceIcons
             },
+            activeWindow: {
+                inverted: bar.activeWindow.inverted
+            },
             tray: {
                 background: bar.tray.background,
                 recolour: bar.tray.recolour,
                 compact: bar.tray.compact,
-                iconSubs: bar.tray.iconSubs
+                iconSubs: bar.tray.iconSubs,
+                hiddenIcons: bar.tray.hiddenIcons
             },
             status: {
                 showAudio: bar.status.showAudio,
@@ -262,14 +284,17 @@ Singleton {
                 showLockStatus: bar.status.showLockStatus
             },
             clock: {
-                showIcon: bar.clock.showIcon
+                showIcon: bar.clock.showIcon,
+                showDate: bar.clock.showDate,
+                background: bar.clock.background
             },
             sizes: {
                 innerWidth: bar.sizes.innerWidth,
                 windowPreviewSize: bar.sizes.windowPreviewSize,
                 trayMenuWidth: bar.sizes.trayMenuWidth,
                 batteryWidth: bar.sizes.batteryWidth,
-                networkWidth: bar.sizes.networkWidth
+                networkWidth: bar.sizes.networkWidth,
+                kbLayoutWidth: bar.sizes.kbLayoutWidth
             },
             entries: bar.entries,
             excludedScreens: bar.excludedScreens
@@ -288,7 +313,8 @@ Singleton {
         return {
             enabled: dashboard.enabled,
             showOnHover: dashboard.showOnHover,
-            updateInterval: dashboard.updateInterval,
+            mediaUpdateInterval: dashboard.mediaUpdateInterval,
+            resourceUpdateInterval: dashboard.resourceUpdateInterval,
             dragThreshold: dashboard.dragThreshold,
             performance: {
                 showBattery: dashboard.performance.showBattery,
@@ -297,6 +323,15 @@ Singleton {
                 showMemory: dashboard.performance.showMemory,
                 showStorage: dashboard.performance.showStorage,
                 showNetwork: dashboard.performance.showNetwork
+            },
+            workspaces: {
+                showLivePreview: dashboard.workspaces.showLivePreview,
+                showSpecialWorkspaces: dashboard.workspaces.showSpecialWorkspaces,
+                showWindowBadges: dashboard.workspaces.showWindowBadges,
+                showMonitorBadge: dashboard.workspaces.showMonitorBadge,
+                maxAppIcons: dashboard.workspaces.maxAppIcons,
+                previewHeight: dashboard.workspaces.previewHeight,
+                enableWindowActions: dashboard.workspaces.enableWindowActions
             },
             sizes: {
                 tabIndicatorHeight: dashboard.sizes.tabIndicatorHeight,
@@ -364,6 +399,7 @@ Singleton {
             expandThreshold: notifs.expandThreshold,
             actionOnClick: notifs.actionOnClick,
             groupPreviewNum: notifs.groupPreviewNum,
+            openExpanded: notifs.openExpanded,
             sizes: {
                 width: notifs.sizes.width,
                 image: notifs.sizes.image,
@@ -449,6 +485,7 @@ Singleton {
                 capsLockChanged: utilities.toasts.capsLockChanged,
                 numLockChanged: utilities.toasts.numLockChanged,
                 kbLayoutChanged: utilities.toasts.kbLayoutChanged,
+                kbLimit: utilities.toasts.kbLimit,
                 vpnChanged: utilities.toasts.vpnChanged,
                 nowPlaying: utilities.toasts.nowPlaying
             },

@@ -61,14 +61,19 @@ System defaults vs user overrides:
   three intentionally unset runtime-resolved keys). HorneroOS/config
   packages that file to `/etc/xdg/hornero/shell.json` (path contract
   row 6, system default); this repo never installs it there itself.
+  The shell does **not** read that system copy at runtime: it is a
+  reference/seed for packaging, and because it equals the compiled
+  defaults, omitting it changes nothing.
 - **User overrides** live outside this repo at
   `$XDG_CONFIG_HOME/hornero/shell.json` (`Paths.config`), plus
-  theme/wallpaper data under the data dir. Load order is user file first,
-  system default as fallback; a missing user file is not an error —
-  compiled defaults apply (`Config.qml` `onLoadFailed` tolerates
-  `FileNotFound`). The shell watches them (`FileView`, `watchFiles`) and
-  live-reloads; a preset apply deep-merges into the user file, never into
-  the shipped tree.
+  theme/wallpaper data under the data dir. `Config.qml` reads only this
+  user file; there is no `/etc/xdg` fallback. A missing user file is not
+  an error — the compiled `*Config.qml` defaults apply (`Config.qml`
+  `onLoadFailed` tolerates `FileNotFound`). The shell watches the file
+  (`FileView`, `watchChanges`) and live-reloads; a preset apply
+  deep-merges into the user file, never into the shipped tree. Settings
+  saves rewrite the whole file from `serializeConfig()`, which must cover
+  every `*Config.qml` property (`tests/test_config_serializer.py`).
 - `assets/pam.d/*` are **host-integration samples**, not installed to
   `/etc` by CMake. Distributors copy/adapt them in packaging.
 

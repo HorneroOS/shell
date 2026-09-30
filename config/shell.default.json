@@ -24,6 +24,16 @@
     "anim": {
       "mediaGifSpeedAdjustment": 300,
       "sessionGifSpeed": 0.7,
+      "curves": {
+        "emphasized": [0.05, 0, 0.13333333333333333, 0.06, 0.16666666666666666, 0.4, 0.20833333333333334, 0.82, 0.25, 1, 1, 1],
+        "emphasizedAccel": [0.3, 0, 0.8, 0.15, 1, 1],
+        "emphasizedDecel": [0.05, 0.7, 0.1, 1, 1, 1],
+        "standard": [0.2, 0, 0, 1, 1, 1],
+        "standardAccel": [0.3, 0, 1, 1, 1, 1],
+        "standardDecel": [0, 0, 0, 1, 1, 1],
+        "expressiveFastSpatial": [0.42, 1.67, 0.21, 0.9, 1, 1],
+        "expressiveDefaultSpatial": [0.38, 1.21, 0.22, 1, 1, 1]
+      },
       "durations": {
         "scale": 1
       }
@@ -111,6 +121,13 @@
       "blur": false,
       "rounding": 1,
       "spacing": 1
+    },
+    "video": {
+      "enabled": true,
+      "pauseOnFullscreen": true,
+      "pauseOnGameMode": false,
+      "batteryLimitEnabled": false,
+      "batteryLimit": 20
     }
   },
   "bar": {
@@ -133,6 +150,7 @@
     },
     "workspaces": {
       "shown": 5,
+      "maxWindowIcons": 5,
       "activeIndicator": true,
       "occupiedBg": true,
       "showWindows": true,
@@ -145,11 +163,15 @@
       "capitalisation": "preserve",
       "specialWorkspaceIcons": []
     },
+    "activeWindow": {
+      "inverted": false
+    },
     "tray": {
       "background": false,
       "recolour": false,
       "compact": false,
-      "iconSubs": []
+      "iconSubs": [],
+      "hiddenIcons": []
     },
     "status": {
       "showAudio": false,
@@ -162,14 +184,17 @@
       "showLockStatus": true
     },
     "clock": {
-      "showIcon": true
+      "showIcon": true,
+      "showDate": false,
+      "background": false
     },
     "sizes": {
       "innerWidth": 40,
       "windowPreviewSize": 400,
       "trayMenuWidth": 300,
       "batteryWidth": 250,
-      "networkWidth": 320
+      "networkWidth": 320,
+      "kbLayoutWidth": 320
     },
     "entries": [
       {"id": "logo", "enabled": true},
@@ -192,6 +217,8 @@
   "dashboard": {
     "enabled": true,
     "showOnHover": true,
+    "mediaUpdateInterval": 500,
+    "resourceUpdateInterval": 1000,
     "dragThreshold": 50,
     "performance": {
       "showBattery": true,
@@ -200,6 +227,15 @@
       "showMemory": true,
       "showStorage": true,
       "showNetwork": true
+    },
+    "workspaces": {
+      "showLivePreview": true,
+      "showSpecialWorkspaces": true,
+      "showWindowBadges": true,
+      "showMonitorBadge": true,
+      "maxAppIcons": 4,
+      "previewHeight": 200,
+      "enableWindowActions": true
     },
     "sizes": {
       "tabIndicatorHeight": 3,
@@ -275,6 +311,7 @@
     "expandThreshold": 20,
     "actionOnClick": false,
     "groupPreviewNum": 3,
+    "openExpanded": false,
     "sizes": {
       "width": 400,
       "image": 41,
@@ -345,6 +382,7 @@
       "capsLockChanged": true,
       "numLockChanged": true,
       "kbLayoutChanged": true,
+      "kbLimit": true,
       "vpnChanged": true,
       "nowPlaying": false
     },

@@ -34,13 +34,13 @@ StyledRect {
     color: Qt.rgba(Colours.palette.m3surfaceContainerHigh.r, Colours.palette.m3surfaceContainerHigh.g, Colours.palette.m3surfaceContainerHigh.b, 0.9)
     radius: Appearance.rounding.large
 
-    implicitWidth: layoutRow.implicitWidth + Appearance.padding.medium * 2
+    implicitWidth: layoutRow.implicitWidth + Appearance.padding.normal * 2
     implicitHeight: 38
 
     Row {
         id: layoutRow
         anchors.centerIn: parent
-        spacing: Appearance.spacing.medium
+        spacing: Appearance.spacing.normal
 
         // Active filter badge & reset action
         StyledRect {
@@ -48,8 +48,8 @@ StyledRect {
 
             anchors.verticalCenter: parent.verticalCenter
             color: Wallpapers.colorFilter !== "" ? Colours.palette.m3secondaryContainer : "transparent"
-            radius: Appearance.rounding.medium
-            implicitWidth: badgeContent.implicitWidth + (Wallpapers.colorFilter !== "" ? Appearance.padding.medium : Appearance.padding.small)
+            radius: Appearance.rounding.normal
+            implicitWidth: badgeContent.implicitWidth + (Wallpapers.colorFilter !== "" ? Appearance.padding.normal : Appearance.padding.small)
             implicitHeight: 26
 
             Row {
@@ -96,15 +96,19 @@ StyledRect {
                 anchors.verticalCenter: parent.verticalCenter
                 color: modelData.hex
                 radius: Appearance.rounding.full
-                implicitWidth: 22
-                implicitHeight: 22
+                // 24px meets the WCAG 2.2 AA minimum target size (2.5.8).
+                implicitWidth: 24
+                implicitHeight: 24
                 border.width: Wallpapers.colorFilter === modelData.id ? 3 : 1
                 border.color: Wallpapers.colorFilter === modelData.id ? Colours.palette.m3onSurface : Qt.alpha(Colours.palette.m3outline, 0.5)
+
+                Accessible.role: Accessible.Button
+                Accessible.name: swatch.modelData.name
 
                 StateLayer {
                     radius: parent.radius
 
-                    onClicked: Wallpapers.colorFilter = root.modelData.id
+                    onClicked: Wallpapers.colorFilter = swatch.modelData.id
                 }
 
                 Behavior on border.width {

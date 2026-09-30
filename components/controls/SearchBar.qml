@@ -10,8 +10,8 @@ StyledTextField {
     readonly property alias bg: bg
     readonly property alias searchIcon: searchIcon
 
-    leftPadding: searchIcon.width + searchIcon.anchors.leftMargin + Appearance.spacing.medium
-    rightPadding: clearIcon.width + clearIcon.anchors.rightMargin + Appearance.spacing.medium
+    leftPadding: searchIcon.width + searchIcon.anchors.leftMargin + Appearance.spacing.normal
+    rightPadding: clearIcon.width + clearIcon.anchors.rightMargin + Appearance.spacing.normal
     topPadding: Appearance.padding.large
     bottomPadding: Appearance.padding.large
 
@@ -39,7 +39,7 @@ StyledTextField {
 
             anchors.verticalCenter: parent.verticalCenter
             anchors.left: parent.left
-            anchors.leftMargin: Appearance.spacing.medium
+            anchors.leftMargin: Appearance.spacing.normal
             text: "search"
             color: Colours.palette.m3onSurfaceVariant
         }
@@ -50,7 +50,7 @@ StyledTextField {
 
         anchors.verticalCenter: parent.verticalCenter
         anchors.right: parent.right
-        anchors.rightMargin: Appearance.spacing.medium
+        anchors.rightMargin: Appearance.spacing.normal
         visible: root.text.length > 0
         color: Colours.palette.m3onSurfaceVariant
         text: "close"

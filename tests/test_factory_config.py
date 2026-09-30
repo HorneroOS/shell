@@ -5,12 +5,10 @@ The factory file mirrors exactly what Config.qml serializeConfig() persists
 on save (the key set the shell itself reads back through its JsonAdapter),
 with values taken from the per-area *Config.qml initializers.
 
+Schema coverage of the serializer itself (no JsonObject property dropped
+on save) is enforced by tests/test_config_serializer.py.
+
 Documented omissions (each asserted below with its reason):
-- dashboard.updateInterval: serializeDashboard() reads
-  DashboardConfig.updateInterval, which does not exist (only
-  media/resourceUpdateInterval); the value is undefined at runtime, so
-  JSON.stringify never writes the key. Pre-existing upstream quirk, left
-  untouched.
 - services.useTwelveHourClock: computed from Qt.locale() at runtime; left
   unset so first-run locale detection still applies.
 - paths.wallpaperDir: runtime default is `${Paths.pictures}/Wallpapers`
@@ -26,7 +24,6 @@ FACTORY = ROOT / "config" / "shell.default.json"
 
 # (section, key, ...) paths intentionally absent from the factory file.
 OMITTED = {
-    ("dashboard", "updateInterval"),
     ("services", "useTwelveHourClock"),
     ("paths", "wallpaperDir"),
 }
@@ -189,7 +186,7 @@ def test_factory_values_match_code_defaults():
     factory = json.loads(FACTORY.read_text())
     bar_src = (ROOT / "config" / "BarConfig.qml").read_text()
     cases = [
-        # appearance (AppearanceConfig.qml; anim literals mirror the adapter)
+        # appearance (AppearanceConfig.qml)
         ("appearance.theme", "hornero-dark"),
         ("appearance.rounding.scale", 1),
         ("appearance.font.family.sans", "Rubik"),
@@ -197,6 +194,8 @@ def test_factory_values_match_code_defaults():
         ("appearance.font.family.material", "Material Symbols Rounded"),
         ("appearance.anim.mediaGifSpeedAdjustment", 300),
         ("appearance.anim.sessionGifSpeed", 0.7),
+        ("appearance.anim.curves.emphasized.2", 2 / 15),
+        ("appearance.anim.curves.standard", [0.2, 0, 0, 1, 1, 1]),
         ("appearance.transparency.enabled", False),
         ("appearance.transparency.base", 0.85),
         # general (GeneralConfig.qml; qsTr() yields the plain source string)
@@ -206,16 +205,24 @@ def test_factory_values_match_code_defaults():
         ("general.battery.criticalLevel", 3),
         ("general.battery.warnLevels.0.level", 20),
         ("general.battery.warnLevels.2.critical", True),
-        # background (BackgroundConfig.qml; video section is not serialized)
+        # background (BackgroundConfig.qml)
         ("background.enabled", True),
         ("background.desktopClock.position", "bottom-right"),
         ("background.desktopClock.shadow.blur", 0.4),
         ("background.visualiser.autoHide", True),
+        ("background.video.enabled", True),
+        ("background.video.batteryLimit", 20),
         # bar (BarConfig.qml)
         ("bar.position", "left"),
         ("bar.style", "attached"),
         ("bar.floatingMargin", 8),
         ("bar.workspaces.shown", 5),
+        ("bar.workspaces.maxWindowIcons", 5),
+        ("bar.activeWindow.inverted", False),
+        ("bar.tray.hiddenIcons", []),
+        ("bar.clock.showDate", False),
+        ("bar.clock.background", False),
+        ("bar.sizes.kbLayoutWidth", 320),
         ("bar.workspaces.showWindowsOnSpecialWorkspaces", True),
         ("bar.workspaces.capitalisation", "preserve"),
         ("bar.status.showNetwork", True),
@@ -228,8 +235,12 @@ def test_factory_values_match_code_defaults():
         ("border.frameEnabled", True),
         ("border.thickness", 10),
         ("border.rounding", 25),
-        # dashboard (DashboardConfig.qml; updateInterval intentionally absent)
+        # dashboard (DashboardConfig.qml)
         ("dashboard.dragThreshold", 50),
+        ("dashboard.mediaUpdateInterval", 500),
+        ("dashboard.resourceUpdateInterval", 1000),
+        ("dashboard.workspaces.maxAppIcons", 4),
+        ("dashboard.workspaces.previewHeight", 200),
         ("dashboard.performance.showGpu", True),
         ("dashboard.sizes.mediaCoverArtSize", 150),
         # controlCenter / lock ratios are 16/9 in code (ControlCenterConfig,
@@ -250,6 +261,7 @@ def test_factory_values_match_code_defaults():
         # notifs / osd
         ("notifs.defaultExpireTimeout", 5000),
         ("notifs.clearThreshold", 0.3),
+        ("notifs.openExpanded", False),
         ("notifs.sizes.badge", 20),
         ("osd.hideDelay", 2000),
         ("osd.enableMicrophone", False),
@@ -263,6 +275,7 @@ def test_factory_values_match_code_defaults():
         ("lock.sizes.centerWidth", 600),
         ("utilities.maxToasts", 4),
         ("utilities.toasts.nowPlaying", False),
+        ("utilities.toasts.kbLimit", True),
         ("utilities.vpn.provider", ["netbird"]),
         ("sidebar.sizes.width", 430),
         # services (ServiceConfig.qml; useTwelveHourClock intentionally

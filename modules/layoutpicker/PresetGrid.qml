@@ -9,7 +9,8 @@ import QtQuick
 import QtQuick.Layouts
 
 // Reusable grid of shell layout presets with mini previews.
-// Hosts: layoutpicker modal (drawers), controlcenter pane, dashboard tab.
+// Hosts: layoutpicker modal (drawers), controlcenter layout pane
+// (the dashboard Layout tab was removed by ADR 003).
 // Data comes from `horneroctl shell preset list --full` (enriched JSON:
 // name, display, description, icon, iconMaterial, position, style,
 // active); applying a preset deep-merges into shell.json and live-reloads

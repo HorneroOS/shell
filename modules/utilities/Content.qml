@@ -13,6 +13,15 @@ Item {
     implicitWidth: layout.implicitWidth
     implicitHeight: layout.implicitHeight
 
+    // Take focus while open so window-level Escape reaches the
+    // central cascade (S4 will move this to focusable controls).
+    // Deferred to visibility: focusing while still hidden fails.
+    focus: true
+    onVisibleChanged: {
+        if (visible && root.visibilities.utilities)
+            root.forceActiveFocus();
+    }
+
     ColumnLayout {
         id: layout
 

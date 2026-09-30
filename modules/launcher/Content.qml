@@ -104,7 +104,7 @@ Item {
             Keys.onUpPressed: list.currentList?.decrementCurrentIndex()
             Keys.onDownPressed: list.currentList?.incrementCurrentIndex()
 
-            Keys.onEscapePressed: root.visibilities.launcher = false
+            // Escape handled centrally (Drawers.dismissTopmost).
 
             Keys.onPressed: event => {
                 if (!Config.launcher.vimKeybinds)

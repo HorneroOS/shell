@@ -5,6 +5,7 @@ import qs.modules.controlcenter
 import qs.modules.welcome
 import qs.services
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Wayland
 import QtQuick
@@ -18,7 +19,8 @@ import QtQuick
 // input (session lock, fullscreen, game mode, area picker).
 //
 // Input-region safety: Overlay layer, Ignore exclusion, no keyboard
-// focus, and a window sized to the sprite (plus bubble/menu only while
+// focus except while the right-click menu is open (Escape dismissal),
+// and a window sized to the sprite (plus bubble/menu only while
 // open), so the companion never steals clicks or keyboard input.
 // Disabled (CompanionStore.enabled == false) unloads every window:
 // zero surfaces, zero timers, zero cost.
@@ -337,7 +339,15 @@ Scope {
             WlrLayershell.namespace: "hornero-companion"
             WlrLayershell.layer: WlrLayer.Overlay
             WlrLayershell.exclusionMode: ExclusionMode.Ignore
-            WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+            // Menu modal exception: focus only while the right-click
+            // menu is open, so Escape can dismiss it (docs/INTERACTION.md).
+            WlrLayershell.keyboardFocus: menu.visible ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+
+            HyprlandFocusGrab {
+                active: menu.visible
+                windows: [win]
+                onCleared: menu.close()
+            }
 
             anchors.top: true
             anchors.left: true
@@ -378,8 +388,13 @@ Scope {
 
                     MouseArea {
                         anchors.fill: parent
-                        acceptedButtons: Qt.LeftButton
-                        onClicked: CompanionStore.dismissBubble()
+                        acceptedButtons: Qt.LeftButton | Qt.RightButton
+                        onClicked: mouse => {
+                            if (mouse.button === Qt.RightButton)
+                                menu.open();
+                            else
+                                CompanionStore.dismissBubble();
+                        }
                     }
                 }
 
@@ -532,9 +547,13 @@ Scope {
                     border.width: 1
                     radius: 10
                     z: 10
+                    focus: true
+
+                    Keys.onEscapePressed: menu.close()
 
                     function open(): void {
                         menu.visible = true;
+                        menu.forceActiveFocus();
                     }
                     function close(): void {
                         menu.visible = false;

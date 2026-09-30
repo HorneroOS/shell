@@ -18,7 +18,12 @@ Item {
     implicitHeight: mainColumn.implicitHeight + Appearance.padding.large * 2
 
     focus: true
-    Keys.onEscapePressed: root.visibilities.layoutPicker = false
+    // Escape handled centrally (Drawers.dismissTopmost).
+    // Deferred to visibility: focusing while still hidden fails.
+    onVisibleChanged: {
+        if (visible && root.visibilities.layoutPicker)
+            root.forceActiveFocus();
+    }
 
     StyledClippingRect {
         anchors.fill: parent

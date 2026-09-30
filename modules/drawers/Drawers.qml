@@ -58,16 +58,11 @@ Variants {
             screen: scope.modelData
             name: "drawers"
             WlrLayershell.exclusionMode: ExclusionMode.Ignore
-            // S4: Tab/arrows/typing need a real wl_keyboard enter (Qt
-            // window activation). HyprlandFocusGrab routes physical
-            // keys to the surface but never activates it, so Tab
-            // traversal stays dead under OnDemand (proven: grabbed
-            // surface, win.activeFocusItem null after Tab). Exclusive
-            // follows explicit opens only — hover opens stay OnDemand
-            // so edge touches never steal typing (docs/FOCUS.md).
-            readonly property bool keyboardExclusive: (visibilities.launcher && Config.launcher.enabled && (!Config.launcher.showOnHover || interactions.launcherShortcutActive)) || (visibilities.session && Config.session.enabled) || (visibilities.sidebar && Config.sidebar.enabled) || ((!Config.dashboard.showOnHover || interactions.dashboardShortcutActive) && visibilities.dashboard && Config.dashboard.enabled) || (interactions.utilitiesShortcutActive && visibilities.utilities && Config.utilities.enabled) || visibilities.layoutPicker || (panels.popouts.currentName.startsWith("traymenu") && panels.popouts.current?.depth > 1)
-            readonly property bool keyboardAnyVisible: visibilities.launcher || visibilities.session || visibilities.layoutPicker || visibilities.dashboard || visibilities.sidebar || visibilities.utilities
-            WlrLayershell.keyboardFocus: keyboardExclusive ? WlrKeyboardFocus.Exclusive : keyboardAnyVisible ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+            // Every drawer joins the focus set: without keyboard focus
+            // the surface never sees Escape and the central cascade
+            // below cannot run. Dashboard additionally needs focus for
+            // its workspace rename field.
+            WlrLayershell.keyboardFocus: visibilities.launcher || visibilities.session || visibilities.layoutPicker || visibilities.dashboard || visibilities.sidebar || visibilities.utilities ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
             // Central Escape cascade (docs/INTERACTION.md). Content with
             // transient inner state (rename field, armed session action)
@@ -326,31 +321,6 @@ Variants {
                 function borders(): string {
                     debugBorders.visible = !debugBorders.visible;
                     return debugBorders.visible ? "borders ON" : "borders OFF";
-                }
-
-                // S4 focus observability (docs/FOCUS.md): window
-                // activation, input modality, grab state and the
-                // active-focus chain. Graphical/agentic tests assert
-                // on this instead of guessing from pixels.
-                function focusState(): string {
-                    const chain = [];
-                    let it = win.activeFocusItem;
-                    let guard = 0;
-                    while (it && guard++ < 10) {
-                        let tag = "?";
-                        try {
-                            tag = String(it).split("(")[0].split("_")[0];
-                        } catch (e) {}
-                        chain.push(`${tag}:${it.objectName || "?"}` + (it.activeFocus ? "*" : ""));
-                        it = it.parent;
-                    }
-                    return JSON.stringify({
-                        winActive: win.active,
-                        keyboard: FocusMode.keyboard,
-                        grab: focusGrab.active,
-                        exclusive: win.keyboardExclusive,
-                        chain: chain.join(" < ") || "(null)"
-                    });
                 }
 
                 function dump(): string {

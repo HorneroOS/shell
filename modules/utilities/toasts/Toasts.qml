@@ -84,7 +84,9 @@ Item {
         anchors.bottom: parent.bottom
         implicitHeight: toastInner.implicitHeight
 
-        acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
+        // D6: right-click is ignored, mirroring Notification.qml —
+        // toasts dismiss on left/middle only, never on right.
+        acceptedButtons: Qt.LeftButton | Qt.MiddleButton
         onClicked: modelData.close()
 
         Component.onCompleted: modelData.lock(this)

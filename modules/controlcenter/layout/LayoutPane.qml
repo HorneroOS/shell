@@ -75,6 +75,7 @@ Item {
                         id: grid
 
                         anchors.centerIn: parent
+                        availableWidth: parent.width - Appearance.padding.large * 2
                     }
                 }
 

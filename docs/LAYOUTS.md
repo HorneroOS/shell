@@ -178,6 +178,7 @@ sides name them.
 
 ## Follow-ups
 
-- Layout-picker `LayoutPreview` renders the primary bar only; a multi-bar
-  mockup would need the enriched `horneroctl preset list --full` output to
-  carry the v2 set.
+- None open for the picker: previews draw every bar from the `bars`
+  topology `horneroctl shell preset list --full` reports (strip, inset,
+  floating, islands, dock, clear; one dot per enabled component), with
+  the legacy primary-bar fallback for older horneroctl builds.

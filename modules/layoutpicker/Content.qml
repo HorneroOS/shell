@@ -18,7 +18,17 @@ Item {
     implicitHeight: mainColumn.implicitHeight + Appearance.padding.large * 2
 
     focus: true
-    // Escape handled centrally (Drawers.dismissTopmost).
+    // FocusMode.enter() seeds the first activeFocusOnTab item of the open
+    // drawer: this root, so arrows/Enter reach the grid instead of staying
+    // in another (hidden) drawer. Escape handled centrally
+    // (Drawers.dismissTopmost).
+    activeFocusOnTab: true
+    Keys.forwardTo: [grid]
+
+    // The picker only opens explicitly (shortcut, IPC, action), and while
+    // the wrapper animates from 0x0 FocusMode.enter() finds nothing shown
+    // yet: take the keyboard once created so arrows/Enter work at once.
+    Component.onCompleted: Qt.callLater(() => root.forceActiveFocus(Qt.ActiveWindowFocusReason))
 
     StyledClippingRect {
         anchors.fill: parent
@@ -78,6 +88,8 @@ Item {
             }
 
             PresetGrid {
+                id: grid
+
                 Layout.alignment: Qt.AlignHCenter
                 keyboardNav: true
             }

@@ -211,3 +211,17 @@ def test_preset_v2_legacy_coherence(path):
     )
     actual = [e["id"] for e in bar.get("entries", [])]
     assert actual == expected, f"{path.name}: legacy entries must flatten the primary bar"
+
+
+def test_layout_picker_topology_contract():
+    """Layout Picker previews draw the `bars` topology from horneroctl
+    (multi-bar, islands, dock, clear), with a legacy single-bar fallback;
+    the picker takes the keyboard when it opens (arrows/Enter work)."""
+    preview = (ROOT / "modules/layoutpicker/LayoutPreview.qml").read_text()
+    for needle in ("property var bars", '"islands"', '"dock"', '"clear"', "Array.from(bars)"):
+        assert needle in preview, f"LayoutPreview lacks {needle}"
+    grid = (ROOT / "modules/layoutpicker/PresetGrid.qml").read_text()
+    assert "bars: card.modelData.bars" in grid
+    assert "availableWidth" in grid and "Accessible.role: Accessible.Button" in grid
+    content = (ROOT / "modules/layoutpicker/Content.qml").read_text()
+    assert "activeFocusOnTab: true" in content and "forceActiveFocus" in content

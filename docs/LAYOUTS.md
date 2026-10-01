@@ -35,7 +35,7 @@ every v1 preset and user `shell.json` keeps working unchanged.
 | `style`     | `attached` `inset` `floating` `islands` `dock`    | `attached`                     |
 | `margin`    | 0–256 px                                          | `bar.floatingMargin`           |
 | `thickness` | 16–256 px                                         | `bar.sizes.innerWidth`         |
-| `reserve`   | bool                                              | `style !== "floating"`         |
+| `reserve`   | bool                                              | reserving styles only (below)  |
 | `density`   | `values` `glyphs`                                 | `values`                       |
 
 Resolution (`BarConfig.barsFor`): per-screen `bars` override wins, else the
@@ -51,6 +51,11 @@ Styles:
 - `islands` — one floating pill per non-empty group (start left, center
   centered, end right); reserves nothing.
 - `dock` — floating pill that still reserves space.
+- `reserve` defaults to true for `attached`, `inset` and `dock`, false for
+  `floating` and `islands` (`BarConfig.styleReserves`, single source of
+  truth). An explicit `reserve` on the spec always wins: `reserve: false`
+  makes any style overlay clients, `reserve: true` makes a pill behave
+  like a dock (full-edge exclusive zone, windows stop at the strip).
 
 Horizontal bars span the full width; vertical bars sit between them, so a top
 bar and a left rail never overlap. `density: "glyphs"` hides numeric text in

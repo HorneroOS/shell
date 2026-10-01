@@ -67,7 +67,7 @@ JsonObject {
         return {
             edge: b.edge,
             style: style,
-            reserve: typeof b.reserve === "boolean" ? b.reserve : style !== "floating",
+            reserve: typeof b.reserve === "boolean" ? b.reserve : styleReserves(style),
             margin: typeof b.margin === "number" ? Math.max(0, Math.min(b.margin, 256)) : floatingMargin,
             thickness: typeof b.thickness === "number" ? Math.max(16, Math.min(b.thickness, 256)) : sizes.innerWidth,
             density: b.density === "glyphs" ? "glyphs" : "values",
@@ -81,10 +81,12 @@ JsonObject {
 
     function legacyBarFor(screenName: string): var {
         const o = getOverride(screenName);
+        const rawStyle = (o && o.style) ? o.style : style;
+        const resolvedStyle = barStyles.includes(rawStyle) ? rawStyle : "attached";
         return {
             edge: (o && barEdges.includes(o.position)) ? o.position : (barEdges.includes(position) ? position : "left"),
-            style: (o && barStyles.includes(o.style)) ? o.style : (barStyles.includes(style) ? style : "attached"),
-            reserve: ((o && o.style) ? o.style : style) !== "floating",
+            style: resolvedStyle,
+            reserve: styleReserves(resolvedStyle),
             margin: floatingMargin,
             thickness: sizes.innerWidth,
             density: "values",
@@ -109,6 +111,14 @@ JsonObject {
             out.push(n);
         }
         return out.length > 0 ? out : [legacyBarFor(screenName)];
+    }
+
+    // Default reservation per style (docs/LAYOUTS.md): strips (attached,
+    // inset) and the dock reserve space; content pills (floating, islands)
+    // overlay clients unless a spec opts in with explicit reserve: true.
+    // Single source of truth for every default site below.
+    function styleReserves(s: string): bool {
+        return s === "attached" || s === "inset" || s === "dock";
     }
 
     // perScreen is a QML list<var>: Array.isArray() is false for it, which
@@ -149,11 +159,11 @@ JsonObject {
     }
 
     function reservesSpace(): bool {
-        return style !== "floating";
+        return styleReserves(barStyles.includes(style) ? style : "attached");
     }
 
     function reservesSpaceFor(screenName: string): bool {
-        return styleFor(screenName) !== "floating";
+        return styleReserves(styleFor(screenName));
     }
 
     property ScrollActions scrollActions: ScrollActions {}

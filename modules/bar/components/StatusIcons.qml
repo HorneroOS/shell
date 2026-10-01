@@ -17,7 +17,9 @@ StyledRect {
 
     property color colour: Colours.palette.m3secondary
     readonly property alias items: iconGrid
-    readonly property bool vertical: Config.bar.isVerticalFor(screen.name)
+    // Orientation of the owning bar (set by Bar.qml); defaults to the
+    // primary bar for standalone use.
+    property bool vertical: Config.bar.isVerticalFor(screen.name)
 
     color: Colours.tPalette.m3surfaceContainer
     radius: Appearance.rounding.full

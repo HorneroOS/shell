@@ -97,6 +97,26 @@ def test_appearance_sections_disclosure_wired():
             f"section {key!r} restores but never reads persisted state")
 
 
+def test_connections_needs_qtquick_import():
+    """Files using Connections must import QtQuick (or QtQml).
+
+    Regression (PR #88): Shortcuts.qml and AreaPicker.qml used Connections
+    without importing QtQuick, so the shell failed to load with
+    "Connections is not a type". qmllint does not catch this (unqualified
+    types are skipped), so the import is asserted here.
+    """
+    import re
+    hits = []
+    for p in _code_files():
+        if p.suffix != ".qml":
+            continue
+        text = p.read_text(errors="ignore")
+        if re.search(r"(^|\W)Connections\s*\{", text) and not re.search(
+                r"^import\s+Qt(Quick|Qml)\b", text, re.M):
+            hits.append(str(p.relative_to(ROOT)))
+    assert not hits, f"Connections without QtQuick/QtQml import in: {hits}"
+
+
 def test_notify_roles_documented():
     # §39 roles doc first: OSD/toast/notification each get exactly one
     # voice, with an admission test for new messages.

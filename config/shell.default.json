@@ -138,6 +138,7 @@
     "style": "attached",
     "floatingMargin": 8,
     "perScreen": [],
+    "bars": [],
     "scrollActions": {
       "workspaces": true,
       "volume": true,

@@ -13,7 +13,7 @@ Item {
     required property Brightness.Monitor monitor
     property color colour: Colours.palette.m3primary
 
-    readonly property bool vertical: Config.bar.isVerticalFor(bar.screen.name)
+    readonly property bool vertical: bar.vertical
 
     readonly property int maxLength: {
         const children = bar.container.children;

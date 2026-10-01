@@ -11,24 +11,124 @@ JsonObject {
     // Optional per-screen overrides: [{ screen: "MONITOR-NAME", position: "...", style: "..." }]
     property list<var> perScreen: []
 
-    function getOverride(screenName: string): var {
-        if (!perScreen || !Array.isArray(perScreen))
-            return null;
-        for (let i = 0; i < perScreen.length; i++) {
-            if (perScreen[i] && perScreen[i].screen === screenName)
-                return perScreen[i];
+    // Layout schema v2 (docs/LAYOUTS.md): a set of bars, at most one per
+    // screen edge, each split into start/center/end groups. Empty means the
+    // legacy single bar (position/style/entries) is synthesized instead, so
+    // every v1 preset and user shell.json keeps working unchanged.
+    property list<var> bars: []
+
+    readonly property var barEdges: ["top", "bottom", "left", "right"]
+    readonly property var barStyles: ["attached", "inset", "floating", "islands", "dock"]
+
+    // QML list<var> values are not JS Arrays; copy them first.
+    function toArray(v: var): var {
+        if (!v || typeof v !== "object" || typeof v.length !== "number")
+            return [];
+        return Array.from(v);
+    }
+
+    function normalizeEntries(list: var): var {
+        const out = [];
+        for (const e of toArray(list)) {
+            const entry = typeof e === "string" ? {id: e, enabled: true} : e;
+            if (!entry || typeof entry.id !== "string" || entry.id === "spacer")
+                continue;
+            out.push({id: entry.id, enabled: entry.enabled !== false, options: entry.options ?? {}});
         }
+        return out;
+    }
+
+    // v1 entries split at enabled spacers: before the first -> start, between
+    // first and last -> center, after the last -> end.
+    function splitLegacyEntries(list: var): var {
+        const src = toArray(list);
+        const cuts = [];
+        for (let i = 0; i < src.length; i++)
+            if (src[i] && src[i].id === "spacer" && src[i].enabled !== false)
+                cuts.push(i);
+        if (cuts.length === 0)
+            return {start: normalizeEntries(src), center: [], end: []};
+        const first = cuts[0];
+        const last = cuts[cuts.length - 1];
+        if (cuts.length === 1)
+            return {start: normalizeEntries(src.slice(0, first)), center: [], end: normalizeEntries(src.slice(first + 1))};
+        return {
+            start: normalizeEntries(src.slice(0, first)),
+            center: normalizeEntries(src.slice(first + 1, last)),
+            end: normalizeEntries(src.slice(last + 1))
+        };
+    }
+
+    function normalizeBar(b: var): var {
+        if (!b || !barEdges.includes(b.edge))
+            return null;
+        const style = barStyles.includes(b.style) ? b.style : "attached";
+        const g = b.groups ?? {};
+        return {
+            edge: b.edge,
+            style: style,
+            reserve: typeof b.reserve === "boolean" ? b.reserve : style !== "floating",
+            margin: typeof b.margin === "number" ? Math.max(0, Math.min(b.margin, 256)) : floatingMargin,
+            thickness: typeof b.thickness === "number" ? Math.max(16, Math.min(b.thickness, 256)) : sizes.innerWidth,
+            density: b.density === "glyphs" ? "glyphs" : "values",
+            groups: {
+                start: normalizeEntries(g.start),
+                center: normalizeEntries(g.center),
+                end: normalizeEntries(g.end)
+            }
+        };
+    }
+
+    function legacyBarFor(screenName: string): var {
+        const o = getOverride(screenName);
+        return {
+            edge: (o && barEdges.includes(o.position)) ? o.position : (barEdges.includes(position) ? position : "left"),
+            style: (o && barStyles.includes(o.style)) ? o.style : (barStyles.includes(style) ? style : "attached"),
+            reserve: ((o && o.style) ? o.style : style) !== "floating",
+            margin: floatingMargin,
+            thickness: sizes.innerWidth,
+            density: "values",
+            groups: splitLegacyEntries(entries)
+        };
+    }
+
+    // Resolved bar set for a screen: per-screen bars, else global bars,
+    // else the synthesized legacy bar. Invalid bars are dropped and the
+    // first bar wins on a duplicated edge; an unusable set falls back to
+    // the legacy bar so the user always keeps desktop chrome.
+    function barsFor(screenName: string): var {
+        const o = getOverride(screenName);
+        const src = (o && toArray(o.bars).length > 0) ? toArray(o.bars) : toArray(bars);
+        const out = [];
+        const seen = [];
+        for (const b of src) {
+            const n = normalizeBar(b);
+            if (!n || seen.includes(n.edge))
+                continue;
+            seen.push(n.edge);
+            out.push(n);
+        }
+        return out.length > 0 ? out : [legacyBarFor(screenName)];
+    }
+
+    // perScreen is a QML list<var>: Array.isArray() is false for it, which
+    // silently disabled every per-screen override before.
+    function getOverride(screenName: string): var {
+        for (const o of toArray(perScreen))
+            if (o && o.screen === screenName)
+                return o;
         return null;
     }
 
+
+    // Primary (first) bar of the resolved set, for consumers that only
+    // need one anchor edge (desktop clock, visualiser).
     function positionFor(screenName: string): string {
-        const override = getOverride(screenName);
-        return (override && override.position) ? override.position : position;
+        return barsFor(screenName)[0].edge;
     }
 
     function styleFor(screenName: string): string {
-        const override = getOverride(screenName);
-        return (override && override.style) ? override.style : style;
+        return barsFor(screenName)[0].style;
     }
 
     function isVertical(): bool {

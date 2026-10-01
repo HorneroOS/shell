@@ -37,7 +37,7 @@ def test_presets_installed_by_cmake():
     cmake = (ROOT / "CMakeLists.txt").read_text()
     assert "presets" in cmake, "CMakeLists.txt must install presets/"
     assert (ROOT / "presets").is_dir()
-    assert len(list((ROOT / "presets").glob("*.json"))) == 11
+    assert len(list((ROOT / "presets").glob("*.json"))) == 13
 
 
 # Path-contract conformance (binding interface: HorneroOS/hornero

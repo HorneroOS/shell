@@ -13,8 +13,9 @@ Item {
     required property ShellScreen screen
 
     property color colour: Colours.palette.m3tertiary
-    readonly property bool vertical: Config.bar.isVerticalFor(screen.name)
-    readonly property bool isTop: Config.bar.positionFor(screen.name) === "top"
+    // Orientation of the owning bar (set by Bar.qml); defaults to the
+    // primary bar for standalone use.
+    property bool vertical: Config.bar.isVerticalFor(screen.name)
 
     implicitWidth: layout.implicitWidth
     implicitHeight: layout.implicitHeight

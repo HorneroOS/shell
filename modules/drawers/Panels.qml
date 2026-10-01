@@ -33,13 +33,13 @@ Item {
     // Floating bars must keep real distance from panels/widgets/edges:
     // the wrapper only reserves pill thickness, so panels add a generous
     // breathing gap on the bar edge (spacing.large + the built-in margin).
-    readonly property real floatBreathing: bar.floating ? Appearance.spacing.large : 0
+    readonly property real floatBreathing: Appearance.spacing.large
 
     anchors.fill: parent
-    anchors.leftMargin: bar.marginLeft + (bar.floating && bar.position === "left" ? root.floatBreathing : 0)
-    anchors.rightMargin: bar.marginRight + (bar.floating && bar.position === "right" ? root.floatBreathing : 0)
-    anchors.topMargin: bar.marginTop + (bar.floating && bar.position === "top" ? root.floatBreathing : 0)
-    anchors.bottomMargin: bar.marginBottom + (bar.floating && bar.position === "bottom" ? root.floatBreathing : 0)
+    anchors.leftMargin: bar.marginLeft + (bar.floatingOn("left") ? root.floatBreathing : 0)
+    anchors.rightMargin: bar.marginRight + (bar.floatingOn("right") ? root.floatBreathing : 0)
+    anchors.topMargin: bar.marginTop + (bar.floatingOn("top") ? root.floatBreathing : 0)
+    anchors.bottomMargin: bar.marginBottom + (bar.floatingOn("bottom") ? root.floatBreathing : 0)
 
     Osd.Wrapper {
         id: osd
@@ -109,8 +109,8 @@ Item {
         x: {
             if (isDetached)
                 return (root.width - nonAnimWidth) / 2;
-            if (Config.bar.isVerticalFor(root.screen.name))
-                return Config.bar.positionFor(root.screen.name) === "right" ? root.width - nonAnimWidth : 0;
+            if (barVertical)
+                return barPosition === "right" ? root.width - nonAnimWidth : 0;
 
             const off = currentCenter - bar.marginLeft - nonAnimWidth / 2;
             const diff = root.width - Math.floor(off + nonAnimWidth);
@@ -121,8 +121,8 @@ Item {
         y: {
             if (isDetached)
                 return (root.height - nonAnimHeight) / 2;
-            if (!Config.bar.isVerticalFor(root.screen.name))
-                return Config.bar.positionFor(root.screen.name) === "bottom" ? root.height - nonAnimHeight : 0;
+            if (!barVertical)
+                return barPosition === "bottom" ? root.height - nonAnimHeight : 0;
 
             const off = currentCenter - bar.marginTop - nonAnimHeight / 2;
             const diff = root.height - Math.floor(off + nonAnimHeight);

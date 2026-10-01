@@ -34,8 +34,9 @@
 - No new `dots-*` coupling without a `docs/COMPAT.md` row + disposition
   and a `TODO(hornero-compat)` marker at the call site.
 - `presets/*.json` schema: `_name`, `_description`, bar entries with
-  `id`/`enabled`, sizes/status/scrollActions — keep
-  `tests/test_shell_layout.py` green (11 presets).
+  `id`/`enabled`, sizes/status/scrollActions, v2 `bars` set
+  (`docs/LAYOUTS.md`) — keep `tests/test_shell_layout.py` green
+  (13 presets).
 
 ## Commits / hygiene
 

@@ -5,6 +5,7 @@ import qs.services
 import Hornero
 import Quickshell
 import Quickshell.Io
+import QtQuick
 
 Scope {
     id: root
@@ -135,6 +136,14 @@ Scope {
                 return visibilities[drawer] ? "true" : "false";
             }
             return "";
+        }
+    }
+
+    Connections {
+        target: ShellActions
+
+        function onSettingsRequested(): void {
+            WindowFactory.create();
         }
     }
 

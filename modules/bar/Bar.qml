@@ -10,36 +10,119 @@ import Quickshell
 import QtQuick
 import QtQuick.Layouts
 
+// One bar of the layout (docs/LAYOUTS.md): an edge, a style and three
+// component groups. Strip styles (attached, inset) span the edge with the
+// groups at start/center/end; content styles (floating, dock) are one
+// content-sized pill; islands renders each non-empty group as its own pill.
 Item {
     id: root
 
     required property ShellScreen screen
     required property PersistentProperties visibilities
     required property BarPopouts.Wrapper popouts
+    required property var spec
 
-    readonly property bool vertical: Config.bar.isVerticalFor(screen.name)
-    readonly property bool floating: Config.bar.isFloatingFor(screen.name)
+    readonly property string edge: spec.edge
+    readonly property string style: spec.style
+    readonly property bool vertical: edge === "left" || edge === "right"
+    readonly property bool floating: style !== "attached"
+    readonly property bool strip: style === "attached" || style === "inset"
     readonly property int edgePadding: Appearance.padding.large
     readonly property int barPadding: Math.max(Appearance.padding.smaller, Config.border.thickness)
-    // Fixed main-axis thickness of the bar content (excludes the float gap)
-    readonly property int pillThickness: Config.bar.sizes.innerWidth + barPadding * 2
-    // Inner padding of the pill when floating
+    // Cross-axis thickness of a pill (excludes the float gap)
+    readonly property int pillThickness: spec.thickness + barPadding * 2
     readonly property int pillPadding: floating ? Appearance.padding.normal : 0
+    readonly property real floatGap: floating ? spec.margin : 0
+    // Main-axis inset of strips: inset bars keep the float gap at both ends
+    readonly property real stripInset: style === "inset" ? spec.margin : 0
+    readonly property int groupSpacing: Appearance.spacing.large
     // Kept for ActiveWindow compat (main-axis end padding)
     readonly property int vPadding: edgePadding
-    readonly property GridLayout container: layout
-    readonly property Item visualItem: pill
+
+    readonly property var islandDefs: {
+        const g = spec.groups;
+        if (style === "islands") {
+            const defs = [];
+            for (const name of ["start", "center", "end"])
+                if (g[name].some(e => e.enabled))
+                    defs.push({align: name, groups: [name]});
+            return defs;
+        }
+        return [{align: strip ? "fill" : "center", groups: ["start", "center", "end"]}];
+    }
+
+    readonly property list<Item> islands: {
+        const out = [];
+        for (let i = 0; i < islandRepeater.count; i++) {
+            const it = islandRepeater.itemAt(i);
+            if (it)
+                out.push(it);
+        }
+        return out;
+    }
+    readonly property Item visualItem: islands.length > 0 ? islands[0] : null
+    // All entry loaders across groups; ActiveWindow sizes itself from its
+    // siblings through this (legacy name: the single GridLayout).
+    readonly property var entryLoaders: {
+        const out = [];
+        for (const island of islands)
+            for (const g of island.groupItems)
+                for (const c of g.layout.children)
+                    out.push(c);
+        return out;
+    }
+    readonly property var container: ({
+            children: entryLoaders
+        })
+    // Island rectangles in bar coordinates (input mask, hit testing).
+    readonly property var visualRects: islands.filter(i => i.visible && i.width > 0 && i.height > 0).map(i => ({
+                x: i.x,
+                y: i.y,
+                width: i.width,
+                height: i.height
+            }))
+
+    function mainLength(item: Item): real {
+        return vertical ? item.height : item.width;
+    }
+
+    function containsPoint(lx: real, ly: real): bool {
+        for (const r of visualRects)
+            if (lx >= r.x && lx <= r.x + r.width && ly >= r.y && ly <= r.y + r.height)
+                return true;
+        return false;
+    }
+
+    function allGroups(): var {
+        const out = [];
+        for (const island of islands)
+            for (const g of island.groupItems)
+                out.push(g);
+        return out;
+    }
+
+    // Loader of the component under a bar-local point, or null.
+    function entryAt(lx: real, ly: real): var {
+        for (const g of allGroups()) {
+            if (!g.visible)
+                continue;
+            const pt = g.layout.mapFromItem(root, lx, ly);
+            const ch = g.layout.childAt(pt.x, pt.y);
+            if (ch)
+                return {loader: ch, layout: g.layout, pt: pt};
+        }
+        return null;
+    }
 
     function closeTray(): void {
         if (!Config.bar.tray.compact)
             return;
-
-        for (let i = 0; i < repeater.count; i++) {
-            const item = repeater.itemAt(i);
-            if (item?.enabled && item.id === "tray") {
-                item.item.expanded = false;
+        for (const g of allGroups())
+            for (let i = 0; i < g.repeater.count; i++) {
+                const item = g.repeater.itemAt(i);
+                if (item?.enabled && item.id === "tray" && item.item)
+                    item.item.expanded = false;
             }
-        }
     }
 
     function resetPopout(): void {
@@ -49,124 +132,106 @@ Item {
         closeTray();
     }
 
-    function checkPopout(pos: real): void {
-        try {
-            if (!pill || !layout)
-                return;
-            // pos is a main-axis coordinate in window space; convert to layout space
-            // (the pill may be offset when floating, and the layout has inner margins)
-            const pt = layout.mapFromItem(pill, vertical ? pill.width / 2 : pos - pill.x, vertical ? pos - pill.y : pill.height / 2);
-        const axisPos = vertical ? pt.y : pt.x;
-        const ch = layout.childAt(pt.x, pt.y) as WrappedLoader;
+    function claimPopouts(): void {
+        popouts.ownerEdge = root.edge;
+        popouts.ownerStyle = root.style;
+    }
 
-        if (ch?.id !== "tray")
-            closeTray();
-
-        if (!ch) {
-            popouts.hasCurrent = false;
-            return;
-        }
-
-        const id = ch.id;
-        const start = vertical ? ch.y : ch.x;
-        const item = ch.item;
-        const itemLength = vertical ? item.implicitHeight : item.implicitWidth;
-
-        if (id === "statusIcons" && Config.bar.popouts.statusIcons) {
-            if (!item || !item.items)
-                return;
-            const items = item.items;
-            if (!items || typeof items.childAt !== "function")
-                return;
-            const mapped = vertical ? root.mapToItem(items, 0, pos) : root.mapToItem(items, pos, 0);
-            if (!mapped)
-                return;
-            const icon = vertical ? items.childAt(items.width / 2, mapped.y) : items.childAt(mapped.x, items.height / 2);
-            if (icon) {
-                popouts.currentName = icon.name;
-                const iconRef = icon;
-                popouts.currentCenter = Qt.binding(() => {
-                    try {
-                        if (!iconRef || typeof iconRef.mapToItem !== "function")
-                            return 0;
-                        return vertical ? iconRef.mapToItem(null, 0, iconRef.implicitHeight / 2).y : iconRef.mapToItem(null, iconRef.implicitWidth / 2, 0).x;
-                    } catch (e) {
-                        return 0;
-                    }
-                });
-                popouts.hasCurrent = true;
+    function centerBinding(ref: Item, len: real): var {
+        return Qt.binding(() => {
+            try {
+                if (!ref || typeof ref.mapToItem !== "function")
+                    return 0;
+                return root.vertical ? ref.mapToItem(null, 0, (len > 0 ? len : ref.implicitHeight) / 2).y : ref.mapToItem(null, (len > 0 ? len : ref.implicitWidth) / 2, 0).x;
+            } catch (e) {
+                return 0;
             }
-        } else if (id === "tray" && Config.bar.popouts.tray) {
-            if (!item || !item.expandIcon)
+        });
+    }
+
+    // Popout trigger at a bar-local point.
+    function checkPopoutAt(lx: real, ly: real): void {
+        try {
+            const hit = entryAt(lx, ly);
+            const ch = hit?.loader ?? null;
+
+            if (ch?.id !== "tray")
+                closeTray();
+
+            if (!ch) {
+                popouts.hasCurrent = false;
                 return;
-            const overExpandIcon = vertical ? item.expandIcon.contains(root.mapToItem(item.expandIcon, item.implicitWidth / 2, pos)) : item.expandIcon.contains(root.mapToItem(item.expandIcon, pos, item.implicitHeight / 2));
-            if (!Config.bar.tray.compact || (item.expanded && !overExpandIcon)) {
-                const layoutLength = vertical ? item.layout.implicitHeight : item.layout.implicitWidth;
-                const count = item.items?.count ?? 0;
-                const index = Math.floor(((axisPos - start - item.padding * 2 + item.spacing) / layoutLength) * count);
-                const trayItem = item.items?.itemAt(index) ?? null;
-                if (trayItem) {
-                    popouts.currentName = `traymenu${index}`;
-                    const trayRef = trayItem;
-                    popouts.currentCenter = Qt.binding(() => {
-                        try {
-                            if (!trayRef || typeof trayRef.mapToItem !== "function")
-                                return 0;
-                            return vertical ? trayRef.mapToItem(null, 0, trayRef.implicitHeight / 2).y : trayRef.mapToItem(null, trayRef.implicitWidth / 2, 0).x;
-                        } catch (e) {
-                            return 0;
-                        }
-                    });
+            }
+
+            const id = ch.id;
+            const item = ch.item;
+            const axisPos = vertical ? hit.pt.y : hit.pt.x;
+            const start = vertical ? ch.y : ch.x;
+            const itemLength = vertical ? item.implicitHeight : item.implicitWidth;
+
+            if (id === "statusIcons" && Config.bar.popouts.statusIcons) {
+                const items = item?.items;
+                if (!items || typeof items.childAt !== "function")
+                    return;
+                const mapped = root.mapToItem(items, lx, ly);
+                const icon = vertical ? items.childAt(items.width / 2, mapped.y) : items.childAt(mapped.x, items.height / 2);
+                if (icon) {
+                    claimPopouts();
+                    popouts.currentName = icon.name;
+                    popouts.currentCenter = centerBinding(icon, 0);
                     popouts.hasCurrent = true;
+                }
+            } else if (id === "tray" && Config.bar.popouts.tray) {
+                if (!item || !item.expandIcon)
+                    return;
+                const overExpandIcon = item.expandIcon.contains(root.mapToItem(item.expandIcon, lx, ly));
+                if (!Config.bar.tray.compact || (item.expanded && !overExpandIcon)) {
+                    const layoutLength = vertical ? item.layout.implicitHeight : item.layout.implicitWidth;
+                    const count = item.items?.count ?? 0;
+                    const index = Math.floor(((axisPos - start - item.padding * 2 + item.spacing) / layoutLength) * count);
+                    const trayItem = item.items?.itemAt(index) ?? null;
+                    if (trayItem) {
+                        claimPopouts();
+                        popouts.currentName = `traymenu${index}`;
+                        popouts.currentCenter = centerBinding(trayItem, 0);
+                        popouts.hasCurrent = true;
+                    } else {
+                        popouts.hasCurrent = false;
+                    }
                 } else {
                     popouts.hasCurrent = false;
+                    item.expanded = true;
                 }
-            } else {
-                popouts.hasCurrent = false;
-                item.expanded = true;
+            } else if (id === "activeWindow" && Config.bar.popouts.activeWindow) {
+                if (!item)
+                    return;
+                claimPopouts();
+                popouts.currentName = id.toLowerCase();
+                popouts.currentCenter = centerBinding(item, itemLength);
+                popouts.hasCurrent = true;
             }
-        } else if (id === "activeWindow" && Config.bar.popouts.activeWindow) {
-            if (!item)
-                return;
-            popouts.currentName = id.toLowerCase();
-            const winRef = item;
-            const len = itemLength;
-            popouts.currentCenter = Qt.binding(() => {
-                try {
-                    if (!winRef || typeof winRef.mapToItem !== "function")
-                        return 0;
-                    return vertical ? winRef.mapToItem(null, 0, len / 2).y : winRef.mapToItem(null, len / 2, 0).x;
-                } catch (e) {
-                    return 0;
-                }
-            });
-            popouts.hasCurrent = true;
-        }
         } catch (e) {
             // During layout transitions the bar items may be temporarily undefined
             popouts.hasCurrent = false;
         }
     }
 
-    function handleWheel(pos: real, angleDelta: point): void {
-        const pt = layout.mapFromItem(pill, vertical ? pill.width / 2 : pos - pill.x, vertical ? pos - pill.y : pill.height / 2);
-        const ch = layout.childAt(pt.x, pt.y) as WrappedLoader;
+    function handleWheelAt(lx: real, ly: real, angleDelta: point): void {
+        const ch = entryAt(lx, ly)?.loader ?? null;
+        const pos = vertical ? ly : lx;
         if (ch?.id === "workspaces" && Config.bar.scrollActions.workspaces) {
-            // Workspace scroll
             const mon = (Config.bar.workspaces.perMonitorWorkspaces ? Hypr.monitorFor(screen) : Hypr.focusedMonitor);
             const specialWs = mon?.lastIpcObject.specialWorkspace.name;
             if (specialWs?.length > 0)
                 Hypr.dispatch(`togglespecialworkspace ${specialWs.slice(8)}`);
             else if (angleDelta.y < 0 || (Config.bar.workspaces.perMonitorWorkspaces ? mon.activeWorkspace?.id : Hypr.activeWsId) > 1)
                 Hypr.dispatch(`workspace r${angleDelta.y > 0 ? "-" : "+"}1`);
-        } else if (pos < (vertical ? parent.height : parent.width) / 2 && Config.bar.scrollActions.volume) {
-            // Volume scroll on first half
+        } else if (pos < mainLength(root) / 2 && Config.bar.scrollActions.volume) {
             if (angleDelta.y > 0)
                 Audio.incrementVolume();
             else if (angleDelta.y < 0)
                 Audio.decrementVolume();
         } else if (Config.bar.scrollActions.brightness) {
-            // Brightness scroll on second half
             const monitor = Brightness.getMonitorForScreen(screen);
             if (angleDelta.y > 0)
                 monitor.setBrightness(monitor.brightness + Config.services.brightnessIncrement);
@@ -175,48 +240,80 @@ Item {
         }
     }
 
-    Connections {
-        target: Config.bar
+    onSpecChanged: resetPopout()
 
-        function onEntriesChanged(): void {
-            root.resetPopout();
-        }
+    Repeater {
+        id: islandRepeater
 
-        function onPositionChanged(): void {
-            root.resetPopout();
-        }
+        model: root.islandDefs
 
-        function onStyleChanged(): void {
-            root.resetPopout();
-        }
+        Island {}
     }
 
-    // The pill: actual bar content container. Attached bars fill the whole edge
-    // strip (content glued to the interior side so it slides out on hide instead
-    // of squishing); floating bars are content-sized and centered on the cross
-    // axis with a gap to the screen edge. Positioned with pure bindings (no
-    // anchors) to avoid anchor conflicts during live config reloads.
-    Item {
-        id: pill
+    // One pill. Main-axis placement: strips span the edge; single content
+    // pills centre; islands sit at start/center/end, the centre one truly
+    // centred but clamped between its neighbours (hidden if it cannot fit).
+    component Island: Item {
+        id: island
 
-        width: root.vertical ? root.pillThickness : (root.floating ? layout.implicitWidth + root.pillPadding * 2 : parent.width)
-        height: root.vertical ? (root.floating ? layout.implicitHeight + root.pillPadding * 2 : parent.height) : root.pillThickness
+        required property var modelData
+        required property int index
 
-        // Floating gap: only when actually floating; attached bars glue to the edge
-        readonly property real floatGap: root.floating ? Config.bar.floatingMargin : 0
-
-        x: {
-            if (root.vertical)
-                return Config.bar.positionFor(root.screen.name) === "left" ? floatGap : parent.width - width - floatGap;
-            return root.floating ? Math.round((parent.width - width) / 2) : 0;
+        readonly property string align: modelData.align
+        readonly property bool fill: align === "fill"
+        readonly property list<Item> groupItems: [startGroup, centerGroup, endGroup]
+        readonly property real contentLength: {
+            let len = 0;
+            let n = 0;
+            for (const g of groupItems)
+                if (g.visible) {
+                    len += root.vertical ? g.implicitHeight : g.implicitWidth;
+                    n++;
+                }
+            return len + Math.max(0, n - 1) * root.groupSpacing;
         }
-        y: {
-            if (!root.vertical)
-                return Config.bar.positionFor(root.screen.name) === "top" ? floatGap : parent.height - height - floatGap;
-            return root.floating ? Math.round((parent.height - height) / 2) : 0;
+        readonly property real mainLen: fill ? root.mainLength(root) - root.stripInset * 2 : contentLength + root.pillPadding * 2 + root.edgePadding * 2
+
+        function neighbour(which: string): Item {
+            for (const it of root.islands)
+                if (it.align === which)
+                    return it;
+            return null;
         }
 
-        // Own background when floating (attached bars are backed by the screen border frame)
+        readonly property real mainPos: {
+            const total = root.mainLength(root);
+            const m = root.spec.margin;
+            if (fill)
+                return root.stripInset;
+            if (align === "start")
+                return m;
+            if (align === "end")
+                return total - mainLen - m;
+            const ideal = Math.round((total - mainLen) / 2);
+            if (root.style !== "islands")
+                return ideal;
+            const s = neighbour("start");
+            const e = neighbour("end");
+            const lo = s ? s.mainPos + s.mainLen + root.groupSpacing : m;
+            const hi = (e ? e.mainPos - root.groupSpacing : total - m) - mainLen;
+            return Math.max(lo, Math.min(ideal, hi));
+        }
+        readonly property bool fits: {
+            if (align !== "center" || root.style !== "islands")
+                return true;
+            const e = neighbour("end");
+            const hi = e ? e.mainPos - root.groupSpacing : root.mainLength(root) - root.spec.margin;
+            return mainPos + mainLen <= hi + 0.5;
+        }
+
+        visible: fits
+        width: root.vertical ? root.pillThickness : mainLen
+        height: root.vertical ? mainLen : root.pillThickness
+        x: root.vertical ? (root.edge === "left" ? root.floatGap : root.width - width - root.floatGap) : mainPos
+        y: root.vertical ? mainPos : (root.edge === "top" ? root.floatGap : root.height - height - root.floatGap)
+
+        // Own background unless an attached strip is backed by the frame
         StyledRect {
             visible: root.floating || !Config.border.frameEnabled
             anchors.fill: parent
@@ -224,15 +321,73 @@ Item {
             radius: root.floating ? Appearance.rounding.full : 0
         }
 
+        BarGroup {
+            id: startGroup
+
+            name: "start"
+            active: island.modelData.groups.includes("start")
+            x: root.vertical ? (island.width - width) / 2 : (island.fill ? root.edgePadding : root.pillPadding + root.edgePadding)
+            y: root.vertical ? (island.fill ? root.edgePadding : root.pillPadding + root.edgePadding) : (island.height - height) / 2
+        }
+
+        BarGroup {
+            id: centerGroup
+
+            readonly property real ownLen: root.vertical ? implicitHeight : implicitWidth
+            readonly property real afterStart: startGroup.visible ? (root.vertical ? startGroup.y + startGroup.height : startGroup.x + startGroup.width) + root.groupSpacing : 0
+            readonly property real beforeEnd: endGroup.visible ? (root.vertical ? endGroup.y : endGroup.x) - root.groupSpacing : root.mainLength(island)
+            readonly property real mainOffset: {
+                if (!island.fill)
+                    return afterStart > 0 ? afterStart : root.pillPadding + root.edgePadding;
+                // Truly centred on the screen edge, clamped between neighbours.
+                const ideal = (root.mainLength(root) - ownLen) / 2 - island.mainPos;
+                return Math.max(afterStart, Math.min(ideal, beforeEnd - ownLen));
+            }
+
+            name: "center"
+            active: island.modelData.groups.includes("center")
+            x: root.vertical ? (island.width - width) / 2 : mainOffset
+            y: root.vertical ? mainOffset : (island.height - height) / 2
+        }
+
+        BarGroup {
+            id: endGroup
+
+            readonly property real ownLen: root.vertical ? implicitHeight : implicitWidth
+            readonly property real mainOffset: {
+                if (island.fill)
+                    return root.mainLength(island) - root.edgePadding - ownLen;
+                const prev = centerGroup.visible ? centerGroup : startGroup;
+                if (!prev.visible)
+                    return root.pillPadding + root.edgePadding;
+                return (root.vertical ? prev.y + prev.height : prev.x + prev.width) + root.groupSpacing;
+            }
+
+            name: "end"
+            active: island.modelData.groups.includes("end")
+            x: root.vertical ? (island.width - width) / 2 : mainOffset
+            y: root.vertical ? mainOffset : (island.height - height) / 2
+        }
+    }
+
+    // A component group: typed entries laid out along the bar's main axis.
+    component BarGroup: Item {
+        id: group
+
+        required property string name
+        property bool active: true
+        readonly property var entries: active ? (root.spec.groups[name] ?? []) : []
+        readonly property alias layout: layout
+        readonly property alias repeater: repeater
+
+        visible: active && entries.some(e => e.enabled)
+        implicitWidth: layout.implicitWidth
+        implicitHeight: layout.implicitHeight
+        width: implicitWidth
+        height: implicitHeight
+
         GridLayout {
             id: layout
-
-            // Floating: centerIn positions without forcing size, so
-            // implicitWidth/Height are children-driven (no circular ref).
-            // Attached: fill the wrapper strip as before.
-            anchors.centerIn: root.floating ? parent : undefined
-            anchors.fill: root.floating ? undefined : parent
-            anchors.margins: root.pillPadding
 
             flow: root.vertical ? GridLayout.TopToBottom : GridLayout.LeftToRight
             rows: root.vertical ? -1 : 1
@@ -243,18 +398,11 @@ Item {
             Repeater {
                 id: repeater
 
-                model: Config.bar.entries
+                model: group.entries
 
                 DelegateChooser {
                     role: "id"
 
-                    DelegateChoice {
-                        roleValue: "spacer"
-                        delegate: WrappedLoader {
-                            Layout.fillHeight: enabled && root.vertical
-                            Layout.fillWidth: enabled && !root.vertical
-                        }
-                    }
                     DelegateChoice {
                         roleValue: "logo"
                         delegate: WrappedLoader {
@@ -266,6 +414,7 @@ Item {
                         delegate: WrappedLoader {
                             sourceComponent: Workspaces {
                                 screen: root.screen
+                                vertical: root.vertical
                             }
                         }
                     }
@@ -283,6 +432,7 @@ Item {
                         delegate: WrappedLoader {
                             sourceComponent: Tray {
                                 screen: root.screen
+                                vertical: root.vertical
                             }
                         }
                     }
@@ -291,6 +441,7 @@ Item {
                         delegate: WrappedLoader {
                             sourceComponent: Clock {
                                 screen: root.screen
+                                vertical: root.vertical
                             }
                         }
                     }
@@ -299,6 +450,7 @@ Item {
                         delegate: WrappedLoader {
                             sourceComponent: StatusIcons {
                                 screen: root.screen
+                                vertical: root.vertical
                             }
                         }
                     }
@@ -321,6 +473,77 @@ Item {
                         }
                     }
                     DelegateChoice {
+                        roleValue: "media"
+                        delegate: WrappedLoader {
+                            id: mediaLoader
+
+                            sourceComponent: Media {
+                                vertical: root.vertical
+                                options: mediaLoader.options
+                            }
+                        }
+                    }
+                    DelegateChoice {
+                        roleValue: "resources"
+                        delegate: WrappedLoader {
+                            id: resourcesLoader
+
+                            sourceComponent: Resources {
+                                vertical: root.vertical
+                                density: root.spec.density
+                                options: resourcesLoader.options
+                            }
+                        }
+                    }
+                    DelegateChoice {
+                        roleValue: "kbLayout"
+                        delegate: WrappedLoader {
+                            sourceComponent: KbLayout {
+                                vertical: root.vertical
+                            }
+                        }
+                    }
+                    DelegateChoice {
+                        roleValue: "weather"
+                        delegate: WrappedLoader {
+                            sourceComponent: WeatherChip {
+                                vertical: root.vertical
+                                density: root.spec.density
+                            }
+                        }
+                    }
+                    DelegateChoice {
+                        roleValue: "pinnedApps"
+                        delegate: WrappedLoader {
+                            id: pinnedLoader
+
+                            sourceComponent: PinnedApps {
+                                vertical: root.vertical
+                                options: pinnedLoader.options
+                            }
+                        }
+                    }
+                    DelegateChoice {
+                        roleValue: "quickActions"
+                        delegate: WrappedLoader {
+                            id: actionsLoader
+
+                            sourceComponent: QuickActions {
+                                vertical: root.vertical
+                                options: actionsLoader.options
+                            }
+                        }
+                    }
+                    DelegateChoice {
+                        roleValue: "battery"
+                        delegate: WrappedLoader {
+                            sourceComponent: Battery {
+                                vertical: root.vertical
+                                density: root.spec.density
+                            }
+                        }
+                    }
+                    DelegateChoice {
                         roleValue: "power"
                         delegate: WrappedLoader {
                             sourceComponent: Power {
@@ -337,34 +560,9 @@ Item {
         required property bool enabled
         required property string id
         required property int index
-
-        function findFirstEnabled(): Item {
-            const count = repeater.count;
-            for (let i = 0; i < count; i++) {
-                const item = repeater.itemAt(i);
-                if (item?.enabled)
-                    return item;
-            }
-            return null;
-        }
-
-        function findLastEnabled(): Item {
-            for (let i = repeater.count - 1; i >= 0; i--) {
-                const item = repeater.itemAt(i);
-                if (item?.enabled)
-                    return item;
-            }
-            return null;
-        }
+        required property var options
 
         Layout.alignment: root.vertical ? Qt.AlignHCenter : Qt.AlignVCenter
-
-        // Cursed ahh thing to add padding to first and last enabled components
-        Layout.topMargin: root.vertical && findFirstEnabled() === this ? root.edgePadding : 0
-        Layout.bottomMargin: root.vertical && findLastEnabled() === this ? root.edgePadding : 0
-        Layout.leftMargin: !root.vertical && findFirstEnabled() === this ? root.edgePadding : 0
-        Layout.rightMargin: !root.vertical && findLastEnabled() === this ? root.edgePadding : 0
-
         visible: enabled
         active: enabled
     }

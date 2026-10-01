@@ -17,7 +17,9 @@ StyledRect {
     // Repeater of the active orientation (exposed by the loaded Column/Row)
     readonly property var items: layout.item?.trayItems ?? null
 
-    readonly property bool vertical: Config.bar.isVerticalFor(screen.name)
+    // Orientation of the owning bar (set by Bar.qml); defaults to the
+    // primary bar for standalone use.
+    property bool vertical: Config.bar.isVerticalFor(screen.name)
 
     readonly property int padding: Config.bar.tray.background ? Appearance.padding.normal : Appearance.padding.small
     readonly property int spacing: Config.bar.tray.background ? Appearance.spacing.small : 0

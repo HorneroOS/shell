@@ -36,15 +36,18 @@ Item {
                 }
             }
         ];
+        // Group sizes as counts: horneroctl sends numbers; raw preset groups
+        // (arrays of {id, enabled}) count their enabled entries.
+        const count = v => typeof v === "number" ? v : (v && v.length !== undefined ? Array.from(v).filter(e => e && e.enabled !== false && e.id !== "spacer").length : 0);
         return src.map(b => ({
                     edge: b.edge ?? "left",
                     style: b.style ?? "attached",
                     backdrop: b.backdrop ?? "solid",
                     reserve: typeof b.reserve === "boolean" ? b.reserve : (b.style === "attached" || b.style === "inset" || b.style === "dock"),
-                    groups: b.groups ?? {
-                        start: 0,
-                        center: 0,
-                        end: 0
+                    groups: {
+                        start: count(b.groups?.start),
+                        center: count(b.groups?.center),
+                        end: count(b.groups?.end)
                     }
                 }));
     }

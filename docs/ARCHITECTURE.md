@@ -95,6 +95,23 @@ Notification state reads `Paths.state/notifs.json` (+
 `Paths.stateFallback` fallback); image caches write to the canonical
 `Paths.imagecache` and regenerate on miss.
 
+## Transparency
+
+`appearance.transparency` carries the global switch (`enabled`, `base`,
+`layers`) plus an `elements` map of per-surface alpha overrides (`bar`,
+`launcher`, `dashboard`, `session`, `sidebar`, `utilities`,
+`notifications`, `osd`, `lock`, `layoutpicker`). A missing or
+non-numeric entry follows `base`. `Colours.elementAlpha()` resolves one
+surface; `Colours.surface()` tints a backdrop color with it (compose as
+`surface(layer(c, n), element)` so text and controls stay opaque). Each
+surface backdrop (panel wings, bar pill, notification cards, lock scrim)
+carries its own alpha; there is intentionally no window-level opacity
+(the Border frame keeps the explicit global). The control-center
+Transparency section edits the globals plus one row per surface
+(custom seeds from `base`, so enabling never jumps). `elements` is a
+plain reassigned object (never mutated in place) so bindings
+re-evaluate; it serializes and ships `{}` in the factory default.
+
 ## External coupling
 
 All external runtime CLI dependencies, their dispositions (A–G), and

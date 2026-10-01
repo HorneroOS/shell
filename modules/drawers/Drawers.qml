@@ -256,7 +256,9 @@ Variants {
 
             Item {
                 anchors.fill: parent
-                opacity: Colours.transparency.enabled ? Colours.transparency.base : 1
+                // No window-level opacity: each backdrop carries its own
+                // surface alpha (global base or per-surface override), so
+                // element sliders never double-dim with this container.
                 layer.enabled: true
                 layer.effect: MultiEffect {
                     shadowEnabled: true
@@ -267,6 +269,7 @@ Variants {
                 Border {
                     bar: bar
                     visible: bar.frameVisible
+                    opacity: Colours.transparency.enabled ? Colours.transparency.base : 1
                 }
 
                 Backgrounds {

@@ -80,7 +80,7 @@ Shape {
         width: wrapper.width
         height: wrapper.height
         visible: wrapper.visible && !wrapper.usesConnectedBackground
-        color: Colours.palette.m3surface
+        color: Colours.surface(Colours.palette.m3surface, "bar")
         radius: wrapper.isDetached ? Appearance.rounding.normal : Config.border.rounding
 
         Behavior on color {

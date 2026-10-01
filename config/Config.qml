@@ -166,7 +166,8 @@ Singleton {
             transparency: {
                 enabled: appearance.transparency.enabled,
                 base: appearance.transparency.base,
-                layers: appearance.transparency.layers
+                layers: appearance.transparency.layers,
+                elements: appearance.transparency.elements
             }
         };
     }

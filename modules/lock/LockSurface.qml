@@ -196,7 +196,7 @@ WlSessionLockSurface {
             anchors.fill: parent
             color: Colours.palette.m3surface
             radius: parent.radius
-            opacity: Colours.transparency.enabled ? Colours.transparency.base : 1
+            opacity: Colours.elementAlpha("lock")
 
             layer.enabled: true
             layer.effect: MultiEffect {

@@ -38,6 +38,7 @@ Item {
     property bool transparencyEnabled: Config.appearance.transparency.enabled ?? false
     property real transparencyBase: Config.appearance.transparency.base ?? 0.85
     property real transparencyLayers: Config.appearance.transparency.layers ?? 0.4
+    property var transparencyElements: Config.appearance.transparency.elements ?? ({})
     property real borderRounding: Config.border.rounding ?? 1
     property real borderThickness: Config.border.thickness ?? 1
 
@@ -709,6 +710,7 @@ Item {
         Config.appearance.transparency.enabled = root.transparencyEnabled;
         Config.appearance.transparency.base = root.transparencyBase;
         Config.appearance.transparency.layers = root.transparencyLayers;
+        Config.appearance.transparency.elements = root.transparencyElements;
 
         Config.background.desktopClock.enabled = root.desktopClockEnabled;
         Config.background.enabled = root.backgroundEnabled;

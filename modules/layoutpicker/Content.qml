@@ -22,7 +22,7 @@ Item {
 
     StyledClippingRect {
         anchors.fill: parent
-        color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+        color: Colours.surface(Colours.layer(Colours.palette.m3surfaceContainer, 1), "layoutpicker")
         radius: Appearance.rounding.large
 
         ColumnLayout {

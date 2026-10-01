@@ -246,6 +246,29 @@ Singleton {
         return layer === 0 ? Qt.alpha(c, transparency.base) : alterColour(c, transparency.layers, layer ?? 1);
     }
 
+    // Resolved backdrop alpha for a named surface (bar, launcher,
+    // dashboard, session, sidebar, utilities, notifications, osd, lock,
+    // layoutpicker): its elements[] override, else the global base.
+    // Non-numeric entries are ignored (follow base).
+    function elementAlpha(element: string): real {
+        if (!transparency.enabled)
+            return 1;
+        const els = transparency.elements ?? {};
+        const v = els[element];
+        if (typeof v === "number" && !isNaN(v))
+            return Math.max(0, Math.min(1, v));
+        return transparency.base;
+    }
+
+    // Backdrop color for a named surface: the (already layer-tinted) color
+    // with the surface's resolved alpha. Compose as
+    // surface(layer(c, n), element); text and controls stay opaque.
+    function surface(c: color, element: string): color {
+        if (!transparency.enabled)
+            return c;
+        return Qt.alpha(c, elementAlpha(element));
+    }
+
     function on(c: color): color {
         if (c.hslLightness < 0.5)
             return Qt.hsla(c.hslHue, c.hslSaturation, 0.9, 1);
@@ -347,6 +370,7 @@ Singleton {
         readonly property bool enabled: Appearance.transparency.enabled
         readonly property real base: Appearance.transparency.base - (root.light ? 0.1 : 0)
         readonly property real layers: Appearance.transparency.layers
+        readonly property var elements: Appearance.transparency.elements ?? ({})
     }
 
     component M3TPalette: QtObject {

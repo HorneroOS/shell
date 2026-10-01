@@ -92,5 +92,10 @@ JsonObject {
         property bool enabled: false
         property real base: 0.85
         property real layers: 0.4
+        // Per-surface alpha overrides: {bar, launcher, dashboard, session,
+        // sidebar, utilities, notifications, osd, lock, layoutpicker} each
+        // 0..1. A missing/non-numeric entry follows `base`. Always reassign
+        // (never mutate in place) so QML bindings re-evaluate.
+        property var elements: ({})
     }
 }

@@ -317,7 +317,7 @@ Item {
         StyledRect {
             visible: root.floating || !Config.border.frameEnabled
             anchors.fill: parent
-            color: Colours.layer(Colours.palette.m3surface, 1)
+            color: Colours.surface(Colours.layer(Colours.palette.m3surface, 1), "bar")
             radius: root.floating ? Appearance.rounding.full : 0
         }
 

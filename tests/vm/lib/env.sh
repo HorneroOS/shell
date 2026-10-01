@@ -62,12 +62,18 @@ VM_SEED_ISO="${VM_SEED_ISO:-${VM_CACHE_DIR}/seed.iso}"
 VM_FPS="${VM_FPS:-10}"
 VM_RECORDING_REMOTE="${VM_RECORDING_REMOTE:-/tmp/vm-recording.mp4}"
 
-# DNS server advertised to the guest over DHCP (QEMU user-net `dns=`).
-# QEMU slirp proxies guest DNS to the host's first nameserver, which may be
-# a LAN-only resolver that answers the host (via fallbacks) but never the
-# guest. A public default keeps provisioning deterministic; override for
-# offline or filtered networks.
+# DNS server pinned inside the guest by provision.sh (direct NAT, never the
+# slirp-intercepted address below).
 VM_GUEST_DNS="${VM_GUEST_DNS:-1.1.1.1}"
+
+# DNS server advertised to the guest over DHCP (QEMU user-net `dns=`).
+# QEMU slirp intercepts traffic to this address and proxies guest DNS to
+# the host's first nameserver, which may be a dead LAN-only resolver that
+# answers the host (via fallbacks) but never the guest. Keep this a decoy
+# that differs from VM_GUEST_DNS: the guest pin then bypasses the
+# interception over direct NAT and survives a dead host primary. Override
+# both together for offline or filtered networks.
+VM_QEMU_DNS="${VM_QEMU_DNS:-9.9.9.9}"
 
 # Set to 1 to print what a script would do without touching the VM.
 VM_DRY_RUN="${VM_DRY_RUN:-0}"
@@ -92,7 +98,7 @@ HX_MATERIALIZE_BIN="${HX_MATERIALIZE_BIN:-}"
 HX_HOREROCTL_BIN="${HX_HOREROCTL_BIN:-}"
 HX_MANIFEST="${HX_MANIFEST:-shell-local}"
 
-export VM_FPS VM_RECORDING_REMOTE VM_DRY_RUN VM_GUEST_DNS
+export VM_FPS VM_RECORDING_REMOTE VM_DRY_RUN VM_GUEST_DNS VM_QEMU_DNS
 export HX_CONFIG_PIN HX_MATERIALIZE_BIN HX_HOREROCTL_BIN HX_MANIFEST
 
 vm_is_dry_run() {

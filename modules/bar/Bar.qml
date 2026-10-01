@@ -473,6 +473,77 @@ Item {
                         }
                     }
                     DelegateChoice {
+                        roleValue: "media"
+                        delegate: WrappedLoader {
+                            id: mediaLoader
+
+                            sourceComponent: Media {
+                                vertical: root.vertical
+                                options: mediaLoader.options
+                            }
+                        }
+                    }
+                    DelegateChoice {
+                        roleValue: "resources"
+                        delegate: WrappedLoader {
+                            id: resourcesLoader
+
+                            sourceComponent: Resources {
+                                vertical: root.vertical
+                                density: root.spec.density
+                                options: resourcesLoader.options
+                            }
+                        }
+                    }
+                    DelegateChoice {
+                        roleValue: "kbLayout"
+                        delegate: WrappedLoader {
+                            sourceComponent: KbLayout {
+                                vertical: root.vertical
+                            }
+                        }
+                    }
+                    DelegateChoice {
+                        roleValue: "weather"
+                        delegate: WrappedLoader {
+                            sourceComponent: WeatherChip {
+                                vertical: root.vertical
+                                density: root.spec.density
+                            }
+                        }
+                    }
+                    DelegateChoice {
+                        roleValue: "pinnedApps"
+                        delegate: WrappedLoader {
+                            id: pinnedLoader
+
+                            sourceComponent: PinnedApps {
+                                vertical: root.vertical
+                                options: pinnedLoader.options
+                            }
+                        }
+                    }
+                    DelegateChoice {
+                        roleValue: "quickActions"
+                        delegate: WrappedLoader {
+                            id: actionsLoader
+
+                            sourceComponent: QuickActions {
+                                vertical: root.vertical
+                                options: actionsLoader.options
+                            }
+                        }
+                    }
+                    DelegateChoice {
+                        roleValue: "battery"
+                        delegate: WrappedLoader {
+                            sourceComponent: Battery {
+                                vertical: root.vertical
+                                density: root.spec.density
+                            }
+                        }
+                    }
+                    DelegateChoice {
                         roleValue: "power"
                         delegate: WrappedLoader {
                             sourceComponent: Power {
@@ -489,6 +560,7 @@ Item {
         required property bool enabled
         required property string id
         required property int index
+        required property var options
 
         Layout.alignment: root.vertical ? Qt.AlignHCenter : Qt.AlignVCenter
         visible: enabled

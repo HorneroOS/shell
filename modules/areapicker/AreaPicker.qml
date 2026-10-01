@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import qs.components.containers
 import qs.components.misc
 import qs.modules.companion
+import qs.services
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Io
@@ -48,6 +49,17 @@ Scope {
                     screen: win.modelData
                 }
             }
+        }
+    }
+
+    Connections {
+        target: ShellActions
+
+        function onScreenshotRequested(): void {
+            root.freeze = false;
+            root.closing = false;
+            root.clipboardOnly = false;
+            root.activeAsync = true;
         }
     }
 

@@ -138,6 +138,14 @@ Scope {
         }
     }
 
+    Connections {
+        target: ShellActions
+
+        function onSettingsRequested(): void {
+            WindowFactory.create();
+        }
+    }
+
     IpcHandler {
         target: "controlCenter"
 

@@ -9,6 +9,7 @@ import "components/workspaces"
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Effects
 
 // One bar of the layout (docs/LAYOUTS.md): an edge, a style and three
 // component groups. Strip styles (attached, inset) span the edge with the
@@ -250,24 +251,33 @@ Item {
 
     onSpecChanged: resetPopout()
 
-    // Edge scrim for clear bars: strongest at the screen edge, fading out
-    // past the components. Strength follows the bar's transparency element
-    // so users can soften or remove it from Appearance.
+    // Edge scrim for clear bars: holds its tone across the component band
+    // (where the glyphs sit) and fades out past it, a vignette rather than
+    // a slab. Strength follows the bar's transparency element so users can
+    // soften or remove it from Appearance.
     Rectangle {
+        id: scrim
+
+        readonly property bool fromStart: root.edge === "top" || root.edge === "left"
+
         visible: root.clear
         anchors.fill: parent
-        opacity: 0.55 * Colours.elementAlpha("bar")
+        opacity: 0.62 * Colours.elementAlpha("bar")
 
         gradient: Gradient {
             orientation: root.vertical ? Gradient.Horizontal : Gradient.Vertical
 
             GradientStop {
                 position: 0
-                color: root.edge === "top" || root.edge === "left" ? Colours.palette.m3surface : "transparent"
+                color: scrim.fromStart ? Colours.palette.m3surface : "transparent"
+            }
+            GradientStop {
+                position: scrim.fromStart ? 0.65 : 0.35
+                color: Colours.palette.m3surface
             }
             GradientStop {
                 position: 1
-                color: root.edge === "top" || root.edge === "left" ? "transparent" : Colours.palette.m3surface
+                color: scrim.fromStart ? "transparent" : Colours.palette.m3surface
             }
         }
     }
@@ -338,6 +348,17 @@ Item {
         }
 
         visible: fits
+        // Clear bars: a soft halo in the surface colour behind every glyph,
+        // so text stays legible on any wallpaper/scheme combination.
+        layer.enabled: root.clear
+        layer.effect: MultiEffect {
+            shadowEnabled: true
+            shadowColor: Colours.palette.m3surface
+            shadowBlur: 1
+            shadowOpacity: 1
+            shadowHorizontalOffset: 0
+            shadowVerticalOffset: 0
+        }
         width: root.vertical ? root.pillThickness : mainLen
         height: root.vertical ? mainLen : root.pillThickness
         x: root.vertical ? (root.edge === "left" ? root.floatGap : root.width - width - root.floatGap) : mainPos
@@ -494,6 +515,7 @@ Item {
                             sourceComponent: StatusIcons {
                                 screen: root.screen
                                 vertical: root.vertical
+                                clear: root.clear
                             }
                         }
                     }

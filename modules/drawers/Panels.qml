@@ -116,7 +116,7 @@ Item {
             if (barVertical)
                 return barPosition === "right" ? root.width - nonAnimWidth : 0;
 
-            const off = Math.round(currentCenter - bar.marginLeft - nonAnimWidth / 2);
+            const off = Math.round(currentCenter - root.x - nonAnimWidth / 2);
             return Math.max(edgeGap, Math.min(off, root.width - nonAnimWidth - edgeGap));
         }
         y: {
@@ -125,7 +125,7 @@ Item {
             if (!barVertical)
                 return barPosition === "bottom" ? root.height - nonAnimHeight : 0;
 
-            const off = Math.round(currentCenter - bar.marginTop - nonAnimHeight / 2);
+            const off = Math.round(currentCenter - root.y - nonAnimHeight / 2);
             return Math.max(edgeGap, Math.min(off, root.height - nonAnimHeight - edgeGap));
         }
     }

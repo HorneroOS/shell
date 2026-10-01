@@ -109,12 +109,19 @@ Item {
         return out;
     }
 
-    // Loader of the component under a bar-local point, or null.
+    // Loader of the component under a bar-local point, or null. Hit-tests
+    // along the bar's main axis only (cross axis pinned to the group's
+    // centre): moving from a trigger towards its popout crosses the bar
+    // below/beside the glyph and must not count as leaving the component.
     function entryAt(lx: real, ly: real): var {
         for (const g of allGroups()) {
             if (!g.visible)
                 continue;
             const pt = g.layout.mapFromItem(root, lx, ly);
+            if (vertical)
+                pt.x = g.layout.width / 2;
+            else
+                pt.y = g.layout.height / 2;
             const ch = g.layout.childAt(pt.x, pt.y);
             if (ch)
                 return {loader: ch, layout: g.layout, pt: pt};

@@ -74,29 +74,29 @@ CustomMouseArea {
     }
 
     function withinPanelHeight(panel: Item, x: real, y: real): bool {
-        const panelY = bar.marginTop + panel.y;
+        const panelY = panels.y + panel.y;
         return y >= panelY - Config.border.rounding && y <= panelY + panel.height + Config.border.rounding;
     }
 
     function withinPanelWidth(panel: Item, x: real, y: real): bool {
-        const panelX = bar.marginLeft + panel.x;
+        const panelX = panels.x + panel.x;
         return x >= panelX - Config.border.rounding && x <= panelX + panel.width + Config.border.rounding;
     }
 
     function inLeftPanel(panel: Item, x: real, y: real): bool {
-        return x < bar.marginLeft + panel.x + panel.width && withinPanelHeight(panel, x, y);
+        return x < panels.x + panel.x + panel.width && withinPanelHeight(panel, x, y);
     }
 
     function inRightPanel(panel: Item, x: real, y: real): bool {
-        return x > bar.marginLeft + panel.x && withinPanelHeight(panel, x, y);
+        return x > panels.x + panel.x && withinPanelHeight(panel, x, y);
     }
 
     function inTopPanel(panel: Item, x: real, y: real): bool {
-        return y < bar.marginTop + panel.y + panel.height && withinPanelWidth(panel, x, y);
+        return y < panels.y + panel.y + panel.height && withinPanelWidth(panel, x, y);
     }
 
     function inBottomPanel(panel: Item, x: real, y: real): bool {
-        return y > root.height - bar.marginBottom - panel.height - Config.border.rounding && withinPanelWidth(panel, x, y);
+        return y > panels.y + panel.y - Config.border.rounding && withinPanelWidth(panel, x, y);
     }
 
     function onWheel(event: WheelEvent): void {
@@ -187,7 +187,7 @@ CustomMouseArea {
                 root.panels.osd.hovered = true;
             }
 
-            const showSidebar = pressed && dragStart.x > bar.marginLeft + panels.sidebar.x;
+            const showSidebar = pressed && dragStart.x > panels.x + panels.sidebar.x;
 
             // Show/hide session on drag
             if (pressed && inRightPanel(panels.session, dragStart.x, dragStart.y) && withinPanelHeight(panels.session, x, y)) {

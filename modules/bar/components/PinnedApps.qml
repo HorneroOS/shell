@@ -13,10 +13,19 @@ Item {
     property bool vertical
     property var options: ({})
     readonly property var apps: {
-        const ids = Array.isArray(options.apps) ? options.apps : [];
+        // Read .values instead of calling heuristicLookup alone: the entry
+        // database populates asynchronously and .values notifies when it
+        // lands, so pins resolve after startup instead of staying empty.
+        // See QuickActions: options arrays need toArray(), not Array.isArray.
+        const byId = {};
+        for (const e of Config.bar.toArray(DesktopEntries.applications.values)) {
+            byId[e.id] = e;
+            if (e.id.endsWith(".desktop"))
+                byId[e.id.slice(0, -8)] = e;
+        }
         const out = [];
-        for (const id of ids) {
-            const entry = DesktopEntries.heuristicLookup(id);
+        for (const id of Config.bar.toArray(options.apps)) {
+            const entry = byId[id] ?? DesktopEntries.heuristicLookup(id);
             if (entry)
                 out.push(entry);
         }

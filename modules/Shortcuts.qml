@@ -5,6 +5,7 @@ import qs.services
 import Hornero
 import Quickshell
 import Quickshell.Io
+import QtQuick
 
 Scope {
     id: root

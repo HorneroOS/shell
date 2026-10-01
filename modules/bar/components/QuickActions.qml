@@ -12,7 +12,9 @@ Item {
     property bool vertical
     property var options: ({})
     readonly property var actions: {
-        const ids = Array.isArray(options.actions) ? options.actions : ["screenshot", "layoutPicker", "settings"];
+        // Options arrive as QML-wrapped sequences (Array.isArray is false);
+        // toArray() converts them back to plain JS arrays.
+        const ids = Config.bar.toArray(options.actions ?? ["screenshot", "layoutPicker", "settings"]);
         return ids.filter(id => {
             if (ShellActions.isKnown(id))
                 return true;

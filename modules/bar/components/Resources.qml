@@ -14,7 +14,8 @@ Item {
     property bool vertical
     property string density: "values"
     property var options: ({})
-    readonly property var show: Array.isArray(options.show) ? options.show : ["cpu", "memory", "disk", "temp"]
+    // See QuickActions: options arrays need toArray(), not Array.isArray.
+    readonly property var show: Config.bar.toArray(options.show ?? ["cpu", "memory", "disk", "temp"])
     readonly property var metrics: [
         {
             id: "cpu",

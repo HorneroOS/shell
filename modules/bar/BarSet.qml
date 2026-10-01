@@ -110,10 +110,11 @@ Item {
             frameVisible: root.frameVisible
             isHovered: root.isHovered
 
-            anchors.left: (!bar.vertical || bar.position === "left") ? parent.left : undefined
-            anchors.right: (!bar.vertical || bar.position === "right") ? parent.right : undefined
-            anchors.top: (bar.vertical || bar.position === "top") ? parent.top : undefined
-            anchors.bottom: (bar.vertical || bar.position === "bottom") ? parent.bottom : undefined
+            // parent is null while delegates are destroyed on model reset.
+            anchors.left: (!bar.vertical || bar.position === "left") ? parent?.left : undefined
+            anchors.right: (!bar.vertical || bar.position === "right") ? parent?.right : undefined
+            anchors.top: (bar.vertical || bar.position === "top") ? parent?.top : undefined
+            anchors.bottom: (bar.vertical || bar.position === "bottom") ? parent?.bottom : undefined
             // Horizontal bars own the full width; vertical bars sit between them.
             anchors.topMargin: bar.vertical ? (root.barOn("top")?.currentThickness ?? 0) : 0
             anchors.bottomMargin: bar.vertical ? (root.barOn("bottom")?.currentThickness ?? 0) : 0

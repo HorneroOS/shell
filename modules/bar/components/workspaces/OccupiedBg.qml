@@ -55,9 +55,8 @@ Item {
 
             required property var modelData
 
-            // Orientation of the owning bar (set by Bar.qml); defaults to the
-    // primary bar for standalone use.
-    property bool vertical: Config.bar.isVerticalFor(screen.name)
+            // Orientation of the owning bar (passed in by Workspaces.qml).
+            readonly property bool vertical: root.vertical
             readonly property Workspace start: root.workspaces.count > 0 ? root.workspaces.itemAt(getWsIdx(modelData.start)) ?? null : null
             readonly property Workspace end: root.workspaces.count > 0 ? root.workspaces.itemAt(getWsIdx(modelData.end)) ?? null : null
 

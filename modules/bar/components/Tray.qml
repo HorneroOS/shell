@@ -20,9 +20,13 @@ StyledRect {
     // Orientation of the owning bar (set by Bar.qml); defaults to the
     // primary bar for standalone use.
     property bool vertical: Config.bar.isVerticalFor(screen.name)
+    // Clear bars draw no chips (set by Bar.qml): the tray sits on the
+    // wallpaper like the rest of the bar even with bar.tray.background.
+    property bool clear: false
+    readonly property bool chip: Config.bar.tray.background && !clear
 
-    readonly property int padding: Config.bar.tray.background ? Appearance.padding.normal : Appearance.padding.small
-    readonly property int spacing: Config.bar.tray.background ? Appearance.spacing.small : 0
+    readonly property int padding: root.chip ? Appearance.padding.normal : Appearance.padding.small
+    readonly property int spacing: root.chip ? Appearance.spacing.small : 0
 
     property bool expanded
 
@@ -43,7 +47,7 @@ StyledRect {
     implicitWidth: vertical ? Config.bar.sizes.innerWidth : nonAnimWidth
     implicitHeight: vertical ? nonAnimHeight : Config.bar.sizes.innerWidth
 
-    color: Qt.alpha(Colours.tPalette.m3surfaceContainer, (Config.bar.tray.background && items.count > 0) ? Colours.tPalette.m3surfaceContainer.a : 0)
+    color: Qt.alpha(Colours.tPalette.m3surfaceContainer, (root.chip && items.count > 0) ? Colours.tPalette.m3surfaceContainer.a : 0)
     radius: Appearance.rounding.full
 
     Loader {
@@ -160,10 +164,10 @@ StyledRect {
 
                 anchors.horizontalCenter: root.vertical ? parent.horizontalCenter : undefined
                 anchors.bottom: root.vertical ? parent.bottom : undefined
-                anchors.bottomMargin: root.vertical ? (Config.bar.tray.background ? Appearance.padding.small : -Appearance.padding.small) : 0
+                anchors.bottomMargin: root.vertical ? (root.chip ? Appearance.padding.small : -Appearance.padding.small) : 0
                 anchors.verticalCenter: root.vertical ? undefined : parent.verticalCenter
                 anchors.right: root.vertical ? undefined : parent.right
-                anchors.rightMargin: root.vertical ? 0 : (Config.bar.tray.background ? Appearance.padding.small : -Appearance.padding.small)
+                anchors.rightMargin: root.vertical ? 0 : (root.chip ? Appearance.padding.small : -Appearance.padding.small)
                 text: root.vertical ? "expand_less" : "chevron_right"
                 font.pointSize: Appearance.font.size.large
                 rotation: root.expanded ? 180 : 0

@@ -13,7 +13,10 @@ ShapePath {
     readonly property real roundingX: flatten ? wrapper.width / 2 : rounding
 
     strokeWidth: -1
-    fillColor: Colours.surface(Colours.palette.m3surface, "osd")
+    // Paint nothing while the panel is closed: the concave corner arcs
+    // live outside the wrapper and would otherwise linger as stray wings
+    // on screens without the frame (frameEnabled false, clear bars).
+    fillColor: wrapper.width > 0 && wrapper.height > 0 ? Colours.surface(Colours.palette.m3surface, "osd") : "transparent"
 
     PathArc {
         relativeX: -root.roundingX

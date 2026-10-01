@@ -501,6 +501,7 @@ Item {
                             sourceComponent: Tray {
                                 screen: root.screen
                                 vertical: root.vertical
+                                clear: root.clear
                             }
                         }
                     }

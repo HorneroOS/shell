@@ -110,7 +110,7 @@ import modules, so the owning modules handle `settingsRequested` and
 
 ## Presets
 
-13 presets (`tests/test_shell_layout.py` locks the count and the schema).
+15 presets (`tests/test_shell_layout.py` locks the count and the schema).
 Each keeps a v1 fallback — legacy `position`/`style`/`entries` describing
 the primary bar — so older `horneroctl` validators and the layout-picker
 preview (primary bar only) keep working. `bar.style` must stay a v1 style

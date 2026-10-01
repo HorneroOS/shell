@@ -27,6 +27,13 @@ Item {
     readonly property bool vertical: edge === "left" || edge === "right"
     readonly property bool floating: style !== "attached"
     readonly property bool strip: style === "attached" || style === "inset"
+    // Clear backdrop: no slab, no frame strip; a soft scrim keeps the
+    // components legible on any wallpaper.
+    readonly property bool clear: spec.backdrop === "clear"
+    // Narrow horizontal bars (laptop panels, split screens) tighten wide
+    // components instead of letting groups collide. A width breakpoint, not
+    // a content measurement, so compacting can never feed back into itself.
+    readonly property bool compact: !vertical && width > 0 && width < 1500
     readonly property int edgePadding: Appearance.padding.large
     readonly property int barPadding: Math.max(Appearance.padding.smaller, Config.border.thickness)
     // Cross-axis thickness of a pill (excludes the float gap)
@@ -135,6 +142,7 @@ Item {
     function claimPopouts(): void {
         popouts.ownerEdge = root.edge;
         popouts.ownerStyle = root.style;
+        popouts.ownerBackdrop = root.spec.backdrop;
     }
 
     function centerBinding(ref: Item, len: real): var {
@@ -242,6 +250,28 @@ Item {
 
     onSpecChanged: resetPopout()
 
+    // Edge scrim for clear bars: strongest at the screen edge, fading out
+    // past the components. Strength follows the bar's transparency element
+    // so users can soften or remove it from Appearance.
+    Rectangle {
+        visible: root.clear
+        anchors.fill: parent
+        opacity: 0.55 * Colours.elementAlpha("bar")
+
+        gradient: Gradient {
+            orientation: root.vertical ? Gradient.Horizontal : Gradient.Vertical
+
+            GradientStop {
+                position: 0
+                color: root.edge === "top" || root.edge === "left" ? Colours.palette.m3surface : "transparent"
+            }
+            GradientStop {
+                position: 1
+                color: root.edge === "top" || root.edge === "left" ? "transparent" : Colours.palette.m3surface
+            }
+        }
+    }
+
     Repeater {
         id: islandRepeater
 
@@ -313,9 +343,10 @@ Item {
         x: root.vertical ? (root.edge === "left" ? root.floatGap : root.width - width - root.floatGap) : mainPos
         y: root.vertical ? mainPos : (root.edge === "top" ? root.floatGap : root.height - height - root.floatGap)
 
-        // Own background unless an attached strip is backed by the frame
+        // Own background unless an attached strip is backed by the frame or
+        // the bar is clear
         StyledRect {
-            visible: root.floating || !Config.border.frameEnabled
+            visible: !root.clear && (root.floating || !Config.border.frameEnabled)
             anchors.fill: parent
             color: Colours.surface(Colours.layer(Colours.palette.m3surface, 1), "bar")
             radius: root.floating ? Appearance.rounding.full : 0
@@ -344,8 +375,13 @@ Item {
                 return Math.max(afterStart, Math.min(ideal, beforeEnd - ownLen));
             }
 
+            // Never draw over a neighbour: a centre group with no room left
+            // between start and end hides, as islands do.
+            readonly property bool hasRoom: !island.fill || beforeEnd - afterStart >= ownLen - 0.5
+
             name: "center"
             active: island.modelData.groups.includes("center")
+            visible: active && entries.some(e => e.enabled) && hasRoom
             x: root.vertical ? (island.width - width) / 2 : mainOffset
             y: root.vertical ? mainOffset : (island.height - height) / 2
         }
@@ -412,9 +448,13 @@ Item {
                     DelegateChoice {
                         roleValue: "workspaces"
                         delegate: WrappedLoader {
+                            id: workspacesLoader
+
                             sourceComponent: Workspaces {
                                 screen: root.screen
                                 vertical: root.vertical
+                                options: workspacesLoader.options
+                                clear: root.clear
                             }
                         }
                     }
@@ -439,9 +479,12 @@ Item {
                     DelegateChoice {
                         roleValue: "clock"
                         delegate: WrappedLoader {
+                            id: clockLoader
+
                             sourceComponent: Clock {
                                 screen: root.screen
                                 vertical: root.vertical
+                                options: clockLoader.options
                             }
                         }
                     }
@@ -457,18 +500,26 @@ Item {
                     DelegateChoice {
                         roleValue: "audioSlider"
                         delegate: WrappedLoader {
+                            id: audioLoader
+
                             sourceComponent: InlineSlider {
                                 screen: root.screen
                                 kind: "audio"
+                                options: audioLoader.options
+                                compact: root.compact
                             }
                         }
                     }
                     DelegateChoice {
                         roleValue: "brightnessSlider"
                         delegate: WrappedLoader {
+                            id: brightnessLoader
+
                             sourceComponent: InlineSlider {
                                 screen: root.screen
                                 kind: "brightness"
+                                options: brightnessLoader.options
+                                compact: root.compact
                             }
                         }
                     }

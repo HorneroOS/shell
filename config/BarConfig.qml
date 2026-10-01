@@ -19,6 +19,10 @@ JsonObject {
 
     readonly property var barEdges: ["top", "bottom", "left", "right"]
     readonly property var barStyles: ["attached", "inset", "floating", "islands", "dock"]
+    // What a bar paints behind its components: "solid" (slab or frame strip)
+    // or "clear" (no slab, components sit on the wallpaper over a soft
+    // edge scrim). Geometry and reservation are unaffected.
+    readonly property var barBackdrops: ["solid", "clear"]
 
     // QML list<var> values are not JS Arrays; copy them first.
     function toArray(v: var): var {
@@ -71,6 +75,7 @@ JsonObject {
             margin: typeof b.margin === "number" ? Math.max(0, Math.min(b.margin, 256)) : floatingMargin,
             thickness: typeof b.thickness === "number" ? Math.max(16, Math.min(b.thickness, 256)) : sizes.innerWidth,
             density: b.density === "glyphs" ? "glyphs" : "values",
+            backdrop: barBackdrops.includes(b.backdrop) ? b.backdrop : "solid",
             groups: {
                 start: normalizeEntries(g.start),
                 center: normalizeEntries(g.center),
@@ -90,6 +95,7 @@ JsonObject {
             margin: floatingMargin,
             thickness: sizes.innerWidth,
             density: "values",
+            backdrop: "solid",
             groups: splitLegacyEntries(entries)
         };
     }

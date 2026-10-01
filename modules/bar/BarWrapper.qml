@@ -23,6 +23,7 @@ Item {
     readonly property string style: spec.style
     readonly property bool vertical: position === "left" || position === "right"
     readonly property bool floating: style !== "attached"
+    readonly property bool clear: spec.backdrop === "clear"
     readonly property bool reserves: spec.reserve
     readonly property int frameInset: frameVisible ? Config.border.thickness : 0
     readonly property int padding: Math.max(Appearance.padding.smaller, Config.border.thickness)

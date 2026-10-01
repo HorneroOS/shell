@@ -33,7 +33,7 @@ KNOWN_ACTIONS = set(
 
 
 def test_preset_count():
-    assert len(PRESETS) == 13, f"expected 13 presets, found {len(PRESETS)}"
+    assert len(PRESETS) == 15, f"expected 15 presets, found {len(PRESETS)}"
 
 
 def check_entry(path, entry, where, allow_spacer):

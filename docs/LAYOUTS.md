@@ -134,19 +134,15 @@ preview (primary bar only) keep working. `bar.style` must stay a v1 style
 
 ## Gallery
 
-Captured in nested Hyprland at 1115x1020 (PR #88 evidence):
+Captured in nested Hyprland with the welcome window dismissed (PR #88
+evidence; cockpit/islands/cozy-minimal/dock-bottom refreshed for the slim
+bars, scaled to 1115px wide):
 
-| Cockpit | Islands |
-|---|---|
-| ![Cockpit: inset top bar + attached bottom bar](assets/layouts/cockpit.png) | ![Islands: three floating pills](assets/layouts/islands.png) |
-
-| Cozy Minimal | Dock Bottom |
-|---|---|
-| ![Cozy Minimal: floating top ribbon](assets/layouts/cozy-minimal.png) | ![Dock Bottom: bottom dock with pinned apps](assets/layouts/dock-bottom.png) |
-
-| Hornero Left (v1) |
-|---|
-| ![Hornero Left: legacy single-bar rail through the v2 runtime](assets/layouts/v1-hornero-left.png) |
+- ![Cockpit: inset top bar + attached bottom bar](assets/layouts/cockpit.png)
+- ![Islands: three floating pills](assets/layouts/islands.png)
+- ![Cozy Minimal: floating top ribbon](assets/layouts/cozy-minimal.png)
+- ![Dock Bottom: bottom dock with pinned apps](assets/layouts/dock-bottom.png)
+- ![Hornero Left: legacy single-bar rail through the v2 runtime](assets/layouts/v1-hornero-left.png)
 
 ## Persistence
 

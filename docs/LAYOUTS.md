@@ -132,8 +132,9 @@ import modules, so the owning modules handle `settingsRequested` and
 
 15 presets (`tests/test_shell_layout.py` locks the count and the schema).
 Each keeps a v1 fallback — legacy `position`/`style`/`entries` describing
-the primary bar — so older `horneroctl` validators and the layout-picker
-preview (primary bar only) keep working. `bar.style` must stay a v1 style
+the primary bar — so older `horneroctl` validators keep working, and the
+layout picker can fall back to a primary-bar preview when an older
+`horneroctl` reports no `bars` topology. `bar.style` must stay a v1 style
 (`attached`/`floating`/`dock`); the v2 style lives on the spec.
 
 | Preset          | Bars                              | Lineage                        |
@@ -178,6 +179,7 @@ sides name them.
 
 ## Follow-ups
 
-- Layout-picker `LayoutPreview` renders the primary bar only; a multi-bar
-  mockup would need the enriched `horneroctl preset list --full` output to
-  carry the v2 set.
+- None open for the picker: previews draw every bar from the `bars`
+  topology `horneroctl shell preset list --full` reports (strip, inset,
+  floating, islands, dock, clear; one dot per enabled component), with
+  the legacy primary-bar fallback for older horneroctl builds.

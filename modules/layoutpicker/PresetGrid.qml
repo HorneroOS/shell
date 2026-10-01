@@ -13,7 +13,8 @@ import QtQuick.Layouts
 // (the dashboard Layout tab was removed by ADR 003).
 // Data comes from `horneroctl shell preset list --full` (enriched JSON:
 // name, display, description, icon, iconMaterial, position, style,
-// active); applying a preset deep-merges into shell.json and live-reloads
+// active, plus the `bars` topology the previews draw);
+// applying a preset deep-merges into shell.json and live-reloads
 // (no shell restart needed). When horneroctl is missing or the list fails,
 // the grid falls back to the empty state with the store path hint below;
 // a `current` pointer naming an unknown preset resolves to no selection
@@ -28,9 +29,41 @@ Item {
     property var presets: []
     property string currentName: ""
     property int focusIndex: 0
+    // Width the host can give the grid (0 = unconstrained modal): columns
+    // follow it so Settings > Layout and the modal picker both fit.
+    property real availableWidth: 0
 
+    readonly property int cardWidth: 212
     readonly property int count: presets.length
-    readonly property int columns: Math.max(2, Math.min(4, Math.ceil(Math.sqrt(Math.max(count, 1)))))
+    readonly property int columns: {
+        const maxCols = availableWidth > 0 ? Math.floor((availableWidth + Appearance.spacing.normal) / (cardWidth + Appearance.spacing.normal)) : (count > 12 ? 5 : 4);
+        return Math.max(1, Math.min(maxCols, Math.max(count, 1)));
+    }
+
+    // Human topology summary for a card ("Two bars · top + bottom").
+    function topologyLabel(p: var): string {
+        const bars = p.bars && p.bars.length > 0 ? Array.from(p.bars) : [
+            {
+                edge: p.position,
+                style: p.style,
+                backdrop: "solid"
+            }
+        ];
+        const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+        const clear = bars.every(b => b.backdrop === "clear") ? qsTr(" · clear") : bars.some(b => b.backdrop === "clear") ? qsTr(" · partly clear") : "";
+        if (bars.length > 1)
+            return cap(bars.map(b => b.edge).join(" + ")) + clear;
+        const b = bars[0];
+        if (b.edge === "left" || b.edge === "right")
+            return qsTr("%1 rail").arg(cap(b.edge)) + clear;
+        if (b.style === "dock")
+            return qsTr("Dock · %1").arg(b.edge) + clear;
+        if (b.style === "islands")
+            return qsTr("Islands · %1").arg(b.edge) + clear;
+        if (b.style === "floating")
+            return qsTr("Floating · %1").arg(b.edge) + clear;
+        return qsTr("%1 bar").arg(cap(b.edge)) + clear;
+    }
 
     implicitWidth: grid.implicitWidth
     implicitHeight: grid.implicitHeight
@@ -137,8 +170,8 @@ Item {
                 readonly property bool isActive: modelData.name === root.currentName
                 readonly property bool isFocused: root.keyboardNav && index === root.focusIndex
 
-                implicitWidth: 210
-                implicitHeight: 168
+                implicitWidth: root.cardWidth
+                implicitHeight: 178
                 radius: Appearance.rounding.normal
                 color: isActive ? Colours.layer(Colours.palette.m3secondaryContainer, 2) : Colours.layer(Colours.palette.m3surfaceContainerHigh, 1)
                 border.color: isFocused ? Colours.palette.m3primary : isActive ? Colours.palette.m3secondary : Qt.alpha(Colours.palette.m3outline, 0.25)
@@ -159,8 +192,31 @@ Item {
 
                     LayoutPreview {
                         Layout.alignment: Qt.AlignHCenter
+                        bars: card.modelData.bars ?? []
                         position: card.modelData.position
                         barStyle: card.modelData.style
+                        highlighted: card.isActive || card.isFocused
+
+                        // Current layout badge on the preview corner
+                        StyledRect {
+                            visible: card.isActive
+                            anchors.right: parent.right
+                            anchors.bottom: parent.bottom
+                            anchors.margins: 4
+                            implicitWidth: currentIcon.implicitWidth + 4
+                            implicitHeight: currentIcon.implicitHeight + 4
+                            radius: Appearance.rounding.full
+                            color: Colours.palette.m3primary
+
+                            MaterialIcon {
+                                id: currentIcon
+
+                                anchors.centerIn: parent
+                                text: "check"
+                                color: Colours.palette.m3onPrimary
+                                font.pointSize: Appearance.font.size.small
+                            }
+                        }
                     }
 
                     RowLayout {
@@ -187,21 +243,23 @@ Item {
 
                             StyledText {
                                 Layout.fillWidth: true
-                                text: `${card.modelData.position} · ${card.modelData.style}`
+                                text: root.topologyLabel(card.modelData)
                                 font.pointSize: Appearance.font.size.smaller
                                 color: Colours.palette.m3onSurfaceVariant
                                 elide: Text.ElideRight
                             }
                         }
 
-                        MaterialIcon {
-                            visible: card.isActive
-                            text: "check_circle"
-                            fill: 1
-                            color: Colours.palette.m3primary
-                        }
+                    }
+
+                    Item {
+                        Layout.fillHeight: true
                     }
                 }
+
+                Accessible.role: Accessible.Button
+                Accessible.name: card.modelData.display
+                Accessible.description: root.topologyLabel(card.modelData) + (card.isActive ? ". " + qsTr("Current layout") : "")
 
                 StateLayer {
                     radius: card.radius
@@ -222,54 +280,5 @@ Item {
         // Path contract row 2: canonical hornero/* first, legacy dots/* fallback.
         text: qsTr("No presets found — check ~/.local/share/hornero/shell-presets")
         color: Colours.palette.m3onSurfaceVariant
-    }
-
-    // Mini screen mockup showing where the bar sits for a preset
-    component LayoutPreview: StyledRect {
-        id: preview
-
-        required property string position
-        required property string barStyle
-
-        readonly property bool vertical: position === "left" || position === "right"
-        readonly property bool floating: barStyle !== "attached"
-
-        implicitWidth: 132
-        implicitHeight: 76
-        radius: Appearance.rounding.small
-        color: Colours.layer(Colours.palette.m3surfaceContainerHighest, 1)
-
-        // Content window hint
-        StyledRect {
-            readonly property int barT: preview.floating ? 13 : 11
-
-            x: preview.position === "left" ? barT + 6 : 6
-            y: preview.position === "top" ? barT + 6 : 6
-            width: preview.width - 12 - (preview.vertical ? barT : 0)
-            height: preview.height - 12 - (preview.vertical ? 0 : barT)
-            radius: Appearance.rounding.small * 0.6
-            color: Colours.layer(Colours.palette.m3surface, 2)
-        }
-
-        // Bar
-        StyledRect {
-            color: Colours.palette.m3primary
-            opacity: 0.85
-            radius: preview.floating ? Appearance.rounding.full : 0
-
-            width: preview.vertical ? 11 : (preview.floating ? 84 : preview.width)
-            height: preview.vertical ? (preview.floating ? 48 : preview.height) : 11
-
-            x: {
-                if (preview.vertical)
-                    return preview.position === "left" ? (preview.floating ? 4 : 0) : preview.width - width - (preview.floating ? 4 : 0);
-                return preview.floating ? Math.round((preview.width - width) / 2) : 0;
-            }
-            y: {
-                if (!preview.vertical)
-                    return preview.position === "top" ? (preview.floating ? 4 : 0) : preview.height - height - (preview.floating ? 4 : 0);
-                return preview.floating ? Math.round((preview.height - height) / 2) : 0;
-            }
-        }
     }
 }

@@ -156,11 +156,14 @@ preview (primary bar only) keep working. `bar.style` must stay a v1 style
 
 ## Gallery
 
-Captured in nested Hyprland with the welcome window dismissed (PR #88
-evidence; cockpit/islands/cozy-minimal/dock-bottom refreshed for the slim
-bars, scaled to 1115px wide):
+Captured in nested Hyprland with the welcome window dismissed, official
+dark wallpaper, scaled to 1115px wide. Cockpit, Cockpit Clear, Horizon,
+Islands and Cozy Minimal are from the backdrop/options change; Dock Bottom
+and Hornero Left are earlier captures:
 
 - ![Cockpit: inset top bar + attached bottom bar](assets/layouts/cockpit.png)
+- ![Cockpit Clear: both bars clear, labels workspaces](assets/layouts/cockpit-clear.png)
+- ![Horizon: one slab on top, clear workspace line below](assets/layouts/horizon.png)
 - ![Islands: three floating pills](assets/layouts/islands.png)
 - ![Cozy Minimal: floating top ribbon](assets/layouts/cozy-minimal.png)
 - ![Dock Bottom: bottom dock with pinned apps](assets/layouts/dock-bottom.png)

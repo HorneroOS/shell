@@ -448,6 +448,11 @@ Variants {
                         barStyleAttached: bar.styleAttached,
                         barEffStyle: bar.effStyle
                         },
+                        popout: {
+                            name: panels.popouts.currentName,
+                            hasCurrent: panels.popouts.hasCurrent,
+                            detached: panels.popouts.detachedMode
+                        },
                         panelsMargins: {
                             left: bar.marginLeft, top: bar.marginTop,
                             right: bar.marginRight, bottom: bar.marginBottom

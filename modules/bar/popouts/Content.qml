@@ -17,8 +17,10 @@ Item {
 
     anchors.centerIn: parent
 
-    implicitWidth: (currentPopout?.implicitWidth ?? 0) + Appearance.padding.large * 2
-    implicitHeight: (currentPopout?.implicitHeight ?? 0) + Appearance.padding.large * 2
+    // No matching popout (unknown or hidden trigger) means no card at all,
+    // never an empty padded square.
+    implicitWidth: currentPopout ? currentPopout.implicitWidth + Appearance.padding.large * 2 : 0
+    implicitHeight: currentPopout ? currentPopout.implicitHeight + Appearance.padding.large * 2 : 0
 
     Item {
         id: content

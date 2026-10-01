@@ -52,6 +52,9 @@ Styles:
 - `islands` — one floating pill per non-empty group (start left, center
   centered, end right); reserves nothing.
 - `dock` — floating pill that still reserves space.
+- The islands, cozy-minimal and floating-island presets set `reserve: true`
+  explicitly: their Polybar/Waybar ancestors reserved space, and overlaying
+  pills hid the first line of every window under them.
 - `reserve` defaults to true for `attached`, `inset` and `dock`, false for
   `floating` and `islands` (`BarConfig.styleReserves`, single source of
   truth). An explicit `reserve` on the spec always wins: `reserve: false`
@@ -138,8 +141,8 @@ preview (primary bar only) keep working. `bar.style` must stay a v1 style
 | `cockpit`       | top inset + bottom attached       | Polybar + Waybar default       |
 | `cockpit-clear` | top + bottom attached, clear      | Polybar default (X11, transparent) |
 | `horizon`       | top inset + bottom attached clear | Polybar top-only profile       |
-| `islands`       | top islands                       | Polybar i3 multipart           |
-| `cozy-minimal`  | top floating                      | Waybar cozy-minimal            |
+| `islands`       | top islands, reserved             | Polybar i3 multipart           |
+| `cozy-minimal`  | top floating, reserved            | Waybar cozy-minimal            |
 | `dock-bottom`   | bottom dock                       | Waybar dock-bottom             |
 | `hornero-left`  | v1 left attached                  | current reference shell        |
 | `hornero-right` | v1 right attached                 | current reference shell        |
@@ -147,7 +150,7 @@ preview (primary bar only) keep working. `bar.style` must stay a v1 style
 | `minimal-top`   | v1 top attached                   | —                              |
 | `classic-top`   | v1 top attached                   | —                              |
 | `classic-bottom`| v1 bottom attached                | —                              |
-| `floating-island`| v1 top floating                  | —                              |
+| `floating-island`| top floating, reserved           | Waybar floating-neon geometry  |
 | `gaming`        | v1 bottom floating                | —                              |
 | `productivity`  | v1 top attached                   | —                              |
 

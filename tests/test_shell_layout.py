@@ -122,6 +122,30 @@ def test_preset_bars_v2(path):
                 check_entry(path, entry, f"bar {edge} group {name}", allow_spacer=False)
 
 
+def test_reserve_default_rule():
+    """BarConfig's reserve default must match docs/LAYOUTS.md: strips
+    (attached, inset) and dock reserve; floating/islands overlay.
+
+    Single source of truth is styleReserves(); every default site must use
+    it so no divergent inline rule (e.g. `style !== "floating"`, which
+    wrongly reserved for islands) can reappear."""
+    src = (ROOT / "config/BarConfig.qml").read_text()
+    m = re.search(
+        r"function styleReserves\(s: string\): bool \{\s*return ([^;]+);", src
+    )
+    assert m, "styleReserves() helper missing from BarConfig.qml"
+    rule = m.group(1)
+    for s in ("attached", "inset", "dock"):
+        assert f'"{s}"' in rule, f"styleReserves must reserve {s}"
+    assert "floating" not in rule and "islands" not in rule, (
+        "styleReserves must not reserve floating/islands"
+    )
+    assert src.count("styleReserves(") >= 5, (
+        "normalizeBar/legacyBarFor/reservesSpace* must all use styleReserves()"
+    )
+    assert '!== "floating"' not in src, "stale `style !== \"floating\"` rule still present"
+
+
 @pytest.mark.parametrize("path", PRESETS, ids=lambda p: p.stem)
 def test_preset_v2_legacy_coherence(path):
     """Multi-bar presets must keep a usable v1 fallback: the legacy fields

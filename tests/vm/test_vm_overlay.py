@@ -9,6 +9,7 @@ scripts are exercised through --dry-run plus static assertions on the
 boot path.
 """
 
+import re
 import subprocess
 from pathlib import Path
 
@@ -114,10 +115,17 @@ def test_verify_stays_fail_closed_on_base():
 
 
 def test_qemu_advertises_guest_dns_over_dhcp():
-    # The guest must not depend on the host LAN resolver: slirp proxies
-    # guest DNS to the host's first nameserver, which may be LAN-only.
+    # The guest must not depend on the host LAN resolver: slirp intercepts
+    # traffic to the dns= address and proxies it to the host's first
+    # nameserver, which may be dead LAN-only. The advertised address is a
+    # dedicated decoy knob that must differ from the in-guest pin default,
+    # so the pin bypasses the interception over direct NAT.
     body = _read_boot()
-    assert "dns=${VM_GUEST_DNS}" in body
+    assert "dns=${VM_QEMU_DNS}" in body
+    env = ENV.read_text()
+    qemu_default = re.search(r'VM_QEMU_DNS="\$\{VM_QEMU_DNS:-([^}]+)\}"', env).group(1)
+    guest_default = re.search(r'VM_GUEST_DNS="\$\{VM_GUEST_DNS:-([^}]+)\}"', env).group(1)
+    assert qemu_default != guest_default, (qemu_default, guest_default)
 
 
 def test_missing_overlay_probe_does_not_abort_boot():

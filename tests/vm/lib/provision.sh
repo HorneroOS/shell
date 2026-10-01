@@ -54,31 +54,39 @@ else
     # alone would never recover (proven: no drop-in written, retries
     # failed against the still-broken link DNS).
     pinned=0
+    pinned_via=""
+    # Candidates in order: the direct pin first (bypasses slirp), then the
+    # slirp-intercepted decoy (forwarded via the host resolver). Either path
+    # has been observed dead while the other worked, depending on the host
+    # LAN, so try both before failing.
+    for _dns in ${VM_GUEST_DNS} ${VM_QEMU_DNS}; do
     for _ in $(seq 1 6); do
         # shellcheck disable=SC2016
-        vm_ssh "sudo resolvectl dns eth0 ${VM_GUEST_DNS} && \
+        vm_ssh "sudo resolvectl dns eth0 ${_dns} && \
             sudo rm -f /etc/systemd/network/10-harness-dns.network && \
             netfile=\$(networkctl status eth0 --no-pager 2>/dev/null | awk -F': ' '/Network File:/{ print \$2 }' | xargs -r basename) && \
             if [ -n \"\$netfile\" ]; then \
                 sudo mkdir -p /etc/systemd/network/\"\${netfile}.d\" && \
-                printf '[Network]\nDNS=${VM_GUEST_DNS}\n\n[DHCPv4]\nUseDNS=no\n' | \
+                printf '[Network]\nDNS=${_dns}\n\n[DHCPv4]\nUseDNS=no\n' | \
                 sudo tee /etc/systemd/network/\"\${netfile}.d\"/10-harness-dns-override.conf > /dev/null; \
             else \
                 sudo mkdir -p /etc/systemd/network && \
-                printf '[Match]\nName=eth0\n\n[Network]\nDHCP=yes\nDNS=${VM_GUEST_DNS}\n\n[DHCPv4]\nUseDNS=no\n' | \
+                printf '[Match]\nName=eth0\n\n[Network]\nDHCP=yes\nDNS=${_dns}\n\n[DHCPv4]\nUseDNS=no\n' | \
                 sudo tee /etc/systemd/network/05-harness-dns.network > /dev/null; \
             fi && \
             sudo networkctl reload" || true
         sleep 5
         # shellcheck disable=SC2016
-        if vm_ssh 'getent hosts archlinux.org > /dev/null 2>&1'; then pinned=1; break; fi
+        if vm_ssh 'getent hosts archlinux.org > /dev/null 2>&1'; then pinned=1; pinned_via="${_dns}"; break; fi
         sleep 5
     done
+    [[ "${pinned}" == 1 ]] && break
+    done
     if [[ "${pinned}" != 1 ]]; then
-        echo "error: guest DNS still broken after pinning ${VM_GUEST_DNS}" >&2
+        echo "error: guest DNS still broken after pinning ${VM_GUEST_DNS} and ${VM_QEMU_DNS}" >&2
         exit 1
     fi
-    echo "==> guest DNS resolves via ${VM_GUEST_DNS}"
+    echo "==> guest DNS resolves via ${pinned_via}"
 fi
 
 echo "==> checking guest free disk space (need ${VM_MIN_GUEST_FREE_GB} GB)"

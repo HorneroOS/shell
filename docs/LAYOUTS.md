@@ -37,6 +37,7 @@ every v1 preset and user `shell.json` keeps working unchanged.
 | `thickness` | 16–256 px                                         | `bar.sizes.innerWidth`         |
 | `reserve`   | bool                                              | reserving styles only (below)  |
 | `density`   | `values` `glyphs`                                 | `values`                       |
+| `backdrop`  | `solid` `clear`                                   | `solid`                        |
 
 Resolution (`BarConfig.barsFor`): per-screen `bars` override wins, else the
 global set; invalid specs are dropped, the first spec wins on a duplicated
@@ -57,6 +58,17 @@ Styles:
   makes any style overlay clients, `reserve: true` makes a pill behave
   like a dock (full-edge exclusive zone, windows stop at the strip).
 
+`backdrop: "clear"` paints no slab and opens the frame on that edge
+(`BarSet.openOn`), so components sit on the wallpaper the way the
+transparent Polybar bars did. A soft edge scrim keeps them legible; its
+strength follows the `bar` transparency element (Appearance), so setting
+that element to 0 removes it. Geometry and reservation are unchanged, and
+popouts from a clear bar always render as cards.
+
+Narrow horizontal bars (under 1500px) compact wide components (inline
+sliders shorten), and a strip's centre group hides rather than overlap its
+neighbours when it cannot fit — the same rule islands use.
+
 Horizontal bars span the full width; vertical bars sit between them, so a top
 bar and a left rail never overlap. `density: "glyphs"` hides numeric text in
 `resources`, `battery` and `weather` (icons carry the level).
@@ -69,13 +81,13 @@ Groups hold `{id, enabled, options?}`. `id` must be a delegate registered in
 | id                 | Component          | `options`                                    |
 |--------------------|--------------------|----------------------------------------------|
 | `logo`             | OsIcon             | —                                            |
-| `workspaces`       | Workspaces         | —                                            |
+| `workspaces`       | Workspaces         | `style`: `pills` (default) or `labels`       |
 | `activeWindow`     | ActiveWindow       | —                                            |
 | `tray`             | Tray               | —                                            |
-| `clock`            | Clock              | —                                            |
+| `clock`            | Clock              | `showDate` (overrides `bar.clock.showDate`)  |
 | `statusIcons`      | StatusIcons        | —                                            |
-| `audioSlider`      | InlineSlider       | —                                            |
-| `brightnessSlider` | InlineSlider       | —                                            |
+| `audioSlider`      | InlineSlider       | `showValue` (level as `72%`)                 |
+| `brightnessSlider` | InlineSlider       | `showValue`                                  |
 | `power`            | Power              | —                                            |
 | `media`            | Media              | `maxWidth` (default 280), `showWhenIdle`     |
 | `resources`        | Resources          | `show`: subset of cpu, memory, disk, temp    |
@@ -84,6 +96,11 @@ Groups hold `{id, enabled, options?}`. `id` must be a delegate registered in
 | `pinnedApps`       | PinnedApps         | `apps`: desktop-entry ids (required)         |
 | `quickActions`     | QuickActions       | `actions`: ShellActions ids (required)       |
 | `battery`          | Battery            | —                                            |
+
+Workspaces `labels` style shows each workspace's number and app glyphs
+with an underline on the bar's inner side: thick accent for the active
+workspace, thin neutral for occupied ones (state is carried by thickness
+as well as colour). No pill or occupied background is drawn.
 
 Interactive entries are built on `BarButton` (one `Interactive`: Tab stop,
 Enter/Space, focus ring, accessible name). `media`, `pinnedApps`, `battery`
@@ -119,6 +136,8 @@ preview (primary bar only) keep working. `bar.style` must stay a v1 style
 | Preset          | Bars                              | Lineage                        |
 |-----------------|-----------------------------------|--------------------------------|
 | `cockpit`       | top inset + bottom attached       | Polybar + Waybar default       |
+| `cockpit-clear` | top + bottom attached, clear      | Polybar default (X11, transparent) |
+| `horizon`       | top inset + bottom attached clear | Polybar top-only profile       |
 | `islands`       | top islands                       | Polybar i3 multipart           |
 | `cozy-minimal`  | top floating                      | Waybar cozy-minimal            |
 | `dock-bottom`   | bottom dock                       | Waybar dock-bottom             |

@@ -146,6 +146,48 @@ def test_reserve_default_rule():
     assert '!== "floating"' not in src, "stale `style !== \"floating\"` rule still present"
 
 
+def test_backdrop_contract():
+    """Clear backdrops (docs/LAYOUTS.md): enum + solid default in BarConfig,
+    the frame opens on clear edges (openOn, not floatingOn), and a clear
+    owner never gets a frame-connected popout."""
+    cfg = (ROOT / "config/BarConfig.qml").read_text()
+    assert 'barBackdrops: ["solid", "clear"]' in cfg
+    assert 'backdrop: barBackdrops.includes(b.backdrop) ? b.backdrop : "solid"' in cfg
+    assert 'backdrop: "solid"' in cfg, "legacy bars must stay solid"
+    for f in ("modules/drawers/Border.qml", "modules/drawers/Panels.qml"):
+        src = (ROOT / f).read_text()
+        assert "openOn(" in src and "floatingOn(" not in src, f"{f} must use BarSet.openOn"
+    wrapper = (ROOT / "modules/bar/popouts/Wrapper.qml").read_text()
+    assert 'ownerBackdrop !== "clear"' in wrapper
+    for path in PRESETS:
+        for b in json.loads(path.read_text())["bar"].get("bars") or []:
+            assert b.get("backdrop", "solid") in ("solid", "clear"), f"{path.name}: bad backdrop"
+
+
+ENTRY_OPTIONS = {
+    "clock": {"showDate": bool},
+    "audioSlider": {"showValue": bool},
+    "brightnessSlider": {"showValue": bool},
+    "workspaces": {"style": ("pills", "labels")},
+}
+
+
+@pytest.mark.parametrize("path", PRESETS, ids=lambda p: p.stem)
+def test_preset_entry_options(path):
+    """Typed per-entry options must use documented keys and values."""
+    for b in json.loads(path.read_text())["bar"].get("bars") or []:
+        for group in b["groups"].values():
+            for e in group:
+                spec = ENTRY_OPTIONS.get(e["id"])
+                if not spec or not e.get("options"):
+                    continue
+                for k, v in e["options"].items():
+                    assert k in spec, f"{path.name}: {e['id']} has undocumented option {k}"
+                    want = spec[k]
+                    ok = isinstance(v, want) if isinstance(want, type) else v in want
+                    assert ok, f"{path.name}: {e['id']}.{k}={v!r}"
+
+
 @pytest.mark.parametrize("path", PRESETS, ids=lambda p: p.stem)
 def test_preset_v2_legacy_coherence(path):
     """Multi-bar presets must keep a usable v1 fallback: the legacy fields

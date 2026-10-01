@@ -127,6 +127,22 @@ preview (primary bar only) keep working. `bar.style` must stay a v1 style
 | `gaming`        | v1 bottom floating                | —                              |
 | `productivity`  | v1 top attached                   | —                              |
 
+## Gallery
+
+Captured in nested Hyprland at 1115x1020 (PR #88 evidence):
+
+| Cockpit | Islands |
+|---|---|
+| ![Cockpit: inset top bar + attached bottom bar](assets/layouts/cockpit.png) | ![Islands: three floating pills](assets/layouts/islands.png) |
+
+| Cozy Minimal | Dock Bottom |
+|---|---|
+| ![Cozy Minimal: floating top ribbon](assets/layouts/cozy-minimal.png) | ![Dock Bottom: bottom dock with pinned apps](assets/layouts/dock-bottom.png) |
+
+| Hornero Left (v1) |
+|---|
+| ![Hornero Left: legacy single-bar rail through the v2 runtime](assets/layouts/v1-hornero-left.png) |
+
 ## Persistence
 
 `bars` is serialized by `Config.qml` (`serialize*`) and present in the

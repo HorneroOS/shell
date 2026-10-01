@@ -18,11 +18,14 @@ Shape {
     required property Panels panels
     required property Item bar
 
+    // Same coordinate space as Panels (including the breathing gap next to
+    // floating/clear bars): every background is drawn at its wrapper's
+    // panel coordinates, so any offset here misplaces all panel shapes.
     anchors.fill: parent
-    anchors.leftMargin: bar.marginLeft
-    anchors.rightMargin: bar.marginRight
-    anchors.topMargin: bar.marginTop
-    anchors.bottomMargin: bar.marginBottom
+    anchors.leftMargin: panels.anchors.leftMargin
+    anchors.rightMargin: panels.anchors.rightMargin
+    anchors.topMargin: panels.anchors.topMargin
+    anchors.bottomMargin: panels.anchors.bottomMargin
     preferredRendererType: Shape.CurveRenderer
 
     Osd.Background {

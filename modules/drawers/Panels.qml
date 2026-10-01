@@ -36,10 +36,10 @@ Item {
     readonly property real floatBreathing: Appearance.spacing.large
 
     anchors.fill: parent
-    anchors.leftMargin: bar.marginLeft + (bar.floatingOn("left") ? root.floatBreathing : 0)
-    anchors.rightMargin: bar.marginRight + (bar.floatingOn("right") ? root.floatBreathing : 0)
-    anchors.topMargin: bar.marginTop + (bar.floatingOn("top") ? root.floatBreathing : 0)
-    anchors.bottomMargin: bar.marginBottom + (bar.floatingOn("bottom") ? root.floatBreathing : 0)
+    anchors.leftMargin: bar.marginLeft + (bar.openOn("left") ? root.floatBreathing : 0)
+    anchors.rightMargin: bar.marginRight + (bar.openOn("right") ? root.floatBreathing : 0)
+    anchors.topMargin: bar.marginTop + (bar.openOn("top") ? root.floatBreathing : 0)
+    anchors.bottomMargin: bar.marginBottom + (bar.openOn("bottom") ? root.floatBreathing : 0)
 
     Osd.Wrapper {
         id: osd
@@ -106,17 +106,18 @@ Item {
 
         screen: root.screen
 
+        // Card popouts (anything not grown from the frame) keep a breathing
+        // gap from the screen edges along the bar; connected ones must touch.
+        readonly property real edgeGap: usesConnectedBackground ? 0 : Appearance.spacing.large
+
         x: {
             if (isDetached)
                 return (root.width - nonAnimWidth) / 2;
             if (barVertical)
                 return barPosition === "right" ? root.width - nonAnimWidth : 0;
 
-            const off = currentCenter - bar.marginLeft - nonAnimWidth / 2;
-            const diff = root.width - Math.floor(off + nonAnimWidth);
-            if (diff < 0)
-                return off + diff;
-            return Math.max(off, 0);
+            const off = Math.round(currentCenter - root.x - nonAnimWidth / 2);
+            return Math.max(edgeGap, Math.min(off, root.width - nonAnimWidth - edgeGap));
         }
         y: {
             if (isDetached)
@@ -124,11 +125,8 @@ Item {
             if (!barVertical)
                 return barPosition === "bottom" ? root.height - nonAnimHeight : 0;
 
-            const off = currentCenter - bar.marginTop - nonAnimHeight / 2;
-            const diff = root.height - Math.floor(off + nonAnimHeight);
-            if (diff < 0)
-                return off + diff;
-            return Math.max(off, 0);
+            const off = Math.round(currentCenter - root.y - nonAnimHeight / 2);
+            return Math.max(edgeGap, Math.min(off, root.height - nonAnimHeight - edgeGap));
         }
     }
 

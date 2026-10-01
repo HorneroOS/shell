@@ -9,6 +9,7 @@ import "components/workspaces"
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Effects
 
 // One bar of the layout (docs/LAYOUTS.md): an edge, a style and three
 // component groups. Strip styles (attached, inset) span the edge with the
@@ -27,6 +28,13 @@ Item {
     readonly property bool vertical: edge === "left" || edge === "right"
     readonly property bool floating: style !== "attached"
     readonly property bool strip: style === "attached" || style === "inset"
+    // Clear backdrop: no slab, no frame strip; a soft scrim keeps the
+    // components legible on any wallpaper.
+    readonly property bool clear: spec.backdrop === "clear"
+    // Narrow horizontal bars (laptop panels, split screens) tighten wide
+    // components instead of letting groups collide. A width breakpoint, not
+    // a content measurement, so compacting can never feed back into itself.
+    readonly property bool compact: !vertical && width > 0 && width < 1500
     readonly property int edgePadding: Appearance.padding.large
     readonly property int barPadding: Math.max(Appearance.padding.smaller, Config.border.thickness)
     // Cross-axis thickness of a pill (excludes the float gap)
@@ -101,12 +109,19 @@ Item {
         return out;
     }
 
-    // Loader of the component under a bar-local point, or null.
+    // Loader of the component under a bar-local point, or null. Hit-tests
+    // along the bar's main axis only (cross axis pinned to the group's
+    // centre): moving from a trigger towards its popout crosses the bar
+    // below/beside the glyph and must not count as leaving the component.
     function entryAt(lx: real, ly: real): var {
         for (const g of allGroups()) {
             if (!g.visible)
                 continue;
             const pt = g.layout.mapFromItem(root, lx, ly);
+            if (vertical)
+                pt.x = g.layout.width / 2;
+            else
+                pt.y = g.layout.height / 2;
             const ch = g.layout.childAt(pt.x, pt.y);
             if (ch)
                 return {loader: ch, layout: g.layout, pt: pt};
@@ -135,6 +150,7 @@ Item {
     function claimPopouts(): void {
         popouts.ownerEdge = root.edge;
         popouts.ownerStyle = root.style;
+        popouts.ownerBackdrop = root.spec.backdrop;
     }
 
     function centerBinding(ref: Item, len: real): var {
@@ -242,6 +258,37 @@ Item {
 
     onSpecChanged: resetPopout()
 
+    // Edge scrim for clear bars: holds its tone across the component band
+    // (where the glyphs sit) and fades out past it, a vignette rather than
+    // a slab. Strength follows the bar's transparency element so users can
+    // soften or remove it from Appearance.
+    Rectangle {
+        id: scrim
+
+        readonly property bool fromStart: root.edge === "top" || root.edge === "left"
+
+        visible: root.clear
+        anchors.fill: parent
+        opacity: 0.62 * Colours.elementAlpha("bar")
+
+        gradient: Gradient {
+            orientation: root.vertical ? Gradient.Horizontal : Gradient.Vertical
+
+            GradientStop {
+                position: 0
+                color: scrim.fromStart ? Colours.palette.m3surface : "transparent"
+            }
+            GradientStop {
+                position: scrim.fromStart ? 0.65 : 0.35
+                color: Colours.palette.m3surface
+            }
+            GradientStop {
+                position: 1
+                color: scrim.fromStart ? "transparent" : Colours.palette.m3surface
+            }
+        }
+    }
+
     Repeater {
         id: islandRepeater
 
@@ -308,14 +355,26 @@ Item {
         }
 
         visible: fits
+        // Clear bars: a soft halo in the surface colour behind every glyph,
+        // so text stays legible on any wallpaper/scheme combination.
+        layer.enabled: root.clear
+        layer.effect: MultiEffect {
+            shadowEnabled: true
+            shadowColor: Colours.palette.m3surface
+            shadowBlur: 1
+            shadowOpacity: 1
+            shadowHorizontalOffset: 0
+            shadowVerticalOffset: 0
+        }
         width: root.vertical ? root.pillThickness : mainLen
         height: root.vertical ? mainLen : root.pillThickness
         x: root.vertical ? (root.edge === "left" ? root.floatGap : root.width - width - root.floatGap) : mainPos
         y: root.vertical ? mainPos : (root.edge === "top" ? root.floatGap : root.height - height - root.floatGap)
 
-        // Own background unless an attached strip is backed by the frame
+        // Own background unless an attached strip is backed by the frame or
+        // the bar is clear
         StyledRect {
-            visible: root.floating || !Config.border.frameEnabled
+            visible: !root.clear && (root.floating || !Config.border.frameEnabled)
             anchors.fill: parent
             color: Colours.surface(Colours.layer(Colours.palette.m3surface, 1), "bar")
             radius: root.floating ? Appearance.rounding.full : 0
@@ -344,8 +403,13 @@ Item {
                 return Math.max(afterStart, Math.min(ideal, beforeEnd - ownLen));
             }
 
+            // Never draw over a neighbour: a centre group with no room left
+            // between start and end hides, as islands do.
+            readonly property bool hasRoom: !island.fill || beforeEnd - afterStart >= ownLen - 0.5
+
             name: "center"
             active: island.modelData.groups.includes("center")
+            visible: active && entries.some(e => e.enabled) && hasRoom
             x: root.vertical ? (island.width - width) / 2 : mainOffset
             y: root.vertical ? mainOffset : (island.height - height) / 2
         }
@@ -412,9 +476,13 @@ Item {
                     DelegateChoice {
                         roleValue: "workspaces"
                         delegate: WrappedLoader {
+                            id: workspacesLoader
+
                             sourceComponent: Workspaces {
                                 screen: root.screen
                                 vertical: root.vertical
+                                options: workspacesLoader.options
+                                clear: root.clear
                             }
                         }
                     }
@@ -439,9 +507,12 @@ Item {
                     DelegateChoice {
                         roleValue: "clock"
                         delegate: WrappedLoader {
+                            id: clockLoader
+
                             sourceComponent: Clock {
                                 screen: root.screen
                                 vertical: root.vertical
+                                options: clockLoader.options
                             }
                         }
                     }
@@ -451,24 +522,33 @@ Item {
                             sourceComponent: StatusIcons {
                                 screen: root.screen
                                 vertical: root.vertical
+                                clear: root.clear
                             }
                         }
                     }
                     DelegateChoice {
                         roleValue: "audioSlider"
                         delegate: WrappedLoader {
+                            id: audioLoader
+
                             sourceComponent: InlineSlider {
                                 screen: root.screen
                                 kind: "audio"
+                                options: audioLoader.options
+                                compact: root.compact
                             }
                         }
                     }
                     DelegateChoice {
                         roleValue: "brightnessSlider"
                         delegate: WrappedLoader {
+                            id: brightnessLoader
+
                             sourceComponent: InlineSlider {
                                 screen: root.screen
                                 kind: "brightness"
+                                options: brightnessLoader.options
+                                compact: root.compact
                             }
                         }
                     }

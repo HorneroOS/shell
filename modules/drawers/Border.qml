@@ -37,14 +37,15 @@ Item {
         layer.enabled: true
         visible: false
 
-        // The cutout reaches the screen edge on the bar's edge when floating,
-        // so the pill floats over the wallpaper instead of a solid frame strip
+        // The cutout reaches the screen edge on the bar's edge when the bar
+        // floats or is clear, so it sits on the wallpaper instead of a solid
+        // frame strip
         Rectangle {
             anchors.fill: parent
-            anchors.leftMargin: root.bar.floatingOn("left") ? 0 : root.bar.marginLeft
-            anchors.rightMargin: root.bar.floatingOn("right") ? 0 : root.bar.marginRight
-            anchors.topMargin: root.bar.floatingOn("top") ? 0 : root.bar.marginTop
-            anchors.bottomMargin: root.bar.floatingOn("bottom") ? 0 : root.bar.marginBottom
+            anchors.leftMargin: root.bar.openOn("left") ? 0 : root.bar.marginLeft
+            anchors.rightMargin: root.bar.openOn("right") ? 0 : root.bar.marginRight
+            anchors.topMargin: root.bar.openOn("top") ? 0 : root.bar.marginTop
+            anchors.bottomMargin: root.bar.openOn("bottom") ? 0 : root.bar.marginBottom
             radius: Config.border.rounding
         }
     }

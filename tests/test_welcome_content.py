@@ -147,4 +147,3 @@ def test_page_set_matches_nav():
     assert nav_ids == ["start", "navigate", "shell", "workspaces",
                        "personalize", "tools", "system", "learn",
                        "shortcuts"]
-

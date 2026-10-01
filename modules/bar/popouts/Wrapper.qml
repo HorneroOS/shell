@@ -23,9 +23,11 @@ Item {
     // popout grows from that bar's edge. Defaults to the primary bar.
     property string ownerEdge: Config.bar.positionFor(screen.name)
     property string ownerStyle: Config.bar.styleFor(screen.name)
+    property string ownerBackdrop: "solid"
     readonly property bool barVertical: ownerEdge === "left" || ownerEdge === "right"
     readonly property string barPosition: ownerEdge
-    readonly property bool usesConnectedBackground: Config.border.frameEnabled && ownerStyle === "attached" && barVertical
+    // Clear owners have no strip to grow from: their popouts are cards.
+    readonly property bool usesConnectedBackground: Config.border.frameEnabled && ownerStyle === "attached" && ownerBackdrop !== "clear" && barVertical
 
     property string currentName
     property real currentCenter

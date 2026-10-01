@@ -16,6 +16,10 @@ Item {
     // Orientation of the owning bar (set by Bar.qml); defaults to the
     // primary bar for standalone use.
     property bool vertical: Config.bar.isVerticalFor(screen.name)
+    // Per-entry options (docs/LAYOUTS.md): showDate overrides the global
+    // bar.clock.showDate for this layout.
+    property var options: ({})
+    readonly property bool showDate: typeof options?.showDate === "boolean" ? options.showDate : Config.bar.clock.showDate
 
     implicitWidth: layout.implicitWidth
     implicitHeight: layout.implicitHeight
@@ -54,7 +58,7 @@ Item {
         // Date line (horizontal bars only, above the time)
         StyledText {
             Layout.alignment: Qt.AlignCenter
-            visible: Config.bar.clock.showDate && !root.vertical
+            visible: root.showDate && !root.vertical
 
             horizontalAlignment: StyledText.AlignHCenter
             text: Time.format("ddd d MMM")

@@ -20,8 +20,11 @@ StyledRect {
     // Orientation of the owning bar (set by Bar.qml); defaults to the
     // primary bar for standalone use.
     property bool vertical: Config.bar.isVerticalFor(screen.name)
+    // Clear bars draw no chips: the cluster sits on the wallpaper like the
+    // rest of the bar (set by Bar.qml).
+    property bool clear: false
 
-    color: Colours.tPalette.m3surfaceContainer
+    color: clear ? "transparent" : Colours.tPalette.m3surfaceContainer
     radius: Appearance.rounding.full
 
     clip: true

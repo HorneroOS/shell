@@ -36,7 +36,7 @@
 - `presets/*.json` schema: `_name`, `_description`, bar entries with
   `id`/`enabled`, sizes/status/scrollActions, v2 `bars` set
   (`docs/LAYOUTS.md`) — keep `tests/test_shell_layout.py` green
-  (13 presets).
+  (15 presets).
 
 ## Commits / hygiene
 

@@ -205,6 +205,29 @@ Variants {
                     // Panels as live Items for reactive geometry during animations
                     for (const p of panels.children)
                         rects.push(p);
+
+                    // Bridge the breathing gap between a floating/clear bar and its
+                    // open popout card, so moving the pointer from the trigger into
+                    // the card never leaves the surface (which closes the popout).
+                    const pop = panels.popouts;
+                    if (pop.visible && !pop.isDetached && pop.width > 0 && pop.height > 0) {
+                        const px = panels.x + pop.x;
+                        const py = panels.y + pop.y;
+                        switch (pop.ownerEdge) {
+                        case "top":
+                            rects.push({isEdge: true, x: px, y: bar.marginTop, width: pop.width, height: Math.max(0, py - bar.marginTop)});
+                            break;
+                        case "bottom":
+                            rects.push({isEdge: true, x: px, y: py + pop.height, width: pop.width, height: Math.max(0, win.height - bar.marginBottom - py - pop.height)});
+                            break;
+                        case "left":
+                            rects.push({isEdge: true, x: bar.marginLeft, y: py, width: Math.max(0, px - bar.marginLeft), height: pop.height});
+                            break;
+                        case "right":
+                            rects.push({isEdge: true, x: px + pop.width, y: py, width: Math.max(0, win.width - bar.marginRight - px - pop.width), height: pop.height});
+                            break;
+                        }
+                    }
                     return rects;
                 }
 
@@ -212,8 +235,10 @@ Variants {
                     required property var modelData
 
                     readonly property bool isEdge: modelData !== null && typeof modelData === "object" && modelData.isEdge === true
-                    x: isEdge ? modelData.x : modelData.x + bar.marginLeft
-                    y: isEdge ? modelData.y : modelData.y + bar.marginTop
+                    // Panels live in the Panels item (bar margins plus the breathing
+                    // gap next to floating/clear bars): map through its origin.
+                    x: isEdge ? modelData.x : modelData.x + panels.x
+                    y: isEdge ? modelData.y : modelData.y + panels.y
                     width: isEdge ? modelData.width : (modelData.width > 0 && modelData.height > 0 ? modelData.width : 0)
                     height: isEdge ? modelData.height : (modelData.width > 0 && modelData.height > 0 ? modelData.height : 0)
                 }
@@ -332,8 +357,8 @@ Variants {
                     Rectangle {
                         required property Item modelData
 
-                        x: modelData.x + bar.marginLeft
-                        y: modelData.y + bar.marginTop
+                        x: modelData.x + panels.x
+                        y: modelData.y + panels.y
                         width: modelData.width
                         height: modelData.height
                         color: "transparent"
@@ -447,6 +472,11 @@ Variants {
                         barFloating: bar.floating,
                         barStyleAttached: bar.styleAttached,
                         barEffStyle: bar.effStyle
+                        },
+                        popout: {
+                            name: panels.popouts.currentName,
+                            hasCurrent: panels.popouts.hasCurrent,
+                            detached: panels.popouts.detachedMode
                         },
                         panelsMargins: {
                             left: bar.marginLeft, top: bar.marginTop,

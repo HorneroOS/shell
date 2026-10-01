@@ -67,6 +67,13 @@ Item {
         return barOn(edge)?.floating ?? false;
     }
 
+    // True when the frame must not paint a strip on this edge: the bar
+    // floats away from it or is clear (draws no backdrop of its own).
+    function openOn(edge: string): bool {
+        const b = barOn(edge);
+        return (b?.floating ?? false) || (b?.clear ?? false);
+    }
+
     function barAt(x: real, y: real): Item {
         return bars.find(b => b.containsVisualPoint(x, y)) ?? null;
     }

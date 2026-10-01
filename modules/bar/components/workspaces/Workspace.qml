@@ -19,6 +19,10 @@ GridLayout {
     // Orientation of the owning bar (set by Bar.qml); defaults to the
     // primary bar for standalone use.
     property bool vertical: Config.bar.isVerticalFor(screen.name)
+    // Labels style: always the workspace number, plus an underline (accent
+    // when active, faint when occupied). Set by Workspaces.
+    property bool labels: false
+    readonly property bool isActive: activeWsId === ws
     readonly property bool isWorkspace: true // Flag for finding workspace children
     // Unanimated prop for others to use as reference (main-axis size)
     readonly property int size: (vertical ? implicitHeight : implicitWidth) + (hasWindows ? Appearance.padding.small : 0)
@@ -54,12 +58,18 @@ GridLayout {
             } else if (Config.bar.workspaces.capitalisation.toLowerCase() === "lower") {
                 displayName = displayName.toLowerCase();
             }
+            if (root.labels)
+                return displayName;
             const label = Config.bar.workspaces.label || displayName;
             const occupiedLabel = Config.bar.workspaces.occupiedLabel || label;
             const activeLabel = Config.bar.workspaces.activeLabel || (root.isOccupied ? occupiedLabel : label);
             return root.activeWsId === root.ws ? activeLabel : root.isOccupied ? occupiedLabel : label;
         }
-        color: Config.bar.workspaces.occupiedBg || root.isOccupied || root.activeWsId === root.ws ? Colours.palette.m3onSurface : Colours.layer(Colours.palette.m3outlineVariant, 2)
+        color: {
+            if (root.labels)
+                return root.isActive ? Colours.palette.m3primary : root.isOccupied ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant;
+            return Config.bar.workspaces.occupiedBg || root.isOccupied || root.isActive ? Colours.palette.m3onSurface : Colours.layer(Colours.palette.m3outlineVariant, 2);
+        }
         verticalAlignment: Qt.AlignVCenter
         horizontalAlignment: Qt.AlignHCenter
     }

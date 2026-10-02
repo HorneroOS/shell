@@ -118,22 +118,28 @@ Scope {
                 if (root.hasFullscreen && ["launcher", "session", "dashboard"].includes(drawer))
                     return;
                 const visibilities = Visibilities.getForActive();
+                if (!visibilities)
+                    return;
                 visibilities[drawer] = !visibilities[drawer];
             } else {
                 console.warn(`[IPC] Drawer "${drawer}" does not exist`);
             }
         }
 
+        // Empty until a screen is active (startup): never throw over IPC.
         function list(): string {
             const visibilities = Visibilities.getForActive();
+            if (!visibilities)
+                return "";
             return Object.keys(visibilities).filter(k => typeof visibilities[k] === "boolean").join("\n");
         }
 
         // Read-only: "true"/"false" for a known drawer, "" otherwise.
+        // An empty list() ("") must not make "" a member: reject empty names.
         function state(drawer: string): string {
-            if (list().split("\n").includes(drawer)) {
+            if (drawer !== "" && list().split("\n").includes(drawer)) {
                 const visibilities = Visibilities.getForActive();
-                return visibilities[drawer] ? "true" : "false";
+                return visibilities && visibilities[drawer] ? "true" : "false";
             }
             return "";
         }

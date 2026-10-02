@@ -140,6 +140,22 @@ def test_settings_search_has_keyboard_entry_and_layered_escape():
     assert "Qt.Key_Return" in search and "Qt.Key_Escape" in search
     assert "searchQuery.length > 0" in factory
 
+
+def test_appearance_section_routes_use_the_sidebar_component_scope():
+    appearance = (CC / "appearance" / "AppearancePane.qml").read_text()
+    keys = re.search(r"readonly property var _sectionKeys:\s*\[([^]]*)\]", appearance)
+    assert keys, "Appearance section ids must remain explicit"
+    section_ids = re.findall(r'"([A-Za-z]+)"', keys.group(1))
+    sidebar_map = re.search(r"readonly property var sections:\s*\(\{(.*?)\}\)", appearance, re.DOTALL)
+    assert sidebar_map, "sidebar component must expose its scoped section items"
+    for section_id in section_ids:
+        assert re.search(rf"\b{re.escape(section_id)}:\s*{re.escape(section_id)}Section\b", sidebar_map.group(1)), (
+            f"sidebar section map is missing {section_id}"
+        )
+    assert "root.sectionItems[key]" in appearance
+    assert "root.sectionScroll = sidebarFlickable" in appearance
+    assert "flickable.contentY = Math.max" in appearance
+
 def test_registered_panes_take_shared_session():
     for entry in _registry_entries():
         text = (CC / entry["component"]).read_text()

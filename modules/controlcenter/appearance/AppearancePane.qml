@@ -47,6 +47,8 @@ Item {
     // _sectionsReady guards write-back while initial state is restored.
     property bool _sectionsReady: false
     readonly property var _sectionKeys: ["themes", "themeMode", "colorVariant", "colorScheme", "gtkTheme", "gtkColorScheme", "iconTheme", "fonts", "animations", "scales", "transparency", "border", "background"]
+    property var sectionItems: ({})
+    property var sectionScroll: null
 
     function isSectionExpanded(key: string): bool {
         return Config.controlCenter.appearanceExpandedSections.indexOf(key) !== -1;
@@ -67,47 +69,24 @@ Item {
 
     function setAllSections(expand: bool): void {
         root._sectionsReady = false;
-        themesSection.expanded = expand;
-        themeModeSection.expanded = expand;
-        colorVariantSection.expanded = expand;
-        colorSchemeSection.expanded = expand;
-        gtkThemeSection.expanded = expand;
-        gtkColorSchemeSection.expanded = expand;
-        iconThemeSection.expanded = expand;
-        fontsSection.expanded = expand;
-        animationsSection.expanded = expand;
-        scalesSection.expanded = expand;
-        transparencySection.expanded = expand;
-        borderSection.expanded = expand;
-        backgroundSection.expanded = expand;
+        for (let i = 0; i < root._sectionKeys.length; i++) {
+            const section = root.sectionItems[root._sectionKeys[i]];
+            if (section)
+                section.expanded = expand;
+        }
         root._sectionsReady = true;
         Config.controlCenter.appearanceExpandedSections = expand ? root._sectionKeys.slice() : [];
         Config.save();
     }
 
     function revealSection(key: string): void {
-        const sections = {
-            themes: themesSection,
-            themeMode: themeModeSection,
-            colorVariant: colorVariantSection,
-            colorScheme: colorSchemeSection,
-            gtkTheme: gtkThemeSection,
-            gtkColorScheme: gtkColorSchemeSection,
-            iconTheme: iconThemeSection,
-            fonts: fontsSection,
-            animations: animationsSection,
-            scales: scalesSection,
-            transparency: transparencySection,
-            border: borderSection,
-            background: backgroundSection
-        };
-        const section = sections[key];
+        const section = root.sectionItems[key];
         if (!section)
             return;
         section.expanded = true;
         root.persistSection(key, true);
         Qt.callLater(() => {
-            const flickable = sidebarFlickable;
+            const flickable = root.sectionScroll;
             if (flickable)
                 flickable.contentY = Math.max(0, section.y - Appearance.padding.normal);
             if (root.session.requestedSection === key)
@@ -971,8 +950,30 @@ Item {
                     spacing: Appearance.spacing.small
 
                     readonly property var rootPane: sidebarFlickable.rootPane
+                    readonly property var sections: ({
+                        themes: themesSection,
+                        themeMode: themeModeSection,
+                        colorVariant: colorVariantSection,
+                        colorScheme: colorSchemeSection,
+                        gtkTheme: gtkThemeSection,
+                        gtkColorScheme: gtkColorSchemeSection,
+                        iconTheme: iconThemeSection,
+                        fonts: fontsSection,
+                        animations: animationsSection,
+                        scales: scalesSection,
+                        transparency: transparencySection,
+                        border: borderSection,
+                        background: backgroundSection
+                    })
 
                     readonly property bool allSectionsExpanded: themesSection.expanded && themeModeSection.expanded && colorVariantSection.expanded && colorSchemeSection.expanded && gtkThemeSection.expanded && gtkColorSchemeSection.expanded && iconThemeSection.expanded && fontsSection.expanded && animationsSection.expanded && scalesSection.expanded && transparencySection.expanded && borderSection.expanded && backgroundSection.expanded
+
+                    Component.onCompleted: {
+                        root.sectionItems = sidebarLayout.sections;
+                        root.sectionScroll = sidebarFlickable;
+                        if (root.session.active === "appearance" && root.session.requestedSection)
+                            Qt.callLater(() => root.revealSection(root.session.requestedSection));
+                    }
 
                     RowLayout {
                         spacing: Appearance.spacing.smaller

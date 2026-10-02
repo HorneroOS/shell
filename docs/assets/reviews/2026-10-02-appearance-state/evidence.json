@@ -1,0 +1,23 @@
+{
+  "capturedAt": "2026-10-02",
+  "surface": "Hornero Settings / Appearance",
+  "viewport": "1344x756",
+  "hostState": {
+    "themeId": "",
+    "mode": "dark",
+    "scheme": "dynamic",
+    "gtkTheme": "Orchis-Light-Compact",
+    "iconTheme": "Numix-Circle"
+  },
+  "before": {
+    "image": "before.png",
+    "shellRevision": "c778a3d47eb33dad83edd46a7d32737beec82cd8",
+    "observation": "Generated appearance was incorrectly labeled as Hornero Dark and marked Current."
+  },
+  "after": {
+    "image": "after.png",
+    "shellRevision": "b2729a42255cb5d4a66a5059c2dcdc46eab414e5",
+    "observation": "The live preview says Following your wallpaper and no catalog theme is falsely marked Current."
+  },
+  "method": "Real host display capture of the isolated PR QML preview; temporary XDG state/config was used for the preview process. The existing user GTK, icon and wallpaper data were read. No theme or appearance settings were applied."
+}

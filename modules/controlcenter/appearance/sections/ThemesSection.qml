@@ -49,6 +49,56 @@ CollapsibleSection {
         Layout.fillWidth: true
         spacing: Appearance.spacing.small / 2
 
+        StyledRect {
+            id: customLookNotice
+
+            readonly property bool savedThemeMissing: !!Colours.themeId && !Themes.themeById(Colours.themeId)
+            visible: ThemeCatalogue.loaded && Colours.themeStateReady && (!Colours.themeId || savedThemeMissing)
+            Layout.fillWidth: true
+            implicitHeight: customLookRow.implicitHeight + Appearance.padding.normal * 2
+            radius: Appearance.rounding.normal
+            color: Qt.alpha(Colours.tPalette.m3secondaryContainer, 0.38)
+
+            RowLayout {
+                id: customLookRow
+                anchors.fill: parent
+                anchors.margins: Appearance.padding.normal
+                spacing: Appearance.spacing.normal
+
+                MaterialIcon {
+                    text: Colours.scheme === "dynamic" ? "wallpaper" : "palette"
+                    color: Colours.palette.m3primary
+                    font.pointSize: Appearance.font.size.large
+                    fill: 1
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 2
+
+                    StyledText {
+                        text: customLookNotice.savedThemeMissing
+                            ? qsTr("Saved theme is unavailable")
+                            : Colours.scheme === "dynamic" ? qsTr("Following your wallpaper") : qsTr("Custom appearance")
+                        font.pointSize: Appearance.font.size.normal
+                        font.weight: 500
+                    }
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: customLookNotice.savedThemeMissing
+                            ? qsTr("The saved theme pack is no longer installed. Your current look is kept; choose an available theme below to restore a curated look.")
+                            : Colours.scheme === "dynamic"
+                                ? qsTr("Colors are generated from your current background. Choose a theme below to switch to a curated look.")
+                                : qsTr("Your current colors and app styling are a custom combination. Choose a theme below to switch to a curated look.")
+                        font.pointSize: Appearance.font.size.small
+                        color: Colours.palette.m3onSurfaceVariant
+                        wrapMode: Text.WordWrap
+                    }
+                }
+            }
+        }
+
         Repeater {
             model: Themes.list
 
@@ -61,7 +111,7 @@ CollapsibleSection {
                 spacing: 0
 
                 readonly property bool isStaged: modelData.id === previewController.pendingThemeId
-                readonly property bool isCurrent: modelData.id === Colours.themeId
+                readonly property bool isCurrent: Colours.themeStateReady && !!Colours.themeId && modelData.id === Colours.themeId
                 readonly property bool isExpanded: modelData.id === sectionRoot.selectedThemeId
 
                 StyledRect {

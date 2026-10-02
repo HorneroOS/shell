@@ -119,17 +119,56 @@ Item {
     }
 
     function syncCurrentThemePreview(): void {
-        if (!ThemeCatalogue.loaded || !Colours.themeId)
+        if (!ThemeCatalogue.loaded || !Colours.themeStateReady)
             return;
 
-        const theme = Themes.themeById(Colours.themeId);
-        if (!theme)
-            return;
-        if (previewSource === "theme" && previewThemeId === theme.id)
-            return;
+        // Keep an explicit hover/focus preview authoritative. This refresh
+        // is for the idle/current preview only; a catalogue or wallpaper
+        // update must not replace the item the user is exploring.
+        if (previewActive && previewSource !== "current") {
+            const previewIsAppliedTheme = previewSource === "theme"
+                && !!Colours.themeId
+                && previewThemeId === Colours.themeId;
+            if (!previewIsAppliedTheme)
+                return;
+        }
 
-        startThemePreview(theme);
-        previewSubtitle = qsTr("Current look");
+        const theme = Colours.themeId ? Themes.themeById(Colours.themeId) : null;
+        if (theme) {
+            if (previewSource === "theme" && previewThemeId === theme.id)
+                return;
+            startThemePreview(theme);
+            previewSubtitle = qsTr("Current look");
+            return;
+        }
+
+        // A generated/custom appearance has no catalogue card. Keep the
+        // preview useful and truthful by showing live semantic colors and
+        // the current wallpaper instead of leaving the whole pane empty.
+        previewActive = true;
+        previewSource = "current";
+        previewTitle = Colours.scheme === "dynamic" ? qsTr("Following your wallpaper") : qsTr("Custom appearance");
+        previewSubtitle = qsTr("Your current look");
+        previewVariant = Schemes.currentVariant;
+        previewMode = Colours.currentLight ? "light" : "dark";
+        previewWallpaperPath = Wallpapers.actualCurrent;
+        previewWallpaperLabel = previewWallpaperPath ? previewWallpaperPath.split("/").pop() : "";
+        previewGtkTheme = pendingGtkTheme;
+        previewIconTheme = pendingIconTheme;
+        previewGtkColorScheme = pendingGtkColorScheme;
+        previewGtkPrefer = pendingGtkColorScheme;
+        previewThemeId = "";
+        previewTags = [];
+        previewWallpaperCount = 0;
+        const roles = [
+            "m3surface", "m3surfaceContainer", "m3surfaceContainerHigh",
+            "m3onSurface", "m3onSurfaceVariant", "m3primary", "m3primaryContainer",
+            "m3onPrimaryContainer", "m3secondaryContainer", "m3onSecondaryContainer", "m3outline"
+        ];
+        const colors = {};
+        for (const role of roles)
+            colors[role] = Colours.current[role];
+        previewPalette = colors;
     }
 
     Connections {
@@ -142,6 +181,9 @@ Item {
     Connections {
         target: Colours
         function onThemeIdChanged(): void {
+            root.syncCurrentThemePreview();
+        }
+        function onSchemeChanged(): void {
             root.syncCurrentThemePreview();
         }
     }
@@ -1207,18 +1249,37 @@ Item {
         target: GtkSettings
 
         function onLiveGtkThemeChanged(): void {
-            if (!root.gtkDirty && GtkSettings.liveGtkTheme)
+            if (!root.gtkDirty && GtkSettings.liveGtkTheme) {
                 root.pendingGtkTheme = GtkSettings.liveGtkTheme;
+                if (root.previewSource === "current")
+                    root.previewGtkTheme = GtkSettings.liveGtkTheme;
+            }
         }
 
         function onLiveIconThemeChanged(): void {
-            if (!root.iconDirty && GtkSettings.liveIconTheme)
+            if (!root.iconDirty && GtkSettings.liveIconTheme) {
                 root.pendingIconTheme = GtkSettings.liveIconTheme;
+                if (root.previewSource === "current")
+                    root.previewIconTheme = GtkSettings.liveIconTheme;
+            }
         }
 
         function onLiveColorSchemeChanged(): void {
-            if (!root.gtkColorSchemeDirty && GtkSettings.liveColorScheme)
+            if (!root.gtkColorSchemeDirty && GtkSettings.liveColorScheme) {
                 root.pendingGtkColorScheme = GtkSettings.liveColorScheme;
+                if (root.previewSource === "current") {
+                    root.previewGtkColorScheme = GtkSettings.liveColorScheme;
+                    root.previewGtkPrefer = GtkSettings.liveColorScheme;
+                }
+            }
+        }
+    }
+
+    Connections {
+        target: Wallpapers
+        function onActualCurrentChanged(): void {
+            if (root.previewSource === "current")
+                root.syncCurrentThemePreview();
         }
     }
 

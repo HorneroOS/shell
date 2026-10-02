@@ -18,7 +18,11 @@ Singleton {
     // hornero-light are fully described by the built-in semantic tables
     // below, so the shell is coherent before any external scheme.json
     // arrives and switches mode without light/dark leakage.
+    // Clean installs default to Hornero Dark. `themeStateReady` prevents this
+    // provisional value from being presented as current before persisted state
+    // is loaded; an active generated/custom appearance clears the ID below.
     property string themeId: "hornero-dark"
+    property bool themeStateReady: false
     property string _pendingBuiltInPersistId: ""
 
     signal builtInThemePersisted(string id, bool ok, string error)
@@ -37,6 +41,7 @@ Singleton {
                 current[propName] = colour;
         }
         themeId = id;
+        themeStateReady = true;
         scheme = id;
         flavour = "tonal-spot";
         currentLight = id === "hornero-light";
@@ -306,8 +311,14 @@ Singleton {
         if (!isPreview) {
             if (root.isBuiltInTheme(scheme.name)) {
                 root.applyBuiltInTheme(scheme.name);
+                root.themeStateReady = true;
                 return;
             }
+            // `dynamic` is the canonical wallpaper-generated appearance.
+            // It must clear any earlier preset identity so the theme list
+            // never labels a stale preset as the current look.
+            root.themeId = scheme.name === "dynamic" ? "" : (scheme.name || "");
+            root.themeStateReady = true;
             root.scheme = scheme.name;
             flavour = scheme.flavour;
             currentLight = scheme.mode === "light";
@@ -367,6 +378,9 @@ Singleton {
             if (err === FileViewError.FileNotFound && !root._schemeFallbackActive) {
                 root._schemeFallbackActive = true;
                 schemeFileViewFallback.reload();
+            } else if (!root.themeStateReady) {
+                root.themeId = "";
+                root.themeStateReady = true;
             }
         }
     }
@@ -379,8 +393,14 @@ Singleton {
             if (root._schemeFallbackActive)
                 root.load(text(), false);
         }
-        onLoadFailed: {
+        onLoadFailed: err => {
             root._schemeFallbackActive = false;
+            // No saved appearance exists yet; use the documented clean-install
+            // default only when both canonical and legacy locations are absent.
+            if (!root.themeStateReady) {
+                root.themeId = err === FileViewError.FileNotFound ? "hornero-dark" : "";
+                root.themeStateReady = true;
+            }
         }
     }
 

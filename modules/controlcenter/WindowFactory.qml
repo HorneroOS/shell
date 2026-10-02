@@ -129,11 +129,10 @@ Singleton {
             implicitWidth: cc.implicitWidth
             implicitHeight: cc.implicitHeight
 
-            // Preserve the screen-proportional opening size while allowing
-            // users to resize Settings. The 16:9 implicit dimensions should
-            // be a starting point, not a compositor-enforced maximum.
-            minimumSize.width: Math.min(1150, screen.width * 0.9)
-            minimumSize.height: Math.min(650, screen.height * 0.9)
+            minimumSize.width: implicitWidth
+            minimumSize.height: implicitHeight
+            maximumSize.width: implicitWidth
+            maximumSize.height: implicitHeight
 
             title: qsTr("Hornero Settings - %1").arg(cc.active.slice(0, 1).toUpperCase() + cc.active.slice(1))
 

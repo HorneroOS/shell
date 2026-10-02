@@ -17,6 +17,7 @@ depends=(
   'libcava'
   'libqalculate'
   'pipewire'
+  'python-pywal16'
   'qt6-base'
   'qt6-declarative'
   'quickshell>=0.3.1'

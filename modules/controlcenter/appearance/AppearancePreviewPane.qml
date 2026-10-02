@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import qs.components
+import qs.components.controls
 import qs.components.images
 import qs.services
 import qs.config
@@ -28,6 +29,7 @@ StyledRect {
     property string themeIdText: ""
     property var tags: []
     property int wallpaperCount: 0
+    property bool showThemeDetails: false
 
     readonly property bool isThemePreview: source === "theme"
     readonly property bool compact: width < 500
@@ -288,8 +290,8 @@ StyledRect {
                 // Recipe details (what Apply will set)
                 StyledRect {
                     Layout.fillWidth: true
-                    Layout.fillHeight: !root.compact
-                    Layout.preferredHeight: root.compact ? 140 : -1
+                    Layout.fillHeight: !root.compact && (!root.isThemePreview || root.showThemeDetails)
+                    Layout.preferredHeight: root.compact ? 140 : (root.isThemePreview ? (root.showThemeDetails ? 360 : 250) : -1)
                     visible: root.active && root.hasRecipe
                     radius: Appearance.rounding.normal
                     color: Qt.alpha(previewColor("m3surfaceContainerHigh", Colours.tPalette.m3surfaceContainerHigh), 0.65)
@@ -304,6 +306,16 @@ StyledRect {
                             font.pointSize: Appearance.font.size.small
                             font.weight: 600
                             color: previewColor("m3onSurface", Colours.palette.m3onSurface)
+                        }
+
+                        TextButton {
+                            visible: root.isThemePreview
+                            type: TextButton.Text
+                            toggle: true
+                            checked: root.showThemeDetails
+                            text: root.showThemeDetails ? qsTr("Hide details") : qsTr("More about this theme")
+                            Accessible.name: text
+                            onClicked: root.showThemeDetails = !root.showThemeDetails
                         }
 
                         Flow {
@@ -350,7 +362,7 @@ StyledRect {
                         // Exact recipe for theme packs
                         ColumnLayout {
                             Layout.fillWidth: true
-                            visible: root.isThemePreview
+                            visible: root.isThemePreview && root.showThemeDetails
                             spacing: 2
 
                             RecipeRow {

@@ -85,9 +85,12 @@ def test_registry_discovery_metadata_is_complete_and_categories_resolve():
 
 def test_registry_categories_are_unique_nonempty_and_grouped():
     text = REGISTRY.read_text()
+    category_block = text.split("readonly property list<QtObject> categories:", 1)[1].split(
+        "readonly property list<QtObject> panes:", 1
+    )[0]
     categories = re.findall(
         r'property string id:\s*"([^"]+)";\s*readonly property string title:',
-        text,
+        category_block,
     )
     entries = _registry_entries()
     pane_categories = [entry["category"] for entry in entries]
@@ -104,6 +107,55 @@ def test_registry_categories_are_unique_nonempty_and_grouped():
             seen.add(category)
             previous = category
 
+
+def test_search_targets_resolve_to_registered_panes_and_appearance_sections():
+    text = REGISTRY.read_text()
+    target_block = text.split("readonly property list<QtObject> searchTargets:", 1)[1].split("]", 1)[0]
+    targets = re.findall(r"QtObject\s*\{([^{}]*)\}", target_block, re.DOTALL)
+    ids = set()
+    panes = {entry["id"] for entry in _registry_entries()}
+    appearance = (CC / "appearance" / "AppearancePane.qml").read_text()
+    for block in targets:
+        values = {}
+        for key in ("id", "title", "pane", "section", "keywords"):
+            match = re.search(rf'readonly property string {key}:\s*(?:qsTr\()?"([^"]*)"', block)
+            assert match, f"search target missing {key}: {block}"
+            values[key] = match.group(1)
+        assert values["id"] not in ids, f"duplicate search target id: {values['id']}"
+        ids.add(values["id"])
+        assert values["title"], f"search target {values['id']}: missing title"
+        assert values["keywords"], f"search target {values['id']}: missing keywords"
+        assert values["pane"] in panes, f"search target {values['id']}: unknown pane"
+        if values["pane"] == "appearance":
+            assert re.search(rf'"{re.escape(values["section"])}"', appearance), (
+                f"search target {values['id']}: unknown Appearance section"
+            )
+
+
+def test_settings_search_has_keyboard_entry_and_layered_escape():
+    search = (CC / "SettingsSearch.qml").read_text()
+    assert 'replace(/\\s+/g, " ").trim()' in search
+    factory = WINDOW_FACTORY.read_text()
+    assert 'sequences: ["Ctrl+,"]' in factory
+    assert "Qt.Key_Down" in search and "Qt.Key_Up" in search
+    assert "Qt.Key_Return" in search and "Qt.Key_Escape" in search
+    assert "searchQuery.length > 0" in factory
+
+
+def test_appearance_section_routes_use_the_sidebar_component_scope():
+    appearance = (CC / "appearance" / "AppearancePane.qml").read_text()
+    keys = re.search(r"readonly property var _sectionKeys:\s*\[([^]]*)\]", appearance)
+    assert keys, "Appearance section ids must remain explicit"
+    section_ids = re.findall(r'"([A-Za-z]+)"', keys.group(1))
+    sidebar_map = re.search(r"readonly property var sections:\s*\(\{(.*?)\}\)", appearance, re.DOTALL)
+    assert sidebar_map, "sidebar component must expose its scoped section items"
+    for section_id in section_ids:
+        assert re.search(rf"\b{re.escape(section_id)}:\s*{re.escape(section_id)}Section\b", sidebar_map.group(1)), (
+            f"sidebar section map is missing {section_id}"
+        )
+    assert "root.sectionItems[key]" in appearance
+    assert "root.sectionScroll = sidebarFlickable" in appearance
+    assert "flickable.contentY = Math.max" in appearance
 
 def test_registered_panes_take_shared_session():
     for entry in _registry_entries():

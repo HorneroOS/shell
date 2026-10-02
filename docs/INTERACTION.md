@@ -60,6 +60,16 @@ Escape — it must authenticate), and the companion menu below.
 | Welcome window | closes | n/a (real window) | X / Done buttons |
 | Area picker | cancels | — | complete a selection |
 
+## Settings search
+
+`Ctrl+,` opens Find a setting in the floating Settings window. Results come
+from `PaneRegistry.qml`, so page names, descriptions, aliases, and direct
+section destinations stay alongside the routes they open. Type a page or a
+common control such as wallpaper, VPN, reduce motion, fonts, or transparency;
+use Up/Down to move and Enter to open it. Escape clears a query first, then
+dismisses search, then closes Settings. `Super+,` remains available to the
+desktop because the host keymap already assigns it to workspace navigation.
+
 Hover is edge-triggered for the dashboard and utilities: entering
 the area opens, leaving closes. An Escape/shortcut dismissal sticks
 while the mouse sits still — only leaving and re-entering (fresh

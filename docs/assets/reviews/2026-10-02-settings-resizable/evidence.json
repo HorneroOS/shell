@@ -1,0 +1,28 @@
+{
+  "capturedAt": "2026-10-02",
+  "product": "Hornero Settings / Appearance",
+  "display": "1920x1080 @ 1x",
+  "before": {
+    "image": "before-fixed.png",
+    "shellRevision": "0812b80c0e89026de1f351c0bce18abe8877ca68",
+    "window": "1344x756",
+    "observation": "The window cannot be resized below its implicit 16:9 dimensions; the Theme preview uses the wide layout."
+  },
+  "after": [
+    {
+      "image": "after-default.png",
+      "shellRevision": "unmerged branch feat/settings-resizable-window",
+      "window": "1344x756",
+      "observation": "The initial desktop composition remains unchanged."
+    },
+    {
+      "image": "after-compact.png",
+      "shellRevision": "unmerged branch feat/settings-resizable-window",
+      "window": "1150x650",
+      "observation": "The floating window resizes; Appearance switches to its compact preview, keeps active theme details visible, and hides the secondary typography sample instead of clipping it."
+    }
+  ],
+  "windowManager": "Hyprland 0.56.2",
+  "windowRule": "A session-only matching float+center rule was added through hyprctl while validating, then removed with hyprctl reload. No persistent host config was edited.",
+  "method": "Real host display capture, cropped to the Settings window. The PR QML ran in a separate Quickshell process with a 512 MiB MemoryMax and temporary config/state paths. No theme or other appearance setting was applied."
+}

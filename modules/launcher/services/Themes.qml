@@ -29,51 +29,11 @@ Searcher {
     }
 
     function reload(): void {
-        loadProc.running = true;
-    }
-
-    // First-class built-in themes (P2 appearance tokens): always listed
-    // first, even when the registry is absent. Full palettes
-    // live in Colours; ThemePipeline applies these ids natively.
-    function _withBuiltIns(items: var): var {
-        function cataloguePack(id: string): var {
-            if (!Array.isArray(items))
-                return {};
-            return items.find(item => item && item.id === id) || {};
-        }
-        const darkPack = cataloguePack("hornero-dark");
-        const lightPack = cataloguePack("hornero-light");
-        const builtIns = [
-            Object.assign({}, darkPack, {
-                "id": "hornero-dark",
-                "name": "Hornero Dark",
-                "description": "Default dark theme with rose accent",
-                "darkMode": true,
-                "schemeType": "tonal-spot",
-                "tags": ["hornero", "dark", "builtin"]
-            }),
-            Object.assign({}, lightPack, {
-                "id": "hornero-light",
-                "name": "Hornero Light",
-                "description": "Default light theme with rose accent",
-                "darkMode": false,
-                "schemeType": "tonal-spot",
-                "tags": ["hornero", "light", "builtin"]
-            })
-        ];
-        const rest = Array.isArray(items) ? items.filter(item => item && item.id !== "hornero-dark" && item.id !== "hornero-light") : [];
-        return builtIns.concat(rest);
+        ThemeCatalogue.reload();
     }
 
     function themeById(id: string): var {
-        if (!id)
-            return null;
-        const items = themes.instances;
-        for (let i = 0; i < items.length; i++) {
-            if (items[i].id === id)
-                return items[i];
-        }
-        return null;
+        return ThemeCatalogue.themeById(id);
     }
 
     list: themes.instances
@@ -87,26 +47,16 @@ Searcher {
         Theme {}
     }
 
-    // Native theme-pack listing (--full prints the JSON manifest array the
-    // launcher parses; pack source resolves CLI-side, empty-model fallback
-    // when absent). See docs/GTK-PACK-OWNERSHIP.md.
-    Process {
-        id: loadProc
-
-        running: true
-        command: ["horneroctl", "appearance", "theme", "list", "--full"]
-
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try {
-                    const parsed = JSON.parse(text);
-                    themes.model = root._withBuiltIns(parsed);
-                } catch (e) {
-                    console.warn("Themes.qml: failed to parse theme list:", e);
-                    themes.model = root._withBuiltIns([]);
-                }
-            }
+    Connections {
+        target: ThemeCatalogue
+        function onThemesChanged(): void {
+            themes.model = ThemeCatalogue.themes;
         }
+    }
+
+    Component.onCompleted: {
+        if (ThemeCatalogue.loaded)
+            themes.model = ThemeCatalogue.themes;
     }
 
     component Theme: QtObject {

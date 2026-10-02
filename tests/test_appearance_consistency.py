@@ -131,6 +131,16 @@ def test_theme_pack_apply_uses_registry_and_propagates_errors():
     )
 
 
+def test_theme_pipeline_uses_installed_catalogue_metadata():
+    catalogue = (ROOT / "services" / "ThemeCatalogue.qml").read_text()
+    pipeline = (ROOT / "services" / "ThemePipeline.qml").read_text()
+    launcher = (ROOT / "modules" / "launcher" / "services" / "Themes.qml").read_text()
+    assert '\"list\", \"--full\"' in catalogue
+    assert "ThemeCatalogue.themeById(job.themeId)" in pipeline
+    assert "cfg.wallpaperPath" in pipeline
+    assert "ThemeCatalogue.reload()" in launcher
+
+
 def test_native_analyser_layer_present():
     layer = ROOT / "services" / "WallpaperAnalysis.qml"
     assert layer.exists(), "services/WallpaperAnalysis.qml native layer missing"

@@ -21,6 +21,7 @@ APPEARANCE_CONFIG = ROOT / "config" / "AppearanceConfig.qml"
 CONFIG_QML = ROOT / "config" / "Config.qml"
 FACTORY = ROOT / "config" / "shell.default.json"
 THEMES = ROOT / "modules" / "launcher" / "services" / "Themes.qml"
+THEME_CATALOGUE = ROOT / "services" / "ThemeCatalogue.qml"
 
 BUILT_INS = ("hornero-dark", "hornero-light")
 
@@ -191,15 +192,15 @@ def test_factory_theme_key_end_to_end():
 
 
 def test_registry_lists_builtins_first():
-    text = THEMES.read_text()
+    text = THEME_CATALOGUE.read_text()
     assert "function _withBuiltIns(items: var)" in text
     dark_at = text.index('"hornero-dark"')
     light_at = text.index('"hornero-light"')
     assert dark_at < light_at, "hornero-dark must lead the built-in pair"
-    assert '"darkMode": true' in text and '"darkMode": false' in text
-    assert "themes.model = root._withBuiltIns(parsed)" in text, (
+    assert "darkMode: true" in text and "darkMode: false" in text
+    assert "root.themes = root._withBuiltIns(JSON.parse(text))" in text, (
         "CLI results must merge over built-ins, never replace them")
-    assert "themes.model = root._withBuiltIns([])" in text, (
+    assert "root.themes = root._withBuiltIns([])" in text, (
         "built-ins must survive an empty/failed registry")
 
 

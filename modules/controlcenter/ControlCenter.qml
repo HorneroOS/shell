@@ -18,6 +18,7 @@ Item {
     property alias floating: session.floating
     property alias active: session.active
     property alias navExpanded: session.navExpanded
+    property alias searchOpen: session.searchOpen
 
     readonly property Session session: Session {
         id: session
@@ -92,6 +93,10 @@ Item {
             bottomRightRadius: root.rounding
             session: root.session
         }
+    }
+
+    SettingsSearch {
+        session: root.session
     }
 
     readonly property bool initialOpeningComplete: panes.initialOpeningComplete

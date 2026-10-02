@@ -17,6 +17,10 @@ QtObject {
     property bool navExpanded: false
     // Hover-prefetch target for NavRail → Panes loaders.
     property string warmLabel: ""
+    property bool searchOpen: false
+    property string searchQuery: ""
+    property int searchSelection: 0
+    property string requestedSection: ""
 
     readonly property BluetoothState bt: BluetoothState {}
     readonly property NetworkState network: NetworkState {}
@@ -36,6 +40,17 @@ QtObject {
 
     function clearPrefetch(): void {
         warmLabel = "";
+    }
+
+    function navigateTo(pane: string, section: string): void {
+        if (!PaneRegistry.getById(pane))
+            return;
+        requestedSection = "";
+        requestedSection = section;
+        active = pane;
+        searchOpen = false;
+        searchQuery = "";
+        searchSelection = 0;
     }
 
     onActiveChanged: {

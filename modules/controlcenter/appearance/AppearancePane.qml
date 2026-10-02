@@ -85,6 +85,48 @@ Item {
         Config.save();
     }
 
+    function revealSection(key: string): void {
+        const sections = {
+            themes: themesSection,
+            themeMode: themeModeSection,
+            colorVariant: colorVariantSection,
+            colorScheme: colorSchemeSection,
+            gtkTheme: gtkThemeSection,
+            gtkColorScheme: gtkColorSchemeSection,
+            iconTheme: iconThemeSection,
+            fonts: fontsSection,
+            animations: animationsSection,
+            scales: scalesSection,
+            transparency: transparencySection,
+            border: borderSection,
+            background: backgroundSection
+        };
+        const section = sections[key];
+        if (!section)
+            return;
+        section.expanded = true;
+        root.persistSection(key, true);
+        Qt.callLater(() => {
+            const flickable = sidebarFlickable;
+            if (flickable)
+                flickable.contentY = Math.max(0, section.y - Appearance.padding.normal);
+            if (root.session.requestedSection === key)
+                root.session.requestedSection = "";
+        });
+    }
+
+    Connections {
+        target: root.session
+        function onRequestedSectionChanged(): void {
+            if (root.session.active === "appearance" && root.session.requestedSection)
+                root.revealSection(root.session.requestedSection);
+        }
+        function onActiveChanged(): void {
+            if (root.session.active === "appearance" && root.session.requestedSection)
+                root.revealSection(root.session.requestedSection);
+        }
+    }
+
     // Single root completion handler: enabling section write-back
     // and resetting staged selections. (Two handlers here is a
     // compile error — "Property value set multiple times" — which
@@ -93,6 +135,8 @@ Item {
         root._sectionsReady = true;
         resetPendingSelections();
         syncCurrentThemePreview();
+        if (root.session.active === "appearance" && root.session.requestedSection)
+            Qt.callLater(() => root.revealSection(root.session.requestedSection));
     }
 
     function syncCurrentThemePreview(): void {

@@ -85,9 +85,12 @@ def test_registry_discovery_metadata_is_complete_and_categories_resolve():
 
 def test_registry_categories_are_unique_nonempty_and_grouped():
     text = REGISTRY.read_text()
+    category_block = text.split("readonly property list<QtObject> categories:", 1)[1].split(
+        "readonly property list<QtObject> panes:", 1
+    )[0]
     categories = re.findall(
         r'property string id:\s*"([^"]+)";\s*readonly property string title:',
-        text,
+        category_block,
     )
     entries = _registry_entries()
     pane_categories = [entry["category"] for entry in entries]
@@ -104,6 +107,38 @@ def test_registry_categories_are_unique_nonempty_and_grouped():
             seen.add(category)
             previous = category
 
+
+def test_search_targets_resolve_to_registered_panes_and_appearance_sections():
+    text = REGISTRY.read_text()
+    target_block = text.split("readonly property list<QtObject> searchTargets:", 1)[1].split("]", 1)[0]
+    targets = re.findall(r"QtObject\s*\{([^{}]*)\}", target_block, re.DOTALL)
+    ids = set()
+    panes = {entry["id"] for entry in _registry_entries()}
+    appearance = (CC / "appearance" / "AppearancePane.qml").read_text()
+    for block in targets:
+        values = {}
+        for key in ("id", "title", "pane", "section", "keywords"):
+            match = re.search(rf'readonly property string {key}:\s*(?:qsTr\()?"([^"]*)"', block)
+            assert match, f"search target missing {key}: {block}"
+            values[key] = match.group(1)
+        assert values["id"] not in ids, f"duplicate search target id: {values['id']}"
+        ids.add(values["id"])
+        assert values["title"], f"search target {values['id']}: missing title"
+        assert values["keywords"], f"search target {values['id']}: missing keywords"
+        assert values["pane"] in panes, f"search target {values['id']}: unknown pane"
+        if values["pane"] == "appearance":
+            assert re.search(rf'"{re.escape(values["section"])}"', appearance), (
+                f"search target {values['id']}: unknown Appearance section"
+            )
+
+
+def test_settings_search_has_keyboard_entry_and_layered_escape():
+    search = (CC / "SettingsSearch.qml").read_text()
+    factory = WINDOW_FACTORY.read_text()
+    assert 'sequences: ["Ctrl+,"]' in factory
+    assert "Qt.Key_Down" in search and "Qt.Key_Up" in search
+    assert "Qt.Key_Return" in search and "Qt.Key_Escape" in search
+    assert "searchQuery.length > 0" in factory
 
 def test_registered_panes_take_shared_session():
     for entry in _registry_entries():

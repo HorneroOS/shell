@@ -105,7 +105,25 @@ Singleton {
             Shortcut {
                 sequences: ["Escape"]
                 context: Qt.WindowShortcut
-                onActivated: win.destroy()
+                onActivated: {
+                    if (cc.searchOpen) {
+                        if (cc.session.searchQuery.length > 0)
+                            cc.session.searchQuery = "";
+                        else
+                            cc.searchOpen = false;
+                    } else {
+                        win.destroy();
+                    }
+                }
+            }
+
+            Shortcut {
+                sequences: ["Ctrl+,"]
+                context: Qt.WindowShortcut
+                onActivated: {
+                    cc.searchOpen = true;
+                    cc.session.searchSelection = 0;
+                }
             }
 
             implicitWidth: cc.implicitWidth

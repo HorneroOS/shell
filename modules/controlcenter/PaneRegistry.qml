@@ -168,6 +168,24 @@ QtObject {
         }
     ]
 
+    // Searchable controls that deserve a direct destination. Keep these
+    // labels and aliases here beside the pane routes; search never scrapes
+    // QML or exposes implementation-only control names.
+    readonly property list<QtObject> searchTargets: [
+        QtObject { readonly property string id: "themes"; readonly property string title: qsTr("Themes"); readonly property string pane: "appearance"; readonly property string section: "themes"; readonly property string icon: "palette"; readonly property string keywords: "theme look style hornero pampa catppuccin" },
+        QtObject { readonly property string id: "dark-mode"; readonly property string title: qsTr("Light and dark mode"); readonly property string pane: "appearance"; readonly property string section: "themeMode"; readonly property string icon: "dark_mode"; readonly property string keywords: "dark light mode brightness" },
+        QtObject { readonly property string id: "colors"; readonly property string title: qsTr("Wallpaper colors"); readonly property string pane: "appearance"; readonly property string section: "colorScheme"; readonly property string icon: "colorize"; readonly property string keywords: "dynamic accent palette color scheme wallpaper" },
+        QtObject { readonly property string id: "generation"; readonly property string title: qsTr("Color generation"); readonly property string pane: "appearance"; readonly property string section: "colorVariant"; readonly property string icon: "auto_awesome"; readonly property string keywords: "material algorithm vibrant expressive fidelity" },
+        QtObject { readonly property string id: "gtk"; readonly property string title: qsTr("GTK apps"); readonly property string pane: "appearance"; readonly property string section: "gtkTheme"; readonly property string icon: "web_asset"; readonly property string keywords: "gtk theme applications manual override" },
+        QtObject { readonly property string id: "icons"; readonly property string title: qsTr("Icon theme"); readonly property string pane: "appearance"; readonly property string section: "iconTheme"; readonly property string icon: "insert_emoticon"; readonly property string keywords: "icons papirus numix" },
+        QtObject { readonly property string id: "fonts"; readonly property string title: qsTr("Fonts"); readonly property string pane: "appearance"; readonly property string section: "fonts"; readonly property string icon: "text_fields"; readonly property string keywords: "font typography typeface" },
+        QtObject { readonly property string id: "motion"; readonly property string title: qsTr("Motion and animation"); readonly property string pane: "appearance"; readonly property string section: "animations"; readonly property string icon: "motion_photos_on"; readonly property string keywords: "reduce motion disable animations accessibility" },
+        QtObject { readonly property string id: "scale"; readonly property string title: qsTr("Interface size"); readonly property string pane: "appearance"; readonly property string section: "scales"; readonly property string icon: "zoom_in"; readonly property string keywords: "scale sizing density text size" },
+        QtObject { readonly property string id: "transparency"; readonly property string title: qsTr("Transparency"); readonly property string pane: "appearance"; readonly property string section: "transparency"; readonly property string icon: "opacity"; readonly property string keywords: "blur opacity glass launcher notifications" },
+        QtObject { readonly property string id: "wallpaper"; readonly property string title: qsTr("Wallpaper and background"); readonly property string pane: "appearance"; readonly property string section: "background"; readonly property string icon: "wallpaper"; readonly property string keywords: "desktop image background clock" },
+        QtObject { readonly property string id: "notification-history"; readonly property string title: qsTr("Notification history"); readonly property string pane: "notifications"; readonly property string section: ""; readonly property string icon: "history"; readonly property string keywords: "alerts previous notifications" }
+    ]
+
     readonly property int count: panes.length
 
     readonly property var labels: {

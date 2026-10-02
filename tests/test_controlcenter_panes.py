@@ -8,6 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 CC = ROOT / "modules" / "controlcenter"
 REGISTRY = CC / "PaneRegistry.qml"
+WINDOW_FACTORY = CC / "WindowFactory.qml"
 
 # Every dots-* wrapper the shell ever invoked, all superseded by horneroctl
 # verbs (see docs/MIGRATION.md). None may appear in pane QML.
@@ -97,3 +98,12 @@ def test_no_dead_wrappers_in_panes():
             if dead in text:
                 hits.append(f"{path.relative_to(ROOT)}: {dead}")
     assert not hits, f"retired wrappers invoked by panes:\n" + "\n".join(hits)
+
+
+def test_dynamic_settings_window_is_visible_on_creation():
+    text = WINDOW_FACTORY.read_text()
+    window = text[text.index("FloatingWindow {"):]
+    assert "visible: true" in window, (
+        "QWindow starts hidden by default; without visible: true the close "
+        "handler immediately destroys Settings after creation"
+    )

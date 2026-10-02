@@ -74,6 +74,12 @@ Singleton {
         FloatingWindow {
             id: win
 
+            // QWindow defaults to hidden. `onVisibleChanged` below treats
+            // a hidden window as a user close, so dynamic creation must
+            // explicitly show the new Settings surface before that handler
+            // can destroy it.
+            visible: true
+
             property alias active: cc.active
             property alias navExpanded: cc.navExpanded
             // Deep-link target validated by the caller against

@@ -124,3 +124,11 @@ def test_welcome_desktop_entry_packaged():
     cmake = (ROOT / "CMakeLists.txt").read_text()
     assert "assets/hornero-welcome.desktop" in cmake
     assert "share/applications" in cmake
+
+
+def test_system_preset_catalogue_packaged():
+    """horneroctl reads presets from XDG_DATA_DIRS (HorneroOS/hornero#96)."""
+    cmake = (ROOT / "CMakeLists.txt").read_text()
+    assert re.search(r'install\(DIRECTORY presets/ DESTINATION "share/hornero/shell-presets"', cmake)
+    assert "/usr/share/hornero/shell-presets" in README.read_text()
+    assert sorted((ROOT / "presets").glob("*.json")), "no presets to install"

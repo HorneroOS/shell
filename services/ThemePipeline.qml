@@ -197,6 +197,7 @@ Singleton {
             themeLoader.themeId = job.themeId;
             themeLoader.wallpaperOverride = job.wallpaper || "";
             themeLoader.fallbackRunning = false;
+            themeLoader.systemRunning = false;
             themeLoader.running = true;
         } else if (job.kind === "wallpaper") {
             _pendingWallpaper = job.wallpaper;
@@ -323,6 +324,7 @@ Singleton {
         property string wallpaperOverride: ""
         property bool running: false
         property bool fallbackRunning: false
+        property bool systemRunning: false
         property string resolvedWallpaper: ""
         property var pendingConfig: ({})
     }
@@ -404,9 +406,41 @@ Singleton {
             root._handleThemeText(rawText);
         }
 
-        onLoadFailed: {
+        onLoadFailed: err => {
             themeLoader.fallbackRunning = false;
-            root._finishJob(false, `theme.json not found for ${themeLoader.themeId}`);
+            if (err === FileViewError.FileNotFound) {
+                themeLoader.systemRunning = true;
+            } else {
+                root._finishJob(false, `failed to read theme.json for ${themeLoader.themeId}`);
+            }
+        }
+    }
+
+    // Read-only package catalogue is the final lookup after explicit user
+    // canonical content and its legacy fallback. This preserves deliberate
+    // user overrides without ever writing into /usr/share.
+    FileView {
+        id: themeFileViewSystem
+        path: themeLoader.systemRunning ? `/usr/share/hornero/themes/${themeLoader.themeId}/theme.json` : ""
+
+        onLoaded: {
+            let rawText = "";
+            try {
+                rawText = text();
+            } catch (e) {
+                console.warn("ThemePipeline: failed to read system theme.json for", themeLoader.themeId, e);
+                themeLoader.systemRunning = false;
+                root._finishJob(false, `failed to read theme.json for ${themeLoader.themeId}`);
+                return;
+            }
+            themeLoader.systemRunning = false;
+            root._handleThemeText(rawText);
+        }
+
+        onLoadFailed: err => {
+            themeLoader.systemRunning = false;
+            const detail = err === FileViewError.FileNotFound ? "not found" : "could not be read";
+            root._finishJob(false, `system theme.json ${detail} for ${themeLoader.themeId}`);
         }
     }
 

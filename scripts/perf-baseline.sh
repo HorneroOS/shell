@@ -28,7 +28,16 @@ while [ $# -gt 0 ]; do
     esac
 done
 
-PID="$(pgrep -x quickshell | head -1)"
+# The shell runs as `quickshell` (distro binary) or `qs` (wrapper entry
+# point, e.g. the QA guest): prefer an exact quickshell match, else the
+# oldest qs — the daemon, not a transient `qs ipc` client.
+shell_pid() {
+    PID="$(pgrep -x quickshell | head -1)"
+    if [ -z "${PID}" ]; then PID="$(pgrep -x -o qs)"; fi
+    printf '%s' "${PID}"
+}
+
+PID="$(shell_pid)"
 if [ -z "${PID}" ]; then
     echo "no running quickshell instance" >&2
     exit 1
@@ -46,10 +55,11 @@ if [ "${RESTART}" -eq 1 ]; then
     done
     T1=$(date +%s%3N)
     START_READY_MS=$((T1 - T0))
-    PID="$(pgrep -x quickshell | head -1)"
+    PID="$(shell_pid)"
 fi
 
-QS_VERSION="$(quickshell --version 2>/dev/null | head -1)"
+QS_VERSION="$(quickshell --version 2>/dev/null || qs --version 2>/dev/null || true)"
+QS_VERSION="$(printf '%s' "${QS_VERSION}" | head -1)"
 CORES="$(nproc)"
 MEM_KB="$(awk '/^MemTotal:/ {print $2}' /proc/meminfo)"
 MONITORS="$(hyprctl monitors 2>/dev/null | grep -c '^Monitor' || true)"

@@ -31,6 +31,18 @@ def test_harness_probes_named_metrics():
         assert probe in text, f"harness missing probe {probe}"
 
 
+def test_harness_finds_shell_by_either_process_name():
+    # The shell runs as `quickshell` (distro binary) or `qs` (wrapper entry
+    # point, e.g. the QA guest): both PID resolutions must share one lookup
+    # that covers both, preferring the daemon over transient qs ipc clients.
+    text = SCRIPT.read_text()
+    assert "shell_pid() {" in text
+    assert "pgrep -x quickshell" in text
+    assert "pgrep -x -o qs" in text
+    assert text.count('PID="$(shell_pid)"') == 2, "startup + post-restart must share shell_pid"
+    assert "qs --version" in text, "version probe needs the qs fallback too"
+
+
 def test_methodology_documented():
     assert DOC.exists(), "missing docs/PERF_BASELINE.md"
     text = DOC.read_text()

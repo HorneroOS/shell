@@ -20,7 +20,7 @@ CollapsibleSection {
     required property var session
 
     title: qsTr("Themes")
-    description: qsTr("Apply-once theme packs — wallpaper, colors, GTK, and icons")
+    description: qsTr("Choose a complete look for your desktop. Click a theme to apply its colors, wallpaper, and app styling.")
     showBackground: true
 
     property string selectedThemeId: ""

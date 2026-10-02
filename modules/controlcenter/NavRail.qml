@@ -40,15 +40,12 @@ Item {
             if (totalH <= viewH)
                 return 0;
 
-            // Estimate position of the active item.
-            // The layout has: topMargin + optional floatButton + spacing + items.
-            // Each item takes a consistent slice — we scroll so the active one
-            // lands roughly in the center of the visible area.
-            const floatButtonSpace = root.session.floating ? 0 : Appearance.spacing.large + Appearance.padding.large * 2;
-            const itemArea = totalH - Appearance.padding.large - floatButtonSpace;
-            const perItem = PaneRegistry.count > 0 ? itemArea / PaneRegistry.count : 60;
-            const activeY = Appearance.padding.large + floatButtonSpace + root.session.activeIndex * perItem;
-            const target = activeY - viewH / 2 + perItem / 2;
+            const activeDelegate = paneRepeater.itemAt(root.session.activeIndex);
+            if (!activeDelegate || !activeDelegate.navItem)
+                return 0;
+            const activeItem = activeDelegate.navItem;
+            const activeY = activeItem.mapToItem(navScroll.contentItem, 0, 0).y;
+            const target = activeY - viewH / 2 + activeItem.height / 2;
             return Math.max(0, Math.min(target, totalH - viewH));
         }
 
@@ -158,22 +155,39 @@ Item {
             }
 
             Repeater {
+                id: paneRepeater
                 model: PaneRegistry.count
 
-                NavItem {
+                delegate: ColumnLayout {
                     required property int index
-                    Layout.topMargin: index === 0 ? Appearance.spacing.large * 2 : 0
-                    icon: PaneRegistry.getByIndex(index).icon
-                    label: PaneRegistry.getByIndex(index).label
-                    badgeVisible: {
-                        const pane = PaneRegistry.getByIndex(index);
-                        if (!pane)
-                            return false;
-                        if (pane.id === "network")
-                            return !Network.active && !Network.activeEthernet;
-                        if (pane.id === "notifications")
-                            return Notifs.notClosed.length > 0;
-                        return false;
+                    readonly property var pane: PaneRegistry.getByIndex(index)
+                    readonly property bool firstInCategory: index === 0 || PaneRegistry.getByIndex(index - 1).category !== pane.category
+                    readonly property Item navItem: paneNavItem
+
+                    Layout.fillWidth: true
+                    spacing: Appearance.spacing.small
+
+                    StyledText {
+                        Layout.leftMargin: Appearance.padding.normal
+                        Layout.topMargin: root.session.navExpanded ? (firstInCategory && index > 0 ? Appearance.spacing.large : Appearance.spacing.small) : 0
+                        Layout.preferredHeight: root.session.navExpanded ? implicitHeight : 0
+                        Layout.fillWidth: true
+                        visible: root.session.navExpanded
+                        opacity: root.session.navExpanded ? 1 : 0
+                        text: firstInCategory ? PaneRegistry.categoryTitle(pane.category) : ""
+                        color: Colours.palette.m3outline
+                        font.pointSize: Appearance.font.size.small
+                        font.capitalization: Font.Capitalize
+                    }
+
+                    NavItem {
+                        id: paneNavItem
+                        Layout.fillWidth: true
+                        Layout.topMargin: !root.session.navExpanded && firstInCategory && index > 0 ? Appearance.spacing.normal : 0
+                        icon: pane.icon
+                        label: pane.label
+                        title: pane.title
+                        badgeVisible: pane.id === "network" ? !Network.active && !Network.activeEthernet : pane.id === "notifications" ? Notifs.notClosed.length > 0 : false
                     }
                 }
             }
@@ -190,6 +204,7 @@ Item {
 
         required property string icon
         required property string label
+        required property string title
         property bool badgeVisible: false
         readonly property bool active: root.session.active === label
 
@@ -292,7 +307,7 @@ Item {
                 anchors.leftMargin: Appearance.spacing.normal
 
                 opacity: 0
-                text: item.label
+                text: item.title
                 color: item.active ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
                 font.capitalization: Font.Capitalize
             }
@@ -304,7 +319,7 @@ Item {
                 anchors.top: icon.bottom
                 anchors.topMargin: Appearance.spacing.small / 2
 
-                text: item.label
+                text: item.title
                 font.pointSize: Appearance.font.size.small
                 font.capitalization: Font.Capitalize
             }

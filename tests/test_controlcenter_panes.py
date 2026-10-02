@@ -43,36 +43,74 @@ DEAD_WRAPPERS = [
 
 def _registry_entries():
     text = REGISTRY.read_text()
-    return re.findall(
-        r'readonly property string id:\s*"([^"]+)"\s*\n'
-        r'\s*readonly property string label:\s*"([^"]+)"\s*\n'
-        r'\s*readonly property string icon:\s*"([^"]+)"\s*\n'
-        r'\s*readonly property string component:\s*"([^"]+)"',
-        text,
-    )
+    entries = []
+    for block in re.findall(r"QtObject\s*\{([^{}]*)\}", text, re.DOTALL):
+        if 'readonly property string component:' not in block:
+            continue
+        values = {}
+        for key in ("id", "label", "icon", "component", "title", "category", "description"):
+            match = re.search(rf'readonly property string {key}:\s*(?:qsTr\()?"([^"]+)"\)?', block)
+            if match:
+                values[key] = match.group(1)
+        values["keywords"] = re.search(r"readonly property list<string> keywords:\s*\[([^]]*)\]", block, re.DOTALL)
+        entries.append(values)
+    return entries
 
 
 def test_registry_components_exist():
     entries = _registry_entries()
     assert entries, "no panes parsed from PaneRegistry.qml"
-    for pid, _label, _icon, component in entries:
-        assert (CC / component).is_file(), f"pane {pid}: missing {component}"
+    for entry in entries:
+        assert (CC / entry["component"]).is_file(), f"pane {entry['id']}: missing {entry['component']}"
 
 
 def test_registry_ids_unique_and_labels_sane():
     entries = _registry_entries()
-    ids = [e[0] for e in entries]
+    ids = [e["id"] for e in entries]
     assert len(ids) == len(set(ids)), f"duplicate pane ids: {ids}"
-    for _pid, label, _icon, _component in entries:
+    for entry in entries:
+        label = entry["label"]
         assert re.fullmatch(r"[a-z]+", label), f"bad pane label: {label}"
 
 
+def test_registry_discovery_metadata_is_complete_and_categories_resolve():
+    text = REGISTRY.read_text()
+    categories = set(re.findall(r'property string id:\s*"([^"]+)";\s*readonly property string title:', text))
+    for entry in _registry_entries():
+        assert entry.get("title"), f"pane {entry['id']}: missing title"
+        assert entry.get("description"), f"pane {entry['id']}: missing description"
+        assert entry.get("keywords") and entry["keywords"].group(1).strip(), f"pane {entry['id']}: missing search keywords"
+        assert entry.get("category") in categories, f"pane {entry['id']}: unknown category {entry.get('category')}"
+
+
+def test_registry_categories_are_unique_nonempty_and_grouped():
+    text = REGISTRY.read_text()
+    categories = re.findall(
+        r'property string id:\s*"([^"]+)";\s*readonly property string title:',
+        text,
+    )
+    entries = _registry_entries()
+    pane_categories = [entry["category"] for entry in entries]
+
+    assert len(categories) == len(set(categories)), f"duplicate categories: {categories}"
+    assert set(categories) == set(pane_categories), "every category must have panes and every pane must have a category"
+    assert all(pane_categories.count(category) > 0 for category in categories)
+
+    seen = set()
+    previous = None
+    for category in pane_categories:
+        if category != previous:
+            assert category not in seen, f"category {category} is split across navigation groups"
+            seen.add(category)
+            previous = category
+
+
 def test_registered_panes_take_shared_session():
-    for pid, _label, _icon, component in _registry_entries():
-        text = (CC / component).read_text()
+    for entry in _registry_entries():
+        text = (CC / entry["component"]).read_text()
         assert ("required property Session session" in text
                 or "required property CC.Session session" in text), (
-            f"pane {pid}: must declare `required property [CC.]Session session`"
+            f"pane {entry['id']}: must declare `required property [CC.]Session session`"
         )
 
 
@@ -81,11 +119,11 @@ def test_session_type_never_shadowed():
     # singleton) into scope. A pane that imports it must qualify the
     # session property (`CC.Session`); unqualified, the loader's session
     # value fails assignment and the pane renders blank (system pane).
-    for _pid, _label, _icon, component in _registry_entries():
-        text = (CC / component).read_text()
+    for entry in _registry_entries():
+        text = (CC / entry["component"]).read_text()
         if "import qs.modules.welcome" in text:
             assert "required property CC.Session session" in text, (
-                f"pane {_pid}: imports qs.modules.welcome, so the session "
+                f"pane {entry['id']}: imports qs.modules.welcome, so the session "
                 "property must be qualified as `CC.Session`"
             )
 

@@ -87,3 +87,6 @@ def test_drawers_ipc_tolerates_no_active_screen():
     for end in calls:
         following = block[end : end + 200]
         assert re.search(r"if \(!visibilities\)|visibilities &&", following), following
+    state_fn = block[block.index("function state(") :]
+    state_fn = state_fn[: state_fn.index("}", state_fn.index("{")) + 1]
+    assert 'drawer !== ""' in state_fn, "state() must reject empty drawer names"

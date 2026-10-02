@@ -135,8 +135,9 @@ Scope {
         }
 
         // Read-only: "true"/"false" for a known drawer, "" otherwise.
+        // An empty list() ("") must not make "" a member: reject empty names.
         function state(drawer: string): string {
-            if (list().split("\n").includes(drawer)) {
+            if (drawer !== "" && list().split("\n").includes(drawer)) {
                 const visibilities = Visibilities.getForActive();
                 return visibilities && visibilities[drawer] ? "true" : "false";
             }

@@ -92,6 +92,35 @@ Item {
     Component.onCompleted: {
         root._sectionsReady = true;
         resetPendingSelections();
+        syncCurrentThemePreview();
+    }
+
+    function syncCurrentThemePreview(): void {
+        if (!ThemeCatalogue.loaded || !Colours.themeId)
+            return;
+
+        const theme = Themes.themeById(Colours.themeId);
+        if (!theme)
+            return;
+        if (previewSource === "theme" && previewThemeId === theme.id)
+            return;
+
+        startThemePreview(theme);
+        previewSubtitle = qsTr("Current look");
+    }
+
+    Connections {
+        target: ThemeCatalogue
+        function onThemesChanged(): void {
+            root.syncCurrentThemePreview();
+        }
+    }
+
+    Connections {
+        target: Colours
+        function onThemeIdChanged(): void {
+            root.syncCurrentThemePreview();
+        }
     }
 
     property bool desktopClockEnabled: Config.background.desktopClock.enabled ?? false
@@ -759,7 +788,7 @@ Item {
 
                 AppearancePreviewPane {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: root.previewSource === "theme" ? 460 : 340
+                    Layout.preferredHeight: root.previewSource === "theme" ? 400 : 340
                     Layout.bottomMargin: Appearance.spacing.normal
 
                     active: root.previewActive

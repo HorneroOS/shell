@@ -40,9 +40,10 @@ Item {
             if (totalH <= viewH)
                 return 0;
 
-            const activeItem = paneRepeater.itemAt(root.session.activeIndex);
-            if (!activeItem)
+            const activeDelegate = paneRepeater.itemAt(root.session.activeIndex);
+            if (!activeDelegate || !activeDelegate.navItem)
                 return 0;
+            const activeItem = activeDelegate.navItem;
             const activeY = activeItem.mapToItem(navScroll.contentItem, 0, 0).y;
             const target = activeY - viewH / 2 + activeItem.height / 2;
             return Math.max(0, Math.min(target, totalH - viewH));
@@ -161,6 +162,7 @@ Item {
                     required property int index
                     readonly property var pane: PaneRegistry.getByIndex(index)
                     readonly property bool firstInCategory: index === 0 || PaneRegistry.getByIndex(index - 1).category !== pane.category
+                    readonly property Item navItem: paneNavItem
 
                     Layout.fillWidth: true
                     spacing: Appearance.spacing.small
@@ -179,6 +181,7 @@ Item {
                     }
 
                     NavItem {
+                        id: paneNavItem
                         Layout.fillWidth: true
                         Layout.topMargin: !root.session.navExpanded && firstInCategory && index > 0 ? Appearance.spacing.normal : 0
                         icon: pane.icon

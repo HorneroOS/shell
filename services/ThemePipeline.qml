@@ -9,11 +9,9 @@ import QtQuick
 Singleton {
     id: root
 
-    // Runtime path contract rows 1/11: canonical hornero/* first, legacy
-    // dots/* fallback (reads only). Writes (schemeJson output, wallpaper
-    // pointer) always target the canonical location.
-    readonly property string themesDir: `${Paths.data}/themes`
-    readonly property string themesDirFallback: `${Paths.dataFallback}/themes`
+    // horneroctl resolves packs through canonical user, legacy user, then
+    // read-only system catalogues. Shell writes only canonical state; legacy
+    // wallpaper roots remain read-only compatibility fallbacks.
     readonly property string wallpapersDir: `${Paths.data}/wallpapers`
     readonly property string wallpapersDirFallback: `${Paths.dataFallback}/wallpapers`
     readonly property string picturesWallpapers: `${Paths.pictures}/Wallpapers`
@@ -24,11 +22,17 @@ Singleton {
     // GTK application is native-first via GtkSettings (gsettings) with the
     // horneroctl gtk fallback there. See docs/NATIVE-APPEARANCE.md.
     readonly property var m3Base: ["horneroctl", "appearance", "colors", "m3", "--yes", "--"]
-    // Contract row 4: canonical scheme.json (written by m3Proc below).
+    // Canonical scheme.json (written by m3Proc below).
     readonly property string schemeJson: `${Paths.cache}/smart-colors/scheme.json`
-    readonly property string schemeJsonFallback: `${Paths.cacheFallback}/smart-colors/scheme.json`
 
-    readonly property bool busy: _busy || _queue.length > 0
+    // User-facing apply requests go through horneroctl so the stable product
+    // boundary owns verification and persisted appearance state. The CLI
+    // routes back through the IPC-only enqueue path below.
+    readonly property bool busy: _cliApplying || _busy || _queue.length > 0
+    property bool _cliApplying: false
+    property string _cliThemeId: ""
+    property string _cliWallpaper: ""
+    property var _cliNextRequest: null
     property bool _busy: false
     property var _queue: []
     property string _jobKind: ""
@@ -113,6 +117,20 @@ Singleton {
     function applyTheme(id: string, wallpaperPath: string): void {
         if (!id)
             return;
+        if (_cliApplying) {
+            _cliNextRequest = { id, wallpaperPath: wallpaperPath || "" };
+            return;
+        }
+        _cliThemeId = id;
+        _cliWallpaper = wallpaperPath || "";
+        _lastError = "";
+        _cliApplying = true;
+        applyThemeCliProc.running = true;
+    }
+
+    function applyThemeFromIpc(id: string, wallpaperPath: string): void {
+        if (!id)
+            return;
         _enqueue({
             kind: "theme",
             themeId: id,
@@ -175,6 +193,8 @@ Singleton {
         if (_busy || _queue.length === 0)
             return;
         const job = _queue[0];
+        if (job.kind === "theme" && !Colours.isBuiltInTheme(job.themeId || "") && !ThemeCatalogue.loaded)
+            return;
         _queue = _queue.slice(1);
         _busy = true;
         _lastError = "";
@@ -194,11 +214,13 @@ Singleton {
                 root._applyBuiltInTheme(job.themeId, job.wallpaper || "");
                 return;
             }
-            themeLoader.themeId = job.themeId;
-            themeLoader.wallpaperOverride = job.wallpaper || "";
-            themeLoader.fallbackRunning = false;
-            themeLoader.systemRunning = false;
-            themeLoader.running = true;
+            themeLoader.themeId = job.themeId || "";
+            const cfg = ThemeCatalogue.themeById(job.themeId);
+            if (!cfg) {
+                root._finishJob(false, `theme ${job.themeId} is unavailable or invalid`);
+                return;
+            }
+            root._handleThemeConfig(cfg, job.wallpaper || "");
         } else if (job.kind === "wallpaper") {
             _pendingWallpaper = job.wallpaper;
             _pendingSchemeType = Colours.flavour || "tonal-spot";
@@ -247,8 +269,6 @@ Singleton {
             _pendingWallpaper = wallpaper;
             writeWallpaperPointer.running = true;
         }
-        // Built-ins previously changed only live QML state. Persist their
-        // identity/mode first so CLI status and the next Shell start agree.
         Colours.persistBuiltInTheme(id, _pendingGtkColorScheme);
     }
 
@@ -269,15 +289,15 @@ Singleton {
         }
         hyprlockProc.running = true;
         hyprReloadProc.running = true;
-        if (_pendingThemeName) {
-            notifyProc.themeName = _pendingThemeName;
-            notifyProc.running = true;
-        }
         _awaitingGtk = true;
         GtkSettings.applyFull("", "", _pendingThemeId, _pendingGtkColorScheme, _pendingDarkMode);
     }
 
     function _finishJob(ok: bool, err: string): void {
+        if (ok && _jobKind === "theme" && _pendingThemeName) {
+            notifyProc.themeName = _pendingThemeName;
+            notifyProc.running = true;
+        }
         if (!ok) {
             _lastError = err || "appearance apply failed";
             console.warn("ThemePipeline:", _lastError);
@@ -301,6 +321,32 @@ Singleton {
 
     // Native scheme persistence: M3 regenerate from the wallpaper pointer.
     Process {
+        id: applyThemeCliProc
+        command: {
+            const args = ["horneroctl", "appearance", "theme", "apply", root._cliThemeId];
+            if (root._cliWallpaper)
+                args.push("--wallpaper", root._cliWallpaper);
+            args.push("--yes");
+            return args;
+        }
+        stderr: StdioCollector { id: applyThemeCliStderr }
+        stdout: StdioCollector { id: applyThemeCliStdout }
+        onExited: (exitCode, exitStatus) => {
+            root._cliApplying = false;
+            if (exitCode !== 0) {
+                root._lastError = applyThemeCliStderr.text.trim() || applyThemeCliStdout.text.trim() || "theme apply failed (exit " + exitCode + ")";
+                console.warn("ThemePipeline:", root._lastError);
+                Toaster.toast("Theme could not be applied", root._lastError, "error");
+            }
+            if (root._cliNextRequest) {
+                const next = root._cliNextRequest;
+                root._cliNextRequest = null;
+                Qt.callLater(() => root.applyTheme(next.id, next.wallpaperPath));
+            }
+        }
+    }
+
+    Process {
         id: ensureSchemeProc
         command: ["horneroctl", "scheme", "regenerate", "--yes"]
         onExited: (exitCode, exitStatus) => {
@@ -309,9 +355,8 @@ Singleton {
         }
     }
 
-    // The built-in semantic palette does not run M3 generation, but its
-    // minimal scheme metadata still needs to be committed to the canonical
-    // CLI state store before GTK verification can report success.
+    // Built-in semantic palettes persist their selected identity before GTK
+    // verification, so status and the next Shell start agree with the UI.
     Process {
         id: syncBuiltInStateProc
         command: ["horneroctl", "scheme", "sync-state", "--yes"]
@@ -321,27 +366,14 @@ Singleton {
     QtObject {
         id: themeLoader
         property string themeId: ""
-        property string wallpaperOverride: ""
-        property bool running: false
-        property bool fallbackRunning: false
-        property bool systemRunning: false
         property string resolvedWallpaper: ""
         property var pendingConfig: ({})
     }
 
-    // Shared theme.json handling for the canonical and fallback FileViews.
-    function _handleThemeText(rawText: string): void {
-        themeLoader.running = false;
-        themeLoader.fallbackRunning = false;
-
-        let cfg = {};
-        try {
-            cfg = JSON.parse(rawText);
-        } catch (e) {
-            root._finishJob(false, `invalid theme.json for ${themeLoader.themeId}`);
-            return;
-        }
-
+    // Theme metadata and resolved system/user wallpaper paths come from
+    // horneroctl's canonical catalogue reader. This keeps user canonical,
+    // user legacy and read-only system pack precedence in one place.
+    function _handleThemeConfig(cfg: var, wallpaperOverride: string): void {
         themeLoader.pendingConfig = cfg;
         root._pendingSchemeType = cfg.schemeType || "tonal-spot";
         root._pendingDarkMode = cfg.darkMode !== undefined ? !!cfg.darkMode : true;
@@ -351,112 +383,43 @@ Singleton {
         root._pendingGtkPreferDark = root.resolveGtkPreferDark(cfg, root._pendingDarkMode);
         root._pendingGtkColorScheme = root.resolveGtkColorScheme(cfg, root._pendingDarkMode);
 
-        const wp = themeLoader.wallpaperOverride;
-        if (wp) {
-            themeLoader.resolvedWallpaper = wp;
-            root._pendingWallpaper = wp;
+        const defaultPath = cfg.wallpaperPath || cfg.wallpaperPaths?.[cfg.defaultWallpaper] || "";
+        const wallpaper = wallpaperOverride || defaultPath;
+        if (wallpaper) {
+            themeLoader.resolvedWallpaper = wallpaper;
+            root._pendingWallpaper = wallpaper;
             root._startWalFromTheme();
-        } else {
-            resolveWallpaperProc.running = true;
+            return;
         }
+        if (cfg.colorOnly) {
+            themeLoader.resolvedWallpaper = Wallpapers.actualCurrent || "";
+            root._pendingWallpaper = themeLoader.resolvedWallpaper;
+            root._startWalFromTheme();
+            return;
+        }
+        root._finishJob(false, `no wallpapers available for theme ${themeLoader.themeId}`);
     }
 
-    FileView {
-        id: themeFileView
-        path: themeLoader.running ? `${root.themesDir}/${themeLoader.themeId}/theme.json` : ""
-
-        onLoaded: {
-            let rawText = "";
-            try {
-                rawText = text();
-            } catch (e) {
-                console.warn("ThemePipeline: failed to read theme.json for", themeLoader.themeId, e);
-                themeLoader.running = false;
-                root._finishJob(false, `failed to read theme.json for ${themeLoader.themeId}`);
-                return;
-            }
-            root._handleThemeText(rawText);
-        }
-
-        onLoadFailed: err => {
-            themeLoader.running = false;
-            if (err === FileViewError.FileNotFound && !themeLoader.fallbackRunning) {
-                themeLoader.fallbackRunning = true;
-            } else {
-                root._finishJob(false, `theme.json not found for ${themeLoader.themeId}`);
-            }
-        }
-    }
-
-    // Legacy dots/* theme packs (contract row 1, fallback read only).
-    FileView {
-        id: themeFileViewFallback
-        path: themeLoader.fallbackRunning ? `${root.themesDirFallback}/${themeLoader.themeId}/theme.json` : ""
-
-        onLoaded: {
-            let rawText = "";
-            try {
-                rawText = text();
-            } catch (e) {
-                console.warn("ThemePipeline: failed to read fallback theme.json for", themeLoader.themeId, e);
-                themeLoader.fallbackRunning = false;
-                root._finishJob(false, `failed to read theme.json for ${themeLoader.themeId}`);
-                return;
-            }
-            root._handleThemeText(rawText);
-        }
-
-        onLoadFailed: err => {
-            themeLoader.fallbackRunning = false;
-            if (err === FileViewError.FileNotFound) {
-                themeLoader.systemRunning = true;
-            } else {
-                root._finishJob(false, `failed to read theme.json for ${themeLoader.themeId}`);
-            }
-        }
-    }
-
-    // Read-only package catalogue is the final lookup after explicit user
-    // canonical content and its legacy fallback. This preserves deliberate
-    // user overrides without ever writing into /usr/share.
-    FileView {
-        id: themeFileViewSystem
-        path: themeLoader.systemRunning ? `/usr/share/hornero/themes/${themeLoader.themeId}/theme.json` : ""
-
-        onLoaded: {
-            let rawText = "";
-            try {
-                rawText = text();
-            } catch (e) {
-                console.warn("ThemePipeline: failed to read system theme.json for", themeLoader.themeId, e);
-                themeLoader.systemRunning = false;
-                root._finishJob(false, `failed to read theme.json for ${themeLoader.themeId}`);
-                return;
-            }
-            themeLoader.systemRunning = false;
-            root._handleThemeText(rawText);
-        }
-
-        onLoadFailed: err => {
-            themeLoader.systemRunning = false;
-            const detail = err === FileViewError.FileNotFound ? "not found" : "could not be read";
-            root._finishJob(false, `system theme.json ${detail} for ${themeLoader.themeId}`);
+    Connections {
+        target: ThemeCatalogue
+        function onLoadedChanged(): void {
+            root._pump();
         }
     }
 
     Process {
         id: resolveWallpaperProc
         command: ["sh", "-c", `
-cfg_default="$DOTS_DEFAULT"
-theme_dir="$DOTS_WALLPAPER_DIR"
+cfg_default="$HORNERO_DEFAULT_WALLPAPER"
+theme_dir="$HORNERO_WALLPAPER_DIR"
 // Contract row 11: canonical hornero/* wallpapers first, legacy dots/* fallback.
-for base in "$DOTS_PIC/$theme_dir" "$DOTS_DATA/$theme_dir" "$DOTS_DATA_FALLBACK/$theme_dir"; do
+for base in "$HORNERO_PICTURES_WALLPAPERS/$theme_dir" "$HORNERO_DATA_WALLPAPERS/$theme_dir" "$HORNERO_LEGACY_DATA_WALLPAPERS/$theme_dir"; do
   if [ -n "$cfg_default" ] && [ -f "$base/$cfg_default" ]; then
     readlink -f "$base/$cfg_default"
     exit 0
   fi
 done
-for base in "$DOTS_PIC/$theme_dir" "$DOTS_DATA/$theme_dir" "$DOTS_DATA_FALLBACK/$theme_dir"; do
+for base in "$HORNERO_PICTURES_WALLPAPERS/$theme_dir" "$HORNERO_DATA_WALLPAPERS/$theme_dir" "$HORNERO_LEGACY_DATA_WALLPAPERS/$theme_dir"; do
   [ -d "$base" ] || continue
   find -L "$base" -maxdepth 1 \\( -type f -o -type l \\) \\( \
     -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.webp" \
@@ -466,11 +429,11 @@ for base in "$DOTS_PIC/$theme_dir" "$DOTS_DATA/$theme_dir" "$DOTS_DATA_FALLBACK/
 done
 `]
         environment: ({
-            "DOTS_DEFAULT": themeLoader.pendingConfig.defaultWallpaper || "",
-            "DOTS_WALLPAPER_DIR": themeLoader.pendingConfig.wallpaperDir || themeLoader.themeId,
-            "DOTS_PIC": root.picturesWallpapers,
-            "DOTS_DATA": root.wallpapersDir,
-            "DOTS_DATA_FALLBACK": root.wallpapersDirFallback
+            "HORNERO_DEFAULT_WALLPAPER": themeLoader.pendingConfig.defaultWallpaper || "",
+            "HORNERO_WALLPAPER_DIR": themeLoader.pendingConfig.wallpaperDir || themeLoader.themeId,
+            "HORNERO_PICTURES_WALLPAPERS": root.picturesWallpapers,
+            "HORNERO_DATA_WALLPAPERS": root.wallpapersDir,
+            "HORNERO_LEGACY_DATA_WALLPAPERS": root.wallpapersDirFallback
         })
 
         stdout: StdioCollector {
@@ -524,10 +487,10 @@ done
         id: writeWallpaperPointer
         // ~/.cache/wal/wal must be a text path file, not a symlink to the image —
         // echoing into a symlink follows it and truncates the wallpaper asset.
-        command: ["sh", "-c", 'mkdir -p "$(dirname "$DOTS_WALLPAPER_PTR")" "$HOME/.cache/wal" && printf "%s\\n" "$DOTS_WALLPAPER_PATH" > "$DOTS_WALLPAPER_PTR" && rm -f "$HOME/.cache/wal/wal" && printf "%s\\n" "$DOTS_WALLPAPER_PATH" > "$HOME/.cache/wal/wal"']
+        command: ["sh", "-c", 'mkdir -p "$(dirname "$HORNERO_WALLPAPER_POINTER")" "$HOME/.cache/wal" && printf "%s\\n" "$HORNERO_WALLPAPER_PATH" > "$HORNERO_WALLPAPER_POINTER" && rm -f "$HOME/.cache/wal/wal" && printf "%s\\n" "$HORNERO_WALLPAPER_PATH" > "$HOME/.cache/wal/wal"']
         environment: ({
-            "DOTS_WALLPAPER_PTR": root.wallpaperPointer,
-            "DOTS_WALLPAPER_PATH": root._pendingWallpaper
+            "HORNERO_WALLPAPER_POINTER": root.wallpaperPointer,
+            "HORNERO_WALLPAPER_PATH": root._pendingWallpaper
         })
     }
 
@@ -626,10 +589,6 @@ done
             snappyProc.running = true;
         }
 
-        if (root._runThemeSideEffects && root._pendingThemeName) {
-            notifyProc.themeName = root._pendingThemeName;
-            notifyProc.running = true;
-        }
     }
 
     Process {
@@ -665,7 +624,7 @@ done
         target: "appearance"
 
         function applyTheme(id: string, wallpaper: string): void {
-            root.applyTheme(id, wallpaper || "");
+            root.applyThemeFromIpc(id, wallpaper || "");
         }
 
         function reload(): void {

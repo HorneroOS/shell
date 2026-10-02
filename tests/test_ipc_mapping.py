@@ -52,7 +52,26 @@ def _handler_functions(source, target):
     m = re.search(r'target:\s*"' + re.escape(target) + r'"(.*?)(?=target:\s*"|\Z)',
                   source, re.S)
     assert m, f"no IpcHandler for target {target!r}"
-    return set(re.findall(r'function\s+(\w+)\s*\(', m.group(1)))
+    functions = {}
+    body = m.group(1)
+    pattern = re.compile(
+        r'function\s+(\w+)\s*\([^)]*\)\s*(?::\s*(\w+))?\s*\{'
+    )
+    for match in pattern.finditer(body):
+        start = match.end() - 1
+        depth = 0
+        for index in range(start, len(body)):
+            if body[index] == "{":
+                depth += 1
+            elif body[index] == "}":
+                depth -= 1
+                if depth == 0:
+                    functions[match.group(1)] = (
+                        match.group(2) or "",
+                        body[start : index + 1],
+                    )
+                    break
+    return functions
 
 
 def test_controlcenter_keyboard_roundtrip():
@@ -64,7 +83,7 @@ def test_controlcenter_keyboard_roundtrip():
     """
     shortcuts = (ROOT / "modules" / "Shortcuts.qml").read_text()
     funcs = _handler_functions(shortcuts, "controlCenter")
-    assert {"open", "close"} <= funcs, (
+    assert {"open", "close"} <= funcs.keys(), (
         f"controlCenter IPC must expose open+close, found: {sorted(funcs)}"
     )
 
@@ -90,3 +109,11 @@ def test_drawers_ipc_tolerates_no_active_screen():
     state_fn = block[block.index("function state(") :]
     state_fn = state_fn[: state_fn.index("}", state_fn.index("{")) + 1]
     assert 'drawer !== ""' in state_fn, "state() must reject empty drawer names"
+
+
+def test_control_center_open_rejects_unknown_pane():
+    source = (ROOT / "modules" / "Shortcuts.qml").read_text()
+    handler = _handler_functions(source, "controlCenter")
+    assert handler["open"][0] == "string"
+    assert "error: unknown control-center pane" in handler["open"][1]
+    assert "opening default" not in handler["open"][1]

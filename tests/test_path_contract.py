@@ -79,9 +79,14 @@ def test_paths_dots_fallback_kept():
 
 def test_consumers_read_canonical_first_with_fallback():
     pipeline = (ROOT / "services" / "ThemePipeline.qml").read_text()
-    for prop in ("themesDirFallback", "wallpapersDirFallback", "schemeJsonFallback"):
+    for prop in ("wallpapersDirFallback",):
         assert prop in pipeline, f"ThemePipeline.qml missing {prop}"
-    assert "themeFileViewFallback" in pipeline, "ThemePipeline theme.json fallback view missing"
+    catalogue = (ROOT / "services" / "ThemeCatalogue.qml").read_text()
+    assert '["horneroctl", "appearance", "theme", "list", "--full"]' in catalogue
+    assert "ThemeCatalogue.themeById(job.themeId)" in pipeline
+    assert "themeFileViewFallback" not in pipeline, (
+        "theme pack precedence belongs to horneroctl's canonical catalogue reader"
+    )
     colours = (ROOT / "services" / "Colours.qml").read_text()
     assert "cacheFallback" in colours, "Colours.qml missing scheme.json fallback"
     assert "schemeFileViewFallback" in colours, "Colours fallback FileView missing"

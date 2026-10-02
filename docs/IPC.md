@@ -40,9 +40,10 @@ Drawer names accepted by `drawers toggle` are the boolean keys of
 exist` and are ignored. Toggles for `launcher`/`session`/`dashboard` are
 suppressed while a fullscreen window has focus.
 
-`controlCenter open [pane]` deep-links into a Control Center pane
-(validated against the pane registry: an unknown pane logs a warning
-and opens the default pane, never crashes). `welcome open [page]`
+`controlCenter open [pane]` deep-links into a Control Center pane and
+returns `opened` or `opened: <pane>`. An unknown pane returns an
+`error:` result and does not open Settings. The shell pane registry is the
+single validity source used by `horneroctl config gui --pane`. `welcome open [page]`
 opens the Welcome Center (`start`, `navigate`, `shell`, `workspaces`,
 `personalize`, `tools`, `system`, `learn`, `shortcuts`; unknown pages open `start`
 with a warning); `welcome close()` closes it; `welcome status()`

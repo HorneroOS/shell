@@ -156,20 +156,18 @@ Scope {
     IpcHandler {
         target: "controlCenter"
 
-        function open(pane: string): void {
+        function open(pane: string): string {
             const id = (pane ?? "").toString().trim();
             if (id === "") {
                 WindowFactory.create();
-                return;
+                return "opened";
             }
-            if (PaneRegistry.getById(id)) {
-                WindowFactory.create(null, {
-                    pane: id
-                });
-            } else {
-                console.warn(`[IPC] Unknown control-center pane "${id}" — opening default`);
-                WindowFactory.create();
+            if (!PaneRegistry.getById(id)) {
+                console.warn(`[IPC] Unknown control-center pane "${id}"`);
+                return `error: unknown control-center pane ${id}`;
             }
+            WindowFactory.create(null, { pane: id });
+            return `opened: ${id}`;
         }
 
         function close(): void {

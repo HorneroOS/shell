@@ -10,10 +10,9 @@ QtObject {
 
     readonly property list<QtObject> categories: [
         QtObject { readonly property string id: "connectivity"; readonly property string title: qsTr("Connectivity") },
-        QtObject { readonly property string id: "sound"; readonly property string title: qsTr("Sound") },
         QtObject { readonly property string id: "personalization"; readonly property string title: qsTr("Personalization") },
-        QtObject { readonly property string id: "system"; readonly property string title: qsTr("System") },
-        QtObject { readonly property string id: "alerts"; readonly property string title: qsTr("Alerts") }
+        QtObject { readonly property string id: "sound-alerts"; readonly property string title: qsTr("Sound & alerts") },
+        QtObject { readonly property string id: "system"; readonly property string title: qsTr("System") }
     ]
 
     readonly property list<QtObject> panes: [
@@ -48,16 +47,6 @@ QtObject {
             readonly property list<string> keywords: ["virtual private network", "wireguard", "netbird", "tunnel"]
         },
         QtObject {
-            readonly property string id: "audio"
-            readonly property string label: "audio"
-            readonly property string title: qsTr("Audio")
-            readonly property string icon: "volume_up"
-            readonly property string component: "audio/AudioPane.qml"
-            readonly property string category: "sound"
-            readonly property string description: qsTr("Choose devices and adjust sound")
-            readonly property list<string> keywords: ["volume", "microphone", "speaker", "output", "input"]
-        },
-        QtObject {
             readonly property string id: "appearance"
             readonly property string label: "appearance"
             readonly property string title: qsTr("Appearance")
@@ -76,6 +65,16 @@ QtObject {
             readonly property string category: "personalization"
             readonly property string description: qsTr("Configure desktop bars and panels")
             readonly property list<string> keywords: ["taskbar", "panel", "rail", "dock", "island", "status bar"]
+        },
+        QtObject {
+            readonly property string id: "layout"
+            readonly property string label: "layout"
+            readonly property string title: qsTr("Layout")
+            readonly property string icon: "dashboard_customize"
+            readonly property string component: "layout/LayoutPane.qml"
+            readonly property string category: "personalization"
+            readonly property string description: qsTr("Arrange bars and desktop surfaces")
+            readonly property list<string> keywords: ["preset", "topology", "position", "screen layout"]
         },
         QtObject {
             readonly property string id: "launcher"
@@ -98,14 +97,44 @@ QtObject {
             readonly property list<string> keywords: ["weather", "location", "widgets", "desktop"]
         },
         QtObject {
-            readonly property string id: "layout"
-            readonly property string label: "layout"
-            readonly property string title: qsTr("Layout")
-            readonly property string icon: "dashboard_customize"
-            readonly property string component: "layout/LayoutPane.qml"
+            readonly property string id: "companion"
+            readonly property string label: "companion"
+            readonly property string title: qsTr("Companion")
+            readonly property string icon: "raven"
+            readonly property string component: "companion/CompanionPane.qml"
             readonly property string category: "personalization"
-            readonly property string description: qsTr("Arrange bars and desktop surfaces")
-            readonly property list<string> keywords: ["preset", "topology", "position", "screen layout"]
+            readonly property string description: qsTr("Configure the Hornero desktop companion")
+            readonly property list<string> keywords: ["mascot", "pet", "character"]
+        },
+        QtObject {
+            readonly property string id: "audio"
+            readonly property string label: "audio"
+            readonly property string title: qsTr("Audio")
+            readonly property string icon: "volume_up"
+            readonly property string component: "audio/AudioPane.qml"
+            readonly property string category: "sound-alerts"
+            readonly property string description: qsTr("Choose devices and adjust sound")
+            readonly property list<string> keywords: ["volume", "microphone", "speaker", "output", "input"]
+        },
+        QtObject {
+            readonly property string id: "notifications"
+            readonly property string label: "notifications"
+            readonly property string title: qsTr("Notifications")
+            readonly property string icon: "notifications"
+            readonly property string component: "notifications/NotificationsPane.qml"
+            readonly property string category: "sound-alerts"
+            readonly property string description: qsTr("Choose when and how notifications appear")
+            readonly property list<string> keywords: ["history", "do not disturb", "dnd", "quiet", "alerts"]
+        },
+        QtObject {
+            readonly property string id: "osd"
+            readonly property string label: "osd"
+            readonly property string title: qsTr("On-screen display")
+            readonly property string icon: "tune"
+            readonly property string component: "osd/OsdPane.qml"
+            readonly property string category: "sound-alerts"
+            readonly property string description: qsTr("Configure on-screen volume and brightness feedback")
+            readonly property list<string> keywords: ["osd", "volume popup", "brightness popup", "feedback"]
         },
         QtObject {
             readonly property string id: "system"
@@ -136,36 +165,6 @@ QtObject {
             readonly property string category: "system"
             readonly property string description: qsTr("Battery and power behavior")
             readonly property list<string> keywords: ["battery", "sleep", "suspend", "shutdown"]
-        },
-        QtObject {
-            readonly property string id: "notifications"
-            readonly property string label: "notifications"
-            readonly property string title: qsTr("Notifications")
-            readonly property string icon: "notifications"
-            readonly property string component: "notifications/NotificationsPane.qml"
-            readonly property string category: "alerts"
-            readonly property string description: qsTr("Choose when and how notifications appear")
-            readonly property list<string> keywords: ["history", "do not disturb", "dnd", "quiet", "alerts"]
-        },
-        QtObject {
-            readonly property string id: "osd"
-            readonly property string label: "osd"
-            readonly property string title: qsTr("On-screen display")
-            readonly property string icon: "tune"
-            readonly property string component: "osd/OsdPane.qml"
-            readonly property string category: "alerts"
-            readonly property string description: qsTr("Configure on-screen volume and brightness feedback")
-            readonly property list<string> keywords: ["osd", "volume popup", "brightness popup", "feedback"]
-        },
-        QtObject {
-            readonly property string id: "companion"
-            readonly property string label: "companion"
-            readonly property string title: qsTr("Companion")
-            readonly property string icon: "raven"
-            readonly property string component: "companion/CompanionPane.qml"
-            readonly property string category: "personalization"
-            readonly property string description: qsTr("Configure the Hornero desktop companion")
-            readonly property list<string> keywords: ["mascot", "pet", "character"]
         }
     ]
 

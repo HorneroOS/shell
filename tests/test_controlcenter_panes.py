@@ -83,6 +83,28 @@ def test_registry_discovery_metadata_is_complete_and_categories_resolve():
         assert entry.get("category") in categories, f"pane {entry['id']}: unknown category {entry.get('category')}"
 
 
+def test_registry_categories_are_unique_nonempty_and_grouped():
+    text = REGISTRY.read_text()
+    categories = re.findall(
+        r'property string id:\s*"([^"]+)";\s*readonly property string title:',
+        text,
+    )
+    entries = _registry_entries()
+    pane_categories = [entry["category"] for entry in entries]
+
+    assert len(categories) == len(set(categories)), f"duplicate categories: {categories}"
+    assert set(categories) == set(pane_categories), "every category must have panes and every pane must have a category"
+    assert all(pane_categories.count(category) > 0 for category in categories)
+
+    seen = set()
+    previous = None
+    for category in pane_categories:
+        if category != previous:
+            assert category not in seen, f"category {category} is split across navigation groups"
+            seen.add(category)
+            previous = category
+
+
 def test_registered_panes_take_shared_session():
     for entry in _registry_entries():
         text = (CC / entry["component"]).read_text()

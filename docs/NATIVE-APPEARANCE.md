@@ -75,8 +75,11 @@ semantic tables in `services/Colours.qml` (`_horneroDark` / `_horneroLight`;
 dark is byte-identical to the compiled palette defaults, fixed colours are
 shared mode-independent per M3). `ThemePipeline.applyTheme` short-circuits
 these ids natively — no wallpaper, `wal`, or M3 round-trip —
-then follows GTK color-scheme policy through `GtkSettings.applyFull` with
-an empty theme id (stays off the legacy registry path). The launcher
+then follows the pack's GTK theme, icon theme and color-scheme policy
+through `GtkSettings.applyFull` with the theme id, which resolves via
+`horneroctl appearance gtk theme` (native; writes the gtk2/3/4 ini files
+that `horneroctl appearance theme set` verifies). A color-scheme-only
+apply would leave the GTK theme name behind and fail that verify. The launcher
 `Themes` model always lists both first, even when the registry is
 absent. The default theme id lives in `config/AppearanceConfig.qml`
 (`theme: "hornero-dark"`), persisted via `serializeAppearance()` and pinned

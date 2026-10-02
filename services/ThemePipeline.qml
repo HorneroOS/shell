@@ -225,9 +225,13 @@ Singleton {
     // First-class built-in themes (hornero-dark / hornero-light): the full
     // semantic palette lives in Colours, so apply needs no wallpaper, wal,
     // or M3 round-trip — correct switching with no light/dark leakage. GTK
-    // follows natively (empty themeId keeps GtkSettings off the legacy
-    // registry path); only the color-scheme policy applies. Legacy theme
-    // extras (snappy switcher packs) are skipped for built-ins.
+    // follows through the shared theme registry (the pack's gtkTheme and
+    // iconTheme are real installed themes): the theme id resolves via
+    // `horneroctl appearance gtk theme`, which writes the gtk2/3/4 ini
+    // files that `horneroctl appearance theme set` verifies. Without the
+    // id the GTK theme name would never switch and verify would refuse
+    // the split state. Legacy theme extras (snappy switcher packs) are
+    // skipped for built-ins.
     function _applyBuiltInTheme(id: string, wallpaper: string): void {
         const darkMode = id !== "hornero-light";
         Colours.applyBuiltInTheme(id);
@@ -249,7 +253,7 @@ Singleton {
             notifyProc.running = true;
         }
         _awaitingGtk = true;
-        GtkSettings.applyFull("", "", "", _pendingGtkColorScheme, _pendingDarkMode);
+        GtkSettings.applyFull("", "", id, _pendingGtkColorScheme, _pendingDarkMode);
     }
 
     function _finishJob(ok: bool, err: string): void {

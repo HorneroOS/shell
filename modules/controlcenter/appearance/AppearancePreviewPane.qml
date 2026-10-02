@@ -36,7 +36,7 @@ StyledRect {
     readonly property bool hasRecipe: {
         return !!modeText || !!variantText || !!gtkThemeText || !!iconThemeText || !!gtkPreferText || !!wallpaperLabel || (tags && tags.length > 0);
     }
-    readonly property bool showVisualSamples: active && !compact && (!!gtkThemeText || !!iconThemeText)
+    readonly property bool showVisualSamples: active && !compact && (!!gtkThemeText || !!iconThemeText) && (!isThemePreview || showThemeDetails)
 
     function previewColor(role: string, fallback: color): color {
         const p = root.rootPane.previewPalette;

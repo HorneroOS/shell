@@ -853,7 +853,7 @@ Item {
 
                 AppearancePreviewPane {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: root.previewSource === "theme" || rightAppearanceFlickable.width < 600 ? 400 : 340
+                    Layout.preferredHeight: root.previewSource === "theme" ? 400 : 340
                     Layout.bottomMargin: Appearance.spacing.normal
 
                     active: root.previewActive

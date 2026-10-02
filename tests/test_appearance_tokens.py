@@ -157,17 +157,29 @@ def test_pipeline_applies_builtins_natively():
     native = text[text.index("function _applyBuiltInTheme"):]
     native = native[:native.index("function _finishJob")]
     assert "Colours.applyBuiltInTheme(id)" in native
-    assert 'GtkSettings.applyFull("", "", id,' in native, (
+    assert "Colours.persistBuiltInTheme(id, _pendingGtkColorScheme)" in native, (
+        "built-in identity must persist before GTK application")
+    completion = text[text.index("function _finishBuiltInThemeApply"):
+                      text.index("function _finishJob")]
+    assert 'GtkSettings.applyFull("", "", _pendingThemeId,' in completion, (
         "built-ins must resolve the pack's gtkTheme/iconTheme via the theme id: "
         "the ini files must switch or `horneroctl appearance theme set` fails verify; "
         "the registry path is native (`horneroctl appearance gtk theme`), not dots-owned"
     )
+    assert '"scheme", "sync-state", "--yes"' in text
     assert '"dots-' not in native and "'dots-" not in native, (
         "built-in apply must not shell out to dots-* CLIs")
     for proc in ("walProc", "walPrepProc", "m3Proc", "themeLoader.running"):
         assert proc not in native, f"built-in apply must not use {proc}"
     assert "snappyProc" not in native, (
         "dots-owned switcher extras are skipped for built-ins")
+
+
+def test_recipe_theme_sync_persists_the_selected_theme_id():
+    text = PIPELINE.read_text()
+    sync = text[text.index("id: syncStateProc"):text.index("id: touchSchemeProc")]
+    assert '"--theme-id", root._pendingThemeId' in sync
+    assert "command: root._pendingThemeId" in sync
 
 
 def test_factory_theme_key_end_to_end():

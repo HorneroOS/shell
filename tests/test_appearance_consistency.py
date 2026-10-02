@@ -117,6 +117,20 @@ def test_native_gtk_layer_present():
     assert "GtkSettings.applyIconTheme" in pipeline, "ThemePipeline setIcons must use GtkSettings"
 
 
+def test_theme_pack_apply_uses_registry_and_propagates_errors():
+    text = (ROOT / "services" / "GtkSettings.qml").read_text()
+    assert 'if (kind === "full" && _themeId)' in text, (
+        "a selected pack id must use the shared GTK pack resolver even when "
+        "the pack also declares an explicit GTK theme name"
+    )
+    compat = text[text.index("function _compatFor"):text.index("// Native apply:")]
+    assert 'if [[ -n "\\${HORNERO_THEME_ID:-}" ]]; then' in compat
+    assert "|| true" not in compat, "failed GTK operations must reach the caller"
+    assert "exitCode === 0" in text and "root._finishApply(false" in text, (
+        "the compatibility process must not report success after a failed command"
+    )
+
+
 def test_native_analyser_layer_present():
     layer = ROOT / "services" / "WallpaperAnalysis.qml"
     assert layer.exists(), "services/WallpaperAnalysis.qml native layer missing"

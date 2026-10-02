@@ -197,6 +197,7 @@ Singleton {
             themeLoader.themeId = job.themeId;
             themeLoader.wallpaperOverride = job.wallpaper || "";
             themeLoader.fallbackRunning = false;
+            themeLoader.systemRunning = false;
             themeLoader.running = true;
         } else if (job.kind === "wallpaper") {
             _pendingWallpaper = job.wallpaper;
@@ -246,6 +247,26 @@ Singleton {
             _pendingWallpaper = wallpaper;
             writeWallpaperPointer.running = true;
         }
+        // Built-ins previously changed only live QML state. Persist their
+        // identity/mode first so CLI status and the next Shell start agree.
+        Colours.persistBuiltInTheme(id, _pendingGtkColorScheme);
+    }
+
+    function _continueBuiltInThemeApply(id: string, ok: bool, error: string): void {
+        if (id !== _pendingThemeId)
+            return;
+        if (!ok) {
+            _finishJob(false, `could not persist ${id}: ${error}`);
+            return;
+        }
+        syncBuiltInStateProc.running = true;
+    }
+
+    function _finishBuiltInThemeApply(exitCode: int): void {
+        if (exitCode !== 0) {
+            _finishJob(false, "could not synchronize built-in theme state");
+            return;
+        }
         hyprlockProc.running = true;
         hyprReloadProc.running = true;
         if (_pendingThemeName) {
@@ -253,7 +274,7 @@ Singleton {
             notifyProc.running = true;
         }
         _awaitingGtk = true;
-        GtkSettings.applyFull("", "", id, _pendingGtkColorScheme, _pendingDarkMode);
+        GtkSettings.applyFull("", "", _pendingThemeId, _pendingGtkColorScheme, _pendingDarkMode);
     }
 
     function _finishJob(ok: bool, err: string): void {
@@ -288,12 +309,22 @@ Singleton {
         }
     }
 
+    // The built-in semantic palette does not run M3 generation, but its
+    // minimal scheme metadata still needs to be committed to the canonical
+    // CLI state store before GTK verification can report success.
+    Process {
+        id: syncBuiltInStateProc
+        command: ["horneroctl", "scheme", "sync-state", "--yes"]
+        onExited: (exitCode, exitStatus) => root._finishBuiltInThemeApply(exitCode)
+    }
+
     QtObject {
         id: themeLoader
         property string themeId: ""
         property string wallpaperOverride: ""
         property bool running: false
         property bool fallbackRunning: false
+        property bool systemRunning: false
         property string resolvedWallpaper: ""
         property var pendingConfig: ({})
     }
@@ -375,9 +406,41 @@ Singleton {
             root._handleThemeText(rawText);
         }
 
-        onLoadFailed: {
+        onLoadFailed: err => {
             themeLoader.fallbackRunning = false;
-            root._finishJob(false, `theme.json not found for ${themeLoader.themeId}`);
+            if (err === FileViewError.FileNotFound) {
+                themeLoader.systemRunning = true;
+            } else {
+                root._finishJob(false, `failed to read theme.json for ${themeLoader.themeId}`);
+            }
+        }
+    }
+
+    // Read-only package catalogue is the final lookup after explicit user
+    // canonical content and its legacy fallback. This preserves deliberate
+    // user overrides without ever writing into /usr/share.
+    FileView {
+        id: themeFileViewSystem
+        path: themeLoader.systemRunning ? `/usr/share/hornero/themes/${themeLoader.themeId}/theme.json` : ""
+
+        onLoaded: {
+            let rawText = "";
+            try {
+                rawText = text();
+            } catch (e) {
+                console.warn("ThemePipeline: failed to read system theme.json for", themeLoader.themeId, e);
+                themeLoader.systemRunning = false;
+                root._finishJob(false, `failed to read theme.json for ${themeLoader.themeId}`);
+                return;
+            }
+            themeLoader.systemRunning = false;
+            root._handleThemeText(rawText);
+        }
+
+        onLoadFailed: err => {
+            themeLoader.systemRunning = false;
+            const detail = err === FileViewError.FileNotFound ? "not found" : "could not be read";
+            root._finishJob(false, `system theme.json ${detail} for ${themeLoader.themeId}`);
         }
     }
 
@@ -510,7 +573,9 @@ done
     // Native scheme persistence: adopt the live scheme meta into state.
     Process {
         id: syncStateProc
-        command: ["horneroctl", "scheme", "sync-state", "--yes"]
+        command: root._pendingThemeId
+            ? ["horneroctl", "scheme", "sync-state", "--theme-id", root._pendingThemeId, "--yes"]
+            : ["horneroctl", "scheme", "sync-state", "--yes"]
         onExited: (exitCode, exitStatus) => {
             if (exitCode !== 0) {
                 root._finishJob(false, `sync-state failed (exit ${exitCode})`);
@@ -541,6 +606,14 @@ done
                 return;
             root._awaitingGtk = false;
             root._finishJob(ok, error);
+        }
+    }
+
+    Connections {
+        target: Colours
+
+        function onBuiltInThemePersisted(id: string, ok: bool, error: string): void {
+            root._continueBuiltInThemeApply(id, ok, error);
         }
     }
 

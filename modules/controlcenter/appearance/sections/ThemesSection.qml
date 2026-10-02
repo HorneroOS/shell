@@ -39,6 +39,10 @@ CollapsibleSection {
         return `${Paths.pictures}/Wallpapers/${dir}/${filename}`;
     }
 
+    function previewPathFor(theme: var): string {
+        return theme?.preview || theme?.wallpaperPath || "";
+    }
+
     Component.onCompleted: Themes.reload()
 
     ColumnLayout {
@@ -57,6 +61,7 @@ CollapsibleSection {
                 spacing: 0
 
                 readonly property bool isStaged: modelData.id === previewController.pendingThemeId
+                readonly property bool isCurrent: modelData.id === Colours.themeId
                 readonly property bool isExpanded: modelData.id === sectionRoot.selectedThemeId
 
                 StyledRect {
@@ -98,7 +103,7 @@ CollapsibleSection {
                             spacing: Appearance.spacing.normal
 
                             Loader {
-                                active: (themeItem.modelData.preview ?? "") !== ""
+                                active: sectionRoot.previewPathFor(themeItem.modelData) !== ""
                                 Layout.alignment: Qt.AlignVCenter
 
                                 sourceComponent: StyledClippingRect {
@@ -109,7 +114,7 @@ CollapsibleSection {
 
                                     CachingImage {
                                         anchors.fill: parent
-                                        path: themeItem.modelData.preview ?? ""
+                                        path: sectionRoot.previewPathFor(themeItem.modelData)
                                         cache: true
                                     }
                                 }
@@ -135,26 +140,6 @@ CollapsibleSection {
                                     wrapMode: Text.WordWrap
                                 }
 
-                                StyledText {
-                                    width: parent.width
-                                    text: {
-                                        const bits = [];
-                                        if (modelData.schemeType)
-                                            bits.push(modelData.schemeType);
-                                        if (modelData.gtkTheme)
-                                            bits.push(modelData.gtkTheme);
-                                        const scheme = modelData.gtkColorScheme || "";
-                                        if (scheme)
-                                            bits.push(scheme);
-                                        if (modelData.iconTheme)
-                                            bits.push(modelData.iconTheme);
-                                        return bits.join(" · ");
-                                    }
-                                    font.pointSize: Appearance.font.size.smaller
-                                    color: Colours.palette.m3outlineVariant
-                                    elide: Text.ElideRight
-                                    visible: !!(modelData.schemeType || modelData.gtkTheme || modelData.iconTheme)
-                                }
                             }
 
                             StyledRect {
@@ -169,6 +154,22 @@ CollapsibleSection {
                                     text: modelData.darkMode ? qsTr("Dark") : qsTr("Light")
                                     font.pointSize: Appearance.font.size.smaller
                                     color: Colours.palette.m3onSecondaryContainer
+                                }
+                            }
+
+                            StyledRect {
+                                visible: themeItem.isCurrent && !themeItem.isStaged
+                                radius: Appearance.rounding.full
+                                color: Qt.alpha(Colours.palette.m3primaryContainer, 0.75)
+                                implicitWidth: currentChip.implicitWidth + Appearance.padding.small * 2
+                                implicitHeight: currentChip.implicitHeight + Appearance.padding.smaller * 2
+
+                                StyledText {
+                                    id: currentChip
+                                    anchors.centerIn: parent
+                                    text: qsTr("Current")
+                                    font.pointSize: Appearance.font.size.smaller
+                                    color: Colours.palette.m3onPrimaryContainer
                                 }
                             }
 
@@ -189,32 +190,6 @@ CollapsibleSection {
                             }
                         }
 
-                        Flow {
-                            Layout.fillWidth: true
-                            visible: (modelData.tags?.length ?? 0) > 0
-                            spacing: Appearance.spacing.smaller
-
-                            Repeater {
-                                model: modelData.tags ?? []
-
-                                delegate: StyledRect {
-                                    required property var modelData
-
-                                    radius: Appearance.rounding.full
-                                    color: Qt.alpha(Colours.palette.m3surfaceVariant, 0.35)
-                                    implicitWidth: tagLabel.implicitWidth + Appearance.padding.small * 2
-                                    implicitHeight: tagLabel.implicitHeight + Appearance.padding.smaller
-
-                                    StyledText {
-                                        id: tagLabel
-                                        anchors.centerIn: parent
-                                        text: modelData
-                                        font.pointSize: Appearance.font.size.smaller
-                                        color: Colours.palette.m3onSurfaceVariant
-                                    }
-                                }
-                            }
-                        }
                     }
 
                     implicitHeight: themeCard.implicitHeight + Appearance.padding.normal * 2

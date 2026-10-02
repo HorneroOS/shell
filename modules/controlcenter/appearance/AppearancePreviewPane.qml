@@ -30,10 +30,11 @@ StyledRect {
     property int wallpaperCount: 0
 
     readonly property bool isThemePreview: source === "theme"
+    readonly property bool compact: width < 500
     readonly property bool hasRecipe: {
         return !!modeText || !!variantText || !!gtkThemeText || !!iconThemeText || !!gtkPreferText || !!wallpaperLabel || (tags && tags.length > 0);
     }
-    readonly property bool showVisualSamples: active && (!!gtkThemeText || !!iconThemeText)
+    readonly property bool showVisualSamples: active && !compact && (!!gtkThemeText || !!iconThemeText)
 
     function previewColor(role: string, fallback: color): color {
         const p = root.rootPane.previewPalette;
@@ -125,14 +126,18 @@ StyledRect {
         anchors.fill: parent
         anchors.margins: Appearance.padding.normal
 
-        RowLayout {
+        GridLayout {
             anchors.fill: parent
-            spacing: Appearance.spacing.normal
+            columns: root.compact ? 1 : 2
+            rowSpacing: Appearance.spacing.normal
+            columnSpacing: Appearance.spacing.normal
 
             // Wallpaper / visual hero
             StyledClippingRect {
-                Layout.preferredWidth: root.isThemePreview ? 180 : 220
-                Layout.fillHeight: true
+                Layout.preferredWidth: root.compact ? -1 : root.isThemePreview ? 180 : 220
+                Layout.preferredHeight: root.compact ? 120 : -1
+                Layout.fillWidth: root.compact
+                Layout.fillHeight: !root.compact
                 radius: Appearance.rounding.normal
                 color: previewColor("m3surfaceContainerHigh", Colours.tPalette.m3surfaceContainerHigh)
 
@@ -185,7 +190,8 @@ StyledRect {
 
             ColumnLayout {
                 Layout.fillWidth: true
-                Layout.fillHeight: true
+                Layout.fillHeight: !root.compact
+                Layout.preferredHeight: root.compact ? 240 : -1
                 spacing: Appearance.spacing.small
 
                 StyledText {
@@ -271,16 +277,19 @@ StyledRect {
                     StyledText {
                         visible: root.isThemePreview && !!root.themeIdText
                         text: root.themeIdText
+                        Layout.maximumWidth: 100
                         font.family: root.rootPane.fontFamilyMono
                         font.pointSize: Appearance.font.size.smaller
                         color: previewColor("m3outline", Colours.palette.m3outline)
+                        elide: Text.ElideMiddle
                     }
                 }
 
                 // Recipe details (what Apply will set)
                 StyledRect {
                     Layout.fillWidth: true
-                    Layout.fillHeight: true
+                    Layout.fillHeight: !root.compact
+                    Layout.preferredHeight: root.compact ? 140 : -1
                     visible: root.active && root.hasRecipe
                     radius: Appearance.rounding.normal
                     color: Qt.alpha(previewColor("m3surfaceContainerHigh", Colours.tPalette.m3surfaceContainerHigh), 0.65)
@@ -351,6 +360,7 @@ StyledRect {
                             }
 
                             RecipeRow {
+                                visible: !root.compact
                                 icon: "palette"
                                 label: qsTr("M3 scheme type")
                                 value: root.variantText || "—"
@@ -363,6 +373,7 @@ StyledRect {
                             }
 
                             RecipeRow {
+                                visible: !root.compact
                                 icon: root.gtkColorSchemeIcon(root.gtkPreferText)
                                 label: qsTr("GTK color scheme")
                                 value: root.gtkColorSchemeLabel(root.gtkPreferText)
@@ -375,13 +386,14 @@ StyledRect {
                             }
 
                             RecipeRow {
+                                visible: !root.compact
                                 icon: "wallpaper"
                                 label: qsTr("Default wallpaper")
                                 value: root.wallpaperLabel || Strings.wallpaperDisplayName(root.wallpaperPath) || "—"
                             }
 
                             RecipeRow {
-                                visible: root.wallpaperCount > 0
+                                visible: !root.compact && root.wallpaperCount > 0
                                 icon: "photo_library"
                                 label: qsTr("Wallpapers in pack")
                                 value: String(root.wallpaperCount)
@@ -446,7 +458,7 @@ StyledRect {
 
                         Flow {
                             Layout.fillWidth: true
-                            visible: root.tags && root.tags.length > 0
+                            visible: !root.compact && root.tags && root.tags.length > 0
                             spacing: Appearance.spacing.smaller
 
                             Repeater {

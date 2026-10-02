@@ -291,7 +291,7 @@ StyledRect {
                 StyledRect {
                     Layout.fillWidth: true
                     Layout.fillHeight: !root.compact && (!root.isThemePreview || root.showThemeDetails)
-                    Layout.preferredHeight: root.compact ? 140 : (root.isThemePreview ? (root.showThemeDetails ? 360 : 250) : -1)
+                    Layout.preferredHeight: root.compact ? 140 : (root.isThemePreview ? (root.showThemeDetails ? 360 : 104) : -1)
                     visible: root.active && root.hasRecipe
                     radius: Appearance.rounding.normal
                     color: Qt.alpha(previewColor("m3surfaceContainerHigh", Colours.tPalette.m3surfaceContainerHigh), 0.65)
@@ -490,6 +490,93 @@ StyledRect {
                                         font.pointSize: Appearance.font.size.smaller
                                         color: previewColor("m3onSecondaryContainer", Colours.palette.m3onSecondaryContainer)
                                     }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Show how the theme reads on a real Shell surface instead of
+                // leaving the right side of the preview empty when recipe
+                // details are collapsed.
+                StyledRect {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: root.isThemePreview && !root.compact
+                    visible: root.active && root.isThemePreview && !root.compact
+                    radius: Appearance.rounding.normal
+                    color: Qt.alpha(previewColor("m3surfaceContainerHigh", Colours.tPalette.m3surfaceContainerHigh), 0.82)
+
+                    ColumnLayout {
+                        anchors.fill: parent
+                        anchors.margins: Appearance.padding.small
+                        spacing: Appearance.spacing.small
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            MaterialIcon {
+                                text: "dashboard"
+                                color: previewColor("m3primary", Colours.palette.m3primary)
+                                font.pointSize: Appearance.font.size.normal
+                            }
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: qsTr("Interface sample")
+                                font.pointSize: Appearance.font.size.small
+                                font.weight: 600
+                                color: previewColor("m3onSurface", Colours.palette.m3onSurface)
+                            }
+                            StyledRect {
+                                radius: Appearance.rounding.full
+                                color: previewColor("m3primaryContainer", Colours.palette.m3primaryContainer)
+                                implicitWidth: sampleBadge.implicitWidth + Appearance.padding.small * 2
+                                implicitHeight: sampleBadge.implicitHeight + Appearance.padding.smaller
+                                StyledText {
+                                    id: sampleBadge
+                                    anchors.centerIn: parent
+                                    text: qsTr("Preview")
+                                    font.pointSize: Appearance.font.size.smaller
+                                    color: previewColor("m3onPrimaryContainer", Colours.palette.m3onPrimaryContainer)
+                                }
+                            }
+                        }
+
+                        StyledRect {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            radius: Appearance.rounding.small
+                            color: previewColor("m3surfaceContainer", Colours.tPalette.m3surfaceContainer)
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.margins: Appearance.padding.small
+                                spacing: Appearance.spacing.small
+                                MaterialIcon {
+                                    text: "palette"
+                                    color: previewColor("m3primary", Colours.palette.m3primary)
+                                    font.pointSize: Appearance.font.size.normal
+                                }
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 2
+                                    StyledText {
+                                        Layout.fillWidth: true
+                                        text: qsTr("A desktop that feels like yours")
+                                        font.pointSize: Appearance.font.size.small
+                                        font.weight: 600
+                                        color: previewColor("m3onSurface", Colours.palette.m3onSurface)
+                                        elide: Text.ElideRight
+                                    }
+                                    StyledText {
+                                        Layout.fillWidth: true
+                                        text: qsTr("Surfaces, text, and accents work together.")
+                                        font.pointSize: Appearance.font.size.smaller
+                                        color: previewColor("m3onSurfaceVariant", Colours.palette.m3onSurfaceVariant)
+                                        elide: Text.ElideRight
+                                    }
+                                }
+                                MaterialIcon {
+                                    text: "check_circle"
+                                    color: previewColor("m3primary", Colours.palette.m3primary)
+                                    font.pointSize: Appearance.font.size.normal
                                 }
                             }
                         }

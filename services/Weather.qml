@@ -17,9 +17,13 @@ Singleton {
     property string lastError: ""
     property bool loading: false
 
-    readonly property bool ready: !!cc && forecast.length > 0
+    readonly property bool locationConfigured: !!(Config.services.weatherLocation || "").trim()
+    property int _requestGeneration: 0
+    readonly property bool ready: locationConfigured && !!cc && forecast.length > 0
     readonly property string icon: cc ? Icons.getWeatherIcon(String(cc.weatherCode)) : "cloud_alert"
     readonly property string description: {
+        if (!locationConfigured)
+            return qsTr("Set a location");
         if (cc?.weatherDesc)
             return cc.weatherDesc;
         if (loading)
@@ -45,100 +49,42 @@ Singleton {
 
     readonly property var cachedCities: new Map()
 
-    // Prefer providers that work on restrictive networks (ipinfo.io often times out).
-    readonly property var geoProviderUrls: [
-        "http://ip-api.com/json/",
-        "https://ipapi.co/json/",
-        "https://get.geojs.io/v1/ip/geo.json",
-        "https://ipinfo.io/json"
-    ]
-
+    // Empty location is an offline state. Opening any weather view or
+    // refreshing it must never infer consent to send an IP/location.
     function reload(): void {
+        _requestGeneration++;
         const configLocation = (Config.services.weatherLocation || "").trim();
         lastError = "";
-        loading = true;
-
-        if (configLocation) {
-            if (configLocation.indexOf(",") !== -1 && !isNaN(parseFloat(configLocation.split(",")[0]))) {
-                _setLocation(configLocation, "");
-                fetchCityFromCoords(configLocation);
-            } else {
-                fetchCoordsFromCity(configLocation);
-            }
+        cc = null;
+        forecast = [];
+        hourlyForecast = [];
+        city = "";
+        loc = "";
+        loading = !!configLocation;
+        if (!configLocation)
             return;
-        }
 
-        if (loc && timer.elapsed() <= 900) {
-            fetchWeatherData();
-            return;
+        if (configLocation.indexOf(",") !== -1 && !isNaN(parseFloat(configLocation.split(",")[0]))) {
+            _setLocation(configLocation, "");
+            fetchCityFromCoords(configLocation);
+        } else {
+            fetchCoordsFromCity(configLocation);
         }
-
-        detectLocation(0);
     }
 
-    function parseGeoResponse(url: string, text: string): var {
-        const r = JSON.parse(text);
-        if (url.indexOf("ip-api.com") !== -1) {
-            if (r.status && r.status !== "success")
-                return null;
-            if (r.lat === undefined || r.lon === undefined)
-                return null;
-            return {
-                loc: `${r.lat},${r.lon}`,
-                city: r.city || r.regionName || ""
-            };
-        }
-        if (url.indexOf("ipapi.co") !== -1) {
-            if (r.error || r.latitude === undefined || r.longitude === undefined)
-                return null;
-            return {
-                loc: `${r.latitude},${r.longitude}`,
-                city: r.city || r.region || ""
-            };
-        }
-        if (url.indexOf("geojs.io") !== -1) {
-            if (r.latitude === undefined || r.longitude === undefined)
-                return null;
-            return {
-                loc: `${r.latitude},${r.longitude}`,
-                city: r.city || r.region || ""
-            };
-        }
-        // ipinfo.io
-        if (!r.loc)
-            return null;
-        return {
-            loc: r.loc,
-            city: r.city || ""
-        };
-    }
-
-    function detectLocation(providerIndex: int): void {
-        if (providerIndex >= geoProviderUrls.length) {
-            loading = false;
-            lastError = qsTr("Could not detect location");
-            console.warn("Weather: all geo providers failed");
+    // A cleared/changed location invalidates every outstanding callback.
+    // A late city lookup must not restart requests after consent is removed.
+    function request(url: string, onSuccess: var, onError: var): void {
+        if (!locationConfigured)
             return;
-        }
-
-        const url = geoProviderUrls[providerIndex];
+        const generation = _requestGeneration;
+        const location = Config.services.weatherLocation;
         Requests.get(url, text => {
-            try {
-                const parsed = parseGeoResponse(url, text);
-                if (!parsed || !parsed.loc) {
-                    detectLocation(providerIndex + 1);
-                    return;
-                }
-                city = parsed.city || city;
-                _setLocation(parsed.loc, parsed.city || "");
-                timer.restart();
-            } catch (e) {
-                console.warn("Weather: geo parse failed for", url, e);
-                detectLocation(providerIndex + 1);
-            }
-        }, err => {
-            console.warn("Weather: geo request failed for", url, err);
-            detectLocation(providerIndex + 1);
+            if (generation === _requestGeneration && locationConfigured && location === Config.services.weatherLocation)
+                onSuccess(text);
+        }, error => {
+            if (generation === _requestGeneration && locationConfigured && location === Config.services.weatherLocation)
+                onError(error);
         });
     }
 
@@ -162,7 +108,7 @@ Singleton {
         const [lat, lon] = coords.split(",");
         // Nominatim requires a UA in theory; Qt may send one. Falls back to Unknown City.
         const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=geocodejson`;
-        Requests.get(url, text => {
+        request(url, text => {
             try {
                 const geo = JSON.parse(text).features?.[0]?.properties?.geocoding;
                 if (geo) {
@@ -184,7 +130,7 @@ Singleton {
     function fetchCoordsFromCity(cityName: string): void {
         const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityName)}&count=1&language=en&format=json`;
 
-        Requests.get(url, text => {
+        request(url, text => {
             try {
                 const json = JSON.parse(text);
                 if (json.results && json.results.length > 0) {
@@ -215,7 +161,7 @@ Singleton {
         }
 
         loading = true;
-        Requests.get(url, text => {
+        request(url, text => {
             try {
                 const json = JSON.parse(text);
                 if (!json.current || !json.daily) {
@@ -334,23 +280,18 @@ Singleton {
 
     onLocChanged: fetchWeatherData()
 
-    // Refresh forecast hourly; re-detect location every 6 hours.
-    Timer {
-        interval: 3600000
-        running: true
-        repeat: true
-        onTriggered: {
-            if (Config.services.weatherLocation)
-                fetchWeatherData();
-            else if (timer.elapsed() > 21600)
-                root.reload();
-            else
-                fetchWeatherData();
+    Connections {
+        target: Config.services
+        function onWeatherLocationChanged(): void {
+            root.reload();
         }
     }
 
-    ElapsedTimer {
-        id: timer
+    Timer {
+        interval: 3600000
+        running: root.locationConfigured
+        repeat: true
+        onTriggered: root.reload()
     }
 
     Component.onCompleted: reload()

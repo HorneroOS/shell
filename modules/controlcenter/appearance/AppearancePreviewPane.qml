@@ -502,8 +502,7 @@ StyledRect {
                 StyledRect {
                     Layout.fillWidth: true
                     Layout.fillHeight: root.isThemePreview && !root.compact
-                    Layout.preferredHeight: root.compact ? 132 : -1
-                    visible: root.active && root.isThemePreview
+                    visible: root.active && root.isThemePreview && !root.compact
                     radius: Appearance.rounding.normal
                     color: Qt.alpha(previewColor("m3surfaceContainerHigh", Colours.tPalette.m3surfaceContainerHigh), 0.82)
 

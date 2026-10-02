@@ -164,3 +164,16 @@ def test_native_analyser_layer_present():
     assert "wallLuminance" in colours, "Colours must keep native luminance"
     pane = (ROOT / "modules" / "controlcenter" / "appearance" / "AppearancePane.qml").read_text()
     assert "previewAnalyser" in pane, "AppearancePane must analyse previews natively"
+
+
+def test_dynamic_appearance_cannot_claim_a_catalogue_theme():
+    colours = (ROOT / "services" / "Colours.qml").read_text()
+    themes = (ROOT / "modules/controlcenter/appearance/sections/ThemesSection.qml").read_text()
+    pane = (ROOT / "modules/controlcenter/appearance/AppearancePane.qml").read_text()
+
+    assert 'scheme.name === "dynamic" ? ""' in colours
+    assert "themeStateReady && !!Colours.themeId" in themes
+    assert "savedThemeMissing" in themes
+    assert 'Colours.scheme === "dynamic" ? qsTr("Following your wallpaper")' in themes
+    assert 'previewSource = "current"' in pane
+    assert 'previewTitle = Colours.scheme === "dynamic" ? qsTr("Following your wallpaper")' in pane

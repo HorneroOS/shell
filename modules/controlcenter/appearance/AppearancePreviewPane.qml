@@ -32,7 +32,7 @@ StyledRect {
     property bool showThemeDetails: false
 
     readonly property bool isThemePreview: source === "theme"
-    readonly property bool compact: width < 500
+    readonly property bool compact: width < 600
     readonly property bool hasRecipe: {
         return !!modeText || !!variantText || !!gtkThemeText || !!iconThemeText || !!gtkPreferText || !!wallpaperLabel || (tags && tags.length > 0);
     }
@@ -587,7 +587,7 @@ StyledRect {
                 StyledRect {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    visible: root.active && !root.isThemePreview
+                    visible: root.active && !root.isThemePreview && !root.compact
                     radius: Appearance.rounding.normal * root.rootPane.roundingScale
                     color: root.rootPane.transparencyEnabled ? Qt.alpha(previewColor("m3surfaceContainer", Colours.palette.m3surfaceContainer), root.rootPane.transparencyBase) : previewColor("m3surfaceContainer", Colours.palette.m3surfaceContainer)
 

@@ -573,7 +573,9 @@ done
     // Native scheme persistence: adopt the live scheme meta into state.
     Process {
         id: syncStateProc
-        command: ["horneroctl", "scheme", "sync-state", "--yes"]
+        command: root._pendingThemeId
+            ? ["horneroctl", "scheme", "sync-state", "--theme-id", root._pendingThemeId, "--yes"]
+            : ["horneroctl", "scheme", "sync-state", "--yes"]
         onExited: (exitCode, exitStatus) => {
             if (exitCode !== 0) {
                 root._finishJob(false, `sync-state failed (exit ${exitCode})`);

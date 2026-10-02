@@ -27,6 +27,7 @@ Singleton {
     property string _policy: ""
     property bool _darkMode: true
     property var _compatCommand: []
+    property string _compatError: ""
     property string _nativeKind: "full"
     property string _compatKind: "full"
 
@@ -107,8 +108,9 @@ Singleton {
         // Theme-pack ids resolve through the shared theme registry via
         // horneroctl; no deterministic gsettings equivalent exists, so go
         // straight to the fallback adapter. See docs/NATIVE-APPEARANCE.md.
-        if (kind === "full" && _themeId && (!_gtkTheme || _gtkTheme === "auto")) {
+        if (kind === "full" && _themeId) {
             _compatKind = kind;
+            _compatError = "";
             compatProc.running = true;
             return;
         }
@@ -134,38 +136,33 @@ Singleton {
             return ["horneroctl", "appearance", "gtk", "color-scheme", _policy || "follow", "--yes"];
         return ["bash", "-c", `
 set -euo pipefail
-if [[ -n "\${HORNERO_THEME_ID:-}" && ( -z "\${HORNERO_GTK_THEME:-}" || "\${HORNERO_GTK_THEME}" == "auto" ) ]]; then
-  horneroctl appearance gtk theme "\${HORNERO_THEME_ID}" --yes || true
-  if [[ -n "\${HORNERO_GTK_COLOR_SCHEME:-}" ]]; then
-    horneroctl appearance gtk color-scheme "\${HORNERO_GTK_COLOR_SCHEME}" --yes || true
-  else
-    horneroctl appearance gtk sync-color-scheme --yes || true
-  fi
+if [[ -n "\${HORNERO_THEME_ID:-}" ]]; then
+  horneroctl appearance gtk theme "\${HORNERO_THEME_ID}" --yes
 elif [[ -n "\${HORNERO_GTK_THEME:-}" && "\${HORNERO_GTK_THEME}" != "auto" ]]; then
   if [[ -n "\${HORNERO_ICON_THEME:-}" ]]; then
     if [[ -n "\${HORNERO_GTK_COLOR_SCHEME:-}" ]]; then
-      horneroctl appearance gtk apply "\${HORNERO_GTK_THEME}" "\${HORNERO_ICON_THEME}" "\${HORNERO_GTK_COLOR_SCHEME}" --yes || true
+      horneroctl appearance gtk apply "\${HORNERO_GTK_THEME}" "\${HORNERO_ICON_THEME}" "\${HORNERO_GTK_COLOR_SCHEME}" --yes
     else
-      horneroctl appearance gtk apply "\${HORNERO_GTK_THEME}" "\${HORNERO_ICON_THEME}" --yes || true
+      horneroctl appearance gtk apply "\${HORNERO_GTK_THEME}" "\${HORNERO_ICON_THEME}" --yes
     fi
   elif [[ -n "\${HORNERO_GTK_COLOR_SCHEME:-}" ]]; then
-    horneroctl appearance gtk apply "\${HORNERO_GTK_THEME}" --yes || true
-    horneroctl appearance gtk color-scheme "\${HORNERO_GTK_COLOR_SCHEME}" --yes || true
+    horneroctl appearance gtk apply "\${HORNERO_GTK_THEME}" --yes
+    horneroctl appearance gtk color-scheme "\${HORNERO_GTK_COLOR_SCHEME}" --yes
   else
-    horneroctl appearance gtk apply "\${HORNERO_GTK_THEME}" --yes || true
+    horneroctl appearance gtk apply "\${HORNERO_GTK_THEME}" --yes
   fi
 elif [[ -n "\${HORNERO_ICON_THEME:-}" ]]; then
-  horneroctl appearance gtk set-icons "\${HORNERO_ICON_THEME}" --yes || true
+  horneroctl appearance gtk set-icons "\${HORNERO_ICON_THEME}" --yes
   if [[ -n "\${HORNERO_GTK_COLOR_SCHEME:-}" ]]; then
-    horneroctl appearance gtk color-scheme "\${HORNERO_GTK_COLOR_SCHEME}" --yes || true
+    horneroctl appearance gtk color-scheme "\${HORNERO_GTK_COLOR_SCHEME}" --yes
   else
-    horneroctl appearance gtk sync-color-scheme --yes || true
+    horneroctl appearance gtk sync-color-scheme --yes
   fi
 else
   if [[ -n "\${HORNERO_GTK_COLOR_SCHEME:-}" ]]; then
-    horneroctl appearance gtk color-scheme "\${HORNERO_GTK_COLOR_SCHEME}" --yes || true
+    horneroctl appearance gtk color-scheme "\${HORNERO_GTK_COLOR_SCHEME}" --yes
   else
-    horneroctl appearance gtk sync-color-scheme --yes || true
+    horneroctl appearance gtk sync-color-scheme --yes
   fi
 fi
 `];
@@ -217,8 +214,16 @@ fi
             "HORNERO_THEME_ID": root._themeId,
             "HORNERO_GTK_COLOR_SCHEME": root._policy
         })
+        stderr: StdioCollector {
+            onStreamFinished: root._compatError = text.trim()
+        }
         onExited: (exitCode, exitStatus) => {
-            root._finishApply(true, "");
+            if (exitCode === 0) {
+                root._finishApply(true, "");
+                return;
+            }
+            const detail = root._compatError || `horneroctl exited with status ${exitCode}`;
+            root._finishApply(false, `GTK theme apply failed: ${detail}`);
         }
     }
 

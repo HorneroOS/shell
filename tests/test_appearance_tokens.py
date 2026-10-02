@@ -175,6 +175,13 @@ def test_pipeline_applies_builtins_natively():
         "dots-owned switcher extras are skipped for built-ins")
 
 
+def test_recipe_theme_sync_persists_the_selected_theme_id():
+    text = PIPELINE.read_text()
+    sync = text[text.index("id: syncStateProc"):text.index("id: touchSchemeProc")]
+    assert '"--theme-id", root._pendingThemeId' in sync
+    assert "command: root._pendingThemeId" in sync
+
+
 def test_factory_theme_key_end_to_end():
     assert 'property string theme: "hornero-dark"' in APPEARANCE_CONFIG.read_text()
     assert "theme: appearance.theme" in CONFIG_QML.read_text(), (

@@ -378,7 +378,7 @@ Singleton {
             if (err === FileViewError.FileNotFound && !root._schemeFallbackActive) {
                 root._schemeFallbackActive = true;
                 schemeFileViewFallback.reload();
-            } else {
+            } else if (!root.themeStateReady) {
                 root.themeId = "";
                 root.themeStateReady = true;
             }
@@ -397,8 +397,10 @@ Singleton {
             root._schemeFallbackActive = false;
             // No saved appearance exists yet; use the documented clean-install
             // default only when both canonical and legacy locations are absent.
-            root.themeId = err === FileViewError.FileNotFound ? "hornero-dark" : "";
-            root.themeStateReady = true;
+            if (!root.themeStateReady) {
+                root.themeId = err === FileViewError.FileNotFound ? "hornero-dark" : "";
+                root.themeStateReady = true;
+            }
         }
     }
 

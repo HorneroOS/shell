@@ -122,6 +122,17 @@ Item {
         if (!ThemeCatalogue.loaded || !Colours.themeStateReady)
             return;
 
+        // Keep an explicit hover/focus preview authoritative. This refresh
+        // is for the idle/current preview only; a catalogue or wallpaper
+        // update must not replace the item the user is exploring.
+        if (previewActive && previewSource !== "current") {
+            const previewIsAppliedTheme = previewSource === "theme"
+                && !!Colours.themeId
+                && previewThemeId === Colours.themeId;
+            if (!previewIsAppliedTheme)
+                return;
+        }
+
         const theme = Colours.themeId ? Themes.themeById(Colours.themeId) : null;
         if (theme) {
             if (previewSource === "theme" && previewThemeId === theme.id)

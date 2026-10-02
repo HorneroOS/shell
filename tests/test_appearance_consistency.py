@@ -177,3 +177,5 @@ def test_dynamic_appearance_cannot_claim_a_catalogue_theme():
     assert 'Colours.scheme === "dynamic" ? qsTr("Following your wallpaper")' in themes
     assert 'previewSource = "current"' in pane
     assert 'previewTitle = Colours.scheme === "dynamic" ? qsTr("Following your wallpaper")' in pane
+    assert 'if (previewActive && previewSource !== "current")' in pane
+    assert "if (!root.themeStateReady)" in colours

@@ -168,8 +168,10 @@ fi
 `];
     }
 
-    // Native apply: deterministic gsettings writes. Exits 99 when gsettings
-    // is unavailable so the caller falls through to the compat adapter.
+    // Native apply: deterministic live gsettings writes. On success the
+    // Hornero CLI adapter still mirrors the choice to GTK's persistent INI
+    // files; gsettings alone leaves gtk-theme-name stale for verification and
+    // for apps that do not consume the desktop schema.
     Process {
         id: nativeProc
 
@@ -194,11 +196,12 @@ fi
         })
         onExited: (exitCode, exitStatus) => {
             if (exitCode === 0) {
-                root._finishApply(true, "");
+                root._compatKind = root._nativeKind;
+                compatProc.running = true;
                 return;
             }
-            // Native apply failed or gsettings is missing: thin compat
-            // fallback (see _compatFor debt note above).
+            // Native apply failed or gsettings is missing: the Hornero CLI
+            // adapter applies both live state and persistent GTK settings.
             root._compatKind = root._nativeKind;
             compatProc.running = true;
         }

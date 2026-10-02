@@ -10,8 +10,10 @@ remains in the runtime tree.
 ### GtkSettings (`services/GtkSettings.qml`) — migration step (a)
 
 Applies GTK themes, icon themes, and color-scheme policy through the
-deterministic `gsettings` desktop APIs before falling back to
-`horneroctl appearance gtk`.
+deterministic `gsettings` desktop APIs, then mirrors successful live changes
+through `horneroctl appearance gtk` so GTK's persistent settings files stay in
+sync. If gsettings is unavailable or fails, the Hornero CLI adapter applies
+both live and persistent state directly.
 
 Policy mapping (`toGsettingsScheme`, input normalized by
 `ThemePipeline.normalizeGtkColorScheme`):
@@ -23,13 +25,19 @@ Policy mapping (`toGsettingsScheme`, input normalized by
 | `default` | `default` |
 | `follow` (or empty) | `prefer-dark` when dark mode, else `prefer-light` |
 
-Native writes:
+Live writes:
 
 | Request | `gsettings set` keys |
 |---|---|
 | GTK theme | `org.gnome.desktop.interface gtk-theme`, `org.gnome.desktop.wm.preferences theme` |
 | Icon theme | `org.gnome.desktop.interface icon-theme` |
 | Color scheme | `org.gnome.desktop.interface color-scheme` |
+
+Every successful live write is followed by the equivalent `horneroctl`
+operation. That operation also writes GTK 2/3/4 settings, which the theme
+pipeline uses for verification and which applications may read independently
+of the desktop schema. Apply is reported complete only after that persistence
+step succeeds.
 
 Live queries (`refreshLive`) read the same three keys back into
 `liveGtkTheme` / `liveIconTheme` / `liveColorScheme`. When `gsettings` is

@@ -131,6 +131,17 @@ def test_theme_pack_apply_uses_registry_and_propagates_errors():
     )
 
 
+def test_native_gtk_apply_persists_gsettings_to_gtk_ini():
+    text = (ROOT / "services" / "GtkSettings.qml").read_text()
+    native = text.split("id: nativeProc", 1)[1].split("id: compatProc", 1)[0]
+    assert "if (exitCode === 0)" in native
+    assert "root._compatKind = root._nativeKind" in native
+    assert "compatProc.running = true" in native, (
+        "successful gsettings writes must also persist GTK theme/icon/scheme "
+        "to settings.ini through the horneroctl adapter"
+    )
+
+
 def test_theme_pipeline_uses_installed_catalogue_metadata():
     catalogue = (ROOT / "services" / "ThemeCatalogue.qml").read_text()
     pipeline = (ROOT / "services" / "ThemePipeline.qml").read_text()

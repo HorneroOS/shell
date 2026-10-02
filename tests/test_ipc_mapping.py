@@ -74,3 +74,16 @@ def test_controlcenter_keyboard_roundtrip():
 
     doc = (ROOT / "docs" / "IPC.md").read_text()
     assert "controlCenter close" in doc, "IPC.md must document controlCenter close"
+
+
+def test_drawers_ipc_tolerates_no_active_screen():
+    """drawers IPC must not throw before a screen is active (issue #97):
+    every Visibilities.getForActive() result is null-checked before use."""
+    src = (ROOT / "modules" / "Shortcuts.qml").read_text()
+    block = src[src.index('target: "drawers"'):]
+    block = block[: block.index("IpcHandler", 1)] if "IpcHandler" in block[1:] else block
+    calls = [m.end() for m in re.finditer(r"Visibilities\.getForActive\(\);", block)]
+    assert calls, "drawers handler no longer reads Visibilities"
+    for end in calls:
+        following = block[end : end + 200]
+        assert re.search(r"if \(!visibilities\)|visibilities &&", following), following

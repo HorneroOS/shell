@@ -19,6 +19,9 @@ Singleton {
     // below, so the shell is coherent before any external scheme.json
     // arrives and switches mode without light/dark leakage.
     property string themeId: "hornero-dark"
+    property string _pendingBuiltInPersistId: ""
+
+    signal builtInThemePersisted(string id, bool ok, string error)
 
     function isBuiltInTheme(id: string): bool {
         return id === "hornero-dark" || id === "hornero-light";
@@ -39,6 +42,27 @@ Singleton {
         currentLight = id === "hornero-light";
         // A live built-in supersedes any wallpaper-preview palette.
         showPreview = false;
+    }
+
+    // Persist the built-in identity and mode through the same scheme file
+    // used by startup restoration. The palette itself remains owned by the
+    // generated built-in tables above; an empty colours object tells load()
+    // to restore that table instead of wallpaper-generated roles.
+    function persistBuiltInTheme(id: string, gtkColorScheme: string): void {
+        if (!isBuiltInTheme(id)) {
+            builtInThemePersisted(id, false, "unknown built-in theme");
+            return;
+        }
+        const mode = id === "hornero-light" ? "light" : "dark";
+        _pendingBuiltInPersistId = id;
+        schemeFileView.setText(JSON.stringify({
+            "name": id,
+            "flavour": "tonal-spot",
+            "mode": mode,
+            "variant": "tonalspot",
+            "gtkColorScheme": gtkColorScheme,
+            "colours": {}
+        }));
     }
     readonly property bool light: showPreview ? previewLight : currentLight
     property bool currentLight
@@ -280,11 +304,13 @@ Singleton {
         const scheme = JSON.parse(data);
 
         if (!isPreview) {
+            if (root.isBuiltInTheme(scheme.name)) {
+                root.applyBuiltInTheme(scheme.name);
+                return;
+            }
             root.scheme = scheme.name;
             flavour = scheme.flavour;
             currentLight = scheme.mode === "light";
-            if (root.isBuiltInTheme(scheme.name))
-                themeId = scheme.name;
             // Live scheme from disk supersedes any wallpaper-preview palette.
             showPreview = false;
         } else {
@@ -322,6 +348,20 @@ Singleton {
         onLoaded: {
             root._schemeFallbackActive = false;
             root.load(text(), false);
+        }
+        onSaved: {
+            const id = root._pendingBuiltInPersistId;
+            if (!id)
+                return;
+            root._pendingBuiltInPersistId = "";
+            root.builtInThemePersisted(id, true, "");
+        }
+        onSaveFailed: error => {
+            const id = root._pendingBuiltInPersistId;
+            if (!id)
+                return;
+            root._pendingBuiltInPersistId = "";
+            root.builtInThemePersisted(id, false, FileViewError.toString(error));
         }
         onLoadFailed: err => {
             if (err === FileViewError.FileNotFound && !root._schemeFallbackActive) {

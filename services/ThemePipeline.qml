@@ -246,6 +246,26 @@ Singleton {
             _pendingWallpaper = wallpaper;
             writeWallpaperPointer.running = true;
         }
+        // Built-ins previously changed only live QML state. Persist their
+        // identity/mode first so CLI status and the next Shell start agree.
+        Colours.persistBuiltInTheme(id, _pendingGtkColorScheme);
+    }
+
+    function _continueBuiltInThemeApply(id: string, ok: bool, error: string): void {
+        if (id !== _pendingThemeId)
+            return;
+        if (!ok) {
+            _finishJob(false, `could not persist ${id}: ${error}`);
+            return;
+        }
+        syncBuiltInStateProc.running = true;
+    }
+
+    function _finishBuiltInThemeApply(exitCode: int): void {
+        if (exitCode !== 0) {
+            _finishJob(false, "could not synchronize built-in theme state");
+            return;
+        }
         hyprlockProc.running = true;
         hyprReloadProc.running = true;
         if (_pendingThemeName) {
@@ -253,7 +273,7 @@ Singleton {
             notifyProc.running = true;
         }
         _awaitingGtk = true;
-        GtkSettings.applyFull("", "", id, _pendingGtkColorScheme, _pendingDarkMode);
+        GtkSettings.applyFull("", "", _pendingThemeId, _pendingGtkColorScheme, _pendingDarkMode);
     }
 
     function _finishJob(ok: bool, err: string): void {
@@ -286,6 +306,15 @@ Singleton {
             if (exitCode !== 0)
                 console.warn("ThemePipeline: scheme regeneration failed (exit", exitCode, ")");
         }
+    }
+
+    // The built-in semantic palette does not run M3 generation, but its
+    // minimal scheme metadata still needs to be committed to the canonical
+    // CLI state store before GTK verification can report success.
+    Process {
+        id: syncBuiltInStateProc
+        command: ["horneroctl", "scheme", "sync-state", "--yes"]
+        onExited: (exitCode, exitStatus) => root._finishBuiltInThemeApply(exitCode)
     }
 
     QtObject {
@@ -541,6 +570,14 @@ done
                 return;
             root._awaitingGtk = false;
             root._finishJob(ok, error);
+        }
+    }
+
+    Connections {
+        target: Colours
+
+        function onBuiltInThemePersisted(id: string, ok: bool, error: string): void {
+            root._continueBuiltInThemeApply(id, ok, error);
         }
     }
 

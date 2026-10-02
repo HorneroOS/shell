@@ -36,23 +36,30 @@ Searcher {
     // first, even when the registry is absent. Full palettes
     // live in Colours; ThemePipeline applies these ids natively.
     function _withBuiltIns(items: var): var {
+        function cataloguePack(id: string): var {
+            if (!Array.isArray(items))
+                return {};
+            return items.find(item => item && item.id === id) || {};
+        }
+        const darkPack = cataloguePack("hornero-dark");
+        const lightPack = cataloguePack("hornero-light");
         const builtIns = [
-            {
+            Object.assign({}, darkPack, {
                 "id": "hornero-dark",
                 "name": "Hornero Dark",
                 "description": "Default dark theme with rose accent",
                 "darkMode": true,
                 "schemeType": "tonal-spot",
                 "tags": ["hornero", "dark", "builtin"]
-            },
-            {
+            }),
+            Object.assign({}, lightPack, {
                 "id": "hornero-light",
                 "name": "Hornero Light",
                 "description": "Default light theme with rose accent",
                 "darkMode": false,
                 "schemeType": "tonal-spot",
                 "tags": ["hornero", "light", "builtin"]
-            }
+            })
         ];
         const rest = Array.isArray(items) ? items.filter(item => item && item.id !== "hornero-dark" && item.id !== "hornero-light") : [];
         return builtIns.concat(rest);

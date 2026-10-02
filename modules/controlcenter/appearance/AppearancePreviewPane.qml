@@ -432,7 +432,7 @@ StyledRect {
                                 FallbackImage {
                                     implicitWidth: 88
                                     implicitHeight: 56
-                                    candidates: root.gtkThumbnailCandidates(root.gtkThemeText)
+                                    candidates: root.showVisualSamples ? root.gtkThumbnailCandidates(root.gtkThemeText) : []
                                     placeholderIcon: "desktop_windows"
                                     placeholderText: root.gtkThemeText === "auto" ? qsTr("auto") : qsTr("No thumb")
                                 }
@@ -459,7 +459,7 @@ StyledRect {
                                             required property string modelData
                                             implicitWidth: 28
                                             implicitHeight: 28
-                                            candidates: root.iconSampleCandidates(root.iconThemeText, modelData)
+                                            candidates: root.showVisualSamples ? root.iconSampleCandidates(root.iconThemeText, modelData) : []
                                             placeholderIcon: ""
                                             hideWhenMissing: true
                                         }

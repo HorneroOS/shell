@@ -11,10 +11,33 @@ Item {
     implicitHeight: layout.implicitHeight
 
     readonly property var today: Weather.forecast && Weather.forecast.length > 0 ? Weather.forecast[0] : null
-    readonly property bool isLoading: Weather.loading || (!Weather.ready && !Weather.lastError)
-    readonly property bool isError: !Weather.loading && !!Weather.lastError && !Weather.ready
+    readonly property bool isLoading: Weather.locationConfigured && (Weather.loading || (!Weather.ready && !Weather.lastError))
+    readonly property bool isError: Weather.locationConfigured && !Weather.loading && !!Weather.lastError && !Weather.ready
 
     Component.onCompleted: Weather.reload()
+
+    Loader {
+        active: !Weather.locationConfigured
+        visible: active
+        anchors.fill: parent
+
+        sourceComponent: Column {
+            anchors.centerIn: parent
+            spacing: Appearance.spacing.normal
+
+            StyledText {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: qsTr("Set a location")
+                font.pointSize: Appearance.font.size.large
+            }
+
+            StyledText {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: qsTr("Choose a city in Settings → Dashboard. Weather is offline until then.")
+                color: Colours.palette.m3onSurfaceVariant
+            }
+        }
+    }
 
     // ── Error state ───────────────────────────────────────────────────────────
     Loader {
@@ -136,11 +159,10 @@ Item {
     }
 
     // ── Real content (shown when data is ready) ───────────────────────────────
-    opacity: root.isLoading || root.isError ? 0 : 1
-    Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
 
     ColumnLayout {
         id: layout
+        visible: Weather.ready
 
         anchors.fill: parent
         spacing: Appearance.spacing.smaller

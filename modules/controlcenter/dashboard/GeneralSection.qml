@@ -93,6 +93,24 @@ SectionContainer {
         }
     }
 
+    StyledText {
+        Layout.fillWidth: true
+        text: qsTr("Weather stays offline until you enter a location. City search and forecasts use Open-Meteo over HTTPS. Coordinates are also sent to OpenStreetMap to find the city name. Clear the field to stop requests.")
+        wrapMode: Text.WordWrap
+        font.pointSize: Appearance.font.size.small
+        color: Colours.palette.m3onSurfaceVariant
+    }
+
+    StyledText {
+        Layout.fillWidth: true
+        visible: Weather.locationConfigured
+        text: Weather.loading ? qsTr("Looking up weather…") : Weather.lastError || Weather.city
+        wrapMode: Text.WordWrap
+        color: Weather.lastError ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
+        Accessible.role: Accessible.StaticText
+        Accessible.name: text
+    }
+
     SectionContainer {
         contentSpacing: Appearance.spacing.normal
 

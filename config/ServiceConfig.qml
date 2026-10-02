@@ -2,7 +2,7 @@ import Quickshell.Io
 import QtQuick
 
 JsonObject {
-    property string weatherLocation: "" // A lat,long pair or empty for autodetection, e.g. "37.8267,-122.4233"
+    property string weatherLocation: "" // City or lat,long. Empty keeps weather offline; no IP detection.
     property bool useFahrenheit: false
     property bool useFahrenheitPerformance: false
     property bool useTwelveHourClock: Qt.locale().timeFormat(Locale.ShortFormat).toLowerCase().includes("a")

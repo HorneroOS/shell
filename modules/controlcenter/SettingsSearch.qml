@@ -27,7 +27,7 @@ Popup {
     readonly property var results: findResults(session.searchQuery)
 
     function normalize(value: string): string {
-        return value.toLowerCase().trim().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ");
+        return value.toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
     }
 
     function fuzzyTokenMatch(query: string, haystack: string): bool {

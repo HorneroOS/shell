@@ -134,6 +134,7 @@ def test_search_targets_resolve_to_registered_panes_and_appearance_sections():
 
 def test_settings_search_has_keyboard_entry_and_layered_escape():
     search = (CC / "SettingsSearch.qml").read_text()
+    assert 'replace(/\\s+/g, " ").trim()' in search
     factory = WINDOW_FACTORY.read_text()
     assert 'sequences: ["Ctrl+,"]' in factory
     assert "Qt.Key_Down" in search and "Qt.Key_Up" in search

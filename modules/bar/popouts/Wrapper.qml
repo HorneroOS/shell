@@ -32,6 +32,13 @@ Item {
     property string currentName
     property real currentCenter
     property bool hasCurrent
+    // Explicit keyboard activation may grab focus; hover-opened cards never do.
+    property bool keyboardIntent: false
+
+    onHasCurrentChanged: {
+        if (!hasCurrent)
+            keyboardIntent = false;
+    }
 
 
     property string detachedMode

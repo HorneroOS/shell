@@ -160,6 +160,7 @@ Item {
         popouts.currentName = name;
         popouts.currentCenter = centerBinding(anchor, 0);
         popouts.hasCurrent = true;
+        popouts.keyboardIntent = true;
     }
 
     function centerBinding(ref: Item, len: real): var {

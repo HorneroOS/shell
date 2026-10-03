@@ -168,6 +168,22 @@ def test_focus_mode_scopes_tab_to_current_root():
     assert "FocusMode.enter(" in drawers
 
 
+def test_status_popout_keyboard_intent_does_not_steal_focus_on_hover():
+    """Status cards opened by keyboard join the existing focus root; ordinary
+    hover remains grab-free so bar previews never steal typing."""
+    status = (ROOT / "modules" / "bar" / "components" / "StatusIcons.qml").read_text()
+    bar = (ROOT / "modules" / "bar" / "Bar.qml").read_text()
+    wrapper = (ROOT / "modules" / "bar" / "popouts" / "Wrapper.qml").read_text()
+    drawers = (ROOT / "modules" / "drawers" / "Drawers.qml").read_text()
+
+    assert "Accessible.role: Accessible.Button" in status
+    assert "Keys.onReturnPressed" in status and "Keys.onSpacePressed" in status
+    assert "root.popoutRequested(name, this)" in status
+    assert "popouts.keyboardIntent = true" in bar
+    assert "if (!hasCurrent)" in wrapper and "keyboardIntent = false" in wrapper
+    assert "panels.popouts.keyboardIntent && panels.popouts.hasCurrent" in drawers
+
+
 def test_click_intent_overlay_stays_out_of_input_mask():
     """The input mask is built from panels.children; a full-size child of
     Panels would make the drawers layer swallow every desktop click

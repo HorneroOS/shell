@@ -69,7 +69,7 @@ Variants {
 
             // Topmost keyboard-holding drawer, same order as
             // dismissTopmost(): Tab stays inside it (FocusMode.step).
-            readonly property Item keyboardRoot: visibilities.layoutPicker ? panels.layoutPicker : visibilities.session ? panels.session : visibilities.launcher ? panels.launcher : (visibilities.dashboard && (!Config.dashboard.showOnHover || interactions.dashboardKeyboardIntent)) ? panels.dashboard : visibilities.sidebar ? panels.sidebar : (visibilities.utilities && interactions.utilitiesKeyboardIntent) ? panels.utilities : panels.popouts.currentName.startsWith("traymenu") ? panels.popouts : null
+            readonly property Item keyboardRoot: visibilities.layoutPicker ? panels.layoutPicker : visibilities.session ? panels.session : visibilities.launcher ? panels.launcher : (visibilities.dashboard && (!Config.dashboard.showOnHover || interactions.dashboardKeyboardIntent)) ? panels.dashboard : visibilities.sidebar ? panels.sidebar : (visibilities.utilities && interactions.utilitiesKeyboardIntent) ? panels.utilities : ((panels.popouts.keyboardIntent && panels.popouts.hasCurrent) || (panels.popouts.currentName.startsWith("traymenu") && panels.popouts.current?.depth > 1)) ? panels.popouts : null
 
             // One writer per window: publish this screen's root while its
             // grab holds the keyboard, clear it only if it is still ours.
@@ -254,7 +254,7 @@ Variants {
                 // stay grab-free so edge touches never steal typing; explicit
                 // opens (shortcut, IPC, action — mouse outside the area) and
                 // a click inside a hover-opened drawer set keyboard intent.
-                active: (visibilities.launcher && Config.launcher.enabled) || (visibilities.session && Config.session.enabled) || (visibilities.sidebar && Config.sidebar.enabled) || ((!Config.dashboard.showOnHover || interactions.dashboardKeyboardIntent) && visibilities.dashboard && Config.dashboard.enabled) || (interactions.utilitiesKeyboardIntent && visibilities.utilities && Config.utilities.enabled) || visibilities.layoutPicker || (panels.popouts.currentName.startsWith("traymenu") && panels.popouts.current?.depth > 1)
+                active: (visibilities.launcher && Config.launcher.enabled) || (visibilities.session && Config.session.enabled) || (visibilities.sidebar && Config.sidebar.enabled) || ((!Config.dashboard.showOnHover || interactions.dashboardKeyboardIntent) && visibilities.dashboard && Config.dashboard.enabled) || (interactions.utilitiesKeyboardIntent && visibilities.utilities && Config.utilities.enabled) || visibilities.layoutPicker || (panels.popouts.keyboardIntent && panels.popouts.hasCurrent) || (panels.popouts.currentName.startsWith("traymenu") && panels.popouts.current?.depth > 1)
                 windows: [win]
                 onActiveChanged: win.syncFocusRoot()
                 onCleared: {

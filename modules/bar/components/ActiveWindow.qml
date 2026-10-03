@@ -35,28 +35,37 @@ Item {
     // and live preview. Keep titles inline on horizontal bars.
     implicitWidth: {
         if (root.compactRail)
-            return icon.implicitWidth;
+            return Config.bar.sizes.innerWidth;
         if (root.vertical)
             return Math.max(icon.implicitWidth, current.implicitHeight);
         return icon.implicitWidth + current.implicitWidth + current.anchors.leftMargin;
     }
     implicitHeight: {
         if (root.compactRail)
-            return icon.implicitHeight;
+            return Config.bar.sizes.innerWidth;
         if (root.vertical)
             return icon.implicitHeight + current.implicitWidth + current.anchors.topMargin;
         return Math.max(icon.implicitHeight, current.implicitHeight);
     }
 
-    MaterialIcon {
+    Item {
         id: icon
 
+        implicitWidth: root.compactRail ? Config.bar.sizes.innerWidth : glyph.implicitWidth
+        implicitHeight: root.compactRail ? Config.bar.sizes.innerWidth : glyph.implicitHeight
+        width: implicitWidth
+        height: implicitHeight
         anchors.horizontalCenter: root.vertical ? parent.horizontalCenter : undefined
-        anchors.verticalCenter: root.vertical ? undefined : parent.verticalCenter
+        anchors.verticalCenter: root.vertical ? (root.compactRail ? parent.verticalCenter : undefined) : parent.verticalCenter
 
-        animate: true
-        text: Icons.getAppCategoryIcon(Hypr.activeToplevel?.lastIpcObject.class, "desktop_windows")
-        color: root.colour
+        MaterialIcon {
+            id: glyph
+
+            anchors.centerIn: parent
+            animate: true
+            text: Icons.getAppCategoryIcon(Hypr.activeToplevel?.lastIpcObject.class, "desktop_windows")
+            color: root.colour
+        }
     }
 
     Title {

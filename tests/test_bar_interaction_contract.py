@@ -64,6 +64,8 @@ def test_vertical_active_window_stays_compact_and_exposes_the_full_title():
     assert "Accessible.name: Hypr.activeToplevel?.title" in src
     assert "readonly property bool compactRail: vertical && Config.bar.popouts.activeWindow" in src
     assert "if (root.compactRail)" in src
+    assert "return Config.bar.sizes.innerWidth;" in src
+    assert "root.compactRail ? parent.verticalCenter" in src
     assert "visible: !root.compactRail" in src
 
 

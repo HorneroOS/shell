@@ -13,6 +13,7 @@ QtObject {
         const pane = Config.controlCenter.startPane ?? "network";
         return PaneRegistry.getById(pane) ? pane : "network";
     }
+    readonly property string activeTitle: PaneRegistry.getById(active)?.title ?? active
     property int activeIndex: 0
     property bool navExpanded: false
     // Hover-prefetch target for NavRail → Panes loaders.

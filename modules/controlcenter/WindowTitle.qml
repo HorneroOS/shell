@@ -19,7 +19,7 @@ StyledRect {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
 
-        text: qsTr("Hornero Settings - %1").arg(root.session.active)
+        text: qsTr("Hornero Settings - %1").arg(root.session.activeTitle)
         font.capitalization: Font.Capitalize
         font.pointSize: Appearance.font.size.larger
         font.weight: 500
@@ -37,7 +37,7 @@ StyledRect {
             radius: Appearance.rounding.full
 
             function onClicked(): void {
-                QsWindow.window.destroy();
+                WindowFactory.closeWindow(QsWindow.window);
             }
         }
 

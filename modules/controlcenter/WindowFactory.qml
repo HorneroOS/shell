@@ -14,6 +14,7 @@ Singleton {
     // destroys all of them; `create` reuses the first one so repeated
     // opens never stack duplicate windows.
     property var windows: []
+    property int nextWindowToken: 0
 
     // Companion yield: a Settings window is a focused configuration
     // surface, and the Overlay-layer companion paints above every
@@ -34,8 +35,11 @@ Singleton {
             return;
         }
         const win = controlCenter.createObject(parent ?? dummy, props);
-        if (win)
+        if (win) {
+            root.nextWindowToken += 1;
+            win.registryToken = root.nextWindowToken;
             windows.push(win);
+        }
         root.syncCompanion();
     }
 
@@ -55,13 +59,44 @@ Singleton {
         }
     }
 
-    function forget(win: Item): void {
-        windows = windows.filter(w => w && w !== win);
+    function forget(win: var): void {
+        let token = -1;
+        try {
+            if (win)
+                token = win.registryToken;
+        } catch (e) {
+            // Destruction callbacks can arrive after the QWindow wrapper died.
+        }
+        windows = windows.filter(w => {
+            try {
+                return w && w.registryToken !== token;
+            } catch (e) {
+                return false;
+            }
+        });
         root.syncCompanion();
     }
 
+    function closeWindow(win: var): void {
+        // Drop the reference before requesting deferred QObject destruction.
+        // A second open can arrive before Component.onDestruction runs.
+        root.forget(win);
+        try {
+            if (win)
+                win.destroy();
+        } catch (e) {
+            console.warn(`[WindowFactory] dropping dead Settings window: ${e}`);
+        }
+    }
+
     function prune(): void {
-        windows = windows.filter(w => w);
+        windows = windows.filter(w => {
+            try {
+                return w && w.visible;
+            } catch (e) {
+                return false;
+            }
+        });
     }
 
     QtObject {
@@ -82,6 +117,7 @@ Singleton {
 
             property alias active: cc.active
             property alias navExpanded: cc.navExpanded
+            property int registryToken: 0
             // Deep-link target validated by the caller against
             // PaneRegistry; applied once the content exists.
             property string pane: ""
@@ -95,7 +131,7 @@ Singleton {
 
             onVisibleChanged: {
                 if (!visible)
-                    destroy();
+                    root.closeWindow(win);
             }
 
             Component.onDestruction: root.forget(win)
@@ -112,7 +148,7 @@ Singleton {
                         else
                             cc.searchOpen = false;
                     } else {
-                        win.destroy();
+                        root.closeWindow(win);
                     }
                 }
             }
@@ -135,7 +171,7 @@ Singleton {
             minimumSize.width: Math.min(1150, screen.width * 0.9)
             minimumSize.height: Math.min(650, screen.height * 0.9)
 
-            title: qsTr("Hornero Settings - %1").arg(cc.active.slice(0, 1).toUpperCase() + cc.active.slice(1))
+            title: qsTr("Hornero Settings - %1").arg(cc.session.activeTitle)
 
             ControlCenter {
                 id: cc
@@ -145,7 +181,7 @@ Singleton {
                 floating: true
 
                 function close(): void {
-                    win.destroy();
+                    root.closeWindow(win);
                 }
             }
 

@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import qs.components
 import qs.services
 import qs.utils
+import qs.components.controls
 import qs.config
 import Quickshell
 import Quickshell.Bluetooth
@@ -23,6 +24,8 @@ StyledRect {
     // Clear bars draw no chips: the cluster sits on the wallpaper like the
     // rest of the bar (set by Bar.qml).
     property bool clear: false
+
+    signal popoutRequested(string name, Item anchor)
 
     color: clear ? "transparent" : Colours.tPalette.m3surfaceContainer
     radius: Appearance.rounding.full
@@ -123,8 +126,9 @@ StyledRect {
         }
 
         // Audio icon
-        WrappedLoader {
+        PopoutTrigger {
             name: "audio"
+            accessibleLabel: qsTr("Volume controls")
             active: Config.bar.status.showAudio
 
             sourceComponent: MaterialIcon {
@@ -135,8 +139,9 @@ StyledRect {
         }
 
         // Microphone icon
-        WrappedLoader {
+        PopoutTrigger {
             name: "audio"
+            accessibleLabel: qsTr("Microphone controls")
             active: Config.bar.status.showMicrophone
 
             sourceComponent: MaterialIcon {
@@ -147,8 +152,9 @@ StyledRect {
         }
 
         // Keyboard layout icon
-        WrappedLoader {
+        PopoutTrigger {
             name: "kblayout"
+            accessibleLabel: qsTr("Keyboard layout controls")
             active: Config.bar.status.showKbLayout
 
             sourceComponent: StyledText {
@@ -160,8 +166,9 @@ StyledRect {
         }
 
         // Network icon
-        WrappedLoader {
+        PopoutTrigger {
             name: "network"
+            accessibleLabel: qsTr("Network controls")
             active: Config.bar.status.showNetwork && (!Nmcli.activeEthernet || Config.bar.status.showWifi)
 
             sourceComponent: MaterialIcon {
@@ -172,8 +179,9 @@ StyledRect {
         }
 
         // Ethernet icon
-        WrappedLoader {
+        PopoutTrigger {
             name: "ethernet"
+            accessibleLabel: qsTr("Ethernet controls")
             active: Config.bar.status.showNetwork && Nmcli.activeEthernet
 
             sourceComponent: MaterialIcon {
@@ -184,11 +192,12 @@ StyledRect {
         }
 
         // Bluetooth section
-        WrappedLoader {
+        PopoutTrigger {
             Layout.preferredHeight: root.vertical ? implicitHeight : -1
             Layout.preferredWidth: root.vertical ? -1 : implicitWidth
 
             name: "bluetooth"
+            accessibleLabel: qsTr("Bluetooth controls")
             active: Config.bar.status.showBluetooth
 
             sourceComponent: GridLayout {
@@ -255,8 +264,9 @@ StyledRect {
         }
 
         // Battery icon
-        WrappedLoader {
+        PopoutTrigger {
             name: "battery"
+            accessibleLabel: qsTr("Power controls")
             active: Config.bar.status.showBattery
 
             sourceComponent: MaterialIcon {
@@ -290,5 +300,38 @@ StyledRect {
 
         Layout.alignment: root.vertical ? Qt.AlignHCenter : Qt.AlignVCenter
         visible: active
+    }
+
+    // Keep the bar's pointer-driven hit test as the single hover owner while
+    // exposing these same popouts to keyboard and assistive technology.
+    component PopoutTrigger: WrappedLoader {
+        required property string accessibleLabel
+
+        focus: active
+        activeFocusOnTab: active
+        Accessible.role: Accessible.Button
+        Accessible.name: accessibleLabel
+
+        onActiveFocusChanged: {
+            if (activeFocus)
+                FocusMode.reportFocus(false);
+        }
+
+        Keys.onReturnPressed: event => {
+            root.popoutRequested(name, this);
+            event.accepted = true;
+        }
+        Keys.onEnterPressed: event => {
+            root.popoutRequested(name, this);
+            event.accepted = true;
+        }
+        Keys.onSpacePressed: event => {
+            root.popoutRequested(name, this);
+            event.accepted = true;
+        }
+
+        FocusRing {
+            radius: Appearance.rounding.full
+        }
     }
 }

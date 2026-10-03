@@ -144,11 +144,38 @@ StyledRect {
                 color: previewColor("m3surfaceContainerHigh", Colours.tPalette.m3surfaceContainerHigh)
 
                 Image {
+                    id: previewWallpaper
                     anchors.fill: parent
                     source: root.wallpaperPath ? `file://${root.wallpaperPath}` : ""
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
                     cache: true
+                    visible: status === Image.Ready
+                    Accessible.name: status === Image.Ready
+                        ? (root.wallpaperLabel || Strings.wallpaperDisplayName(root.wallpaperPath))
+                        : status === Image.Error ? qsTr("Wallpaper unavailable") : qsTr("Loading wallpaper")
+                }
+
+                Column {
+                    anchors.centerIn: parent
+                    spacing: Appearance.spacing.smaller
+                    visible: root.active && previewWallpaper.status !== Image.Ready
+
+                    MaterialIcon {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: previewWallpaper.status === Image.Error ? "image_not_supported" : "wallpaper"
+                        font.pointSize: Appearance.font.size.large
+                        color: previewColor("m3outline", Colours.palette.m3outline)
+                    }
+
+                    StyledText {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: previewWallpaper.status === Image.Error
+                            ? qsTr("Wallpaper unavailable")
+                            : root.wallpaperPath ? qsTr("Loading wallpaper") : qsTr("No wallpaper selected")
+                        font.pointSize: Appearance.font.size.small
+                        color: previewColor("m3onSurfaceVariant", Colours.palette.m3onSurfaceVariant)
+                    }
                 }
 
                 // Mode badge over wallpaper

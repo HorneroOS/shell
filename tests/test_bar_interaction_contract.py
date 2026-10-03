@@ -58,6 +58,17 @@ def test_inline_bar_sliders_explain_current_value_and_input():
     assert "monitor.setBrightness" in src
 
 
+def test_vertical_active_window_stays_compact_and_exposes_the_full_title():
+    src = (ROOT / "modules/bar/components/ActiveWindow.qml").read_text()
+    assert "Accessible.role: Accessible.StaticText" in src
+    assert "Accessible.name: Hypr.activeToplevel?.title" in src
+    assert "readonly property bool compactRail: vertical && Config.bar.popouts.activeWindow" in src
+    assert "if (root.compactRail)" in src
+    assert "return Config.bar.sizes.innerWidth;" in src
+    assert "root.compactRail ? parent.verticalCenter" in src
+    assert "visible: !root.compactRail" in src
+
+
 def test_motion_and_bar_affordances_are_documented():
     src = (ROOT / "docs/INTERACTION.md").read_text()
     assert "unfold from" in src

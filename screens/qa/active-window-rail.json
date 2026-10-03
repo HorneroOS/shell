@@ -1,0 +1,10 @@
+{
+  "capture": "nested-hyprland",
+  "capture_date": "2026-10-03",
+  "host_output": "1920x1080",
+  "nested_monitor": "1111x1016",
+  "scope": "representative left-rail configuration; icon and workspace geometry only",
+  "before": "active-window-rail-before.png",
+  "after": "active-window-rail-after.png",
+  "notes": "Crops contain only the Hornero rail. The nested session had no connected Hyprland active-window metadata, so this evidence validates rail rendering, not the live-preview popout content."
+}

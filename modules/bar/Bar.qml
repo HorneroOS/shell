@@ -153,6 +153,16 @@ Item {
         popouts.ownerBackdrop = root.spec.backdrop;
     }
 
+    function openStatusPopout(name: string, anchor: Item): void {
+        if (!Config.bar.popouts.statusIcons || !anchor)
+            return;
+        claimPopouts();
+        popouts.currentName = name;
+        popouts.currentCenter = centerBinding(anchor, 0);
+        popouts.hasCurrent = true;
+        popouts.keyboardIntent = true;
+    }
+
     function centerBinding(ref: Item, len: real): var {
         return Qt.binding(() => {
             try {
@@ -524,6 +534,7 @@ Item {
                                 screen: root.screen
                                 vertical: root.vertical
                                 clear: root.clear
+                                onPopoutRequested: (name, anchor) => root.openStatusPopout(name, anchor)
                             }
                         }
                     }

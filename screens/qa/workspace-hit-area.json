@@ -7,5 +7,14 @@
   "input": "QMP pointer click on workspace 2",
   "result": "active workspace changed from 1 to 2",
   "before": "workspace-hit-area-before.png",
-  "after": "workspace-hit-area-after.png"
+  "after": "workspace-hit-area-after.png",
+  "vertical": {
+    "run_id": "20261003T103720Z-bars-workspace-click-outside-layout-1",
+    "scenario": "bars/workspace-click-outside-layout",
+    "layout": "hornero-left",
+    "input": "QMP pointer click on the vertical workspace marker",
+    "result": "active workspace changed from 1 to 3",
+    "before": "workspace-hit-area-vertical-before.png",
+    "after": "workspace-hit-area-vertical-after.png"
+  }
 }

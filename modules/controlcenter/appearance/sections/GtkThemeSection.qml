@@ -73,6 +73,14 @@ CollapsibleSection {
 
         StyledText {
             Layout.fillWidth: true
+            visible: !ThemeCatalogue.gtkThemesLoaded
+            text: qsTr("Checking installed GTK styles…")
+            font.pointSize: Appearance.font.size.small
+            color: Colours.palette.m3onSurfaceVariant
+        }
+
+        StyledText {
+            Layout.fillWidth: true
             visible: ThemeCatalogue.gtkThemesLoaded && root.themeNames.length === 0
             text: ThemeCatalogue.gtkThemesFailed
                 ? qsTr("Hornero couldn't load the installed GTK styles.")
@@ -80,6 +88,14 @@ CollapsibleSection {
             font.pointSize: Appearance.font.size.small
             color: Colours.palette.m3onSurfaceVariant
             wrapMode: Text.WordWrap
+        }
+
+        TextButton {
+            Layout.alignment: Qt.AlignLeft
+            visible: ThemeCatalogue.gtkThemesLoaded && ThemeCatalogue.gtkThemesFailed
+            text: qsTr("Try again")
+            type: TextButton.Text
+            onClicked: ThemeCatalogue.loadAppearanceChoices()
         }
     }
 }

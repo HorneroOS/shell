@@ -226,6 +226,20 @@ def test_appearance_choice_catalogues_can_start_before_they_are_loaded():
     assert "if (appearanceChoicesLoading" not in loader
 
 
+def test_theme_cards_distinguish_unverified_gtk_and_icon_dependencies():
+    themes = (ROOT / "modules" / "controlcenter" / "appearance" / "sections" / "ThemesSection.qml").read_text()
+    gtk = (ROOT / "modules" / "controlcenter" / "appearance" / "sections" / "GtkThemeSection.qml").read_text()
+    icons = (ROOT / "modules" / "controlcenter" / "appearance" / "sections" / "IconThemeSection.qml").read_text()
+
+    assert "readonly property bool gtkAvailabilityUnknown: ThemeCatalogue.gtkThemesFailed" in themes
+    assert "readonly property bool iconAvailabilityUnknown: ThemeCatalogue.iconThemesFailed" in themes
+    assert "Couldn't verify GTK and icon styles" in themes
+    assert "ThemeCatalogue.loadAppearanceChoices()" in gtk
+    assert "ThemeCatalogue.loadAppearanceChoices()" in icons
+    assert "Checking installed GTK styles…" in gtk
+    assert "Checking installed icon styles…" in icons
+
+
 def test_native_analyser_layer_present():
     layer = ROOT / "services" / "WallpaperAnalysis.qml"
     assert layer.exists(), "services/WallpaperAnalysis.qml native layer missing"

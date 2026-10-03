@@ -73,6 +73,14 @@ CollapsibleSection {
 
         StyledText {
             Layout.fillWidth: true
+            visible: !ThemeCatalogue.iconThemesLoaded
+            text: qsTr("Checking installed icon styles…")
+            font.pointSize: Appearance.font.size.small
+            color: Colours.palette.m3onSurfaceVariant
+        }
+
+        StyledText {
+            Layout.fillWidth: true
             visible: ThemeCatalogue.iconThemesLoaded && root.iconNames.length === 0
             text: ThemeCatalogue.iconThemesFailed
                 ? qsTr("Hornero couldn't load the installed icon styles.")
@@ -80,6 +88,14 @@ CollapsibleSection {
             font.pointSize: Appearance.font.size.small
             color: Colours.palette.m3onSurfaceVariant
             wrapMode: Text.WordWrap
+        }
+
+        TextButton {
+            Layout.alignment: Qt.AlignLeft
+            visible: ThemeCatalogue.iconThemesLoaded && ThemeCatalogue.iconThemesFailed
+            text: qsTr("Try again")
+            type: TextButton.Text
+            onClicked: ThemeCatalogue.loadAppearanceChoices()
         }
     }
 }

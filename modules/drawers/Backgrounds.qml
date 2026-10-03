@@ -83,7 +83,10 @@ Shape {
         width: wrapper.width
         height: wrapper.height
         visible: wrapper.visible && !wrapper.usesConnectedBackground
-        color: Colours.surface(Colours.palette.m3surface, "bar")
+        // Floating, clear-bar and horizontal popouts are standalone cards.
+        // Give them the same lifted surface used by other shell cards so
+        // they remain legible over near-black wallpapers and terminal panes.
+        color: Colours.surface(Colours.palette.m3surfaceContainer, "bar")
         radius: wrapper.isDetached ? Appearance.rounding.normal : Config.border.rounding
 
         Behavior on color {

@@ -121,19 +121,40 @@ Item {
             }
         }
 
-        // Vertical time (for vertical bars)
-        StyledText {
+        // Keep a rail clock compact: the meridiem shares the minute row
+        // instead of stretching the clock to a third full-size line.
+        ColumnLayout {
             Layout.alignment: Qt.AlignCenter
             visible: root.vertical
+            spacing: 0
 
-            horizontalAlignment: StyledText.AlignHCenter
-            text: {
-                const twelve = Config.services.useTwelveHourClock;
-                return Time.format(twelve ? "hh\nmm\nA" : "hh\nmm");
+            StyledText {
+                Layout.alignment: Qt.AlignHCenter
+                text: Time.hourStr
+                font.pointSize: Appearance.font.size.smaller
+                font.family: Appearance.font.family.mono
+                color: root.colour
             }
-            font.pointSize: Appearance.font.size.smaller
-            font.family: Appearance.font.family.mono
-            color: root.colour
+
+            RowLayout {
+                Layout.alignment: Qt.AlignHCenter
+                spacing: Appearance.spacing.small / 2
+
+                StyledText {
+                    text: Time.minuteStr
+                    font.pointSize: Appearance.font.size.smaller
+                    font.family: Appearance.font.family.mono
+                    color: root.colour
+                }
+
+                StyledText {
+                    visible: Config.services.useTwelveHourClock && Time.amPmStr !== ""
+                    text: Time.amPmStr
+                    font.pointSize: Appearance.font.size.small
+                    font.family: Appearance.font.family.sans
+                    color: Colours.palette.m3onSurfaceVariant
+                }
+            }
         }
     }
 }

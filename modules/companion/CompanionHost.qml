@@ -337,7 +337,11 @@ Scope {
             screen: win.modelData
             color: "transparent"
             WlrLayershell.namespace: "hornero-companion"
-            WlrLayershell.layer: WlrLayer.Overlay
+            // Keep the Companion above ordinary windows but below transient
+            // shell surfaces (drawers, pickers and other Overlay panels).
+            // This lets it remain part of the desktop without covering
+            // controls that the user has deliberately opened.
+            WlrLayershell.layer: WlrLayer.Top
             WlrLayershell.exclusionMode: ExclusionMode.Ignore
             // Menu modal exception: focus only while the right-click
             // menu is open, so Escape can dismiss it (docs/INTERACTION.md).

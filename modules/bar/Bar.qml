@@ -330,12 +330,7 @@ Item {
             let len = 0;
             let n = 0;
             for (const g of groupItems)
-                // Geometry must follow the configured content, not the
-                // effective visual visibility inherited from this island.
-                // The island's own fit test depends on its contentLength;
-                // feeding g.visible back into this calculation can create
-                // a visibility → fit → size binding loop.
-                if (g.active && g.entries.some(e => e.enabled)) {
+                if (g.visible) {
                     len += root.vertical ? g.implicitHeight : g.implicitWidth;
                     n++;
                 }

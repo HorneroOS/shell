@@ -40,7 +40,7 @@ CollapsibleSection {
     }
 
     function previewPathFor(theme: var): string {
-        return theme?.preview || theme?.wallpaperPath || "";
+        return theme?.preview || theme?.wallpaperPath || (theme?.colorOnly ? Wallpapers.actualCurrent : "");
     }
 
     Component.onCompleted: Themes.reload()

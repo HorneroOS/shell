@@ -5,6 +5,7 @@ import qs.config
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Quickshell
 
 Popup {
     id: root
@@ -26,6 +27,14 @@ Popup {
 
     // Popup properties - doesn't affect layout
     parent: {
+        // Bar triggers sit inside clipped islands, so their nearest
+        // anchors.fill ancestor is often only the 48 px bar itself. Keep
+        // the tooltip in the owning layer-surface coordinate space instead
+        // of clipping it to that island.
+        const windowContent = QsWindow.window?.contentItem;
+        if (windowContent)
+            return windowContent;
+
         let p = target;
         // Walk up to find the root Item (usually has anchors.fill: parent)
         while (p && p.parent) {
@@ -94,23 +103,34 @@ Popup {
             const tooltipWidth = tooltipRect.width > 0 ? tooltipRect.width : tooltipRect.implicitWidth;
             const tooltipHeight = tooltipRect.height > 0 ? tooltipRect.height : tooltipRect.implicitHeight;
 
-            // Center tooltip horizontally on target
-            let newX = targetCenterX - tooltipWidth / 2;
-
-            // Position tooltip above target
-            let newY = targetPos.y - tooltipHeight - Appearance.spacing.small;
-
-            // Keep within bounds
             const padding = Appearance.padding.normal;
-            if (newX < padding) {
-                newX = padding;
-            } else if (newX + tooltipWidth > (parent.width - padding)) {
-                newX = parent.width - tooltipWidth - padding;
+            const gap = Appearance.spacing.small;
+            const targetCenterY = targetPos.y + target.height / 2;
+            const onLeftEdge = targetCenterX < parent.width * 0.18;
+            const onRightEdge = targetCenterX > parent.width * 0.82;
+            let newX = targetCenterX - tooltipWidth / 2;
+            let newY = targetPos.y - tooltipHeight - gap;
+
+            // Rails read best with the tooltip beside the trigger. If there
+            // is not room, fall back to the vertical placement used by bars.
+            if (onLeftEdge && parent.width - targetPos.x - target.width >= tooltipWidth + gap + padding) {
+                newX = targetPos.x + target.width + gap;
+                newY = targetCenterY - tooltipHeight / 2;
+            } else if (onRightEdge && targetPos.x >= tooltipWidth + gap + padding) {
+                newX = targetPos.x - tooltipWidth - gap;
+                newY = targetCenterY - tooltipHeight / 2;
+            } else if (targetCenterY < parent.height / 2) {
+                newY = targetPos.y + target.height + gap;
             }
 
-            // Update popup position
-            x = newX;
-            y = newY;
+            // Flip if the preferred side is clipped, then clamp to the
+            // surface. This keeps top, bottom, left and right bars usable.
+            const maxX = Math.max(padding, parent.width - tooltipWidth - padding);
+            const maxY = Math.max(padding, parent.height - tooltipHeight - padding);
+            if (newY + tooltipHeight > parent.height - padding)
+                newY = targetPos.y - tooltipHeight - gap;
+            x = Math.max(padding, Math.min(newX, maxX));
+            y = Math.max(padding, Math.min(newY, maxY));
             } catch (e) {
                 // Target destroyed mid-layout — skip this positioning pass
             }

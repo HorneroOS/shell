@@ -159,6 +159,7 @@ Item {
         claimPopouts();
         popouts.currentName = name;
         popouts.currentCenter = centerBinding(anchor, 0);
+        popouts.currentAnchor = anchor;
         popouts.hasCurrent = true;
         popouts.keyboardIntent = true;
     }
@@ -208,6 +209,7 @@ Item {
                     claimPopouts();
                     popouts.currentName = icon.name;
                     popouts.currentCenter = centerBinding(icon, 0);
+                    popouts.currentAnchor = icon;
                     popouts.hasCurrent = true;
                 }
             } else if (id === "tray" && Config.bar.popouts.tray) {
@@ -223,6 +225,7 @@ Item {
                         claimPopouts();
                         popouts.currentName = `traymenu${index}`;
                         popouts.currentCenter = centerBinding(trayItem, 0);
+                        popouts.currentAnchor = trayItem;
                         popouts.hasCurrent = true;
                     } else {
                         popouts.hasCurrent = false;
@@ -237,6 +240,7 @@ Item {
                 claimPopouts();
                 popouts.currentName = id.toLowerCase();
                 popouts.currentCenter = centerBinding(item, itemLength);
+                popouts.currentAnchor = item;
                 popouts.hasCurrent = true;
             }
         } catch (e) {

@@ -15,6 +15,7 @@ Item {
     property string label
     property real iconSize: Appearance.font.size.large
     property bool filled
+    readonly property bool hovered: interaction.containsMouse
 
     signal activated
 
@@ -22,10 +23,17 @@ Item {
     implicitHeight: Math.max(glyph.implicitHeight, iconSize) + Appearance.padding.small * 2
 
     Interactive {
+        id: interaction
+
         radius: Appearance.rounding.full
         Accessible.role: Accessible.Button
         Accessible.name: root.label
         onClicked: root.activated()
+    }
+
+    Tooltip {
+        target: root
+        text: root.label
     }
 
     MaterialIcon {

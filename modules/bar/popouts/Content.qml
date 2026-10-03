@@ -179,10 +179,27 @@ Item {
         anchors.left: barVertical && barPosition === "right" ? parent.left : undefined
         anchors.bottom: !barVertical && barPosition === "top" ? parent.bottom : undefined
         anchors.top: !barVertical && barPosition === "bottom" ? parent.top : undefined
-
         opacity: 0
-        scale: 0.8
+        property real revealScale: 0.94
         active: false
+
+        readonly property point anchorPoint: {
+            const anchor = root.wrapper.currentAnchor;
+            if (!anchor)
+                return Qt.point(popout.width / 2, popout.height / 2);
+            try {
+                return anchor.mapToItem(popout, anchor.width / 2, anchor.height / 2);
+            } catch (e) {
+                return Qt.point(popout.width / 2, popout.height / 2);
+            }
+        }
+
+        transform: Scale {
+            origin.x: popout.barVertical ? (popout.barPosition === "left" ? 0 : popout.width) : Math.max(0, Math.min(popout.width, popout.anchorPoint.x))
+            origin.y: popout.barVertical ? Math.max(0, Math.min(popout.height, popout.anchorPoint.y)) : (popout.barPosition === "top" ? 0 : popout.height)
+            xScale: popout.revealScale
+            yScale: popout.revealScale
+        }
 
         states: State {
             name: "active"
@@ -191,7 +208,7 @@ Item {
             PropertyChanges {
                 popout.active: true
                 popout.opacity: 1
-                popout.scale: 1
+                popout.revealScale: 1
             }
         }
 
@@ -202,7 +219,7 @@ Item {
 
                 SequentialAnimation {
                     Anim {
-                        properties: "opacity,scale"
+                        properties: "opacity,revealScale"
                         duration: Appearance.anim.durations.small
                     }
                     PropertyAction {
@@ -221,7 +238,7 @@ Item {
                         property: "active"
                     }
                     Anim {
-                        properties: "opacity,scale"
+                        properties: "opacity,revealScale"
                     }
                 }
             }

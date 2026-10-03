@@ -31,13 +31,25 @@ Item {
 
     property string currentName
     property real currentCenter
+    property Item currentAnchor
     property bool hasCurrent
+    // The first frame has no useful position/size yet. Snap the wrapper to
+    // the trigger on open, then animate later anchor/size changes normally.
+    property bool geometryReady
     // Explicit keyboard activation may grab focus; hover-opened cards never do.
     property bool keyboardIntent: false
 
     onHasCurrentChanged: {
-        if (!hasCurrent)
+        if (!hasCurrent) {
             keyboardIntent = false;
+            currentAnchor = null;
+        } else {
+            geometryReady = false;
+            Qt.callLater(() => {
+                if (root.hasCurrent)
+                    root.geometryReady = true;
+            });
+        }
     }
 
 
@@ -63,6 +75,7 @@ Item {
         hasCurrent = false;
         currentName = "";
         currentCenter = 0;
+        currentAnchor = null;
         animLength = Appearance.anim.durations.normal;
         detachedMode = "";
         animCurve = Appearance.anim.curves.emphasized;
@@ -158,6 +171,8 @@ Item {
     }
 
     Behavior on x {
+        enabled: root.geometryReady
+
         Anim {
             duration: root.animLength
             easing.bezierCurve: root.animCurve
@@ -165,7 +180,7 @@ Item {
     }
 
     Behavior on y {
-        enabled: root.implicitWidth > 0
+        enabled: root.geometryReady && root.implicitWidth > 0
 
         Anim {
             duration: root.animLength
@@ -174,6 +189,8 @@ Item {
     }
 
     Behavior on implicitWidth {
+        enabled: root.geometryReady
+
         Anim {
             duration: root.animLength
             easing.bezierCurve: root.animCurve
@@ -181,7 +198,7 @@ Item {
     }
 
     Behavior on implicitHeight {
-        enabled: root.implicitWidth > 0
+        enabled: root.geometryReady && root.implicitWidth > 0
 
         Anim {
             duration: root.animLength

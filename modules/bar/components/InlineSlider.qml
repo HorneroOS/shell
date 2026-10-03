@@ -49,6 +49,10 @@ RowLayout {
     StyledSlider {
         id: slider
 
+        Accessible.role: Accessible.Slider
+        Accessible.name: root.isAudio ? qsTr("Volume") : qsTr("Brightness")
+        Accessible.description: qsTr("%1. Scroll or use the arrow keys to adjust.").arg(root.isAudio && Audio.muted ? qsTr("Muted") : `${Math.round(value * 100)}%`)
+
         Layout.alignment: Qt.AlignVCenter
         implicitWidth: root.compact ? 64 : 110
         implicitHeight: Appearance.font.size.normal * 1.6
@@ -85,6 +89,11 @@ RowLayout {
             cursorShape: Qt.PointingHandCursor
             z: -1
         }
+    }
+
+    Tooltip {
+        target: slider
+        text: `${root.isAudio ? qsTr("Volume") : qsTr("Brightness")}: ${root.isAudio && Audio.muted ? qsTr("Muted") : `${Math.round(slider.value * 100)}%`}`
     }
 
     // Fixed width ("100%") so the bar does not jitter as the level changes.

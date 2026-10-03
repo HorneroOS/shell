@@ -70,6 +70,14 @@ use Up/Down to move and Enter to open it. Escape clears a query first, then
 dismisses search, then closes Settings. `Super+,` remains available to the
 desktop because the host keymap already assigns it to workspace navigation.
 
+Bar popouts keep the trigger's centre on the bar's long axis, then unfold from
+the edge the trigger lives on: down from top bars, up from bottom bars, inward
+from left or right rails. Icon-only bar actions expose the same short name as
+a hover tooltip and an accessible label; inline volume and brightness also
+announce their current value and support wheel and arrow-key adjustment.
+Tooltips move to the nearest usable side of their trigger and stay within the
+screen on top, bottom and vertical bars.
+
 Hover is edge-triggered for the dashboard and utilities: entering
 the area opens, leaving closes. An Escape/shortcut dismissal sticks
 while the mouse sits still — only leaving and re-entering (fresh

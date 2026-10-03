@@ -117,15 +117,14 @@ transitions with jump cuts.
 ## Z-order policy
 
 The companion is ambient chrome, not a window citizen: it lives on
-the layer-shell `Top` layer, above ordinary windows but below transient
-shell surfaces on `Overlay`. This keeps it visible on the desktop while
-ensuring open drawers, pickers and similar controls remain unobstructed.
-It never steals focus, and returns to its persisted position after a
-configuration surface closes. Settings (a regular floating window) and
-the area picker explicitly suppress it while open through
+the layer-shell `Bottom` layer, above the wallpaper but below ordinary
+windows and shell panels. This keeps it visible on the desktop while
+ensuring open windows, drawers and pickers remain unobstructed. It never
+steals focus, and returns to its persisted position after a configuration
+surface closes. Settings (a regular floating window) and the area picker
+explicitly suppress it while open through
 `CompanionStore.controlCenterOpen` and `areaPickerOpen`, respectively.
-Toasts and ordinary windows do not hide it; there is no per-window
-z-order juggling or click-through exception.
+There is no per-window z-order juggling or click-through exception.
 
 Control Center › Companion exposes enable, character, size,
 idle-to-sleep, tips, edge, bubble theme, summon, and position reset.

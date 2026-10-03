@@ -99,7 +99,7 @@ def test_resolver_exposes_full_reels():
 def test_host_single_companion_overlay():
     assert "CompanionStore.enabled ? Quickshell.screens : []" in HOST
     assert "isMine" in HOST
-    assert "WlrLayer.Top" in HOST
+    assert "WlrLayer.Bottom" in HOST
     assert "ExclusionMode.Ignore" in HOST
     assert "WlrKeyboardFocus.None" in HOST
 
@@ -271,8 +271,8 @@ def test_assistant_boundary_docs():
 
 
 def test_settings_open_suppresses_companion():
-    # Layer-shell Top remains above ordinary toplevel Settings windows,
-    # so configuration surfaces suppress the ambient Companion explicitly.
+    # The Bottom-layer companion still needs explicit suppression for
+    # floating Settings windows, which are above it in the compositor.
     assert "property bool controlCenterOpen: false" in STORE
     assert "|| root.controlCenterOpen" in STORE
 

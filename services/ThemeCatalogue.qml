@@ -9,6 +9,53 @@ Singleton {
 
     property bool loaded: false
     property var themes: []
+    property var gtkThemes: []
+    property var iconThemes: []
+    property bool gtkThemesLoaded: false
+    property bool iconThemesLoaded: false
+    property bool gtkThemesFailed: false
+    property bool iconThemesFailed: false
+    readonly property bool appearanceChoicesLoaded: gtkThemesLoaded && iconThemesLoaded
+    readonly property bool appearanceChoicesLoading: !appearanceChoicesLoaded
+    readonly property bool appearanceChoicesFailed: gtkThemesFailed || iconThemesFailed
+
+    function loadAppearanceChoices(): void {
+        if (appearanceChoicesLoading || (appearanceChoicesLoaded && !appearanceChoicesFailed))
+            return;
+        gtkThemesLoaded = false;
+        iconThemesLoaded = false;
+        gtkThemesFailed = false;
+        iconThemesFailed = false;
+        gtkThemes = [];
+        iconThemes = [];
+        gtkListProc.running = true;
+        iconListProc.running = true;
+    }
+
+    function _finishAppearanceChoices(exitCode: int, output: string, icons: bool): void {
+        if (exitCode === 0) {
+            const names = output.split("\n").map(line => line.trim()).filter(line => line.length > 0);
+            if (icons) {
+                iconThemes = names;
+                iconThemesFailed = false;
+                iconThemesLoaded = true;
+            } else {
+                gtkThemes = names;
+                gtkThemesFailed = false;
+                gtkThemesLoaded = true;
+            }
+        } else {
+            if (icons) {
+                iconThemes = [];
+                iconThemesFailed = true;
+                iconThemesLoaded = true;
+            } else {
+                gtkThemes = [];
+                gtkThemesFailed = true;
+                gtkThemesLoaded = true;
+            }
+        }
+    }
 
     readonly property var _builtIns: [
         {
@@ -78,5 +125,21 @@ Singleton {
                 root.loaded = true;
             }
         }
+    }
+
+    // Appearance opens these catalogues lazily and shares the results
+    // between theme readiness and the GTK/icon choice sections.
+    Process {
+        id: gtkListProc
+        command: ["horneroctl", "appearance", "gtk", "list"]
+        stdout: StdioCollector { id: gtkListOutput }
+        onExited: (exitCode, exitStatus) => root._finishAppearanceChoices(exitCode, gtkListOutput.text, false)
+    }
+
+    Process {
+        id: iconListProc
+        command: ["horneroctl", "appearance", "gtk", "icons"]
+        stdout: StdioCollector { id: iconListOutput }
+        onExited: (exitCode, exitStatus) => root._finishAppearanceChoices(exitCode, iconListOutput.text, true)
     }
 }

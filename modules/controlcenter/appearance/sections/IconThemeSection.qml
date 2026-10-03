@@ -6,8 +6,6 @@ import qs.components.controls
 import qs.components.containers
 import qs.services
 import qs.config
-import Quickshell
-import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 
@@ -21,27 +19,7 @@ CollapsibleSection {
     description: qsTr("Desktop icon set — applies on click")
     showBackground: true
 
-    property var iconNames: []
-
-    function reloadIcons(): void {
-        listProc.running = true;
-    }
-
-    Component.onCompleted: reloadIcons()
-
-    // Icon listing via the native icon-theme catalogue (index.theme
-    // parsing plus de-dup across /usr/share/icons, ~/.local/share/icons,
-    // ~/.icons); see docs/NATIVE-APPEARANCE.md.
-    Process {
-        id: listProc
-
-        command: ["horneroctl", "appearance", "gtk", "icons"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                root.iconNames = text.split("\n").map(line => line.trim()).filter(line => line.length > 0);
-            }
-        }
-    }
+    readonly property var iconNames: ThemeCatalogue.iconThemes
 
     ColumnLayout {
         Layout.fillWidth: true
@@ -91,6 +69,17 @@ CollapsibleSection {
 
                 implicitHeight: Appearance.padding.normal * 2 + Appearance.font.size.normal * 1.4
             }
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+            visible: ThemeCatalogue.iconThemesLoaded && root.iconNames.length === 0
+            text: ThemeCatalogue.iconThemesFailed
+                ? qsTr("Hornero couldn't load the installed icon styles.")
+                : qsTr("No icon styles are available. Install an icon theme to restore app icons.")
+            font.pointSize: Appearance.font.size.small
+            color: Colours.palette.m3onSurfaceVariant
+            wrapMode: Text.WordWrap
         }
     }
 }

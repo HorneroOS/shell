@@ -6,8 +6,6 @@ import qs.components.controls
 import qs.components.containers
 import qs.services
 import qs.config
-import Quickshell
-import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 
@@ -21,27 +19,7 @@ CollapsibleSection {
     description: qsTr("Application chrome theme — applies on click")
     showBackground: true
 
-    property var themeNames: []
-
-    function reloadThemes(): void {
-        listProc.running = true;
-    }
-
-    Component.onCompleted: reloadThemes()
-
-    // Theme listing via the native GTK catalogue (index.theme parsing plus
-    // de-dup across /usr/share/themes, ~/.local/share/themes, ~/.themes);
-    // see docs/NATIVE-APPEARANCE.md.
-    Process {
-        id: listProc
-
-        command: ["horneroctl", "appearance", "gtk", "list"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                root.themeNames = text.split("\n").map(line => line.trim()).filter(line => line.length > 0);
-            }
-        }
-    }
+    readonly property var themeNames: ThemeCatalogue.gtkThemes
 
     ColumnLayout {
         Layout.fillWidth: true
@@ -91,6 +69,17 @@ CollapsibleSection {
 
                 implicitHeight: Appearance.padding.normal * 2 + Appearance.font.size.normal * 1.4
             }
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+            visible: ThemeCatalogue.gtkThemesLoaded && root.themeNames.length === 0
+            text: ThemeCatalogue.gtkThemesFailed
+                ? qsTr("Hornero couldn't load the installed GTK styles.")
+                : qsTr("No GTK styles are available. Install a GTK theme to style your apps.")
+            font.pointSize: Appearance.font.size.small
+            color: Colours.palette.m3onSurfaceVariant
+            wrapMode: Text.WordWrap
         }
     }
 }

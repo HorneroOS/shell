@@ -25,25 +25,10 @@ CollapsibleSection {
 
     property string selectedThemeId: ""
 
-    function wallpaperPathFor(theme: var, filename: string): string {
-        if (!theme || !filename)
-            return "";
-        const mapped = theme.wallpaperPaths?.[filename];
-        if (mapped)
-            return mapped;
-        if (theme.wallpaperPath && theme.defaultWallpaper === filename)
-            return theme.wallpaperPath;
-        const dir = theme.wallpaperDir || theme.id || "";
-        // Prefer the user Pictures dir; the theme wallpaperPath already
-        // falls back to the data dir for the default wallpaper.
-        return `${Paths.pictures}/Wallpapers/${dir}/${filename}`;
+    Component.onCompleted: {
+        Themes.reload();
+        ThemeCatalogue.loadAppearanceChoices();
     }
-
-    function previewPathFor(theme: var): string {
-        return theme?.preview || theme?.wallpaperPath || (theme?.colorOnly ? Wallpapers.actualCurrent : "");
-    }
-
-    Component.onCompleted: Themes.reload()
 
     ColumnLayout {
         Layout.fillWidth: true
@@ -113,6 +98,32 @@ CollapsibleSection {
                 readonly property bool isStaged: modelData.id === previewController.pendingThemeId
                 readonly property bool isCurrent: Colours.themeStateReady && !!Colours.themeId && modelData.id === Colours.themeId
                 readonly property bool isExpanded: modelData.id === sectionRoot.selectedThemeId
+                readonly property bool missingGtkTheme: ThemeCatalogue.gtkThemesLoaded && !ThemeCatalogue.gtkThemesFailed && !!modelData.gtkTheme && modelData.gtkTheme !== "auto" && ThemeCatalogue.gtkThemes.indexOf(modelData.gtkTheme) < 0
+                readonly property bool missingIconTheme: ThemeCatalogue.iconThemesLoaded && !ThemeCatalogue.iconThemesFailed && !!modelData.iconTheme && ThemeCatalogue.iconThemes.indexOf(modelData.iconTheme) < 0
+                readonly property bool missingWallpaper: !modelData.colorOnly && !Themes.hasAvailableWallpaper(modelData) && !Wallpapers.actualCurrent
+                readonly property bool missingCurrentWallpaper: modelData.colorOnly && !Themes.hasAvailableWallpaper(modelData) && !Wallpapers.actualCurrent
+                readonly property bool hasReadinessNotice: missingGtkTheme || missingIconTheme || missingWallpaper || missingCurrentWallpaper
+                readonly property string readinessText: {
+                    if (missingWallpaper || missingCurrentWallpaper)
+                        return qsTr("Choose a wallpaper before applying")
+                    if (missingGtkTheme && missingIconTheme)
+                        return qsTr("GTK and icon styles are unavailable")
+                    if (missingGtkTheme)
+                        return qsTr("GTK style is unavailable")
+                    if (missingIconTheme)
+                        return qsTr("Icon style is unavailable")
+                    return ""
+                }
+                readonly property string readinessDetails: {
+                    const details = [];
+                    if (missingGtkTheme)
+                        details.push(qsTr("GTK style “%1” is not installed. Install it for the full look; Hornero will try an available fallback.").arg(modelData.gtkTheme));
+                    if (missingIconTheme)
+                        details.push(qsTr("Icon style “%1” is not installed. Install it for the full icon set; Hornero will try an available fallback.").arg(modelData.iconTheme));
+                    if (missingWallpaper || missingCurrentWallpaper)
+                        details.push(qsTr("Choose a wallpaper in Appearance → Background before applying this theme."));
+                    return details.join(" ");
+                }
 
                 StyledRect {
                     Layout.fillWidth: true
@@ -123,10 +134,12 @@ CollapsibleSection {
                     border.color: Colours.palette.m3primary
 
                     StateLayer {
+                        disabled: themeItem.missingWallpaper || themeItem.missingCurrentWallpaper
+
                         function onClicked(): void {
                             sectionRoot.selectedThemeId = themeItem.modelData.id;
                             previewController.stageThemeApply(themeItem.modelData.id);
-                            previewController.startThemePreview(themeItem.modelData);
+                            previewController.startThemePreview(themeItem.modelData, Themes.palettePreviewPathFor(themeItem.modelData, true));
                             previewController.commitPending();
                         }
                     }
@@ -135,7 +148,7 @@ CollapsibleSection {
                         anchors.fill: parent
                         acceptedButtons: Qt.NoButton
                         hoverEnabled: true
-                        onEntered: previewController.startThemePreview(themeItem.modelData)
+                        onEntered: previewController.startThemePreview(themeItem.modelData, Themes.palettePreviewPathFor(themeItem.modelData, true))
                     }
 
                     ColumnLayout {
@@ -166,12 +179,13 @@ CollapsibleSection {
                                     radius: Appearance.rounding.small
                                     color: Colours.tPalette.m3surfaceContainer
                                     Accessible.name: themePreviewImage.status === Image.Ready
-                                        ? qsTr("Theme preview") : qsTr("Theme preview unavailable")
+                                        ? qsTr("Theme preview") : themeItem.missingWallpaper || themeItem.missingCurrentWallpaper
+                                            ? themeItem.readinessText : qsTr("Theme preview unavailable")
 
                                     CachingImage {
                                         id: themePreviewImage
                                         anchors.fill: parent
-                                        path: sectionRoot.previewPathFor(themeItem.modelData)
+                                        path: Themes.previewPathFor(themeItem.modelData)
                                         cache: true
                                         visible: status === Image.Ready
                                     }
@@ -183,7 +197,7 @@ CollapsibleSection {
 
                                         MaterialIcon {
                                             anchors.horizontalCenter: parent.horizontalCenter
-                                            text: themePreviewImage.status === Image.Loading ? "wallpaper" : "image_not_supported"
+                                            text: themeItem.modelData.colorOnly ? "palette" : themeItem.hasReadinessNotice ? "wallpaper" : themePreviewImage.status === Image.Loading ? "wallpaper" : "image_not_supported"
                                             font.pointSize: Appearance.font.size.small
                                             color: Colours.palette.m3outline
                                         }
@@ -209,6 +223,16 @@ CollapsibleSection {
                                     elide: Text.ElideRight
                                     maximumLineCount: 2
                                     wrapMode: Text.WordWrap
+                                }
+
+                                StyledText {
+                                    visible: themeItem.hasReadinessNotice
+                                    width: parent.width
+                                    text: themeItem.readinessText + (themeItem.readinessDetails ? ". " + themeItem.readinessDetails : "")
+                                    font.pointSize: Appearance.font.size.smaller
+                                    color: Colours.palette.m3tertiary
+                                    wrapMode: Text.WordWrap
+                                    maximumLineCount: 3
                                 }
 
                             }
@@ -289,7 +313,7 @@ CollapsibleSection {
 
                                 required property string modelData
 
-                                readonly property string fullPath: sectionRoot.wallpaperPathFor(themeItem.modelData, wallpaperThumb.modelData)
+                                readonly property string fullPath: Themes.wallpaperPathFor(themeItem.modelData, wallpaperThumb.modelData)
                                 readonly property bool available: wallpaperImage.status === Image.Ready
                                 readonly property bool loading: !!fullPath && wallpaperImage.status !== Image.Ready && wallpaperImage.status !== Image.Error
 

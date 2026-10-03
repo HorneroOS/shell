@@ -36,6 +36,51 @@ Searcher {
         return ThemeCatalogue.themeById(id);
     }
 
+    function wallpaperPathFor(theme: var, filename: string): string {
+        if (!theme || !filename)
+            return "";
+        const mapped = theme.wallpaperPaths?.[filename];
+        if (mapped)
+            return mapped;
+        if (theme.wallpaperPath && theme.defaultWallpaper === filename)
+            return theme.wallpaperPath;
+        const dir = theme.wallpaperDir || theme.id || "";
+        return `${Paths.pictures}/Wallpapers/${dir}/${filename}`;
+    }
+
+    function previewPathFor(theme: var): string {
+        if (!theme)
+            return "";
+        return palettePreviewPathFor(theme, true) || theme.preview || "";
+    }
+
+    function hasAvailableWallpaper(theme: var): bool {
+        return !!theme && Object.keys(theme.wallpaperPaths ?? {}).length > 0;
+    }
+
+    function palettePreviewPathFor(theme: var, useCurrentFallback = true): string {
+        if (!theme)
+            return "";
+        const wallpapers = theme.wallpapers ?? [];
+        const wallpaperPaths = theme.wallpaperPaths ?? {};
+        const defaultWallpaper = theme.defaultWallpaper ?? "";
+        if (defaultWallpaper && wallpaperPaths[defaultWallpaper])
+            return wallpaperPaths[defaultWallpaper];
+        for (const wallpaper of wallpapers) {
+            if (wallpaperPaths[wallpaper])
+                return wallpaperPaths[wallpaper];
+        }
+        if (useCurrentFallback)
+            return Wallpapers.actualCurrent || "";
+        return "";
+    }
+
+    function wallpaperOverrideFor(theme: var): string {
+        if (!theme || theme.colorOnly || hasAvailableWallpaper(theme))
+            return "";
+        return Wallpapers.actualCurrent || "";
+    }
+
     list: themes.instances
     useFuzzy: Config.launcher.useFuzzy.actions
     keys: ["name", "description", "id", "tags"]
@@ -76,7 +121,7 @@ Searcher {
         readonly property bool darkMode: modelData.darkMode !== undefined ? !!modelData.darkMode : true
         readonly property string schemeType: modelData.schemeType || "tonal-spot"
         readonly property string gtkTheme: modelData.gtkTheme || "Orchis-Light-Compact"
-        readonly property string iconTheme: modelData.iconTheme || ""
+        readonly property string iconTheme: modelData.iconTheme || "Numix-Circle"
         readonly property string gtkColorScheme: {
             const raw = (modelData.gtkColorScheme ?? "").toString().toLowerCase().replace(/_/g, "-");
             switch (raw) {
@@ -98,7 +143,7 @@ Searcher {
         readonly property bool gtkPreferDark: gtkColorScheme === "prefer-dark" || gtkColorScheme === "follow" && darkMode
         function onClicked(list: AppList): void {
             list.visibilities.launcher = false;
-            ThemePipeline.applyTheme(id, wallpaperPath || "");
+            ThemePipeline.applyTheme(id, Themes.wallpaperOverrideFor(modelData));
         }
     }
 }

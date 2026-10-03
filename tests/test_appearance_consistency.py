@@ -156,14 +156,59 @@ def test_color_only_theme_preview_preserves_the_current_wallpaper():
     launcher = (ROOT / "modules" / "launcher" / "services" / "Themes.qml").read_text()
     pane = (ROOT / "modules" / "controlcenter" / "appearance" / "AppearancePane.qml").read_text()
     section = (ROOT / "modules" / "controlcenter" / "appearance" / "sections" / "ThemesSection.qml").read_text()
-    preview = pane.split("function startThemePreview(modelData: var): void", 1)[1].split(
+    preview = pane.split("function startThemePreview(modelData: var, resolvedWallpaper: string): void", 1)[1].split(
         "function clearPreviewFor", 1
     )[0]
 
     assert "readonly property bool colorOnly: modelData.colorOnly === true" in launcher
-    assert "if (!previewWallpaperPath && modelData.colorOnly)" in preview
-    assert "previewWallpaperPath = Wallpapers.actualCurrent" in preview
-    assert 'theme?.colorOnly ? Wallpapers.actualCurrent' in section
+    assert 'previewWallpaperPath = resolvedWallpaper || Wallpapers.actualCurrent || "";' in preview
+    assert "!Themes.hasAvailableWallpaper(modelData)" in preview
+    assert "previewing with your current wallpaper" in preview
+    theme_preview_path = launcher.split("function previewPathFor(theme: var): string", 1)[1].split(
+        "function palettePreviewPathFor", 1
+    )[0]
+    palette_preview_path = launcher.split("function palettePreviewPathFor", 1)[1].split(
+        "list: themes.instances", 1
+    )[0]
+    assert "if (defaultWallpaper && wallpaperPaths[defaultWallpaper])" in palette_preview_path
+    assert "if (wallpaperPaths[wallpaper])" in palette_preview_path
+    assert "if (useCurrentFallback)" in palette_preview_path
+    assert 'return Wallpapers.actualCurrent || "";' in palette_preview_path
+    assert 'return palettePreviewPathFor(theme, true) || theme.preview || "";' in theme_preview_path
+    assert "startThemePreview(themeItem.modelData, Themes.palettePreviewPathFor(themeItem.modelData, true))" in section
+    assert "startThemePreview(theme, Themes.palettePreviewPathFor(theme, true))" in pane
+
+
+def test_recipe_without_wallpaper_uses_the_current_wallpaper_when_applying():
+    pane = (ROOT / "modules" / "controlcenter" / "appearance" / "AppearancePane.qml").read_text()
+    section = (ROOT / "modules" / "controlcenter" / "appearance" / "sections" / "ThemesSection.qml").read_text()
+    launcher = (ROOT / "modules" / "launcher" / "services" / "Themes.qml").read_text()
+
+    assert "function wallpaperOverrideFor(theme: var): string" in launcher
+    assert "function hasAvailableWallpaper(theme: var): bool" in launcher
+    assert 'return Wallpapers.actualCurrent || "";' in launcher
+    assert 'stagedThemeWallpaper = Themes.wallpaperOverrideFor(theme);' in pane
+    assert 'ThemePipeline.applyTheme(id, Themes.wallpaperOverrideFor(modelData));' in launcher
+    assert "&& !Wallpapers.actualCurrent" in section
+    assert "Choose a wallpaper in Appearance → Background before applying this theme." in section
+    assert "disabled: themeItem.missingWallpaper || themeItem.missingCurrentWallpaper" in section
+
+
+def test_appearance_shares_installed_styles_for_theme_readiness():
+    catalogue = (ROOT / "services" / "ThemeCatalogue.qml").read_text()
+    themes = (ROOT / "modules" / "controlcenter" / "appearance" / "sections" / "ThemesSection.qml").read_text()
+    gtk = (ROOT / "modules" / "controlcenter" / "appearance" / "sections" / "GtkThemeSection.qml").read_text()
+    icons = (ROOT / "modules" / "controlcenter" / "appearance" / "sections" / "IconThemeSection.qml").read_text()
+
+    assert "function loadAppearanceChoices(): void" in catalogue
+    assert '"appearance", "gtk", "list"' in catalogue
+    assert '"appearance", "gtk", "icons"' in catalogue
+    assert "ThemeCatalogue.loadAppearanceChoices()" in themes
+    assert "ThemeCatalogue.gtkThemes.indexOf(modelData.gtkTheme) < 0" in themes
+    assert "ThemeCatalogue.iconThemes.indexOf(modelData.iconTheme) < 0" in themes
+    assert "ThemeCatalogue.gtkThemes" in gtk and "Process {" not in gtk
+    assert "ThemeCatalogue.iconThemes" in icons and "Process {" not in icons
+    assert "try an available fallback" in themes
 
 
 def test_native_analyser_layer_present():

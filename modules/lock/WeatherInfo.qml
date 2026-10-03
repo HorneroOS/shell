@@ -63,6 +63,7 @@ ColumnLayout {
                 Layout.fillWidth: true
 
                 animate: true
+                visible: !!Weather.cc
                 text: qsTr("Humidity: %1%").arg(Weather.humidity)
                 color: Colours.palette.m3onSurfaceVariant
                 font.pointSize: Appearance.font.size.normal
@@ -72,7 +73,7 @@ ColumnLayout {
 
         Loader {
             Layout.rightMargin: Appearance.padding.smaller
-            active: root.width > 400
+            active: root.width > 400 && !!Weather.cc
             visible: active
 
             sourceComponent: ColumnLayout {
@@ -111,7 +112,7 @@ ColumnLayout {
         Layout.bottomMargin: Appearance.padding.large * 2
         Layout.fillWidth: true
 
-        active: root.rootHeight > 820
+        active: root.rootHeight > 820 && Weather.ready
         visible: active
 
         sourceComponent: RowLayout {

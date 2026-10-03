@@ -174,7 +174,7 @@ def test_color_only_theme_preview_preserves_the_current_wallpaper():
     assert "if (wallpaperPaths[wallpaper])" in palette_preview_path
     assert "if (useCurrentFallback)" in palette_preview_path
     assert 'return Wallpapers.actualCurrent || "";' in palette_preview_path
-    assert 'return palettePreviewPathFor(theme, true) || theme.preview || "";' in theme_preview_path
+    assert 'return palettePreviewPathFor(theme, false) || theme.preview || Wallpapers.actualCurrent || "";' in theme_preview_path
     assert "startThemePreview(themeItem.modelData, Themes.palettePreviewPathFor(themeItem.modelData, true))" in section
     assert "startThemePreview(theme, Themes.palettePreviewPathFor(theme, true))" in pane
 
@@ -240,6 +240,21 @@ def test_theme_cards_distinguish_unverified_gtk_and_icon_dependencies():
     assert "Checking installed icon styles…" in icons
     assert "!ThemeCatalogue.appearanceChoicesLoading" in gtk
     assert "!ThemeCatalogue.appearanceChoicesLoading" in icons
+
+
+def test_generated_theme_preview_keeps_latest_request_authoritative():
+    pane = (ROOT / "modules" / "controlcenter" / "appearance" / "AppearancePane.qml").read_text()
+    themes = (ROOT / "modules" / "launcher" / "services" / "Themes.qml").read_text()
+    preview_process = pane.split("id: previewPaletteProc", 1)[1].split("\n    }\n\n    SplitPaneLayout", 1)[0]
+    queue_handler = preview_process.split("onRunningChanged:", 1)[1]
+    scheduling = pane.split("function scheduleGeneratedPreview", 1)[1].split("function resetPreviewRecipe", 1)[0]
+
+    assert "runningKey === root.previewRequestKey" in preview_process
+    assert "previewPaletteCache[runningKey]" in preview_process
+    assert "previewRunningKey = previewRequestKey;" in queue_handler
+    assert "previewPaletteQueued = false;" in scheduling
+    assert "previewPaletteDebounce.stop();" in scheduling
+    assert 'return palettePreviewPathFor(theme, false) || theme.preview || Wallpapers.actualCurrent || "";' in themes
 
 
 def test_native_analyser_layer_present():

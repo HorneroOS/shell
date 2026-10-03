@@ -381,15 +381,23 @@ Item {
     }
 
     function scheduleGeneratedPreview(wallpaperPath: string, mode: string, schemeType: string): void {
-        if (!wallpaperPath)
+        if (!wallpaperPath) {
+            previewPaletteDebounce.stop();
+            previewPaletteQueued = false;
+            previewPalette = {};
+            previewRequestKey = "";
             return;
+        }
 
         const normalizedMode = mode === "light" ? "light" : "dark";
         const normalizedSchemeType = normalizeSchemeType(schemeType);
         const key = buildPreviewKey(wallpaperPath, normalizedMode, normalizedSchemeType);
 
-        if (applyPreviewFromCache(key))
+        if (applyPreviewFromCache(key)) {
+            previewPaletteDebounce.stop();
+            previewPaletteQueued = false;
             return;
+        }
 
         previewRequestKey = key;
         previewGenWallpaper = wallpaperPath;
@@ -545,8 +553,7 @@ Item {
         if (previewWallpaperPath) {
             scheduleGeneratedPreview(previewWallpaperPath, previewMode, previewSchemeType);
         } else {
-            previewPalette = {};
-            previewRequestKey = "";
+            scheduleGeneratedPreview("", previewMode, previewSchemeType);
             previewSubtitle += ` · ${qsTr("choose a wallpaper to preview these colors")}`;
         }
     }
@@ -566,6 +573,8 @@ Item {
         previewWallpaperPath = "";
         previewSchemeType = "";
         resetPreviewRecipe();
+        previewPaletteDebounce.stop();
+        previewPaletteQueued = false;
         previewPalette = {};
         previewRequestKey = "";
         previewRunningKey = "";
@@ -964,13 +973,17 @@ Item {
                 try {
                     const parsed = JSON.parse(text);
                     const palette = normalizePreviewPalette(parsed.colours ?? {});
-                    root.previewPalette = palette;
-                    root.previewMode = parsed.mode === "light" ? "light" : "dark";
-                    if (root.previewRunningKey) {
-                        root.previewPaletteCache[root.previewRunningKey] = {
+                    const mode = parsed.mode === "light" ? "light" : "dark";
+                    const runningKey = root.previewRunningKey;
+                    if (runningKey) {
+                        root.previewPaletteCache[runningKey] = {
                             palette,
-                            mode: root.previewMode
+                            mode
                         };
+                    }
+                    if (runningKey && runningKey === root.previewRequestKey) {
+                        root.previewPalette = palette;
+                        root.previewMode = mode;
                     }
                 } catch (e) {
                     // Keep previous preview if parse fails.
@@ -980,6 +993,7 @@ Item {
         onRunningChanged: {
             if (!running && previewPaletteQueued) {
                 previewPaletteQueued = false;
+                previewRunningKey = previewRequestKey;
                 running = true;
             }
         }

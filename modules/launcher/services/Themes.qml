@@ -51,7 +51,7 @@ Searcher {
     function previewPathFor(theme: var): string {
         if (!theme)
             return "";
-        return palettePreviewPathFor(theme, true) || theme.preview || "";
+        return palettePreviewPathFor(theme, false) || theme.preview || Wallpapers.actualCurrent || "";
     }
 
     function hasAvailableWallpaper(theme: var): bool {

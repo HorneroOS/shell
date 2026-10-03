@@ -231,8 +231,11 @@ def test_bar_workspaces_are_accessible_controls():
     """Every visible workspace can be activated by pointer or keyboard and
     exposes its identity/state to accessibility clients."""
     workspace = (ROOT / "modules/bar/components/workspaces/Workspace.qml").read_text()
+    assert "\nItem {\n    id: root" in workspace, "the interaction target must not be managed by the visual GridLayout"
+    assert "GridLayout {\n        id: content" in workspace
     assert "import qs.components.controls" in workspace
     assert "Interactive {" in workspace
+    assert "    Interactive {\n        anchors.fill: parent" in workspace
     assert "Accessible.role: Accessible.Button" in workspace
     assert 'Accessible.name: qsTr("Workspace %1, %2")' in workspace
     assert "root.activeWsId !== root.ws" in workspace

@@ -153,19 +153,40 @@ CollapsibleSection {
                             spacing: Appearance.spacing.normal
 
                             Loader {
-                                active: sectionRoot.previewPathFor(themeItem.modelData) !== ""
+                                active: true
                                 Layout.alignment: Qt.AlignVCenter
+                                Layout.preferredWidth: 72
+                                Layout.preferredHeight: 40
+                                Layout.minimumWidth: 72
+                                Layout.minimumHeight: 40
 
                                 sourceComponent: StyledClippingRect {
                                     implicitWidth: 72
                                     implicitHeight: 40
                                     radius: Appearance.rounding.small
                                     color: Colours.tPalette.m3surfaceContainer
+                                    Accessible.name: themePreviewImage.status === Image.Ready
+                                        ? qsTr("Theme preview") : qsTr("Theme preview unavailable")
 
                                     CachingImage {
+                                        id: themePreviewImage
                                         anchors.fill: parent
                                         path: sectionRoot.previewPathFor(themeItem.modelData)
                                         cache: true
+                                        visible: status === Image.Ready
+                                    }
+
+                                    Column {
+                                        anchors.centerIn: parent
+                                        spacing: 1
+                                        visible: themePreviewImage.status !== Image.Ready
+
+                                        MaterialIcon {
+                                            anchors.horizontalCenter: parent.horizontalCenter
+                                            text: themePreviewImage.status === Image.Loading ? "wallpaper" : "image_not_supported"
+                                            font.pointSize: Appearance.font.size.small
+                                            color: Colours.palette.m3outline
+                                        }
                                     }
                                 }
                             }
@@ -269,9 +290,13 @@ CollapsibleSection {
                                 required property string modelData
 
                                 readonly property string fullPath: sectionRoot.wallpaperPathFor(themeItem.modelData, wallpaperThumb.modelData)
+                                readonly property bool available: wallpaperImage.status === Image.Ready
+                                readonly property bool loading: !!fullPath && wallpaperImage.status !== Image.Ready && wallpaperImage.status !== Image.Error
 
-                                implicitWidth: 72
-                                implicitHeight: 40
+                                Accessible.name: available ? wallpaperThumb.modelData : loading ? qsTr("Loading wallpaper") : qsTr("Wallpaper unavailable")
+
+                                implicitWidth: 96
+                                implicitHeight: 54
 
                                 StyledClippingRect {
                                     anchors.fill: parent
@@ -279,14 +304,37 @@ CollapsibleSection {
                                     color: Colours.tPalette.m3surfaceContainer
 
                                     CachingImage {
+                                        id: wallpaperImage
                                         anchors.fill: parent
                                         path: wallpaperThumb.fullPath
                                         cache: true
+                                        visible: status === Image.Ready
+                                    }
+
+                                    Column {
+                                        anchors.centerIn: parent
+                                        spacing: 1
+                                        visible: !wallpaperThumb.available
+
+                                        MaterialIcon {
+                                            anchors.horizontalCenter: parent.horizontalCenter
+                                            text: wallpaperThumb.loading ? "wallpaper" : "image_not_supported"
+                                            font.pointSize: Appearance.font.size.small
+                                            color: Colours.palette.m3outline
+                                        }
+
+                                        StyledText {
+                                            anchors.horizontalCenter: parent.horizontalCenter
+                                            text: wallpaperThumb.loading ? qsTr("Loading") : qsTr("Unavailable")
+                                            font.pointSize: Appearance.font.size.smaller
+                                            color: Colours.palette.m3onSurfaceVariant
+                                        }
                                     }
                                 }
 
                                 StateLayer {
                                     radius: Appearance.rounding.small
+                                    disabled: !wallpaperThumb.available
 
                                     function onClicked(): void {
                                         previewController.stageThemeApplyWithWallpaper(sectionRoot.selectedThemeId, wallpaperThumb.fullPath);
@@ -298,7 +346,10 @@ CollapsibleSection {
                                     anchors.fill: parent
                                     acceptedButtons: Qt.NoButton
                                     hoverEnabled: true
-                                    onEntered: previewController.startWallpaperPreview(wallpaperThumb.fullPath, wallpaperThumb.modelData)
+                                    onEntered: {
+                                        if (wallpaperThumb.available)
+                                            previewController.startWallpaperPreview(wallpaperThumb.fullPath, wallpaperThumb.modelData);
+                                    }
                                 }
                             }
                         }

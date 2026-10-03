@@ -1,4 +1,5 @@
 import qs.components
+import qs.components.controls
 import qs.services
 import qs.utils
 import qs.config
@@ -24,6 +25,7 @@ GridLayout {
     property bool labels: false
     readonly property bool isActive: activeWsId === ws
     readonly property bool isWorkspace: true // Flag for finding workspace children
+    readonly property string accessibleState: root.isActive ? qsTr("current") : root.isOccupied ? qsTr("occupied") : qsTr("empty")
     // Unanimated prop for others to use as reference (main-axis size)
     readonly property int size: (vertical ? implicitHeight : implicitWidth) + (hasWindows ? Appearance.padding.small : 0)
 
@@ -40,6 +42,19 @@ GridLayout {
     columns: vertical ? 1 : -1
     rowSpacing: 0
     columnSpacing: 0
+
+    Interactive {
+        Accessible.role: Accessible.Button
+        Accessible.name: qsTr("Workspace %1, %2").arg(root.ws).arg(root.accessibleState)
+        Accessible.description: root.isActive ? qsTr("Activating the current workspace opens the special workspace") : qsTr("Switch to workspace %1").arg(root.ws)
+
+        onClicked: {
+            if (root.activeWsId !== root.ws)
+                Hypr.dispatch(`workspace ${root.ws}`);
+            else
+                Hypr.dispatch("togglespecialworkspace special");
+        }
+    }
 
     StyledText {
         id: indicator

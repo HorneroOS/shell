@@ -225,3 +225,18 @@ def test_layout_picker_topology_contract():
     assert "availableWidth" in grid and "Accessible.role: Accessible.Button" in grid
     content = (ROOT / "modules/layoutpicker/Content.qml").read_text()
     assert "activeFocusOnTab: true" in content and "forceActiveFocus" in content
+
+
+def test_bar_workspaces_are_accessible_controls():
+    """Every visible workspace can be activated by pointer or keyboard and
+    exposes its identity/state to accessibility clients."""
+    workspace = (ROOT / "modules/bar/components/workspaces/Workspace.qml").read_text()
+    assert "import qs.components.controls" in workspace
+    assert "Interactive {" in workspace
+    assert "Accessible.role: Accessible.Button" in workspace
+    assert 'Accessible.name: qsTr("Workspace %1, %2")' in workspace
+    assert "root.activeWsId !== root.ws" in workspace
+    assert 'Hypr.dispatch("togglespecialworkspace special")' in workspace
+
+    group = (ROOT / "modules/bar/components/workspaces/Workspaces.qml").read_text()
+    assert "MouseArea {" not in group, "per-workspace controls own the hit target and focus"

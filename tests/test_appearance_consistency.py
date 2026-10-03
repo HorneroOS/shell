@@ -184,8 +184,13 @@ def test_recipe_without_wallpaper_uses_the_current_wallpaper_when_applying():
     section = (ROOT / "modules" / "controlcenter" / "appearance" / "sections" / "ThemesSection.qml").read_text()
     launcher = (ROOT / "modules" / "launcher" / "services" / "Themes.qml").read_text()
 
+    override = launcher.split("function wallpaperOverrideFor(theme: var): string", 1)[1].split(
+        "list: themes.instances", 1
+    )[0]
     assert "function wallpaperOverrideFor(theme: var): string" in launcher
     assert "function hasAvailableWallpaper(theme: var): bool" in launcher
+    assert "if (!theme || hasAvailableWallpaper(theme))" in override
+    assert "theme.colorOnly" not in override
     assert 'return Wallpapers.actualCurrent || "";' in launcher
     assert 'stagedThemeWallpaper = Themes.wallpaperOverrideFor(theme);' in pane
     assert 'ThemePipeline.applyTheme(id, Themes.wallpaperOverrideFor(modelData));' in launcher

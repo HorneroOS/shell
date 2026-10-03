@@ -76,8 +76,11 @@ Searcher {
     }
 
     function wallpaperOverrideFor(theme: var): string {
-        if (!theme || theme.colorOnly || hasAvailableWallpaper(theme))
+        if (!theme || hasAvailableWallpaper(theme))
             return "";
+        // Color-only recipes deliberately have no bundled media. Their
+        // preview already follows the current wallpaper; applying them must
+        // use that same source instead of a manifest's unavailable default.
         return Wallpapers.actualCurrent || "";
     }
 

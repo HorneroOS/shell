@@ -180,6 +180,8 @@ def test_status_popout_keyboard_intent_does_not_steal_focus_on_hover():
     assert "Keys.onReturnPressed" in status and "Keys.onSpacePressed" in status
     assert "root.popoutRequested(name, this)" in status
     assert "popouts.keyboardIntent = true" in bar
+    hover_handler = bar.split("function checkPopoutAt", 1)[1].split("function handleWheelAt", 1)[0]
+    assert hover_handler.index("popouts.keyboardIntent = false") < hover_handler.index("const hit = entryAt")
     assert "if (!hasCurrent)" in wrapper and "keyboardIntent = false" in wrapper
     assert "panels.popouts.keyboardIntent && panels.popouts.hasCurrent" in drawers
 

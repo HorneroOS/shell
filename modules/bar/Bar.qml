@@ -177,6 +177,9 @@ Item {
 
     // Popout trigger at a bar-local point.
     function checkPopoutAt(lx: real, ly: real): void {
+        // Pointer hover is a fresh, non-keyboard intent even when it moves
+        // between triggers without closing the currently visible popout.
+        popouts.keyboardIntent = false;
         try {
             const hit = entryAt(lx, ly);
             const ch = hit?.loader ?? null;

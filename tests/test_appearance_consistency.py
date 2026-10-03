@@ -155,7 +155,6 @@ def test_theme_pipeline_uses_installed_catalogue_metadata():
 def test_color_only_theme_preview_preserves_the_current_wallpaper():
     launcher = (ROOT / "modules" / "launcher" / "services" / "Themes.qml").read_text()
     pane = (ROOT / "modules" / "controlcenter" / "appearance" / "AppearancePane.qml").read_text()
-    section = (ROOT / "modules" / "controlcenter" / "appearance" / "sections" / "ThemesSection.qml").read_text()
     preview = pane.split("function startThemePreview(modelData: var): void", 1)[1].split(
         "function clearPreviewFor", 1
     )[0]
@@ -163,7 +162,6 @@ def test_color_only_theme_preview_preserves_the_current_wallpaper():
     assert "readonly property bool colorOnly: modelData.colorOnly === true" in launcher
     assert "if (!previewWallpaperPath && modelData.colorOnly)" in preview
     assert "previewWallpaperPath = Wallpapers.actualCurrent" in preview
-    assert 'theme?.colorOnly ? Wallpapers.actualCurrent' in section
 
 
 def test_native_analyser_layer_present():

@@ -211,6 +211,21 @@ def test_appearance_shares_installed_styles_for_theme_readiness():
     assert "try an available fallback" in themes
 
 
+def test_appearance_choice_catalogues_can_start_before_they_are_loaded():
+    catalogue = (ROOT / "services" / "ThemeCatalogue.qml").read_text()
+    loader = catalogue.split("function loadAppearanceChoices(): void", 1)[1].split(
+        "function _finishAppearanceChoices", 1
+    )[0]
+
+    # The view-level loading property is true before the first request, so it
+    # must not be used as the process-start guard.
+    assert "if (gtkListProc.running || iconListProc.running)" in loader
+    assert "if (appearanceChoicesLoaded && !appearanceChoicesFailed)" in loader
+    assert "gtkListProc.running = true;" in loader
+    assert "iconListProc.running = true;" in loader
+    assert "if (appearanceChoicesLoading" not in loader
+
+
 def test_native_analyser_layer_present():
     layer = ROOT / "services" / "WallpaperAnalysis.qml"
     assert layer.exists(), "services/WallpaperAnalysis.qml native layer missing"

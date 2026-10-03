@@ -20,7 +20,14 @@ Singleton {
     readonly property bool appearanceChoicesFailed: gtkThemesFailed || iconThemesFailed
 
     function loadAppearanceChoices(): void {
-        if (appearanceChoicesLoading || (appearanceChoicesLoaded && !appearanceChoicesFailed))
+        // A not-yet-requested catalogue is "loading" from the view's
+        // perspective too, so do not use appearanceChoicesLoading as the
+        // request guard. Keep an in-flight pair intact; retry only after a
+        // failed pair has fully settled and the Appearance pane is opened
+        // again.
+        if (gtkListProc.running || iconListProc.running)
+            return;
+        if (appearanceChoicesLoaded && !appearanceChoicesFailed)
             return;
         gtkThemesLoaded = false;
         iconThemesLoaded = false;

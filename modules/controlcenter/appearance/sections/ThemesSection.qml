@@ -20,7 +20,7 @@ CollapsibleSection {
     required property var session
 
     title: qsTr("Themes")
-    description: qsTr("Choose a look for your desktop. Themes update colors and app styling; some also include a matching wallpaper.")
+    description: qsTr("Choose a complete look for your desktop. Click a theme to apply its colors, wallpaper, and app styling.")
     showBackground: true
 
     property string selectedThemeId: ""

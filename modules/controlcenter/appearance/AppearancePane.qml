@@ -527,16 +527,12 @@ Item {
         previewVariant = modelData.schemeType ?? "";
         previewMode = modelData.darkMode ? "dark" : "light";
         previewWallpaperPath = modelData.wallpaperPath ?? modelData.wallpaper ?? "";
-        if (!previewWallpaperPath && modelData.colorOnly)
-            previewWallpaperPath = Wallpapers.actualCurrent;
         previewSchemeType = normalizeSchemeType(modelData.schemeType ?? "");
         previewGtkTheme = modelData.gtkTheme || "Orchis-Light-Compact";
         previewIconTheme = modelData.iconTheme || "";
         previewGtkColorScheme = modelData.gtkColorScheme || ThemePipeline.resolveGtkColorScheme(modelData, !!modelData.darkMode);
         previewGtkPrefer = previewGtkColorScheme;
-        previewWallpaperLabel = modelData.defaultWallpaper && modelData.wallpaperPath
-            ? modelData.defaultWallpaper
-            : previewWallpaperPath ? previewWallpaperPath.split("/").pop() : "";
+        previewWallpaperLabel = modelData.defaultWallpaper || (previewWallpaperPath ? previewWallpaperPath.split("/").pop() : "");
         previewThemeId = modelData.id || "";
         previewTags = modelData.tags ?? [];
         previewWallpaperCount = Array.isArray(modelData.wallpapers) ? modelData.wallpapers.length : 0;

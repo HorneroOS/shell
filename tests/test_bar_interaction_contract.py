@@ -28,6 +28,14 @@ def test_popout_owner_keeps_a_live_trigger_reference():
     assert wrapper.count("enabled: root.geometryReady && root.implicitWidth > 0") == 2
 
 
+def test_standalone_popouts_use_a_lifted_surface_and_connected_ones_keep_the_bar_surface():
+    background = (ROOT / "modules/drawers/Backgrounds.qml").read_text()
+    shape = (ROOT / "modules/bar/popouts/Background.qml").read_text()
+    assert 'visible: wrapper.visible && !wrapper.usesConnectedBackground' in background
+    assert 'Colours.surface(Colours.palette.m3surfaceContainer, "bar")' in background
+    assert 'Colours.palette.m3surface, "bar") : "transparent"' in shape
+
+
 def test_icon_bar_buttons_have_visual_and_accessible_names():
     src = (ROOT / "modules/bar/components/BarButton.qml").read_text()
     assert "Accessible.name: root.label" in src

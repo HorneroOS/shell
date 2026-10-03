@@ -238,6 +238,8 @@ def test_theme_cards_distinguish_unverified_gtk_and_icon_dependencies():
     assert "ThemeCatalogue.loadAppearanceChoices()" in icons
     assert "Checking installed GTK styles…" in gtk
     assert "Checking installed icon styles…" in icons
+    assert "!ThemeCatalogue.appearanceChoicesLoading" in gtk
+    assert "!ThemeCatalogue.appearanceChoicesLoading" in icons
 
 
 def test_native_analyser_layer_present():

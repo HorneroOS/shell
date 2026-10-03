@@ -92,7 +92,7 @@ CollapsibleSection {
 
         TextButton {
             Layout.alignment: Qt.AlignLeft
-            visible: ThemeCatalogue.gtkThemesLoaded && ThemeCatalogue.gtkThemesFailed
+            visible: ThemeCatalogue.gtkThemesLoaded && ThemeCatalogue.gtkThemesFailed && !ThemeCatalogue.appearanceChoicesLoading
             text: qsTr("Try again")
             type: TextButton.Text
             onClicked: ThemeCatalogue.loadAppearanceChoices()

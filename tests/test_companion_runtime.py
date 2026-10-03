@@ -99,7 +99,7 @@ def test_resolver_exposes_full_reels():
 def test_host_single_companion_overlay():
     assert "CompanionStore.enabled ? Quickshell.screens : []" in HOST
     assert "isMine" in HOST
-    assert "WlrLayer.Overlay" in HOST
+    assert "WlrLayer.Bottom" in HOST
     assert "ExclusionMode.Ignore" in HOST
     assert "WlrKeyboardFocus.None" in HOST
 
@@ -271,9 +271,8 @@ def test_assistant_boundary_docs():
 
 
 def test_settings_open_suppresses_companion():
-    # The Overlay-layer companion paints above the floating Settings
-    # window by structure, so an open Settings window must suppress it
-    # like the other focused configuration surface (area picker).
+    # The Bottom-layer companion still needs explicit suppression for
+    # floating Settings windows, which are above it in the compositor.
     assert "property bool controlCenterOpen: false" in STORE
     assert "|| root.controlCenterOpen" in STORE
 
@@ -292,7 +291,7 @@ def test_z_order_policy_documented():
     assert "## Z-order policy" in doc
     assert "controlCenterOpen" in doc
     assert "areaPickerOpen" in doc
-    assert "non-goals" in doc.lower()
+    assert "no per-window" in doc.lower()
 
 
 def test_control_center_dead_close_stub_removed():

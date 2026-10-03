@@ -14,8 +14,8 @@ StackView {
     required property Item popouts
     required property QsMenuHandle trayItem
 
-    implicitWidth: currentItem.implicitWidth
-    implicitHeight: currentItem.implicitHeight
+    implicitWidth: currentItem?.implicitWidth ?? 0
+    implicitHeight: currentItem?.implicitHeight ?? 0
 
     initialItem: SubMenu {
         handle: root.trayItem
@@ -71,12 +71,18 @@ StackView {
                 id: item
 
                 required property QsMenuEntry modelData
+                readonly property bool hasEntry: modelData !== null
+                readonly property bool isSeparator: modelData?.isSeparator ?? false
+                readonly property bool isEnabled: modelData?.enabled ?? false
+                readonly property bool hasChildren: modelData?.hasChildren ?? false
+                readonly property string iconName: modelData?.icon ?? ""
 
                 implicitWidth: Config.bar.sizes.trayMenuWidth
-                implicitHeight: modelData.isSeparator ? 1 : children.implicitHeight
+                implicitHeight: !hasEntry ? 0 : isSeparator ? 1 : children.implicitHeight
+                visible: hasEntry
 
                 radius: Appearance.rounding.full
-                color: modelData.isSeparator ? Colours.palette.m3outlineVariant : "transparent"
+                color: isSeparator ? Colours.palette.m3outlineVariant : "transparent"
 
                 Loader {
                     id: children
@@ -84,7 +90,7 @@ StackView {
                     anchors.left: parent.left
                     anchors.right: parent.right
 
-                    active: !item.modelData.isSeparator
+                    active: item.hasEntry && !item.isSeparator
 
                     sourceComponent: Item {
                         implicitHeight: label.implicitHeight
@@ -95,11 +101,13 @@ StackView {
                             anchors.rightMargin: -Appearance.padding.smaller
 
                             radius: item.radius
-                            disabled: !item.modelData.enabled
+                            disabled: !item.isEnabled
 
                             function onClicked(): void {
+                                if (!item.hasEntry || !item.isEnabled)
+                                    return;
                                 const entry = item.modelData;
-                                if (entry.hasChildren)
+                                if (item.hasChildren)
                                     root.push(subMenuComp.createObject(null, {
                                         handle: entry,
                                         isSubMenu: true
@@ -116,7 +124,7 @@ StackView {
 
                             anchors.left: parent.left
 
-                            active: item.modelData.icon !== ""
+                            active: item.iconName !== ""
 
                             sourceComponent: IconImage {
                                 implicitSize: label.implicitHeight
@@ -124,7 +132,7 @@ StackView {
                                 // Menu entry icons are arbitrary app-provided
                                 // names; fall back instead of rendering a
                                 // broken placeholder when the theme lacks them.
-                                source: item.modelData.icon.includes("?fallback=") || item.modelData.icon.startsWith("file:") ? item.modelData.icon : `${item.modelData.icon}?fallback=image-missing`
+                                source: item.iconName.includes("?fallback=") || item.iconName.startsWith("file:") ? item.iconName : `${item.iconName}?fallback=image-missing`
                             }
                         }
 
@@ -135,13 +143,13 @@ StackView {
                             anchors.leftMargin: icon.active ? Appearance.spacing.smaller : 0
 
                             text: labelMetrics.elidedText
-                            color: item.modelData.enabled ? Colours.palette.m3onSurface : Colours.palette.m3outline
+                            color: item.isEnabled ? Colours.palette.m3onSurface : Colours.palette.m3outline
                         }
 
                         TextMetrics {
                             id: labelMetrics
 
-                            text: item.modelData.text
+                            text: item.modelData?.text ?? ""
                             font.pointSize: label.font.pointSize
                             font.family: label.font.family
 
@@ -155,11 +163,11 @@ StackView {
                             anchors.verticalCenter: parent.verticalCenter
                             anchors.right: parent.right
 
-                            active: item.modelData.hasChildren
+                            active: item.hasChildren
 
                             sourceComponent: MaterialIcon {
                                 text: "chevron_right"
-                                color: item.modelData.enabled ? Colours.palette.m3onSurface : Colours.palette.m3outline
+                                color: item.isEnabled ? Colours.palette.m3onSurface : Colours.palette.m3outline
                             }
                         }
                     }

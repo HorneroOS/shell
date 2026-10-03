@@ -76,7 +76,10 @@ from left or right rails. Icon-only bar actions expose the same short name as
 a hover tooltip and an accessible label; inline volume and brightness also
 announce their current value and support wheel and arrow-key adjustment.
 Tooltips move to the nearest usable side of their trigger and stay within the
-screen on top, bottom and vertical bars.
+screen on top, bottom and vertical bars. When active-window popouts are
+enabled, vertical rails keep the current-app icon compact; hovering opens its
+title and live-preview card, and assistive technology still receives the full
+window title. Turning that popout off restores the visible rail title.
 
 Hover is edge-triggered for the dashboard and utilities: entering
 the area opens, leaving closes. An Escape/shortcut dismissal sticks

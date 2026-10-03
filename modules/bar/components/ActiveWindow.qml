@@ -13,7 +13,12 @@ Item {
     required property Brightness.Monitor monitor
     property color colour: Colours.palette.m3primary
 
+    Accessible.role: Accessible.StaticText
+    Accessible.name: Hypr.activeToplevel?.title ?? qsTr("Desktop")
+    Accessible.description: Hypr.activeToplevel?.lastIpcObject.class ?? qsTr("Current window")
+
     readonly property bool vertical: bar.vertical
+    readonly property bool compactRail: vertical && Config.bar.popouts.activeWindow
 
     readonly property int maxLength: {
         const children = bar.container.children;
@@ -25,8 +30,23 @@ Item {
     property Title current: text1
 
     clip: true
-    implicitWidth: root.vertical ? Math.max(icon.implicitWidth, current.implicitHeight) : icon.implicitWidth + current.implicitWidth + current.anchors.leftMargin
-    implicitHeight: root.vertical ? icon.implicitHeight + current.implicitWidth + current.anchors.topMargin : Math.max(icon.implicitHeight, current.implicitHeight)
+    // A rail has little room for a rotated window title. Its icon identifies
+    // the app; hover opens the adjacent window-info card with the full title
+    // and live preview. Keep titles inline on horizontal bars.
+    implicitWidth: {
+        if (root.compactRail)
+            return icon.implicitWidth;
+        if (root.vertical)
+            return Math.max(icon.implicitWidth, current.implicitHeight);
+        return icon.implicitWidth + current.implicitWidth + current.anchors.leftMargin;
+    }
+    implicitHeight: {
+        if (root.compactRail)
+            return icon.implicitHeight;
+        if (root.vertical)
+            return icon.implicitHeight + current.implicitWidth + current.anchors.topMargin;
+        return Math.max(icon.implicitHeight, current.implicitHeight);
+    }
 
     MaterialIcon {
         id: icon
@@ -97,6 +117,7 @@ Item {
         font.family: metrics.font.family
         color: root.colour
         opacity: root.current === this ? 1 : 0
+        visible: !root.compactRail
 
         transform: root.vertical ? [vertTranslate, vertRotation] : []
 

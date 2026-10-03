@@ -11,6 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SERVICE = ROOT / "services" / "Weather.qml"
+LOCK_WEATHER = ROOT / "modules" / "lock" / "WeatherInfo.qml"
 
 
 def _function(source: str, name: str) -> str:
@@ -81,3 +82,11 @@ def test_automatic_ip_discovery_and_plain_http_are_absent():
     assert "ip-api.com" not in source
     assert "http://" not in source
     assert source.count("Requests.get(") == 1, "all network access must pass the guarded request method"
+
+
+def test_lock_weather_hides_measurements_until_weather_is_available():
+    source = LOCK_WEATHER.read_text()
+    humidity = re.search(r"StyledText\s*\{[^{}]*text:\s*qsTr\(\"Humidity:", source, re.S)
+    assert humidity, "lock weather should keep a humidity row for configured locations"
+    assert re.search(r"visible:\s*!!Weather\.cc", humidity.group(0)), "humidity must not show a fabricated 0%"
+    assert "active: root.rootHeight > 820 && Weather.ready" in source, "forecast rows need loaded weather data"

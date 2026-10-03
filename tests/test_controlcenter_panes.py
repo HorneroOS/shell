@@ -197,3 +197,23 @@ def test_dynamic_settings_window_is_visible_on_creation():
         "QWindow starts hidden by default; without visible: true the close "
         "handler immediately destroys Settings after creation"
     )
+
+
+def test_settings_close_releases_window_and_uses_registered_titles():
+    factory = WINDOW_FACTORY.read_text()
+    close = factory.split("function closeWindow(win: var): void", 1)[1].split("function prune()", 1)[0]
+    assert close.index("root.forget(win)") < close.index("win.destroy()"), (
+        "unregister a floating Settings window before deferred destruction so an immediate reopen can create it"
+    )
+    assert "property int registryToken: 0" in factory
+    assert "w.registryToken !== token" in factory, "window cleanup must not depend on QML wrapper identity"
+    assert "function forget(win: var)" in factory, "FloatingWindow is not a QQuickItem"
+    assert "return w && w.visible" in factory, "prune windows that were hidden before destruction completed"
+    assert factory.count("root.closeWindow(win)") >= 3, "Escape, WM close, and ControlCenter close must share cleanup"
+    assert "cc.session.activeTitle" in factory, "window titles should use canonical pane names (for example, VPN)"
+
+    title = (CC / "WindowTitle.qml").read_text()
+    session = (CC / "Session.qml").read_text()
+    assert "readonly property string activeTitle: PaneRegistry.getById(active)?.title ?? active" in session
+    assert "root.session.activeTitle" in title
+    assert "WindowFactory.closeWindow(QsWindow.window)" in title

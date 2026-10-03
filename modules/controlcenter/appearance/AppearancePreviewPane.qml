@@ -29,14 +29,14 @@ StyledRect {
     property string themeIdText: ""
     property var tags: []
     property int wallpaperCount: 0
-    property bool showThemeDetails: false
+    property bool showAdvancedDetails: false
 
     readonly property bool isThemePreview: source === "theme"
     readonly property bool compact: width < 600
     readonly property bool hasRecipe: {
         return !!modeText || !!variantText || !!gtkThemeText || !!iconThemeText || !!gtkPreferText || !!wallpaperLabel || (tags && tags.length > 0);
     }
-    readonly property bool showVisualSamples: active && !compact && (!!gtkThemeText || !!iconThemeText) && (!isThemePreview || showThemeDetails)
+    readonly property bool showVisualSamples: active && showAdvancedDetails && !compact && (!!gtkThemeText || !!iconThemeText)
 
     function previewColor(role: string, fallback: color): color {
         const p = root.rootPane.previewPalette;
@@ -277,7 +277,7 @@ StyledRect {
                     }
 
                     StyledText {
-                        visible: root.isThemePreview && !!root.themeIdText
+                        visible: root.isThemePreview && root.showAdvancedDetails && !!root.themeIdText
                         text: root.themeIdText
                         Layout.maximumWidth: 100
                         font.family: root.rootPane.fontFamilyMono
@@ -287,11 +287,14 @@ StyledRect {
                     }
                 }
 
-                // Recipe details (what Apply will set)
+                // Advanced implementation details stay out of the default
+                // preview. The title, description, wallpaper and palette are
+                // enough to understand a look; backend names remain available
+                // to users who deliberately expand this section.
                 StyledRect {
                     Layout.fillWidth: true
-                    Layout.fillHeight: !root.compact && (!root.isThemePreview || root.showThemeDetails)
-                    Layout.preferredHeight: root.compact ? 140 : (root.isThemePreview ? (root.showThemeDetails ? 360 : 104) : -1)
+                    Layout.fillHeight: !root.compact && root.showAdvancedDetails
+                    Layout.preferredHeight: root.showAdvancedDetails ? (root.compact ? 260 : 360) : 56
                     visible: root.active && root.hasRecipe
                     radius: Appearance.rounding.normal
                     color: Qt.alpha(previewColor("m3surfaceContainerHigh", Colours.tPalette.m3surfaceContainerHigh), 0.65)
@@ -301,26 +304,30 @@ StyledRect {
                         anchors.margins: Appearance.padding.normal
                         spacing: Appearance.spacing.small / 2
 
-                        StyledText {
-                            text: root.isThemePreview ? qsTr("This theme applies") : qsTr("Preview details")
-                            font.pointSize: Appearance.font.size.small
-                            font.weight: 600
-                            color: previewColor("m3onSurface", Colours.palette.m3onSurface)
-                        }
+                        RowLayout {
+                            Layout.fillWidth: true
 
-                        TextButton {
-                            visible: root.isThemePreview
-                            type: TextButton.Text
-                            toggle: true
-                            checked: root.showThemeDetails
-                            text: root.showThemeDetails ? qsTr("Hide details") : qsTr("More about this theme")
-                            Accessible.name: text
-                            onClicked: root.showThemeDetails = !root.showThemeDetails
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: qsTr("About this look")
+                                font.pointSize: Appearance.font.size.small
+                                font.weight: 600
+                                color: previewColor("m3onSurface", Colours.palette.m3onSurface)
+                            }
+
+                            TextButton {
+                                type: TextButton.Text
+                                toggle: true
+                                checked: root.showAdvancedDetails
+                                text: root.showAdvancedDetails ? qsTr("Hide details") : qsTr("More details")
+                                Accessible.name: text
+                                onClicked: root.showAdvancedDetails = !root.showAdvancedDetails
+                            }
                         }
 
                         Flow {
                             Layout.fillWidth: true
-                            visible: !root.isThemePreview
+                            visible: root.showAdvancedDetails && !root.isThemePreview
                             spacing: Appearance.spacing.smaller
 
                             PreviewChip {
@@ -362,7 +369,7 @@ StyledRect {
                         // Exact recipe for theme packs
                         ColumnLayout {
                             Layout.fillWidth: true
-                            visible: root.isThemePreview && root.showThemeDetails
+                            visible: root.isThemePreview && root.showAdvancedDetails
                             spacing: 2
 
                             RecipeRow {
@@ -470,7 +477,7 @@ StyledRect {
 
                         Flow {
                             Layout.fillWidth: true
-                            visible: !root.compact && root.tags && root.tags.length > 0
+                            visible: root.showAdvancedDetails && !root.compact && root.tags && root.tags.length > 0
                             spacing: Appearance.spacing.smaller
 
                             Repeater {
@@ -583,11 +590,13 @@ StyledRect {
                     }
                 }
 
-                // Shell chrome preview (non-theme sources keep the typography sandbox)
+                // The custom-appearance typography sandbox is useful for
+                // tuning fonts, but it is an advanced preview detail rather
+                // than part of the everyday "choose a look" flow.
                 StyledRect {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    visible: root.active && !root.isThemePreview && !root.compact
+                    visible: root.active && root.showAdvancedDetails && !root.isThemePreview && !root.compact
                     radius: Appearance.rounding.normal * root.rootPane.roundingScale
                     color: root.rootPane.transparencyEnabled ? Qt.alpha(previewColor("m3surfaceContainer", Colours.palette.m3surfaceContainer), root.rootPane.transparencyBase) : previewColor("m3surfaceContainer", Colours.palette.m3surfaceContainer)
 

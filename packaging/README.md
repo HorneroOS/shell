@@ -7,6 +7,7 @@ standard prefixes verified against a local `DESTDIR` install:
 - `/etc/xdg/quickshell/hornero` — shell QML runtime, assets, presets
 - `/usr/share/hornero/shell-presets` — layout-preset catalogue read by
   `horneroctl` (system catalogue, below the user's own presets)
+- `/usr/share/doc/hornero-shell/IPC.md` — installed IPC contract for tooling
 - `/usr/lib/hornero` — `version` helper binary
 - `/usr/lib/qt6/qml/Hornero*` — native QML plugin modules
   (`Hornero`, `Hornero.Internal`, `Hornero.Models`, `Hornero.Services`)

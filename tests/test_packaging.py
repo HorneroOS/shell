@@ -146,3 +146,11 @@ def test_system_preset_catalogue_packaged():
     assert re.search(r'install\(DIRECTORY presets/ DESTINATION "share/hornero/shell-presets"', cmake)
     assert "/usr/share/hornero/shell-presets" in README.read_text()
     assert sorted((ROOT / "presets").glob("*.json")), "no presets to install"
+
+
+def test_ipc_contract_is_installed_for_package_consumers():
+    cmake = (ROOT / "CMakeLists.txt").read_text()
+    readme = README.read_text()
+    assert (ROOT / "docs/IPC.md").is_file()
+    assert 'install(FILES docs/IPC.md DESTINATION "share/doc/hornero-shell")' in cmake
+    assert "/usr/share/doc/hornero-shell/IPC.md" in readme

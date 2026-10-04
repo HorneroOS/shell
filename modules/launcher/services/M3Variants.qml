@@ -79,7 +79,7 @@ Searcher {
 
         function onClicked(list: AppList): void {
             list.visibilities.launcher = false;
-            Quickshell.execDetached(["horneroctl", "scheme", "set-variant", variant, "--yes"]);
+            Quickshell.execDetached(["horneroctl", "appearance", "scheme", "set-variant", variant, "--yes"]);
         }
     }
 }

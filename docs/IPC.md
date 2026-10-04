@@ -87,7 +87,7 @@ The shell also *spawns* processes; the stable outbound contracts are:
   `Colours.wallLuminance`/`wallDominantColour`).
 - Appearance uses the shared native Hornero CLI contract:
   `horneroctl appearance colors m3 -- …`,
-  `horneroctl appearance gtk …`, `horneroctl scheme …`.
+  `horneroctl appearance gtk …`, `horneroctl appearance scheme …`.
 - Optional integrations: `horneroctl capture record start/stop/pause --yes`,
   `horneroctl wallpaper current`, `horneroctl wallpaper set --yes`,
   `horneroctl shell preset apply --yes`,

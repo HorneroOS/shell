@@ -50,7 +50,7 @@ Searcher {
         id: getSchemes
 
         running: true
-        command: ["horneroctl", "scheme", "list"]
+        command: ["horneroctl", "appearance", "scheme", "list"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const schemeData = JSON.parse(text);
@@ -74,7 +74,7 @@ Searcher {
         id: getCurrent
 
         running: true
-        command: ["horneroctl", "scheme", "current"]
+        command: ["horneroctl", "appearance", "scheme", "current"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const [name, flavour, variant] = text.trim().split("\n");
@@ -95,7 +95,7 @@ Searcher {
             // set-variant persists variant + derived flavour and regenerates,
             // which is exactly what `set -n <name> -f <flavour>` did; the
             // single "dynamic" scheme name is kept server-side.
-            Quickshell.execDetached(["horneroctl", "scheme", "set-variant", root.flavourToVariant(flavour), "--yes"]);
+            Quickshell.execDetached(["horneroctl", "appearance", "scheme", "set-variant", root.flavourToVariant(flavour), "--yes"]);
         }
     }
 }

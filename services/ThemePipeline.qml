@@ -346,7 +346,7 @@ Singleton {
 
     Process {
         id: ensureSchemeProc
-        command: ["horneroctl", "scheme", "regenerate", "--yes"]
+        command: ["horneroctl", "appearance", "scheme", "regenerate", "--yes"]
         onExited: (exitCode, exitStatus) => {
             if (exitCode !== 0)
                 console.warn("ThemePipeline: scheme regeneration failed (exit", exitCode, ")");
@@ -357,7 +357,7 @@ Singleton {
     // verification, so status and the next Shell start agree with the UI.
     Process {
         id: syncBuiltInStateProc
-        command: ["horneroctl", "scheme", "sync-state", "--yes"]
+        command: ["horneroctl", "appearance", "scheme", "sync-state", "--yes"]
         onExited: (exitCode, exitStatus) => root._finishBuiltInThemeApply(exitCode)
     }
 
@@ -534,8 +534,8 @@ done
     Process {
         id: syncStateProc
         command: root._pendingThemeId
-            ? ["horneroctl", "scheme", "sync-state", "--theme-id", root._pendingThemeId, "--yes"]
-            : ["horneroctl", "scheme", "sync-state", "--yes"]
+            ? ["horneroctl", "appearance", "scheme", "sync-state", "--theme-id", root._pendingThemeId, "--yes"]
+            : ["horneroctl", "appearance", "scheme", "sync-state", "--yes"]
         onExited: (exitCode, exitStatus) => {
             if (exitCode !== 0) {
                 root._finishJob(false, `sync-state failed (exit ${exitCode})`);

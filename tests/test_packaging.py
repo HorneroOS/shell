@@ -71,6 +71,20 @@ def test_quickshell_dependency_is_stable_release():
     )
 
 
+def test_hornero_runtime_dependencies_are_packaged():
+    text = PKGBUILD.read_text()
+    match = re.search(r"^depends=\((.*?)\)", text, re.MULTILINE | re.DOTALL)
+    assert match, "depends array not found"
+    depends = match.group(1)
+    assert re.search(r"'hornero-config>=[0-9.]+(?:-[0-9]+)?'", depends), (
+        "the Shell must require the AUR-owned system catalogue"
+    )
+    assert "'horneroctl-bin>=0.2.0_preview14.2'" in depends, (
+        "the Shell must require the AUR-owned CLI runtime"
+    )
+    assert "python-pywal16" not in depends, "retired pywal must not be a dependency"
+
+
 def test_printsrcinfo_parses():
     if shutil.which("makepkg") is None:
         pytest.skip("makepkg not available")

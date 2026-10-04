@@ -91,6 +91,7 @@ CollapsibleSection {
                 id: themeItem
 
                 required property var modelData
+                required property int index
 
                 Layout.fillWidth: true
                 spacing: 0
@@ -98,6 +99,8 @@ CollapsibleSection {
                 readonly property bool isStaged: modelData.id === previewController.pendingThemeId
                 readonly property bool isCurrent: Colours.themeStateReady && !!Colours.themeId && modelData.id === Colours.themeId
                 readonly property bool isExpanded: modelData.id === sectionRoot.selectedThemeId
+                readonly property string collectionId: modelData.collection === "hornero-originals" ? "hornero-originals" : "other"
+                readonly property bool showCollectionHeading: index === 0 || collectionId !== (Themes.list[index - 1]?.collection === "hornero-originals" ? "hornero-originals" : "other")
                 readonly property bool missingGtkTheme: ThemeCatalogue.gtkThemesLoaded && !ThemeCatalogue.gtkThemesFailed && !!modelData.gtkTheme && modelData.gtkTheme !== "auto" && ThemeCatalogue.gtkThemes.indexOf(modelData.gtkTheme) < 0
                 readonly property bool missingIconTheme: ThemeCatalogue.iconThemesLoaded && !ThemeCatalogue.iconThemesFailed && !!modelData.iconTheme && ThemeCatalogue.iconThemes.indexOf(modelData.iconTheme) < 0
                 readonly property bool gtkAvailabilityUnknown: ThemeCatalogue.gtkThemesFailed
@@ -143,6 +146,37 @@ CollapsibleSection {
                     if (missingWallpaper || missingCurrentWallpaper)
                         details.push(qsTr("Choose a wallpaper in Appearance → Background before applying this theme."));
                     return details.join(" ");
+                }
+
+                StyledRect {
+                    id: collectionHeading
+                    visible: themeItem.showCollectionHeading
+                    Layout.fillWidth: true
+                    implicitHeight: headingContent.implicitHeight + Appearance.padding.normal
+                    color: "transparent"
+
+                    ColumnLayout {
+                        id: headingContent
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        spacing: 2
+
+                        StyledText {
+                            text: themeItem.collectionId === "hornero-originals" ? qsTr("Hornero Originals") : qsTr("Other looks")
+                            font.pointSize: Appearance.font.size.normal
+                            font.weight: 600
+                        }
+
+                        StyledText {
+                            visible: themeItem.collectionId === "hornero-originals"
+                            text: qsTr("First-party looks, from warm clay and grassland to glacier, wetlands, mineral light and the city at night.")
+                            font.pointSize: Appearance.font.size.small
+                            color: Colours.palette.m3onSurfaceVariant
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                        }
+                    }
                 }
 
                 StyledRect {

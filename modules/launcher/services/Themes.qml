@@ -122,6 +122,8 @@ Searcher {
         readonly property string wallpaperPath: modelData.wallpaperPath ?? ""
         readonly property var wallpaperPaths: modelData.wallpaperPaths ?? ({})
         readonly property bool colorOnly: modelData.colorOnly === true
+        readonly property string collection: modelData.collection || ""
+        readonly property int collectionOrder: Number(modelData.collectionOrder ?? 999)
         readonly property var tags: modelData.tags ?? []
         readonly property bool darkMode: modelData.darkMode !== undefined ? !!modelData.darkMode : true
         readonly property string schemeType: modelData.schemeType || "tonal-spot"

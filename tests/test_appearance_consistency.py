@@ -244,6 +244,28 @@ def test_appearance_choice_catalogues_can_start_before_they_are_loaded():
     assert "if (appearanceChoicesLoading" not in loader
 
 
+def test_theme_collection_metadata_reaches_appearance_cards():
+    catalogue = (ROOT / "services" / "ThemeCatalogue.qml").read_text()
+    themes = (ROOT / "modules" / "launcher" / "services" / "Themes.qml").read_text()
+    cards = (ROOT / "modules" / "controlcenter" / "appearance" / "sections" / "ThemesSection.qml").read_text()
+
+    assert 'collection: "hornero-originals"' in catalogue
+    assert "collectionOrder: 1" in catalogue and "collectionOrder: 4" in catalogue
+    assert 'readonly property string collection: modelData.collection || ""' in themes
+    assert "readonly property int collectionOrder:" in themes
+    sorting = catalogue.split("function _withBuiltIns(items: var): var", 1)[1].split(
+        "function themeById", 1
+    )[0]
+    assert "return combined.sort((a, b) =>" in sorting
+    assert "a.collectionOrder ?? 999" in sorting and "b.collectionOrder ?? 999" in sorting
+    assert 'modelData.collection === "hornero-originals"' in cards
+    assert "collectionId !== (Themes.list[index - 1]?.collection" in cards
+    assert 'qsTr("Hornero Originals")' in cards
+    assert 'qsTr("First-party looks, from warm clay' in cards
+    assert "Eight first-party looks" not in cards
+    assert 'qsTr("Other looks")' in cards
+
+
 def test_theme_cards_distinguish_unverified_gtk_and_icon_dependencies():
     themes = (ROOT / "modules" / "controlcenter" / "appearance" / "sections" / "ThemesSection.qml").read_text()
     gtk = (ROOT / "modules" / "controlcenter" / "appearance" / "sections" / "GtkThemeSection.qml").read_text()

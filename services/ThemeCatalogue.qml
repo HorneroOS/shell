@@ -71,6 +71,8 @@ Singleton {
             description: "Default dark theme with rose accent",
             darkMode: true,
             schemeType: "tonal-spot",
+            collection: "hornero-originals",
+            collectionOrder: 1,
             tags: ["hornero", "dark", "builtin"]
         },
         {
@@ -79,6 +81,8 @@ Singleton {
             description: "Default light theme with rose accent",
             darkMode: false,
             schemeType: "tonal-spot",
+            collection: "hornero-originals",
+            collectionOrder: 4,
             tags: ["hornero", "light", "builtin"]
         }
     ]
@@ -92,7 +96,16 @@ Singleton {
             }
             return fallback;
         });
-        return builtIns.concat(actual.filter(item => item.id !== "hornero-dark" && item.id !== "hornero-light"));
+        const combined = builtIns.concat(actual.filter(item => item.id !== "hornero-dark" && item.id !== "hornero-light"));
+        return combined.sort((a, b) => {
+            const aOriginal = a.collection === "hornero-originals";
+            const bOriginal = b.collection === "hornero-originals";
+            if (aOriginal !== bOriginal)
+                return aOriginal ? -1 : 1;
+            if (aOriginal && bOriginal)
+                return (a.collectionOrder ?? 999) - (b.collectionOrder ?? 999);
+            return String(a.name ?? a.id).localeCompare(String(b.name ?? b.id));
+        });
     }
 
     function themeById(id: string): var {

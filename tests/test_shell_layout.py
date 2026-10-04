@@ -226,6 +226,7 @@ def test_layout_picker_topology_contract():
     assert "function focusCurrentPreset(): void" in grid
     assert "onCurrentNameChanged: focusCurrentPreset()" in grid
     assert "onKeyboardNavChanged: focusCurrentPreset()" in grid
+    assert "root.forceActiveFocus()" in grid
     assert "onEntered: root.focusIndex = card.index" not in grid
     content = (ROOT / "modules/layoutpicker/Content.qml").read_text()
     assert "activeFocusOnTab: true" in content and "forceActiveFocus" in content

@@ -91,8 +91,13 @@ Item {
         if (!root.keyboardNav)
             return;
         const index = root.presets.findIndex(p => p.name === root.currentName);
-        if (index >= 0)
+        if (index >= 0) {
             root.focusIndex = index;
+            // Applying a layout live-rebuilds the bars. Quickshell may move
+            // active focus during that reload, so restore it to the picker
+            // before the next arrow-key action.
+            root.forceActiveFocus();
+        }
     }
 
     onKeyboardNavChanged: focusCurrentPreset()

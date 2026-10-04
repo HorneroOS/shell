@@ -391,13 +391,13 @@ Singleton {
         if (wallpaper) {
             themeLoader.resolvedWallpaper = wallpaper;
             root._pendingWallpaper = wallpaper;
-            root._startWalFromTheme();
+            root._startPaletteFromTheme();
             return;
         }
         if (cfg.colorOnly) {
             themeLoader.resolvedWallpaper = Wallpapers.actualCurrent || "";
             root._pendingWallpaper = themeLoader.resolvedWallpaper;
-            root._startWalFromTheme();
+            root._startPaletteFromTheme();
             return;
         }
         root._finishJob(false, `no wallpapers available for theme ${themeLoader.themeId}`);

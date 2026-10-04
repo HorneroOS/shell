@@ -24,6 +24,13 @@ def test_scheme_operations_use_nested_appearance_command():
                  ROOT / "modules/controlcenter/appearance/AppearancePane.qml"]:
         text = path.read_text()
         assert '"horneroctl", "scheme"' not in text
+
+
+def test_theme_recipe_palette_entrypoint_is_defined_and_used():
+    text = PIPELINE.read_text()
+    assert "function _startPaletteFromTheme()" in text
+    assert "root._startPaletteFromTheme()" in text
+    assert "_startWalFromTheme" not in text
 COLOURS = ROOT / "services" / "Colours.qml"
 PIPELINE = ROOT / "services" / "ThemePipeline.qml"
 APPEARANCE_CONFIG = ROOT / "config" / "AppearanceConfig.qml"

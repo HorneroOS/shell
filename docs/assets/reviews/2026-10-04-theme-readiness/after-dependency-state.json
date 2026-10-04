@@ -1,13 +1,13 @@
 {
   "schema": "hornero.qa.screenshot/1",
   "file": "001-unavailable-theme-state.png",
-  "sha256": "8c541a06410e82b090f56b77ac96a6d04873aae62c30303a43369e65470a03fc",
-  "run_id": "20261004T014023Z-appearance-pr131-degraded-theme-block-1",
+  "sha256": "fb33c140c0370874590469e8e4d6129e8317bc33c115f7d8ce5cd37f0d5a2f16",
+  "run_id": "20261004T020204Z-appearance-pr131-degraded-theme-block-1",
   "scenario": "appearance/pr131-degraded-theme-block",
-  "captured": "2026-10-04T01:42:05Z",
-  "t": 101.972,
+  "captured": "2026-10-04T02:03:40Z",
+  "t": 95.488,
   "product": {
-    "shell_sha": "21b7a69bda2d9810fea6ffa95f8462fa0b540391",
+    "shell_sha": "e07a1ae3aa2174301e93e6c4c1d88b6bf6892a48",
     "config_sha": "ac42eef83dddcc93923b4552540c3cc47790edc2",
     "horneroctl": "horneroctl v0.2.0-preview14-3-g9c15172 (9c15172)",
     "horneroctl_sha256": "e6d1177803018af3859f72d949318c97147c77c24eed8ce533ac59ea3291536d"
@@ -17,7 +17,7 @@
     "hornero_qa": "0.1.0",
     "host_kernel": "7.2.7-arch1-1",
     "qemu": "QEMU emulator version 11.1.1",
-    "image": "shell-131-candidate-21b7a69.qcow2",
+    "image": "shell-131-candidate-e07a1ae.qcow2",
     "outputs": 1,
     "resolution": "1280x800"
   },

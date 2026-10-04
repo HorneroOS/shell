@@ -1,0 +1,25 @@
+{
+  "schema": "hornero.qa.screenshot/1",
+  "file": "001-color-only-recipe.png",
+  "sha256": "9c040ac951ffd43cab07f118544f7e53899f41d7661d24f94e6353eaf5090fe2",
+  "run_id": "20261004T010835Z-appearance-pr131-color-only-recipe-1",
+  "scenario": "appearance/pr131-color-only-recipe",
+  "captured": "2026-10-04T01:10:13Z",
+  "t": 97.955,
+  "product": {
+    "shell_sha": "61a458088af8bbfefc04cad1e598354611bbc441",
+    "config_sha": "ac42eef83dddcc93923b4552540c3cc47790edc2",
+    "horneroctl": "horneroctl v0.2.0-preview14-3-g9c15172 (9c15172)",
+    "horneroctl_sha256": "e6d1177803018af3859f72d949318c97147c77c24eed8ce533ac59ea3291536d"
+  },
+  "environment": {
+    "engine": "native",
+    "hornero_qa": "0.1.0",
+    "host_kernel": "7.2.7-arch1-1",
+    "qemu": "QEMU emulator version 11.1.1",
+    "image": "shell-131-candidate.qcow2",
+    "outputs": 1,
+    "resolution": "1280x800"
+  },
+  "step": 10
+}

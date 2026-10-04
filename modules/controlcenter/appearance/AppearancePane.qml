@@ -137,8 +137,10 @@ Item {
         if (theme) {
             if (previewSource === "theme" && previewThemeId === theme.id)
                 return;
-            startThemePreview(theme);
-            previewSubtitle = qsTr("Current look");
+            startThemePreview(theme, Themes.palettePreviewPathFor(theme, true));
+            previewSubtitle = previewSubtitle
+                ? `${previewSubtitle} · ${qsTr("Current look")}`
+                : qsTr("Current look");
             return;
         }
 
@@ -381,15 +383,23 @@ Item {
     }
 
     function scheduleGeneratedPreview(wallpaperPath: string, mode: string, schemeType: string): void {
-        if (!wallpaperPath)
+        if (!wallpaperPath) {
+            previewPaletteDebounce.stop();
+            previewPaletteQueued = false;
+            previewPalette = {};
+            previewRequestKey = "";
             return;
+        }
 
         const normalizedMode = mode === "light" ? "light" : "dark";
         const normalizedSchemeType = normalizeSchemeType(schemeType);
         const key = buildPreviewKey(wallpaperPath, normalizedMode, normalizedSchemeType);
 
-        if (applyPreviewFromCache(key))
+        if (applyPreviewFromCache(key)) {
+            previewPaletteDebounce.stop();
+            previewPaletteQueued = false;
             return;
+        }
 
         previewRequestKey = key;
         previewGenWallpaper = wallpaperPath;
@@ -516,7 +526,7 @@ Item {
         scheduleGeneratedPreview(path, previewMode || pendingMode, previewSchemeType);
     }
 
-    function startThemePreview(modelData: var): void {
+    function startThemePreview(modelData: var, resolvedWallpaper: string): void {
         if (!modelData)
             return;
 
@@ -526,22 +536,28 @@ Item {
         previewSubtitle = modelData.description ?? qsTr("Theme pack");
         previewVariant = modelData.schemeType ?? "";
         previewMode = modelData.darkMode ? "dark" : "light";
-        previewWallpaperPath = modelData.wallpaperPath ?? modelData.wallpaper ?? "";
-        if (!previewWallpaperPath && modelData.colorOnly)
-            previewWallpaperPath = Wallpapers.actualCurrent;
+        previewWallpaperPath = resolvedWallpaper || Wallpapers.actualCurrent || "";
+        if (!modelData.colorOnly
+                && !Themes.hasAvailableWallpaper(modelData)
+                && previewWallpaperPath === Wallpapers.actualCurrent
+                && previewWallpaperPath)
+            previewSubtitle += ` · ${qsTr("previewing with your current wallpaper")}`;
         previewSchemeType = normalizeSchemeType(modelData.schemeType ?? "");
         previewGtkTheme = modelData.gtkTheme || "Orchis-Light-Compact";
         previewIconTheme = modelData.iconTheme || "";
         previewGtkColorScheme = modelData.gtkColorScheme || ThemePipeline.resolveGtkColorScheme(modelData, !!modelData.darkMode);
         previewGtkPrefer = previewGtkColorScheme;
-        previewWallpaperLabel = modelData.defaultWallpaper && modelData.wallpaperPath
-            ? modelData.defaultWallpaper
-            : previewWallpaperPath ? previewWallpaperPath.split("/").pop() : "";
+        previewWallpaperLabel = previewWallpaperPath ? previewWallpaperPath.split("/").pop() : "";
         previewThemeId = modelData.id || "";
         previewTags = modelData.tags ?? [];
         previewWallpaperCount = Array.isArray(modelData.wallpapers) ? modelData.wallpapers.length : 0;
 
-        scheduleGeneratedPreview(previewWallpaperPath || pendingWallpaperPath, previewMode, previewSchemeType);
+        if (previewWallpaperPath) {
+            scheduleGeneratedPreview(previewWallpaperPath, previewMode, previewSchemeType);
+        } else {
+            scheduleGeneratedPreview("", previewMode, previewSchemeType);
+            previewSubtitle += ` · ${qsTr("choose a wallpaper to preview these colors")}`;
+        }
     }
 
     function clearPreviewFor(source: string): void {
@@ -559,6 +575,8 @@ Item {
         previewWallpaperPath = "";
         previewSchemeType = "";
         resetPreviewRecipe();
+        previewPaletteDebounce.stop();
+        previewPaletteQueued = false;
         previewPalette = {};
         previewRequestKey = "";
         previewRunningKey = "";
@@ -684,6 +702,10 @@ Item {
         if (theme) {
             wallpaperScopeDir = theme.wallpaperDir || themeId;
             wallpaperShowAll = false;
+            // Recipe packs without bundled wallpaper media still have a
+            // useful, deterministic apply path: keep the user's current
+            // background and generate the recipe colors from it.
+            stagedThemeWallpaper = Themes.wallpaperOverrideFor(theme);
             pendingMode = theme.darkMode ? "dark" : "light";
             const current = Colours.currentLight ? "light" : "dark";
             modeDirty = pendingMode !== current;
@@ -904,6 +926,10 @@ Item {
                         session: root.session
                         previewController: root
                         wallpaperScopeDir: root.wallpaperScopeDir
+                        wallpaperUsesCurrentThemeFallback: root.previewSource === "theme"
+                            && !!root.previewWallpaperPath
+                            && root.previewWallpaperPath === Wallpapers.actualCurrent
+                            && !Themes.hasAvailableWallpaper(Themes.themeById(root.previewThemeId))
                         showAllWallpapers: root.wallpaperShowAll
                         onToggleShowAllRequested: root.wallpaperShowAll = !root.wallpaperShowAll
                     }
@@ -953,13 +979,17 @@ Item {
                 try {
                     const parsed = JSON.parse(text);
                     const palette = normalizePreviewPalette(parsed.colours ?? {});
-                    root.previewPalette = palette;
-                    root.previewMode = parsed.mode === "light" ? "light" : "dark";
-                    if (root.previewRunningKey) {
-                        root.previewPaletteCache[root.previewRunningKey] = {
+                    const mode = parsed.mode === "light" ? "light" : "dark";
+                    const runningKey = root.previewRunningKey;
+                    if (runningKey) {
+                        root.previewPaletteCache[runningKey] = {
                             palette,
-                            mode: root.previewMode
+                            mode
                         };
+                    }
+                    if (runningKey && runningKey === root.previewRequestKey) {
+                        root.previewPalette = palette;
+                        root.previewMode = mode;
                     }
                 } catch (e) {
                     // Keep previous preview if parse fails.
@@ -969,6 +999,7 @@ Item {
         onRunningChanged: {
             if (!running && previewPaletteQueued) {
                 previewPaletteQueued = false;
+                previewRunningKey = previewRequestKey;
                 running = true;
             }
         }

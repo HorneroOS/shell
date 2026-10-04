@@ -2,6 +2,7 @@ pragma Singleton
 
 import qs.services
 import qs.utils
+import Hornero
 import Quickshell
 import Quickshell.Io
 import QtQuick

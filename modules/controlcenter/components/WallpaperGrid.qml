@@ -20,6 +20,7 @@ Item {
 
     property string wallpaperScopeDir: ""
     property bool showAllWallpapers: false
+    property bool wallpaperUsesCurrentThemeFallback: false
     signal toggleShowAllRequested()
 
     readonly property string scopeBasePath: wallpaperScopeDir ? `${Paths.pictures}/Wallpapers/${wallpaperScopeDir}` : ""
@@ -102,9 +103,11 @@ Item {
             StyledText {
                 anchors.centerIn: parent
                 visible: grid.count === 0
-                text: root.wallpaperScopeDir && !root.showAllWallpapers
-                    ? qsTr("No wallpapers found for this theme")
-                    : qsTr("No wallpapers found")
+                text: root.wallpaperUsesCurrentThemeFallback
+                    ? qsTr("No bundled wallpapers. Using your current wallpaper for preview.")
+                    : root.wallpaperScopeDir && !root.showAllWallpapers
+                        ? qsTr("No wallpapers found for this theme")
+                        : qsTr("No wallpapers found")
                 color: Colours.palette.m3outline
                 font.pointSize: Appearance.font.size.normal
             }

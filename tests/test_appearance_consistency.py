@@ -156,14 +156,125 @@ def test_color_only_theme_preview_preserves_the_current_wallpaper():
     launcher = (ROOT / "modules" / "launcher" / "services" / "Themes.qml").read_text()
     pane = (ROOT / "modules" / "controlcenter" / "appearance" / "AppearancePane.qml").read_text()
     section = (ROOT / "modules" / "controlcenter" / "appearance" / "sections" / "ThemesSection.qml").read_text()
-    preview = pane.split("function startThemePreview(modelData: var): void", 1)[1].split(
+    preview = pane.split("function startThemePreview(modelData: var, resolvedWallpaper: string): void", 1)[1].split(
         "function clearPreviewFor", 1
     )[0]
 
     assert "readonly property bool colorOnly: modelData.colorOnly === true" in launcher
-    assert "if (!previewWallpaperPath && modelData.colorOnly)" in preview
-    assert "previewWallpaperPath = Wallpapers.actualCurrent" in preview
-    assert 'theme?.colorOnly ? Wallpapers.actualCurrent' in section
+    assert 'previewWallpaperPath = resolvedWallpaper || Wallpapers.actualCurrent || "";' in preview
+    assert '`${previewSubtitle} · ${qsTr("Current look")}`' in pane
+    assert "!Themes.hasAvailableWallpaper(modelData)" in preview
+    assert "previewing with your current wallpaper" in preview
+    theme_preview_path = launcher.split("function previewPathFor(theme: var): string", 1)[1].split(
+        "function palettePreviewPathFor", 1
+    )[0]
+    palette_preview_path = launcher.split("function palettePreviewPathFor", 1)[1].split(
+        "list: themes.instances", 1
+    )[0]
+    assert "if (defaultWallpaper && wallpaperPaths[defaultWallpaper])" in palette_preview_path
+    assert "if (wallpaperPaths[wallpaper])" in palette_preview_path
+    assert "if (useCurrentFallback)" in palette_preview_path
+    assert 'return Wallpapers.actualCurrent || "";' in palette_preview_path
+    assert 'return palettePreviewPathFor(theme, false) || theme.preview || Wallpapers.actualCurrent || "";' in theme_preview_path
+    assert "startThemePreview(themeItem.modelData, Themes.palettePreviewPathFor(themeItem.modelData, true))" in section
+    assert "startThemePreview(theme, Themes.palettePreviewPathFor(theme, true))" in pane
+
+
+def test_recipe_without_wallpaper_uses_the_current_wallpaper_when_applying():
+    pane = (ROOT / "modules" / "controlcenter" / "appearance" / "AppearancePane.qml").read_text()
+    section = (ROOT / "modules" / "controlcenter" / "appearance" / "sections" / "ThemesSection.qml").read_text()
+    launcher = (ROOT / "modules" / "launcher" / "services" / "Themes.qml").read_text()
+
+    override = launcher.split("function wallpaperOverrideFor(theme: var): string", 1)[1].split(
+        "list: themes.instances", 1
+    )[0]
+    assert "function wallpaperOverrideFor(theme: var): string" in launcher
+    assert "function hasAvailableWallpaper(theme: var): bool" in launcher
+    assert "if (!theme || hasAvailableWallpaper(theme))" in override
+    assert "wallpaperPath may be the canonical target for absent pack media" in launcher
+    assert "return !!theme && Object.keys(theme.wallpaperPaths ?? {}).length > 0;" in launcher
+    assert "theme.colorOnly" not in override
+    assert 'return Wallpapers.actualCurrent || "";' in launcher
+    assert 'stagedThemeWallpaper = Themes.wallpaperOverrideFor(theme);' in pane
+    assert "!Colours.isBuiltInTheme(modelData.id) && !modelData.colorOnly" in section
+    assert 'ThemePipeline.applyTheme(id, Themes.wallpaperOverrideFor(modelData));' in launcher
+    assert "&& !Wallpapers.actualCurrent" in section
+    assert "Choose a wallpaper in Appearance → Background before applying this theme." in section
+    assert "disabled: themeItem.cannotApply" in section
+
+
+def test_theme_without_media_explains_current_wallpaper_preview():
+    pane = (ROOT / "modules" / "controlcenter" / "appearance" / "AppearancePane.qml").read_text()
+    grid = (ROOT / "modules" / "controlcenter" / "components" / "WallpaperGrid.qml").read_text()
+
+    assert "wallpaperUsesCurrentThemeFallback:" in pane
+    assert "!Themes.hasAvailableWallpaper(Themes.themeById(root.previewThemeId))" in pane
+    assert "No bundled wallpapers. Using your current wallpaper for preview." in grid
+
+
+def test_appearance_shares_installed_styles_for_theme_readiness():
+    catalogue = (ROOT / "services" / "ThemeCatalogue.qml").read_text()
+    themes = (ROOT / "modules" / "controlcenter" / "appearance" / "sections" / "ThemesSection.qml").read_text()
+    gtk = (ROOT / "modules" / "controlcenter" / "appearance" / "sections" / "GtkThemeSection.qml").read_text()
+    icons = (ROOT / "modules" / "controlcenter" / "appearance" / "sections" / "IconThemeSection.qml").read_text()
+
+    assert "function loadAppearanceChoices(): void" in catalogue
+    assert '"appearance", "gtk", "list"' in catalogue
+    assert '"appearance", "gtk", "icons"' in catalogue
+    assert "ThemeCatalogue.loadAppearanceChoices()" in themes
+    assert "ThemeCatalogue.gtkThemes.indexOf(modelData.gtkTheme) < 0" in themes
+    assert "ThemeCatalogue.iconThemes.indexOf(modelData.iconTheme) < 0" in themes
+    assert "ThemeCatalogue.gtkThemes" in gtk and "Process {" not in gtk
+    assert "ThemeCatalogue.iconThemes" in icons and "Process {" not in icons
+    assert "Install it to use this theme." in themes
+
+
+def test_appearance_choice_catalogues_can_start_before_they_are_loaded():
+    catalogue = (ROOT / "services" / "ThemeCatalogue.qml").read_text()
+    loader = catalogue.split("function loadAppearanceChoices(): void", 1)[1].split(
+        "function _finishAppearanceChoices", 1
+    )[0]
+
+    # The view-level loading property is true before the first request, so it
+    # must not be used as the process-start guard.
+    assert "if (gtkListProc.running || iconListProc.running)" in loader
+    assert "if (appearanceChoicesLoaded && !appearanceChoicesFailed)" in loader
+    assert "gtkListProc.running = true;" in loader
+    assert "iconListProc.running = true;" in loader
+    assert "if (appearanceChoicesLoading" not in loader
+
+
+def test_theme_cards_distinguish_unverified_gtk_and_icon_dependencies():
+    themes = (ROOT / "modules" / "controlcenter" / "appearance" / "sections" / "ThemesSection.qml").read_text()
+    gtk = (ROOT / "modules" / "controlcenter" / "appearance" / "sections" / "GtkThemeSection.qml").read_text()
+    icons = (ROOT / "modules" / "controlcenter" / "appearance" / "sections" / "IconThemeSection.qml").read_text()
+
+    assert "readonly property bool gtkAvailabilityUnknown: ThemeCatalogue.gtkThemesFailed" in themes
+    assert "readonly property bool iconAvailabilityUnknown: ThemeCatalogue.iconThemesFailed" in themes
+    assert "Couldn't verify GTK and icon styles" in themes
+    assert "appearanceChoicesLoading || hasUnavailableStyle || missingWallpaper || missingCurrentWallpaper" in themes
+    assert "disabled: themeItem.cannotApply" in themes
+    assert "ThemeCatalogue.loadAppearanceChoices()" in gtk
+    assert "ThemeCatalogue.loadAppearanceChoices()" in icons
+    assert "Checking installed GTK styles…" in gtk
+    assert "Checking installed icon styles…" in icons
+    assert "!ThemeCatalogue.appearanceChoicesLoading" in gtk
+    assert "!ThemeCatalogue.appearanceChoicesLoading" in icons
+
+
+def test_generated_theme_preview_keeps_latest_request_authoritative():
+    pane = (ROOT / "modules" / "controlcenter" / "appearance" / "AppearancePane.qml").read_text()
+    themes = (ROOT / "modules" / "launcher" / "services" / "Themes.qml").read_text()
+    preview_process = pane.split("id: previewPaletteProc", 1)[1].split("\n    }\n\n    SplitPaneLayout", 1)[0]
+    queue_handler = preview_process.split("onRunningChanged:", 1)[1]
+    scheduling = pane.split("function scheduleGeneratedPreview", 1)[1].split("function resetPreviewRecipe", 1)[0]
+
+    assert "runningKey === root.previewRequestKey" in preview_process
+    assert "previewPaletteCache[runningKey]" in preview_process
+    assert "previewRunningKey = previewRequestKey;" in queue_handler
+    assert "previewPaletteQueued = false;" in scheduling
+    assert "previewPaletteDebounce.stop();" in scheduling
+    assert 'return palettePreviewPathFor(theme, false) || theme.preview || Wallpapers.actualCurrent || "";' in themes
 
 
 def test_native_analyser_layer_present():

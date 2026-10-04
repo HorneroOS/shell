@@ -52,8 +52,10 @@ Searcher {
     /** Raw pointer file content; avoids empty UI if the wallpaper query fails (env/PATH). */
     function applyPointerFromFileView(pointerReadout: string): void {
         let t = pointerReadout.trim();
-        if (!t.length)
+        if (!t.length) {
+            actualCurrent = "";
             return;
+        }
         // Normalize file:// URIs written by some tools / drag-drop paths.
         if (t.startsWith("file://"))
             t = Paths.toLocalFile(t) || t.replace(/^file:\/\//, "");
@@ -92,13 +94,17 @@ Searcher {
 
         command: ["horneroctl", "wallpaper", "current"]
         running: false
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const t = text.trim();
-                if (t.length > 0)
-                    root.actualCurrent = t;
-                root.previewColourLock = false;
+        stdout: StdioCollector { id: resolveOutput }
+        onExited: (exitCode, exitStatus) => {
+            // `wallpaper current` reports the unconfigured case with a
+            // non-zero exit. Never treat its diagnostic text as an image
+            // path; preserve the FileView pointer fallback when available.
+            if (exitCode === 0) {
+                const path = resolveOutput.text.trim();
+                if (path.length > 0)
+                    root.actualCurrent = path;
             }
+            root.previewColourLock = false;
         }
     }
 
@@ -114,8 +120,10 @@ Searcher {
             reloadWallpaperPath();
         }
         onLoadFailed: err => {
-            if (err === FileViewError.FileNotFound)
+            if (err === FileViewError.FileNotFound) {
+                root.applyPointerFromFileView("");
                 reloadWallpaperPath();
+            }
         }
     }
 

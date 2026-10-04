@@ -223,8 +223,20 @@ def test_layout_picker_topology_contract():
     grid = (ROOT / "modules/layoutpicker/PresetGrid.qml").read_text()
     assert "bars: card.modelData.bars" in grid
     assert "availableWidth" in grid and "Accessible.role: Accessible.Button" in grid
+    assert "function focusCurrentPreset(): void" in grid
+    assert "onCurrentNameChanged: focusCurrentPreset()" in grid
+    assert "onKeyboardNavChanged: focusCurrentPreset()" in grid
+    assert "root.forceActiveFocus()" in grid
+    assert "onEntered: root.focusIndex = card.index" not in grid
     content = (ROOT / "modules/layoutpicker/Content.qml").read_text()
     assert "activeFocusOnTab: true" in content and "forceActiveFocus" in content
+
+
+def test_wallpaper_empty_state_fits_available_width():
+    """The first-run wallpaper card stays visible on narrower displays."""
+    wallpaper = (ROOT / "modules/background/Wallpaper.qml").read_text()
+    assert "width: Math.max(0, Math.min(420, parent.width - Appearance.padding.large * 2))" in wallpaper
+    assert "width: parent.width - Appearance.padding.large * 2" in wallpaper
 
 
 def test_bar_workspaces_are_accessible_controls():

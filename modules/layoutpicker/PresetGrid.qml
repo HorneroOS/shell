@@ -87,6 +87,25 @@ Item {
             root.apply(p.name);
     }
 
+    function focusCurrentPreset(): void {
+        if (!root.keyboardNav)
+            return;
+        const index = root.presets.findIndex(p => p.name === root.currentName);
+        if (index >= 0) {
+            root.focusIndex = index;
+            // Applying a layout live-rebuilds the bars. Quickshell may move
+            // active focus during that reload, so restore it to the picker
+            // after the current event and binding updates have settled.
+            Qt.callLater(() => {
+                if (root.keyboardNav)
+                    root.forceActiveFocus();
+            });
+        }
+    }
+
+    onKeyboardNavChanged: focusCurrentPreset()
+    onCurrentNameChanged: focusCurrentPreset()
+
     Component.onCompleted: reload()
 
     Process {
@@ -105,6 +124,9 @@ Item {
                     // state file, uninstalled preset) selects nothing
                     // instead of badgeing the wrong card.
                     root.currentName = active ? active.name : "";
+                    // The list refresh completes after the apply process; by
+                    // then the live shell reload may have taken focus again.
+                    root.focusCurrentPreset();
                     if (!active)
                         console.warn("[layoutpicker] No active preset in list; selection cleared");
                 } catch (e) {
@@ -267,7 +289,6 @@ Item {
                         root.focusIndex = card.index;
                         root.apply(card.modelData.name);
                     }
-                    onEntered: root.focusIndex = card.index
                 }
             }
         }

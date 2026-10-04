@@ -924,6 +924,10 @@ Item {
                         session: root.session
                         previewController: root
                         wallpaperScopeDir: root.wallpaperScopeDir
+                        wallpaperUsesCurrentThemeFallback: root.previewSource === "theme"
+                            && !!root.previewWallpaperPath
+                            && root.previewWallpaperPath === Wallpapers.actualCurrent
+                            && !Themes.hasAvailableWallpaper(Themes.themeById(root.previewThemeId))
                         showAllWallpapers: root.wallpaperShowAll
                         onToggleShowAllRequested: root.wallpaperShowAll = !root.wallpaperShowAll
                     }

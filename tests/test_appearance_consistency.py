@@ -199,6 +199,15 @@ def test_recipe_without_wallpaper_uses_the_current_wallpaper_when_applying():
     assert "disabled: themeItem.cannotApply" in section
 
 
+def test_theme_without_media_explains_current_wallpaper_preview():
+    pane = (ROOT / "modules" / "controlcenter" / "appearance" / "AppearancePane.qml").read_text()
+    grid = (ROOT / "modules" / "controlcenter" / "components" / "WallpaperGrid.qml").read_text()
+
+    assert "wallpaperUsesCurrentThemeFallback:" in pane
+    assert "!Themes.hasAvailableWallpaper(Themes.themeById(root.previewThemeId))" in pane
+    assert "No bundled wallpapers. Using your current wallpaper for preview." in grid
+
+
 def test_appearance_shares_installed_styles_for_theme_readiness():
     catalogue = (ROOT / "services" / "ThemeCatalogue.qml").read_text()
     themes = (ROOT / "modules" / "controlcenter" / "appearance" / "sections" / "ThemesSection.qml").read_text()

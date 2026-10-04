@@ -52,8 +52,10 @@ Searcher {
     /** Raw pointer file content; avoids empty UI if the wallpaper query fails (env/PATH). */
     function applyPointerFromFileView(pointerReadout: string): void {
         let t = pointerReadout.trim();
-        if (!t.length)
+        if (!t.length) {
+            actualCurrent = "";
             return;
+        }
         // Normalize file:// URIs written by some tools / drag-drop paths.
         if (t.startsWith("file://"))
             t = Paths.toLocalFile(t) || t.replace(/^file:\/\//, "");

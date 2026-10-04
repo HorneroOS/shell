@@ -4,7 +4,7 @@ import qs.config
 import QtQuick
 import QtQuick.Layouts
 
-// Active keyboard layout (legacy context-bar). Read-only indicator.
+// Active keyboard layout indicator. Read-only indicator.
 Item {
     id: root
 

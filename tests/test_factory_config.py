@@ -168,7 +168,7 @@ def _check_keys(path, expected, actual):
 def _get(factory, dotted):
     node = factory
     for part in dotted.split("."):
-        node = node[part]
+        node = node[int(part)] if isinstance(node, list) else node[part]
     return node
 
 
@@ -213,9 +213,9 @@ def test_factory_values_match_code_defaults():
         ("background.video.enabled", True),
         ("background.video.batteryLimit", 20),
         # bar (BarConfig.qml)
-        ("bar.position", "left"),
-        ("bar.style", "attached"),
-        ("bar.floatingMargin", 8),
+        ("bar.bars.0.edge", "left"),
+        ("bar.bars.0.style", "attached"),
+        ("bar.bars.0.margin", 8),
         ("bar.workspaces.shown", 5),
         ("bar.workspaces.maxWindowIcons", 5),
         ("bar.activeWindow.inverted", False),
@@ -228,8 +228,8 @@ def test_factory_values_match_code_defaults():
         ("bar.status.showNetwork", True),
         ("bar.status.showAudio", False),
         ("bar.sizes.innerWidth", 40),
-        ("bar.entries.0.id", "logo"),
-        ("bar.entries.8.id", "power"),
+        ("bar.bars.0.groups.start.0.id", "logo"),
+        ("bar.bars.0.groups.end.3.id", "power"),
         # border resolves Appearance tokens at scale 1: padding.normal=10,
         # rounding.large=25 (BorderConfig.qml)
         ("border.frameEnabled", True),

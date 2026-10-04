@@ -42,13 +42,7 @@ Item {
 
     // Human topology summary for a card ("Two bars · top + bottom").
     function topologyLabel(p: var): string {
-        const bars = p.bars && p.bars.length > 0 ? Array.from(p.bars) : [
-            {
-                edge: p.position,
-                style: p.style,
-                backdrop: "solid"
-            }
-        ];
+        const bars = Array.from(p.bars ?? []);
         const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
         const clear = bars.every(b => b.backdrop === "clear") ? qsTr(" · clear") : bars.some(b => b.backdrop === "clear") ? qsTr(" · partly clear") : "";
         if (bars.length > 1)
@@ -215,8 +209,6 @@ Item {
                     LayoutPreview {
                         Layout.alignment: Qt.AlignHCenter
                         bars: card.modelData.bars ?? []
-                        position: card.modelData.position
-                        barStyle: card.modelData.style
                         highlighted: card.isActive || card.isFocused
 
                         // Current layout badge on the preview corner
@@ -298,7 +290,7 @@ Item {
     StyledText {
         anchors.centerIn: parent
         visible: root.count === 0
-        // Path contract row 2: canonical hornero/* first, legacy dots/* fallback.
+        // Presets are package data with user overrides in the Hornero XDG tree.
         text: qsTr("No presets found — check ~/.local/share/hornero/shell-presets")
         color: Colours.palette.m3onSurfaceVariant
     }

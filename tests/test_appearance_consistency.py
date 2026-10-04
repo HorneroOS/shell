@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parent.parent
 QML_DIRS = [ROOT / d for d in ("modules", "services", "config", "utils", "components")]
 
 # Every dots-* wrapper the shell ever shelled out to. All retired: the
-# native horneroctl verbs cover each one (see docs/MIGRATION.md).
+# native horneroctl verbs cover each one (see docs/PROVENANCE.md).
 RETIRED_WRAPPERS = [
     "dots-gtk-theme",
     "dots-m3-colors",

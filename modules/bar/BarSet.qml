@@ -33,7 +33,7 @@ Item {
     }
     readonly property Item primary: bars.length > 0 ? bars[0] : null
 
-    // Legacy single-bar view (primary bar) for consumers that need one edge.
+    // Primary-bar convenience properties for single-edge consumers.
     readonly property string position: primary?.position ?? "left"
     readonly property bool vertical: primary?.vertical ?? true
     readonly property bool floating: primary?.floating ?? false

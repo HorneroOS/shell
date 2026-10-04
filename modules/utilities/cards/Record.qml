@@ -88,19 +88,19 @@ StyledRect {
                         icon: "screenshot_region"
                         text: qsTr("Record region")
                         activeText: qsTr("Region")
-                        onClicked: Recorder.start(["-r"])
+                        onClicked: Recorder.start(["--region"])
                     },
                     MenuItem {
                         icon: "select_to_speak"
                         text: qsTr("Record fullscreen with sound")
                         activeText: qsTr("Fullscreen")
-                        onClicked: Recorder.start(["-s"])
+                        onClicked: Recorder.start(["--sound"])
                     },
                     MenuItem {
                         icon: "volume_up"
                         text: qsTr("Record region with sound")
                         activeText: qsTr("Region")
-                        onClicked: Recorder.start(["-sr"])
+                        onClicked: Recorder.start(["--sr"])
                     }
                 ]
             }

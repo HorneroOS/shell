@@ -235,9 +235,6 @@ Singleton {
             persistent: bar.persistent,
             showOnHover: bar.showOnHover,
             dragThreshold: bar.dragThreshold,
-            position: bar.position,
-            style: bar.style,
-            floatingMargin: bar.floatingMargin,
             perScreen: bar.perScreen,
             bars: bar.bars,
             scrollActions: {
@@ -298,7 +295,6 @@ Singleton {
                 networkWidth: bar.sizes.networkWidth,
                 kbLayoutWidth: bar.sizes.kbLayoutWidth
             },
-            entries: bar.entries,
             excludedScreens: bar.excludedScreens
         };
     }
@@ -533,9 +529,8 @@ Singleton {
         };
     }
 
-    // Runtime path contract row 6: shell.json is already canonical
-    // ($XDG_CONFIG_HOME/hornero/shell.json) with no dots/* fallback. A
-    // missing user file means compiled defaults apply (see onLoadFailed).
+    // Runtime shell settings live at $XDG_CONFIG_HOME/hornero/shell.json.
+    // A missing user file means compiled defaults apply (see onLoadFailed).
     FileView {
         id: fileView
 

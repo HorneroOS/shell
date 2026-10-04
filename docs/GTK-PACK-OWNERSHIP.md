@@ -35,4 +35,4 @@ one owner for the format and one consumer for the UX.
   gtk`; pack-id applies always use the fallback path (see
   `docs/NATIVE-APPEARANCE.md`).
 - Markers: every call site above is a `horneroctl` invocation with a
-  `docs/COMPAT.md` row (disposition D/E).
+  `docs/INTEGRATION.md`.

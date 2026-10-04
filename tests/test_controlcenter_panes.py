@@ -11,7 +11,7 @@ REGISTRY = CC / "PaneRegistry.qml"
 WINDOW_FACTORY = CC / "WindowFactory.qml"
 
 # Every dots-* wrapper the shell ever invoked, all superseded by horneroctl
-# verbs (see docs/MIGRATION.md). None may appear in pane QML.
+# verbs (see docs/PROVENANCE.md). None may appear in pane QML.
 DEAD_WRAPPERS = [
     "dots-quickshell",
     "dots-launcher",

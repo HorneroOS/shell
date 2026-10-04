@@ -15,17 +15,17 @@ stripped from any imported file.
 
 ## HorneroOS modifications
 
-- Imported from `ulises-jeremias/dotfiles@b26db04`
-  (`home/dot_config/quickshell/`, `home/dot_local/share/dots/shell-presets/`)
-  via COPY-never-MOVE into this repository (`feat/initial-shell-extraction`).
+- The initial extraction was sourced from
+  [ulises-jeremias/dotfiles](https://github.com/ulises-jeremias/dotfiles)
+  at commit `b26db04`; the shell runtime and its layout presets now live in
+  this repository.
 - Personal-workstation assumptions removed: chezmoi-managed paths replaced
   with XDG/env-based resolution (`utils/Paths.qml`), `HorneroConfig`
   branding repointed to HorneroOS/Hornero Shell, dotfiles provenance URLs
-  repointed to HorneroOS homes. See `docs/MIGRATION.md`.
-- Runtime integration points that still call out to `dots-*` helper CLIs are
-  documented in `docs/COMPAT.md` with dispositions and in `docs/IPC.md` as
-  process contracts. They remain external runtime dependencies, not vendored
-  code.
+  repointed to HorneroOS homes. See `docs/PROVENANCE.md`.
+- The runtime uses Hornero-owned `horneroctl` contracts for operating-system
+  operations. Platform utilities remain external dependencies and are not
+  vendored code.
 - Per the GPL-3.0 terms of the original work, all HorneroOS modifications to
   the shell runtime (`shell.qml`, `modules/`, `services/`, `config/`,
   `utils/`, `components/`, `assets/`, `plugin/`, `extras/`, `presets/`)

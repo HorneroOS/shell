@@ -463,9 +463,7 @@ Variants {
                         },
                             disabled: bar.disabled,
                         config: {
-                            position: Config.bar.position,
-                            style: Config.bar.style,
-                            perScreen: Config.bar.perScreen,
+                            bars: Config.bar.barsFor("HDMI-A-1").map(b => ({edge: b.edge, style: b.style})),
                             styleFor: Config.bar.styleFor("HDMI-A-1"),
                             floatingFor: Config.bar.isFloatingFor("HDMI-A-1")
                         },

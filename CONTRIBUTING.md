@@ -24,12 +24,12 @@ All five must pass. Never disable a failing check to get green.
 ## Rules that bite
 
 - QML/Qt/IPC/Process rules: see `AGENTS.md` (imports, IPC docs+tests,
-  forbidden appearance calls, no personal paths, no new `dots-*`
-  coupling without a `docs/COMPAT.md` row).
+  forbidden appearance calls, no personal paths, and no unreviewed process
+  boundary changes.
 - Licensing: imported runtime files are GPL-3.0-only — do not strip
   headers or relicense. New project docs/scaffold files are MIT.
 - Provenance: imported code needs a source + commit reference in the
-  commit message (see `docs/MIGRATION.md` for the format).
+  commit message (see `docs/PROVENANCE.md` for the format).
 
 ## Reporting issues / security
 

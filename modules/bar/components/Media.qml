@@ -4,7 +4,7 @@ import qs.config
 import QtQuick
 import QtQuick.Layouts
 
-// Media cluster (legacy dual-bar centre): prev / play-pause / next and the
+// Media controls: prev / play-pause / next and the
 // current track. Collapses to nothing while no player is active.
 Item {
     id: root

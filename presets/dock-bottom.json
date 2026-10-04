@@ -5,53 +5,8 @@
   "_iconMaterial": "dock_to_bottom",
   "_lineage": "Waybar dock-bottom profile",
   "bar": {
-    "position": "bottom",
-    "style": "dock",
-    "floatingMargin": 12,
     "persistent": true,
     "showOnHover": true,
-    "entries": [
-      {
-        "id": "logo",
-        "enabled": true
-      },
-      {
-        "id": "workspaces",
-        "enabled": true
-      },
-      {
-        "id": "spacer",
-        "enabled": true
-      },
-      {
-        "id": "pinnedApps",
-        "enabled": true
-      },
-      {
-        "id": "quickActions",
-        "enabled": true
-      },
-      {
-        "id": "spacer",
-        "enabled": true
-      },
-      {
-        "id": "clock",
-        "enabled": true
-      },
-      {
-        "id": "statusIcons",
-        "enabled": true
-      },
-      {
-        "id": "battery",
-        "enabled": true
-      },
-      {
-        "id": "tray",
-        "enabled": true
-      }
-    ],
     "bars": [
       {
         "edge": "bottom",
@@ -110,7 +65,10 @@
               "enabled": true
             }
           ]
-        }
+        },
+        "reserve": true,
+        "density": "values",
+        "backdrop": "solid"
       }
     ],
     "sizes": {

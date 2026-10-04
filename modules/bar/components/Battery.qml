@@ -5,7 +5,7 @@ import Quickshell.Services.UPower
 import QtQuick
 import QtQuick.Layouts
 
-// Battery level (legacy top-right). Absent on machines without a laptop
+// Battery status; hidden on machines without a laptop battery. Absent on machines without a laptop
 // battery, so layouts can include it unconditionally.
 Item {
     id: root

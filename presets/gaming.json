@@ -4,25 +4,8 @@
   "_icon": "🎮",
   "_iconMaterial": "sports_esports",
   "bar": {
-    "position": "bottom",
-    "style": "floating",
-    "floatingMargin": 14,
     "persistent": true,
     "showOnHover": true,
-    "entries": [
-      {
-        "id": "workspaces",
-        "enabled": true
-      },
-      {
-        "id": "spacer",
-        "enabled": true
-      },
-      {
-        "id": "statusIcons",
-        "enabled": true
-      }
-    ],
     "sizes": {
       "innerWidth": 32
     },
@@ -35,7 +18,34 @@
       "volume": true,
       "brightness": false
     },
-    "bars": []
+    "bars": [
+      {
+        "edge": "bottom",
+        "style": "floating",
+        "reserve": false,
+        "margin": 14,
+        "thickness": 32,
+        "density": "values",
+        "backdrop": "solid",
+        "groups": {
+          "start": [
+            {
+              "id": "workspaces",
+              "enabled": true,
+              "options": {}
+            }
+          ],
+          "center": [],
+          "end": [
+            {
+              "id": "statusIcons",
+              "enabled": true,
+              "options": {}
+            }
+          ]
+        }
+      }
+    ]
   },
   "border": {
     "frameEnabled": false

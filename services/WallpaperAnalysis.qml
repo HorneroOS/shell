@@ -4,7 +4,7 @@ import Hornero
 import QtQuick
 import Quickshell
 
-// Native wallpaper color analysis (issue #2, migration step (b)).
+// Native wallpaper color analysis.
 //
 // Thin wrapper around the native `ImageAnalyser` plugin
 // (`dominantColour`/`luminance`). Covers instant wallpaper tone analysis

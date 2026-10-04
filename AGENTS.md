@@ -17,9 +17,9 @@
 
 - New `IpcHandler` targets/functions must be documented in `docs/IPC.md`
   **and** covered in `tests/test_ipc_mapping.py` in the same commit.
-- Spawning processes: prefer `dots-*` CLIs by bare name (see
-  `docs/COMPAT.md`). Forbidden in QML: direct `gtk-theme-manager.sh`
-  calls, bare `python3 generate-m3-colors` (enforced by
+- Shell integration uses the installed `horneroctl` command contract.
+  Keep platform-specific process calls behind tested services; QML must not
+  call appearance scripts directly (enforced by
   `tests/test_appearance_consistency.py`).
 - Outbound commands are contracts: keep arg order stable, quote paths,
   never pass unsanitized user input to `sh -c`.
@@ -31,8 +31,6 @@
   (env → XDG → `$HOME`); add new knobs there, not inline.
 - No chezmoi/template markers (`{{ … }}`) anywhere
   (`tests/test_static_scans.py`).
-- No new `dots-*` coupling without a `docs/COMPAT.md` row + disposition
-  and a `TODO(hornero-compat)` marker at the call site.
 - `presets/*.json` schema: `_name`, `_description`, bar entries with
   `id`/`enabled`, sizes/status/scrollActions, v2 `bars` set
   (`docs/LAYOUTS.md`) — keep `tests/test_shell_layout.py` green

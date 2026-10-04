@@ -19,11 +19,8 @@ Image {
         }
     }
 
-    // Runtime path contract row 10: cacheDir is the canonical
-    // $XDG_CACHE_HOME/hornero/imagecache, so new entries are written there.
-    // No dots/* read fallback is wired: cache entries are derived files that
-    // regenerate on miss (see Paths.imagecacheFallback), and absolute legacy
-    // source paths keep resolving directly.
+    // Cache entries are derived from the image source and regenerate on miss.
+    // Source paths are stored as absolute paths in the Hornero cache index.
     CachingImageManager {
         id: manager
 

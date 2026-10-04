@@ -10,11 +10,8 @@ import QtQuick
 Singleton {
     id: root
 
-    // horneroctl resolves packs through canonical user, legacy user, then
-    // read-only system catalogues. Shell writes only canonical state; legacy
-    // wallpaper roots remain read-only compatibility fallbacks.
+    // User packs override package catalogues. State writes use XDG Hornero paths.
     readonly property string wallpapersDir: `${Paths.data}/wallpapers`
-    readonly property string wallpapersDirFallback: `${Paths.dataFallback}/wallpapers`
     readonly property string picturesWallpapers: `${Paths.pictures}/Wallpapers`
     readonly property string wallpaperPointer: Paths.wallpaperPointer
     // M3 palette generation runs through horneroctl (its backend resolves
@@ -254,7 +251,7 @@ Singleton {
     // `horneroctl appearance gtk theme`, which writes the gtk2/3/4 ini
     // files that `horneroctl appearance theme set` verifies. Without the
     // id the GTK theme name would never switch and verify would refuse
-    // the split state. Legacy theme extras (snappy switcher packs) are
+    // the split state. Optional theme integrations (snappy switcher packs) are
     // skipped for built-ins.
     function _applyBuiltInTheme(id: string, wallpaper: string): void {
         const darkMode = id !== "hornero-light";
@@ -372,8 +369,8 @@ Singleton {
     }
 
     // Theme metadata and resolved system/user wallpaper paths come from
-    // horneroctl's canonical catalogue reader. This keeps user canonical,
-    // user legacy and read-only system pack precedence in one place.
+    // horneroctl's canonical catalogue reader. This keeps user overrides
+    // and read-only system pack precedence in one place.
     function _handleThemeConfig(cfg: var, wallpaperOverride: string): void {
         themeLoader.pendingConfig = cfg;
         root._pendingSchemeType = cfg.schemeType || "tonal-spot";
@@ -413,14 +410,14 @@ Singleton {
         command: ["sh", "-c", `
 cfg_default="$HORNERO_DEFAULT_WALLPAPER"
 theme_dir="$HORNERO_WALLPAPER_DIR"
-// Contract row 11: canonical hornero/* wallpapers first, legacy dots/* fallback.
-for base in "$HORNERO_PICTURES_WALLPAPERS/$theme_dir" "$HORNERO_DATA_WALLPAPERS/$theme_dir" "$HORNERO_LEGACY_DATA_WALLPAPERS/$theme_dir"; do
+// Resolve editable user media after the catalogue has checked package assets.
+for base in "$HORNERO_PICTURES_WALLPAPERS/$theme_dir" "$HORNERO_DATA_WALLPAPERS/$theme_dir"; do
   if [ -n "$cfg_default" ] && [ -f "$base/$cfg_default" ]; then
     readlink -f "$base/$cfg_default"
     exit 0
   fi
 done
-for base in "$HORNERO_PICTURES_WALLPAPERS/$theme_dir" "$HORNERO_DATA_WALLPAPERS/$theme_dir" "$HORNERO_LEGACY_DATA_WALLPAPERS/$theme_dir"; do
+for base in "$HORNERO_PICTURES_WALLPAPERS/$theme_dir" "$HORNERO_DATA_WALLPAPERS/$theme_dir"; do
   [ -d "$base" ] || continue
   find -L "$base" -maxdepth 1 \\( -type f -o -type l \\) \\( \
     -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.webp" \
@@ -434,7 +431,6 @@ done
             "HORNERO_WALLPAPER_DIR": themeLoader.pendingConfig.wallpaperDir || themeLoader.themeId,
             "HORNERO_PICTURES_WALLPAPERS": root.picturesWallpapers,
             "HORNERO_DATA_WALLPAPERS": root.wallpapersDir,
-            "HORNERO_LEGACY_DATA_WALLPAPERS": root.wallpapersDirFallback
         })
 
         stdout: StdioCollector {

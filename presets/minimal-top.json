@@ -4,33 +4,8 @@
   "_icon": "✨",
   "_iconMaterial": "minimize",
   "bar": {
-    "position": "top",
-    "style": "attached",
-    "floatingMargin": 8,
     "persistent": true,
     "showOnHover": true,
-    "entries": [
-      {
-        "id": "workspaces",
-        "enabled": true
-      },
-      {
-        "id": "spacer",
-        "enabled": true
-      },
-      {
-        "id": "clock",
-        "enabled": true
-      },
-      {
-        "id": "spacer",
-        "enabled": true
-      },
-      {
-        "id": "power",
-        "enabled": true
-      }
-    ],
     "sizes": {
       "innerWidth": 32
     },
@@ -40,7 +15,40 @@
       "volume": true,
       "brightness": false
     },
-    "bars": []
+    "bars": [
+      {
+        "edge": "top",
+        "style": "attached",
+        "reserve": true,
+        "margin": 8,
+        "thickness": 32,
+        "density": "values",
+        "backdrop": "solid",
+        "groups": {
+          "start": [
+            {
+              "id": "workspaces",
+              "enabled": true,
+              "options": {}
+            }
+          ],
+          "center": [
+            {
+              "id": "clock",
+              "enabled": true,
+              "options": {}
+            }
+          ],
+          "end": [
+            {
+              "id": "power",
+              "enabled": true,
+              "options": {}
+            }
+          ]
+        }
+      }
+    ]
   },
   "border": {
     "frameEnabled": false

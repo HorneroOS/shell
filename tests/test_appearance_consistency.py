@@ -75,8 +75,8 @@ def test_canonical_cli_calls_present():
     spawning = list(_spawning())
     gtk = [p for p, text in spawning if '"gtk"' in text]
     assert gtk, "expected horneroctl appearance gtk calls in QML"
-    scheme = [p for p, text in spawning if '"scheme"' in text]
-    assert scheme, "expected horneroctl scheme calls in QML"
+    scheme = [p for p, text in spawning if '"appearance", "scheme"' in text]
+    assert scheme, "expected nested horneroctl appearance scheme calls in QML"
     m3 = [p for p, text in spawning if '"m3"' in text]
     assert m3, "expected horneroctl appearance colors m3 calls in QML"
     for path in gtk + scheme + m3:

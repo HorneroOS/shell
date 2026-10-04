@@ -114,7 +114,7 @@ outside the generated roles.
 | Call site | Command | Notes |
 |---|---|---|
 | `ThemePipeline.m3Proc`, `Wallpapers` preview colours, `AppearancePane.previewPaletteProc` | `horneroctl appearance colors m3 --yes -- …` | Passthrough to the M3 backend script (materialyoucolor lives outside this repo); same stdout payload as before |
-| `ThemePipeline` scheme regenerate/sync-state; `Colours.setMode`; `Schemes` list/current/set-variant; `M3Variants`; `AppearancePane` scheme/mode commits | `horneroctl scheme …` | Scheme persistence runs natively in `HorneroOS/hornero` |
+| `ThemePipeline` scheme regenerate/sync-state; `Colours.setMode`; `Schemes` list/current/set-variant; `M3Variants`; `AppearancePane` scheme/mode commits | `horneroctl appearance scheme …` | Scheme persistence runs natively in `HorneroOS/hornero` |
 | `GtkSettings` full-mode with theme-pack id | `horneroctl appearance gtk theme …` | Theme-pack id resolution lives in the shared theme registry |
 | `GtkThemeSection` / `IconThemeSection` listings | `horneroctl appearance gtk list/icons` | Catalogue parsing plus de-dup across system/user roots |
 | `AppearancePane` live queries (fallback branch) | `horneroctl appearance gtk current*` | Hosts without `gsettings` |

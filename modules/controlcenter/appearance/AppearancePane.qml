@@ -607,12 +607,12 @@ Item {
                 const flavour = parts.slice(1).join(" ") || pendingVariant;
                 // set-variant persists the selected variant and its derived
                 // flavour; the single "dynamic" scheme name stays server-side.
-                session.runAction(["horneroctl", "scheme", "set-variant", root.normalizeVariantKey(flavour), "--yes"]);
+                session.runAction(["horneroctl", "appearance", "scheme", "set-variant", root.normalizeVariantKey(flavour), "--yes"]);
             } else if (variantDirty && pendingVariant) {
-                session.runAction(["horneroctl", "scheme", "set-variant", pendingVariant, "--yes"]);
+                session.runAction(["horneroctl", "appearance", "scheme", "set-variant", pendingVariant, "--yes"]);
             }
             if (modeDirty && pendingMode)
-                session.runAction(["horneroctl", "scheme", "set-mode", pendingMode, "--yes"]);
+                session.runAction(["horneroctl", "appearance", "scheme", "set-mode", pendingMode, "--yes"]);
         }
 
         if (gtkDirty && pendingGtkTheme) {
@@ -669,7 +669,7 @@ Item {
             return;
         const mode = deferredMode;
         deferredMode = "";
-        session.runAction(["horneroctl", "scheme", "set-mode", mode, "--yes"]);
+        session.runAction(["horneroctl", "appearance", "scheme", "set-mode", mode, "--yes"]);
     }
 
     function _flushDeferredPipelineExtras(): void {

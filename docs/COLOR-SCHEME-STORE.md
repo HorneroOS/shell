@@ -1,13 +1,13 @@
 # Color-scheme / M3 store decision — track 3a
 
-Question: keep scheme and M3 palette state behind the `horneroctl scheme` /
+Question: keep scheme and M3 palette state behind the `horneroctl appearance scheme` /
 `horneroctl appearance colors m3` verbs, or add a native palette store in
 the shell?
 
 ## Decision: keep the CLI, no native store
 
 Scheme list/current/set-mode/set-variant/regenerate/sync-state ops run
-through `horneroctl scheme` and full M3 palette generation through
+through `horneroctl appearance scheme` and full M3 palette generation through
 `horneroctl appearance colors m3` (same backend, owned by
 `HorneroOS/hornero`; see `docs/INTEGRATION.md`). The shell adds no palette
 persistence of its own.
@@ -17,7 +17,7 @@ persistence of its own.
 1. **Generation dependency lives outside this repo.** Full M3 palettes need
    `materialyoucolor`, which the shell cannot import (QML-only runtime).
    A native store would still shell out for generation, gaining nothing.
-2. **Persistence already has an owner.** `horneroctl scheme` owns scheme
+2. **Persistence already has an owner.** `horneroctl appearance scheme` owns scheme
    persistence; the shell reads the cached result (`scheme.json` under
    `Paths.cache/smart-colors/`) through a `FileView` watcher, so the UI
    stays live without owning writes.

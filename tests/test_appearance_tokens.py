@@ -15,6 +15,15 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
+
+
+def test_scheme_operations_use_nested_appearance_command():
+    for path in [ROOT / "services/Colours.qml", ROOT / "services/ThemePipeline.qml",
+                 ROOT / "modules/launcher/services/Schemes.qml",
+                 ROOT / "modules/launcher/services/M3Variants.qml",
+                 ROOT / "modules/controlcenter/appearance/AppearancePane.qml"]:
+        text = path.read_text()
+        assert '"horneroctl", "scheme"' not in text
 COLOURS = ROOT / "services" / "Colours.qml"
 PIPELINE = ROOT / "services" / "ThemePipeline.qml"
 APPEARANCE_CONFIG = ROOT / "config" / "AppearanceConfig.qml"

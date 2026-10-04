@@ -95,8 +95,11 @@ Item {
             root.focusIndex = index;
             // Applying a layout live-rebuilds the bars. Quickshell may move
             // active focus during that reload, so restore it to the picker
-            // before the next arrow-key action.
-            root.forceActiveFocus();
+            // after the current event and binding updates have settled.
+            Qt.callLater(() => {
+                if (root.keyboardNav)
+                    root.forceActiveFocus();
+            });
         }
     }
 
@@ -121,6 +124,9 @@ Item {
                     // state file, uninstalled preset) selects nothing
                     // instead of badgeing the wrong card.
                     root.currentName = active ? active.name : "";
+                    // The list refresh completes after the apply process; by
+                    // then the live shell reload may have taken focus again.
+                    root.focusCurrentPreset();
                     if (!active)
                         console.warn("[layoutpicker] No active preset in list; selection cleared");
                 } catch (e) {

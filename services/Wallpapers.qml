@@ -120,8 +120,10 @@ Searcher {
             reloadWallpaperPath();
         }
         onLoadFailed: err => {
-            if (err === FileViewError.FileNotFound)
+            if (err === FileViewError.FileNotFound) {
+                root.applyPointerFromFileView("");
                 reloadWallpaperPath();
+            }
         }
     }
 

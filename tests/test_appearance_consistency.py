@@ -191,8 +191,8 @@ def test_recipe_without_wallpaper_uses_the_current_wallpaper_when_applying():
     assert "function wallpaperOverrideFor(theme: var): string" in launcher
     assert "function hasAvailableWallpaper(theme: var): bool" in launcher
     assert "if (!theme || hasAvailableWallpaper(theme))" in override
-    assert "!!theme.wallpaperPath" in launcher
-    assert "if (theme.wallpaperPath)" in launcher
+    assert "wallpaperPath may be the canonical target for absent pack media" in launcher
+    assert "return !!theme && Object.keys(theme.wallpaperPaths ?? {}).length > 0;" in launcher
     assert "theme.colorOnly" not in override
     assert 'return Wallpapers.actualCurrent || "";' in launcher
     assert 'stagedThemeWallpaper = Themes.wallpaperOverrideFor(theme);' in pane

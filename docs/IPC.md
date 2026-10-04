@@ -85,7 +85,7 @@ The shell also *spawns* processes; the stable outbound contracts are:
   `services/GtkSettings.qml`) and the native `ImageAnalyser` plugin
   (`dominantColour`/`luminance`, via `services/WallpaperAnalysis.qml` and
   `Colours.wallLuminance`/`wallDominantColour`).
-- Appearance fallbacks (native horneroctl verbs, see `docs/COMPAT.md`):
+- Appearance uses the shared native Hornero CLI contract:
   `horneroctl appearance colors m3 -- …`,
   `horneroctl appearance gtk …`, `horneroctl scheme …`.
 - Optional integrations: `horneroctl capture record start/stop/pause --yes`,

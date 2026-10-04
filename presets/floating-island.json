@@ -4,41 +4,8 @@
   "_icon": "🏝️",
   "_iconMaterial": "web_asset",
   "bar": {
-    "position": "top",
-    "style": "floating",
-    "floatingMargin": 16,
     "persistent": true,
     "showOnHover": true,
-    "entries": [
-      {
-        "id": "logo",
-        "enabled": true
-      },
-      {
-        "id": "workspaces",
-        "enabled": true
-      },
-      {
-        "id": "spacer",
-        "enabled": true
-      },
-      {
-        "id": "clock",
-        "enabled": true
-      },
-      {
-        "id": "spacer",
-        "enabled": true
-      },
-      {
-        "id": "statusIcons",
-        "enabled": true
-      },
-      {
-        "id": "power",
-        "enabled": true
-      }
-    ],
     "sizes": {
       "innerWidth": 32
     },
@@ -86,7 +53,10 @@
               "enabled": true
             }
           ]
-        }
+        },
+        "thickness": 40,
+        "density": "values",
+        "backdrop": "solid"
       }
     ]
   },

@@ -2,12 +2,11 @@
 
 QML applies theming through native layers first (`gsettings`,
 `ImageAnalyser`, `horneroctl` verbs owned by `HorneroOS/hornero`) and
-reaches outside the repo only through `horneroctl`. No `dots-*` wrapper
-remains in the runtime tree.
+reaches outside the repo through the Hornero CLI and the platform APIs.
 
 ## Native layers
 
-### GtkSettings (`services/GtkSettings.qml`) — migration step (a)
+### GtkSettings (`services/GtkSettings.qml`)
 
 Applies GTK themes, icon themes, and color-scheme policy through the
 deterministic `gsettings` desktop APIs, then mirrors successful live changes
@@ -51,7 +50,7 @@ pipeline finalize step via `applyFull`), `AppearancePane` (live seeding via
 `refreshLive` plus change connections; its `horneroctl gtk` live queries
 yield whenever a native value exists).
 
-### WallpaperAnalysis (`services/WallpaperAnalysis.qml`) — migration step (b)
+### WallpaperAnalysis (`services/WallpaperAnalysis.qml`)
 
 Thin wrapper around the native `ImageAnalyser` plugin exposing
 `dominantColour` / `luminance` plus `ready` and `isLight` helpers for any
@@ -119,20 +118,19 @@ outside the generated roles.
 | `GtkSettings` full-mode with theme-pack id | `horneroctl appearance gtk theme …` | Theme-pack id resolution lives in the shared theme registry |
 | `GtkThemeSection` / `IconThemeSection` listings | `horneroctl appearance gtk list/icons` | Catalogue parsing plus de-dup across system/user roots |
 | `AppearancePane` live queries (fallback branch) | `horneroctl appearance gtk current*` | Hosts without `gsettings` |
-| `ThemePipeline` side effects | `horneroctl apps switcher apply-theme-pack --yes`, `horneroctl appearance hyprlock --yes` | Native backends (host shim-pinned via `HORNERO_SNAPPY_BIN` / `HORNERO_SETTINGS_GUI_BIN`) |
+| `ThemePipeline` side effects | `horneroctl apps switcher apply-theme-pack --yes`, `horneroctl appearance hyprlock --yes` | Shell switcher action plus GTK/lock integration |
 | `Themes.qml` loader | `horneroctl appearance theme list --full` | JSON manifest array; empty-model fallback when absent (see `docs/GTK-PACK-OWNERSHIP.md`) |
-| `ColorVariantSection.qml` accent set/clear | `horneroctl appearance accent …` | Was `dots-accent-override` |
-| `Wallpapers.resolveProc` | `horneroctl wallpaper current` | Was `dots-wallpaper-current`; `FileView` pointer fallback kept |
-| `QuickToggles` / `SystemPane` night toggle | `horneroctl appearance night-mode toggle --yes` | Was `dots-night-mode` |
-| `Recorder.qml` start/stop/pause | `horneroctl capture record … --yes` | Was `dots-recorder`; `-r`/`-s`/`-sr` translate to `--region`/`--sound`/`--sr` |
+| `ColorVariantSection.qml` accent set/clear | `horneroctl appearance accent …` | Persists the user accent override |
+| `Wallpapers.resolveProc` | `horneroctl wallpaper current` | Reads the canonical wallpaper pointer |
+| `QuickToggles` / `SystemPane` night toggle | `horneroctl appearance night-mode toggle --yes` | Updates the selected mode and GTK policy |
+| `Recorder.qml` start/stop/pause | `horneroctl capture record … --yes` | Uses the configured screen recorder |
 
 ## Contracts and checks
 
-- `gtk-theme-manager.sh` is never called from QML, bare
-  `python3 generate-m3-colors` never runs, and no retired `dots-*` wrapper
-  name appears in QML — enforced by `tests/test_appearance_consistency.py`
-  and `scripts/check_forbidden_paths.sh`.
+- Appearance operations use the shared Hornero CLI contract and do not invoke
+  helper scripts directly from QML — enforced by
+  `tests/test_appearance_consistency.py` and `scripts/check_forbidden_paths.sh`.
 - The same test file requires both native layers to exist and every
   appearance call site to go through `horneroctl`.
 - Outbound process contracts are documented in `docs/IPC.md`; the
-  per-CLI table in `docs/MIGRATION.md` §2 records the migration status.
+  see `docs/INTEGRATION.md` for current process boundaries.

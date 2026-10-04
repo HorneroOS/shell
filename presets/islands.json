@@ -5,61 +5,8 @@
   "_iconMaterial": "view_column",
   "_lineage": "Polybar i3 multipart profile",
   "bar": {
-    "position": "top",
-    "style": "floating",
-    "floatingMargin": 10,
     "persistent": true,
     "showOnHover": true,
-    "entries": [
-      {
-        "id": "logo",
-        "enabled": true
-      },
-      {
-        "id": "quickActions",
-        "enabled": true
-      },
-      {
-        "id": "audioSlider",
-        "enabled": true
-      },
-      {
-        "id": "brightnessSlider",
-        "enabled": true
-      },
-      {
-        "id": "spacer",
-        "enabled": true
-      },
-      {
-        "id": "clock",
-        "enabled": true
-      },
-      {
-        "id": "weather",
-        "enabled": true
-      },
-      {
-        "id": "spacer",
-        "enabled": true
-      },
-      {
-        "id": "battery",
-        "enabled": true
-      },
-      {
-        "id": "statusIcons",
-        "enabled": true
-      },
-      {
-        "id": "tray",
-        "enabled": true
-      },
-      {
-        "id": "power",
-        "enabled": true
-      }
-    ],
     "bars": [
       {
         "edge": "top",
@@ -120,7 +67,10 @@
             }
           ]
         },
-        "reserve": true
+        "reserve": true,
+        "thickness": 40,
+        "density": "values",
+        "backdrop": "solid"
       }
     ],
     "sizes": {

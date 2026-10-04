@@ -605,9 +605,8 @@ Item {
             if (schemeDirty && pendingSchemeKey) {
                 const parts = pendingSchemeKey.split(" ");
                 const flavour = parts.slice(1).join(" ") || pendingVariant;
-                // set-variant persists variant + derived flavour and
-                // regenerates (the legacy `set -n <name> -f` shape); the
-                // single "dynamic" scheme name is kept server-side.
+                // set-variant persists the selected variant and its derived
+                // flavour; the single "dynamic" scheme name stays server-side.
                 session.runAction(["horneroctl", "scheme", "set-variant", root.normalizeVariantKey(flavour), "--yes"]);
             } else if (variantDirty && pendingVariant) {
                 session.runAction(["horneroctl", "scheme", "set-variant", pendingVariant, "--yes"]);

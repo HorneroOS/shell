@@ -1,121 +1,64 @@
-# Architecture — HorneroOS/shell
+# Hornero Shell architecture
 
-Quickshell + QML + Qt6 desktop shell for Wayland (Hyprland-first).
-Imported from `ulises-jeremias/dotfiles@b26db04`; see `MIGRATION.md`.
+Hornero Shell is the Wayland desktop runtime built with Quickshell, QML, Qt 6,
+and a small native plugin. It owns the bars, launcher, dashboard, Control
+Center, notifications, wallpaper presentation, session surfaces, lock UI, and
+Companion.
 
-## Entry point
+## Ownership
 
-`shell.qml` (`ShellRoot`): mounts `Background`, `Drawers`, `AreaPicker`,
-`Lock`, `Shortcuts`, `BatteryMonitor`, `IdleMonitors`. Pragmas pin
-`QS_NO_RELOAD_POPUP=1`, threaded render loop, and flickable deceleration.
+- **HorneroOS/shell** owns presentation, live session state, interaction, and
+  accessibility behavior. `services/` coordinates session state; `modules/`
+  and `components/` render it; `config/` provides typed settings; `utils/`
+  contains shared runtime helpers.
+- **HorneroOS/hornero** owns the stable CLI, operating-system actions, shared
+  file contracts, and catalogue resolution.
+- **HorneroOS/config** owns factory defaults, packaged application settings,
+  theme and wallpaper data, and materialization.
+- **HorneroOS/docs** owns user and developer documentation. The website
+  consumes reviewed pins and product data.
 
-## Layers
+The current data flow is: Shell interaction → Shell service → Shell IPC or
+`horneroctl` capability → user-owned XDG state. Packaged defaults and media are
+read-only inputs; they are never modified by a running session.
 
-| Layer | Paths | Role |
-|---|---|---|
-| Shell root | `shell.qml` | Composition only |
-| Modules | `modules/` | Visible surfaces: bar, launcher, dashboard, controlcenter, lock, notifications, osd, session, sidebar, utilities, drawers, background, areapicker, layoutpicker, windowinfo |
-| Services | `services/` | Singletons: `ThemePipeline`, `Colours`, `Wallpapers`, `Audio`, `Brightness`, `Hypr`, `Network`/`Nmcli`, `Notifs`, `Players`, `Recorder`, `SystemUsage`, `Weather`, `Time`, `Visibilities`, `GameMode`, `IdleInhibitor`, `VPN`, `ThemePipeline` |
-| Config | `config/` | `Config.qml` + per-area `*Config.qml`; user-tunable knobs |
-| Shared UI | `components/` | Reusable controls/containers/effects (`qs.components*`) |
-| Helpers | `utils/` | `Paths`, `SysInfo`, `Icons`, `Images`, `Searcher`, `Strings`, `NetworkConnection`, JS (`fuzzysort.js`, `fzf.js`) |
-| Assets | `assets/` | Logo, gifs, shaders, `wrap_term_launch.sh`, `pam.d/` samples |
-| Native | `plugin/`, `extras/` | `Hornero` QML plugin (C++: image analysis, audio, calculator, models) + `version` helper |
-| Data | `presets/` | 11 vendored layout presets (installed alongside the shell; the dataset `horneroctl shell preset list` serves) |
+## Configuration and paths
 
-## Runtime / config path model
+The Shell uses one XDG namespace, `hornero`, via `utils/Paths.qml`:
 
-Binding interface: `HorneroOS/hornero` `docs/PATH_CONTRACT.md` is the
-canonical record of every runtime path the session reads or writes; this
-repo does not redefine paths. The rule: **new writes go to `hornero/*`**;
-readers check the canonical `hornero/*` location first and fall back to
-the legacy `dots/*` location (**reads only**, never written) for one
-migration window.
+| Data | User path |
+| --- | --- |
+| Shell settings | `$XDG_CONFIG_HOME/hornero/shell.json` |
+| Theme packs, presets, wallpapers | `$XDG_DATA_HOME/hornero/` |
+| Wallpaper pointer and notification state | `$XDG_STATE_HOME/hornero/` |
+| Generated palettes and image caches | `$XDG_CACHE_HOME/hornero/` |
 
-No chezmoi, no hardcoded home layouts. Resolution order everywhere is
-**explicit env override → XDG → `$HOME` default**, centralized in
-`utils/Paths.qml` (singleton, `qs.utils`). The `DOTS_*_DIR` overrides pin
-the legacy `dots/*` roots only:
+Unset XDG variables use their standard home-relative directories. System
+catalogues are read from XDG data directories; runtime writes stay in user
+locations. See [PATH_CONTRACT.md](PATH_CONTRACT.md).
 
-| Path | Canonical (writes) | Legacy fallback (reads only) |
-|---|---|---|
-| Shell data: theme packs `themes/<id>/theme.json` (row 1), installed wallpapers `wallpapers/` (row 11) | `$XDG_DATA_HOME/hornero` (`Paths.data`) | `$XDG_DATA_HOME/dots` (`Paths.dataFallback`, `DOTS_DATA_DIR` override) |
-| Shell state: wallpaper pointer `wallpaper/path` (row 9), `notifs.json` (row 10) | `$XDG_STATE_HOME/hornero` (`Paths.state`, `Paths.wallpaperPointer`) | `$XDG_STATE_HOME/dots` (`Paths.stateFallback`, `Paths.wallpaperPointerFallback`, `DOTS_STATE_DIR` override) |
-| Shell cache: `smart-colors/scheme.json` (row 4), `imagecache[/notifs]` (row 10) | `$XDG_CACHE_HOME/hornero` (`Paths.cache`, `Paths.imagecache`) | `$XDG_CACHE_HOME/dots` (`Paths.cacheFallback`, `Paths.imagecacheFallback`, `DOTS_CACHE_DIR` override) |
-| Shell user config: `shell.json` (row 6, no fallback — already canonical) | `$XDG_CONFIG_HOME/hornero` (`Paths.config`, `DOTS_CONFIG_DIR` override) | none |
-| Pictures / videos | `XDG_PICTURES_DIR` / `XDG_VIDEOS_DIR` | `~/Pictures`, `~/Videos` |
-| Wallpapers dir | `HORNERO_WALLPAPERS_DIR` | `Config.paths.wallpaperDir` (absolute-resolved) |
-| Recordings dir | `HORNERO_RECORDINGS_DIR` | `~/Videos/Recordings` |
-| Native helper lib (row 12) | `/usr/lib/hornero` | `DOTS_LIB_DIR` / `HORNERO_LIB_DIR` lookup |
-| XKB rules (dev/nix) | `HORNERO_XKB_RULES_PATH` | system xkeyboard-config |
+## Appearance flow
 
-System defaults vs user overrides:
+Theme catalogue metadata comes from HorneroOS/config packs. The Shell presents
+the catalogue and previews, then submits a validated apply request. The shared
+pipeline coordinates the Shell palette, selected mode, wallpaper, GTK theme and
+color-scheme policy, icons, and generated color roles. Wallpaper-derived color
+generation is cached and debounced; the latest selection wins. Pack-owned
+assets are never downloaded automatically. See
+[theme data ownership](theme-split-plan.md) and
+[native appearance](NATIVE-APPEARANCE.md).
 
-- **System defaults** ship under the Quickshell config dir
-  (`INSTALL_QSCONFDIR`, default `etc/xdg/quickshell/hornero`): QML tree,
-  `presets/`, `LICENSE.GPL-3.0`, `NOTICE`.
-- **Factory settings** live in this repo at `config/shell.default.json`:
-  its content equals what `Config.qml` `serializeConfig()` persists with
-  pristine defaults (values from the per-area `*Config.qml` initializers;
-  see `tests/test_factory_config.py` for the key-by-key proof and the
-  three intentionally unset runtime-resolved keys). HorneroOS/config
-  packages that file to `/etc/xdg/hornero/shell.json` (path contract
-  row 6, system default); this repo never installs it there itself.
-  The shell does **not** read that system copy at runtime: it is a
-  reference/seed for packaging, and because it equals the compiled
-  defaults, omitting it changes nothing.
-- **User overrides** live outside this repo at
-  `$XDG_CONFIG_HOME/hornero/shell.json` (`Paths.config`), plus
-  theme/wallpaper data under the data dir. `Config.qml` reads only this
-  user file; there is no `/etc/xdg` fallback. A missing user file is not
-  an error — the compiled `*Config.qml` defaults apply (`Config.qml`
-  `onLoadFailed` tolerates `FileNotFound`). The shell watches the file
-  (`FileView`, `watchChanges`) and live-reloads; a preset apply
-  deep-merges into the user file, never into the shipped tree. Settings
-  saves rewrite the whole file from `serializeConfig()`, which must cover
-  every `*Config.qml` property (`tests/test_config_serializer.py`).
-- `assets/pam.d/*` are **host-integration samples**, not installed to
-  `/etc` by CMake. Distributors copy/adapt them in packaging.
+## Settings and navigation
 
-## Theming pipeline
+`PaneRegistry.qml` is the canonical Control Center destination registry. It
+provides labels, categories, searchable metadata, and pane components. Shell IPC
+opens destinations from Welcome, the CLI, keyboard shortcuts, and in-product
+links. Appearance section metadata lives with Appearance Settings.
 
-`services/ThemePipeline.qml` serializes appearance jobs (theme / wallpaper /
-reload) and shells out **only** to the canonical `horneroctl` verbs
-(`appearance colors m3` for color generation, `appearance gtk` for GTK
-apply, `scheme` for scheme state). It never invokes
-`gtk-theme-manager.sh` directly and never runs bare
-`python3 generate-m3-colors` (enforced by
-`tests/test_appearance_consistency.py`). Theme data resolves from
-`Paths.data/themes` (canonical) with `Paths.dataFallback/themes` as the
-legacy read fallback, wallpapers from `Paths.data/wallpapers`
-(+ `Paths.dataFallback` fallback), and the scheme from
-`Paths.cache/smart-colors/scheme.json` (+ `Paths.cacheFallback`
-fallback), with `Paths.pictures/Wallpapers` as the user-content root.
-Notification state reads `Paths.state/notifs.json` (+
-`Paths.stateFallback` fallback); image caches write to the canonical
-`Paths.imagecache` and regenerate on miss.
+## Validation
 
-## Transparency
-
-`appearance.transparency` carries the global switch (`enabled`, `base`,
-`layers`) plus an `elements` map of per-surface alpha overrides (`bar`,
-`launcher`, `dashboard`, `session`, `sidebar`, `utilities`,
-`notifications`, `osd`, `lock`, `layoutpicker`). A missing or
-non-numeric entry follows `base`. `Colours.elementAlpha()` resolves one
-surface; `Colours.surface()` tints a backdrop color with it (compose as
-`surface(layer(c, n), element)` so text and controls stay opaque). Each
-surface backdrop (panel wings, bar pill, notification cards, lock scrim)
-carries its own alpha; there is intentionally no window-level opacity
-(the Border frame keeps the explicit global). The control-center
-Transparency section edits the globals plus one row per surface
-(custom seeds from `base`, so enabling never jumps). `elements` is a
-plain reassigned object (never mutated in place) so bindings
-re-evaluate; it serializes and ships `{}` in the factory default.
-
-## External coupling
-
-All external runtime CLI dependencies, their dispositions (A–G), and
-fallback behavior are inventoried in `docs/COMPAT.md`.
-The Quickshell IPC surface (targets other components script against) is in
-`docs/IPC.md`. Contributor rules for QML/Qt/IPC/Process usage are in
-`AGENTS.md`.
+QML lint, Python contract tests, V tests in HorneroOS/hornero, config validation,
+and graphical Hornero QA cover the product boundary. UI acceptance uses real
+keyboard/pointer interaction and rendered screenshots; deterministic system
+checks prove state and package contents. See [IPC](IPC.md),
+[Layouts](LAYOUTS.md), and [VM testing](VM_TESTING.md).

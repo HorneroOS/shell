@@ -4,7 +4,7 @@ import Quickshell
 import Quickshell.Io
 import QtQuick
 
-// Native GTK application layer (issue #2, migration step (a)).
+// Native GTK application layer.
 //
 // Applies GTK themes, icon themes, and color-scheme policy through the
 // deterministic `gsettings` desktop APIs first. `horneroctl appearance gtk`

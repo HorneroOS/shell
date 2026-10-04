@@ -341,14 +341,8 @@ Singleton {
     }
 
     function reloadFromDisk(): void {
-        root._schemeFallbackActive = false;
         schemeFileView.reload();
     }
-
-    // Runtime path contract row 4: canonical hornero/* scheme.json first,
-    // legacy dots/* fallback (reads only). The fallback applies only after
-    // the canonical read fails, so a migrated install never regresses.
-    property bool _schemeFallbackActive: false
 
     FileView {
         id: schemeFileView
@@ -356,10 +350,7 @@ Singleton {
         path: `${Paths.cache}/smart-colors/scheme.json`
         watchChanges: true
         onFileChanged: reload()
-        onLoaded: {
-            root._schemeFallbackActive = false;
-            root.load(text(), false);
-        }
+        onLoaded: root.load(text(), false)
         onSaved: {
             const id = root._pendingBuiltInPersistId;
             if (!id)
@@ -375,34 +366,13 @@ Singleton {
             root.builtInThemePersisted(id, false, FileViewError.toString(error));
         }
         onLoadFailed: err => {
-            if (err === FileViewError.FileNotFound && !root._schemeFallbackActive) {
-                root._schemeFallbackActive = true;
-                schemeFileViewFallback.reload();
-            } else if (!root.themeStateReady) {
-                root.themeId = "";
-                root.themeStateReady = true;
-            }
-        }
-    }
-
-    FileView {
-        id: schemeFileViewFallback
-
-        path: `${Paths.cacheFallback}/smart-colors/scheme.json`
-        onLoaded: {
-            if (root._schemeFallbackActive)
-                root.load(text(), false);
-        }
-        onLoadFailed: err => {
-            root._schemeFallbackActive = false;
-            // No saved appearance exists yet; use the documented clean-install
-            // default only when both canonical and legacy locations are absent.
             if (!root.themeStateReady) {
                 root.themeId = err === FileViewError.FileNotFound ? "hornero-dark" : "";
                 root.themeStateReady = true;
             }
         }
     }
+
 
     IpcHandler {
         target: "colours"

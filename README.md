@@ -20,17 +20,15 @@ for performance-critical work (image analysis, audio, calculator).
   ([HorneroOS/config](https://github.com/HorneroOS/config)), distribution
   composition ([HorneroOS/hornero](https://github.com/HorneroOS/hornero)),
   user overrides (`~/.config/hornero`, theme/wallpaper data), or external
-  CLIs: the shell calls `horneroctl` by bare name and nothing else
-  (external runtime contracts, see `docs/COMPAT.md`).
+  CLIs: the shell calls `horneroctl` by bare name for operating-system
+  capabilities (see `docs/INTEGRATION.md`).
 
 ## Status
 
-Under active development; shell changes ship through the
-HorneroOS/hornero preview candidates. The `dots-*` compat adapters
-are retired (external coupling is `horneroctl`-only, see
-`docs/COMPAT.md`), and the appearance path never shells out to bare
-`python3` (`tests/test_appearance_consistency.py` enforces this).
-Extraction history lives under Provenance below.
+Under active development; shell changes ship through reviewed HorneroOS
+preview candidates. Operating-system operations use the Hornero CLI contract,
+and Appearance uses the shared Hornero pipeline. Extraction history and
+upstream attribution are documented in `docs/PROVENANCE.md`.
 
 ## Build
 
@@ -67,16 +65,14 @@ QML2_IMPORT_PATH=<install-prefix>/usr/lib/qt6/qml \
 qs ipc call <target> <fn> …                  # see docs/IPC.md
 ```
 
-Runtime knobs are env-first: `DOTS_{DATA,STATE,CACHE,CONFIG}_DIR`,
-`HORNERO_WALLPAPERS_DIR`, `HORNERO_RECORDINGS_DIR`, `HORNERO_LIB_DIR`
-(see `docs/ARCHITECTURE.md`).
+Runtime paths follow XDG and the `hornero` namespace. Explicit service knobs
+include `HORNERO_WALLPAPERS_DIR`, `HORNERO_RECORDINGS_DIR`, and
+`HORNERO_LIB_DIR` (see `docs/ARCHITECTURE.md`).
 
 ## Provenance
 
-COPY-never-MOVE import from `ulises-jeremias/dotfiles@b26db04`
-(`home/dot_config/quickshell/` → repo root,
-`home/dot_local/share/dots/shell-presets/` → `presets/`).
-Full matrix: `docs/MIGRATION.md`.
+The original extraction source and upstream license are recorded in
+`docs/PROVENANCE.md` and `NOTICE`.
 
 ## Structure
 

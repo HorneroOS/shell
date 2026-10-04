@@ -1,10 +1,8 @@
 """Layout-preset consistency: every presets/*.json must satisfy the schema
 consumed by modules/layoutpicker/PresetGrid.qml and config/BarConfig.qml.
 
-Schema v2 (docs/LAYOUTS.md): bar.bars is the resolved bar set (empty means
-the legacy single bar is synthesized). Legacy bar.position/style/entries stay
-as the fallback for older horneroctl validators, so they must describe the
-primary bar and use v1-only values."""
+Schema v2 (docs/LAYOUTS.md): every bar is declared explicitly as an edge,
+style, reservation policy, and start/center/end component groups."""
 import json
 import re
 from pathlib import Path
@@ -15,8 +13,6 @@ ROOT = Path(__file__).resolve().parent.parent
 PRESETS = sorted((ROOT / "presets").glob("*.json"))
 
 POSITIONS = {"top", "bottom", "left", "right"}
-# v1 styles accepted by older horneroctl validators.
-STYLES = {"attached", "floating", "dock"}
 # v2 styles accepted by BarConfig.barStyles.
 BAR_STYLES = {"attached", "inset", "floating", "islands", "dock"}
 GROUPS = ("start", "center", "end")
@@ -71,12 +67,9 @@ def test_preset_layout(path):
     assert data.get("_name"), f"{path.name}: missing _name"
     bar = data.get("bar")
     assert isinstance(bar, dict), f"{path.name}: missing bar object"
-    assert bar.get("position") in POSITIONS, f"{path.name}: bad bar.position"
-    assert bar.get("style") in STYLES, f"{path.name}: bad bar.style"
-    entries = bar.get("entries")
-    assert isinstance(entries, list) and entries, f"{path.name}: empty entries"
-    for entry in entries:
-        check_entry(path, entry, "legacy entries", allow_spacer=True)
+    assert "position" not in bar and "style" not in bar and "entries" not in bar, (
+        f"{path.name}: bar must use only the multi-bar schema"
+    )
     sizes = bar.get("sizes", {})
     assert isinstance(sizes.get("innerWidth"), (int, float)), (
         f"{path.name}: sizes.innerWidth must be numeric"
@@ -140,8 +133,8 @@ def test_reserve_default_rule():
     assert "floating" not in rule and "islands" not in rule, (
         "styleReserves must not reserve floating/islands"
     )
-    assert src.count("styleReserves(") >= 5, (
-        "normalizeBar/legacyBarFor/reservesSpace* must all use styleReserves()"
+    assert src.count("styleReserves(") >= 2, (
+        "normalizeBar must use the shared styleReserves() rule"
     )
     assert '!== "floating"' not in src, "stale `style !== \"floating\"` rule still present"
 
@@ -153,7 +146,7 @@ def test_backdrop_contract():
     cfg = (ROOT / "config/BarConfig.qml").read_text()
     assert 'barBackdrops: ["solid", "clear"]' in cfg
     assert 'backdrop: barBackdrops.includes(b.backdrop) ? b.backdrop : "solid"' in cfg
-    assert 'backdrop: "solid"' in cfg, "legacy bars must stay solid"
+    assert 'backdrop: "solid"' in cfg, "default bars must stay solid"
     for f in ("modules/drawers/Border.qml", "modules/drawers/Panels.qml"):
         src = (ROOT / f).read_text()
         assert "openOn(" in src and "floatingOn(" not in src, f"{f} must use BarSet.openOn"
@@ -189,39 +182,22 @@ def test_preset_entry_options(path):
 
 
 @pytest.mark.parametrize("path", PRESETS, ids=lambda p: p.stem)
-def test_preset_v2_legacy_coherence(path):
-    """Multi-bar presets must keep a usable v1 fallback: the legacy fields
-    describe the primary bar so older horneroctl renders it."""
-    data = json.loads(path.read_text())
-    bar = data.get("bar")
-    bars = bar.get("bars") or []
-    if not bars:
-        return
-    primary = bars[0]
-    assert bar.get("position") == primary["edge"], (
-        f"{path.name}: legacy position must match the primary bar edge"
+def test_preset_has_no_single_bar_schema(path):
+    bar = json.loads(path.read_text())["bar"]
+    assert bar["bars"], f"{path.name}: needs an explicit v2 bar set"
+    assert not {"position", "style", "entries", "floatingMargin"}.intersection(bar), (
+        f"{path.name}: single-bar schema fields must not ship"
     )
-    groups = primary["groups"]
-    expected = (
-        [e["id"] for e in groups["start"]]
-        + ["spacer"]
-        + [e["id"] for e in groups["center"]]
-        + ["spacer"]
-        + [e["id"] for e in groups["end"]]
-    )
-    actual = [e["id"] for e in bar.get("entries", [])]
-    assert actual == expected, f"{path.name}: legacy entries must flatten the primary bar"
 
 
 def test_layout_picker_topology_contract():
-    """Layout Picker previews draw the `bars` topology from horneroctl
-    (multi-bar, islands, dock, clear), with a legacy single-bar fallback;
-    the picker takes the keyboard when it opens (arrows/Enter work)."""
+    """Layout Picker previews canonical bar topology and owns keyboard focus."""
     preview = (ROOT / "modules/layoutpicker/LayoutPreview.qml").read_text()
-    for needle in ("property var bars", '"islands"', '"dock"', '"clear"', "Array.from(bars)"):
+    for needle in ("property var bars", '"islands"', '"dock"', '"clear"', "Array.from(bars ?? [])"):
         assert needle in preview, f"LayoutPreview lacks {needle}"
     grid = (ROOT / "modules/layoutpicker/PresetGrid.qml").read_text()
     assert "bars: card.modelData.bars" in grid
+    assert "p.position" not in grid and "p.style" not in grid
     assert "availableWidth" in grid and "Accessible.role: Accessible.Button" in grid
     assert "function focusCurrentPreset(): void" in grid
     assert "onCurrentNameChanged: focusCurrentPreset()" in grid

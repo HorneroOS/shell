@@ -4,7 +4,7 @@ import qs.config
 import QtQuick
 import QtQuick.Layouts
 
-// Typed shell actions (legacy tools drawer). options.actions lists ids from
+// Typed shell actions. options.actions lists ids from
 // ShellActions.known; unknown ids are skipped with a warning.
 Item {
     id: root

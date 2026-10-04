@@ -4,7 +4,7 @@ import qs.config
 import QtQuick
 import QtQuick.Layouts
 
-// Current weather next to the clock (legacy top-centre). Hidden until the
+// Current weather next to the clock. Hidden until the
 // weather service has data.
 Item {
     id: root

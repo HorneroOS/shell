@@ -70,7 +70,7 @@ Item {
     }
     readonly property Item visualItem: islands.length > 0 ? islands[0] : null
     // All entry loaders across groups; ActiveWindow sizes itself from its
-    // siblings through this (legacy name: the single GridLayout).
+    // siblings through this shared grid layout.
     readonly property var entryLoaders: {
         const out = [];
         for (const island of islands)

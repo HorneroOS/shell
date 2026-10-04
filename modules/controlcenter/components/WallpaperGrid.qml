@@ -25,8 +25,6 @@ Item {
 
     readonly property string scopeBasePath: wallpaperScopeDir ? `${Paths.pictures}/Wallpapers/${wallpaperScopeDir}` : ""
     readonly property string scopeDataPath: wallpaperScopeDir ? `${Paths.data}/wallpapers/${wallpaperScopeDir}` : ""
-    // Runtime path contract row 11: legacy installed-wallpaper location (fallback read only).
-    readonly property string scopeDataPathFallback: wallpaperScopeDir ? `${Paths.dataFallback}/wallpapers/${wallpaperScopeDir}` : ""
     readonly property var displayModel: {
         let entries = Wallpapers.list;
         const filter = Wallpapers.colorFilter;
@@ -40,11 +38,9 @@ Item {
             return entries;
         const pics = scopeBasePath;
         const data = scopeDataPath;
-        const legacyData = scopeDataPathFallback;
         return entries.filter(entry => {
             const p = entry?.path ?? "";
             return p.startsWith(`${pics}/`) || p === pics || p.startsWith(`${data}/`) || p === data
-                || (legacyData !== "" && (p.startsWith(`${legacyData}/`) || p === legacyData))
                 || p.includes(`/Wallpapers/${wallpaperScopeDir}/`)
                 || p.includes(`/wallpapers/${wallpaperScopeDir}/`);
         });

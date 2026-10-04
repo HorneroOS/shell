@@ -53,4 +53,4 @@ the `$XDG_RUNTIME_DIR` session guard, the `.desktop` entry Exec target.
 - The Shell must degrade when `horneroctl` is absent (in-memory
   preference, warning) and never crash on malformed state.
 - Content stays data-driven with typed allowlisted actions; no arbitrary
-  commands, no network at render, no telemetry, no `dots-*` paths.
+  commands, no network at render, no telemetry, no non-Hornero state paths.

@@ -101,9 +101,9 @@ providers, dock layouts, copying any bar/sidebar geometry.
   panes.
 - **Motion**: not yet audited (needs screen recordings). Deferred to
   implementation slices; do not assume incoherence.
-- **Wallpaper store path**: live wallpaper resolved to
-  `~/.local/share/dots/wallpapers/...` — a `dots`-named path survives in
-  the product. Cosmetic but worth renaming on the Hornero side.
+- **Wallpaper storage**: theme media is resolved through the installed Hornero
+  catalogue and manifests; current wallpaper state belongs under the user XDG
+  state directory.
 
 ## 5. UX problems (evidence-backed, with reproduction)
 

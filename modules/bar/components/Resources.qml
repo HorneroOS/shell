@@ -5,7 +5,7 @@ import qs.config
 import QtQuick
 import QtQuick.Layouts
 
-// System telemetry (legacy context-bar right side). options.show selects
+// System telemetry indicator. options.show selects
 // metrics: cpu, memory, disk, temp. Values density shows numbers; glyphs
 // density shows icons whose colour and weight carry the level.
 Item {

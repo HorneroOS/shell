@@ -10,32 +10,17 @@ import QtQuick
 // style — strip, inset strip, floating pill, three islands, dock, clear —
 // with one dot per enabled component at start/center/end, plus two windows
 // filling the work area the bars leave (so reserving vs overlaying shows).
-// Older horneroctl builds send no `bars`: the legacy position/style pair is
-// drawn as one bar. Theme tokens only, so it follows Dark/Light/Pampa.
+// Theme tokens only, so it follows Dark/Light/Pampa.
 Item {
     id: root
 
     property var bars: []
-    property string position: "left"
-    property string barStyle: "attached"
     property bool highlighted: false
 
     // Normalised topology: [{edge, style, backdrop, reserve, groups}]
     readonly property var topology: {
         // QML hands var lists over as QVariantList (Array.isArray is false).
-        const src = bars && bars.length > 0 ? Array.from(bars) : [
-            {
-                edge: position,
-                style: barStyle,
-                backdrop: "solid",
-                reserve: barStyle === "attached" || barStyle === "dock",
-                groups: {
-                    start: 2,
-                    center: 1,
-                    end: 3
-                }
-            }
-        ];
+        const src = Array.from(bars ?? []);
         // Group sizes as counts: horneroctl sends numbers; raw preset groups
         // (arrays of {id, enabled}) count their enabled entries.
         const count = v => typeof v === "number" ? v : (v && v.length !== undefined ? Array.from(v).filter(e => e && e.enabled !== false && e.id !== "spacer").length : 0);

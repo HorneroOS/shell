@@ -41,7 +41,7 @@ def test_licensing_intact():
     notice = (ROOT / "NOTICE").read_text()
     assert "caelestia-dots/shell" in notice
     assert "HorneroOS modifications" in notice or "HorneroOS" in notice
-    assert (ROOT / "docs" / "MIGRATION.md").exists()
+    assert (ROOT / "docs" / "PROVENANCE.md").exists()
 
 
 def test_no_undefined_per_area_saveconfig():

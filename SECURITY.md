@@ -19,7 +19,7 @@ We will acknowledge within 7 days and coordinate a fix + disclosure.
 
 ## Scope notes
 
-- The shell executes local helper CLIs (`dots-*`) and renders remote
+- The shell invokes installed Hornero capabilities and renders remote
   content (album art, notification images, weather data). Treat those as
   untrusted input: image loading goes through the caching/error-tolerant
   paths (`components/images/`), network data is displayed, never `eval`'d.

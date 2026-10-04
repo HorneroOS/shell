@@ -48,20 +48,7 @@ Item {
 
     anchors.fill: parent
 
-    Component.onCompleted: {
-        if (Config.bar.entries) {
-            entriesModel.clear();
-            for (let i = 0; i < Config.bar.entries.length; i++) {
-                const entry = Config.bar.entries[i];
-                entriesModel.append({
-                    id: entry.id,
-                    enabled: entry.enabled !== false
-                });
-            }
-        }
-    }
-
-    function saveConfig(entryIndex, entryEnabled) {
+    function saveConfig() {
         Config.bar.clock.showIcon = root.clockShowIcon;
         Config.bar.persistent = root.persistent;
         Config.bar.showOnHover = root.showOnHover;
@@ -89,24 +76,7 @@ Item {
         Config.bar.popouts.tray = root.popoutTray;
         Config.bar.popouts.statusIcons = root.popoutStatusIcons;
 
-        const entries = [];
-        for (let i = 0; i < entriesModel.count; i++) {
-            const entry = entriesModel.get(i);
-            let enabled = entry.enabled;
-            if (entryIndex !== undefined && i === entryIndex) {
-                enabled = entryEnabled;
-            }
-            entries.push({
-                id: entry.id,
-                enabled: enabled
-            });
-        }
-        Config.bar.entries = entries;
         Config.save();
-    }
-
-    ListModel {
-        id: entriesModel
     }
 
     ClippingRectangle {

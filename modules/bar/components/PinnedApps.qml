@@ -4,7 +4,7 @@ import Quickshell
 import QtQuick
 import QtQuick.Layouts
 
-// Pinned applications (legacy dock-bottom shortcuts). options.apps lists
+// Pinned application shortcuts. options.apps lists
 // desktop-entry ids; entries are resolved and launched through
 // DesktopEntries, never through command strings in the preset.
 Item {

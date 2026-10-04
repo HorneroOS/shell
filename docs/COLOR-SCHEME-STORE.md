@@ -9,7 +9,7 @@ the shell?
 Scheme list/current/set-mode/set-variant/regenerate/sync-state ops run
 through `horneroctl scheme` and full M3 palette generation through
 `horneroctl appearance colors m3` (same backend, owned by
-`HorneroOS/hornero`; see `docs/COMPAT.md`). The shell adds no palette
+`HorneroOS/hornero`; see `docs/INTEGRATION.md`). The shell adds no palette
 persistence of its own.
 
 ## Why

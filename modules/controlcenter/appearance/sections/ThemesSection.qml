@@ -131,9 +131,9 @@ CollapsibleSection {
                 readonly property string readinessDetails: {
                     const details = [];
                     if (missingGtkTheme)
-                        details.push(qsTr("GTK style “%1” is not installed. Install it, then reopen Appearance to apply this look.").arg(modelData.gtkTheme));
+                        details.push(qsTr("GTK style “%1” is missing. Install it to use this theme.").arg(modelData.gtkTheme));
                     if (missingIconTheme)
-                        details.push(qsTr("Icon style “%1” is not installed. Install it, then reopen Appearance to apply this look.").arg(modelData.iconTheme));
+                        details.push(qsTr("Icon style “%1” is missing. Install it to use this theme.").arg(modelData.iconTheme));
                     if (gtkAvailabilityUnknown)
                         details.push(qsTr("Hornero couldn't check installed GTK styles. Reopen Appearance to try again."));
                     if (iconAvailabilityUnknown)
@@ -252,7 +252,7 @@ CollapsibleSection {
                                     font.pointSize: Appearance.font.size.smaller
                                     color: Colours.palette.m3tertiary
                                     wrapMode: Text.WordWrap
-                                    maximumLineCount: 3
+                                    maximumLineCount: 5
                                 }
 
                             }

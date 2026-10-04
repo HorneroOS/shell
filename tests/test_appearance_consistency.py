@@ -213,7 +213,7 @@ def test_appearance_shares_installed_styles_for_theme_readiness():
     assert "ThemeCatalogue.iconThemes.indexOf(modelData.iconTheme) < 0" in themes
     assert "ThemeCatalogue.gtkThemes" in gtk and "Process {" not in gtk
     assert "ThemeCatalogue.iconThemes" in icons and "Process {" not in icons
-    assert "Install it, then reopen Appearance to apply this look." in themes
+    assert "Install it to use this theme." in themes
 
 
 def test_appearance_choice_catalogues_can_start_before_they_are_loaded():

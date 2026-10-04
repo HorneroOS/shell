@@ -253,8 +253,16 @@ def test_theme_collection_metadata_reaches_appearance_cards():
     assert "collectionOrder: 1" in catalogue and "collectionOrder: 4" in catalogue
     assert 'readonly property string collection: modelData.collection || ""' in themes
     assert "readonly property int collectionOrder:" in themes
+    sorting = catalogue.split("function _withBuiltIns(items: var): var", 1)[1].split(
+        "function themeById", 1
+    )[0]
+    assert "return combined.sort((a, b) =>" in sorting
+    assert "a.collectionOrder ?? 999" in sorting and "b.collectionOrder ?? 999" in sorting
     assert 'modelData.collection === "hornero-originals"' in cards
+    assert "collectionId !== (Themes.list[index - 1]?.collection" in cards
     assert 'qsTr("Hornero Originals")' in cards
+    assert 'qsTr("First-party looks, from warm clay' in cards
+    assert "Eight first-party looks" not in cards
     assert 'qsTr("Other looks")' in cards
 
 

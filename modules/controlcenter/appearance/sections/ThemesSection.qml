@@ -170,7 +170,7 @@ CollapsibleSection {
 
                         StyledText {
                             visible: themeItem.collectionId === "hornero-originals"
-                            text: qsTr("Eight first-party looks, from warm clay and grassland to glacier, wetlands, mineral light and the city at night.")
+                            text: qsTr("First-party looks, from warm clay and grassland to glacier, wetlands, mineral light and the city at night.")
                             font.pointSize: Appearance.font.size.small
                             color: Colours.palette.m3onSurfaceVariant
                             wrapMode: Text.WordWrap

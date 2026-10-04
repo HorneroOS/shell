@@ -55,30 +55,48 @@ Item {
         active: root.completed && !root.source
 
         sourceComponent: StyledRect {
-            color: Colours.palette.m3surfaceContainer
+            color: Colours.palette.m3surface
 
-            Row {
+            StyledRect {
                 anchors.centerIn: parent
-                spacing: Appearance.spacing.large
-
-                MaterialIcon {
-                    text: "sentiment_stressed"
-                    color: Colours.palette.m3onSurfaceVariant
-                    font.pointSize: Appearance.font.size.extraLarge * 5
-                }
+                implicitWidth: 420
+                implicitHeight: emptyContent.implicitHeight + Appearance.padding.large * 2
+                radius: Appearance.rounding.large
+                color: Colours.palette.m3surfaceContainer
 
                 Column {
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: Appearance.spacing.small
+                    id: emptyContent
+
+                    anchors.centerIn: parent
+                    width: parent.implicitWidth - Appearance.padding.large * 2
+                    spacing: Appearance.spacing.normal
+
+                    MaterialIcon {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: "wallpaper"
+                        color: Colours.palette.m3primary
+                        font.pointSize: 40
+                    }
 
                     StyledText {
-                        text: qsTr("Wallpaper missing?")
-                        color: Colours.palette.m3onSurfaceVariant
-                        font.pointSize: Appearance.font.size.extraLarge * 2
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: qsTr("Choose a wallpaper")
+                        color: Colours.palette.m3onSurface
+                        font.pointSize: Appearance.font.size.large
                         font.bold: true
                     }
 
+                    StyledText {
+                        width: parent.width
+                        text: qsTr("Pick an image or video for your desktop background.")
+                        color: Colours.palette.m3onSurfaceVariant
+                        font.pointSize: Appearance.font.size.small
+                        wrapMode: Text.WordWrap
+                        horizontalAlignment: Text.AlignHCenter
+                    }
+
                     StyledRect {
+                        anchors.horizontalCenter: parent.horizontalCenter
                         implicitWidth: selectWallText.implicitWidth + Appearance.padding.large * 2
                         implicitHeight: selectWallText.implicitHeight + Appearance.padding.small * 2
 
@@ -97,6 +115,7 @@ Item {
                         StateLayer {
                             radius: parent.radius
                             color: Colours.palette.m3onPrimary
+                            Accessible.name: qsTr("Choose wallpaper")
 
                             function onClicked(): void {
                                 dialog.open();
@@ -108,9 +127,9 @@ Item {
 
                             anchors.centerIn: parent
 
-                            text: qsTr("Set it now!")
+                            text: qsTr("Browse wallpapers")
                             color: Colours.palette.m3onPrimary
-                            font.pointSize: Appearance.font.size.large
+                            font.pointSize: Appearance.font.size.normal
                         }
                     }
                 }

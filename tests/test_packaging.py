@@ -140,11 +140,12 @@ def test_welcome_desktop_entry_packaged():
     assert "share/applications" in cmake
 
 
-def test_system_preset_catalogue_packaged():
-    """horneroctl reads presets from XDG_DATA_DIRS (HorneroOS/hornero#96)."""
+def test_system_preset_catalogue_has_one_package_owner():
+    """hornero-config owns /usr/share; Shell owns only its runtime copy."""
     cmake = (ROOT / "CMakeLists.txt").read_text()
-    assert re.search(r'install\(DIRECTORY presets/ DESTINATION "share/hornero/shell-presets"', cmake)
-    assert "/usr/share/hornero/shell-presets" in README.read_text()
+    assert not re.search(r'install\(DIRECTORY presets/ DESTINATION "share/hornero/shell-presets"', cmake)
+    assert "hornero-config" in README.read_text()
+    assert "/etc/xdg/quickshell/hornero/presets" in README.read_text()
     assert sorted((ROOT / "presets").glob("*.json")), "no presets to install"
 
 

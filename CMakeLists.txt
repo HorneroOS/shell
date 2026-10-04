@@ -79,11 +79,10 @@ if("shell" IN_LIST ENABLE_MODULES)
     endforeach()
     install(FILES shell.qml LICENSE.GPL-3.0 NOTICE DESTINATION "${INSTALL_QSCONFDIR}")
     install(DIRECTORY presets DESTINATION "${INSTALL_QSCONFDIR}")
-    # System layout-preset catalogue read by horneroctl through XDG_DATA_DIRS
-    # (hornero docs/PATH_CONTRACT.md row 2, HorneroOS/hornero#96). Without it a
-    # package-only install lists no presets and the Layout Picker is empty.
-    install(DIRECTORY presets/ DESTINATION "share/hornero/shell-presets"
-        FILES_MATCHING PATTERN "*.json")
+    # The system layout-preset catalogue is packaged by hornero-config, which
+    # carries a byte-synced copy from this repository. Do not install the same
+    # /usr/share files here: both packages are installed together and pacman
+    # correctly rejects duplicate ownership. Keep the runtime copies above.
     # Standalone restart cover (`qs --path <conf>/reloadcover/shell.qml`),
     # shown by `horneroctl shell restart` while the main shell reloads.
     install(DIRECTORY reloadcover DESTINATION "${INSTALL_QSCONFDIR}")

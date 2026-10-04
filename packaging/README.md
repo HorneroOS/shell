@@ -5,17 +5,18 @@ desktop shell. The package builds the CMake project and installs it to the
 standard prefixes verified against a local `DESTDIR` install:
 
 - `/etc/xdg/quickshell/hornero` — shell QML runtime, assets, presets
-- `/usr/share/hornero/shell-presets` — layout-preset catalogue read by
-  `horneroctl` (system catalogue, below the user's own presets)
+- `/etc/xdg/quickshell/hornero/presets` — runtime preset definitions used by
+  the Shell's Layout Picker
 - `/usr/share/doc/hornero-shell/IPC.md` — installed IPC contract for tooling
 - `/usr/lib/hornero` — `version` helper binary
 - `/usr/lib/qt6/qml/Hornero*` — native QML plugin modules
   (`Hornero`, `Hornero.Internal`, `Hornero.Models`, `Hornero.Services`)
 
 The runtime depends on the AUR packages `hornero-config` and
-`horneroctl-bin`. They own the system catalogue and the stable operations
-used by the Shell. User dotfiles may set preferences and add wallpaper media,
-but do not need a second Shell checkout or a locally compiled plugin.
+`horneroctl-bin`. `hornero-config` owns the system preset catalogue exposed to
+`horneroctl`; this package owns only the Shell runtime copy under
+`/etc/xdg/quickshell/hornero`. User configuration can set preferences and add
+wallpaper media without a second Shell checkout or locally compiled plugin.
 
 ## Build the package
 

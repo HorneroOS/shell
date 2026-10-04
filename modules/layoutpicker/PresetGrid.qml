@@ -87,6 +87,17 @@ Item {
             root.apply(p.name);
     }
 
+    function focusCurrentPreset(): void {
+        if (!root.keyboardNav)
+            return;
+        const index = root.presets.findIndex(p => p.name === root.currentName);
+        if (index >= 0)
+            root.focusIndex = index;
+    }
+
+    onKeyboardNavChanged: focusCurrentPreset()
+    onCurrentNameChanged: focusCurrentPreset()
+
     Component.onCompleted: reload()
 
     Process {
@@ -267,7 +278,6 @@ Item {
                         root.focusIndex = card.index;
                         root.apply(card.modelData.name);
                     }
-                    onEntered: root.focusIndex = card.index
                 }
             }
         }

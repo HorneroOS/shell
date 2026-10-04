@@ -92,13 +92,17 @@ Searcher {
 
         command: ["horneroctl", "wallpaper", "current"]
         running: false
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const t = text.trim();
-                if (t.length > 0)
-                    root.actualCurrent = t;
-                root.previewColourLock = false;
+        stdout: StdioCollector { id: resolveOutput }
+        onExited: (exitCode, exitStatus) => {
+            // `wallpaper current` reports the unconfigured case with a
+            // non-zero exit. Never treat its diagnostic text as an image
+            // path; preserve the FileView pointer fallback when available.
+            if (exitCode === 0) {
+                const path = resolveOutput.text.trim();
+                if (path.length > 0)
+                    root.actualCurrent = path;
             }
+            root.previewColourLock = false;
         }
     }
 

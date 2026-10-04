@@ -18,6 +18,11 @@ The runtime depends on the AUR packages `hornero-config` and
 `/etc/xdg/quickshell/hornero`. User configuration can set preferences and add
 wallpaper media without a second Shell checkout or locally compiled plugin.
 
+The Shell includes a capability-limited experimental Niri backend. Install
+`niri` separately to try it; Hyprland remains the validated session. Niri's
+portal and XWayland dependencies belong to the compositor/session profile,
+not to the Shell package.
+
 ## Build the package
 
 Install the build dependencies, then run `makepkg`:

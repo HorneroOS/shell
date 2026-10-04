@@ -13,9 +13,13 @@ Item {
     required property ShellScreen screen
 
     required property int index
-    required property int activeWsId
+    required property var activeWsId
     required property var occupied
     required property int groupOffset
+    required property var modelData
+
+    property bool niriMode: false
+    property var workspaceData: null
 
     // Orientation of the owning bar (set by Bar.qml); defaults to the
     // primary bar for standalone use.
@@ -29,9 +33,15 @@ Item {
     // Unanimated prop for others to use as reference (main-axis size)
     readonly property int size: (vertical ? implicitHeight : implicitWidth) + (hasWindows ? Appearance.padding.small : 0)
 
-    readonly property int ws: groupOffset + index + 1
+    readonly property var ws: niriMode ? workspaceData?.id : groupOffset + index + 1
     readonly property bool isOccupied: occupied[ws] ?? false
     readonly property bool hasWindows: isOccupied && Config.bar.workspaces.showWindows
+    readonly property var windowItems: Compositor.windowsForWorkspace(ws)
+
+    function iconForWindow(window: var): string {
+        const appId = niriMode ? window.app_id : window.lastIpcObject.class;
+        return Icons.getAppCategoryIcon(appId, "terminal");
+    }
 
     Layout.alignment: vertical ? Qt.AlignHCenter : Qt.AlignVCenter
     Layout.preferredHeight: vertical ? size : implicitHeight
@@ -58,6 +68,10 @@ Item {
 
             animate: true
             text: {
+                if (root.niriMode) {
+                    const nativeLabel = Compositor.workspaceLabel(root.workspaceData, root.ws);
+                    return root.labels ? nativeLabel : root.isActive ? (Config.bar.workspaces.activeLabel || nativeLabel) : root.isOccupied ? (Config.bar.workspaces.occupiedLabel || Config.bar.workspaces.label || nativeLabel) : (Config.bar.workspaces.label || nativeLabel);
+                }
                 const ws = Hypr.workspaces.values.find(w => w.id === root.ws);
                 const wsName = !ws || ws.name == root.ws ? root.ws : ws.name[0];
                 let displayName = wsName.toString();
@@ -125,14 +139,14 @@ Item {
 
                 Repeater {
                     model: ScriptModel {
-                        values: Hypr.toplevels.values.filter(c => c.workspace?.id === root.ws).slice(0, Config.bar.workspaces.maxWindowIcons)
+                        values: root.windowItems.slice(0, Config.bar.workspaces.maxWindowIcons)
                     }
 
                     MaterialIcon {
                         required property var modelData
 
                         grade: 0
-                        text: Icons.getAppCategoryIcon(modelData.lastIpcObject.class, "terminal")
+                        text: root.iconForWindow(modelData)
                         color: Colours.palette.m3onSurfaceVariant
                     }
                 }
@@ -167,14 +181,14 @@ Item {
 
                 Repeater {
                     model: ScriptModel {
-                        values: Hypr.toplevels.values.filter(c => c.workspace?.id === root.ws).slice(0, Config.bar.workspaces.maxWindowIcons)
+                    values: root.windowItems.slice(0, Config.bar.workspaces.maxWindowIcons)
                     }
 
                     MaterialIcon {
                         required property var modelData
 
                         grade: 0
-                        text: Icons.getAppCategoryIcon(modelData.lastIpcObject.class, "terminal")
+                        text: root.iconForWindow(modelData)
                         color: Colours.palette.m3onSurfaceVariant
                     }
                 }
@@ -186,14 +200,14 @@ Item {
         anchors.fill: parent
 
         Accessible.role: Accessible.Button
-        Accessible.name: qsTr("Workspace %1, %2").arg(root.ws).arg(root.accessibleState)
-        Accessible.description: root.isActive ? qsTr("Activating the current workspace opens the special workspace") : qsTr("Switch to workspace %1").arg(root.ws)
+        Accessible.name: qsTr("Workspace %1, %2").arg(root.niriMode ? Compositor.workspaceLabel(root.workspaceData, root.ws) : root.ws).arg(root.accessibleState)
+        Accessible.description: root.isActive && !root.niriMode ? qsTr("Activating the current workspace opens the special workspace") : qsTr("Switch to workspace %1").arg(root.ws)
 
         onClicked: {
             if (root.activeWsId !== root.ws)
-                Hypr.dispatch(`workspace ${root.ws}`);
-            else
-                Hypr.dispatch("togglespecialworkspace special");
+                Compositor.focusWorkspace(root.niriMode ? root.workspaceData : ({ id: root.ws }));
+            else if (!root.niriMode)
+                Compositor.toggleSpecialWorkspace();
         }
     }
 

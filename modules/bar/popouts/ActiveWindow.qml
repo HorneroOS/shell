@@ -12,7 +12,7 @@ Item {
 
     required property Item wrapper
 
-    implicitWidth: Hypr.activeToplevel ? child.implicitWidth : -Appearance.padding.large * 2
+    implicitWidth: Compositor.activeWindow ? child.implicitWidth : -Appearance.padding.large * 2
     implicitHeight: child.implicitHeight
 
     Column {
@@ -33,7 +33,7 @@ Item {
 
                 Layout.alignment: Qt.AlignVCenter
                 implicitSize: details.implicitHeight
-                source: Icons.getAppIcon(Hypr.activeToplevel?.lastIpcObject.class ?? "", "image-missing")
+                source: Icons.getAppIcon(Compositor.activeWindowAppId, "image-missing")
             }
 
             ColumnLayout {
@@ -44,14 +44,14 @@ Item {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: Hypr.activeToplevel?.title ?? ""
+                    text: Compositor.activeWindowTitle
                     font.pointSize: Appearance.font.size.normal
                     elide: Text.ElideRight
                 }
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: Hypr.activeToplevel?.lastIpcObject.class ?? ""
+                    text: Compositor.activeWindowAppId
                     color: Colours.palette.m3onSurfaceVariant
                     elide: Text.ElideRight
                 }
@@ -85,13 +85,14 @@ Item {
         }
 
         ClippingWrapperRectangle {
+            visible: Compositor.supports("nativeWindowThumbnails")
             color: "transparent"
             radius: Appearance.rounding.small
 
             ScreencopyView {
                 id: preview
 
-                captureSource: Hypr.activeToplevel?.wayland ?? null
+                captureSource: Compositor.isHyprland ? Hypr.activeToplevel?.wayland ?? null : null
                 live: visible
 
                 constraintSize.width: Config.bar.sizes.windowPreviewSize

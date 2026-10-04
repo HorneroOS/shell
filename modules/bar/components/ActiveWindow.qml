@@ -14,8 +14,8 @@ Item {
     property color colour: Colours.palette.m3primary
 
     Accessible.role: Accessible.StaticText
-    Accessible.name: Hypr.activeToplevel?.title ?? qsTr("Desktop")
-    Accessible.description: Hypr.activeToplevel?.lastIpcObject.class ?? qsTr("Current window")
+    Accessible.name: Compositor.activeWindowTitle || qsTr("Desktop")
+    Accessible.description: Compositor.activeWindowAppId || qsTr("Current window")
 
     readonly property bool vertical: bar.vertical
     readonly property bool compactRail: vertical && Config.bar.popouts.activeWindow
@@ -63,7 +63,7 @@ Item {
 
             anchors.centerIn: parent
             animate: true
-            text: Icons.getAppCategoryIcon(Hypr.activeToplevel?.lastIpcObject.class, "desktop_windows")
+            text: Icons.getAppCategoryIcon(Compositor.activeWindowAppId, "desktop_windows")
             color: root.colour
         }
     }
@@ -79,7 +79,7 @@ Item {
     TextMetrics {
         id: metrics
 
-        readonly property string rawTitle: Hypr.activeToplevel?.title ?? qsTr("Desktop")
+        readonly property string rawTitle: Compositor.activeWindowTitle || qsTr("Desktop")
         readonly property string compactTitle: {
             const idx = Math.max(rawTitle.lastIndexOf(" — "), rawTitle.lastIndexOf(" - "), rawTitle.lastIndexOf(" – "));
             return idx > 0 ? rawTitle.slice(idx + 3).trim() : rawTitle;

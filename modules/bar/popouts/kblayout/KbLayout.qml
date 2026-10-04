@@ -91,7 +91,7 @@ ColumnLayout {
             width: list.width
             height: Math.max(36, rowText.implicitHeight + Appearance.padding.small * 2)
 
-            readonly property bool isDisabled: layoutIndex > 3
+            readonly property bool isDisabled: !Compositor.isNiri && layoutIndex > 3
 
             StateLayer {
                 id: layer
@@ -122,7 +122,7 @@ ColumnLayout {
             }
 
             ToolTip.visible: isDisabled && layer.containsMouse
-            ToolTip.text: "XKB limitation: maximum 4 layouts allowed"
+            ToolTip.text: qsTr("This layout is beyond the four-layout limit of this compositor")
         }
     }
 

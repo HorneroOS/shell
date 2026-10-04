@@ -14,7 +14,7 @@ Item {
     implicitHeight: layout.implicitHeight
 
     Accessible.role: Accessible.StaticText
-    Accessible.name: qsTr("Keyboard layout %1").arg(Hypr.kbLayoutFull)
+    Accessible.name: qsTr("Keyboard layout %1").arg(Compositor.keyboardLayoutName)
 
     GridLayout {
         id: layout
@@ -32,7 +32,7 @@ Item {
 
         StyledText {
             Layout.alignment: Qt.AlignCenter
-            text: Hypr.kbLayout
+            text: Compositor.keyboardLayoutShort
             color: Colours.palette.m3onSurface
             font.pointSize: Appearance.font.size.smaller
             font.capitalization: Font.AllUppercase

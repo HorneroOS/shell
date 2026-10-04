@@ -28,24 +28,20 @@ def test_central_handler_covers_all_drawers():
 
 
 def test_keyboard_focus_follows_grab():
-    """keyboardFocus is OnDemand exactly while the focus grab is active
-    (#84): the grab covers every cascade drawer, and hover opens stay
-    None so follow_mouse=1 never hands them the keyboard. Exclusive
-    is banned: committing it on a mapped surface clears the grab."""
+    """Explicit keyboard intent focuses the layer under either compositor;
+    only Hyprland needs its native focus-grab helper. Hover stays unfocused."""
     src = DRAWERS.read_text()
     focus_line = next(
         line for line in src.splitlines() if "WlrLayershell.keyboardFocus:" in line
     )
-    assert "focusGrab.active ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None" in focus_line
+    assert "keyboardIntent ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None" in focus_line
+    assert "active: Compositor.isHyprland && win.keyboardIntent" in src
     assert "WlrKeyboardFocus.Exclusive" not in src
 
 
 def test_click_outside_covers_utilities():
     src = DRAWERS.read_text()
-    grab_line = next(
-        line for line in src.splitlines() if line.strip().startswith("active:")
-    )
-    assert "visibilities.utilities" in grab_line
+    assert "interactions.utilitiesKeyboardIntent && visibilities.utilities" in src
     assert src.count("visibilities.utilities = false") >= 2  # grab + cascade
 
 
@@ -75,11 +71,8 @@ def test_grab_covers_all_cascade_drawers():
     item focus — so every drawer dismissTopmost() can close needs a
     grab term (nested-proven: grab-less dashboard never saw Escape)."""
     src = DRAWERS.read_text()
-    grab_line = next(
-        line for line in src.splitlines() if line.strip().startswith("active:")
-    )
     for vis in ("launcher", "session", "sidebar", "dashboard", "utilities", "layoutPicker"):
-        assert f"visibilities.{vis}" in grab_line, f"{vis} missing from grab"
+        assert f"visibilities.{vis}" in src, f"{vis} missing from keyboard intent"
 
 
 def test_dashboard_grab_is_explicit_only():
@@ -87,21 +80,17 @@ def test_dashboard_grab_is_explicit_only():
     only explicit opens (shortcut/IPC/action, mouse outside the area)
     grab. The showOnHover=false config keeps its unconditional grab."""
     src = DRAWERS.read_text()
-    grab_line = next(
-        line for line in src.splitlines() if line.strip().startswith("active:")
-    )
-    assert "interactions.dashboardKeyboardIntent" in grab_line
-    assert "!Config.dashboard.showOnHover" in grab_line
+    keyboard_intent = next(line for line in src.splitlines() if "property bool keyboardIntent:" in line)
+    assert "interactions.dashboardKeyboardIntent" in keyboard_intent
+    assert "!Config.dashboard.showOnHover" in keyboard_intent
 
 
 def test_utilities_grab_is_explicit_only():
     """Utilities opens on bottom-edge hover like the dashboard, so it
     follows the same rule: hover opens never take the keyboard."""
     src = DRAWERS.read_text()
-    grab_line = next(
-        line for line in src.splitlines() if line.strip().startswith("active:")
-    )
-    assert "interactions.utilitiesKeyboardIntent && visibilities.utilities" in grab_line
+    keyboard_intent = next(line for line in src.splitlines() if "property bool keyboardIntent:" in line)
+    assert "interactions.utilitiesKeyboardIntent && visibilities.utilities" in keyboard_intent
 
 
 def test_click_inside_promotes_keyboard_intent():

@@ -145,7 +145,7 @@ ColumnLayout {
             "fullscreen|0": "Toggle fullscreen",
             "fullscreen|1": "Toggle maximize",
             "pin|": "Pin window (all workspaces)",
-            "exit|": "Exit Hyprland",
+            "exit|": Compositor.isNiri ? qsTr("Exit Niri") : qsTr("Exit Hyprland"),
             "focuscurrentorlast|": "Focus current or last window",
             "togglegroup|": "Toggle group",
             "lockactivegroup|toggle": "Toggle group lock",

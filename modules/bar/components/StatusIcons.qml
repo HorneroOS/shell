@@ -32,7 +32,7 @@ StyledRect {
 
     clip: true
     implicitWidth: vertical ? Config.bar.sizes.innerWidth : iconGrid.implicitWidth + Appearance.padding.normal * 2
-    implicitHeight: vertical ? iconGrid.implicitHeight + Appearance.padding.normal * 2 - (Config.bar.status.showLockStatus && !Hypr.capsLock && !Hypr.numLock ? iconGrid.rowSpacing : 0) : Config.bar.sizes.innerWidth
+    implicitHeight: vertical ? iconGrid.implicitHeight + Appearance.padding.normal * 2 - (Config.bar.status.showLockStatus && Compositor.supports("lockStatus") && !Compositor.capsLock && !Compositor.numLock ? iconGrid.rowSpacing : 0) : Config.bar.sizes.innerWidth
 
     GridLayout {
         id: iconGrid
@@ -53,7 +53,7 @@ StyledRect {
         // Lock keys status
         WrappedLoader {
             name: "lockstatus"
-            active: Config.bar.status.showLockStatus
+            active: Config.bar.status.showLockStatus && Compositor.supports("lockStatus")
 
             sourceComponent: GridLayout {
                 flow: root.vertical ? GridLayout.TopToBottom : GridLayout.LeftToRight
@@ -63,16 +63,16 @@ StyledRect {
                 columnSpacing: 0
 
                 Item {
-                    implicitWidth: root.vertical ? capslockIcon.implicitWidth : (Hypr.capsLock ? capslockIcon.implicitWidth : 0)
-                    implicitHeight: root.vertical ? (Hypr.capsLock ? capslockIcon.implicitHeight : 0) : capslockIcon.implicitHeight
+                    implicitWidth: root.vertical ? capslockIcon.implicitWidth : (Compositor.capsLock ? capslockIcon.implicitWidth : 0)
+                    implicitHeight: root.vertical ? (Compositor.capsLock ? capslockIcon.implicitHeight : 0) : capslockIcon.implicitHeight
 
                     MaterialIcon {
                         id: capslockIcon
 
                         anchors.centerIn: parent
 
-                        scale: Hypr.capsLock ? 1 : 0.5
-                        opacity: Hypr.capsLock ? 1 : 0
+                        scale: Compositor.capsLock ? 1 : 0.5
+                        opacity: Compositor.capsLock ? 1 : 0
 
                         text: "keyboard_capslock_badge"
                         color: root.colour
@@ -92,19 +92,19 @@ StyledRect {
                 }
 
                 Item {
-                    Layout.topMargin: root.vertical && Hypr.capsLock && Hypr.numLock ? iconGrid.rowSpacing : 0
-                    Layout.leftMargin: !root.vertical && Hypr.capsLock && Hypr.numLock ? iconGrid.columnSpacing : 0
+                    Layout.topMargin: root.vertical && Compositor.capsLock && Compositor.numLock ? iconGrid.rowSpacing : 0
+                    Layout.leftMargin: !root.vertical && Compositor.capsLock && Compositor.numLock ? iconGrid.columnSpacing : 0
 
-                    implicitWidth: root.vertical ? numlockIcon.implicitWidth : (Hypr.numLock ? numlockIcon.implicitWidth : 0)
-                    implicitHeight: root.vertical ? (Hypr.numLock ? numlockIcon.implicitHeight : 0) : numlockIcon.implicitHeight
+                    implicitWidth: root.vertical ? numlockIcon.implicitWidth : (Compositor.numLock ? numlockIcon.implicitWidth : 0)
+                    implicitHeight: root.vertical ? (Compositor.numLock ? numlockIcon.implicitHeight : 0) : numlockIcon.implicitHeight
 
                     MaterialIcon {
                         id: numlockIcon
 
                         anchors.centerIn: parent
 
-                        scale: Hypr.numLock ? 1 : 0.5
-                        opacity: Hypr.numLock ? 1 : 0
+                        scale: Compositor.numLock ? 1 : 0.5
+                        opacity: Compositor.numLock ? 1 : 0
 
                         text: "looks_one"
                         color: root.colour
@@ -155,11 +155,11 @@ StyledRect {
         PopoutTrigger {
             name: "kblayout"
             accessibleLabel: qsTr("Keyboard layout controls")
-            active: Config.bar.status.showKbLayout
+            active: Config.bar.status.showKbLayout && Compositor.supports("keyboardLayoutSwitch")
 
             sourceComponent: StyledText {
                 animate: true
-                text: Hypr.kbLayout
+                text: Compositor.keyboardLayoutShort
                 color: root.colour
                 font.family: Appearance.font.family.mono
             }

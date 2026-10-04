@@ -61,6 +61,8 @@ Item {
     property list<real> animCurve: Appearance.anim.curves.emphasized
 
     function detach(mode: string): void {
+        if (mode === "winfo" && !Compositor.supports("nativeWindowThumbnails"))
+            return;
         animLength = Appearance.anim.durations.large;
         if (mode === "winfo") {
             detachedMode = mode;
@@ -108,7 +110,7 @@ Item {
     }
 
     HyprlandFocusGrab {
-        active: root.isDetached
+        active: Compositor.isHyprland && root.isDetached
         windows: [QsWindow.window]
         onCleared: root.close()
     }

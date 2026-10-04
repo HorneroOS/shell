@@ -83,7 +83,12 @@ Singleton {
         extras.batchMessage(["keyword bindlni ,Caps_Lock,global,hornero:refreshDevices", "keyword bindlni ,Num_Lock,global,hornero:refreshDevices"]);
     }
 
-    Component.onCompleted: reloadDynamicConfs()
+    // HyprExtras can only install bindings while a Hyprland session owns the
+    // IPC socket. The singleton is still available to QML in other sessions.
+    Component.onCompleted: {
+        if (Quickshell.env("NIRI_SOCKET") === "" && Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") !== "")
+            reloadDynamicConfs();
+    }
 
     onCapsLockChanged: {
         if (!Config.utilities.toasts.capsLockChanged)

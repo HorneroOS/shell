@@ -30,13 +30,13 @@ Variants {
         StyledWindow {
             id: win
 
-            readonly property bool hasFullscreen: Hypr.monitorFor(screen)?.activeWorkspace?.toplevels.values.some(t => t.lastIpcObject.fullscreen === 2) ?? false
+            readonly property bool keyboardIntent: (visibilities.launcher && Config.launcher.enabled) || (visibilities.session && Config.session.enabled) || (visibilities.sidebar && Config.sidebar.enabled) || ((!Config.dashboard.showOnHover || interactions.dashboardKeyboardIntent) && visibilities.dashboard && Config.dashboard.enabled) || (interactions.utilitiesKeyboardIntent && visibilities.utilities && Config.utilities.enabled) || visibilities.layoutPicker || (panels.popouts.keyboardIntent && panels.popouts.hasCurrent) || (panels.popouts.currentName.startsWith("traymenu") && panels.popouts.current?.depth > 1)
+            readonly property bool hasFullscreen: Compositor.hasFullscreenOnScreen(screen)
             readonly property int dragMaskPadding: {
-                if (focusGrab.active || panels.popouts.isDetached)
+                if (keyboardIntent || panels.popouts.isDetached)
                     return 0;
 
-                const mon = Hypr.monitorFor(screen);
-                if (mon?.lastIpcObject?.specialWorkspace?.name || mon?.activeWorkspace?.lastIpcObject?.windows > 0)
+                if (Compositor.isSpecialWorkspaceActive(screen, true) || Compositor.activeWorkspaceHasWindows(screen))
                     return 0;
 
                 const thresholds = [];
@@ -65,7 +65,7 @@ Variants {
             // OnDemand layer under the pointer the keyboard, which would
             // steal typing from the focused app. Never Exclusive: a mapped
             // surface committing Exclusive clears the grab (bounce).
-            WlrLayershell.keyboardFocus: focusGrab.active ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+            WlrLayershell.keyboardFocus: keyboardIntent ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
             // Topmost keyboard-holding drawer, same order as
             // dismissTopmost(): Tab stays inside it (FocusMode.step).
@@ -74,7 +74,7 @@ Variants {
             // One writer per window: publish this screen's root while its
             // grab holds the keyboard, clear it only if it is still ours.
             function syncFocusRoot(): void {
-                if (focusGrab.active) {
+                if (keyboardIntent) {
                     FocusMode.currentRoot = win.keyboardRoot;
                     // Qt focus may still sit in another (hidden) drawer, e.g.
                     // the launcher search field; seed the new root so typed
@@ -254,7 +254,7 @@ Variants {
                 // stay grab-free so edge touches never steal typing; explicit
                 // opens (shortcut, IPC, action — mouse outside the area) and
                 // a click inside a hover-opened drawer set keyboard intent.
-                active: (visibilities.launcher && Config.launcher.enabled) || (visibilities.session && Config.session.enabled) || (visibilities.sidebar && Config.sidebar.enabled) || ((!Config.dashboard.showOnHover || interactions.dashboardKeyboardIntent) && visibilities.dashboard && Config.dashboard.enabled) || (interactions.utilitiesKeyboardIntent && visibilities.utilities && Config.utilities.enabled) || visibilities.layoutPicker || (panels.popouts.keyboardIntent && panels.popouts.hasCurrent) || (panels.popouts.currentName.startsWith("traymenu") && panels.popouts.current?.depth > 1)
+                active: Compositor.isHyprland && win.keyboardIntent
                 windows: [win]
                 onActiveChanged: win.syncFocusRoot()
                 onCleared: {

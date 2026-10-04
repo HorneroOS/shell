@@ -69,7 +69,7 @@ def test_inline_bar_sliders_explain_current_value_and_input():
 def test_vertical_active_window_stays_compact_and_exposes_the_full_title():
     src = (ROOT / "modules/bar/components/ActiveWindow.qml").read_text()
     assert "Accessible.role: Accessible.StaticText" in src
-    assert "Accessible.name: Hypr.activeToplevel?.title" in src
+    assert "Accessible.name: Compositor.activeWindowTitle" in src
     assert "readonly property bool compactRail: vertical && Config.bar.popouts.activeWindow" in src
     assert "if (root.compactRail)" in src
     assert "return Config.bar.sizes.innerWidth;" in src

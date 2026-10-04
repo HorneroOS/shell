@@ -21,18 +21,57 @@ Item {
     property int activeIndex: -1
 
     function start() {
+        if (Compositor.isNiri) {
+            _syncNiriLayouts();
+            _xkbXmlBase.running = true;
+            return;
+        }
         _xkbXmlBase.running = true;
         _getKbLayoutOpt.running = true;
     }
 
     function refresh() {
+        if (Compositor.isNiri) {
+            _syncNiriLayouts();
+            return;
+        }
         _notifiedLimit = false;
         _getKbLayoutOpt.running = true;
     }
 
     function switchTo(idx) {
+        if (Compositor.isNiri) {
+            Compositor.switchKeyboardLayout(idx);
+            return;
+        }
         _switchProc.command = ["hyprctl", "switchxkblayout", "all", String(idx)];
         _switchProc.running = true;
+    }
+
+    function _syncNiriLayouts() {
+        const state = Niri.keyboardLayouts;
+        if (!state || !(state.names instanceof Array))
+            return;
+
+        _layoutsModel.clear();
+        state.names.forEach((token, index) => _layoutsModel.append({
+            layoutIndex: index,
+            token: token,
+            label: _pretty(token)
+        }));
+        activeIndex = state.current_idx ?? -1;
+        activeLabel = activeIndex >= 0 && activeIndex < _layoutsModel.count
+            ? _layoutsModel.get(activeIndex).label
+            : "";
+        _rebuildVisible();
+    }
+
+    Connections {
+        target: Niri
+        function onKeyboardLayoutsChanged(): void {
+            if (Compositor.isNiri)
+                model._syncNiriLayouts();
+        }
     }
 
     ListModel {
@@ -91,7 +130,10 @@ Item {
             }
             _layoutsModel.clear();
             tmp.forEach(t => _layoutsModel.append(t));
-            _fetchActiveLayouts.running = true;
+            if (Compositor.isNiri)
+                _syncNiriLayouts();
+            else
+                _fetchActiveLayouts.running = true;
         }
     }
 
@@ -199,7 +241,7 @@ Item {
         arr = arr.filter(i => i.layoutIndex !== activeIndex);
         arr.forEach(i => _visibleModel.append(i));
 
-        if (!Config.utilities.toasts.kbLimit)
+        if (!Config.utilities.toasts.kbLimit || Compositor.isNiri)
             return;
 
         if (_layoutsModel.count > 4) {

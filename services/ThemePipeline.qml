@@ -290,8 +290,10 @@ Singleton {
             _finishJob(false, "could not synchronize built-in theme state");
             return;
         }
-        hyprlockProc.running = true;
-        hyprReloadProc.running = true;
+        if (Compositor.isHyprland) {
+            hyprlockProc.running = true;
+            hyprReloadProc.running = true;
+        }
         _awaitingGtk = true;
         GtkSettings.applyFull("", "", _pendingThemeId, _pendingGtkColorScheme, _pendingDarkMode);
     }
@@ -553,8 +555,10 @@ done
     }
 
     function _runSideEffects(): void {
-        hyprlockProc.running = true;
-        hyprReloadProc.running = true;
+        if (Compositor.isHyprland) {
+            hyprlockProc.running = true;
+            hyprReloadProc.running = true;
+        }
 
         if (root._runThemeSideEffects && root._pendingThemeId) {
             snappyProc.themeId = root._pendingThemeId;

@@ -18,7 +18,7 @@ Item {
     readonly property Item shellBar: Visibilities.bars.get(screen) ?? null
     readonly property int frameInset: Config.border.frameEnabled ? Config.border.thickness : 0
     readonly property int barSpacing: Appearance.spacing.small * Config.background.visualiser.spacing
-    readonly property bool shouldBeActive: Config.background.visualiser.enabled && (!Config.background.visualiser.autoHide || (Hypr.monitorFor(screen)?.activeWorkspace?.toplevels?.values.every(t => t.lastIpcObject?.floating) ?? true))
+    readonly property bool shouldBeActive: Config.background.visualiser.enabled && (!Config.background.visualiser.autoHide || Compositor.hasOnlyFloatingWindowsOnScreen(screen))
     property real offset: shouldBeActive ? 0 : screen.height * 0.2
 
     opacity: shouldBeActive ? 1 : 0

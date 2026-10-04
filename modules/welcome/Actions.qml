@@ -16,7 +16,7 @@ Singleton {
 
     // Fullscreen guard shared by drawer toggles (mirrors Shortcuts.qml):
     // opening drawers over an exclusive fullscreen surface is refused.
-    readonly property bool hasFullscreen: Hypr.focusedWorkspace?.toplevels.values.some(t => t.lastIpcObject.fullscreen === 2) ?? false
+    readonly property bool hasFullscreen: Compositor.hasFullscreenOnFocusedOutput()
 
     function openLauncher(): void {
         if (root.hasFullscreen)

@@ -68,6 +68,10 @@ Scope {
         target: "picker"
 
         function open(): void {
+            if (Compositor.supports("nativeScreenshotSelection")) {
+                Compositor.openScreenshotPicker();
+                return;
+            }
             root.freeze = false;
             root.closing = false;
             root.clipboardOnly = false;
@@ -75,6 +79,11 @@ Scope {
         }
 
         function openFreeze(): void {
+            if (Compositor.supports("nativeScreenshotSelection")) {
+                console.warn("[Screenshot] Frozen capture is unavailable in Niri; opening its native picker.");
+                Compositor.openScreenshotPicker();
+                return;
+            }
             root.freeze = true;
             root.closing = false;
             root.clipboardOnly = false;
@@ -82,6 +91,10 @@ Scope {
         }
 
         function openClip(): void {
+            if (Compositor.supports("nativeScreenshotSelection")) {
+                Compositor.openScreenshotPicker();
+                return;
+            }
             root.freeze = false;
             root.closing = false;
             root.clipboardOnly = true;
@@ -89,6 +102,11 @@ Scope {
         }
 
         function openFreezeClip(): void {
+            if (Compositor.supports("nativeScreenshotSelection")) {
+                console.warn("[Screenshot] Frozen capture is unavailable in Niri; opening its native picker.");
+                Compositor.openScreenshotPicker();
+                return;
+            }
             root.freeze = true;
             root.closing = false;
             root.clipboardOnly = true;

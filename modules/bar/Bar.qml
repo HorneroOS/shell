@@ -253,6 +253,11 @@ Item {
         const ch = entryAt(lx, ly)?.loader ?? null;
         const pos = vertical ? ly : lx;
         if (ch?.id === "workspaces" && Config.bar.scrollActions.workspaces) {
+            if (Compositor.isNiri) {
+                if (angleDelta.y !== 0)
+                    Compositor.focusWorkspaceDirection(angleDelta.y > 0 ? -1 : 1);
+                return;
+            }
             const mon = (Config.bar.workspaces.perMonitorWorkspaces ? Hypr.monitorFor(screen) : Hypr.focusedMonitor);
             const specialWs = mon?.lastIpcObject.specialWorkspace.name;
             if (specialWs?.length > 0)

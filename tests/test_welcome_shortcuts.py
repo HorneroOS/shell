@@ -57,12 +57,12 @@ def test_drawers_keep_dashboard_keyboard_focus():
     text = DRAWERS.read_text()
     m = re.search(r"WlrLayershell\.keyboardFocus:\s*(.+)", text)
     assert m, "keyboardFocus binding missing in Drawers.qml"
-    # keyboardFocus follows the focus grab (#84); the dashboard reaches
-    # OnDemand through the grab on explicit opens and on a click inside
-    # a hover-opened dashboard (its rename field).
-    assert "focusGrab.active" in m.group(1)
-    grab = next(line for line in text.splitlines() if line.strip().startswith("active:"))
-    assert "visibilities.dashboard" in grab, (
+    # Layer focus tracks explicit keyboard intent; Hyprland also applies its
+    # compositor-specific grab while Niri uses the native layer-shell focus.
+    assert "keyboardIntent" in m.group(1)
+    assert "active: Compositor.isHyprland && win.keyboardIntent" in text
+    keyboard_intent = next(line for line in text.splitlines() if "property bool keyboardIntent:" in line)
+    assert "visibilities.dashboard" in keyboard_intent, (
         "dashboard must stay in the focus-grab set for its text inputs")
 
 

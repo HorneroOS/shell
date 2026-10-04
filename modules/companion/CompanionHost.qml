@@ -30,7 +30,7 @@ Scope {
     // WlSessionLock passed from shell.qml (Lock exposes it as `lock`).
     required property var lock
 
-    readonly property bool hasFullscreen: Hypr.focusedWorkspace?.toplevels.values.some(t => t.lastIpcObject.fullscreen === 2) ?? false
+    readonly property bool hasFullscreen: Compositor.hasFullscreenOnFocusedOutput()
 
     // Session-lock suppression follows the upstream `locked` notify
     // signal, `lockStateChanged` (verified against the installed
@@ -88,7 +88,7 @@ Scope {
             readonly property int screenW: win.modelData.width
             readonly property int screenH: win.modelData.height
             readonly property bool screenKnown: Quickshell.screens.some(s => s.name === CompanionStore.screenName)
-            readonly property string targetScreen: (CompanionStore.screenName !== "" && win.screenKnown) ? CompanionStore.screenName : (Hypr.focusedMonitor !== null && Hypr.focusedMonitor !== undefined ? Hypr.focusedMonitor.name : Quickshell.screens[0].name)
+            readonly property string targetScreen: (CompanionStore.screenName !== "" && win.screenKnown) ? CompanionStore.screenName : (Compositor.focusedOutputName || Quickshell.screens[0].name)
             readonly property bool isMine: win.modelData.name === win.targetScreen
             readonly property bool peekMode: CompanionStore.state === "peeking"
             readonly property bool menuOpen: menu.visible
@@ -348,7 +348,7 @@ Scope {
             WlrLayershell.keyboardFocus: menu.visible ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
             HyprlandFocusGrab {
-                active: menu.visible
+                active: Compositor.isHyprland && menu.visible
                 windows: [win]
                 onCleared: menu.close()
             }

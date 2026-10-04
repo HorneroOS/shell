@@ -6,7 +6,6 @@ import qs.components.controls
 import qs.services
 import qs.config
 import Quickshell
-import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Layouts
 
@@ -16,9 +15,9 @@ Item {
     id: root
 
     required property int wsId
-    required property HyprlandWorkspace workspace
+    required property var workspace
 
-    readonly property var wsToplevels: Hypr.toplevels.values.filter(t => t.workspace?.id === root.wsId)
+    readonly property var wsToplevels: Compositor.windowsForWorkspace(root.wsId)
 
     implicitWidth: parent ? parent.width : 300
     implicitHeight: layout.implicitHeight
@@ -102,10 +101,10 @@ Item {
 
                 delegate: WindowListItem {
                     width: winList.width
-                    isActive: modelData.wayland?.activated ?? false
+                    isActive: Compositor.isNiri ? modelData.is_focused : modelData.wayland?.activated ?? false
 
                     onFocusRequested: {
-                        Hypr.dispatch(`focuswindow address:0x${modelData.address}`);
+                        Compositor.focusWindowFor(modelData);
                     }
                 }
 

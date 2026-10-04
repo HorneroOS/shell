@@ -227,7 +227,7 @@ def test_bar_workspaces_are_accessible_controls():
     assert "Accessible.role: Accessible.Button" in workspace
     assert 'Accessible.name: qsTr("Workspace %1, %2")' in workspace
     assert "root.activeWsId !== root.ws" in workspace
-    assert 'Hypr.dispatch("togglespecialworkspace special")' in workspace
+    assert "Compositor.toggleSpecialWorkspace()" in workspace
 
     group = (ROOT / "modules/bar/components/workspaces/Workspaces.qml").read_text()
     assert "MouseArea {" not in group, "per-workspace controls own the hit target and focus"

@@ -30,6 +30,7 @@ Item {
 
         // Rename inline
         Item {
+            visible: Compositor.capabilities.workspaceRename === true
             Layout.fillWidth: true
             Layout.preferredHeight: renameField.visible ? renameField.implicitHeight + Appearance.padding.small : renameBtn.implicitHeight
             clip: true
@@ -119,6 +120,7 @@ Item {
             verticalPadding: Appearance.padding.small / 2
             font.pointSize: Appearance.font.size.small
 
+            visible: Compositor.capabilities.workspaceCreate === true
             onClicked: Hypr.dispatch("workspace empty")
         }
 
@@ -131,9 +133,9 @@ Item {
             font.pointSize: Appearance.font.size.small
 
             onClicked: {
-                const toplevels = Hypr.toplevels.values.filter(t => t.workspace?.id === root.wsId);
+                const toplevels = Compositor.windowsForWorkspace(root.wsId);
                 for (const t of toplevels)
-                    Hypr.dispatch(`killwindow address:0x${t.address}`);
+                    Compositor.closeWindowFor(t);
             }
         }
     }

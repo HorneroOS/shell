@@ -175,8 +175,8 @@ Item {
                                 return true;
                         }
 
-                        if (Config.background.video.pauseOnFullscreen && Hypr.activeToplevel && Hypr.activeToplevel.lastIpcObject && Hypr.activeToplevel.lastIpcObject.fullscreen) {
-                            const winClass = (Hypr.activeToplevel.lastIpcObject.class || "").toLowerCase();
+                        if (Config.background.video.pauseOnFullscreen && Compositor.hasFullscreenOnFocusedOutput()) {
+                            const winClass = Compositor.activeWindowAppId.toLowerCase();
                             const browsers = ["firefox", "brave", "chromium", "chrome", "zen", "thorium", "vivaldi", "opera", "floorp", "waterfox", "librewolf", "edge"];
                             if (browsers.some(b => winClass.includes(b)))
                                 return false;

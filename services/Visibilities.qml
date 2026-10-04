@@ -1,13 +1,16 @@
 pragma Singleton
 
 import Quickshell
+import qs.services
 
 Singleton {
     property var screens: new Map()
     property var bars: new Map()
 
     function load(screen: ShellScreen, visibilities: var): void {
-        screens.set(Hypr.monitorFor(screen), visibilities);
+        const updated = new Map(screens);
+        updated.set(screen.name, visibilities);
+        screens = updated;
     }
 
     function setBar(screen: ShellScreen, bar: var): void {
@@ -17,6 +20,7 @@ Singleton {
     }
 
     function getForActive(): PersistentProperties {
-        return screens.get(Hypr.focusedMonitor);
+        const focused = Compositor.focusedOutputName || Quickshell.screens[0]?.name || "";
+        return screens.get(focused);
     }
 }

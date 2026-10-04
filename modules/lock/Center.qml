@@ -225,21 +225,25 @@ ColumnLayout {
             id: stateMessage
 
             readonly property string msg: {
-                if (Hypr.kbLayout !== Hypr.defaultKbLayout) {
-                    if (Hypr.capsLock && Hypr.numLock)
-                        return qsTr("Caps lock and Num lock are ON.\nKeyboard layout: %1").arg(Hypr.kbLayoutFull);
-                    if (Hypr.capsLock)
-                        return qsTr("Caps lock is ON. Kb layout: %1").arg(Hypr.kbLayoutFull);
-                    if (Hypr.numLock)
-                        return qsTr("Num lock is ON. Kb layout: %1").arg(Hypr.kbLayoutFull);
-                    return qsTr("Keyboard layout: %1").arg(Hypr.kbLayoutFull);
+                const layoutChanged = Compositor.supports("keyboardLayoutState") && !Compositor.keyboardLayoutIsDefault;
+                const lockStatus = Compositor.supports("lockStatus");
+                if (layoutChanged) {
+                    if (lockStatus && Compositor.capsLock && Compositor.numLock)
+                        return qsTr("Caps lock and Num lock are ON.\nKeyboard layout: %1").arg(Compositor.keyboardLayoutName);
+                    if (lockStatus && Compositor.capsLock)
+                        return qsTr("Caps lock is ON. Keyboard layout: %1").arg(Compositor.keyboardLayoutName);
+                    if (lockStatus && Compositor.numLock)
+                        return qsTr("Num lock is ON. Keyboard layout: %1").arg(Compositor.keyboardLayoutName);
+                    return qsTr("Keyboard layout: %1").arg(Compositor.keyboardLayoutName);
                 }
 
-                if (Hypr.capsLock && Hypr.numLock)
+                if (!lockStatus)
+                    return "";
+                if (Compositor.capsLock && Compositor.numLock)
                     return qsTr("Caps lock and Num lock are ON.");
-                if (Hypr.capsLock)
+                if (Compositor.capsLock)
                     return qsTr("Caps lock is ON.");
-                if (Hypr.numLock)
+                if (Compositor.numLock)
                     return qsTr("Num lock is ON.");
 
                 return "";

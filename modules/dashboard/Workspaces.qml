@@ -7,7 +7,6 @@ import qs.services
 import qs.config
 import "dash"
 import Quickshell
-import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Layouts
 
@@ -19,24 +18,31 @@ import QtQuick.Layouts
 Item {
     id: root
 
-    property int selectedWsId: Hypr.activeWsId
+    readonly property var nativeWorkspaces: Compositor.workspacesForScreen({ name: Compositor.focusedOutputName })
+    // The event stream can briefly be empty while Niri starts. Child controls
+    // accept an integer workspace id, so give them a stable, real workspace
+    // instead of passing null through the first QML binding pass.
+    property int selectedWsId: Compositor.activeWorkspaceIdForScreen({ name: Compositor.focusedOutputName }) ?? nativeWorkspaces[0]?.id ?? 1
 
     readonly property var regularWorkspaces: {
-        const all = Hypr.workspaces.values;
-        return all.filter(w => !w.name.startsWith("special:")).sort((a, b) => a.id - b.id);
+        if (Compositor.isNiri)
+            return nativeWorkspaces;
+        return nativeWorkspaces.filter(w => !w.name.startsWith("special:")).sort((a, b) => a.id - b.id);
     }
 
     readonly property var specialWorkspaces: {
-        return Hypr.workspaces.values.filter(w => w.name.startsWith("special:"));
+        return Compositor.isNiri ? [] : nativeWorkspaces.filter(w => w.name.startsWith("special:"));
     }
 
-    readonly property HyprlandWorkspace selectedWorkspace: {
-        return Hypr.workspaces.values.find(w => w.id === root.selectedWsId) ?? null;
+    readonly property var selectedWorkspace: {
+        return regularWorkspaces.find(w => w.id === root.selectedWsId) ?? null;
     }
 
-    readonly property string activeSpecialName: Hypr.focusedMonitor?.lastIpcObject?.specialWorkspace?.name ?? ""
+    readonly property string activeSpecialName: Compositor.isSpecialWorkspaceActive({ name: Compositor.focusedOutputName }, true)
+        ? Hypr.focusedMonitor?.lastIpcObject?.specialWorkspace?.name ?? ""
+        : ""
 
-    Component.onCompleted: root.selectedWsId = Hypr.activeWsId
+    Component.onCompleted: root.selectedWsId = Compositor.activeWorkspaceIdForScreen({ name: Compositor.focusedOutputName }) ?? nativeWorkspaces[0]?.id ?? 1
 
     implicitWidth: Math.max(800, content.implicitWidth)
     implicitHeight: content.implicitHeight
@@ -85,7 +91,7 @@ Item {
                         }
 
                         StyledText {
-                            text: root.selectedWorkspace?.name ?? qsTr("Workspace %1").arg(root.selectedWsId)
+                            text: root.selectedWorkspace ? Compositor.workspaceLabel(root.selectedWorkspace, root.selectedWsId) : qsTr("Workspace %1").arg(root.selectedWsId ?? "—")
                             font.pointSize: Appearance.font.size.larger
                             font.weight: 600
                             color: Colours.palette.m3onSurface
@@ -95,7 +101,7 @@ Item {
 
                         StyledText {
                             text: {
-                                const n = root.selectedWorkspace?.lastIpcObject?.windows ?? 0;
+                                const n = Compositor.windowsForWorkspace(root.selectedWsId).length;
                                 return n === 0 ? qsTr("Empty") : qsTr("%1 windows").arg(n);
                             }
                             font.pointSize: Appearance.font.size.small
@@ -106,9 +112,9 @@ Item {
                     // Live preview
                     Loader {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: Config.dashboard.workspaces.previewHeight
+                        Layout.preferredHeight: active ? Config.dashboard.workspaces.previewHeight : 0
 
-                        active: Config.dashboard.workspaces.showLivePreview && root.selectedWorkspace !== null
+                        active: Config.dashboard.workspaces.showLivePreview && root.selectedWorkspace !== null && Compositor.supports("nativeWindowThumbnails")
 
                         sourceComponent: WorkspacePreview {
                             wsId: root.selectedWsId
@@ -181,7 +187,7 @@ Item {
                                 isActive: modelData.name === root.activeSpecialName
 
                                 onClicked: {
-                                    Hypr.dispatch(`togglespecialworkspace ${modelData.name.slice("special:".length)}`);
+                                Hypr.dispatch(`togglespecialworkspace ${modelData.name.slice("special:".length)}`);
                                 }
                             }
                         }
@@ -198,12 +204,12 @@ Item {
                         model: root.regularWorkspaces
 
                         delegate: WorkspaceCard {
-                            isActive: modelData.id === Hypr.activeWsId
+                            isActive: modelData.id === Compositor.activeWorkspaceIdForScreen({ name: Compositor.focusedOutputName })
                             isSelected: modelData.id === root.selectedWsId
 
                             onClicked: {
                                 root.selectedWsId = modelData.id;
-                                Hypr.dispatch(`workspace ${modelData.id}`);
+                                Compositor.focusWorkspace(modelData);
                             }
                         }
                     }

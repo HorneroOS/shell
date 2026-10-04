@@ -20,6 +20,8 @@ Singleton {
 
     function getMonitor(query: string): var {
         if (query === "active") {
+            if (Compositor.isNiri)
+                return monitors.find(m => m.modelData.name === Compositor.focusedOutputName);
             return monitors.find(m => Hypr.monitorFor(m.modelData)?.focused);
         }
 

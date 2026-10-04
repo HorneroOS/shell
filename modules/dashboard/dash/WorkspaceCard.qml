@@ -4,7 +4,6 @@ import qs.components
 import qs.services
 import qs.utils
 import qs.config
-import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Layouts
 
@@ -13,17 +12,19 @@ import QtQuick.Layouts
 Item {
     id: root
 
-    required property HyprlandWorkspace modelData
+    required property var modelData
     required property bool isSelected
     required property bool isActive
 
     signal clicked()
 
-    readonly property int windowCount: root.modelData.lastIpcObject?.windows ?? 0
-    readonly property var wsToplevels: Hypr.toplevels.values.filter(t => t.workspace?.id === root.modelData.id)
+    readonly property int windowCount: Compositor.windowsForWorkspace(root.modelData.id).length
+    readonly property var wsToplevels: Compositor.windowsForWorkspace(root.modelData.id)
 
     implicitWidth: 150
-    implicitHeight: card.implicitHeight
+    // Flow sizes delegates from their implicit dimensions; StyledRect is a
+    // Rectangle and does not infer height from its anchored children.
+    implicitHeight: 72
 
     StyledRect {
         id: card
@@ -67,7 +68,7 @@ Item {
                 spacing: Appearance.spacing.small
 
                 StyledText {
-                    text: root.modelData.id
+                    text: Compositor.workspaceLabel(root.modelData, root.modelData.id)
                     font.pointSize: Appearance.font.size.normal
                     font.weight: 700
                     color: root.isActive
@@ -80,6 +81,7 @@ Item {
                 StyledText {
                     Layout.fillWidth: true
                     text: root.modelData.name === String(root.modelData.id) ? "" : root.modelData.name
+                    visible: !Compositor.isNiri && text !== ""
                     font.pointSize: Appearance.font.size.small
                     color: root.isActive
                         ? Colours.palette.m3onPrimaryContainer
@@ -87,7 +89,6 @@ Item {
                             ? Colours.palette.m3onSecondaryContainer
                             : Colours.palette.m3onSurfaceVariant
                     elide: Text.ElideRight
-                    visible: text !== ""
                 }
 
                 // Window count
@@ -112,7 +113,7 @@ Item {
                     MaterialIcon {
                         required property int index
 
-                        text: Icons.getAppCategoryIcon(root.wsToplevels[index]?.lastIpcObject?.class ?? "", "terminal")
+                        text: Icons.getAppCategoryIcon(Compositor.isNiri ? root.wsToplevels[index]?.app_id ?? "" : root.wsToplevels[index]?.lastIpcObject?.class ?? "", "terminal")
                         color: root.isActive
                             ? Colours.palette.m3onPrimaryContainer
                             : root.isSelected

@@ -30,6 +30,7 @@ Item {
             icon: "sports_esports"
             label: qsTr("Game")
             active: GameMode.enabled
+            visible: Compositor.supports("hyprlandTuning")
             onToggled: GameMode.toggle()
         }
 

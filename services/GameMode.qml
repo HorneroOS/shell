@@ -13,6 +13,8 @@ Singleton {
     property alias enabled: props.enabled
 
     function setDynamicConfs(): void {
+        if (!Compositor.supports("hyprlandTuning"))
+            return;
         Hypr.extras.applyOptions({
             "animations:enabled": 0,
             "decoration:shadow:enabled": 0,
@@ -26,6 +28,11 @@ Singleton {
     }
 
     onEnabledChanged: {
+        if (!Compositor.supports("hyprlandTuning")) {
+            if (props.enabled)
+                props.enabled = false;
+            return;
+        }
         if (enabled) {
             setDynamicConfs();
             if (Config.utilities.toasts.gameModeChanged)
@@ -40,7 +47,7 @@ Singleton {
     PersistentProperties {
         id: props
 
-        property bool enabled: Hypr.options["animations:enabled"] === 0
+        property bool enabled: Compositor.supports("hyprlandTuning") && Hypr.options["animations:enabled"] === 0
 
         reloadableId: "gameMode"
     }

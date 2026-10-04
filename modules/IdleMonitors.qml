@@ -21,10 +21,16 @@ Scope {
             lock.requestLock();
         else if (action === "unlock")
             lock.lock.locked = false;
-        else if (typeof action === "string")
-            Hypr.dispatch(action);
-        else
+        else if (action === "dpms off")
+            Compositor.setMonitorsPowered(false);
+        else if (action === "dpms on")
+            Compositor.setMonitorsPowered(true);
+        else if (typeof action === "string") {
+            if (Compositor.isHyprland)
+                Hypr.dispatch(action);
+        } else {
             Quickshell.execDetached(action);
+        }
     }
 
     LogindManager {

@@ -5,7 +5,6 @@ import qs.components.controls
 import qs.services
 import qs.utils
 import qs.config
-import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Layouts
 
@@ -14,15 +13,15 @@ import QtQuick.Layouts
 Item {
     id: root
 
-    required property HyprlandToplevel modelData
+    required property var modelData
     required property bool isActive
 
     signal focusRequested()
 
-    readonly property string addr: `0x${root.modelData.address}`
-    readonly property bool floating: root.modelData.lastIpcObject?.floating ?? false
-    readonly property bool pinned: root.modelData.lastIpcObject?.pinned ?? false
-    readonly property int fullscreen: root.modelData.lastIpcObject?.fullscreen ?? 0
+    readonly property bool floating: Compositor.isNiri ? root.modelData.is_floating : root.modelData.lastIpcObject?.floating ?? false
+    readonly property bool pinned: !Compositor.isNiri && (root.modelData.lastIpcObject?.pinned ?? false)
+    readonly property int fullscreen: Compositor.isNiri ? 0 : root.modelData.lastIpcObject?.fullscreen ?? 0
+    readonly property string appId: Compositor.isNiri ? root.modelData.app_id ?? "" : root.modelData.lastIpcObject?.class ?? ""
 
     implicitWidth: parent ? parent.width : 300
     implicitHeight: row.implicitHeight + Appearance.padding.small
@@ -50,7 +49,7 @@ Item {
         // App icon
         MaterialIcon {
             Layout.alignment: Qt.AlignVCenter
-            text: Icons.getAppCategoryIcon(root.modelData.lastIpcObject?.class ?? "", "terminal")
+            text: Icons.getAppCategoryIcon(root.appId, "terminal")
             color: root.isActive ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
             font.pointSize: Appearance.font.size.normal
         }
@@ -78,7 +77,7 @@ Item {
             }
 
             MaterialIcon {
-                visible: root.fullscreen > 0
+                visible: Compositor.supports("fullscreenState") && root.fullscreen > 0
                 text: "fullscreen"
                 color: Colours.palette.m3secondary
                 font.pointSize: Appearance.font.size.small
@@ -94,25 +93,27 @@ Item {
 
         // Action buttons
         Row {
-            visible: Config.dashboard.workspaces.enableWindowActions
+            visible: Config.dashboard.workspaces.enableWindowActions && (Compositor.supports("windowFloatingToggle") || Compositor.supports("windowClose"))
             spacing: 2
 
             IconButton {
                 type: IconButton.Text
+                visible: Compositor.supports("windowFloatingToggle")
                 icon: root.floating ? "select_window" : "select_window_off"
                 padding: Appearance.padding.small / 2
                 font.pointSize: Appearance.font.size.small
 
-                onClicked: Hypr.dispatch(`togglefloating address:${root.addr}`)
+                onClicked: Compositor.toggleWindowFloating(root.modelData)
             }
 
             IconButton {
                 type: IconButton.Text
                 icon: "close"
+                visible: Compositor.supports("windowClose")
                 padding: Appearance.padding.small / 2
                 font.pointSize: Appearance.font.size.small
 
-                onClicked: Hypr.dispatch(`killwindow address:${root.addr}`)
+                onClicked: Compositor.closeWindowFor(root.modelData)
             }
         }
     }

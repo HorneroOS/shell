@@ -2,6 +2,7 @@ pragma Singleton
 
 import Quickshell
 import QtQuick
+import qs.services
 
 // Typed shell actions for bar components (docs/LAYOUTS.md). Layout presets
 // name an action id, never a command string; the shell owns what it does.
@@ -63,7 +64,10 @@ Singleton {
             root.settingsRequested();
             break;
         case "screenshot":
-            root.screenshotRequested();
+            if (Compositor.supports("nativeScreenshotSelection"))
+                Compositor.openScreenshotPicker();
+            else
+                root.screenshotRequested();
             break;
         default:
             console.warn(`[ShellActions] unknown action "${id}"`);

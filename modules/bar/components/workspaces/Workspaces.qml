@@ -22,14 +22,18 @@ StyledClippingRect {
     property var options: ({})
     property bool clear: false
     readonly property bool labels: options?.style === "labels"
-    readonly property bool onSpecial: (Config.bar.workspaces.perMonitorWorkspaces ? Hypr.monitorFor(screen) : Hypr.focusedMonitor)?.lastIpcObject?.specialWorkspace?.name !== ""
-    readonly property int activeWsId: Config.bar.workspaces.perMonitorWorkspaces ? (Hypr.monitorFor(screen).activeWorkspace?.id ?? 1) : Hypr.activeWsId
+    readonly property bool niriMode: Compositor.isNiri
+    readonly property bool onSpecial: Compositor.isSpecialWorkspaceActive(screen, Config.bar.workspaces.perMonitorWorkspaces)
+    readonly property var activeWsId: niriMode
+        ? Compositor.activeWorkspaceIdForScreen(screen)
+        : Config.bar.workspaces.perMonitorWorkspaces ? (Hypr.monitorFor(screen).activeWorkspace?.id ?? 1) : Hypr.activeWsId
 
-    readonly property var occupied: Hypr.workspaces.values.reduce((acc, curr) => {
-        acc[curr.id] = curr.lastIpcObject.windows > 0;
+    readonly property var workspaceItems: Compositor.workspacesForScreen(screen)
+    readonly property var occupied: workspaceItems.reduce((acc, curr) => {
+        acc[curr.id] = Compositor.workspaceHasWindows(curr);
         return acc;
     }, {})
-    readonly property int groupOffset: Math.floor((activeWsId - 1) / Config.bar.workspaces.shown) * Config.bar.workspaces.shown
+    readonly property int groupOffset: niriMode || activeWsId === null ? 0 : Math.floor((activeWsId - 1) / Config.bar.workspaces.shown) * Config.bar.workspaces.shown
 
     property real blur: onSpecial ? 1 : 0
 
@@ -53,7 +57,7 @@ StyledClippingRect {
 
         Loader {
             asynchronous: true
-            active: Config.bar.workspaces.occupiedBg && !root.labels
+            active: Config.bar.workspaces.occupiedBg && !root.labels && !root.niriMode
 
             anchors.fill: parent
             anchors.margins: Appearance.padding.small
@@ -80,10 +84,12 @@ StyledClippingRect {
             Repeater {
                 id: workspaces
 
-                model: Config.bar.workspaces.shown
+                model: root.niriMode ? root.workspaceItems : Config.bar.workspaces.shown
 
                 Workspace {
                     screen: root.screen
+                    niriMode: root.niriMode
+                    workspaceData: root.niriMode ? modelData : null
 
                     vertical: root.vertical
                     labels: root.labels
@@ -124,7 +130,7 @@ StyledClippingRect {
             asynchronous: true
             anchors.horizontalCenter: root.vertical ? parent.horizontalCenter : undefined
             anchors.verticalCenter: root.vertical ? undefined : parent.verticalCenter
-            active: Config.bar.workspaces.activeIndicator && !root.labels
+            active: Config.bar.workspaces.activeIndicator && !root.labels && !root.niriMode
 
             sourceComponent: ActiveIndicator {
                 screen: root.screen
@@ -150,7 +156,7 @@ StyledClippingRect {
         anchors.fill: parent
         anchors.margins: Appearance.padding.small
 
-        active: opacity > 0
+        active: opacity > 0 && Compositor.capabilities.specialWorkspaces
 
         scale: root.onSpecial ? 1 : 0.5
         opacity: root.onSpecial ? 1 : 0

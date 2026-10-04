@@ -75,6 +75,7 @@ StyledRect {
             Toggle {
                 icon: "gamepad"
                 checked: GameMode.enabled
+                visible: Compositor.supports("hyprlandTuning")
                 onClicked: GameMode.enabled = !GameMode.enabled
             }
 

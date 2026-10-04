@@ -76,7 +76,7 @@ def test_hornero_runtime_dependencies_are_packaged():
     match = re.search(r"^depends=\((.*?)\)", text, re.MULTILINE | re.DOTALL)
     assert match, "depends array not found"
     depends = match.group(1)
-    assert re.search(r"'hornero-config>=[0-9.]+(?:-[0-9]+)?'", depends), (
+    assert "'hornero-config>=0.3.0'" in depends, (
         "the Shell must require the AUR-owned system catalogue"
     )
     assert "'horneroctl-bin>=0.2.0_preview14.2'" in depends, (

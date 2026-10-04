@@ -45,6 +45,7 @@ Singleton {
     property string _pendingGtkPreferDark: ""
     // follow | default | prefer-light | prefer-dark | "" (wallpaper jobs sync live policy)
     property string _pendingGtkColorScheme: ""
+    property bool _syncAfterWallpaperPointer: false
     property bool _runThemeSideEffects: false
     property string _lastError: ""
     readonly property string lastError: _lastError
@@ -204,6 +205,7 @@ Singleton {
         _pendingThemeId = "";
         _pendingGtkPreferDark = "";
         _pendingGtkColorScheme = "";
+        _syncAfterWallpaperPointer = false;
 
         if (job.kind === "theme") {
             _runThemeSideEffects = true;
@@ -223,12 +225,15 @@ Singleton {
             _pendingWallpaper = job.wallpaper;
             _pendingSchemeType = Colours.flavour || "tonal-spot";
             _pendingDarkMode = !Colours.currentLight;
-            walPrepProc.running = true;
+            m3Proc.running = true;
         } else if (job.kind === "reload") {
             _pendingWallpaper = Wallpapers.actualCurrent || "";
             _pendingSchemeType = Colours.flavour || "tonal-spot";
             _pendingDarkMode = !Colours.currentLight;
-            walReloadProc.running = true;
+            if (_pendingWallpaper)
+                m3Proc.running = true;
+            else
+                _finishJob(false, "no current wallpaper is available to regenerate colours");
         } else if (job.kind === "gtk") {
             _awaitingGtk = true;
             GtkSettings.applyGtkTheme(job.gtkTheme || "");
@@ -244,8 +249,8 @@ Singleton {
     }
 
     // First-class built-in themes (hornero-dark / hornero-light): the full
-    // semantic palette lives in Colours, so apply needs no wallpaper, wal,
-    // or M3 round-trip — correct switching with no light/dark leakage. GTK
+    // semantic palette lives in Colours, so built-in theme apply needs no
+    // wallpaper-driven M3 round-trip — correct switching with no mode leakage. GTK
     // follows through the shared theme registry (the pack's gtkTheme and
     // iconTheme are real installed themes): the theme id resolves via
     // `horneroctl appearance gtk theme`, which writes the gtk2/3/4 ini
@@ -386,13 +391,13 @@ Singleton {
         if (wallpaper) {
             themeLoader.resolvedWallpaper = wallpaper;
             root._pendingWallpaper = wallpaper;
-            root._startWalFromTheme();
+            root._startPaletteFromTheme();
             return;
         }
         if (cfg.colorOnly) {
             themeLoader.resolvedWallpaper = Wallpapers.actualCurrent || "";
             root._pendingWallpaper = themeLoader.resolvedWallpaper;
-            root._startWalFromTheme();
+            root._startPaletteFromTheme();
             return;
         }
         root._finishJob(false, `no wallpapers available for theme ${themeLoader.themeId}`);
@@ -438,7 +443,7 @@ done
                 const wp = text.trim();
                 if (wp) {
                     themeLoader.resolvedWallpaper = wp;
-                    root._startWalFromTheme();
+                    root._startPaletteFromTheme();
                 } else {
                     root._finishJob(false, `no wallpapers found for theme ${themeLoader.themeId}`);
                 }
@@ -446,63 +451,32 @@ done
         }
     }
 
-    function _startWalFromTheme(): void {
+    function _startPaletteFromTheme(): void {
         _pendingWallpaper = themeLoader.resolvedWallpaper;
         const cfg = themeLoader.pendingConfig || {};
         _pendingSchemeType = cfg.schemeType || "tonal-spot";
         _pendingDarkMode = cfg.darkMode !== undefined ? !!cfg.darkMode : true;
         _pendingGtkPreferDark = root.resolveGtkPreferDark(cfg, _pendingDarkMode);
         _pendingGtkColorScheme = root.resolveGtkColorScheme(cfg, _pendingDarkMode);
-        walPrepProc.running = true;
-    }
-
-    Process {
-        id: walPrepProc
-        command: ["sh", "-c", 'mkdir -p "$HOME/.cache/wal" && rm -f "$HOME/.cache/wal/wal"']
-        onExited: () => {
-            walProc.running = true;
-        }
-    }
-
-    Process {
-        id: walProc
-        command: root._pendingDarkMode
-            ? ["wal", "-i", root._pendingWallpaper, "-q"]
-            : ["wal", "-i", root._pendingWallpaper, "-q", "-l"]
-
-        onExited: (exitCode, exitStatus) => {
-            if (exitCode !== 0) {
-                root._finishJob(false, `wal failed (exit ${exitCode})`);
-                return;
-            }
-            writeWallpaperPointer.running = true;
-            m3Proc.running = true;
-        }
+        m3Proc.running = true;
     }
 
     Process {
         id: writeWallpaperPointer
-        // ~/.cache/wal/wal must be a text path file, not a symlink to the image —
-        // echoing into a symlink follows it and truncates the wallpaper asset.
-        command: ["sh", "-c", 'mkdir -p "$(dirname "$HORNERO_WALLPAPER_POINTER")" "$HOME/.cache/wal" && printf "%s\\n" "$HORNERO_WALLPAPER_PATH" > "$HORNERO_WALLPAPER_POINTER" && rm -f "$HOME/.cache/wal/wal" && printf "%s\\n" "$HORNERO_WALLPAPER_PATH" > "$HOME/.cache/wal/wal"']
+        command: ["sh", "-c", 'mkdir -p "$(dirname "$HORNERO_WALLPAPER_POINTER")" && tmp="$HORNERO_WALLPAPER_POINTER.tmp.$$" && printf "%s\\n" "$HORNERO_WALLPAPER_PATH" > "$tmp" && mv -f "$tmp" "$HORNERO_WALLPAPER_POINTER"']
         environment: ({
             "HORNERO_WALLPAPER_POINTER": root.wallpaperPointer,
             "HORNERO_WALLPAPER_PATH": root._pendingWallpaper
         })
-    }
-
-    Process {
-        id: walReloadProc
-        command: ["wal", "-R", "-q"]
         onExited: (exitCode, exitStatus) => {
             if (exitCode !== 0) {
-                root._finishJob(false, `wal -R failed (exit ${exitCode})`);
+                root._finishJob(false, `could not save wallpaper selection (exit ${exitCode})`);
                 return;
             }
-            // wal -R may recreate ~/.cache/wal/wal as an image symlink; rewrite
-            // it as a text path file before anything echoes into that path.
-            writeWallpaperPointer.running = true;
-            m3Proc.running = true;
+            if (root._syncAfterWallpaperPointer) {
+                root._syncAfterWallpaperPointer = false;
+                syncStateProc.running = true;
+            }
         }
     }
 
@@ -526,7 +500,8 @@ done
                 root._finishJob(false, `M3 colour generation failed (exit ${exitCode})`);
                 return;
             }
-            syncStateProc.running = true;
+            root._syncAfterWallpaperPointer = true;
+            writeWallpaperPointer.running = true;
         }
     }
 

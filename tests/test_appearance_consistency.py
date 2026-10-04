@@ -196,7 +196,7 @@ def test_recipe_without_wallpaper_uses_the_current_wallpaper_when_applying():
     assert 'ThemePipeline.applyTheme(id, Themes.wallpaperOverrideFor(modelData));' in launcher
     assert "&& !Wallpapers.actualCurrent" in section
     assert "Choose a wallpaper in Appearance → Background before applying this theme." in section
-    assert "disabled: themeItem.missingWallpaper || themeItem.missingCurrentWallpaper" in section
+    assert "disabled: themeItem.cannotApply" in section
 
 
 def test_appearance_shares_installed_styles_for_theme_readiness():
@@ -213,7 +213,7 @@ def test_appearance_shares_installed_styles_for_theme_readiness():
     assert "ThemeCatalogue.iconThemes.indexOf(modelData.iconTheme) < 0" in themes
     assert "ThemeCatalogue.gtkThemes" in gtk and "Process {" not in gtk
     assert "ThemeCatalogue.iconThemes" in icons and "Process {" not in icons
-    assert "try an available fallback" in themes
+    assert "Install it, then reopen Appearance to apply this look." in themes
 
 
 def test_appearance_choice_catalogues_can_start_before_they_are_loaded():
@@ -239,6 +239,8 @@ def test_theme_cards_distinguish_unverified_gtk_and_icon_dependencies():
     assert "readonly property bool gtkAvailabilityUnknown: ThemeCatalogue.gtkThemesFailed" in themes
     assert "readonly property bool iconAvailabilityUnknown: ThemeCatalogue.iconThemesFailed" in themes
     assert "Couldn't verify GTK and icon styles" in themes
+    assert "appearanceChoicesLoading || hasUnavailableStyle || missingWallpaper || missingCurrentWallpaper" in themes
+    assert "disabled: themeItem.cannotApply" in themes
     assert "ThemeCatalogue.loadAppearanceChoices()" in gtk
     assert "ThemeCatalogue.loadAppearanceChoices()" in icons
     assert "Checking installed GTK styles…" in gtk

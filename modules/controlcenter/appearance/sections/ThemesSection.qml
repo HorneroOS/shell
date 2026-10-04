@@ -104,8 +104,14 @@ CollapsibleSection {
                 readonly property bool iconAvailabilityUnknown: ThemeCatalogue.iconThemesFailed
                 readonly property bool missingWallpaper: !modelData.colorOnly && !Themes.hasAvailableWallpaper(modelData) && !Wallpapers.actualCurrent
                 readonly property bool missingCurrentWallpaper: modelData.colorOnly && !Themes.hasAvailableWallpaper(modelData) && !Wallpapers.actualCurrent
-                readonly property bool hasReadinessNotice: missingGtkTheme || missingIconTheme || gtkAvailabilityUnknown || iconAvailabilityUnknown || missingWallpaper || missingCurrentWallpaper
+                readonly property bool appearanceChoicesLoading: ThemeCatalogue.appearanceChoicesLoading
+                readonly property bool appearanceChoicesUnknown: gtkAvailabilityUnknown || iconAvailabilityUnknown
+                readonly property bool hasUnavailableStyle: missingGtkTheme || missingIconTheme || appearanceChoicesUnknown
+                readonly property bool cannotApply: appearanceChoicesLoading || hasUnavailableStyle || missingWallpaper || missingCurrentWallpaper
+                readonly property bool hasReadinessNotice: appearanceChoicesLoading || hasUnavailableStyle || missingWallpaper || missingCurrentWallpaper
                 readonly property string readinessText: {
+                    if (appearanceChoicesLoading)
+                        return qsTr("Checking installed styles…")
                     if (missingWallpaper || missingCurrentWallpaper)
                         return qsTr("Choose a wallpaper before applying")
                     if (gtkAvailabilityUnknown && iconAvailabilityUnknown)
@@ -125,13 +131,15 @@ CollapsibleSection {
                 readonly property string readinessDetails: {
                     const details = [];
                     if (missingGtkTheme)
-                        details.push(qsTr("GTK style “%1” is not installed. Install it for the full look; Hornero will try an available fallback.").arg(modelData.gtkTheme));
+                        details.push(qsTr("GTK style “%1” is not installed. Install it, then reopen Appearance to apply this look.").arg(modelData.gtkTheme));
                     if (missingIconTheme)
-                        details.push(qsTr("Icon style “%1” is not installed. Install it for the full icon set; Hornero will try an available fallback.").arg(modelData.iconTheme));
+                        details.push(qsTr("Icon style “%1” is not installed. Install it, then reopen Appearance to apply this look.").arg(modelData.iconTheme));
                     if (gtkAvailabilityUnknown)
-                        details.push(qsTr("Hornero couldn't check installed GTK styles, so this theme may not style GTK apps as expected."));
+                        details.push(qsTr("Hornero couldn't check installed GTK styles. Reopen Appearance to try again."));
                     if (iconAvailabilityUnknown)
-                        details.push(qsTr("Hornero couldn't check installed icon styles, so some app icons may use a fallback."));
+                        details.push(qsTr("Hornero couldn't check installed icon styles. Reopen Appearance to try again."));
+                    if (appearanceChoicesLoading)
+                        details.push(qsTr("Theme choices become available after this check finishes."));
                     if (missingWallpaper || missingCurrentWallpaper)
                         details.push(qsTr("Choose a wallpaper in Appearance → Background before applying this theme."));
                     return details.join(" ");
@@ -146,7 +154,7 @@ CollapsibleSection {
                     border.color: Colours.palette.m3primary
 
                     StateLayer {
-                        disabled: themeItem.missingWallpaper || themeItem.missingCurrentWallpaper
+                        disabled: themeItem.cannotApply
 
                         function onClicked(): void {
                             sectionRoot.selectedThemeId = themeItem.modelData.id;

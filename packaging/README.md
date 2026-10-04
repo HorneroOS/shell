@@ -7,9 +7,15 @@ standard prefixes verified against a local `DESTDIR` install:
 - `/etc/xdg/quickshell/hornero` — shell QML runtime, assets, presets
 - `/usr/share/hornero/shell-presets` — layout-preset catalogue read by
   `horneroctl` (system catalogue, below the user's own presets)
+- `/usr/share/doc/hornero-shell/IPC.md` — installed IPC contract for tooling
 - `/usr/lib/hornero` — `version` helper binary
 - `/usr/lib/qt6/qml/Hornero*` — native QML plugin modules
   (`Hornero`, `Hornero.Internal`, `Hornero.Models`, `Hornero.Services`)
+
+The runtime depends on the AUR packages `hornero-config` and
+`horneroctl-bin`. They own the system catalogue and the stable operations
+used by the Shell. User dotfiles may set preferences and add wallpaper media,
+but do not need a second Shell checkout or a locally compiled plugin.
 
 ## Build the package
 
@@ -29,8 +35,8 @@ AUR (on stock Arch) and must be installed first with an AUR helper (or
 paru -S libcava
 ```
 
-Any package providing the `quickshell` name (such as AUR
-`quickshell-git`) also satisfies that dependency.
+The package uses Arch's stable `quickshell` package; it does not require the
+VCS build.
 
 Then install the built package:
 

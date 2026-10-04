@@ -93,4 +93,7 @@ if("shell" IN_LIST ENABLE_MODULES)
     # Brand icon for the entry above; Icon=hornero-welcome in the .desktop.
     install(FILES assets/logo.svg DESTINATION "share/icons/hicolor/scalable/apps"
         RENAME hornero-welcome.svg)
+    # External desktop tools validate their Shell IPC calls against the
+    # package-owned contract without needing a source checkout.
+    install(FILES docs/IPC.md DESTINATION "share/doc/hornero-shell")
 endif()

@@ -232,6 +232,13 @@ def test_layout_picker_topology_contract():
     assert "activeFocusOnTab: true" in content and "forceActiveFocus" in content
 
 
+def test_wallpaper_empty_state_fits_available_width():
+    """The first-run wallpaper card stays visible on narrower displays."""
+    wallpaper = (ROOT / "modules/background/Wallpaper.qml").read_text()
+    assert "width: Math.max(0, Math.min(420, parent.width - Appearance.padding.large * 2))" in wallpaper
+    assert "width: parent.width - Appearance.padding.large * 2" in wallpaper
+
+
 def test_bar_workspaces_are_accessible_controls():
     """Every visible workspace can be activated by pointer or keyboard and
     exposes its identity/state to accessibility clients."""

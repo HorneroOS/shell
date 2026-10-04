@@ -59,7 +59,7 @@ Item {
 
             StyledRect {
                 anchors.centerIn: parent
-                implicitWidth: 420
+                width: Math.max(0, Math.min(420, parent.width - Appearance.padding.large * 2))
                 implicitHeight: emptyContent.implicitHeight + Appearance.padding.large * 2
                 radius: Appearance.rounding.large
                 color: Colours.palette.m3surfaceContainer
@@ -68,7 +68,7 @@ Item {
                     id: emptyContent
 
                     anchors.centerIn: parent
-                    width: parent.implicitWidth - Appearance.padding.large * 2
+                    width: parent.width - Appearance.padding.large * 2
                     spacing: Appearance.spacing.normal
 
                     MaterialIcon {

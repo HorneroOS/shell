@@ -162,6 +162,7 @@ def test_color_only_theme_preview_preserves_the_current_wallpaper():
 
     assert "readonly property bool colorOnly: modelData.colorOnly === true" in launcher
     assert 'previewWallpaperPath = resolvedWallpaper || Wallpapers.actualCurrent || "";' in preview
+    assert '`${previewSubtitle} · ${qsTr("Current look")}`' in pane
     assert "!Themes.hasAvailableWallpaper(modelData)" in preview
     assert "previewing with your current wallpaper" in preview
     theme_preview_path = launcher.split("function previewPathFor(theme: var): string", 1)[1].split(
@@ -190,9 +191,12 @@ def test_recipe_without_wallpaper_uses_the_current_wallpaper_when_applying():
     assert "function wallpaperOverrideFor(theme: var): string" in launcher
     assert "function hasAvailableWallpaper(theme: var): bool" in launcher
     assert "if (!theme || hasAvailableWallpaper(theme))" in override
+    assert "!!theme.wallpaperPath" in launcher
+    assert "if (theme.wallpaperPath)" in launcher
     assert "theme.colorOnly" not in override
     assert 'return Wallpapers.actualCurrent || "";' in launcher
     assert 'stagedThemeWallpaper = Themes.wallpaperOverrideFor(theme);' in pane
+    assert "!Colours.isBuiltInTheme(modelData.id) && !modelData.colorOnly" in section
     assert 'ThemePipeline.applyTheme(id, Themes.wallpaperOverrideFor(modelData));' in launcher
     assert "&& !Wallpapers.actualCurrent" in section
     assert "Choose a wallpaper in Appearance → Background before applying this theme." in section

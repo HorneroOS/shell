@@ -102,7 +102,7 @@ CollapsibleSection {
                 readonly property bool missingIconTheme: ThemeCatalogue.iconThemesLoaded && !ThemeCatalogue.iconThemesFailed && !!modelData.iconTheme && ThemeCatalogue.iconThemes.indexOf(modelData.iconTheme) < 0
                 readonly property bool gtkAvailabilityUnknown: ThemeCatalogue.gtkThemesFailed
                 readonly property bool iconAvailabilityUnknown: ThemeCatalogue.iconThemesFailed
-                readonly property bool missingWallpaper: !modelData.colorOnly && !Themes.hasAvailableWallpaper(modelData) && !Wallpapers.actualCurrent
+                readonly property bool missingWallpaper: !Colours.isBuiltInTheme(modelData.id) && !modelData.colorOnly && !Themes.hasAvailableWallpaper(modelData) && !Wallpapers.actualCurrent
                 readonly property bool missingCurrentWallpaper: modelData.colorOnly && !Themes.hasAvailableWallpaper(modelData) && !Wallpapers.actualCurrent
                 readonly property bool appearanceChoicesLoading: ThemeCatalogue.appearanceChoicesLoading
                 readonly property bool appearanceChoicesUnknown: gtkAvailabilityUnknown || iconAvailabilityUnknown

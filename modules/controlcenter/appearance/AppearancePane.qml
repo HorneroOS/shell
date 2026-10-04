@@ -138,7 +138,9 @@ Item {
             if (previewSource === "theme" && previewThemeId === theme.id)
                 return;
             startThemePreview(theme, Themes.palettePreviewPathFor(theme, true));
-            previewSubtitle = qsTr("Current look");
+            previewSubtitle = previewSubtitle
+                ? `${previewSubtitle} · ${qsTr("Current look")}`
+                : qsTr("Current look");
             return;
         }
 

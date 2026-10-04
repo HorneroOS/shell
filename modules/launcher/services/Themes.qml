@@ -55,7 +55,7 @@ Searcher {
     }
 
     function hasAvailableWallpaper(theme: var): bool {
-        return !!theme && Object.keys(theme.wallpaperPaths ?? {}).length > 0;
+        return !!theme && (!!theme.wallpaperPath || Object.keys(theme.wallpaperPaths ?? {}).length > 0);
     }
 
     function palettePreviewPathFor(theme: var, useCurrentFallback = true): string {
@@ -66,6 +66,8 @@ Searcher {
         const defaultWallpaper = theme.defaultWallpaper ?? "";
         if (defaultWallpaper && wallpaperPaths[defaultWallpaper])
             return wallpaperPaths[defaultWallpaper];
+        if (theme.wallpaperPath)
+            return theme.wallpaperPath;
         for (const wallpaper of wallpapers) {
             if (wallpaperPaths[wallpaper])
                 return wallpaperPaths[wallpaper];

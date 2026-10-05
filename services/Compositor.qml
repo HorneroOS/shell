@@ -10,7 +10,8 @@ import qs.services
 Singleton {
     // Prefer the child session even when a compositor is launched nested and
     // inherits its parent's signature from the environment.
-    readonly property bool isHyprland: !Niri.available && Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") !== ""
+    readonly property string hyprlandInstanceSignature: Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") ?? ""
+    readonly property bool isHyprland: !Niri.available && hyprlandInstanceSignature !== ""
     readonly property string backendId: Niri.available ? "niri" : isHyprland ? "hyprland" : "unknown"
     readonly property bool isNiri: backendId === "niri"
     readonly property bool connected: isNiri ? Niri.connected : isHyprland

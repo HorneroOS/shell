@@ -15,7 +15,7 @@ Item {
     signal released()
 
     Loader {
-        active: Quickshell.env("NIRI_SOCKET") === "" && Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") !== ""
+        active: (Quickshell.env("NIRI_SOCKET") ?? "") === "" && (Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") ?? "") !== ""
 
         sourceComponent: GlobalShortcut {
             appid: "hornero"

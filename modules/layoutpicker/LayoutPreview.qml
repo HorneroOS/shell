@@ -123,6 +123,19 @@ Item {
 
             Bar {}
         }
+
+        StyledRect {
+            anchors.fill: parent
+            visible: root.topology.length === 0
+            color: Colours.layer(Colours.palette.m3surface, 2)
+
+            StyledText {
+                anchors.centerIn: parent
+                text: qsTr("Preview unavailable")
+                color: Colours.palette.m3onSurfaceVariant
+                font.pointSize: Appearance.font.size.smaller
+            }
+        }
     }
 
     // One bar of the topology, positioned on its edge. Horizontal bars span

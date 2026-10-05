@@ -7,7 +7,11 @@ import QtQuick
 Singleton {
     id: root
 
-    readonly property bool available: Quickshell.env("NIRI_SOCKET") !== ""
+    // Quickshell.env() returns null when an environment variable is unset.
+    // Comparing null to an empty string incorrectly detects Niri in every
+    // non-Niri session and routes the bar to an empty workspace snapshot.
+    readonly property string socketPath: Quickshell.env("NIRI_SOCKET") ?? ""
+    readonly property bool available: socketPath !== ""
     readonly property bool connected: available && eventStream.running && workspacesLoaded
     readonly property bool workspacesLoaded: workspaces !== null
     readonly property var capabilities: ({
@@ -252,6 +256,11 @@ Singleton {
     Process {
         id: eventStream
 
+        // Process starts automatically when a command is assigned unless
+        // explicitly held stopped. Niri must not be probed in Hyprland
+        // sessions; Component.onCompleted starts it only when NIRI_SOCKET is
+        // present.
+        running: false
         command: ["niri", "msg", "--json", "event-stream"]
         stdout: SplitParser {
             onRead: data => root.consumeEventLine(data)
@@ -303,7 +312,7 @@ Singleton {
     Socket {
         id: workspaceActionSocket
 
-        path: Quickshell.env("NIRI_SOCKET")
+        path: root.socketPath
         onConnectedChanged: {
             if (!connected || root.pendingWorkspaceFocus === null)
                 return;

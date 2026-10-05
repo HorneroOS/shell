@@ -327,7 +327,7 @@ Item {
             }
 
             Timer {
-                running: root.current !== img && root.current?.isReady
+                running: root.current !== img && (root.current?.isReady ?? false)
                 interval: fadeInImg.duration || 500
                 onTriggered: {
                     img.source = "";

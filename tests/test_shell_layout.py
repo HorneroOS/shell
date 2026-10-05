@@ -195,9 +195,12 @@ def test_layout_picker_topology_contract():
     preview = (ROOT / "modules/layoutpicker/LayoutPreview.qml").read_text()
     for needle in ("property var bars", '"islands"', '"dock"', '"clear"', "Array.from(bars ?? [])"):
         assert needle in preview, f"LayoutPreview lacks {needle}"
+    assert "visible: root.topology.length === 0" in preview
+    assert 'text: qsTr("Preview unavailable")' in preview
     grid = (ROOT / "modules/layoutpicker/PresetGrid.qml").read_text()
     assert "bars: card.modelData.bars" in grid
-    assert "p.position" not in grid and "p.style" not in grid
+    assert "p.position ?? p.edge" in grid
+    assert "if (bars.length === 0)" in grid
     assert "availableWidth" in grid and "Accessible.role: Accessible.Button" in grid
     assert "function focusCurrentPreset(): void" in grid
     assert "onCurrentNameChanged: focusCurrentPreset()" in grid
@@ -231,3 +234,9 @@ def test_bar_workspaces_are_accessible_controls():
 
     group = (ROOT / "modules/bar/components/workspaces/Workspaces.qml").read_text()
     assert "MouseArea {" not in group, "per-workspace controls own the hit target and focus"
+
+
+def test_layout_picker_handles_presets_without_topology_metadata():
+    picker = (ROOT / "modules/layoutpicker/PresetGrid.qml").read_text()
+    assert "if (bars.length === 0)" in picker
+    assert 'return qsTr("Topology preview unavailable")' in picker

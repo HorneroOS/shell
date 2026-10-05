@@ -13,6 +13,10 @@ KEYBOARD_MODEL = (ROOT / "modules/bar/popouts/kblayout/KbLayoutModel.qml").read_
 
 def test_niri_backend_subscribes_to_native_event_stream_without_polling():
     assert '["niri", "msg", "--json", "event-stream"]' in NIRI
+    assert 'readonly property string socketPath: Quickshell.env("NIRI_SOCKET") ?? ""' in NIRI
+    assert "readonly property bool available: socketPath !== \"\"" in NIRI
+    event_stream = NIRI.split("id: eventStream", 1)[1].split("Process {\n        id: actionProcess", 1)[0]
+    assert "running: false" in event_stream, "Niri IPC must remain stopped when a different compositor owns the session"
     assert '"niri", "msg", "--json", "workspaces"' not in NIRI
     assert '"niri", "msg", "--json", "windows"' not in NIRI
 
@@ -46,7 +50,7 @@ def test_niri_backend_keeps_native_workspace_and_window_actions_explicit():
 
 def test_niri_workspace_bar_targets_native_workspace_id_across_outputs():
     assert "Socket {" in NIRI
-    assert "path: Quickshell.env(\"NIRI_SOCKET\")" in NIRI
+    assert "path: root.socketPath" in NIRI
     assert "pendingWorkspaceFocus = workspace.id" in NIRI
     assert "FocusWorkspace" in NIRI
     assert "Id: Number(root.pendingWorkspaceFocus)" in NIRI
@@ -80,6 +84,8 @@ def test_niri_backend_does_not_claim_hyprland_only_capabilities():
 
 def test_workspace_bar_uses_native_niri_workspaces_and_capability_gates():
     assert 'readonly property string backendId: Niri.available ? "niri" : isHyprland ? "hyprland" : "unknown"' in COMPOSITOR_FACADE
+    assert 'readonly property string hyprlandInstanceSignature: Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") ?? ""' in COMPOSITOR_FACADE
+    assert "!Niri.available && hyprlandInstanceSignature !== \"\"" in COMPOSITOR_FACADE
     assert "Niri.workspacesForOutput(screen.name)" in COMPOSITOR_FACADE
     assert "Niri.activeWorkspaceForOutput(screen.name)" in COMPOSITOR_FACADE
     assert "model: root.niriMode ? root.workspaceItems : Config.bar.workspaces.shown" in WORKSPACES
@@ -113,7 +119,7 @@ def test_shared_surfaces_use_output_identity_and_native_keyboard_events():
 def test_shared_shell_services_do_not_send_hyprland_commands_to_niri():
     hypr_service = (ROOT / "services/Hypr.qml").read_text(encoding="utf-8")
     idle_monitors = (ROOT / "modules/IdleMonitors.qml").read_text(encoding="utf-8")
-    assert 'Quickshell.env("NIRI_SOCKET") === ""' in hypr_service
+    assert '(Quickshell.env("NIRI_SOCKET") ?? "") === ""' in hypr_service
     assert 'action === "dpms off"' in idle_monitors
     assert 'action === "dpms on"' in idle_monitors
     assert "Compositor.setMonitorsPowered(false)" in idle_monitors
@@ -139,7 +145,7 @@ def test_game_mode_is_not_offered_as_hyprland_tuning_under_niri():
 
 def test_quickshell_hyprland_global_shortcuts_only_register_in_hyprland():
     shortcut = (ROOT / "components/misc/CustomShortcut.qml").read_text(encoding="utf-8")
-    assert 'active: Quickshell.env("NIRI_SOCKET") === ""' in shortcut
+    assert 'active: (Quickshell.env("NIRI_SOCKET") ?? "") === ""' in shortcut
     assert "signal pressed()" in shortcut
     assert "signal released()" in shortcut
 

@@ -24,21 +24,8 @@ jobs:
           fetch-depth: 0
       - name: Stamp pkgver and source tag
         run: |
-          tag="${GITHUB_REF_NAME}"
-          ver="${tag#v}"
           pkgbuild=packaging/PKGBUILD
-          repo_url="git+https://github.com/HorneroOS/shell.git"
-          # Exactly one mutation target each: fail loudly otherwise.
-          [ "$(grep -c '^pkgver=' "${pkgbuild}")" -eq 1 ]
-          [ "$(grep -Fc "${repo_url}" "${pkgbuild}")" -eq 1 ]
-          if grep -Fq '#tag=' "${pkgbuild}"; then
-            grep -Fq "${repo_url}#tag=${tag}" "${pkgbuild}" \
-              || { echo "STAMP-FAIL: already stamped with a different tag" >&2; exit 1; }
-            echo "stamp: already at ${tag}, skipping"
-          else
-            sed -i "s/^pkgver=.*/pkgver=${ver}/" "${pkgbuild}"
-            sed -i "s|${repo_url}|${repo_url}#tag=${tag}|" "${pkgbuild}"
-          fi
+          python3 scripts/stamp_aur_package.py "${pkgbuild}" "${GITHUB_REF_NAME}"
           grep -E '^(pkgver|source)=' "${pkgbuild}"
       - name: Publish AUR package
         # yamllint disable rule:line-length

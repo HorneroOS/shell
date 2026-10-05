@@ -1,10 +1,11 @@
 # HorneroOS shell
 
-The official HorneroOS desktop shell, built with
-[Quickshell](https://quickshell.org/) + QML + Qt 6 for Wayland
-(Hyprland-first): bar, launcher, dashboard, control center, notifications,
-lock screen, wallpaper/theme pipeline, and a native `Hornero` C++ plugin
-for performance-critical work (image analysis, audio, calculator).
+Hornero Shell is the official HorneroOS desktop shell for Wayland, built with
+[Quickshell](https://quickshell.org/), QML, and Qt 6. Hyprland is its supported
+compositor; Niri integration is experimental. The shell provides bars,
+launcher, dashboard, Control Center, notifications, lock screen, and
+wallpaper/theme pipeline, plus a native `Hornero` C++ plugin for
+performance-critical work (image analysis, audio, calculator).
 
 ![Hornero desktop](docs/assets/desktop-hero.png)
 

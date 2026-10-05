@@ -44,7 +44,7 @@ Item {
     function topologyLabel(p: var): string {
         const bars = Array.from(p.bars ?? []);
         const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
-        const clear = bars.every(b => b.backdrop === "clear") ? qsTr(" · clear") : bars.some(b => b.backdrop === "clear") ? qsTr(" · partly clear") : "";
+        const clear = bars.every(b => b.backdrop === "clear") ? qsTr(" · clear") : bars.some(b => b.backdrop === "clear") ? qsTr(" · mixed") : "";
         if (bars.length > 1)
             return cap(bars.map(b => b.edge).join(" + ")) + clear;
         const b = bars[0];

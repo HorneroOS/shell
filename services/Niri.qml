@@ -8,7 +8,7 @@ Singleton {
     id: root
 
     readonly property bool available: Quickshell.env("NIRI_SOCKET") !== ""
-    readonly property bool connected: available && workspacesLoaded
+    readonly property bool connected: available && eventStream.running && workspacesLoaded
     readonly property bool workspacesLoaded: workspaces !== null
     readonly property var capabilities: ({
             workspaceEvents: true,
@@ -265,6 +265,19 @@ Singleton {
         }
         onStarted: root.connectionGeneration++
         onExited: {
+            // Discard the last snapshot before retrying. Keeping it marked as
+            // connected would let bars and window actions present stale
+            // compositor state while Niri is restarting or its IPC socket is
+            // unavailable.
+            root.workspaces = null;
+            root.windows = [];
+            root.focusedWindowId = null;
+            root.keyboardLayouts = null;
+            root.pendingWorkspaceFocus = null;
+            root.actionQueue = [];
+            workspaceActionSocket.connected = false;
+            workspaceReplyTimer.stop();
+            root.stateChanged();
             if (root.available)
                 reconnectTimer.start();
         }

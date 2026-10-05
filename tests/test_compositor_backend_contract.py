@@ -17,6 +17,22 @@ def test_niri_backend_subscribes_to_native_event_stream_without_polling():
     assert '"niri", "msg", "--json", "windows"' not in NIRI
 
 
+def test_niri_disconnect_invalidates_snapshot_before_reconnecting():
+    assert "readonly property bool connected: available && eventStream.running && workspacesLoaded" in NIRI
+    disconnect = NIRI.split("id: eventStream", 1)[1].split("Process {\n        id: actionProcess", 1)[0]
+    for reset in (
+        "root.workspaces = null",
+        "root.windows = []",
+        "root.focusedWindowId = null",
+        "root.keyboardLayouts = null",
+        "root.actionQueue = []",
+        "workspaceActionSocket.connected = false",
+        "workspaceReplyTimer.stop()",
+    ):
+        assert reset in disconnect
+    assert disconnect.index("root.workspaces = null") < disconnect.index("reconnectTimer.start()")
+
+
 def test_niri_backend_keeps_native_workspace_and_window_actions_explicit():
     for action in (
         '"focus-window"',

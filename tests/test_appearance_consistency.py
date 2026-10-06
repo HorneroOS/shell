@@ -212,6 +212,18 @@ def test_theme_without_media_explains_current_wallpaper_preview():
     assert "No bundled wallpapers. Using your current wallpaper for preview." in grid
 
 
+def test_factory_wallpapers_are_browsable_without_copying_them_to_home():
+    paths = (ROOT / "utils" / "Paths.qml").read_text()
+    service = (ROOT / "services" / "Wallpapers.qml").read_text()
+    grid = (ROOT / "modules" / "controlcenter" / "components" / "WallpaperGrid.qml").read_text()
+
+    assert '"/usr/share/hornero/wallpapers"' in paths
+    assert "list: wallpapers.entries.concat(factoryWallpapers.entries)" in service
+    assert "path: Paths.systemWallsdir" in service
+    assert "scopeSystemPath" in grid
+    assert "p.startsWith(`${scopeSystemPath}/`)" in grid
+
+
 def test_appearance_shares_installed_styles_for_theme_readiness():
     catalogue = (ROOT / "services" / "ThemeCatalogue.qml").read_text()
     themes = (ROOT / "modules" / "controlcenter" / "appearance" / "sections" / "ThemesSection.qml").read_text()

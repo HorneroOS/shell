@@ -65,7 +65,9 @@ Searcher {
         actualCurrent = t;
     }
 
-    list: wallpapers.entries
+    // User wallpapers remain writable and separate from the package; factory
+    // art is read from its system-owned path. Present both in one catalogue.
+    list: wallpapers.entries.concat(factoryWallpapers.entries)
     key: "relativePath"
     useFuzzy: Config.launcher.useFuzzy.wallpapers
     extraOpts: useFuzzy ? ({}) : ({
@@ -132,6 +134,14 @@ Searcher {
 
         recursive: true
         path: Paths.wallsdir
+        filter: FileSystemModel.Files
+    }
+
+    FileSystemModel {
+        id: factoryWallpapers
+
+        recursive: true
+        path: Paths.systemWallsdir
         filter: FileSystemModel.Files
     }
 

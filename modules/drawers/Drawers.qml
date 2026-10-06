@@ -32,6 +32,7 @@ Variants {
 
             readonly property bool keyboardIntent: (visibilities.launcher && Config.launcher.enabled) || (visibilities.session && Config.session.enabled) || (visibilities.sidebar && Config.sidebar.enabled) || ((!Config.dashboard.showOnHover || interactions.dashboardKeyboardIntent) && visibilities.dashboard && Config.dashboard.enabled) || (interactions.utilitiesKeyboardIntent && visibilities.utilities && Config.utilities.enabled) || visibilities.layoutPicker || (panels.popouts.keyboardIntent && panels.popouts.hasCurrent) || (panels.popouts.currentName.startsWith("traymenu") && panels.popouts.current?.depth > 1)
             property var focusedWindowAtKeyboardIntent: null
+            property var lastNiriOutsideClick: null
             readonly property bool hasFullscreen: Compositor.hasFullscreenOnScreen(screen)
             readonly property int dragMaskPadding: {
                 if (keyboardIntent || panels.popouts.isDetached)
@@ -301,7 +302,15 @@ Variants {
 
                 onClicked: mouse => {
                     const inside = win.pointerInsideKeyboardRoot(mouse.x, mouse.y);
-                    console.log("[niri-outside-click]", mouse.x, mouse.y, inside, win.keyboardRoot?.objectName, win.keyboardRoot?.x, win.keyboardRoot?.y, win.keyboardRoot?.width, win.keyboardRoot?.height);
+                    const root = win.keyboardRoot;
+                    const origin = root ? root.mapToItem(win.contentItem, 0, 0) : Qt.point(0, 0);
+                    win.lastNiriOutsideClick = {
+                        x: mouse.x,
+                        y: mouse.y,
+                        inside: inside,
+                        root: root ? root.objectName || String(root).split("(")[0] : null,
+                        rect: root ? [origin.x, origin.y, root.width, root.height] : null
+                    };
                     if (!inside)
                         win.dismissNiriTransientSurfaces();
                 }
@@ -467,6 +476,7 @@ Variants {
                         grab: focusGrab.active,
                         kbMode: win.WlrLayershell.keyboardFocus,
                         intent: { dashboard: interactions.dashboardKeyboardIntent, utilities: interactions.utilitiesKeyboardIntent },
+                        lastNiriOutsideClick: win.lastNiriOutsideClick,
                         chain: chain.join(" < ") || "(null)"
                     });
                 }

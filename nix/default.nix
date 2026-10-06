@@ -33,7 +33,7 @@
   withCli ? false,
   extraRuntimeDeps ? [],
 }: let
-  version = "1.2.2";
+  version = "1.2.5";
 
   runtimeDeps =
     [

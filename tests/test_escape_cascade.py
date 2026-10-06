@@ -43,10 +43,13 @@ def test_keyboard_focus_follows_grab():
 
 def test_niri_focus_loss_releases_exclusive_drawer_focus():
     src = DRAWERS.read_text()
-    assert "function dismissForNiriFocusLoss()" in src
+    assert "function dismissNiriTransientSurfaces()" in src
     assert "focusedWindowAtKeyboardIntent" in src
     assert "function onFocusedWindowChanged(): void" in src
     assert "Niri.focusedWindow?.id" in src
+    assert "function pointerInsideKeyboardRoot(pointX: real, pointY: real): bool" in src
+    assert "Compositor.isNiri && win.keyboardIntent" in src
+    assert "dismissNiriTransientSurfaces();" in src
     assert "if (Compositor.isNiri && !active && keyboardIntent)" in src
     for state in ("launcher", "session", "sidebar", "dashboard", "utilities", "layoutPicker"):
         assert f"visibilities.{state} = false" in src

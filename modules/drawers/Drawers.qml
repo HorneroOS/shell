@@ -117,10 +117,10 @@ Variants {
             }
 
             // Niri's layer-shell Exclusive mode receives explicit keyboard
-            // intent, but it does not provide Hyprland's global click grab.
-            // When another window takes focus, close transient surfaces so
-            // the layer can release the keyboard immediately.
-            function dismissForNiriFocusLoss(): void {
+            // intent, but an outside pointer click can still reach a window
+            // beneath the layer. Close transient surfaces so the layer
+            // releases the keyboard immediately.
+            function dismissNiriTransientSurfaces(): void {
                 visibilities.launcher = false;
                 visibilities.session = false;
                 visibilities.sidebar = false;
@@ -133,18 +133,27 @@ Variants {
                 bar.closeTray();
             }
 
+            function pointerInsideKeyboardRoot(pointX: real, pointY: real): bool {
+                const root = keyboardRoot;
+                if (!root || !root.visible || root.width <= 0 || root.height <= 0)
+                    return false;
+
+                const origin = root.mapToItem(win.contentItem, 0, 0);
+                return pointX >= origin.x && pointX <= origin.x + root.width && pointY >= origin.y && pointY <= origin.y + root.height;
+            }
+
             Connections {
                 target: Niri
 
                 function onFocusedWindowChanged(): void {
                     if (Compositor.isNiri && win.keyboardIntent && (Niri.focusedWindow?.id ?? null) !== win.focusedWindowAtKeyboardIntent)
-                        win.dismissForNiriFocusLoss();
+                        win.dismissNiriTransientSurfaces();
                 }
             }
 
             onActiveChanged: {
                 if (Compositor.isNiri && !active && keyboardIntent)
-                    dismissForNiriFocusLoss();
+                    dismissNiriTransientSurfaces();
             }
 
             mask: Region {
@@ -186,6 +195,12 @@ Variants {
                         return [];
                     const trigger = Math.max(bar.frameInset, win.dragMaskPadding, 1);
                     const rects = [];
+                    // Niri keeps Exclusive keyboard focus on a top-layer
+                    // surface even when a pointer click reaches a window
+                    // beneath it. Catch outside clicks on the same surface
+                    // so the transient can close and release that focus.
+                    if (Compositor.isNiri && win.keyboardIntent)
+                        rects.push({ x: 0, y: 0, width: win.width, height: win.height, isEdge: true });
                     if (panels.popouts.isDetached) {
                         // Detached popouts grab all clicks so outside-clicks
                         // can close them (see Interactions.onPressed)
@@ -277,6 +292,17 @@ Variants {
                     y: isEdge ? modelData.y : modelData.y + panels.y
                     width: isEdge ? modelData.width : (modelData.width > 0 && modelData.height > 0 ? modelData.width : 0)
                     height: isEdge ? modelData.height : (modelData.width > 0 && modelData.height > 0 ? modelData.height : 0)
+                }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                enabled: Compositor.isNiri && win.keyboardIntent
+                acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+
+                onClicked: mouse => {
+                    if (!win.pointerInsideKeyboardRoot(mouse.x, mouse.y))
+                        win.dismissNiriTransientSurfaces();
                 }
             }
 

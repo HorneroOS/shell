@@ -84,7 +84,11 @@ activates the window on `wl_keyboard.enter` whatever its shell role.
   uses `Exclusive` while an explicit drawer is open: its top-layer
   on-demand surface does not receive keyboard focus from a compositor
   shortcut. Both paths activate the Qt window so `activeFocusItem`, Tab
-  and typing work.
+and typing work.
+While Niri has an explicit drawer open, a temporary full-output pointer
+region catches clicks outside the active drawer, closes its transient
+surfaces, and releases exclusive focus. The dismissing click is consumed;
+a second click activates the underlying window.
 - Hover opens keep `keyboardFocus: None`. With `follow_mouse = 1`
   Hyprland gives an on-demand layer under the pointer the keyboard,
   so any other value would steal typing from the focused app.

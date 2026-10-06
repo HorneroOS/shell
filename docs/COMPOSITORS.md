@@ -17,7 +17,9 @@ routing. The bar workspace view and Dashboard window list use these native
 models. Layer-shell surfaces can take explicit keyboard focus without using
 Hyprland's focus-grab object.
 
-This is an experimental integration, not a supported Niri session claim.
+This experimental integration now has a passing single-output graphical
+baseline in the disposable Hornero QA guest, but that acceptance does not
+make every Shell feature or hardware topology available under Niri.
 Several functions still rely on Hyprland-specific APIs, including output
 metadata and brightness targeting, area picking, native window thumbnails,
 game mode, lock-state indicators, session startup, and some layout actions.
@@ -45,13 +47,16 @@ translating these concepts silently.
 
 ## Current graphical evidence
 
-A disposable QEMU guest running Niri v26.04 at 1280×800 has been used with
-real keyboard and pointer input. The exercised journey includes Shell startup,
-Launcher, Dashboard, Control Center, Appearance, applying Hornero Light,
-opening Layout Picker and applying Hornero Left, changing workspaces, and
-Niri's screenshot selector. This is single-output exploratory acceptance.
-It does not yet certify multiple outputs, OBS/screencast portals, lock/session
-recovery, or all Shell surfaces. The host Hyprland session was not changed.
+A disposable QEMU guest running Niri v26.04 at 1280×800 passed a repeatable
+graphical QA journey with real keyboard and pointer input. It verifies Niri
+output and focused-workspace state, the live workspace rail, switching
+between workspaces 1 and 2 after a window exists, Kitty as the active native
+window, Launcher, Hornero Light, the packaged wallpaper catalogue, Appearance,
+Layout Picker, lock/unlock, the ScreenCast portal interface, and a completed
+Niri screenshot action. This is single-output baseline acceptance. It does
+not certify multiple outputs, HiDPI, actual OBS capture, notification
+delivery, session recovery, or every Shell surface. The host Hyprland session
+was not changed.
 
 ## Backend contract
 

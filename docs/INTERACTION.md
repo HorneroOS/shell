@@ -21,11 +21,18 @@ change. Toasts likewise expire by timer (hover pauses expiry).
 
 ## Key delivery: the grab
 
-Physical keys reach the drawers surface through the
-`HyprlandFocusGrab` in `Drawers.qml`, and the surface's keyboard
-interactivity follows that grab exactly (`OnDemand` while grabbed,
-`None` otherwise; see `FOCUS.md`). Every drawer the cascade must
-dismiss therefore needs grab coverage on its keyboard-driven opens.
+Physical keys reach the drawers surface through compositor-specific
+layer-shell focus in `Drawers.qml`: Hyprland combines
+`HyprlandFocusGrab` with `OnDemand`, while Niri uses `Exclusive` for an
+explicit open because its top-layer `OnDemand` surface does not accept
+keyboard focus from a shortcut. Both return to `None` when no drawer
+holds keyboard intent (see `FOCUS.md`). Every drawer the cascade must
+dismiss therefore needs keyboard intent on its keyboard-driven opens.
+
+Niri also expands the pointer region only while an explicit transient is
+open; a click outside that drawer closes it and releases exclusive
+keyboard focus. The click is consumed by the dismissal, so click the
+underlying window again to activate it.
 
 Dashboard and utilities hover opens stay grab-free on purpose: an
 edge touch must never steal typing from other apps. Explicit opens —
@@ -46,12 +53,12 @@ Escape — it must authenticate), and the companion menu below.
 
 | Surface | Escape | Click-outside | Other |
 |---|---|---|---|
-| Launcher | closes (central) | focus grab clears | re-issue shortcut |
-| Session | disarm, then close | focus grab clears | re-issue shortcut |
-| Dashboard | closes (central, explicit opens and clicks grab) | grab clears, else hover-leave | rename takes first Escape |
-| Sidebar | closes (central) | focus grab clears | re-issue shortcut |
-| Utilities | closes when opened explicitly or clicked into; hover opens close on leave | grab clears (explicit/clicked), else hover-leave | a shortcut while the pointer already rests in the area counts as hover |
-| Layout picker | closes (central) | focus grab clears | re-issue shortcut |
+| Launcher | closes (central) | focus grab clears; Niri outside click closes and consumes the click | re-issue shortcut |
+| Session | disarm, then close | focus grab clears; Niri outside click closes and consumes the click | re-issue shortcut |
+| Dashboard | closes (central, explicit opens and clicks grab) | grab clears; Niri outside click closes and consumes the click; otherwise hover-leave | rename takes first Escape |
+| Sidebar | closes (central) | focus grab clears; Niri outside click closes and consumes the click | re-issue shortcut |
+| Utilities | closes when opened explicitly or clicked into; hover opens close on leave | grab clears; Niri outside click closes and consumes the click; otherwise hover-leave | a shortcut while the pointer already rests in the area counts as hover |
+| Layout picker | closes (central) | focus grab clears; Niri outside click closes and consumes the click | re-issue shortcut |
 | Bar popouts | closes (own handler) | own grab clears | re-click trigger |
 | OSD | clears with a drawer | — | timer |
 | Companion menu | closes | grab clears | pick an entry |

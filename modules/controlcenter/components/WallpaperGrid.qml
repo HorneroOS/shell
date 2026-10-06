@@ -25,6 +25,7 @@ Item {
 
     readonly property string scopeBasePath: wallpaperScopeDir ? `${Paths.pictures}/Wallpapers/${wallpaperScopeDir}` : ""
     readonly property string scopeDataPath: wallpaperScopeDir ? `${Paths.data}/wallpapers/${wallpaperScopeDir}` : ""
+    readonly property string scopeSystemPath: wallpaperScopeDir ? `${Paths.systemWallsdir}/${wallpaperScopeDir}` : ""
     readonly property var displayModel: {
         let entries = Wallpapers.list;
         const filter = Wallpapers.colorFilter;
@@ -41,6 +42,7 @@ Item {
         return entries.filter(entry => {
             const p = entry?.path ?? "";
             return p.startsWith(`${pics}/`) || p === pics || p.startsWith(`${data}/`) || p === data
+                || p.startsWith(`${scopeSystemPath}/`) || p === scopeSystemPath
                 || p.includes(`/Wallpapers/${wallpaperScopeDir}/`)
                 || p.includes(`/wallpapers/${wallpaperScopeDir}/`);
         });

@@ -79,17 +79,27 @@ layer surface: the compositor gives it keyboard focus, and QtWayland
 activates the window on `wl_keyboard.enter` whatever its shell role.
 
 - Explicit opens (shortcut, IPC, action, or a click inside a
-  hover-opened drawer) activate `HyprlandFocusGrab`, and the surface's
-  `keyboardFocus` is `OnDemand` exactly while that grab is active. The
-  grab hands the surface the keyboard; `activeFocusItem`, Tab and
-  typing all work.
+  hover-opened drawer) activate `HyprlandFocusGrab` on Hyprland. There,
+  `keyboardFocus` is `OnDemand` exactly while that grab is active. Niri
+  uses `Exclusive` while an explicit drawer is open: its top-layer
+  on-demand surface does not receive keyboard focus from a compositor
+  shortcut. Both paths activate the Qt window so `activeFocusItem`, Tab
+  and typing work. While that Niri layer owns keyboard focus,
+  `Niri.focusedWindow` can be null; a real different focused toplevel
+  dismisses the transient drawer, while null does not. This lets users
+  reopen the launcher after it previously launched and focused an app.
+While Niri has an explicit drawer open, a temporary full-output pointer
+region catches clicks outside the active drawer, closes its transient
+surfaces, and releases exclusive focus. The dismissing click is consumed;
+a second click activates the underlying window.
 - Hover opens keep `keyboardFocus: None`. With `follow_mouse = 1`
   Hyprland gives an on-demand layer under the pointer the keyboard,
   so any other value would steal typing from the focused app.
-- Never `Exclusive`: Hyprland clears the focus grab when a mapped
+- On Hyprland, never `Exclusive`: it clears the focus grab when a mapped
   surface commits `exclusive` (`LayerSurface.cpp`, no `accepts()`
   check on that path), which is the "bounce" the reverted S4 attempt
-  hit.
+  hit. Niri uses exclusive interactivity only for explicit grabs and
+  returns to `None` as soon as the drawer closes.
 - The bar and every drawer share one window, and Qt's tab chain spans
   the whole window; `FocusScope` does not confine it. `FocusMode`
   therefore holds `currentRoot` (the topmost keyboard-holding drawer,

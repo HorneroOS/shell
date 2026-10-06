@@ -31,6 +31,8 @@ Variants {
             id: win
 
             readonly property bool keyboardIntent: (visibilities.launcher && Config.launcher.enabled) || (visibilities.session && Config.session.enabled) || (visibilities.sidebar && Config.sidebar.enabled) || ((!Config.dashboard.showOnHover || interactions.dashboardKeyboardIntent) && visibilities.dashboard && Config.dashboard.enabled) || (interactions.utilitiesKeyboardIntent && visibilities.utilities && Config.utilities.enabled) || visibilities.layoutPicker || (panels.popouts.keyboardIntent && panels.popouts.hasCurrent) || (panels.popouts.currentName.startsWith("traymenu") && panels.popouts.current?.depth > 1)
+            property var focusedWindowAtKeyboardIntent: null
+            property var lastNiriOutsideClick: null
             readonly property bool hasFullscreen: Compositor.hasFullscreenOnScreen(screen)
             readonly property int dragMaskPadding: {
                 if (keyboardIntent || panels.popouts.isDetached)
@@ -59,13 +61,14 @@ Variants {
             name: "drawers"
             WlrLayershell.exclusionMode: ExclusionMode.Ignore
             // Keyboard interactivity follows the focus grab exactly
-            // (#84): explicit opens take OnDemand + grab, which is what
-            // delivers wl_keyboard.enter and Qt window activation. Hover
-            // opens stay None — with follow_mouse=1 Hyprland hands an
-            // OnDemand layer under the pointer the keyboard, which would
-            // steal typing from the focused app. Never Exclusive: a mapped
-            // surface committing Exclusive clears the grab (bounce).
-            WlrLayershell.keyboardFocus: keyboardIntent ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+            // (#84). Niri does not give a top-layer OnDemand surface
+            // keyboard focus when opened by a compositor shortcut, so
+            // explicit drawer interactions need Exclusive there. Hyprland
+            // uses OnDemand: Exclusive causes its focus-grab bounce for an
+            // already-mapped surface. Hover-only surfaces stay None on both.
+            WlrLayershell.keyboardFocus: keyboardIntent && Compositor.isNiri
+                ? WlrKeyboardFocus.Exclusive
+                : keyboardIntent ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
             // Topmost keyboard-holding drawer, same order as
             // dismissTopmost(): Tab stays inside it (FocusMode.step).
@@ -87,6 +90,9 @@ Variants {
                     FocusMode.currentRoot = null;
             }
             onKeyboardRootChanged: syncFocusRoot()
+            onKeyboardIntentChanged: {
+                focusedWindowAtKeyboardIntent = Compositor.isNiri && keyboardIntent ? Niri.focusedWindow?.id ?? null : null;
+            }
 
             // Central Escape cascade (docs/INTERACTION.md). Content with
             // transient inner state (rename field, armed session action)
@@ -109,6 +115,45 @@ Variants {
                 else
                     return;
                 visibilities.osd = false;
+            }
+
+            // Niri's layer-shell Exclusive mode receives explicit keyboard
+            // intent, but an outside pointer click can still reach a window
+            // beneath the layer. Close transient surfaces so the layer
+            // releases the keyboard immediately.
+            function dismissNiriTransientSurfaces(): void {
+                visibilities.launcher = false;
+                visibilities.session = false;
+                visibilities.sidebar = false;
+                visibilities.dashboard = false;
+                visibilities.utilities = false;
+                visibilities.layoutPicker = false;
+                visibilities.osd = false;
+                panels.popouts.keyboardIntent = false;
+                panels.popouts.hasCurrent = false;
+                bar.closeTray();
+            }
+
+            function pointerInsideKeyboardRoot(pointX: real, pointY: real): bool {
+                const root = keyboardRoot;
+                if (!root || !root.visible || root.width <= 0 || root.height <= 0)
+                    return false;
+
+                const origin = root.mapToItem(win.contentItem, 0, 0);
+                return pointX >= origin.x && pointX <= origin.x + root.width && pointY >= origin.y && pointY <= origin.y + root.height;
+            }
+
+            Connections {
+                target: Niri
+
+                function onFocusedWindowChanged(): void {
+                    const focusedWindow = Niri.focusedWindow;
+                    // An Exclusive layer makes Niri report no focused
+                    // toplevel while the drawer owns keyboard focus. Only a
+                    // different real window should dismiss the transient.
+                    if (Compositor.isNiri && win.keyboardIntent && focusedWindow && focusedWindow.id !== win.focusedWindowAtKeyboardIntent)
+                        win.dismissNiriTransientSurfaces();
+                }
             }
 
             mask: Region {
@@ -150,6 +195,12 @@ Variants {
                         return [];
                     const trigger = Math.max(bar.frameInset, win.dragMaskPadding, 1);
                     const rects = [];
+                    // Niri keeps Exclusive keyboard focus on a top-layer
+                    // surface even when a pointer click reaches a window
+                    // beneath it. Catch outside clicks on the same surface
+                    // so the transient can close and release that focus.
+                    if (Compositor.isNiri && win.keyboardIntent)
+                        rects.push({ x: 0, y: 0, width: win.width, height: win.height, isEdge: true });
                     if (panels.popouts.isDetached) {
                         // Detached popouts grab all clicks so outside-clicks
                         // can close them (see Interactions.onPressed)
@@ -404,6 +455,8 @@ Variants {
                         grab: focusGrab.active,
                         kbMode: win.WlrLayershell.keyboardFocus,
                         intent: { dashboard: interactions.dashboardKeyboardIntent, utilities: interactions.utilitiesKeyboardIntent },
+                        inputRegions: inputRegions.instances.map(region => [region.x, region.y, region.width, region.height]),
+                        lastNiriOutsideClick: win.lastNiriOutsideClick,
                         chain: chain.join(" < ") || "(null)"
                     });
                 }
@@ -512,11 +565,10 @@ Variants {
                     bar: bar
                 }
 
-                // A click inside a hover-opened drawer is keyboard
-                // intent (#84). Drawer content consumes presses before
-                // parents see them, so a transparent overlay on top
-                // observes them with a passive PointHandler, which
-                // never blocks delivery to the controls beneath.
+                // Drawer content consumes presses before parents see them,
+                // so a passive PointHandler observes pointer intent without
+                // blocking controls. On Niri it also dismisses exclusive
+                // drawer focus when the pointer lands outside the active root.
                 Item {
                     // Sibling of Panels, never a child: the input mask
                     // is built from panels.children and must not grow.
@@ -529,6 +581,20 @@ Variants {
                             if (!active)
                                 return;
                             const p = panels.mapToItem(interactions, point.position.x, point.position.y);
+                            if (Compositor.isNiri && win.keyboardIntent) {
+                                const inside = win.pointerInsideKeyboardRoot(p.x, p.y);
+                                const root = win.keyboardRoot;
+                                const origin = root ? root.mapToItem(win.contentItem, 0, 0) : Qt.point(0, 0);
+                                win.lastNiriOutsideClick = {
+                                    x: p.x,
+                                    y: p.y,
+                                    inside: inside,
+                                    root: root ? root.objectName || String(root).split("(")[0] : null,
+                                    rect: root ? [origin.x, origin.y, root.width, root.height] : null
+                                };
+                                if (!inside)
+                                    win.dismissNiriTransientSurfaces();
+                            }
                             if (visibilities.dashboard && interactions.inTopPanel(panels.dashboard, p.x, p.y))
                                 interactions.dashboardKeyboardIntent = true;
                             if (visibilities.utilities && interactions.inBottomPanel(panels.utilities, p.x, p.y))

@@ -63,9 +63,10 @@ vm_ssh 'test -f ~/.config/quickshell/shell.qml && test -f ~/.config/hypr/hyprlan
 # shellcheck disable=SC2016 # remote $HOME must expand inside the guest
 guest_home="$(vm_ssh 'printf %s "$HOME"')"
 guest_prefix="${VM_GUEST_PREFIX//\$HOME/${guest_home}}"
+guest_qml_dir="${guest_prefix}/lib/qt6/qml/Hornero"
 tree_id="$(git -C "${SHELL_ROOT}" rev-parse HEAD):$(git -C "${SHELL_ROOT}" status --porcelain | sha256sum | awk '{ print $1 }')"
 # shellcheck disable=SC2016
-if vm_ssh "test -f ~/.cache/vm-harness-plugin-id && [ \"\$(cat ~/.cache/vm-harness-plugin-id)\" = '${tree_id}' ]" > /dev/null 2>&1; then
+if vm_ssh "test -f ~/.cache/vm-harness-plugin-id && [ \"\$(cat ~/.cache/vm-harness-plugin-id)\" = '${tree_id}' ] && for lib in '${guest_qml_dir}/libhornero.so' '${guest_qml_dir}/libhorneroplugin.so'; do test -f \"\$lib\" && ldd -r \"\$lib\" > /dev/null 2>&1 && ! ldd -r \"\$lib\" 2>&1 | grep -Eq 'undefined symbol|not found' || exit 1; done" > /dev/null 2>&1; then
     echo "==> native plugin up to date, skipping rebuild"
 else
     echo "==> building the native QML plugin in the guest (prefix ${guest_prefix})"
@@ -80,10 +81,22 @@ else
     vm_ssh 'yay -Si libcava > /dev/null 2>&1 && yay -S --noconfirm --needed libcava || true'
     # Guest-side variables stay escaped so they expand inside the VM.
     if vm_ssh "set -e
+rm -rf ~/.cache/hornero-shell-build
 cd ~/.config/quickshell
 cmake -S . -B ~/.cache/hornero-shell-build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX='${guest_prefix}' -DINSTALL_QMLDIR='${guest_prefix}/lib/qt6/qml' -DINSTALL_LIBDIR='${guest_prefix}/lib/hornero' -DINSTALL_QSCONFDIR='${guest_prefix}/etc/xdg/quickshell/hornero'
 cmake --build ~/.cache/hornero-shell-build -j\$(nproc)
-cmake --install ~/.cache/hornero-shell-build"; then
+cmake --install ~/.cache/hornero-shell-build
+for lib in '${guest_prefix}/lib/qt6/qml/Hornero/libhornero.so' '${guest_prefix}/lib/qt6/qml/Hornero/libhorneroplugin.so'; do
+    test -f \"\$lib\"
+    ldd -r \"\$lib\" > /dev/null 2>&1 || {
+        echo \"error: ldd failed for a Hornero QML plugin library\" >&2
+        exit 1
+    }
+    if ldd -r \"\$lib\" 2>&1 | grep -Eq 'undefined symbol|not found'; then
+        echo \"error: unresolved dependency in \$lib\" >&2
+        exit 1
+    fi
+done"; then
         vm_ssh "printf %s '${tree_id}' > ~/.cache/vm-harness-plugin-id"
         echo "==> native plugin installed"
     else

@@ -26,6 +26,10 @@ Singleton {
     readonly property string imagecache: `${cache}/imagecache`
     readonly property string notifimagecache: `${imagecache}/notifs`
     readonly property string wallsdir: Quickshell.env("HORNERO_WALLPAPERS_DIR") || absolutePath(Config.paths.wallpaperDir)
+    // Factory artwork belongs to the system package. Keep it discoverable
+    // alongside personal wallpapers without copying package-owned assets into
+    // a user's Pictures directory.
+    readonly property string systemWallsdir: "/usr/share/hornero/wallpapers"
     readonly property string recsdir: Quickshell.env("HORNERO_RECORDINGS_DIR") || `${videos}/Recordings`
     readonly property string libdir: Quickshell.env("HORNERO_LIB_DIR") || "/usr/share/hornero/lib/hornero"
 

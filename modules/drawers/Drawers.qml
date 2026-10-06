@@ -151,11 +151,6 @@ Variants {
                 }
             }
 
-            onActiveChanged: {
-                if (Compositor.isNiri && !active && keyboardIntent)
-                    dismissNiriTransientSurfaces();
-            }
-
             mask: Region {
                 regions: win.hasFullscreen ? [] : inputRegions.instances
             }

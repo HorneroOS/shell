@@ -295,11 +295,12 @@ def test_factory_values_match_code_defaults():
         for part in dotted.split("."):
             node = node[int(part)] if isinstance(node, list) else node[part]
         assert node == want, f"{dotted}: got {node!r}, want {want!r}"
-    # Glyph-bearing bar labels must be byte-exact copies of the QML source.
+    # Workspace defaults show native workspace IDs instead of ambiguous glyphs.
     for key in ("label", "occupiedLabel", "activeLabel"):
         m = re.search(rf"property string {key}: \"(.*?)\"", bar_src)
         assert m, f"{key} default not found in BarConfig.qml"
-        assert factory["bar"]["workspaces"][key] == m.group(1), f"bar.workspaces.{key} glyph mismatch"
+        assert m.group(1) == "", f"{key} should use the readable workspace ID fallback"
+        assert factory["bar"]["workspaces"][key] == "", f"bar.workspaces.{key} should use the readable workspace ID fallback"
 
 
 def test_factory_documents_omissions():

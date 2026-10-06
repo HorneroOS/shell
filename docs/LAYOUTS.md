@@ -59,6 +59,11 @@ the three groups provide the layout structure directly.
 `audioSlider.showValue`, `brightnessSlider.showValue`,
 `workspaces.style` (`pills` or `labels`), and `media.maxWidth`.
 
+Workspace indicators display their workspace name or number by default. The
+active indicator and occupied background communicate state without relying on
+icon-font glyphs. Set `workspaces.style` to `labels` for an always-labelled
+workspace row; the default pill style still keeps each workspace readable.
+
 Bar actions reference IDs in `services/ShellActions.qml`, never shell command
 strings. Current actions include launcher, layout picker, dashboard, session,
 settings, and screenshot. Unknown actions are skipped with a warning.

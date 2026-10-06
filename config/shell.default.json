@@ -282,9 +282,9 @@
       "showWindowsOnSpecialWorkspaces": true,
       "activeTrail": false,
       "perMonitorWorkspaces": true,
-      "label": "  ",
-      "occupiedLabel": "󰮯",
-      "activeLabel": "󰮯",
+      "label": "",
+      "occupiedLabel": "",
+      "activeLabel": "",
       "capitalisation": "preserve",
       "specialWorkspaceIcons": []
     },

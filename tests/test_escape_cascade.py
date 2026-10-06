@@ -59,6 +59,20 @@ def test_niri_focus_loss_releases_exclusive_drawer_focus():
     assert "panels.popouts.hasCurrent = false" in src
 
 
+def test_niri_outside_dismissal_uses_passive_pointer_handler():
+    src = DRAWERS.read_text()
+    assert "passive PointHandler" in src
+    handler_start = src.index("PointHandler {")
+    handler_end = src.index("\n                    }", handler_start)
+    handler = src[handler_start:handler_end]
+    assert "acceptedButtons: Qt.AllButtons" in handler
+    assert "Compositor.isNiri && win.keyboardIntent" in handler
+    assert "win.pointerInsideKeyboardRoot(p.x, p.y)" in handler
+    assert "if (!inside)" in handler
+    assert "win.dismissNiriTransientSurfaces()" in handler
+    assert "id: niriOutsideClickArea" not in src
+
+
 def test_click_outside_covers_utilities():
     src = DRAWERS.read_text()
     assert "interactions.utilitiesKeyboardIntent && visibilities.utilities" in src

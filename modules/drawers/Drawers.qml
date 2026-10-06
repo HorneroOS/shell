@@ -565,11 +565,10 @@ Variants {
                     bar: bar
                 }
 
-                // A click inside a hover-opened drawer is keyboard
-                // intent (#84). Drawer content consumes presses before
-                // parents see them, so a transparent overlay on top
-                // observes them with a passive PointHandler, which
-                // never blocks delivery to the controls beneath.
+                // Drawer content consumes presses before parents see them,
+                // so a passive PointHandler observes pointer intent without
+                // blocking controls. On Niri it also dismisses exclusive
+                // drawer focus when the pointer lands outside the active root.
                 Item {
                     // Sibling of Panels, never a child: the input mask
                     // is built from panels.children and must not grow.

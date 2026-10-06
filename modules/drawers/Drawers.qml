@@ -295,28 +295,6 @@ Variants {
                 }
             }
 
-            MouseArea {
-                id: niriOutsideClickArea
-                anchors.fill: parent
-                enabled: Compositor.isNiri && win.keyboardIntent
-                acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-
-                onClicked: mouse => {
-                    const inside = win.pointerInsideKeyboardRoot(mouse.x, mouse.y);
-                    const root = win.keyboardRoot;
-                    const origin = root ? root.mapToItem(win.contentItem, 0, 0) : Qt.point(0, 0);
-                    win.lastNiriOutsideClick = {
-                        x: mouse.x,
-                        y: mouse.y,
-                        inside: inside,
-                        root: root ? root.objectName || String(root).split("(")[0] : null,
-                        rect: root ? [origin.x, origin.y, root.width, root.height] : null
-                    };
-                    if (!inside)
-                        win.dismissNiriTransientSurfaces();
-                }
-            }
-
             HyprlandFocusGrab {
                 id: focusGrab
 
@@ -477,7 +455,6 @@ Variants {
                         grab: focusGrab.active,
                         kbMode: win.WlrLayershell.keyboardFocus,
                         intent: { dashboard: interactions.dashboardKeyboardIntent, utilities: interactions.utilitiesKeyboardIntent },
-                        outsideClickArea: { enabled: niriOutsideClickArea.enabled, width: niriOutsideClickArea.width, height: niriOutsideClickArea.height },
                         inputRegions: inputRegions.instances.map(region => [region.x, region.y, region.width, region.height]),
                         lastNiriOutsideClick: win.lastNiriOutsideClick,
                         chain: chain.join(" < ") || "(null)"
@@ -605,6 +582,20 @@ Variants {
                             if (!active)
                                 return;
                             const p = panels.mapToItem(interactions, point.position.x, point.position.y);
+                            if (Compositor.isNiri && win.keyboardIntent) {
+                                const inside = win.pointerInsideKeyboardRoot(p.x, p.y);
+                                const root = win.keyboardRoot;
+                                const origin = root ? root.mapToItem(win.contentItem, 0, 0) : Qt.point(0, 0);
+                                win.lastNiriOutsideClick = {
+                                    x: p.x,
+                                    y: p.y,
+                                    inside: inside,
+                                    root: root ? root.objectName || String(root).split("(")[0] : null,
+                                    rect: root ? [origin.x, origin.y, root.width, root.height] : null
+                                };
+                                if (!inside)
+                                    win.dismissNiriTransientSurfaces();
+                            }
                             if (visibilities.dashboard && interactions.inTopPanel(panels.dashboard, p.x, p.y))
                                 interactions.dashboardKeyboardIntent = true;
                             if (visibilities.utilities && interactions.inBottomPanel(panels.utilities, p.x, p.y))

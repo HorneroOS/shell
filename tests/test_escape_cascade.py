@@ -41,6 +41,19 @@ def test_keyboard_focus_follows_grab():
     assert "active: Compositor.isHyprland && win.keyboardIntent" in src
 
 
+def test_niri_focus_loss_releases_exclusive_drawer_focus():
+    src = DRAWERS.read_text()
+    assert "function dismissForNiriFocusLoss()" in src
+    assert "focusedWindowAtKeyboardIntent" in src
+    assert "function onFocusedWindowChanged(): void" in src
+    assert "Niri.focusedWindow?.id" in src
+    assert "if (Compositor.isNiri && !active && keyboardIntent)" in src
+    for state in ("launcher", "session", "sidebar", "dashboard", "utilities", "layoutPicker"):
+        assert f"visibilities.{state} = false" in src
+    assert "panels.popouts.keyboardIntent = false" in src
+    assert "panels.popouts.hasCurrent = false" in src
+
+
 def test_click_outside_covers_utilities():
     src = DRAWERS.read_text()
     assert "interactions.utilitiesKeyboardIntent && visibilities.utilities" in src

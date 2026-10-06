@@ -408,6 +408,8 @@ def test_deploy_rebuilds_or_rejects_broken_cached_qml_plugin():
     body = (LIB_DIR / "deploy-shell.sh").read_text()
     assert "ldd -r" in body
     assert "undefined symbol|not found" in body
+    assert 'ldd -r \\"\\$lib\\" > /dev/null 2>&1' in body
+    assert 'ldd -r \\"\\$lib\\" > /dev/null 2>&1 || {' in body
     assert "rm -rf ~/.cache/hornero-shell-build" in body
 
 

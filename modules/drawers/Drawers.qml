@@ -31,6 +31,7 @@ Variants {
             id: win
 
             readonly property bool keyboardIntent: (visibilities.launcher && Config.launcher.enabled) || (visibilities.session && Config.session.enabled) || (visibilities.sidebar && Config.sidebar.enabled) || ((!Config.dashboard.showOnHover || interactions.dashboardKeyboardIntent) && visibilities.dashboard && Config.dashboard.enabled) || (interactions.utilitiesKeyboardIntent && visibilities.utilities && Config.utilities.enabled) || visibilities.layoutPicker || (panels.popouts.keyboardIntent && panels.popouts.hasCurrent) || (panels.popouts.currentName.startsWith("traymenu") && panels.popouts.current?.depth > 1)
+            property var focusedWindowAtKeyboardIntent: null
             readonly property bool hasFullscreen: Compositor.hasFullscreenOnScreen(screen)
             readonly property int dragMaskPadding: {
                 if (keyboardIntent || panels.popouts.isDetached)
@@ -88,6 +89,9 @@ Variants {
                     FocusMode.currentRoot = null;
             }
             onKeyboardRootChanged: syncFocusRoot()
+            onKeyboardIntentChanged: {
+                focusedWindowAtKeyboardIntent = Compositor.isNiri && keyboardIntent ? Niri.focusedWindow?.id ?? null : null;
+            }
 
             // Central Escape cascade (docs/INTERACTION.md). Content with
             // transient inner state (rename field, armed session action)
@@ -110,6 +114,37 @@ Variants {
                 else
                     return;
                 visibilities.osd = false;
+            }
+
+            // Niri's layer-shell Exclusive mode receives explicit keyboard
+            // intent, but it does not provide Hyprland's global click grab.
+            // When another window takes focus, close transient surfaces so
+            // the layer can release the keyboard immediately.
+            function dismissForNiriFocusLoss(): void {
+                visibilities.launcher = false;
+                visibilities.session = false;
+                visibilities.sidebar = false;
+                visibilities.dashboard = false;
+                visibilities.utilities = false;
+                visibilities.layoutPicker = false;
+                visibilities.osd = false;
+                panels.popouts.keyboardIntent = false;
+                panels.popouts.hasCurrent = false;
+                bar.closeTray();
+            }
+
+            Connections {
+                target: Niri
+
+                function onFocusedWindowChanged(): void {
+                    if (Compositor.isNiri && win.keyboardIntent && (Niri.focusedWindow?.id ?? null) !== win.focusedWindowAtKeyboardIntent)
+                        win.dismissForNiriFocusLoss();
+                }
+            }
+
+            onActiveChanged: {
+                if (Compositor.isNiri && !active && keyboardIntent)
+                    dismissForNiriFocusLoss();
             }
 
             mask: Region {

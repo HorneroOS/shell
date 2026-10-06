@@ -65,7 +65,7 @@ guest_home="$(vm_ssh 'printf %s "$HOME"')"
 guest_prefix="${VM_GUEST_PREFIX//\$HOME/${guest_home}}"
 tree_id="$(git -C "${SHELL_ROOT}" rev-parse HEAD):$(git -C "${SHELL_ROOT}" status --porcelain | sha256sum | awk '{ print $1 }')"
 # shellcheck disable=SC2016
-if vm_ssh "test -f ~/.cache/vm-harness-plugin-id && [ \"\$(cat ~/.cache/vm-harness-plugin-id)\" = '${tree_id}' ] && for lib in ~/.local/lib/qt6/qml/Hornero/libhornero.so ~/.local/lib/qt6/qml/Hornero/libhorneroplugin.so; do test -f \"\$lib\" && ! ldd -r \"\$lib\" 2>&1 | grep -Eq 'undefined symbol|not found' || exit 1; done" > /dev/null 2>&1; then
+if vm_ssh "test -f ~/.cache/vm-harness-plugin-id && [ \"\$(cat ~/.cache/vm-harness-plugin-id)\" = '${tree_id}' ] && for lib in ~/.local/lib/qt6/qml/Hornero/libhornero.so ~/.local/lib/qt6/qml/Hornero/libhorneroplugin.so; do test -f \"\$lib\" && ldd -r \"\$lib\" > /dev/null 2>&1 && ! ldd -r \"\$lib\" 2>&1 | grep -Eq 'undefined symbol|not found' || exit 1; done" > /dev/null 2>&1; then
     echo "==> native plugin up to date, skipping rebuild"
 else
     echo "==> building the native QML plugin in the guest (prefix ${guest_prefix})"
@@ -87,6 +87,10 @@ cmake --build ~/.cache/hornero-shell-build -j\$(nproc)
 cmake --install ~/.cache/hornero-shell-build
 for lib in '${guest_prefix}/lib/qt6/qml/Hornero/libhornero.so' '${guest_prefix}/lib/qt6/qml/Hornero/libhorneroplugin.so'; do
     test -f \"\$lib\"
+    ldd -r \"\$lib\" > /dev/null 2>&1 || {
+        echo \"error: ldd failed for a Hornero QML plugin library\" >&2
+        exit 1
+    }
     if ldd -r \"\$lib\" 2>&1 | grep -Eq 'undefined symbol|not found'; then
         echo \"error: unresolved dependency in \$lib\" >&2
         exit 1

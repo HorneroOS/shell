@@ -300,7 +300,9 @@ Variants {
                 acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
 
                 onClicked: mouse => {
-                    if (!win.pointerInsideKeyboardRoot(mouse.x, mouse.y))
+                    const inside = win.pointerInsideKeyboardRoot(mouse.x, mouse.y);
+                    console.log("[niri-outside-click]", mouse.x, mouse.y, inside, win.keyboardRoot?.objectName, win.keyboardRoot?.x, win.keyboardRoot?.y, win.keyboardRoot?.width, win.keyboardRoot?.height);
+                    if (!inside)
                         win.dismissNiriTransientSurfaces();
                 }
             }

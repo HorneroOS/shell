@@ -59,13 +59,14 @@ Variants {
             name: "drawers"
             WlrLayershell.exclusionMode: ExclusionMode.Ignore
             // Keyboard interactivity follows the focus grab exactly
-            // (#84): explicit opens take OnDemand + grab, which is what
-            // delivers wl_keyboard.enter and Qt window activation. Hover
-            // opens stay None — with follow_mouse=1 Hyprland hands an
-            // OnDemand layer under the pointer the keyboard, which would
-            // steal typing from the focused app. Never Exclusive: a mapped
-            // surface committing Exclusive clears the grab (bounce).
-            WlrLayershell.keyboardFocus: keyboardIntent ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+            // (#84). Niri does not give a top-layer OnDemand surface
+            // keyboard focus when opened by a compositor shortcut, so
+            // explicit drawer interactions need Exclusive there. Hyprland
+            // uses OnDemand: Exclusive causes its focus-grab bounce for an
+            // already-mapped surface. Hover-only surfaces stay None on both.
+            WlrLayershell.keyboardFocus: keyboardIntent && Compositor.isNiri
+                ? WlrKeyboardFocus.Exclusive
+                : keyboardIntent ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
             // Topmost keyboard-holding drawer, same order as
             // dismissTopmost(): Tab stays inside it (FocusMode.step).

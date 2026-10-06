@@ -21,11 +21,13 @@ change. Toasts likewise expire by timer (hover pauses expiry).
 
 ## Key delivery: the grab
 
-Physical keys reach the drawers surface through the
-`HyprlandFocusGrab` in `Drawers.qml`, and the surface's keyboard
-interactivity follows that grab exactly (`OnDemand` while grabbed,
-`None` otherwise; see `FOCUS.md`). Every drawer the cascade must
-dismiss therefore needs grab coverage on its keyboard-driven opens.
+Physical keys reach the drawers surface through compositor-specific
+layer-shell focus in `Drawers.qml`: Hyprland combines
+`HyprlandFocusGrab` with `OnDemand`, while Niri uses `Exclusive` for an
+explicit open because its top-layer `OnDemand` surface does not accept
+keyboard focus from a shortcut. Both return to `None` when no drawer
+holds keyboard intent (see `FOCUS.md`). Every drawer the cascade must
+dismiss therefore needs keyboard intent on its keyboard-driven opens.
 
 Dashboard and utilities hover opens stay grab-free on purpose: an
 edge touch must never steal typing from other apps. Explicit opens —

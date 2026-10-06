@@ -28,15 +28,17 @@ def test_central_handler_covers_all_drawers():
 
 
 def test_keyboard_focus_follows_grab():
-    """Explicit keyboard intent focuses the layer under either compositor;
-    only Hyprland needs its native focus-grab helper. Hover stays unfocused."""
+    """Explicit modal grabs use compositor-safe layer focus; hover stays unfocused."""
     src = DRAWERS.read_text()
     focus_line = next(
         line for line in src.splitlines() if "WlrLayershell.keyboardFocus:" in line
     )
-    assert "keyboardIntent ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None" in focus_line
+    assert "keyboardIntent" in focus_line
+    assert "keyboardIntent && Compositor.isNiri" in focus_line
+    assert "WlrKeyboardFocus.Exclusive" in src
+    assert "WlrKeyboardFocus.OnDemand" in src
+    assert "WlrKeyboardFocus.None" in src
     assert "active: Compositor.isHyprland && win.keyboardIntent" in src
-    assert "WlrKeyboardFocus.Exclusive" not in src
 
 
 def test_click_outside_covers_utilities():

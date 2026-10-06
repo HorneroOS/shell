@@ -84,7 +84,10 @@ activates the window on `wl_keyboard.enter` whatever its shell role.
   uses `Exclusive` while an explicit drawer is open: its top-layer
   on-demand surface does not receive keyboard focus from a compositor
   shortcut. Both paths activate the Qt window so `activeFocusItem`, Tab
-and typing work.
+  and typing work. While that Niri layer owns keyboard focus,
+  `Niri.focusedWindow` can be null; a real different focused toplevel
+  dismisses the transient drawer, while null does not. This lets users
+  reopen the launcher after it previously launched and focused an app.
 While Niri has an explicit drawer open, a temporary full-output pointer
 region catches clicks outside the active drawer, closes its transient
 surfaces, and releases exclusive focus. The dismissing click is consumed;

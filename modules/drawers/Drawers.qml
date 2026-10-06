@@ -146,7 +146,11 @@ Variants {
                 target: Niri
 
                 function onFocusedWindowChanged(): void {
-                    if (Compositor.isNiri && win.keyboardIntent && (Niri.focusedWindow?.id ?? null) !== win.focusedWindowAtKeyboardIntent)
+                    const focusedWindow = Niri.focusedWindow;
+                    // An Exclusive layer makes Niri report no focused
+                    // toplevel while the drawer owns keyboard focus. Only a
+                    // different real window should dismiss the transient.
+                    if (Compositor.isNiri && win.keyboardIntent && focusedWindow && focusedWindow.id !== win.focusedWindowAtKeyboardIntent)
                         win.dismissNiriTransientSurfaces();
                 }
             }

@@ -45,6 +45,8 @@ def test_niri_focus_loss_releases_exclusive_drawer_focus():
     src = DRAWERS.read_text()
     assert "function dismissNiriTransientSurfaces()" in src
     assert "focusedWindowAtKeyboardIntent" in src
+    assert "const focusedWindow = Niri.focusedWindow;" in src
+    assert "focusedWindow && focusedWindow.id !== win.focusedWindowAtKeyboardIntent" in src
     assert "function onFocusedWindowChanged(): void" in src
     assert "Niri.focusedWindow?.id" in src
     assert "function pointerInsideKeyboardRoot(pointX: real, pointY: real): bool" in src

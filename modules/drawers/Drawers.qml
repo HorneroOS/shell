@@ -296,6 +296,7 @@ Variants {
             }
 
             MouseArea {
+                id: niriOutsideClickArea
                 anchors.fill: parent
                 enabled: Compositor.isNiri && win.keyboardIntent
                 acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
@@ -476,6 +477,8 @@ Variants {
                         grab: focusGrab.active,
                         kbMode: win.WlrLayershell.keyboardFocus,
                         intent: { dashboard: interactions.dashboardKeyboardIntent, utilities: interactions.utilitiesKeyboardIntent },
+                        outsideClickArea: { enabled: niriOutsideClickArea.enabled, width: niriOutsideClickArea.width, height: niriOutsideClickArea.height },
+                        inputRegions: inputRegions.instances.map(region => [region.x, region.y, region.width, region.height]),
                         lastNiriOutsideClick: win.lastNiriOutsideClick,
                         chain: chain.join(" < ") || "(null)"
                     });

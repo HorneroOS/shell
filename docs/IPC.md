@@ -92,4 +92,6 @@ The shell also *spawns* processes; the stable outbound contracts are:
   `horneroctl wallpaper current`, `horneroctl wallpaper set --yes`,
   `horneroctl shell preset apply --yes`,
   `horneroctl appearance night-mode toggle --yes`,
-  `notify-send …`, `systemctl …`, `foot -e sh -c …`.
+  `notify-send …`, `systemctl …`, and the configured terminal from
+  `Config.general.apps.terminal` (Kitty by default) through `app2unit` when
+  available, with a direct-launch fallback.

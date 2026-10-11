@@ -111,7 +111,7 @@
     "logo": "",
     "apps": {
       "terminal": [
-        "foot"
+        "kitty"
       ],
       "audio": [
         "pavucontrol"

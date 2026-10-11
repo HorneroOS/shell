@@ -199,7 +199,7 @@ def test_factory_values_match_code_defaults():
         ("appearance.transparency.enabled", False),
         ("appearance.transparency.base", 0.85),
         # general (GeneralConfig.qml; qsTr() yields the plain source string)
-        ("general.apps.terminal", ["foot"]),
+        ("general.apps.terminal", ["kitty"]),
         ("general.idle.lockBeforeSleep", True),
         ("general.idle.timeouts.1.idleAction", "dpms off"),
         ("general.battery.criticalLevel", 3),

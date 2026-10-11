@@ -49,7 +49,7 @@ window always shows the live binding.
 | `ipc-dashboard-toggle` | SUPER + D | Navigate |
 | `scrolloverview-overview:toggle` | SUPER + O | Navigate |
 | `app-terminalemulator` | SUPER + Return | Shell |
-| `exec-kitty` | SUPER + E | Shell |
+| `exec-terminal-file` | SUPER + E | Shell |
 | `workspace:1` | SUPER + 1 | Workspaces |
 | `movetoworkspace:1` | SUPER + SHIFT + 1 | Workspaces |
 | `togglespecialworkspace:magic` | SUPER + S | Workspaces |

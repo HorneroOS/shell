@@ -48,6 +48,13 @@ def test_documented_targets_exist():
     assert known & doc_targets, "no overlap between QML targets and IPC.md"
 
 
+def test_process_contract_documents_the_configured_terminal():
+    doc = (ROOT / "docs" / "IPC.md").read_text()
+    assert "Config.general.apps.terminal" in doc
+    assert "Kitty by default" in doc
+    assert "foot -e" not in doc
+
+
 def _handler_functions(source, target):
     m = re.search(r'target:\s*"' + re.escape(target) + r'"(.*?)(?=target:\s*"|\Z)',
                   source, re.S)

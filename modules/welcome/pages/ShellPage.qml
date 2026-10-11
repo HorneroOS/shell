@@ -18,9 +18,9 @@ PageView {
 
     ActionCard {
         icon: "terminal"
-        title: qsTr("Kitty")
-        description: qsTr("A second terminal with its own key, for side-by-side work.")
-        shortcutId: "exec-kitty"
+        title: qsTr("Yazi in the configured terminal")
+        description: qsTr("Browse files in a separate window with the terminal you selected.")
+        shortcutId: "exec-terminal-file"
         interactive: false
     }
 }

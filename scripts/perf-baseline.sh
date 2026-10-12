@@ -210,12 +210,36 @@ except (IndexError, OSError, ValueError):
 PY
 }
 
+# smaps_rollup exposes the proportional set size split by backing type on
+# current Linux kernels. Keep missing fields null so older kernels are not
+# misreported as having zero anonymous/file/shared memory.
+memory_breakdown() {
+    python3 - "${PID}" <<'PY'
+import json
+import re
+import sys
+from pathlib import Path
+
+fields = {"Pss_Anon": "pss_anon_kb", "Pss_File": "pss_file_kb", "Pss_Shmem": "pss_shmem_kb"}
+values = {name: None for name in fields.values()}
+try:
+    for line in Path(f"/proc/{sys.argv[1]}/smaps_rollup").read_text().splitlines():
+        match = re.fullmatch(r"(Pss_Anon|Pss_File|Pss_Shmem):\s+(\d+) kB", line)
+        if match:
+            values[fields[match.group(1)]] = int(match.group(2))
+except OSError:
+    pass
+print(json.dumps(values, separators=(",", ":")))
+PY
+}
+
 SAMPLE_JSON=""
 PREV_CPU_TICKS="$(cpu_ticks)"
 PREV_CPU_TIME="$(date +%s%3N)"
 for _ in $(seq 1 "${SAMPLES}"); do
     RSS_KB="$(ps -o rss= -p "${PID}" | tr -d ' ')"
     PSS_KB="$(awk '/^Pss:/ {s+=$2} END {print s+0}' "/proc/${PID}/smaps_rollup" 2>/dev/null || true)"
+    MEMORY_BREAKDOWN="$(memory_breakdown)"
     L0=$(date +%s%3N)
     qs ipc call lock isLocked >/dev/null 2>&1
     L1=$(date +%s%3N)
@@ -227,7 +251,7 @@ for _ in $(seq 1 "${SAMPLES}"); do
     CPU_PERCENT="$(awk -v before="${PREV_CPU_TICKS}" -v after="${NOW_CPU_TICKS}" \
         -v elapsed="${ELAPSED_MS}" -v ticks="${CLK_TCK}" \
         'BEGIN { if (elapsed > 0 && ticks > 0) printf "%.2f", ((after - before) * 100000) / (ticks * elapsed); else print "0.00" }')"
-    SAMPLE_JSON="${SAMPLE_JSON}{\"rss_kb\": ${RSS_KB:-0}, \"pss_kb\": ${PSS_KB:-0}, \"cpu_percent\": ${CPU_PERCENT}, \"ipc_ms\": $((L1 - L0)), \"layers\": ${LAYERS}},"
+    SAMPLE_JSON="${SAMPLE_JSON}{\"rss_kb\": ${RSS_KB:-0}, \"pss_kb\": ${PSS_KB:-0}, \"memory_breakdown\": ${MEMORY_BREAKDOWN}, \"cpu_percent\": ${CPU_PERCENT}, \"ipc_ms\": $((L1 - L0)), \"layers\": ${LAYERS}},"
     PREV_CPU_TICKS="${NOW_CPU_TICKS}"
     PREV_CPU_TIME="${NOW_CPU_TIME}"
 done
@@ -275,12 +299,17 @@ print(
 print(f"CPU cores: {data['cores']} effective / {data['host_cores']} online | RAM: {data['mem_total_kb'] / 1048576:.1f} GiB")
 if data["startup_ready_ms"]:
     print(f"Restart to IPC-ready: {data['startup_ready_ms']} ms")
-print("Sample  RSS MiB  PSS MiB  CPU %  IPC ms  Layers")
+print("Sample  RSS MiB  PSS MiB  Anon MiB  File MiB  Shared MiB  CPU %  IPC ms  Layers")
 for index, sample in enumerate(data["samples"], start=1):
     layers = sample["layers"] if sample["layers"] is not None else "n/a"
+    memory = sample["memory_breakdown"]
+    def mib(value):
+        return f"{value / 1024:>8.1f}" if value is not None else f"{'n/a':>8}"
     print(
         f"{index:>6}  {sample['rss_kb'] / 1024:>7.1f}  "
-        f"{sample['pss_kb'] / 1024:>7.1f}  {sample['cpu_percent']:>5.2f}  "
+        f"{sample['pss_kb'] / 1024:>7.1f}  {mib(memory['pss_anon_kb'])}  "
+        f"{mib(memory['pss_file_kb'])}  {mib(memory['pss_shmem_kb'])}  "
+        f"{sample['cpu_percent']:>5.2f}  "
         f"{sample['ipc_ms']:>6}  {layers:>6}"
     )
 PY

@@ -12,7 +12,12 @@ guarantee.
 - `startup_ready_ms` — restart to first answered IPC call (only with
   `--restart`; disruptive, the desktop reloads).
 - `rss_kb` / `pss_kb` — quickshell resident/proportional memory per
-  sample (`ps`, `/proc/<pid>/smaps_rollup`).
+  sample (`ps`, `/proc/<pid>/smaps_rollup`). `memory_breakdown` adds the
+  kernel-reported `pss_anon_kb`, `pss_file_kb`, and `pss_shmem_kb` portions
+  where available. Unsupported or unreadable fields are `null`, never
+  treated as zero. These categories help distinguish private anonymous
+  allocations from file-backed and shared mappings; they are diagnostic
+  signals, not a memory-leak diagnosis.
 - `cpu_percent` — process CPU time consumed between samples, calculated
   from `/proc/<pid>/stat` ticks over the measured wall interval. `cores`
   reports the effective CPUs visible to the harness (including cgroup
@@ -36,7 +41,8 @@ guarantee.
 ```
 
 The default run does not restart or otherwise mutate the desktop. It prints
-a table with CPU%, RSS, PSS, IPC latency, and layer-surface counts. Use
+a table with CPU%, RSS, PSS, its anonymous/file/shared breakdown, IPC latency,
+and layer-surface counts. Use
 `--format json` for structured output. The
 `--restart` option is intentionally disruptive and must only be used from a
 disposable test session or with the user's explicit approval. The harness

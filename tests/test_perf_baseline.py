@@ -31,7 +31,8 @@ def test_harness_probes_named_metrics():
     text = SCRIPT.read_text()
     for probe in ("smaps_rollup", "ipc call", "hyprctl layers",
                   "quickshell --version", "startup_ready_ms",
-                  "rss_kb", "pss_kb", "cpu_percent", "ipc_ms"):
+                  "rss_kb", "pss_kb", "pss_anon_kb", "pss_file_kb",
+                  "pss_shmem_kb", "cpu_percent", "ipc_ms"):
         assert probe in text, f"harness missing probe {probe}"
 
 
@@ -180,6 +181,7 @@ def test_harness_uses_niri_json_for_monitor_and_layer_counts():
     assert report["compositor"] == "niri"
     assert report["monitors"] == 1
     assert report["samples"][0]["layers"] == 1
+    _assert_memory_breakdown(report["samples"][0])
     assert 0 <= report["samples"][0]["cpu_percent"]
     assert report["qml_files_available"] == 3
     assert "qml_files_live" not in report
@@ -191,6 +193,7 @@ def test_harness_keeps_hyprland_metrics():
     assert report["compositor"] == "hyprland"
     assert report["monitors"] == 2
     assert report["samples"][0]["layers"] == 2
+    _assert_memory_breakdown(report["samples"][0])
     assert 0 <= report["samples"][0]["cpu_percent"]
 
 
@@ -205,9 +208,15 @@ def test_harness_reports_niri_errors_and_unknown_shapes_as_unavailable():
     assert report["samples"][0]["layers"] is None
 
 
+def _assert_memory_breakdown(sample: dict) -> None:
+    memory = sample["memory_breakdown"]
+    assert set(memory) == {"pss_anon_kb", "pss_file_kb", "pss_shmem_kb"}
+    assert all(value is None or isinstance(value, int) for value in memory.values())
+
+
 def test_harness_prints_a_complete_human_table_by_default():
     output, report = _run_fixture("hyprland", output_format=None)
     assert report is None
-    assert "Sample  RSS MiB  PSS MiB  CPU %  IPC ms  Layers" in output
+    assert "Sample  RSS MiB  PSS MiB  Anon MiB  File MiB  Shared MiB" in output
     assert "CPU cores:" in output
     assert "QML files available: 3" in output

@@ -66,6 +66,18 @@ def test_inline_bar_sliders_explain_current_value_and_input():
     assert "monitor.setBrightness" in src
 
 
+def test_tray_menu_tolerates_transiently_missing_entries():
+    src = (ROOT / "modules/bar/popouts/TrayMenu.qml").read_text()
+    assert "currentItem?.implicitWidth ?? 0" in src
+    assert "currentItem?.implicitHeight ?? 0" in src
+    assert "readonly property bool hasEntry: modelData !== null" in src
+    assert "readonly property bool isSeparator: modelData?.isSeparator ?? false" in src
+    assert "visible: hasEntry" in src
+    assert "active: item.hasEntry && !item.isSeparator" in src
+    assert "if (!item.hasEntry || !item.isEnabled)" in src
+    assert 'text: item.modelData?.text ?? ""' in src
+
+
 def test_vertical_active_window_stays_compact_and_exposes_the_full_title():
     src = (ROOT / "modules/bar/components/ActiveWindow.qml").read_text()
     assert "Accessible.role: Accessible.StaticText" in src

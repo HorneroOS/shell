@@ -288,14 +288,17 @@ def test_verify_image_accepts_matching_digest(tmp_path):
     if not _needs_verification_tools():
         pytest.skip("curl/sha256sum required")
     image, url = _write_image_with_sidecar(tmp_path, os.urandom(1024))
+    unavailable_tmpdir = tmp_path / "unavailable-tmp"
     proc = subprocess.run(
         ["bash", str(VERIFY_IMAGE), str(image), url],
         capture_output=True,
         text=True,
+        env={**os.environ, "TMPDIR": str(unavailable_tmpdir)},
         check=False,
     )
     assert proc.returncode == 0, proc.stderr
     assert "verified:" in proc.stdout
+    assert not unavailable_tmpdir.exists()
 
 
 def test_verify_image_rejects_tampered_image(tmp_path):
@@ -312,6 +315,21 @@ def test_verify_image_rejects_tampered_image(tmp_path):
     )
     assert proc.returncode == 1
     assert "mismatch" in proc.stderr
+
+
+def test_verify_image_rejects_oversized_sidecar(tmp_path):
+    if not _needs_verification_tools():
+        pytest.skip("curl/sha256sum required")
+    image, url = _write_image_with_sidecar(tmp_path, os.urandom(64))
+    Path(url.removeprefix("file://")).write_text("x" * 4097)
+    proc = subprocess.run(
+        ["bash", str(VERIFY_IMAGE), str(image), url],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 1
+    assert "could not fetch checksum sidecar" in proc.stderr
 
 
 def test_verify_image_fails_without_sidecar(tmp_path):

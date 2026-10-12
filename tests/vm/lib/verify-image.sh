@@ -2,9 +2,10 @@
 # Verify a VM image against its published SHA256 sidecar.
 # Usage: verify-image.sh [--dry-run] <image> <sha256-url>
 #
-# Downloads the sidecar (sha256sum format, first field wins) to a temp file
-# and compares it with the local image digest. The cached image is verified
-# on every run, so a swapped or bitrotted cache is caught before boot.
+# Streams a bounded sidecar (sha256sum format, first field wins) and compares
+# it with the local image digest. The cached image is verified on every run,
+# so a swapped or bitrotted cache is caught before boot. Keeping the small
+# sidecar in a pipe avoids consuming scarce or quota-limited temporary space.
 # Exit 0 match; 1 mismatch/unreadable/unfetchable; 2 usage.
 set -euo pipefail
 
@@ -37,14 +38,11 @@ command -v sha256sum > /dev/null || {
     exit 1
 }
 
-sidecar="$(mktemp)"
-trap 'rm -f "${sidecar}"' EXIT
-curl -fSL --retry 3 -o "${sidecar}" "${sidecar_url}" || {
+expected="$(curl -fSL --retry 3 --max-filesize 4096 "${sidecar_url}" | awk 'NR == 1 { first = $1 } END { print first }')" || {
     echo "error: could not fetch checksum sidecar: ${sidecar_url}" >&2
     exit 1
 }
 
-expected="$(awk '{ print $1; exit }' "${sidecar}")"
 [[ "${expected}" =~ ^[0-9a-fA-F]{64}$ ]] || {
     echo "error: sidecar has no valid SHA256 digest: ${sidecar_url}" >&2
     exit 1

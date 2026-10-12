@@ -101,7 +101,7 @@ The packaged shell runtime is GPL-3.0 (see `LICENSE.GPL-3.0` and `NOTICE` at
 the repository root), so the package declares `GPL-3.0-or-later` and installs
 both files under `/usr/share/licenses/hornero-shell/`.
 
-# AUR release tags
+## AUR release tags
 
 The `aur-publish` workflow only accepts tags in the package namespace:
 `pkg/hornero-shell-vX.Y.Z`. This keeps HorneroOS composition tags such as

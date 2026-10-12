@@ -114,16 +114,18 @@ Singleton {
                 if (geo) {
                     const geoCity = geo.type === "city" ? geo.name : (geo.city || geo.name || geo.state);
                     city = geoCity || "Unknown City";
-                    cachedCities.set(coords, city);
                 } else {
                     city = "Unknown City";
                 }
+                cachedCities.set(coords, city);
             } catch (e) {
                 city = "Unknown City";
+                cachedCities.set(coords, city);
             }
         }, err => {
             console.warn("Weather: reverse geocode failed", err);
             city = city || "Unknown City";
+            cachedCities.set(coords, city);
         }, "HorneroOS Shell (https://github.com/HorneroOS/shell; https://horneroos.com)");
     }
 

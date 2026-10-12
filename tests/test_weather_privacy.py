@@ -104,6 +104,56 @@ def test_nominatim_request_identifies_horneroos_and_attributes_openstreetmap():
     assert "[© OpenStreetMap contributors](https://www.openstreetmap.org/copyright)" in dashboard
 
 
+def test_reverse_geocoding_caches_success_and_failure_for_the_session():
+    node = shutil.which("node")
+    assert node, "Node.js is required to exercise the asynchronous QML service contract"
+    source = SERVICE.read_text()
+    functions = {
+        name: _function(source, name)
+        for name in ("request", "fetchCityFromCoords")
+    }
+    script = r"""
+const assert = require('node:assert/strict');
+const functions = JSON.parse(process.argv[1]);
+const requests = [];
+const Config = { services: { weatherLocation: '10,20' } };
+const scope = {
+  Config,
+  Requests: { get(url, ok, fail, userAgent) { requests.push({url, ok, fail, userAgent}); } },
+  console: { warn() {} },
+  _requestGeneration: 0,
+  cachedCities: new Map(),
+  city: '',
+  get locationConfigured() { return !!Config.services.weatherLocation.trim(); },
+};
+const invoke = (source, ...args) => Function('scope', `with (scope) { return (${source}); }`)(scope)(...args);
+scope.request = (...args) => invoke(functions.request, ...args);
+
+invoke(functions.fetchCityFromCoords, '10,20');
+assert.equal(requests.length, 1);
+assert.match(requests[0].userAgent, /^HorneroOS Shell /);
+requests[0].ok(JSON.stringify({features: [{properties: {geocoding: {type: 'city', name: 'Test City'}}}]}));
+invoke(functions.fetchCityFromCoords, '10,20');
+assert.equal(requests.length, 1, 'hourly refresh should reuse a successful cached lookup');
+assert.equal(scope.city, 'Test City');
+
+scope.city = '';
+invoke(functions.fetchCityFromCoords, '30,40');
+assert.equal(requests.length, 2);
+requests[1].fail('offline');
+invoke(functions.fetchCityFromCoords, '30,40');
+assert.equal(requests.length, 2, 'hourly refresh should not retry a failed lookup');
+assert.equal(scope.city, 'Unknown City');
+"""
+    result = subprocess.run(
+        [node, "-e", script, json.dumps(functions)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+
+
 def test_lock_weather_hides_measurements_until_weather_is_available():
     source = LOCK_WEATHER.read_text()
     humidity = re.search(r"StyledText\s*\{[^{}]*text:\s*qsTr\(\"Humidity:", source, re.S)

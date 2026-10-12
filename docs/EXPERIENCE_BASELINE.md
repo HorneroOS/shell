@@ -244,3 +244,83 @@ Per slice: implement → `horneroctl shell restart --yes` → interact →
 iterate. Gates unchanged: `pytest tests/ --ignore=tests/vm` (172 green
 at baseline), `lint_qml.sh`, `check_forbidden_paths.sh`, full CI per PR.
 No release cut until slices land; Preview 4 stays immutable.
+
+## 11. External product comparison — 2026-10-12
+
+This section extends the structure-level shell comparison with a current
+review of the official repositories and published documentation for
+[Caelestia](https://github.com/caelestia-dots),
+[Ryoku](https://github.com/Ryoku-dev/ryoku), and
+[Omarchy](https://github.com/omacom/omarchy). It records publicly
+documented product structure, not a benchmark or a claim that every
+feature was run locally. Details can change; links point to the reviewed
+upstream sources.
+
+| Product | Product shape visible in official sources | Notable user/contributor experience | HorneroOS lesson |
+|---|---|---|---|
+| Caelestia | A Quickshell desktop plus a separately distributed CLI/control script, framework/config repository, website, example plugin and official plugin manifests. The shell README positions it as a Hyprland-oriented desktop. | The CLI exposes shell, scheme, wallpaper, screenshot, recording, clipboard and install/update commands; its README documents configuration and installation. Themes can be generated from Material You color roles. | Keep command-line operations discoverable and documented alongside the GUI. Hornero's V horneroctl and graphical Settings can complement one another, provided status and writes share an explicit contract. The plugin validator merged in #155/#163 is a safer foundation than an undocumented extension directory; it does not by itself imply a plugin store or runtime loader. |
+| Ryoku | A single Arch workstation distribution repository contains its desktop, system definition, installer, release/update system and CLI. It supports Hyprland and Niri in the compositor's native configuration languages. The wider organization includes docs, community store, and separate desktop tools. | The project states an explicit design and operating philosophy, publishes hardware requirements and operational boundaries (for example UEFI and Secure Boot constraints), and presents one visual language across shell surfaces. | State product boundaries and hardware/support requirements in one obvious place. Preserve Hornero's separately owned repositories and edition manifests, but give users a concise map of which repository owns each layer and how maturity differs. |
+| Omarchy | An Arch-based, opinionated desktop distribution with an extensive manual, CLI and theme workflow. Its docs distinguish trusted first-party themes from repository-installed themes and filter files that can execute code. It also maintains a theme registry with validation and generated previews. | The manual covers everyday use, configuration, troubleshooting, security and theme authoring. Theming documentation describes activation and precedence, while the registry gives a clear submit → validate → publish path. | Hornero can make its existing source-of-truth boundaries easier for users and contributors to navigate: provide one theme-author guide, explain provenance and package ownership, and keep third-party extensions constrained and reviewable. Do not claim the plugin contract is equivalent to a curated marketplace. |
+
+### Findings for HorneroOS
+
+The comparison does not identify a missing feature that should be copied
+verbatim. The products have different boundaries: Caelestia is a shell and
+dotfiles ecosystem, Ryoku describes a complete workstation distribution,
+and Omarchy couples a desktop distribution to a detailed user manual and
+theme publishing workflow. HorneroOS is building a composable product
+family across separate repositories, so its strongest opportunity is to
+make those boundaries legible rather than imitate another repository
+layout.
+
+The work already present on HorneroOS main materially addresses several
+of the useful patterns found in this review: a V-based management CLI,
+edition/package composition, a shell plugin contract and validator, a
+product design guide, a contributor-facing repository map, wallpaper
+provenance, and an evidence-backed shell performance baseline. These are
+product infrastructure, not proof that every planned edition or
+compositor is fully supported. The website and docs should continue to
+label release maturity according to the acceptance evidence for each
+component.
+
+The remaining high-value work is narrower:
+
+1. **Publish one discoverable product map.** Link the design/brand guide,
+   repository ownership map, contributor guide, supported editions, and
+   compositor capability matrix from the website and organization profile.
+   Keep the detailed specifications in their canonical repositories.
+2. **Close the user documentation loop.** For each supported shell surface,
+   document the user task, keyboard path, settings/CLI equivalent, and
+   graceful behavior when an optional capability is unavailable. Keep
+   Hyprland and Niri differences explicit instead of promising parity.
+3. **Keep extension distribution separate from execution.** The plugin
+   contract and validator establish format and static checks. A catalog,
+   installer, signature/trust model, update behavior, and permissions
+   policy would be separate product work and should not be implied until
+   implemented.
+4. **Measure live interaction before polishing timing.** Issue #77 records
+   a small rapid-Escape race in nested Hyprland, with normal-speed closes
+   succeeding and no crash/protocol failure. Quickshell 0.3.1 documents
+   that HyprlandFocusGrab.active stays false until the compositor starts
+   the grab, then becomes true; it also exposes cleared, but no signal for
+   an Escape event missed before activation. A fix therefore needs a
+   separate, non-invasive way to receive or preserve that key without
+   stealing Escape from other applications. The existing VM harness can
+   exercise real sessions only when explicitly run; its GitHub workflow
+   intentionally validates scripts and dry-run coherence without booting a
+   VM. Do not add arbitrary delays or claim the race fixed without
+   repeatable before/after graphical evidence.
+
+### Sources reviewed
+
+- Caelestia [shell](https://github.com/caelestia-dots/shell),
+  [CLI](https://github.com/caelestia-dots/cli), and
+  [official plugin manifests](https://github.com/caelestia-dots/plugins).
+- Quickshell 0.3.1
+  [HyprlandFocusGrab reference](https://quickshell.org/docs/v0.3.1/types/Quickshell.Hyprland/HyprlandFocusGrab/).
+- Ryoku [product repository](https://github.com/Ryoku-dev/ryoku),
+  [documentation repository](https://github.com/Ryoku-dev/ryoku-docs), and
+  [community store](https://github.com/Ryoku-dev/ryostore).
+- Omarchy [product repository and manual](https://github.com/omacom/omarchy),
+  [theme authoring guide](https://github.com/omacom/omarchy/blob/quattro/manual/43-making-your-own-theme.md),
+  and [theme registry](https://github.com/omacom/omarchy-theme-registry).

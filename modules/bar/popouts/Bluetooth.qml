@@ -15,6 +15,25 @@ ColumnLayout {
     id: root
 
     required property Item wrapper
+    readonly property var adapter: Bluetooth.defaultAdapter ?? null
+    readonly property bool hasAdapter: adapter !== null
+    readonly property string deviceStatus: {
+        if (!root.hasAdapter)
+            return qsTr("No Bluetooth adapter found");
+        if (!root.adapter.enabled)
+            return qsTr("Turn on Bluetooth to find nearby devices");
+        if (root.adapter.discovering)
+            return qsTr("Looking for nearby devices…");
+        const devices = Bluetooth.devices.values;
+        if (devices.length > 0) {
+            let available = qsTr("%1 device%2 available").arg(devices.length).arg(devices.length === 1 ? "" : "s");
+            const connected = devices.filter(d => d.connected).length;
+            if (connected > 0)
+                available += qsTr(" (%1 connected)").arg(connected);
+            return available;
+        }
+        return qsTr("No nearby devices. Turn on Discovering to search.");
+    }
 
     spacing: Appearance.spacing.small
 
@@ -27,37 +46,32 @@ ColumnLayout {
 
     Toggle {
         label: qsTr("Enabled")
-        checked: Bluetooth.defaultAdapter?.enabled ?? false
+        visible: root.hasAdapter
+        checked: root.adapter?.enabled ?? false
         toggle.onToggled: {
-            const adapter = Bluetooth.defaultAdapter;
-            if (adapter)
-                adapter.enabled = checked;
+            if (root.adapter)
+                root.adapter.enabled = checked;
         }
     }
 
     Toggle {
         label: qsTr("Discovering")
-        checked: Bluetooth.defaultAdapter?.discovering ?? false
+        visible: root.hasAdapter
+        checked: root.adapter?.discovering ?? false
         toggle.onToggled: {
-            const adapter = Bluetooth.defaultAdapter;
-            if (adapter)
-                adapter.discovering = checked;
+            if (root.adapter)
+                root.adapter.discovering = checked;
         }
     }
 
     StyledText {
         Layout.topMargin: Appearance.spacing.small
+        Layout.fillWidth: true
         Layout.rightMargin: Appearance.padding.small
-        text: {
-            const devices = Bluetooth.devices.values;
-            let available = qsTr("%1 device%2 available").arg(devices.length).arg(devices.length === 1 ? "" : "s");
-            const connected = devices.filter(d => d.connected).length;
-            if (connected > 0)
-                available += qsTr(" (%1 connected)").arg(connected);
-            return available;
-        }
+        text: root.deviceStatus
         color: Colours.palette.m3onSurfaceVariant
         font.pointSize: Appearance.font.size.small
+        wrapMode: Text.WordWrap
     }
 
     Repeater {

@@ -54,3 +54,5 @@ def test_policy_documented():
     assert "requestLock" in doc
     assert "1054" in doc
     assert "single-locker" in doc
+    assert "Quickshell 0.3.2" in doc
+    assert "partial containment" in doc

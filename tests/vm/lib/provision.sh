@@ -3,9 +3,9 @@
 # the guest marker file exists, so repeat runs only re-provision explicitly).
 # Usage: provision.sh [--dry-run]
 #
-# Quickshell ships through the AUR, so provisioning bootstraps yay first and
-# then installs quickshell plus the Qt6 modules the shell needs. This is the
-# slowest harness stage on first boot; afterwards the marker makes it instant.
+# Quickshell is available in Arch's official extra repository. The harness
+# uses that stable package, matching the minimum supported by hornero-shell,
+# rather than introducing a moving AUR VCS dependency into graphical QA.
 
 set -euo pipefail
 
@@ -25,7 +25,7 @@ fi
 if vm_is_dry_run; then
     echo "dry-run: would pin guest DNS to ${VM_GUEST_DNS} when DHCP DNS does not resolve"
     echo "dry-run: would check guest free disk space (fail fast below ${VM_MIN_GUEST_FREE_GB} GB)"
-    echo "dry-run: would install guest packages (pacman incl. cmake, libqalculate + AUR quickshell)"
+    echo "dry-run: would install guest packages (pacman incl. cmake, libqalculate, quickshell>=0.3.2)"
     echo "dry-run: would enable seatd and grant seat/video/render groups"
     echo "dry-run: would write the provision marker when done"
     exit 0
@@ -106,8 +106,8 @@ fi
 echo "==> installing guest desktop stack (this takes a while on first boot)"
 # Remote script on purpose: every expansion below must happen on the guest.
 # shellcheck disable=SC2016
-vm_ssh 'sudo pacman -Sy --noconfirm --needed --overwrite "/usr/lib/*" \
-    hyprland xdg-desktop-portal-hyprland \
+vm_ssh 'sudo pacman -Syu --noconfirm --needed --overwrite "/usr/lib/*" \
+    hyprland xdg-desktop-portal-hyprland quickshell \
     pipewire wireplumber pipewire-pulse \
     seatd polkit \
     grim slurp wf-recorder \
@@ -116,15 +116,14 @@ vm_ssh 'sudo pacman -Sy --noconfirm --needed --overwrite "/usr/lib/*" \
     pipewire-jack aubio libqalculate \
     noto-fonts noto-fonts-emoji ttf-jetbrains-mono-nerd ttf-material-symbols-variable'
 
-echo "==> bootstrapping yay for AUR packages (quickshell)"
+echo "==> checking the installed stable Quickshell version"
 # shellcheck disable=SC2016
-vm_ssh 'if ! command -v yay > /dev/null; then \
-    rm -rf /tmp/yay-bin && git clone https://aur.archlinux.org/yay-bin.git /tmp/yay-bin && \
-    (cd /tmp/yay-bin && makepkg -si --noconfirm) && rm -rf /tmp/yay-bin; fi'
-
-echo "==> installing quickshell from the AUR"
-# shellcheck disable=SC2016
-vm_ssh 'yay -S --noconfirm --needed quickshell-git'
+vm_ssh 'qs_version=$(pacman -Q quickshell | awk "{print \$2}"); \
+    if [ "$(vercmp "$qs_version" 0.3.2)" -lt 0 ]; then \
+        echo "error: Arch repositories provided quickshell $qs_version; hornero-shell requires 0.3.2 or later" >&2; \
+        exit 1; \
+    fi; \
+    printf "Quickshell: %s\\n" "$qs_version"'
 
 echo "==> granting DRM and seat access"
 # SSH sessions have no logind seat, so seatd handles DRM device access.

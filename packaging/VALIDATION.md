@@ -94,7 +94,7 @@ remains recommended and unexecuted.
 | pipewire | extra | — |
 | qt6-base | extra | — |
 | qt6-declarative | extra | — |
-| quickshell | extra (0.3.1-1) | no longer AUR-only; corroborated on archlinux.org |
+| quickshell | extra (0.3.2-1, checked 2026-10-12) | stable package includes the session-lock acquisition guard |
 | cmake, git, ninja | extra | — |
 | pkgconf | core | — |
 | qt6-tools | extra | — |

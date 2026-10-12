@@ -26,6 +26,16 @@ def test_pkgbuild_required_variables():
     assert not missing, f"PKGBUILD missing variables: {missing}"
 
 
+def test_release_version_matches_nix_and_arch_package():
+    pkgbuild = PKGBUILD.read_text()
+    nix = (ROOT / "nix/default.nix").read_text()
+    pkgver = re.search(r"^pkgver=([^\n]+)$", pkgbuild, re.MULTILINE)
+    nix_version = re.search(r'^  version = "([^\"]+)";$', nix, re.MULTILINE)
+    source_tag = re.search(r"#tag=pkg/hornero-shell-v([^\"]+)", pkgbuild)
+    assert pkgver and nix_version and source_tag
+    assert pkgver.group(1) == nix_version.group(1) == source_tag.group(1)
+
+
 def test_pkgbuild_build_and_package_functions():
     text = PKGBUILD.read_text()
     assert re.search(r"^build\(\)", text, re.MULTILINE), "build() missing"
@@ -59,15 +69,16 @@ def test_documented_qml_modules_exist():
 
 def test_quickshell_dependency_is_stable_release():
     # The shell must depend on the official Arch package, not the AUR VCS
-    # package: only long-stable Quickshell QML modules are used and no
-    # Quickshell C++ API is linked (verified against quickshell 0.3.1).
+    # package: stable Quickshell QML modules are used and no Quickshell C++
+    # API is linked. 0.3.2 is required for its failed-lock acquisition guard;
+    # orphaned lock-manager lifecycle issues remain upstream.
     text = PKGBUILD.read_text()
     match = re.search(r"^depends=\((.*?)\)", text, re.MULTILINE | re.DOTALL)
     assert match, "depends array not found"
     depends = match.group(1)
     assert "quickshell-git" not in depends, "must not force the VCS package"
-    assert re.search(r"'quickshell>=[0-9.]+'", depends), (
-        "must pin a minimum official quickshell version"
+    assert "'quickshell>=0.3.2'" in depends, (
+        "must require the stable Quickshell release with the session-lock guard"
     )
 
 

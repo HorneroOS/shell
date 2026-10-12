@@ -273,8 +273,10 @@ exactly the checks that are deterministic without hardware:
 - The guest uses a minimal test-only `hyprland.conf` from
   `tests/vm/guest/`; compositor bindings and theming live in
   HorneroOS/config and are out of scope here.
-- Quickshell comes from the AUR (`quickshell-git`), so first provisioning
-  tracks upstream tip rather than a pinned release.
+- Quickshell comes from Arch `extra` as a stable package, matching the
+  production dependency floor. Provisioning records the installed package
+  version and fails early if the guest repositories offer less than 0.3.2.
+  This avoids testing the shell against a moving AUR VCS build.
 - Video capture needs a `wlr-screencopy` compositor (Hyprland qualifies)
   and must stop with SIGINT (`record.sh stop` does this); SIGTERM leaves
   a truncated file.

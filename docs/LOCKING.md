@@ -36,19 +36,25 @@ point structurally.
 ## Why prevention, not handling
 
 `WlSessionLock` exposes only `locked` — no error or failed signal
-(verified in the installed `quickshell-wayland.qmltypes`). A failed
-or reentrant acquisition is a fatal Wayland protocol error
-(`invalid object`, connection terminates), uncatchable from QML.
-No retry, timeout, or delay in the shell can mitigate it.
+(verified in the installed `quickshell-wayland.qmltypes`). Before
+Quickshell 0.3.2, a failed or reentrant acquisition could take a fatal
+Wayland path (`invalid object`, connection terminates), uncatchable
+from QML. Version 0.3.2 guards that known failed-acquisition path,
+but QML still cannot repair an orphaned compositor lock. No retry,
+timeout, or delay in the shell can mitigate protocol state owned by
+the compositor.
 
-Upstream owner: quickshell#1054 (open) — fatal re-lock over an
-orphaned ext-session-lock. Master carries afb2c27
-("wayland/lock: guard against reentrancy during surface creation",
-2026-08-25), which covers the reentrancy family but is in no
-released quickshell yet (installed: 0.3.1, 2026-08-21). The
-cross-locker orphan case (holder dies mid-lock, compositor state
-stale) has no upstream fix; the single-locker policy above is the
-Hornero-side containment until one lands.
+Upstream owner: [quickshell#1054](https://github.com/quickshell-mirror/quickshell/issues/1054)
+(open) — fatal re-lock over an orphaned ext-session-lock.
+[Quickshell 0.3.2](https://github.com/quickshell-mirror/quickshell/releases/tag/v0.3.2)
+(released 2026-10-08) includes afb2c27, “wayland/lock: guard against
+reentrancy during surface creation.” This prevents the known fatal path
+when acquisition fails or re-enters during surface creation. It does not
+clear the session-lock manager's active pointer when a live lock object is
+destroyed without `unlock()`, so the orphaned-lock lifecycle remains
+unresolved upstream. Hornero requires Quickshell 0.3.2 or later and retains
+the single-locker policy; the version floor is a partial containment, not a
+claim that cross-locker recovery works.
 
 ## Recovery
 

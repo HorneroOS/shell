@@ -79,7 +79,7 @@ def test_hornero_runtime_dependencies_are_packaged():
     assert "'hornero-config>=0.3.0'" in depends, (
         "the Shell must require the AUR-owned system catalogue"
     )
-    assert "'horneroctl-bin>=0.2.0_preview14.2'" in depends, (
+    assert "'horneroctl-bin>=0.2.0_preview17'" in depends, (
         "the Shell must require the AUR-owned CLI runtime"
     )
     assert "python-pywal16" not in depends, "retired pywal must not be a dependency"

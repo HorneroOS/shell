@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "example-clock",
+  "name": "Example Clock",
+  "version": "1.0.0",
+  "description": "A minimal example package for the Hornero Shell extension contract.",
+  "author": "HorneroOS contributors",
+  "license": "MIT",
+  "entrypoint": "Main.qml",
+  "files": [
+    "Main.qml",
+    "README.md",
+    "LICENSE"
+  ],
+  "capabilities": {
+    "processCommands": [],
+    "networkHosts": [],
+    "settings": {}
+  }
+}

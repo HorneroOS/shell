@@ -1,0 +1,74 @@
+# Hornero Shell extension contract
+
+**Status: contract and static validator only.** The Shell does not yet discover,
+load, configure, or install third-party extensions. `Hornero.PluginKit` is a
+reserved stable import surface for a future host implementation; it is not
+provided by the current Shell package.
+
+This contract gives community authors and maintainers a reviewable package
+shape before a runtime loader exists. The manifest schema is
+[`schemas/plugin-manifest.schema.json`](../schemas/plugin-manifest.schema.json)
+and the local checker is `scripts/validate_plugin.py`.
+
+## Trust boundary
+
+Quickshell QML executes with the logged-in user's permissions. Hornero Shell
+does not sandbox QML, and a manifest declaration cannot restrict filesystem,
+process, or network access at runtime. The validator catches a conservative
+set of malformed packages and suspicious source patterns; passing it is not a
+security certification. Review source before running a community extension.
+Never put credentials, privileged helpers, compiled binaries, or personal
+configuration into an extension package.
+
+## Package shape
+
+Each package contains one `manifest.json`, the declared QML entrypoint, and
+exactly the files listed in `files`. Paths are package-relative and may not
+escape the package. Symlinks, compiled binaries, bytecode, setuid/setgid bits,
+world-writable files, and executable files are rejected. A package must carry
+its own README and license when it is distributed; the checker does not infer
+or approve SPDX license identifiers.
+
+Minimal manifest:
+
+```json
+{
+  "schemaVersion": 1,
+  "id": "example-clock",
+  "name": "Example Clock",
+  "version": "1.0.0",
+  "description": "A sample clock card.",
+  "author": "Example Author",
+  "license": "MIT",
+  "entrypoint": "Main.qml",
+  "files": ["Main.qml", "README.md", "LICENSE"],
+  "capabilities": {
+    "processCommands": [],
+    "networkHosts": [],
+    "settings": {}
+  }
+}
+```
+
+Use `processCommands` to disclose exact executable basenames and
+`networkHosts` to disclose intended network hosts. These fields support code
+review only; they are not an operating-system permission grant. Settings are
+typed metadata with explicit defaults. A future host must own persistence and
+expose settings through a stable API rather than letting extensions rewrite
+Shell configuration files.
+
+The extension import surface is intentionally narrow: Qt Quick and Quickshell
+public modules plus the future `Hornero.PluginKit` API. Imports from Hornero's
+internal implementation are not stable and are rejected. The checker also
+rejects obvious shell/privilege escalation patterns and undeclared literal
+`Process` commands. These textual checks can be evaded by dynamic code and
+must never be treated as a sandbox.
+
+## Validate a package
+
+```sh
+python3 scripts/validate_plugin.py path/to/example-clock
+```
+
+The checker is also covered by `tests/test_plugin_contract.py`. Adding this
+contract does not alter shipped plugins or enable extension loading.

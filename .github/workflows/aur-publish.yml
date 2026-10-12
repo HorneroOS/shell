@@ -32,10 +32,13 @@ jobs:
             echo "Refusing to publish an AUR package from a commit outside main." >&2
             exit 1
           fi
-      - name: Stamp pkgver and source tag
+      - name: Stamp pkgver and source commit
+        env:
+          RELEASE_SHA: ${{ github.sha }}
         run: |
           pkgbuild=packaging/PKGBUILD
-          python3 scripts/stamp_aur_package.py "${pkgbuild}" "${GITHUB_REF_NAME}"
+          python3 scripts/stamp_aur_package.py \
+            "${pkgbuild}" "${GITHUB_REF_NAME}" "${RELEASE_SHA}"
           grep -E '^(pkgver|source)=' "${pkgbuild}"
       - name: Publish AUR package
         # yamllint disable rule:line-length

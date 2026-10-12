@@ -8,13 +8,16 @@ import sys
 from pathlib import Path
 
 REPOSITORY = "git+https://github.com/HorneroOS/shell.git"
+TAG_PREFIX = "pkg/hornero-shell-v"
 
 
 def stamp(pkgbuild: Path, tag: str) -> None:
     """Update pkgver and the source ref, including an existing pinned ref."""
-    if not re.fullmatch(r"v[0-9A-Za-z._+-]+", tag):
+    if not tag.startswith(TAG_PREFIX):
         raise ValueError(f"invalid release tag: {tag}")
-    version = tag.removeprefix("v").replace("-", "_")
+    version = tag.removeprefix(TAG_PREFIX)
+    if not re.fullmatch(r"[0-9][A-Za-z0-9._+]*", version):
+        raise ValueError(f"invalid Arch package version in release tag: {tag}")
     content = pkgbuild.read_text(encoding="utf-8")
 
     version_lines = re.findall(r"(?m)^pkgver=.*$", content)

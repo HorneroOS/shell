@@ -6,12 +6,20 @@ import pytest
 
 from scripts.stamp_aur_package import REPOSITORY, stamp
 
+WORKFLOW = Path(__file__).parents[1] / ".github/workflows/aur-publish.yml"
+
+
+def test_aur_workflow_only_listens_to_the_shell_package_namespace() -> None:
+    workflow = WORKFLOW.read_text(encoding="utf-8")
+    assert '"pkg/hornero-shell-v*"' in workflow
+    assert '"v*"' not in workflow
+
 
 @pytest.mark.parametrize(
     ("source", "tag", "expected_version"),
     [
-        (f'source=("pkg::{REPOSITORY}#tag=v1.2.2")', "v1.2.3", "1.2.3"),
-        (f'source=("pkg::{REPOSITORY}")', "v1.3.0-preview1", "1.3.0_preview1"),
+        (f'source=("pkg::{REPOSITORY}#tag=pkg/hornero-shell-v1.2.2")', "pkg/hornero-shell-v1.2.3", "1.2.3"),
+        (f'source=("pkg::{REPOSITORY}")', "pkg/hornero-shell-v1.3.0_preview1", "1.3.0_preview1"),
     ],
 )
 def test_stamp_updates_version_and_existing_or_unpinned_source(
@@ -33,6 +41,8 @@ def test_stamp_updates_version_and_existing_or_unpinned_source(
     [
         ("pkgver=1.2.2\n", "v1.2.3"),
         (f"pkgver=1.2.2\n{REPOSITORY}\n", "latest"),
+        (f"pkgver=1.2.2\n{REPOSITORY}\n", "v1.2.3"),
+        (f"pkgver=1.2.2\n{REPOSITORY}\n", "pkg/hornero-shell-v1.2.3-preview1"),
     ],
 )
 def test_stamp_rejects_ambiguous_or_unpinned_input(tmp_path: Path, content: str, tag: str):

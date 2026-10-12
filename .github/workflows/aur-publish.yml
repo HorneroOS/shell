@@ -1,14 +1,13 @@
 ---
-# Continuous AUR publishing: on version tags (v*), stamp pkgver and the
-# git source tag from the release tag, then push the packaging PKGBUILD
-# via the shared publish action (it regenerates .SRCINFO itself).
+# Continuous AUR publishing: package-specific tags keep distro preview tags
+# from triggering an AUR publication.
 
 name: aur-publish
 
 on:
   push:
     tags:
-      - "v*"
+      - "pkg/hornero-shell-v*"
 
 jobs:
   aur-publish:

@@ -100,3 +100,12 @@ new release:
 The packaged shell runtime is GPL-3.0 (see `LICENSE.GPL-3.0` and `NOTICE` at
 the repository root), so the package declares `GPL-3.0-or-later` and installs
 both files under `/usr/share/licenses/hornero-shell/`.
+
+# AUR release tags
+
+The `aur-publish` workflow only accepts tags in the package namespace:
+`pkg/hornero-shell-vX.Y.Z`. This keeps HorneroOS composition tags such as
+`v0.2.0-preview15` from publishing an AUR package. Arch `pkgver` does not
+allow hyphens; encode preview labels with underscores, for example
+`pkg/hornero-shell-v1.3.0_preview1`. The workflow validates the tag before
+updating the PKGBUILD and publishing it.

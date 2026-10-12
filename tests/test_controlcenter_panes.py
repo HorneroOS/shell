@@ -180,6 +180,15 @@ def test_session_type_never_shadowed():
             )
 
 
+def test_terminal_settings_uses_cli_report_and_change_contract():
+    pane = (CC / "terminal" / "TerminalPane.qml").read_text()
+    assert '["horneroctl", "--json", "config", "default-apps", "list"]' in pane
+    assert 'data.terminals_available' in pane
+    assert 'data.terminal_shell_id' in pane
+    assert '"default-apps", "set", "terminal", id, "--yes"' in pane
+    assert 'Install Kitty, Alacritty, or Ghostty' in pane
+
+
 def test_no_dead_wrappers_in_panes():
     hits = []
     for path in CC.rglob("*.qml"):

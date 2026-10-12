@@ -157,6 +157,16 @@ QtObject {
             readonly property list<string> keywords: ["upgrade", "packages", "maintenance"]
         },
         QtObject {
+            readonly property string id: "terminal"
+            readonly property string label: "terminal"
+            readonly property string title: qsTr("Terminal")
+            readonly property string icon: "terminal"
+            readonly property string component: "terminal/TerminalPane.qml"
+            readonly property string category: "system"
+            readonly property string description: qsTr("Choose the terminal used by Hornero and integrated launch actions")
+            readonly property list<string> keywords: ["kitty", "alacritty", "ghostty", "default app", "console"]
+        },
+        QtObject {
             readonly property string id: "power"
             readonly property string label: "power"
             readonly property string title: qsTr("Power")

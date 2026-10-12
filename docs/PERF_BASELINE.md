@@ -2,7 +2,10 @@
 
 How to measure the Hornero shell repeatably so regressions show up as
 numbers, not vibes. The harness samples the running shell; reports are
-point-in-time observations, never published estimates.
+point-in-time observations, never published estimates. An anonymized,
+dated reference capture lives in `docs/perf-baselines/` so reviewers can
+see the shape of an observed run without mistaking it for a portable
+guarantee.
 
 ## What is measured
 
@@ -40,6 +43,13 @@ disposable test session or with the user's explicit approval. The harness
 reuses the `QS_CONFIG_PATH`, `QS_CONFIG_NAME`, and compositor socket/signature
 from the live Quickshell process when the caller does not already have them.
 
+The script reports steady-state measurements from the currently running
+shell. It does not measure the greeter-to-desktop path or the first rendered
+frame. `startup_ready_ms` is only a restart-to-IPC-ready proxy and must not be
+described as login-to-first-frame latency. A true first-frame measurement needs
+a disposable graphical session and an external frame observer; IPC readiness
+alone is insufficient evidence.
+
 ## How to compare
 
 Run twice under the same conditions (same session age, same open
@@ -48,10 +58,23 @@ regression is a sustained median move across runs, not one outlier
 sample. Session age matters: compare fresh-start to fresh-start, or
 steady-state to steady-state at similar uptimes.
 
-## Rules
+## Reference captures and rules
 
-- Reports are never committed to the repo (machine-specific, rots fast).
+- Raw reports are not committed: they contain machine/session details such as
+  process IDs, host memory, CPU counts, uptime, and timestamps. A reviewed
+  reference capture may be committed only after removing those details and
+  documenting the software version, sampling method, and limitations.
+- Reference captures are evidence from one environment and one time. They are
+  not defaults, SLOs, release claims, or proof of a regression/improvement by
+  themselves. Compare them only with runs made using the same method and
+  materially similar shell/compositor conditions.
 - Never publish estimates or projections — only observed runs with
   their metadata attached.
 - Keep the harness dependency-free: POSIX shell + `python3` (already a
   test dependency) + the shell's own CLI surface.
+
+## Current reference
+
+See [`perf-baselines/2026-10-12.md`](perf-baselines/2026-10-12.md) for a
+sanitized steady-state capture. It intentionally does not claim a clean-login,
+startup-to-first-frame, or per-surface frame-cost result.

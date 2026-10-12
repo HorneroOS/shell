@@ -8,7 +8,8 @@ standard prefixes verified against a local `DESTDIR` install:
 - `/etc/xdg/quickshell/hornero/presets` — runtime preset definitions used by
   the Shell's Layout Picker
 - `/usr/share/doc/hornero-shell/IPC.md` — installed IPC contract for tooling
-- `/usr/lib/hornero` — `version` helper binary
+- `/usr/lib/hornero` — `version` helper binary and
+  `hornero-shell-plugin-validate`, the shared community-plugin contract checker
 - `/usr/lib/qt6/qml/Hornero*` — native QML plugin modules
   (`Hornero`, `Hornero.Internal`, `Hornero.Models`, `Hornero.Services`)
 
@@ -25,7 +26,8 @@ not to the Shell package.
 
 ## Build the package
 
-Install the build dependencies, then run `makepkg`:
+Install the build dependencies (including Python for the packaged plugin
+validator), then run `makepkg`:
 
 ```bash
 sudo pacman -S --needed base-devel cmake ninja pkgconf git qt6-base qt6-declarative qt6-tools

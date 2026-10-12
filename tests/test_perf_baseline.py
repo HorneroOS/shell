@@ -73,6 +73,20 @@ def test_sanitized_reference_capture_has_observed_values_and_limits():
         assert expected in text, f"reference capture missing {expected!r}"
 
 
+def test_follow_up_capture_is_separate_sanitized_and_honest_about_limits():
+    capture = ROOT / "docs" / "perf-baselines" / "2026-10-12.md"
+    text = capture.read_text()
+    for expected in (
+        "## Follow-up host observation",
+        "`hornero-shell 1.2.7-1`",
+        "| **Median** | **517.4** | **431.4** | **342.4** | **88.9** | **0.0** | **0.00** | **23** | **7** |",
+        "do not infer a\nbefore/after improvement",
+        "does not supply the clean-session",
+        "Host identity, process IDs, host memory, CPU topology, user name",
+    ):
+        assert expected in text, f"follow-up capture missing {expected!r}"
+
+
 def _write_executable(path: Path, text: str) -> None:
     path.write_text(textwrap.dedent(text), encoding="utf-8")
     path.chmod(0o755)

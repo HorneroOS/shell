@@ -83,6 +83,8 @@ def _run_fixture(
     output_format: str | None = "json",
     niri_outputs: str = '{"HDMI-A-1":{"current_mode":{"width":1920}},"eDP-1":{"current_mode":null}}',
     niri_layers: str = '[{"namespace":"hornero"}]',
+    shell_pid: str | None = None,
+    proc_root: Path | None = None,
 ) -> tuple[str, dict | None]:
     with TemporaryDirectory(prefix="hornero-perf-") as temporary:
         root = Path(temporary)
@@ -124,7 +126,7 @@ def _run_fixture(
         env.update(
             {
                 "PATH": f"{bindir}:{env['PATH']}",
-                "HORNERO_TEST_PID": str(os.getpid()),
+                "HORNERO_TEST_PID": shell_pid or str(os.getpid()),
                 "QS_CONFIG_PATH": str(qml_root / "shell.qml"),
                 "QS_CONFIG_NAME": "",
                 "QS_MANIFEST": "",
@@ -135,6 +137,8 @@ def _run_fixture(
                 "NIRI_TEST_LAYERS": niri_layers,
             }
         )
+        if proc_root is not None:
+            env["HORNERO_PROC_ROOT"] = str(proc_root)
         if compositor == "niri":
             _write_executable(
                 bindir / "niri",
@@ -155,6 +159,18 @@ def _run_fixture(
                 case "$*" in
                     *monitors*) printf 'Monitor HDMI-A-1\\nMonitor DP-1\\n' ;;
                     *layers*) printf 'namespace: hornero\\nnamespace: wallpaper\\n' ;;
+                    *) exit 2 ;;
+                esac
+                """,
+            )
+        if shell_pid is not None:
+            _write_executable(
+                bindir / "ps",
+                """
+                #!/bin/sh
+                case "$*" in
+                    *rss*) printf '1234\\n' ;;
+                    *etimes*) printf '10\\n' ;;
                     *) exit 2 ;;
                 esac
                 """,
@@ -206,6 +222,49 @@ def test_harness_reports_niri_errors_and_unknown_shapes_as_unavailable():
     assert report is not None
     assert report["monitors"] is None
     assert report["samples"][0]["layers"] is None
+
+
+def test_harness_reports_null_memory_breakdown_when_smaps_rollup_is_unreadable():
+    _, report = _run_fixture("niri", shell_pid="999999999", proc_root=Path("/nonexistent"))
+    assert report is not None
+    assert report["samples"][0]["memory_breakdown"] == {
+        "pss_anon_kb": None,
+        "pss_file_kb": None,
+        "pss_shmem_kb": None,
+    }
+
+
+def test_harness_reports_null_for_missing_pss_breakdown_fields():
+    with TemporaryDirectory(prefix="hornero-proc-") as temporary:
+        proc_root = Path(temporary)
+        rollup = proc_root / "999999999" / "smaps_rollup"
+        rollup.parent.mkdir()
+        rollup.write_text("Rss: 10 kB\nPss: 5 kB\n", encoding="utf-8")
+        _, report = _run_fixture("niri", shell_pid="999999999", proc_root=proc_root)
+    assert report is not None
+    assert report["samples"][0]["memory_breakdown"] == {
+        "pss_anon_kb": None,
+        "pss_file_kb": None,
+        "pss_shmem_kb": None,
+    }
+
+
+def test_harness_parses_available_pss_breakdown_fields():
+    with TemporaryDirectory(prefix="hornero-proc-") as temporary:
+        proc_root = Path(temporary)
+        rollup = proc_root / "999999999" / "smaps_rollup"
+        rollup.parent.mkdir()
+        rollup.write_text(
+            "Pss: 60 kB\nPss_Anon: 10 kB\nPss_File: 20 kB\nPss_Shmem: 30 kB\n",
+            encoding="utf-8",
+        )
+        _, report = _run_fixture("niri", shell_pid="999999999", proc_root=proc_root)
+    assert report is not None
+    assert report["samples"][0]["memory_breakdown"] == {
+        "pss_anon_kb": 10,
+        "pss_file_kb": 20,
+        "pss_shmem_kb": 30,
+    }
 
 
 def _assert_memory_breakdown(sample: dict) -> None:

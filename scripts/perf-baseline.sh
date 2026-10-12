@@ -213,8 +213,9 @@ PY
 # smaps_rollup exposes the proportional set size split by backing type on
 # current Linux kernels. Keep missing fields null so older kernels are not
 # misreported as having zero anonymous/file/shared memory.
+# HORNERO_PROC_ROOT is a test seam; live reports read from /proc by default.
 memory_breakdown() {
-    python3 - "${PID}" <<'PY'
+    python3 - "${HORNERO_PROC_ROOT:-/proc}/${PID}/smaps_rollup" <<'PY'
 import json
 import re
 import sys
@@ -223,7 +224,7 @@ from pathlib import Path
 fields = {"Pss_Anon": "pss_anon_kb", "Pss_File": "pss_file_kb", "Pss_Shmem": "pss_shmem_kb"}
 values = {name: None for name in fields.values()}
 try:
-    for line in Path(f"/proc/{sys.argv[1]}/smaps_rollup").read_text().splitlines():
+    for line in Path(sys.argv[1]).read_text().splitlines():
         match = re.fullmatch(r"(Pss_Anon|Pss_File|Pss_Shmem):\s+(\d+) kB", line)
         if match:
             values[fields[match.group(1)]] = int(match.group(2))

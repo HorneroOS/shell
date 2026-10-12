@@ -262,6 +262,33 @@ upstream sources.
 | Ryoku | A single Arch workstation distribution repository contains its desktop, system definition, installer, release/update system and CLI. It supports Hyprland and Niri in the compositor's native configuration languages. The wider organization includes docs, community store, and separate desktop tools. | The project states an explicit design and operating philosophy, publishes hardware requirements and operational boundaries (for example UEFI and Secure Boot constraints), and presents one visual language across shell surfaces. | State product boundaries and hardware/support requirements in one obvious place. Preserve Hornero's separately owned repositories and edition manifests, but give users a concise map of which repository owns each layer and how maturity differs. |
 | Omarchy | An Arch-based, opinionated desktop distribution with an extensive manual, CLI and theme workflow. Its docs distinguish trusted first-party themes from repository-installed themes and filter files that can execute code. It also maintains a theme registry with validation and generated previews. | The manual covers everyday use, configuration, troubleshooting, security and theme authoring. Theming documentation describes activation and precedence, while the registry gives a clear submit → validate → publish path. | Hornero can make its existing source-of-truth boundaries easier for users and contributors to navigate: provide one theme-author guide, explain provenance and package ownership, and keep third-party extensions constrained and reviewable. Do not claim the plugin contract is equivalent to a curated marketplace. |
 
+### Organization and repository boundaries
+
+This inventory is based on the public organization listings and repository
+metadata checked on 2026-10-12. A repository description is not proof of
+maintenance ownership, compatibility, or release support; fork ancestry and
+the repository's own documentation matter too.
+
+| Ecosystem | Public repository map | Provenance and interpretation |
+|---|---|---|
+| Caelestia | The organization separates the Quickshell `shell`, the `cli`, the `caelestia` dotfiles/app-configuration repository, the `website`, official `plugins` manifests, and an `example-plugin`. | The CLI README describes the supported install/update path; the dotfiles repository marks its old `install.fish` as retired in favor of the CLI. Treat the plugin manifest repository and example as first-party extension infrastructure, not as evidence that arbitrary third-party QML is sandboxed. |
+| Ryoku | The organization has the `ryoku` product repository, `ryoku-docs`, and `ryostore`, alongside repositories named `ryoshot`, `ryoview`, and `ryomotion`. | GitHub currently identifies `ryoshot` as a fork of [Gakuseei/rishot](https://github.com/Gakuseei/rishot), `ryoview` as a fork of [fedsfarm/gloview](https://github.com/fedsfarm/gloview), and `ryomotion` as a fork of [siddharthvaddem/openscreen](https://github.com/siddharthvaddem/openscreen). Their repository descriptions and README identities are not fully aligned. Compare their upstream projects and the Ryoku forks as distinct provenance; do not count the forks as original Ryoku implementations or assume the README describes a Ryoku-specific integration. |
+| Omarchy | The `omarchy` repository contains the distribution, its manual, installer, CLI, theme workflow and operational documentation; `omarchy-theme-registry` separately publishes the community theme catalog. | The registry documents issue-based submission, automated validation, maintainer-reviewed merges, catalog builds, and preview publication. That is a concrete contribution pipeline; it remains separate from the first-party theme authoring and execution policy in Omarchy itself. |
+
+The Ryoku fork metadata is especially useful when evaluating feature breadth:
+the repositories indicate curated access to related tools, but their GitHub
+parent links and upstream READMEs are necessary context before attributing
+ownership or support. Recheck those relationships before using this comparison
+for product or maintenance claims.
+
+Hornero already exposes screenshot capture and recording through the Shell and
+`horneroctl`, and has a static community-plugin contract and validator. Those
+are not equivalent to a standalone annotation app, a workspace-switcher
+product, or a theme marketplace. The meaningful follow-up is a reviewed
+contribution path with explicit package ownership, provenance, preview
+generation and lifecycle policy—not simply adding a directory of external
+assets or claiming feature parity.
+
 ### Findings for HorneroOS
 
 The comparison does not identify a missing feature that should be copied

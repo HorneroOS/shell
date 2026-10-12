@@ -11,10 +11,12 @@ REPOSITORY = "git+https://github.com/HorneroOS/shell.git"
 TAG_PREFIX = "pkg/hornero-shell-v"
 
 
-def stamp(pkgbuild: Path, tag: str) -> None:
-    """Update pkgver and the source ref, including an existing pinned ref."""
+def stamp(pkgbuild: Path, tag: str, release_sha: str) -> None:
+    """Update pkgver and pin the source to the release commit."""
     if not tag.startswith(TAG_PREFIX):
         raise ValueError(f"invalid release tag: {tag}")
+    if not re.fullmatch(r"[0-9a-fA-F]{40}", release_sha):
+        raise ValueError("release commit must be a full 40-character SHA-1")
     version = tag.removeprefix(TAG_PREFIX)
     if not re.fullmatch(r"[0-9][A-Za-z0-9._+]*", version):
         raise ValueError(f"invalid Arch package version in release tag: {tag}")
@@ -23,13 +25,18 @@ def stamp(pkgbuild: Path, tag: str) -> None:
     version_lines = re.findall(r"(?m)^pkgver=.*$", content)
     if len(version_lines) != 1:
         raise ValueError("expected exactly one pkgver assignment")
-    source_matches = list(re.finditer(re.escape(REPOSITORY) + r"(?:#tag=[^\s\"']+)?", content))
+    source_matches = list(
+        re.finditer(
+            re.escape(REPOSITORY) + r"(?:#(?:tag|commit)=[^\s\"']+)?",
+            content,
+        )
+    )
     if len(source_matches) != 1:
         raise ValueError("expected exactly one Hornero Shell source URL")
 
     content = (
         content[: source_matches[0].start()]
-        + f"{REPOSITORY}#tag={tag}"
+        + f"{REPOSITORY}#commit={release_sha.lower()}"
         + content[source_matches[0].end() :]
     )
     content = content.replace(version_lines[0], f"pkgver={version}", 1)
@@ -37,11 +44,14 @@ def stamp(pkgbuild: Path, tag: str) -> None:
 
 
 def main() -> int:
-    if len(sys.argv) != 3:
-        print("usage: stamp_aur_package.py PKGBUILD vX.Y.Z", file=sys.stderr)
+    if len(sys.argv) != 4:
+        print(
+            "usage: stamp_aur_package.py PKGBUILD pkg/hornero-shell-vX.Y.Z RELEASE_SHA",
+            file=sys.stderr,
+        )
         return 2
     try:
-        stamp(Path(sys.argv[1]), sys.argv[2])
+        stamp(Path(sys.argv[1]), sys.argv[2], sys.argv[3])
     except (OSError, ValueError) as error:
         print(f"STAMP-FAIL: {error}", file=sys.stderr)
         return 1

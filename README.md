@@ -77,6 +77,13 @@ include `HORNERO_WALLPAPERS_DIR`, `HORNERO_RECORDINGS_DIR`, and
 The original extraction source and upstream license are recorded in
 `docs/PROVENANCE.md` and `NOTICE`.
 
+## Extension contract
+
+The repository documents a proposed community extension package contract and
+static validator in [`docs/PLUGINS.md`](docs/PLUGINS.md). Third-party plugin
+discovery, loading, and installation are not implemented; Quickshell code is
+not sandboxed.
+
 ## Structure
 
 ```text

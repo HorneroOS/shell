@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://horneroos.com/schemas/shell-plugin-manifest-v1.json",
+  "title": "Hornero Shell Plugin Manifest",
+  "description": "Metadata contract for community-authored Hornero Shell extensions. This schema does not define a sandbox or runtime loader.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "id",
+    "name",
+    "version",
+    "description",
+    "author",
+    "license",
+    "entrypoint",
+    "files",
+    "capabilities"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{0,47}$"
+    },
+    "name": { "type": "string", "minLength": 1, "maxLength": 64, "pattern": "\\S" },
+    "version": {
+      "maxLength": 80,
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\\+[0-9A-Za-z.-]+)?$"
+    },
+    "description": { "type": "string", "minLength": 1, "maxLength": 280, "pattern": "\\S" },
+    "author": { "type": "string", "minLength": 1, "maxLength": 120, "pattern": "\\S" },
+    "license": { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "\\S" },
+    "homepage": { "type": "string", "maxLength": 500, "format": "uri", "pattern": "^https://[^\\s/]+(?:/.*)?$" },
+    "entrypoint": {
+      "type": "string",
+      "maxLength": 240,
+      "pattern": "^(?!/)(?!\\.{1,2}(?:/|$))(?!.*\\/\\.{1,2}(?:/|$))(?!.*//)[A-Za-z0-9._/-]+\\.qml$"
+    },
+    "files": {
+      "type": "array",
+      "minItems": 3,
+      "uniqueItems": true,
+      "allOf": [
+        { "contains": { "const": "README.md" } },
+        { "contains": { "const": "LICENSE" } }
+      ],
+      "items": {
+        "type": "string",
+        "maxLength": 240,
+        "pattern": "^(?!/)(?!\\.{1,2}(?:/|$))(?!.*\\/\\.{1,2}(?:/|$))(?!.*//)[A-Za-z0-9._/-]+$",
+        "not": { "const": "manifest.json" }
+      }
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["processCommands", "networkHosts", "settings"],
+      "properties": {
+        "processCommands": {
+          "description": "Exact executable basenames the extension may invoke. Declarations are review metadata, not enforcement.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^(?!(?:[sS][hH]|[bB][aA][sS][hH]|[dD][aA][sS][hH]|[zZ][sS][hH]|[fF][iI][sS][hH]|[sS][uU][dD][oO]|[dD][oO][aA][sS]|[sS][uU])$)[A-Za-z0-9_.+-]+$"
+          }
+        },
+        "networkHosts": {
+          "description": "Network hostnames the extension intends to contact. Declarations are review metadata, not enforcement.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\\.)*[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$" }
+        },
+        "settings": {
+          "type": "object",
+          "propertyNames": { "pattern": "^[a-z][a-zA-Z0-9]{0,47}$" },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["type", "default"],
+            "properties": {
+              "type": { "enum": ["boolean", "integer", "number", "string"] },
+              "default": { "type": ["boolean", "integer", "number", "string"] },
+              "description": { "type": "string", "maxLength": 160, "pattern": "\\S" }
+            },
+            "oneOf": [
+              { "properties": { "type": { "const": "boolean" }, "default": { "type": "boolean" } } },
+              { "properties": { "type": { "const": "integer" }, "default": { "type": "integer" } } },
+              { "properties": { "type": { "const": "number" }, "default": { "type": "number" } } },
+              { "properties": { "type": { "const": "string" }, "default": { "type": "string" } } }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

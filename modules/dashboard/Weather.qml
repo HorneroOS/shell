@@ -1,6 +1,7 @@
 import qs.components
 import qs.services
 import qs.config
+import Quickshell
 import QtQuick
 import QtQuick.Layouts
 
@@ -186,6 +187,14 @@ Item {
                     text: new Date().toLocaleDateString(Qt.locale(), "dddd, MMMM d")
                     font.pointSize: Appearance.font.size.small
                     color: Colours.palette.m3onSurfaceVariant
+                }
+
+                StyledText {
+                    textFormat: Text.MarkdownText
+                    text: qsTr("Weather: [Open-Meteo](https://open-meteo.com/) · Geocoding: [© OpenStreetMap contributors](https://www.openstreetmap.org/copyright)")
+                    font.pointSize: Appearance.font.size.smaller
+                    color: Colours.palette.m3onSurfaceVariant
+                    onLinkActivated: link => Quickshell.execDetached(["app2unit", "-O", "--", link])
                 }
             }
 

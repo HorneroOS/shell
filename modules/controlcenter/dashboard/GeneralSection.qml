@@ -4,6 +4,7 @@ import qs.components
 import qs.components.controls
 import qs.services
 import qs.config
+import Quickshell
 import QtQuick
 import QtQuick.Layouts
 
@@ -95,10 +96,13 @@ SectionContainer {
 
     StyledText {
         Layout.fillWidth: true
-        text: qsTr("Weather stays offline until you enter a location. City search and forecasts use Open-Meteo over HTTPS. Coordinates are also sent to OpenStreetMap to find the city name. Clear the field to stop requests.")
+        textFormat: Text.MarkdownText
+        text: qsTr("Weather stays offline until you enter a location. City search and forecasts use Open-Meteo over HTTPS. When you enter coordinates, they are also sent to OpenStreetMap to find the city name. Clear the field to stop requests. [© OpenStreetMap contributors](https://www.openstreetmap.org/copyright)")
         wrapMode: Text.WordWrap
         font.pointSize: Appearance.font.size.small
         color: Colours.palette.m3onSurfaceVariant
+
+        onLinkActivated: link => Quickshell.execDetached(["app2unit", "-O", "--", link])
     }
 
     StyledText {

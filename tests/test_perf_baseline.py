@@ -62,7 +62,12 @@ def _write_executable(path: Path, text: str) -> None:
     path.chmod(0o755)
 
 
-def _run_fixture(compositor: str, output_format: str | None = "json") -> tuple[str, dict | None]:
+def _run_fixture(
+    compositor: str,
+    output_format: str | None = "json",
+    niri_outputs: str = '{"HDMI-A-1":{"current_mode":{"width":1920}},"eDP-1":{"current_mode":null}}',
+    niri_layers: str = '[{"namespace":"hornero"}]',
+) -> tuple[str, dict | None]:
     with TemporaryDirectory(prefix="hornero-perf-") as temporary:
         root = Path(temporary)
         bindir = root / "bin"
@@ -107,6 +112,8 @@ def _run_fixture(compositor: str, output_format: str | None = "json") -> tuple[s
                 "QS_PLUGIN_PATH": "",
                 "NIRI_SOCKET": "/fixture/niri.sock" if compositor == "niri" else "",
                 "HYPRLAND_INSTANCE_SIGNATURE": "fixture" if compositor == "hyprland" else "",
+                "NIRI_TEST_OUTPUTS": niri_outputs,
+                "NIRI_TEST_LAYERS": niri_layers,
             }
         )
         if compositor == "niri":
@@ -115,10 +122,8 @@ def _run_fixture(compositor: str, output_format: str | None = "json") -> tuple[s
                 """
                 #!/bin/sh
                 case "$*" in
-                    *outputs*)
-                        printf '%s\\n' '{"HDMI-A-1":{"current_mode":{"width":1920}},"eDP-1":{"current_mode":null}}'
-                        ;;
-                    *layers*) printf '%s\\n' '[{"namespace":"hornero"}]' ;;
+                    *outputs*) printf '%s\\n' "$NIRI_TEST_OUTPUTS" ;;
+                    *layers*) printf '%s\\n' "$NIRI_TEST_LAYERS" ;;
                     *) exit 2 ;;
                 esac
                 """,
@@ -168,6 +173,17 @@ def test_harness_keeps_hyprland_metrics():
     assert report["monitors"] == 2
     assert report["samples"][0]["layers"] == 2
     assert 0 <= report["samples"][0]["cpu_percent"]
+
+
+def test_harness_reports_niri_errors_and_unknown_shapes_as_unavailable():
+    _, report = _run_fixture(
+        "niri",
+        niri_outputs='{"Err":"unsupported request"}',
+        niri_layers='{"unexpected":"shape"}',
+    )
+    assert report is not None
+    assert report["monitors"] is None
+    assert report["samples"][0]["layers"] is None
 
 
 def test_harness_prints_a_complete_human_table_by_default():

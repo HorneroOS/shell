@@ -116,16 +116,27 @@ except (KeyError, json.JSONDecodeError):
 
 if isinstance(value, dict) and "Ok" in value:
     value = value["Ok"]
+elif isinstance(value, dict) and "Err" in value:
+    print("null")
+    raise SystemExit(0)
 key = "Outputs" if kind == "outputs" else "Layers"
 if isinstance(value, dict) and key in value:
     value = value[key]
 
 if kind == "outputs" and isinstance(value, dict):
+    if any(
+        not isinstance(output, dict) or "current_mode" not in output
+        for output in value.values()
+    ):
+        print("null")
+        raise SystemExit(0)
     count = sum(
-        1 for output in value.values()
-        if isinstance(output, dict) and output.get("current_mode") is not None
+        1 for output in value.values() if output["current_mode"] is not None
     )
-elif isinstance(value, (dict, list)):
+elif kind == "layers" and isinstance(value, list):
+    if any(not isinstance(layer, dict) or "namespace" not in layer for layer in value):
+        print("null")
+        raise SystemExit(0)
     count = len(value)
 else:
     print("null")

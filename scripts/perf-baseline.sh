@@ -192,7 +192,7 @@ if [ -n "${QS_CONFIG_PATH:-}" ]; then
 else
     QML_ROOT="${XDG_CONFIG_HOME:-${HOME}/.config}/quickshell"
 fi
-QML_FILES="$(find "${QML_ROOT}" -name '*.qml' 2>/dev/null | wc -l)"
+QML_FILES_AVAILABLE="$(find "${QML_ROOT}" -name '*.qml' 2>/dev/null | wc -l)"
 SHELL_UPTIME="$(ps -o etimes= -p "${PID}" 2>/dev/null | tr -d ' ' || true)"
 CLK_TCK="$(getconf CLK_TCK 2>/dev/null || printf '100')"
 
@@ -236,7 +236,7 @@ SAMPLE_JSON="[${SAMPLE_JSON%,}]"
 export HB_QS_VERSION="${QS_VERSION}" HB_CORES="${CORES}" \
     HB_HOST_CORES="${HOST_CORES}" HB_MEM_KB="${MEM_KB}" \
     HB_COMPOSITOR="${COMPOSITOR}" HB_MONITORS="${MONITORS}" \
-    HB_QML_FILES="${QML_FILES}" HB_PID="${PID}" HB_SHELL_UPTIME="${SHELL_UPTIME}" \
+    HB_QML_FILES_AVAILABLE="${QML_FILES_AVAILABLE}" HB_PID="${PID}" HB_SHELL_UPTIME="${SHELL_UPTIME}" \
     HB_START_MS="${START_READY_MS}" HB_SAMPLES="${SAMPLE_JSON}" HB_OUT="${OUT}"
 REPORT="$(python3 - <<'EOF'
 import json, os
@@ -249,7 +249,7 @@ print(json.dumps({
     "host_cores": int(os.environ["HB_HOST_CORES"]),
     "mem_total_kb": int(os.environ["HB_MEM_KB"]),
     "monitors": int(os.environ["HB_MONITORS"]) if os.environ["HB_MONITORS"].isdigit() else None,
-    "qml_files_live": int(os.environ["HB_QML_FILES"]),
+    "qml_files_available": int(os.environ["HB_QML_FILES_AVAILABLE"]),
     "shell_pid": int(os.environ["HB_PID"]),
     "shell_uptime_sec": int(os.environ["HB_SHELL_UPTIME"]) if os.environ["HB_SHELL_UPTIME"].isdigit() else None,
     "startup_ready_ms": os.environ["HB_START_MS"],
@@ -269,7 +269,7 @@ print(f"Hornero Shell performance sample ({data['ts_utc']})")
 print(
     f"Compositor: {data['compositor']} | Quickshell: {data['quickshell']} | "
     f"monitors: {data['monitors'] if data['monitors'] is not None else 'n/a'} | "
-    f"QML files: {data['qml_files_live']} | shell age: "
+    f"QML files available: {data['qml_files_available']} | shell age: "
     f"{data['shell_uptime_sec'] if data['shell_uptime_sec'] is not None else 'n/a'}s"
 )
 print(f"CPU cores: {data['cores']} effective / {data['host_cores']} online | RAM: {data['mem_total_kb'] / 1048576:.1f} GiB")

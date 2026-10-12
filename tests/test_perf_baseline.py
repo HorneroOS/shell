@@ -75,6 +75,9 @@ def _run_fixture(
         bindir.mkdir()
         qml_root.mkdir()
         (qml_root / "shell.qml").write_text("// fixture\n", encoding="utf-8")
+        (qml_root / "modules").mkdir()
+        (qml_root / "modules" / "Loaded.qml").write_text("// fixture\n", encoding="utf-8")
+        (qml_root / "modules" / "AvailableOnly.qml").write_text("// fixture\n", encoding="utf-8")
         _write_executable(
             bindir / "pgrep",
             """
@@ -163,7 +166,8 @@ def test_harness_uses_niri_json_for_monitor_and_layer_counts():
     assert report["monitors"] == 1
     assert report["samples"][0]["layers"] == 1
     assert 0 <= report["samples"][0]["cpu_percent"]
-    assert report["qml_files_live"] == 1
+    assert report["qml_files_available"] == 3
+    assert "qml_files_live" not in report
 
 
 def test_harness_keeps_hyprland_metrics():
@@ -191,3 +195,4 @@ def test_harness_prints_a_complete_human_table_by_default():
     assert report is None
     assert "Sample  RSS MiB  PSS MiB  CPU %  IPC ms  Layers" in output
     assert "CPU cores:" in output
+    assert "QML files available: 3" in output

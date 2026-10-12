@@ -17,9 +17,11 @@ point-in-time observations, never published estimates.
 - `ipc_ms` — round trip of `qs ipc call lock isLocked` per sample.
 - `layers` — compositor layer-surface count per sample.
 - Metadata: UTC timestamp, quickshell version, cores, RAM, monitor
-  count, compositor identity, live QML file count, shell PID. Monitor and
-  layer counts use Hyprland IPC or Niri's JSON IPC; unsupported compositor
-  metrics are `null`, not a misleading zero.
+  count, compositor identity, number of QML files available in the selected
+  config tree, shell PID and session age. The file count does not claim those
+  files are loaded in memory. Monitor and layer counts use Hyprland IPC or
+  Niri's JSON IPC; unsupported compositor metrics are `null`, not a
+  misleading zero.
 
 ## How to run
 

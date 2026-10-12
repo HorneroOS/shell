@@ -1,12 +1,15 @@
-# HorneroOS Experience Baseline — Phase 1 Research Deliverable
+# HorneroOS Experience Baseline — Research and Follow-through
 
-> Status: research in progress. This document records **evidence-backed**
-> observations only. Nothing here authorizes redesign yet.
-> Baseline commit: `HorneroOS/shell@79d7fff`, host verified byte-identical
-> (`~/.config/quickshell` diff clean except `__pycache__`).
-> Screenshots: `/tmp/hornero-baseline/` (13 captures, 1920x1080, dark unless noted).
+> Historical snapshot: the live observations and screenshots below were
+> captured against `HorneroOS/shell@79d7fff` on 2026-09-29. They are evidence
+> of that baseline, not a claim about today's live session. Follow-up status
+> for the original UX findings is recorded in §5; current product direction
+> and next work are in §11.
+> Screenshots from the original audit were stored at `/tmp/hornero-baseline/`
+> (13 captures, 1920x1080, dark unless noted); those temporary files are not
+> part of this repository.
 
-## 1. Current experience map (verified live via `qs ipc`)
+## 1. Original experience map (verified live via `qs ipc`)
 
 IPC targets on shell main: `idleInhibitor, welcome (open/close/status),
 companion, notifs, appearance, controlCenter (open only), drawers
@@ -30,7 +33,7 @@ close (`hyprctl dispatch closewindow 'title:Hornero Settings.*'`),
 stub was removed; the real close path is `WindowFactory` plus
 `FloatingWindow` teardown.
 
-## 2. Baseline screenshot set
+## 2. Original screenshot set
 
 | File | Surface | Notes |
 |---|---|---|
@@ -105,7 +108,7 @@ providers, dock layouts, copying any bar/sidebar geometry.
   catalogue and manifests; current wallpaper state belongs under the user XDG
   state directory.
 
-## 5. UX problems (evidence-backed, with reproduction)
+## 5. Original UX findings and follow-up status
 
 ### 5.1 Settings has no programmatic close; `close()` is a stub
 
@@ -123,12 +126,22 @@ open appearance`, then no IPC call dismisses it.
 
 ### 5.2 Lock screen shows full notification content
 
+> **Fixed by default** (PR #63): `Config.lock.hideNotifs` defaults to `true`;
+> the lock surface shows a neutral placeholder and withholds the count until
+> unlock. Users can opt in through Notifications settings. This status is
+> verified in configuration and QML, not by a fresh live lock-screen capture.
+
 `welcome.png` (accidental lock capture): "14 notifications" with complete
 bodies ("Smart Float Window: 1400x864" x14) visible pre-auth. Privacy gap:
 notification content on lock screen should be hidden or redacted by
 default.
 
 ### 5.3 Welcome Shortcuts exposes raw compositor internals
+
+> **Improved** (PR #64): the original examples now have explicit action
+> labels such as “Move window to center,” “Close active window,” and
+> “Fit active window to column.” Unknown dispatcher/argument pairs still use
+> a generic fallback, so the long tail may retain compositor terminology.
 
 `welcome-shortcuts.png`, Windows group: "Centerwindow unnamed",
 "Killactive unnamed", "Layoutmsg fit active", "Layoutmsg colresize conf".
@@ -138,6 +151,11 @@ map them to intent. The manifest is authoritative for bindings; the
 
 ### 5.4 `horneroctl appearance status` disagrees with live shell
 
+> **Follow-up implemented:** `appearance status` now gathers wallpaper,
+> scheme, GTK and icon-theme state through `read_appearance_status_native`,
+> with text and JSON report tests. This code-level check does not replace a
+> live apply-then-read verification on a disposable desktop session.
+
 After `appearance theme apply hornero-light --yes`: `colours mode` →
 `light`, launcher rendered light, but `appearance status` still reported
 `mode: dark`. State file vs live shell drift. (Restored to dark/dark
@@ -145,10 +163,21 @@ after capture; both agree again.)
 
 ### 5.5 Wallpaper filenames truncate to unreadability
 
+> **Improved:** picker and preview labels use `Strings.wallpaperDisplayName`
+> to remove extensions, resolution suffixes and separators; tests cover the
+> affected surfaces. The display name still comes from the source filename,
+> so descriptive editorial titles remain a separate content-quality question.
+
 `cc-appearance.png`: `wallhaven-...0x1080.png` x6. Users cannot
 distinguish wallpapers by name; thumbnails carry the whole burden.
 
 ### 5.6 Appearance sections all collapse by default
+
+> **Fixed in the current configuration path:** Themes is expanded by default,
+> and each section's disclosure state is persisted in
+> `controlCenter.appearanceExpandedSections`. The original capture predates
+> that behavior; a fresh visual check is still needed to assess first-run
+> discoverability across the full pane.
 
 `cc-appearance.png`: Themes, Theme mode, Generation mode, Saved
 palettes, GTK theme, GTK color scheme, Icon theme, Fonts, Animations,
@@ -158,17 +187,26 @@ per-section.
 
 ### 5.7 Companion renders above Settings windows
 
+> **Fixed and documented** (PR #69): Companion yields to open Settings
+> windows, with the z-order policy recorded in `docs/COMPANION.md`.
+
 `companion.png`, `cc-audio.png`: summoned Companion sprite paints over
 the floating Settings window. Z-order policy for Companion vs windows is
 undefined (or explicitly always-on-top — either way, undocumented).
 
 ### 5.8 Session drawer avatar block is unexplained
 
+> **Code path identified; UX question remains:** this is the configurable
+> `Config.paths.sessionGif` animation placed between Shut down and Hibernate,
+> not a system-user avatar. Its decorative role is still unlabeled in the UI;
+> a visual and accessibility review should decide whether to label, describe,
+> reposition or remove it.
+
 `session.png`: an anime character tile sits between "Shut down" and
 "Hibernate" in the power menu with no label. Origin (user avatar?
 Companion skin? placeholder?) unknown — needs code read before judging.
 
-## 6. Information architecture audit (current, descriptive)
+## 6. Information architecture snapshot at the original baseline
 
 - **Launcher**: app search + favorites + `>` command mode. Role: *do*.
   Clear.
@@ -220,7 +258,7 @@ itself in writing or moves to Settings; light mode stays first-class
 > labels (#64), companion z-order (#69), dashboard Layout-tab removal
 > (ADR 003). This section stays as the directional vision.
 
-## 9. Implementation map (slices, each a small PR with before/after)
+## 9. Original implementation plan (historical)
 
 | # | Slice | Repo | Evidence |
 |---|---|---|---|

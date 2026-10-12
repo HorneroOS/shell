@@ -43,8 +43,12 @@ AUR (on stock Arch) and must be installed first with an AUR helper (or
 paru -S libcava
 ```
 
-The package uses Arch's stable `quickshell` package; it does not require the
-VCS build.
+The package uses Arch's stable `quickshell` package (0.3.2 or later); it
+does not require the VCS build. The version floor includes the upstream guard
+for failed or reentrant session-lock acquisition. It does not resolve the
+separate orphaned-lock lifecycle issue tracked by
+[quickshell#1054](https://github.com/quickshell-mirror/quickshell/issues/1054),
+so Hornero's single-locker policy remains necessary.
 
 Then install the built package:
 
@@ -67,9 +71,9 @@ Expected results:
 - No missing-dependency warnings: every directly linked library observed in
   the built modules (`libqalculate`, `libaubio`, `libcava`, `libpipewire`,
   Qt6 Core/Gui/Qml/Quick/Network/Sql/Concurrent) maps to a `depends` entry.
-- Possible informational note about the AUR-only dependencies (`quickshell`
-  resolved via the `quickshell-git` provides, and `libcava`): this is normal
-  for AUR packages and not a defect.
+- Possible informational note about `libcava` being AUR-only on stock Arch;
+  this is normal for AUR packages and not a defect. `quickshell` comes from
+  Arch `extra`.
 - No ELF or permission warnings: the helper script
   `assets/wrap_term_launch.sh` is explicitly kept executable in `package()`.
 
@@ -78,9 +82,8 @@ Expected results:
 - `extra/cava` does **not** provide the `libcava` shared library or its
   pkg-config file (it ships only the `cava` binary), so the build depends on
   the AUR `libcava` package instead.
-- Quickshell is resolved through the `quickshell` provides name (currently
-  supplied by AUR `quickshell-git`); depending on the provides name keeps the
-  PKGBUILD working no matter which Quickshell package supplies it.
+- Quickshell is resolved from Arch `extra` through the `quickshell` package
+  name, with a 0.3.2 minimum for the session-lock acquisition guard.
 - `qt6-tools` is a build-only dependency for the Qt QML module tooling used
   by `qt_add_qml_module`.
 

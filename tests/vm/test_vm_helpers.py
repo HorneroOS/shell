@@ -237,6 +237,14 @@ def test_smoke_dry_run_is_coherent():
     assert "dry-run: harness plan is coherent" in proc.stdout
 
 
+def test_vm_provision_uses_supported_arch_quickshell_package():
+    provision = (LIB_DIR / "provision.sh").read_text()
+    assert "hyprland xdg-desktop-portal-hyprland quickshell" in provision
+    assert "vercmp \"$qs_version\" 0.3.2" in provision
+    assert "quickshell-git" not in provision
+    assert "yay -S" not in provision
+
+
 def test_smoke_rejects_unknown_args():
     proc = subprocess.run(
         ["bash", str(SMOKE), "--boot-the-cloud"],

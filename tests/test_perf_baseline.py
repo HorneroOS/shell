@@ -47,14 +47,29 @@ def test_harness_finds_shell_by_either_process_name():
     assert "qs --version" in text, "version probe needs the qs fallback too"
 
 
-def test_methodology_documented():
+def test_methodology_and_reference_capture_documented():
     assert DOC.exists(), "missing docs/PERF_BASELINE.md"
     text = DOC.read_text()
     for section in ("## What is measured", "## How to run",
-                    "## How to compare", "## Rules"):
+                    "## How to compare", "## Reference captures and rules"):
         assert section in text, f"doc missing {section}"
-    assert "never committed" in text.lower()
     assert "never publish estimates" in text.lower()
+    assert "first rendered" in text.lower()
+
+
+def test_sanitized_reference_capture_has_observed_values_and_limits():
+    capture = ROOT / "docs" / "perf-baselines" / "2026-10-12.md"
+    assert capture.exists(), "missing dated reference capture"
+    text = capture.read_text()
+    for expected in (
+        "Quickshell: `0.3.1`",
+        "Compositor: Hyprland",
+        "| **Median** | **892.5** | **556.4** | **0.00** | **23** | **7** |",
+        "not a clean-session or cold-start measurement",
+        "does not measure greeter-to-desktop time",
+        "full timestamps are omitted",
+    ):
+        assert expected in text, f"reference capture missing {expected!r}"
 
 
 def _write_executable(path: Path, text: str) -> None:

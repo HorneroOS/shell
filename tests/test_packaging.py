@@ -155,3 +155,15 @@ def test_ipc_contract_is_installed_for_package_consumers():
     assert (ROOT / "docs/IPC.md").is_file()
     assert 'install(FILES docs/IPC.md DESTINATION "share/doc/hornero-shell")' in cmake
     assert "/usr/share/doc/hornero-shell/IPC.md" in readme
+
+
+def test_community_plugin_validator_is_installed_from_contract_source():
+    cmake = (ROOT / "CMakeLists.txt").read_text()
+    readme = README.read_text()
+    validator = ROOT / "scripts" / "validate_plugin.py"
+    assert validator.is_file()
+    assert 'install(PROGRAMS scripts/validate_plugin.py' in cmake
+    assert "RENAME hornero-shell-plugin-validate" in cmake
+    assert "hornero-shell-plugin-validate" in readme
+    match = re.search(r"^depends=\((.*?)\)", PKGBUILD.read_text(), re.MULTILINE | re.DOTALL)
+    assert match and "'python'" in match.group(1)

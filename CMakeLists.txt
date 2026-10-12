@@ -95,4 +95,9 @@ if("shell" IN_LIST ENABLE_MODULES)
     # External desktop tools validate their Shell IPC calls against the
     # package-owned contract without needing a source checkout.
     install(FILES docs/IPC.md DESTINATION "share/doc/hornero-shell")
+    # horneroctl uses the same contract validator when managing community
+    # plugin packages; keep the validator owned and versioned with the Shell.
+    install(PROGRAMS scripts/validate_plugin.py
+        DESTINATION "${INSTALL_LIBDIR}"
+        RENAME hornero-shell-plugin-validate)
 endif()

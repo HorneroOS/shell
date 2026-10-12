@@ -10,10 +10,16 @@ point-in-time observations, never published estimates.
   `--restart`; disruptive, the desktop reloads).
 - `rss_kb` / `pss_kb` — quickshell resident/proportional memory per
   sample (`ps`, `/proc/<pid>/smaps_rollup`).
+- `cpu_percent` — process CPU time consumed between samples, calculated
+  from `/proc/<pid>/stat` ticks over the measured wall interval. `cores`
+  reports the effective CPUs visible to the harness (including cgroup
+  limits); `host_cores` reports online host CPUs.
 - `ipc_ms` — round trip of `qs ipc call lock isLocked` per sample.
 - `layers` — compositor layer-surface count per sample.
 - Metadata: UTC timestamp, quickshell version, cores, RAM, monitor
-  count, live QML file count, shell PID.
+  count, compositor identity, live QML file count, shell PID. Monitor and
+  layer counts use Hyprland IPC or Niri's JSON IPC; unsupported compositor
+  metrics are `null`, not a misleading zero.
 
 ## How to run
 
@@ -21,8 +27,16 @@ point-in-time observations, never published estimates.
 ./scripts/perf-baseline.sh                          # steady state, default 5x2s
 ./scripts/perf-baseline.sh --samples 3 --interval 1 # quick check
 ./scripts/perf-baseline.sh --restart                 # includes startup timing
-./scripts/perf-baseline.sh --out /tmp/baseline.json  # save instead of print
+./scripts/perf-baseline.sh --format json --out /tmp/baseline.json
 ```
+
+The default run does not restart or otherwise mutate the desktop. It prints
+a table with CPU%, RSS, PSS, IPC latency, and layer-surface counts. Use
+`--format json` for structured output. The
+`--restart` option is intentionally disruptive and must only be used from a
+disposable test session or with the user's explicit approval. The harness
+reuses the `QS_CONFIG_PATH`, `QS_CONFIG_NAME`, and compositor socket/signature
+from the live Quickshell process when the caller does not already have them.
 
 ## How to compare
 

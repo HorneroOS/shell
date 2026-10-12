@@ -4,6 +4,10 @@ Static contract tests (no compositor needed): the harness contract is
 asserted structurally so regressions fail here, not on a live machine.
 """
 import os
+import json
+import subprocess
+import textwrap
+from tempfile import TemporaryDirectory
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -27,7 +31,7 @@ def test_harness_probes_named_metrics():
     text = SCRIPT.read_text()
     for probe in ("smaps_rollup", "ipc call", "hyprctl layers",
                   "quickshell --version", "startup_ready_ms",
-                  "rss_kb", "pss_kb", "ipc_ms"):
+                  "rss_kb", "pss_kb", "cpu_percent", "ipc_ms"):
         assert probe in text, f"harness missing probe {probe}"
 
 
@@ -51,3 +55,139 @@ def test_methodology_documented():
         assert section in text, f"doc missing {section}"
     assert "never committed" in text.lower()
     assert "never publish estimates" in text.lower()
+
+
+def _write_executable(path: Path, text: str) -> None:
+    path.write_text(textwrap.dedent(text), encoding="utf-8")
+    path.chmod(0o755)
+
+
+def _run_fixture(
+    compositor: str,
+    output_format: str | None = "json",
+    niri_outputs: str = '{"HDMI-A-1":{"current_mode":{"width":1920}},"eDP-1":{"current_mode":null}}',
+    niri_layers: str = '[{"namespace":"hornero"}]',
+) -> tuple[str, dict | None]:
+    with TemporaryDirectory(prefix="hornero-perf-") as temporary:
+        root = Path(temporary)
+        bindir = root / "bin"
+        qml_root = root / "shell"
+        bindir.mkdir()
+        qml_root.mkdir()
+        (qml_root / "shell.qml").write_text("// fixture\n", encoding="utf-8")
+        _write_executable(
+            bindir / "pgrep",
+            """
+            #!/bin/sh
+            printf '%s\\n' "$HORNERO_TEST_PID"
+            """,
+        )
+        _write_executable(
+            bindir / "quickshell",
+            """
+            #!/bin/sh
+            printf 'Quickshell fixture 1.0\\n'
+            """,
+        )
+        _write_executable(
+            bindir / "qs",
+            """
+            #!/bin/sh
+            if [ "$1" = ipc ]; then
+                printf 'false\\n'
+            else
+                printf 'Quickshell fixture 1.0\\n'
+            fi
+            """,
+        )
+
+        env = os.environ.copy()
+        env.update(
+            {
+                "PATH": f"{bindir}:{env['PATH']}",
+                "HORNERO_TEST_PID": str(os.getpid()),
+                "QS_CONFIG_PATH": str(qml_root / "shell.qml"),
+                "QS_CONFIG_NAME": "",
+                "QS_MANIFEST": "",
+                "QS_PLUGIN_PATH": "",
+                "NIRI_SOCKET": "/fixture/niri.sock" if compositor == "niri" else "",
+                "HYPRLAND_INSTANCE_SIGNATURE": "fixture" if compositor == "hyprland" else "",
+                "NIRI_TEST_OUTPUTS": niri_outputs,
+                "NIRI_TEST_LAYERS": niri_layers,
+            }
+        )
+        if compositor == "niri":
+            _write_executable(
+                bindir / "niri",
+                """
+                #!/bin/sh
+                case "$*" in
+                    *outputs*) printf '%s\\n' "$NIRI_TEST_OUTPUTS" ;;
+                    *layers*) printf '%s\\n' "$NIRI_TEST_LAYERS" ;;
+                    *) exit 2 ;;
+                esac
+                """,
+            )
+        else:
+            _write_executable(
+                bindir / "hyprctl",
+                """
+                #!/bin/sh
+                case "$*" in
+                    *monitors*) printf 'Monitor HDMI-A-1\\nMonitor DP-1\\n' ;;
+                    *layers*) printf 'namespace: hornero\\nnamespace: wallpaper\\n' ;;
+                    *) exit 2 ;;
+                esac
+                """,
+            )
+
+        args = [str(SCRIPT), "--samples", "1", "--interval", "0"]
+        if output_format is not None:
+            args += ["--format", output_format]
+        report = subprocess.run(
+            args,
+            check=False,
+            capture_output=True,
+            text=True,
+            env=env,
+            timeout=8,
+        )
+        assert report.returncode == 0, report.stderr
+        return report.stdout, json.loads(report.stdout) if output_format == "json" else None
+
+
+def test_harness_uses_niri_json_for_monitor_and_layer_counts():
+    _, report = _run_fixture("niri")
+    assert report is not None
+    assert report["compositor"] == "niri"
+    assert report["monitors"] == 1
+    assert report["samples"][0]["layers"] == 1
+    assert 0 <= report["samples"][0]["cpu_percent"]
+    assert report["qml_files_live"] == 1
+
+
+def test_harness_keeps_hyprland_metrics():
+    _, report = _run_fixture("hyprland")
+    assert report is not None
+    assert report["compositor"] == "hyprland"
+    assert report["monitors"] == 2
+    assert report["samples"][0]["layers"] == 2
+    assert 0 <= report["samples"][0]["cpu_percent"]
+
+
+def test_harness_reports_niri_errors_and_unknown_shapes_as_unavailable():
+    _, report = _run_fixture(
+        "niri",
+        niri_outputs='{"Err":"unsupported request"}',
+        niri_layers='{"unexpected":"shape"}',
+    )
+    assert report is not None
+    assert report["monitors"] is None
+    assert report["samples"][0]["layers"] is None
+
+
+def test_harness_prints_a_complete_human_table_by_default():
+    output, report = _run_fixture("hyprland", output_format=None)
+    assert report is None
+    assert "Sample  RSS MiB  PSS MiB  CPU %  IPC ms  Layers" in output
+    assert "CPU cores:" in output

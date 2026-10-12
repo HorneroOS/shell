@@ -310,22 +310,25 @@ compositor is fully supported. The website and docs should continue to
 label release maturity according to the acceptance evidence for each
 component.
 
+The product-map recommendation is complete: the Website Roots page and footer
+link to the shared design language, repository ownership map, and contribution
+guide, while the organization profile also points to the edition catalogue and
+compositor capability guide. The details remain in their canonical repositories
+([Website #79](https://github.com/HorneroOS/website/pull/79),
+[.github #18](https://github.com/HorneroOS/.github/pull/18)).
+
 The remaining high-value work is narrower:
 
-1. **Publish one discoverable product map.** Link the design/brand guide,
-   repository ownership map, contributor guide, supported editions, and
-   compositor capability matrix from the website and organization profile.
-   Keep the detailed specifications in their canonical repositories.
-2. **Close the user documentation loop.** For each supported shell surface,
+1. **Close the user documentation loop.** For each supported shell surface,
    document the user task, keyboard path, settings/CLI equivalent, and
    graceful behavior when an optional capability is unavailable. Keep
    Hyprland and Niri differences explicit instead of promising parity.
-3. **Keep extension distribution separate from execution.** The plugin
+2. **Keep extension distribution separate from execution.** The plugin
    contract and validator establish format and static checks. A catalog,
    installer, signature/trust model, update behavior, and permissions
    policy would be separate product work and should not be implied until
    implemented.
-4. **Measure live interaction before polishing timing.** Issue #77 records
+3. **Measure live interaction before polishing timing.** Issue #77 records
    a small rapid-Escape race in nested Hyprland, with normal-speed closes
    succeeding and no crash/protocol failure. Quickshell 0.3.1 documents
    that HyprlandFocusGrab.active stays false until the compositor starts

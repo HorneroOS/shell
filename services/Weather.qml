@@ -74,7 +74,7 @@ Singleton {
 
     // A cleared/changed location invalidates every outstanding callback.
     // A late city lookup must not restart requests after consent is removed.
-    function request(url: string, onSuccess: var, onError: var): void {
+    function request(url: string, onSuccess: var, onError: var, userAgent: var): void {
         if (!locationConfigured)
             return;
         const generation = _requestGeneration;
@@ -85,7 +85,7 @@ Singleton {
         }, error => {
             if (generation === _requestGeneration && locationConfigured && location === Config.services.weatherLocation)
                 onError(error);
-        });
+        }, userAgent || "");
     }
 
     function _setLocation(coords: string, cityName: string): void {
@@ -106,7 +106,7 @@ Singleton {
         }
 
         const [lat, lon] = coords.split(",");
-        // Nominatim requires a UA in theory; Qt may send one. Falls back to Unknown City.
+        // Identify the application as required by the Nominatim usage policy.
         const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=geocodejson`;
         request(url, text => {
             try {
@@ -124,7 +124,7 @@ Singleton {
         }, err => {
             console.warn("Weather: reverse geocode failed", err);
             city = city || "Unknown City";
-        });
+        }, "HorneroOS Shell (https://github.com/HorneroOS/shell; https://horneroos.com)");
     }
 
     function fetchCoordsFromCity(cityName: string): void {

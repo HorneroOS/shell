@@ -35,7 +35,7 @@ def test_weather_network_requests_require_explicit_location():
     node = shutil.which("node")
     assert node, "Node.js is required to exercise the asynchronous QML service contract"
     source = SERVICE.read_text()
-    functions = {name: _function(source, name) for name in ("reload", "request")}
+    functions = {name: _function(source, name) for name in ("reload", "request", "onWeatherLocationChanged")}
     script = r"""
 const assert = require('node:assert/strict');
 const functions = JSON.parse(process.argv[1]);
@@ -43,29 +43,34 @@ let requests = [];
 const Config = { services: { weatherLocation: '' } };
 const scope = {
   Config,
-  Requests: { get(url, ok, fail) { requests.push({url, ok, fail}); } },
+  Requests: { get(url, ok, fail, userAgent) { requests.push({url, ok, fail, userAgent}); } },
   qsTr: x => x,
   _requestGeneration: 0,
   get locationConfigured() { return !!Config.services.weatherLocation.trim(); },
   set lastError(v) {}, set cc(v) {}, set forecast(v) {}, set hourlyForecast(v) {},
-  set city(v) {}, set loc(v) {}, set loading(v) {},
+  set city(v) {}, set loc(v) {}, set loading(v) { this._loading = v; },
   _setLocation() { throw new Error('empty location must not start a lookup'); },
+  fetchCoordsFromCity(location) {
+    invoke(functions.request, `https://example.invalid/geocode?name=${encodeURIComponent(location)}`, () => {}, () => {});
+  },
 };
+scope.root = scope;
 const invoke = (source, ...args) => Function('scope', `with (scope) { return (${source}); }`)(scope)(...args);
+scope.reload = () => invoke(functions.reload);
 invoke(functions.reload);
 assert.equal(requests.length, 0, 'startup with an empty location must stay offline');
 invoke(functions.request, 'https://example.invalid', () => {}, () => {});
 assert.equal(requests.length, 0, 'request entry point must reject an empty location');
 Config.services.weatherLocation = 'Buenos Aires';
-invoke(functions.request, 'https://example.invalid', () => { throw new Error('stale response applied'); }, () => {});
-assert.equal(requests.length, 1);
+invoke(functions.onWeatherLocationChanged);
+assert.equal(requests.length, 1, 'changing the setting must trigger the real configuration handler');
+assert.equal(requests[0].url.includes('Buenos%20Aires'), true, 'the handler must start lookup for the new location');
 const delayed = requests[0].ok;
 Config.services.weatherLocation = '';
-scope._requestGeneration++;
+invoke(functions.onWeatherLocationChanged);
 delayed('late response');
-assert.equal(requests.length, 1, 'stale callback must not schedule another request');
-invoke(functions.reload);
-assert.equal(requests.length, 1, 'clearing location must stop subsequent refreshes');
+assert.equal(requests.length, 1, 'clearing location must not schedule another request');
+assert.equal(scope._loading, false, 'clearing location through the settings handler must stop loading');
 """
     result = subprocess.run(
         [node, "-e", script, json.dumps(functions)],
@@ -82,6 +87,21 @@ def test_automatic_ip_discovery_and_plain_http_are_absent():
     assert "ip-api.com" not in source
     assert "http://" not in source
     assert source.count("Requests.get(") == 1, "all network access must pass the guarded request method"
+
+
+def test_nominatim_request_identifies_horneroos_and_attributes_openstreetmap():
+    source = SERVICE.read_text()
+    reverse_geocode = _function(source, "fetchCityFromCoords")
+    assert '"HorneroOS Shell (https://github.com/HorneroOS/shell; https://horneroos.com)"' in reverse_geocode
+    assert '}, userAgent || "");' in _function(source, "request")
+
+    settings = (ROOT / "modules" / "controlcenter" / "dashboard" / "GeneralSection.qml").read_text()
+    assert "[© OpenStreetMap contributors](https://www.openstreetmap.org/copyright)" in settings
+    assert "onLinkActivated: link => Quickshell.execDetached" in settings
+
+    dashboard = (ROOT / "modules" / "dashboard" / "Weather.qml").read_text()
+    assert "[Open-Meteo](https://open-meteo.com/)" in dashboard
+    assert "[© OpenStreetMap contributors](https://www.openstreetmap.org/copyright)" in dashboard
 
 
 def test_lock_weather_hides_measurements_until_weather_is_available():

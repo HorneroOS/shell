@@ -10,13 +10,15 @@ Requests::Requests(QObject* parent)
     : QObject(parent)
     , m_manager(new QNetworkAccessManager(this)) {}
 
-void Requests::get(const QUrl& url, QJSValue onSuccess, QJSValue onError) const {
+void Requests::get(const QUrl& url, QJSValue onSuccess, QJSValue onError, const QString& userAgent) const {
     if (!onSuccess.isCallable()) {
         qWarning() << "Requests::get: onSuccess is not callable";
         return;
     }
 
     QNetworkRequest request(url);
+    if (!userAgent.isEmpty())
+        request.setRawHeader("User-Agent", userAgent.toUtf8());
     auto reply = m_manager->get(request);
 
     QObject::connect(reply, &QNetworkReply::finished, [reply, onSuccess, onError]() {

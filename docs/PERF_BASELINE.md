@@ -22,7 +22,7 @@ guarantee.
   from `/proc/<pid>/stat` ticks over the measured wall interval. `cores`
   reports the effective CPUs visible to the harness (including cgroup
   limits); `host_cores` reports online host CPUs.
-- `ipc_ms` — round trip of `qs ipc call lock isLocked` per sample.
+- `ipc_ms` — round trip of `qs ipc --pid <shell-pid> call lock isLocked` per sample.
 - `layers` — compositor layer-surface count per sample.
 - Metadata: UTC timestamp, quickshell version, cores, RAM, monitor
   count, compositor identity, number of QML files available in the selected
@@ -46,12 +46,13 @@ and layer-surface counts. Use
 `--format json` for structured output. The
 `--restart` option is intentionally disruptive and must only be used from a
 disposable test session or with the user's explicit approval. The harness
-reuses the `QS_CONFIG_PATH`, `QS_CONFIG_NAME`, `QS_MANIFEST`, and compositor
-socket/signature from the live Quickshell process when the caller does not
-already have them. Config selection is recovered from the process environment
-or its `--path` / `--config` / `--manifest` arguments, so package-owned
-sessions launched with an explicit path are measured rather than silently
-falling back to the caller's default Quickshell config.
+uses Quickshell's `--pid` selection for every IPC probe, so it always measures
+the exact live process even when the caller's environment or working directory
+differs. The helper clears mutually exclusive config selectors for those IPC
+calls. Config selection is also recovered from the process environment or its
+`--path` / `--config` / `--manifest` arguments. Relative `--path` values are
+resolved against the process working directory when counting available QML
+files, and directory paths count only files inside that selected config.
 
 The script reports steady-state measurements from the currently running
 shell. It does not measure the greeter-to-desktop path or the first rendered

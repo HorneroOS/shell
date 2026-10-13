@@ -29,7 +29,7 @@ def test_harness_is_safe_shell():
 
 def test_harness_probes_named_metrics():
     text = SCRIPT.read_text()
-    for probe in ("smaps_rollup", "ipc call", "hyprctl layers",
+    for probe in ("smaps_rollup", "qs ipc --pid", "hyprctl layers",
                   "quickshell --version", "startup_ready_ms",
                   "rss_kb", "pss_kb", "pss_anon_kb", "pss_file_kb",
                   "pss_shmem_kb", "cpu_percent", "ipc_ms"):
@@ -44,7 +44,9 @@ def test_harness_finds_shell_by_either_process_name():
     assert "shell_pid() {" in text
     assert "pgrep -x quickshell" in text
     assert "pgrep -x -o qs" in text
-    assert text.count('PID="$(shell_pid)"') == 2, "startup + post-restart must share shell_pid"
+    assert text.count('PID="$(shell_pid)"') >= 3, "startup and restart polling must refresh the shell PID"
+    restart_poll = text.split('if [ "${RESTART}" -eq 1 ]; then', 1)[1].split('QS_VERSION=', 1)[0]
+    assert 'PID="$(shell_pid)"' in restart_poll
     assert "qs --version" in text, "version probe needs the qs fallback too"
 
 
@@ -54,6 +56,67 @@ def test_harness_recovers_config_path_from_live_process_arguments():
         shell_pid="4242",
         process_config="argv",
         clear_config_environment=True,
+    )
+    assert report is not None
+    assert report["qml_files_available"] == 3
+
+
+def test_harness_targets_the_exact_live_process_for_ipc():
+    _, report = _run_fixture("hyprland", shell_pid="4242")
+    assert report is not None
+    assert report["shell_pid"] == 4242
+
+
+def test_harness_counts_qml_files_inside_a_selected_config_directory():
+    _, report = _run_fixture(
+        "hyprland",
+        shell_pid="4242",
+        process_config="argv_directory",
+        clear_config_environment=True,
+    )
+    assert report is not None
+    assert report["qml_files_available"] == 3
+
+
+def test_harness_resolves_a_relative_config_directory_from_process_cwd():
+    _, report = _run_fixture(
+        "hyprland",
+        shell_pid="4242",
+        process_config="argv_relative_directory",
+        clear_config_environment=True,
+    )
+    assert report is not None
+    assert report["qml_files_available"] == 3
+
+
+def test_harness_resolves_a_relative_config_file_from_process_cwd():
+    _, report = _run_fixture(
+        "hyprland",
+        shell_pid="4242",
+        process_config="argv_relative_file",
+        clear_config_environment=True,
+    )
+    assert report is not None
+    assert report["qml_files_available"] == 3
+
+
+def test_harness_prefers_config_arguments_over_process_environment():
+    _, report = _run_fixture(
+        "hyprland",
+        shell_pid="4242",
+        process_config="argv_over_environment",
+        clear_config_environment=True,
+    )
+    assert report is not None
+    assert report["qml_files_available"] == 3
+
+
+def test_harness_prefers_process_environment_over_caller_environment():
+    _, report = _run_fixture(
+        "hyprland",
+        shell_pid="4242",
+        process_config="environment",
+        caller_config_path="other",
     )
     assert report is not None
     assert report["qml_files_available"] == 3
@@ -134,6 +197,7 @@ def _run_fixture(
     proc_root: Path | None = None,
     process_config: str | None = None,
     clear_config_environment: bool = False,
+    caller_config_path: str | None = None,
 ) -> tuple[str, dict | None]:
     with TemporaryDirectory(prefix="hornero-perf-") as temporary:
         root = Path(temporary)
@@ -145,11 +209,16 @@ def _run_fixture(
         (qml_root / "modules").mkdir()
         (qml_root / "modules" / "Loaded.qml").write_text("// fixture\n", encoding="utf-8")
         (qml_root / "modules" / "AvailableOnly.qml").write_text("// fixture\n", encoding="utf-8")
+        (root / "Unrelated.qml").write_text("// unrelated fixture\n", encoding="utf-8")
+        other_root = root / "other"
+        other_root.mkdir()
+        (other_root / "other.qml").write_text("// other config fixture\n", encoding="utf-8")
         fixture_proc_root = proc_root
         if process_config is not None:
             fixture_proc_root = root / "proc"
             process_dir = fixture_proc_root / (shell_pid or str(os.getpid()))
             process_dir.mkdir(parents=True)
+            (process_dir / "cwd").symlink_to(root, target_is_directory=True)
             config_path = str(qml_root / "shell.qml")
             if process_config == "argv":
                 (process_dir / "cmdline").write_bytes(
@@ -162,6 +231,25 @@ def _run_fixture(
             elif process_config == "environment":
                 (process_dir / "environ").write_bytes(
                     b"QS_CONFIG_PATH=" + config_path.encode() + b"\0"
+                )
+            elif process_config == "argv_over_environment":
+                (process_dir / "cmdline").write_bytes(
+                    b"/usr/bin/quickshell\0--path\0" + config_path.encode() + b"\0"
+                )
+                (process_dir / "environ").write_bytes(
+                    b"QS_CONFIG_PATH=" + str(other_root).encode() + b"\0"
+                )
+            elif process_config == "argv_directory":
+                (process_dir / "cmdline").write_bytes(
+                    b"/usr/bin/quickshell\0--path\0" + str(qml_root).encode() + b"\0"
+                )
+            elif process_config == "argv_relative_directory":
+                (process_dir / "cmdline").write_bytes(
+                    b"/usr/bin/quickshell\0--path\0shell\0"
+                )
+            elif process_config == "argv_relative_file":
+                (process_dir / "cmdline").write_bytes(
+                    b"/usr/bin/quickshell\0--path\0shell/shell.qml\0"
                 )
             else:
                 raise ValueError(f"unsupported process_config fixture: {process_config}")
@@ -184,6 +272,8 @@ def _run_fixture(
             """
             #!/bin/sh
             if [ "$1" = ipc ]; then
+                [ "$2" = --pid ] && [ "$3" = "$HORNERO_TEST_PID" ] && [ "$4" = call ] || exit 1
+                [ -z "${QS_CONFIG_PATH:-}" ] && [ -z "${QS_CONFIG_NAME:-}" ] && [ -z "${QS_MANIFEST:-}" ] || exit 1
                 printf 'false\\n'
             else
                 printf 'Quickshell fixture 1.0\\n'
@@ -196,7 +286,9 @@ def _run_fixture(
             {
                 "PATH": f"{bindir}:{env['PATH']}",
                 "HORNERO_TEST_PID": shell_pid or str(os.getpid()),
-                "QS_CONFIG_PATH": "" if clear_config_environment else str(qml_root / "shell.qml"),
+                "QS_CONFIG_PATH": caller_config_path if caller_config_path is not None else (
+                    "" if clear_config_environment else str(qml_root / "shell.qml")
+                ),
                 "QS_CONFIG_NAME": "",
                 "QS_MANIFEST": "",
                 "QS_PLUGIN_PATH": "",

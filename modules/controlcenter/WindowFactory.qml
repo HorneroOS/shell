@@ -15,6 +15,42 @@ Singleton {
     // opens never stack duplicate windows.
     property var windows: []
     property int nextWindowToken: 0
+    property var pendingFocusWindow: null
+    property int focusAttemptsRemaining: 0
+
+    function focusSettingsWindow(win: var): void {
+        if (!win || !win.visible)
+            return;
+        root.pendingFocusWindow = win;
+        root.focusAttemptsRemaining = 10;
+        focusTimer.restart();
+        Qt.callLater(() => root.tryFocusSettingsWindow());
+    }
+
+    function tryFocusSettingsWindow(): void {
+        const win = root.pendingFocusWindow;
+        if (!win || !win.visible) {
+            focusTimer.stop();
+            root.pendingFocusWindow = null;
+            return;
+        }
+        if (Compositor.activeWindowAppId === "org.quickshell" && Compositor.activeWindowTitle.startsWith("Hornero Settings - ")) {
+            focusTimer.stop();
+            root.pendingFocusWindow = null;
+            return;
+        }
+
+        // Compositor IPC can report the new toplevel a moment after QML has
+        // created it. Keep retrying briefly so a fast open cannot leave
+        // Settings behind the current application.
+        Compositor.focusWindowByAppIdAndTitlePrefix("org.quickshell", "Hornero Settings - ");
+        root.focusAttemptsRemaining -= 1;
+        if (root.focusAttemptsRemaining <= 0) {
+            focusTimer.stop();
+            root.pendingFocusWindow = null;
+            console.warn("[WindowFactory] Settings window did not become focused after retries");
+        }
+    }
 
     // Companion yield: a Settings window is a focused configuration
     // surface, and the Overlay-layer companion paints above every
@@ -31,10 +67,7 @@ Singleton {
             const pane = props?.pane?.toString() ?? "";
             if (pane !== "" && PaneRegistry.getById(pane))
                 existing.active = pane;
-            Qt.callLater(() => {
-                if (existing && existing.visible)
-                    Compositor.focusWindowByAppIdAndTitlePrefix("org.quickshell", "Hornero Settings - ");
-            });
+            root.focusSettingsWindow(existing);
             root.syncCompanion();
             return;
         }
@@ -43,10 +76,7 @@ Singleton {
             root.nextWindowToken += 1;
             win.registryToken = root.nextWindowToken;
             windows.push(win);
-            Qt.callLater(() => {
-                if (win && win.visible)
-                    Compositor.focusWindowByAppIdAndTitlePrefix("org.quickshell", "Hornero Settings - ");
-            });
+            root.focusSettingsWindow(win);
         }
         root.syncCompanion();
     }
@@ -88,6 +118,10 @@ Singleton {
     function closeWindow(win: var): void {
         // Drop the reference before requesting deferred QObject destruction.
         // A second open can arrive before Component.onDestruction runs.
+        if (root.pendingFocusWindow === win) {
+            focusTimer.stop();
+            root.pendingFocusWindow = null;
+        }
         root.forget(win);
         try {
             if (win)
@@ -105,6 +139,14 @@ Singleton {
                 return false;
             }
         });
+    }
+
+    Timer {
+        id: focusTimer
+
+        interval: 120
+        repeat: true
+        onTriggered: root.tryFocusSettingsWindow()
     }
 
     QtObject {

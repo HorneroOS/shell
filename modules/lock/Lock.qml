@@ -10,10 +10,10 @@ Scope {
 
     // Single acquisition point for the in-shell session lock (shell#24).
     // A redundant `locked = true` write is the reentrant path that kills
-    // quickshell (upstream quickshell#1054, fixed on master by afb2c27 but
-    // in no release yet), and a fatal Wayland protocol error is
-    // uncatchable from QML — so acquisition must be prevented, never
-    // retried. Policy, see docs/LOCKING.md:
+    // quickshell on versions before 0.3.2 (upstream quickshell#1054;
+    // afb2c27 is included in 0.3.2). That release guards the failed
+    // acquisition path, but cannot repair an orphaned compositor lock.
+    // Policy, see docs/LOCKING.md:
     //   - no-op while already locked or while a request is in flight;
     //   - refuse while the foreign hyprlock backend holds the session;
     //   - fail OPEN when the probe itself errors (a missing/broken pidof

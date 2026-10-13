@@ -35,26 +35,29 @@ point structurally.
 
 ## Why prevention, not handling
 
-`WlSessionLock` exposes only `locked` — no error or failed signal
-(verified in the installed `quickshell-wayland.qmltypes`). Before
-Quickshell 0.3.2, a failed or reentrant acquisition could take a fatal
-Wayland path (`invalid object`, connection terminates), uncatchable
-from QML. Version 0.3.2 guards that known failed-acquisition path,
-but QML still cannot repair an orphaned compositor lock. No retry,
-timeout, or delay in the shell can mitigate protocol state owned by
-the compositor.
+`WlSessionLock` exposes `locked` and read-only `secure`, but no signal
+for a failed acquisition (verified in the installed
+`quickshell-wayland.qmltypes`). `secure` reports compositor lock state;
+it does not establish that this `WlSessionLock` instance owns the lock.
+The upstream orphaned-lock report documents a dangling manager pointer
+that can make this value stale, so it must not be used as an ownership
+check or recovery guard. Before Quickshell 0.3.2, a failed or reentrant
+acquisition could take a fatal Wayland path (`invalid object`, connection
+terminates), uncatchable from QML. Version 0.3.2 guards that specific
+failed-acquisition path, but QML still cannot repair an orphaned compositor
+lock. No retry, timeout, or delay in the shell can mitigate protocol state
+owned by the compositor.
 
 Upstream owner: [quickshell#1054](https://github.com/quickshell-mirror/quickshell/issues/1054)
 (open) — fatal re-lock over an orphaned ext-session-lock.
 [Quickshell 0.3.2](https://github.com/quickshell-mirror/quickshell/releases/tag/v0.3.2)
 (released 2026-10-08) includes afb2c27, “wayland/lock: guard against
 reentrancy during surface creation.” This prevents the known fatal path
-when acquisition fails or re-enters during surface creation. It does not
-clear the session-lock manager's active pointer when a live lock object is
-destroyed without `unlock()`, so the orphaned-lock lifecycle remains
-unresolved upstream. Hornero requires Quickshell 0.3.2 or later and retains
-the single-locker policy; the version floor is a partial containment, not a
-claim that cross-locker recovery works.
+when acquisition fails or re-enters during surface creation. The upstream
+report also describes the unresolved dangling-pointer lifecycle after a
+lock object is destroyed without `unlock()`. Hornero requires Quickshell
+0.3.2 or later and retains the single-locker policy; the version floor is
+partial containment, not a claim that orphaned-lock recovery works.
 
 ## Recovery
 

@@ -195,6 +195,8 @@ def test_terminal_settings_uses_available_rounded_clipping_component():
     assert "required property CC.Session session" in pane
     assert "StyledClippingRect {" in pane
     assert "ClippingRectangle {" not in pane
+    assert "radius: Appearance.rounding.normal" in pane
+    assert "radius: border.innerRadius" not in pane
 
 
 def test_no_dead_wrappers_in_panes():

@@ -118,7 +118,7 @@ Item {
         anchors.margins: Appearance.padding.normal
         anchors.leftMargin: 0
         anchors.rightMargin: Appearance.padding.normal
-        radius: border.innerRadius
+        radius: Appearance.rounding.normal
         color: "transparent"
 
         StyledFlickable {

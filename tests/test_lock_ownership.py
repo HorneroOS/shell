@@ -65,5 +65,8 @@ def test_recovery_distinguishes_a_shell_exit_from_hyprlands_lock_fallback():
     assert "restarting Quickshell alone cannot repair" in doc
     assert "keyword misc:allow_session_lock_restore 1" in doc
     assert "dispatch exec hyprlock" in doc
+    assert "Hyprland 0.55+" in doc
+    assert "hl.config({misc = { allow_session_lock_restore = 1}})" in doc
+    assert 'hl.dispatch(hl.dsp.exec_cmd("hyprlock"))' in doc
     assert "Do not use `hl.clear_crashed_lockscreen()`" in doc
-    assert "Lua-managed" in doc
+    assert "Lua config manager" in doc

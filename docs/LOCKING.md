@@ -79,13 +79,21 @@ hyprctl --instance 0 'keyword misc:allow_session_lock_restore 1'
 hyprctl --instance 0 'dispatch exec hyprlock'
 ```
 
-The setting above is applied at runtime. If old `hyprlock` processes are
-still blocking reacquisition, follow Hyprland's recovery guidance from the
+For Hyprland 0.55+ using the Lua config manager, use its `eval` and Lua
+dispatch APIs instead:
+
+```sh
+hyprctl --instance 0 eval 'hl.config({misc = { allow_session_lock_restore = 1}})'
+hyprctl --instance 0 eval 'hl.dispatch(hl.dsp.exec_cmd("hyprlock"))'
+```
+
+The setting is applied at runtime. If old `hyprlock` processes are still
+blocking reacquisition, follow Hyprland's recovery guidance from the
 authenticated TTY to stop those stale processes and relaunch the lock
-immediately. Lua-managed
-Hyprland configs require the `eval` form instead; do not mix the two command
-forms. See the upstream [crashed-lockscreen recovery report](https://github.com/hyprwm/Hyprland/issues/8847)
-and [Lua-config recovery discussion](https://github.com/hyprwm/Hyprland/discussions/14762).
+immediately. Do not mix the Hyprlang and Lua command forms. See the upstream
+[crashed-lockscreen recovery report](https://github.com/hyprwm/Hyprland/issues/8847),
+[Lua 0.55 recovery discussion](https://github.com/hyprwm/Hyprland/discussions/14696),
+and [Lua config-manager discussion](https://github.com/hyprwm/Hyprland/discussions/14762).
 
 Never run hyprlock and the shell lock in the same session on purpose, and
 never re-request a lock while one is engaged.

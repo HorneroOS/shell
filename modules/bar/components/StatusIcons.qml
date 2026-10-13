@@ -125,6 +125,36 @@ StyledRect {
             }
         }
 
+        // Niri exposes portal screencast sessions through its event stream.
+        // Keep the indicator generic: do not reveal the captured target or
+        // the application that opened the session.
+        Item {
+            id: screencastIndicator
+
+            visible: Compositor.hasScreencastSession
+            implicitWidth: visible ? icon.implicitWidth : 0
+            implicitHeight: visible ? icon.implicitHeight : 0
+            Layout.alignment: Qt.AlignCenter
+
+            Accessible.role: Accessible.StaticText
+            Accessible.name: qsTr("Screen capture session open")
+
+            MaterialIcon {
+                id: icon
+
+                anchors.centerIn: parent
+                text: "screen_record"
+                color: Colours.palette.m3error
+                fill: 1
+                Accessible.ignored: true
+            }
+
+            Tooltip {
+                target: screencastIndicator
+                text: qsTr("A screen capture session is open")
+            }
+        }
+
         // Audio icon
         PopoutTrigger {
             name: "audio"

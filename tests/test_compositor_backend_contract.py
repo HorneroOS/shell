@@ -1,3 +1,7 @@
+import json
+import re
+import shutil
+import subprocess
 from pathlib import Path
 
 
@@ -27,6 +31,8 @@ def test_niri_disconnect_invalidates_snapshot_before_reconnecting():
     for reset in (
         "root.workspaces = null",
         "root.windows = []",
+        "root.casts = []",
+        "root.screencastStateKnown = false",
         "root.focusedWindowId = null",
         "root.keyboardLayouts = null",
         "root.actionQueue = []",
@@ -80,6 +86,72 @@ def test_niri_backend_does_not_claim_hyprland_only_capabilities():
     ):
         assert capability in NIRI
     assert "experimental integration" in COMPOSITOR_DOC
+
+
+def _qml_function(source: str, name: str) -> str:
+    match = re.search(
+        rf"\bfunction {name}\s*\([^)]*\)(?:\s*:\s*\w+)?\s*\{{",
+        source,
+    )
+    assert match, f"Niri.qml is missing {name}"
+    start = match.end() - 1
+    depth = 0
+    for index in range(start, len(source)):
+        if source[index] == "{":
+            depth += 1
+        elif source[index] == "}":
+            depth -= 1
+            if depth == 0:
+                header = source[match.start():start]
+                header = re.sub(r":\s*(?:string|var|int|bool|real|void)\b", "", header)
+                return header + source[start:index + 1]
+    raise AssertionError(f"unclosed QML function {name}")
+
+
+def test_niri_screencast_snapshots_and_deltas_track_open_sessions():
+    node = shutil.which("node")
+    assert node, "Node.js is required to exercise the Niri IPC state reducer"
+    function = _qml_function(NIRI, "castsAfterEvent")
+    script = r"""
+const assert = require('node:assert/strict');
+const reducer = Function(`return (${process.argv[1]})`)();
+const first = {stream_id: 11, session_id: 2, is_active: true, target: {Window: 99}};
+const second = {stream_id: 12, session_id: 3, is_active: false, target: {Output: 'DP-1'}};
+let casts = reducer([], {CastsChanged: {casts: [first]}});
+assert.deepEqual(casts, [first], 'initial snapshots replace current session state');
+casts = reducer(casts, {CastStartedOrChanged: {cast: second}});
+assert.deepEqual(casts, [first, second], 'new sessions preserve other open sessions, including paused ones');
+const changed = {...second, is_active: true};
+casts = reducer(casts, {CastStartedOrChanged: {cast: changed}});
+assert.deepEqual(casts, [first, changed], 'session changes replace the matching stream');
+casts = reducer(casts, {CastStopped: {stream_id: 11}});
+assert.deepEqual(casts, [changed], 'stopped sessions are removed by stream id');
+assert.deepEqual(reducer(casts, {CastStopped: {}}), casts, 'malformed stop events do not clear state');
+"""
+    result = subprocess.run(
+        [node, "-e", script, function],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+
+
+def test_screencast_status_is_capability_gated_and_does_not_expose_capture_metadata():
+    status_icons = (ROOT / "modules/bar/components/StatusIcons.qml").read_text(encoding="utf-8")
+    assert "screencastState: screencastStateKnown" in NIRI
+    assert "property bool screencastStateKnown: false" in NIRI
+    assert "screencastStateKnown = true" in NIRI
+    assert "root.casts = []" in NIRI
+    assert 'readonly property bool hasScreencastSession: isNiri' in COMPOSITOR_FACADE
+    assert '&& supports("screencastState")' in COMPOSITOR_FACADE
+    assert "&& Niri.casts.length > 0" in COMPOSITOR_FACADE
+    assert "screencastState: false" in COMPOSITOR_FACADE
+    assert "visible: Compositor.hasScreencastSession" in status_icons
+    assert 'Accessible.name: qsTr("Screen capture session open")' in status_icons
+    assert 'text: qsTr("A screen capture session is open")' in status_icons
+    assert "cast.target" not in status_icons
+    assert "cast.pid" not in status_icons
 
 
 def test_workspace_bar_uses_native_niri_workspaces_and_capability_gates():

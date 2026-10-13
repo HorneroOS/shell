@@ -228,6 +228,14 @@ def test_control_center_navigation_uses_keyboard_accessible_interactive_controls
     assert 'Accessible.name: qsTr("Float Settings window")' in float_action
 
 
+def test_control_center_window_factory_activates_new_and_reused_settings_windows():
+    factory = (CC / "WindowFactory.qml").read_text()
+    create_body = factory.split("function create(parent: Item, props: var): void {", 1)[1].split("function closeAll()", 1)[0]
+    assert "existing.requestActivate()" in create_body
+    assert "Qt.callLater(() => {" in create_body
+    assert "win.requestActivate()" in create_body
+
+
 def test_no_dead_wrappers_in_panes():
     hits = []
     for path in CC.rglob("*.qml"):

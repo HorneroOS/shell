@@ -86,6 +86,10 @@ steady-state to steady-state at similar uptimes.
 
 ## Current reference
 
-See [`perf-baselines/2026-10-12.md`](perf-baselines/2026-10-12.md) for a
-sanitized steady-state capture. It intentionally does not claim a clean-login,
-startup-to-first-frame, or per-surface frame-cost result.
+See [`perf-baselines/2026-10-13.md`](perf-baselines/2026-10-13.md) for the
+latest sanitized steady-state observation and
+[`perf-baselines/2026-10-12.md`](perf-baselines/2026-10-12.md) for the earlier
+capture. These intentionally do not claim a clean-login,
+startup-to-first-frame, or per-surface frame-cost result. The observations
+come from different Shell and Quickshell versions and must not be read as a
+before/after comparison.

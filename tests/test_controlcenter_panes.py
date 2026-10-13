@@ -259,6 +259,30 @@ def test_compositor_can_focus_a_shell_window_on_supported_backends():
     assert "return window === null ? false : focusWindowFor(window);" in compositor
 
 
+def test_hyprland_window_actions_normalize_addresses_before_dispatch():
+    compositor = (ROOT / "services" / "Compositor.qml").read_text()
+    assert 'function hyprlandAddress(windowId: var): string' in compositor
+    assert 'address.startsWith("0x") ? address : `0x${address}`' in compositor
+
+    focus = compositor.split("function focusWindow(windowId: var): bool", 1)[1].split(
+        "function closeWindow(windowId: var): bool", 1
+    )[0]
+    close = compositor.split("function closeWindow(windowId: var): bool", 1)[1].split(
+        "function hyprlandAddress", 1
+    )[0]
+    floating = compositor.split("function toggleWindowFloating(window: var): bool", 1)[1].split(
+        "function toggleFullscreen()", 1
+    )[0]
+
+    assert "const address = hyprlandAddress(windowId);" in focus
+    assert "focuswindow address:${address}" in focus
+    assert "const address = hyprlandAddress(windowId);" in close
+    assert "closewindow address:${address}" in close
+    assert "const address = hyprlandAddress(windowIdFor(window));" in floating
+    assert "togglefloating address:${address}" in floating
+    assert "address:0x${windowId}" not in compositor
+
+
 def test_no_dead_wrappers_in_panes():
     hits = []
     for path in CC.rglob("*.qml"):

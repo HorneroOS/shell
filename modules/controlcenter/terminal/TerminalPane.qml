@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import "../components"
+import ".." as CC
 import qs.components
 import qs.components.controls
 import qs.components.containers
@@ -13,7 +14,7 @@ import QtQuick.Layouts
 Item {
     id: root
 
-    required property Session session
+    required property CC.Session session
 
     anchors.fill: parent
 
@@ -112,12 +113,12 @@ Item {
         }
     }
 
-    ClippingRectangle {
+    StyledClippingRect {
         anchors.fill: parent
         anchors.margins: Appearance.padding.normal
         anchors.leftMargin: 0
         anchors.rightMargin: Appearance.padding.normal
-        radius: border.innerRadius
+        radius: Appearance.rounding.normal
         color: "transparent"
 
         StyledFlickable {

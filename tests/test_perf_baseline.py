@@ -48,6 +48,39 @@ def test_harness_finds_shell_by_either_process_name():
     assert "qs --version" in text, "version probe needs the qs fallback too"
 
 
+def test_harness_recovers_config_path_from_live_process_arguments():
+    _, report = _run_fixture(
+        "hyprland",
+        shell_pid="4242",
+        process_config="argv",
+        clear_config_environment=True,
+    )
+    assert report is not None
+    assert report["qml_files_available"] == 3
+
+
+def test_harness_recovers_equals_form_config_path_argument():
+    _, report = _run_fixture(
+        "hyprland",
+        shell_pid="4242",
+        process_config="argv_equals",
+        clear_config_environment=True,
+    )
+    assert report is not None
+    assert report["qml_files_available"] == 3
+
+
+def test_harness_recovers_config_path_from_live_process_environment():
+    _, report = _run_fixture(
+        "hyprland",
+        shell_pid="4242",
+        process_config="environment",
+        clear_config_environment=True,
+    )
+    assert report is not None
+    assert report["qml_files_available"] == 3
+
+
 def test_methodology_and_reference_capture_documented():
     assert DOC.exists(), "missing docs/PERF_BASELINE.md"
     text = DOC.read_text()
@@ -99,6 +132,8 @@ def _run_fixture(
     niri_layers: str = '[{"namespace":"hornero"}]',
     shell_pid: str | None = None,
     proc_root: Path | None = None,
+    process_config: str | None = None,
+    clear_config_environment: bool = False,
 ) -> tuple[str, dict | None]:
     with TemporaryDirectory(prefix="hornero-perf-") as temporary:
         root = Path(temporary)
@@ -110,6 +145,26 @@ def _run_fixture(
         (qml_root / "modules").mkdir()
         (qml_root / "modules" / "Loaded.qml").write_text("// fixture\n", encoding="utf-8")
         (qml_root / "modules" / "AvailableOnly.qml").write_text("// fixture\n", encoding="utf-8")
+        fixture_proc_root = proc_root
+        if process_config is not None:
+            fixture_proc_root = root / "proc"
+            process_dir = fixture_proc_root / (shell_pid or str(os.getpid()))
+            process_dir.mkdir(parents=True)
+            config_path = str(qml_root / "shell.qml")
+            if process_config == "argv":
+                (process_dir / "cmdline").write_bytes(
+                    b"/usr/bin/quickshell\0--path\0" + config_path.encode() + b"\0"
+                )
+            elif process_config == "argv_equals":
+                (process_dir / "cmdline").write_bytes(
+                    b"/usr/bin/quickshell\0--path=" + config_path.encode() + b"\0"
+                )
+            elif process_config == "environment":
+                (process_dir / "environ").write_bytes(
+                    b"QS_CONFIG_PATH=" + config_path.encode() + b"\0"
+                )
+            else:
+                raise ValueError(f"unsupported process_config fixture: {process_config}")
         _write_executable(
             bindir / "pgrep",
             """
@@ -141,7 +196,7 @@ def _run_fixture(
             {
                 "PATH": f"{bindir}:{env['PATH']}",
                 "HORNERO_TEST_PID": shell_pid or str(os.getpid()),
-                "QS_CONFIG_PATH": str(qml_root / "shell.qml"),
+                "QS_CONFIG_PATH": "" if clear_config_environment else str(qml_root / "shell.qml"),
                 "QS_CONFIG_NAME": "",
                 "QS_MANIFEST": "",
                 "QS_PLUGIN_PATH": "",
@@ -151,8 +206,8 @@ def _run_fixture(
                 "NIRI_TEST_LAYERS": niri_layers,
             }
         )
-        if proc_root is not None:
-            env["HORNERO_PROC_ROOT"] = str(proc_root)
+        if fixture_proc_root is not None:
+            env["HORNERO_PROC_ROOT"] = str(fixture_proc_root)
         if compositor == "niri":
             _write_executable(
                 bindir / "niri",

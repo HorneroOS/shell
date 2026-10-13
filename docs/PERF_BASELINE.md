@@ -46,8 +46,12 @@ and layer-surface counts. Use
 `--format json` for structured output. The
 `--restart` option is intentionally disruptive and must only be used from a
 disposable test session or with the user's explicit approval. The harness
-reuses the `QS_CONFIG_PATH`, `QS_CONFIG_NAME`, and compositor socket/signature
-from the live Quickshell process when the caller does not already have them.
+reuses the `QS_CONFIG_PATH`, `QS_CONFIG_NAME`, `QS_MANIFEST`, and compositor
+socket/signature from the live Quickshell process when the caller does not
+already have them. Config selection is recovered from the process environment
+or its `--path` / `--config` / `--manifest` arguments, so package-owned
+sessions launched with an explicit path are measured rather than silently
+falling back to the caller's default Quickshell config.
 
 The script reports steady-state measurements from the currently running
 shell. It does not measure the greeter-to-desktop path or the first rendered

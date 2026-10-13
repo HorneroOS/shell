@@ -57,20 +57,53 @@ fi
 # Quickshell selection so qs IPC addresses the daemon we are measuring.
 proc_env_value() {
     local key="$1" entry
-    if [ ! -r "/proc/${PID}/environ" ]; then return 0; fi
+    if [ ! -r "${HORNERO_PROC_ROOT:-/proc}/${PID}/environ" ]; then return 0; fi
     while IFS= read -r -d '' entry; do
         case "${entry}" in
             "${key}="*) printf '%s' "${entry#*=}"; return 0 ;;
         esac
-    done < "/proc/${PID}/environ"
+    done < "${HORNERO_PROC_ROOT:-/proc}/${PID}/environ"
+    return 0
+}
+
+# Quickshell launched with `--path` or `--config` does not have to export the
+# matching QS_CONFIG_* variables. Recover those arguments from the live process
+# before falling back to the caller's default config.
+proc_cmdline_value() {
+    local key="$1" long_flag short_flag arg index
+    local -a args=()
+    case "${key}" in
+        QS_CONFIG_PATH) long_flag="--path"; short_flag="-p" ;;
+        QS_CONFIG_NAME) long_flag="--config"; short_flag="-c" ;;
+        QS_MANIFEST) long_flag="--manifest"; short_flag="-m" ;;
+        *) return 0 ;;
+    esac
+    if [ ! -r "${HORNERO_PROC_ROOT:-/proc}/${PID}/cmdline" ]; then return 0; fi
+    mapfile -d '' -t args < "${HORNERO_PROC_ROOT:-/proc}/${PID}/cmdline"
+    for index in "${!args[@]}"; do
+        arg="${args[${index}]}"
+        case "${arg}" in
+            "${long_flag}"|"${short_flag}")
+                if (( index + 1 < ${#args[@]} )); then
+                    printf '%s' "${args[$((index + 1))]}"
+                    return 0
+                fi
+                ;;
+            "${long_flag}="*)
+                printf '%s' "${arg#*=}"
+                return 0
+                ;;
+        esac
+    done
     return 0
 }
 
 for key in QS_CONFIG_PATH QS_CONFIG_NAME QS_MANIFEST QS_PLUGIN_PATH NIRI_SOCKET HYPRLAND_INSTANCE_SIGNATURE; do
-    if [[ -v "${key}" ]]; then
+    if [[ -v "${key}" ]] && [ -n "${!key}" ]; then
         value="${!key}"
     else
         value="$(proc_env_value "${key}")"
+        if [ -z "${value}" ]; then value="$(proc_cmdline_value "${key}")"; fi
     fi
     if [ -n "${value}" ]; then export "${key}=${value}"; fi
 done

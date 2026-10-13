@@ -233,9 +233,18 @@ def test_control_center_window_factory_activates_new_and_reused_settings_windows
     create_body = factory.split("function create(parent: Item, props: var): void {", 1)[1].split("function closeAll()", 1)[0]
     reuse_path = create_body.split("if (windows.length > 0) {", 1)[1].split("\n        }\n        const win", 1)[0]
     new_window_path = create_body.split("const win = controlCenter.createObject", 1)[1].split("\n        root.syncCompanion();", 1)[0]
-    assert "existing.requestActivate()" in reuse_path
+    assert 'Compositor.focusWindowByAppIdAndTitlePrefix("org.quickshell", "Hornero Settings - ")' in reuse_path
     assert "Qt.callLater(() => {" in new_window_path
-    assert "win.requestActivate()" in new_window_path
+    assert 'Compositor.focusWindowByAppIdAndTitlePrefix("org.quickshell", "Hornero Settings - ")' in new_window_path
+    assert "requestActivate()" not in factory
+
+
+def test_compositor_can_focus_a_shell_window_on_supported_backends():
+    compositor = (ROOT / "services" / "Compositor.qml").read_text()
+    assert "function focusWindowByAppIdAndTitlePrefix(appId: string, titlePrefix: string): bool" in compositor
+    assert "Niri.windows.find" in compositor
+    assert "Hypr.toplevels.values.find" in compositor
+    assert "return window === null ? false : focusWindowFor(window);" in compositor
 
 
 def test_no_dead_wrappers_in_panes():

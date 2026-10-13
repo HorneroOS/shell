@@ -56,3 +56,14 @@ def test_policy_documented():
     assert "single-locker" in doc
     assert "Quickshell 0.3.2" in doc
     assert "partial containment" in doc
+
+
+def test_recovery_distinguishes_a_shell_exit_from_hyprlands_lock_fallback():
+    """The crashed compositor lock must be restored without unlocking it."""
+    doc = " ".join(DOC.read_text().split())
+    assert "crashed-lockscreen" in doc
+    assert "restarting Quickshell alone cannot repair" in doc
+    assert "keyword misc:allow_session_lock_restore 1" in doc
+    assert "dispatch exec hyprlock" in doc
+    assert "Do not use `hl.clear_crashed_lockscreen()`" in doc
+    assert "Lua-managed" in doc

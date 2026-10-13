@@ -58,7 +58,34 @@ claim that cross-locker recovery works.
 
 ## Recovery
 
-If the shell dies to a lock fatal, restart it
-(`horneroctl shell restart --yes`); the session itself survives.
-Never run hyprlock and the shell lock in the same session on
-purpose, and never re-request a lock while one is engaged.
+There are two different failure states:
+
+- If Quickshell exits but Hyprland does **not** show its crashed-lockscreen
+  fallback, restart the shell with `horneroctl shell restart --yes`.
+- If Hyprland shows the **“lockscreen app died”** fallback, restarting
+  Quickshell alone cannot repair the compositor-owned session-lock state.
+  Keep the session locked and recover from another TTY after authenticating
+  locally. Do not use `hl.clear_crashed_lockscreen()` when the session must
+  remain protected: Hyprland implements it with `forceUnlock()`, so it clears
+  the crashed lock instead of restoring an authentication prompt ([0.56.2
+  implementation](https://github.com/hyprwm/Hyprland/blob/v0.56.2/src/config/lua/bindings/LuaBindingsToplevel.cpp#L337-L349)).
+
+Hyprland's recovery command depends on its config manager. With the legacy
+Hyprlang config, allow a lock restore and immediately start the lockscreen
+again:
+
+```sh
+hyprctl --instance 0 'keyword misc:allow_session_lock_restore 1'
+hyprctl --instance 0 'dispatch exec hyprlock'
+```
+
+The setting above is applied at runtime. If old `hyprlock` processes are
+still blocking reacquisition, follow Hyprland's recovery guidance from the
+authenticated TTY to stop those stale processes and relaunch the lock
+immediately. Lua-managed
+Hyprland configs require the `eval` form instead; do not mix the two command
+forms. See the upstream [crashed-lockscreen recovery report](https://github.com/hyprwm/Hyprland/issues/8847)
+and [Lua-config recovery discussion](https://github.com/hyprwm/Hyprland/discussions/14762).
+
+Never run hyprlock and the shell lock in the same session on purpose, and
+never re-request a lock while one is engaged.

@@ -283,7 +283,7 @@ iterate. Gates unchanged: `pytest tests/ --ignore=tests/vm` (172 green
 at baseline), `lint_qml.sh`, `check_forbidden_paths.sh`, full CI per PR.
 No release cut until slices land; Preview 4 stays immutable.
 
-## 11. External product comparison — 2026-10-12
+## 11. External product comparison — 2026-10-13
 
 This section extends the structure-level shell comparison with a current
 review of the official repositories and published documentation for
@@ -296,14 +296,14 @@ upstream sources.
 
 | Product | Product shape visible in official sources | Notable user/contributor experience | HorneroOS lesson |
 |---|---|---|---|
-| Caelestia | A Quickshell desktop plus a separately distributed CLI/control script, framework/config repository, website, example plugin and official plugin manifests. The shell README positions it as a Hyprland-oriented desktop. | The CLI exposes shell, scheme, wallpaper, screenshot, recording, clipboard and install/update commands; its README documents configuration and installation. Themes can be generated from Material You color roles. | Keep command-line operations discoverable and documented alongside the GUI. Hornero's V horneroctl and graphical Settings can complement one another, provided status and writes share an explicit contract. The plugin validator merged in #155/#163 is a safer foundation than an undocumented extension directory; it does not by itself imply a plugin store or runtime loader. |
-| Ryoku | A single Arch workstation distribution repository contains its desktop, system definition, installer, release/update system and CLI. It supports Hyprland and Niri in the compositor's native configuration languages. The wider organization includes docs, community store, and separate desktop tools. | The project states an explicit design and operating philosophy, publishes hardware requirements and operational boundaries (for example UEFI and Secure Boot constraints), and presents one visual language across shell surfaces. | State product boundaries and hardware/support requirements in one obvious place. Preserve Hornero's separately owned repositories and edition manifests, but give users a concise map of which repository owns each layer and how maturity differs. |
-| Omarchy | An Arch-based, opinionated desktop distribution with an extensive manual, CLI and theme workflow. Its docs distinguish trusted first-party themes from repository-installed themes and filter files that can execute code. It also maintains a theme registry with validation and generated previews. | The manual covers everyday use, configuration, troubleshooting, security and theme authoring. Theming documentation describes activation and precedence, while the registry gives a clear submit → validate → publish path. | Hornero can make its existing source-of-truth boundaries easier for users and contributors to navigate: provide one theme-author guide, explain provenance and package ownership, and keep third-party extensions constrained and reviewable. Do not claim the plugin contract is equivalent to a curated marketplace. |
+| Caelestia | A Quickshell desktop with separate shell, CLI, configuration, website, example-plugin, and official-plugin-manifest repositories. Its shell README documents a Hyprland-oriented environment and offers stable and git AUR packages. | The CLI has distinct stable and bleeding-edge packages, explicit shell/scheme/wallpaper/screenshot/record/clipboard/update commands, and user templates that emit color roles for multiple applications. The official plugin repository publishes manifests; it is not evidence that third-party QML is sandboxed. | Keep GUI and CLI operations consistent, and make install channels and extension trust boundaries explicit. Hornero's V CLI, theme engine, and plugin contract are useful foundations; a static validator is not a plugin store or runtime. |
+| Ryoku | An Arch workstation distribution with the desktop, system definition, installer, release/update system, and CLI in one main repository. It supports Hyprland and Niri through compositor-specific configuration. | `ryoku update` takes snapshots, updates only packages from its signed `[ryoku]` repository, refreshes its owned configuration, and takes a paired post-update snapshot. It leaves the base-system update and kernel to `pacman -Syu`; `ryoku update --system` explicitly combines both lanes. | Make update ownership and rollback scope legible. Ryoku's package lane depends on a signed first-party repository and a real snapshot/recovery contract. Hornero should not emulate that with selective AUR upgrades or call config archives an OS rollback. |
+| Omarchy | An Arch-based, opinionated desktop distribution with an extensive manual, CLI, update channels, and theme workflow. Its separate theme registry validates public theme repositories and publishes generated catalogues and previews. | The registry checks the commit it will install, limits installed files to the theme contract, reports errors and warnings, and uses maintainer-reviewed submissions. The manual distinguishes stable, RC, edge, and development update tracks. | Pair community discovery with a strict, reviewable install contract. Hornero's existing theme provenance and plugin validator can grow toward curated discovery, but extension execution, signatures, updates, and permissions need their own product policy. |
 
 ### Organization and repository boundaries
 
 This inventory is based on the public organization listings and repository
-metadata checked on 2026-10-12. A repository description is not proof of
+metadata checked on 2026-10-13. A repository description is not proof of
 maintenance ownership, compatibility, or release support; fork ancestry and
 the repository's own documentation matter too.
 
@@ -327,6 +327,34 @@ contribution path with explicit package ownership, provenance, preview
 generation and lifecycle policy—not simply adding a directory of external
 assets or claiming feature parity.
 
+### Update ownership and rollback are different product contracts
+
+Ryoku's `ryoku update` is not a safe template for selectively upgrading a
+random set of Arch/AUR packages. Its documented lane updates packages from a
+signed first-party repository and pairs that transaction with system
+snapshots; the base system remains an explicit `pacman -Syu` operation. That
+package ownership and recovery model is part of the feature.
+
+Hornero's current [update and recovery contract](https://github.com/HorneroOS/hornero/blob/main/docs/UPDATE_RECOVERY.md)
+correctly describes `horneroctl package upgrade --yes` as a full
+`pacman -Syu`. Hornero configuration snapshots are not filesystem or bootable
+OS snapshots. A future Hornero-only update lane should follow only after the
+project owns a signed package channel and has demonstrated snapshot, rollback,
+and recovery behavior on a disposable test system (tracked in
+[hornero#62](https://github.com/HorneroOS/hornero/issues/62)). Until then,
+the full system upgrade name and scope should stay explicit; partial-upgrade
+shortcuts would make the product less reliable.
+
+### Theme discovery needs the same rigor as theme execution
+
+Omarchy's community registry validates the exact commit it lists, narrows the
+files installed to its theme contract, and separates validation errors from
+warnings. Hornero's theme provenance and plugin validator are useful building
+blocks, but they do not yet provide a registry or an execution sandbox. Any
+future community catalogue should preserve provenance and licenses, pin the
+reviewed content, and keep executable QML out of automatic install paths until
+the trust and permissions model is explicit.
+
 ### Findings for HorneroOS
 
 The comparison does not identify a missing feature that should be copied
@@ -339,14 +367,13 @@ make those boundaries legible rather than imitate another repository
 layout.
 
 The work already present on HorneroOS main materially addresses several
-of the useful patterns found in this review: a V-based management CLI,
+useful patterns found in this review: a V-based management CLI,
 edition/package composition, a shell plugin contract and validator, a
 product design guide, a contributor-facing repository map, wallpaper
 provenance, and an evidence-backed shell performance baseline. These are
-product infrastructure, not proof that every planned edition or
-compositor is fully supported. The website and docs should continue to
-label release maturity according to the acceptance evidence for each
-component.
+product infrastructure, not proof that every planned edition or compositor
+is fully supported. The website and docs should continue to label release
+maturity according to the acceptance evidence for each component.
 
 The product-map recommendation is complete: the Website Roots page and footer
 link to the shared design language, repository ownership map, and contribution
@@ -361,12 +388,15 @@ The remaining high-value work is narrower:
    document the user task, keyboard path, settings/CLI equivalent, and
    graceful behavior when an optional capability is unavailable. Keep
    Hyprland and Niri differences explicit instead of promising parity.
-2. **Keep extension distribution separate from execution.** The plugin
+2. **Build the update channel before promising a Hornero-only update lane.**
+   A signed package source, explicit update phases, and filesystem snapshot
+   backend are prerequisites; config archives cannot satisfy that promise.
+3. **Keep extension distribution separate from execution.** The plugin
    contract and validator establish format and static checks. A catalog,
    installer, signature/trust model, update behavior, and permissions
    policy would be separate product work and should not be implied until
    implemented.
-3. **Measure live interaction before polishing timing.** Issue #77 records
+4. **Measure live interaction before polishing timing.** Issue #77 records
    a small rapid-Escape race in nested Hyprland, with normal-speed closes
    succeeding and no crash/protocol failure. Quickshell 0.3.1 documents
    that HyprlandFocusGrab.active stays false until the compositor starts
@@ -382,13 +412,15 @@ The remaining high-value work is narrower:
 ### Sources reviewed
 
 - Caelestia [shell](https://github.com/caelestia-dots/shell),
-  [CLI](https://github.com/caelestia-dots/cli), and
-  [official plugin manifests](https://github.com/caelestia-dots/plugins).
+  [CLI](https://github.com/caelestia-dots/cli),
+  [official plugin manifests](https://github.com/caelestia-dots/plugins),
+  and the current [organization repository map](https://github.com/caelestia-dots).
 - Quickshell 0.3.1
   [HyprlandFocusGrab reference](https://quickshell.org/docs/v0.3.1/types/Quickshell.Hyprland/HyprlandFocusGrab/).
-- Ryoku [product repository](https://github.com/Ryoku-dev/ryoku),
+- Ryoku [product repository and update contract](https://github.com/Ryoku-dev/ryoku/blob/main/README.md),
   [documentation repository](https://github.com/Ryoku-dev/ryoku-docs), and
   [community store](https://github.com/Ryoku-dev/ryostore).
 - Omarchy [product repository and manual](https://github.com/omacom/omarchy),
+  [update-track guide](https://github.com/omacom/omarchy/blob/quattro/manual/30-updates.md),
   [theme authoring guide](https://github.com/omacom/omarchy/blob/quattro/manual/43-making-your-own-theme.md),
-  and [theme registry](https://github.com/omacom/omarchy-theme-registry).
+  and [theme registry validation and publishing contract](https://github.com/omacom/omarchy-theme-registry).

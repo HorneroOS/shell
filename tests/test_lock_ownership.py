@@ -59,6 +59,9 @@ def test_policy_documented():
     assert "read-only `secure`" in doc
     assert "ownership check or recovery guard" in doc
     assert "dangling manager pointer" in doc
+    assert "WlSessionLock::updateSurfaces(true)" in doc
+    assert "invalid-object Wayland protocol error" in doc
+    assert "does not repair stale lock-manager or compositor state" in doc
 
 
 def test_recovery_distinguishes_a_shell_exit_from_hyprlands_lock_fallback():

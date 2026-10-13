@@ -9,10 +9,10 @@ Scope {
     property alias lock: lock
 
     // Single acquisition point for the in-shell session lock (shell#24).
-    // A redundant `locked = true` write is the reentrant path that kills
-    // quickshell on versions before 0.3.2 (upstream quickshell#1054;
-    // afb2c27 is included in 0.3.2). That release guards the failed
-    // acquisition path, but cannot repair an orphaned compositor lock.
+    // Before quickshell 0.3.2, a failed acquisition could hit qFatal during
+    // surface creation (upstream quickshell#1054; afb2c27 is in 0.3.2).
+    // That guard does not repair a previously orphaned compositor lock or
+    // its stale manager state.
     // Policy, see docs/LOCKING.md:
     //   - no-op while already locked or while a request is in flight;
     //   - refuse while the foreign hyprlock backend holds the session;

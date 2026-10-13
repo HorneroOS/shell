@@ -199,15 +199,15 @@ def test_later_follow_up_records_process_swap_without_claiming_improvement():
 
 def test_current_host_capture_is_sanitized_and_keeps_its_limits_explicit():
     capture = ROOT / "docs" / "perf-baselines" / "2026-10-13.md"
-    text = capture.read_text()
+    text = " ".join(capture.read_text().split())
     for expected in (
         "## Current host observation",
         "`hornero-shell 1.2.14-1`",
-        "The installed package's source revision",
-        "was not\n  established, so this capture",
+        "The installed package's source revision was not established",
+        "so this capture is not attributed to the repository `main` revision",
         "| **Median** | **842.9** | **633.3** | **507.4** | **125.9** | **0.0** | **0.0** | **0.00** | **21** | **7** |",
         "does not establish a regression",
-        "does not measure login-to-first-frame or",
+        "does not measure login-to-first-frame or per-surface frame cost",
         "Host identity, process IDs, user name, host memory, CPU topology",
     ):
         assert expected in text, f"current reference capture missing {expected!r}"

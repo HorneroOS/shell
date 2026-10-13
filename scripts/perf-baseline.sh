@@ -54,29 +54,66 @@ fi
 
 # A system-installed shell may run with a package-owned QS_CONFIG_PATH that
 # is not present in the caller's environment. Reuse the live process's
-# Quickshell selection so qs IPC addresses the daemon we are measuring.
+# selection for accurate QML metadata; IPC itself targets the process by PID.
 proc_env_value() {
     local key="$1" entry
-    if [ ! -r "/proc/${PID}/environ" ]; then return 0; fi
+    if [ ! -r "${HORNERO_PROC_ROOT:-/proc}/${PID}/environ" ]; then return 0; fi
     while IFS= read -r -d '' entry; do
         case "${entry}" in
             "${key}="*) printf '%s' "${entry#*=}"; return 0 ;;
         esac
-    done < "/proc/${PID}/environ"
+    done < "${HORNERO_PROC_ROOT:-/proc}/${PID}/environ"
+    return 0
+}
+
+# Quickshell launched with `--path` or `--config` does not have to export the
+# matching QS_CONFIG_* variables. Recover those arguments from the live process
+# before falling back to the caller's default config.
+proc_cmdline_value() {
+    local key="$1" long_flag short_flag arg index
+    local -a args=()
+    case "${key}" in
+        QS_CONFIG_PATH) long_flag="--path"; short_flag="-p" ;;
+        QS_CONFIG_NAME) long_flag="--config"; short_flag="-c" ;;
+        QS_MANIFEST) long_flag="--manifest"; short_flag="-m" ;;
+        *) return 0 ;;
+    esac
+    if [ ! -r "${HORNERO_PROC_ROOT:-/proc}/${PID}/cmdline" ]; then return 0; fi
+    mapfile -d '' -t args < "${HORNERO_PROC_ROOT:-/proc}/${PID}/cmdline"
+    for index in "${!args[@]}"; do
+        arg="${args[${index}]}"
+        case "${arg}" in
+            "${long_flag}"|"${short_flag}")
+                if (( index + 1 < ${#args[@]} )); then
+                    printf '%s' "${args[$((index + 1))]}"
+                    return 0
+                fi
+                ;;
+            "${long_flag}="*)
+                printf '%s' "${arg#*=}"
+                return 0
+                ;;
+        esac
+    done
     return 0
 }
 
 for key in QS_CONFIG_PATH QS_CONFIG_NAME QS_MANIFEST QS_PLUGIN_PATH NIRI_SOCKET HYPRLAND_INSTANCE_SIGNATURE; do
-    if [[ -v "${key}" ]]; then
+    value="$(proc_cmdline_value "${key}")"
+    if [ -z "${value}" ]; then value="$(proc_env_value "${key}")"; fi
+    if [ -z "${value}" ] && [[ -v "${key}" ]]; then
         value="${!key}"
-    else
-        value="$(proc_env_value "${key}")"
     fi
     if [ -n "${value}" ]; then export "${key}=${value}"; fi
 done
 
-if ! qs ipc call lock isLocked >/dev/null 2>&1; then
-    echo "cannot reach the selected Quickshell IPC instance; verify QS_CONFIG_PATH or QS_CONFIG_NAME" >&2
+qs_ipc() {
+    env -u QS_CONFIG_PATH -u QS_CONFIG_NAME -u QS_MANIFEST \
+        qs ipc --pid "${PID}" "$@"
+}
+
+if ! qs_ipc call lock isLocked >/dev/null 2>&1; then
+    echo "cannot reach the running Quickshell process by PID; verify it is alive and IPC is available" >&2
     exit 1
 fi
 
@@ -171,7 +208,8 @@ if [ "${RESTART}" -eq 1 ]; then
     T0=$(date +%s%3N)
     horneroctl shell restart --yes >/dev/null
     for _ in $(seq 1 60); do
-        if qs ipc call lock isLocked >/dev/null 2>&1; then
+        PID="$(shell_pid)"
+        if [ -n "${PID}" ] && qs_ipc call lock isLocked >/dev/null 2>&1; then
             break
         fi
         sleep 1
@@ -188,7 +226,15 @@ HOST_CORES="$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc --all 2>/dev/null |
 MEM_KB="$(awk '/^MemTotal:/ {print $2}' /proc/meminfo)"
 MONITORS="$(compositor_count outputs)"
 if [ -n "${QS_CONFIG_PATH:-}" ]; then
-    QML_ROOT="$(dirname "${QS_CONFIG_PATH}")"
+    QML_CONFIG_PATH="${QS_CONFIG_PATH}"
+    if [[ "${QML_CONFIG_PATH}" != /* ]]; then
+        QML_CONFIG_PATH="${HORNERO_PROC_ROOT:-/proc}/${PID}/cwd/${QML_CONFIG_PATH}"
+    fi
+    if [ -d "${QML_CONFIG_PATH}" ]; then
+        QML_ROOT="${QML_CONFIG_PATH}"
+    else
+        QML_ROOT="$(dirname "${QML_CONFIG_PATH}")"
+    fi
 else
     QML_ROOT="${XDG_CONFIG_HOME:-${HOME}/.config}/quickshell"
 fi
@@ -242,7 +288,7 @@ for _ in $(seq 1 "${SAMPLES}"); do
     PSS_KB="$(awk '/^Pss:/ {s+=$2} END {print s+0}' "/proc/${PID}/smaps_rollup" 2>/dev/null || true)"
     MEMORY_BREAKDOWN="$(memory_breakdown)"
     L0=$(date +%s%3N)
-    qs ipc call lock isLocked >/dev/null 2>&1
+    qs_ipc call lock isLocked >/dev/null 2>&1
     L1=$(date +%s%3N)
     LAYERS="$(compositor_count layers)"
     sleep "${INTERVAL}"

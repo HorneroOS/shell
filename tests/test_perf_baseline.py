@@ -183,6 +183,20 @@ def test_follow_up_capture_is_separate_sanitized_and_honest_about_limits():
         assert expected in text, f"follow-up capture missing {expected!r}"
 
 
+def test_later_follow_up_records_process_swap_without_claiming_improvement():
+    capture = ROOT / "docs" / "perf-baselines" / "2026-10-13.md"
+    text = capture.read_text()
+    for expected in (
+        "## Later follow-up observation",
+        "`d4f89e5` (`main` at capture time)",
+        "| **Median** | **460.4** | **351.1** | **274.6** | **76.4** | **0.0** | **175.3** | **0.46** | **27** | **7** |",
+        "does not, by itself, establish memory pressure or a leak",
+        "window state and other session conditions were not controlled",
+        "Host identity, process IDs, user name, host memory, CPU topology",
+    ):
+        assert expected in text, f"later follow-up capture missing {expected!r}"
+
+
 def _write_executable(path: Path, text: str) -> None:
     path.write_text(textwrap.dedent(text), encoding="utf-8")
     path.chmod(0o755)

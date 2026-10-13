@@ -189,6 +189,12 @@ def test_terminal_settings_uses_cli_report_and_change_contract():
     assert 'Install Kitty, Alacritty, or Ghostty' in pane
 
 
+def test_terminal_settings_uses_available_rounded_clipping_component():
+    pane = (CC / "terminal" / "TerminalPane.qml").read_text()
+    assert "StyledClippingRect {" in pane
+    assert "ClippingRectangle {" not in pane
+
+
 def test_no_dead_wrappers_in_panes():
     hits = []
     for path in CC.rglob("*.qml"):

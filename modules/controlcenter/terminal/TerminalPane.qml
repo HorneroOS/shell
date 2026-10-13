@@ -112,7 +112,7 @@ Item {
         }
     }
 
-    ClippingRectangle {
+    StyledClippingRect {
         anchors.fill: parent
         anchors.margins: Appearance.padding.normal
         anchors.leftMargin: 0

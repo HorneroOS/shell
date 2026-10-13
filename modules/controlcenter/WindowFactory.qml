@@ -31,7 +31,10 @@ Singleton {
             const pane = props?.pane?.toString() ?? "";
             if (pane !== "" && PaneRegistry.getById(pane))
                 existing.active = pane;
-            existing.requestActivate();
+            Qt.callLater(() => {
+                if (existing && existing.visible)
+                    Compositor.focusWindowByAppIdAndTitlePrefix("org.quickshell", "Hornero Settings - ");
+            });
             root.syncCompanion();
             return;
         }
@@ -40,12 +43,9 @@ Singleton {
             root.nextWindowToken += 1;
             win.registryToken = root.nextWindowToken;
             windows.push(win);
-            // Dynamic windows are not guaranteed to receive focus simply
-            // because they became visible. Bring Settings above the current
-            // application so opening a pane cannot look like a no-op.
             Qt.callLater(() => {
                 if (win && win.visible)
-                    win.requestActivate();
+                    Compositor.focusWindowByAppIdAndTitlePrefix("org.quickshell", "Hornero Settings - ");
             });
         }
         root.syncCompanion();

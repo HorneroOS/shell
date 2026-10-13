@@ -165,6 +165,16 @@ Singleton {
         return id === null ? false : focusWindow(id);
     }
 
+    function focusWindowByAppIdAndTitlePrefix(appId: string, titlePrefix: string): bool {
+        let window = null;
+        if (isNiri) {
+            window = Niri.windows.find(item => item.app_id === appId && String(item.title ?? "").startsWith(titlePrefix)) ?? null;
+        } else if (isHyprland) {
+            window = Hypr.toplevels.values.find(item => item.lastIpcObject?.class === appId && String(item.title ?? "").startsWith(titlePrefix)) ?? null;
+        }
+        return window === null ? false : focusWindowFor(window);
+    }
+
     function closeWindowFor(window: var): bool {
         const id = windowIdFor(window);
         return id === null ? false : closeWindow(id);

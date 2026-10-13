@@ -32,7 +32,7 @@ def test_harness_probes_named_metrics():
     for probe in ("smaps_rollup", "qs ipc --pid", "hyprctl layers",
                   "quickshell --version", "startup_ready_ms",
                   "rss_kb", "pss_kb", "pss_anon_kb", "pss_file_kb",
-                  "pss_shmem_kb", "cpu_percent", "ipc_ms"):
+                  "pss_shmem_kb", "swap_kb", "cpu_percent", "ipc_ms"):
         assert probe in text, f"harness missing probe {probe}"
 
 
@@ -392,6 +392,7 @@ def test_harness_reports_null_memory_breakdown_when_smaps_rollup_is_unreadable()
         "pss_anon_kb": None,
         "pss_file_kb": None,
         "pss_shmem_kb": None,
+        "swap_kb": None,
     }
 
 
@@ -407,6 +408,7 @@ def test_harness_reports_null_for_missing_pss_breakdown_fields():
         "pss_anon_kb": None,
         "pss_file_kb": None,
         "pss_shmem_kb": None,
+        "swap_kb": None,
     }
 
 
@@ -416,7 +418,7 @@ def test_harness_parses_available_pss_breakdown_fields():
         rollup = proc_root / "999999999" / "smaps_rollup"
         rollup.parent.mkdir()
         rollup.write_text(
-            "Pss: 60 kB\nPss_Anon: 10 kB\nPss_File: 20 kB\nPss_Shmem: 30 kB\n",
+            "Pss: 60 kB\nPss_Anon: 10 kB\nPss_File: 20 kB\nPss_Shmem: 30 kB\nSwap: 40 kB\n",
             encoding="utf-8",
         )
         _, report = _run_fixture("niri", shell_pid="999999999", proc_root=proc_root)
@@ -425,18 +427,19 @@ def test_harness_parses_available_pss_breakdown_fields():
         "pss_anon_kb": 10,
         "pss_file_kb": 20,
         "pss_shmem_kb": 30,
+        "swap_kb": 40,
     }
 
 
 def _assert_memory_breakdown(sample: dict) -> None:
     memory = sample["memory_breakdown"]
-    assert set(memory) == {"pss_anon_kb", "pss_file_kb", "pss_shmem_kb"}
+    assert set(memory) == {"pss_anon_kb", "pss_file_kb", "pss_shmem_kb", "swap_kb"}
     assert all(value is None or isinstance(value, int) for value in memory.values())
 
 
 def test_harness_prints_a_complete_human_table_by_default():
     output, report = _run_fixture("hyprland", output_format=None)
     assert report is None
-    assert "Sample  RSS MiB  PSS MiB  Anon MiB  File MiB  Shared MiB" in output
+    assert "Sample  RSS MiB  PSS MiB  Anon MiB  File MiB  Shared MiB  Swap MiB" in output
     assert "CPU cores:" in output
     assert "QML files available: 3" in output

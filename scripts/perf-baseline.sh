@@ -267,11 +267,16 @@ import re
 import sys
 from pathlib import Path
 
-fields = {"Pss_Anon": "pss_anon_kb", "Pss_File": "pss_file_kb", "Pss_Shmem": "pss_shmem_kb"}
+fields = {
+    "Pss_Anon": "pss_anon_kb",
+    "Pss_File": "pss_file_kb",
+    "Pss_Shmem": "pss_shmem_kb",
+    "Swap": "swap_kb",
+}
 values = {name: None for name in fields.values()}
 try:
     for line in Path(sys.argv[1]).read_text().splitlines():
-        match = re.fullmatch(r"(Pss_Anon|Pss_File|Pss_Shmem):\s+(\d+) kB", line)
+        match = re.fullmatch(r"(Pss_Anon|Pss_File|Pss_Shmem|Swap):\s+(\d+) kB", line)
         if match:
             values[fields[match.group(1)]] = int(match.group(2))
 except OSError:
@@ -346,7 +351,7 @@ print(
 print(f"CPU cores: {data['cores']} effective / {data['host_cores']} online | RAM: {data['mem_total_kb'] / 1048576:.1f} GiB")
 if data["startup_ready_ms"]:
     print(f"Restart to IPC-ready: {data['startup_ready_ms']} ms")
-print("Sample  RSS MiB  PSS MiB  Anon MiB  File MiB  Shared MiB  CPU %  IPC ms  Layers")
+print("Sample  RSS MiB  PSS MiB  Anon MiB  File MiB  Shared MiB  Swap MiB  CPU %  IPC ms  Layers")
 for index, sample in enumerate(data["samples"], start=1):
     layers = sample["layers"] if sample["layers"] is not None else "n/a"
     memory = sample["memory_breakdown"]
@@ -356,6 +361,7 @@ for index, sample in enumerate(data["samples"], start=1):
         f"{index:>6}  {sample['rss_kb'] / 1024:>7.1f}  "
         f"{sample['pss_kb'] / 1024:>7.1f}  {mib(memory['pss_anon_kb'])}  "
         f"{mib(memory['pss_file_kb'])}  {mib(memory['pss_shmem_kb'])}  "
+        f"{mib(memory['swap_kb'])}  "
         f"{sample['cpu_percent']:>5.2f}  "
         f"{sample['ipc_ms']:>6}  {layers:>6}"
     )

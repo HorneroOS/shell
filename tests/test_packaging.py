@@ -36,6 +36,13 @@ def test_release_version_matches_nix_and_arch_package():
     assert pkgver.group(1) == nix_version.group(1) == source_tag.group(1)
 
 
+def test_cmake_normalizes_package_release_tags():
+    cmake = (ROOT / "CMakeLists.txt").read_text()
+    assert 'string(REGEX REPLACE "^pkg/hornero-shell-v" "" VERSION' in cmake
+    assert 'if(NOT VERSION MATCHES "^[0-9]+\\\\.[0-9]+\\\\.[0-9]+$")' in cmake
+    assert 'set(VERSION "0.0.0")' in cmake
+
+
 def test_pkgbuild_build_and_package_functions():
     text = PKGBUILD.read_text()
     assert re.search(r"^build\(\)", text, re.MULTILINE), "build() missing"

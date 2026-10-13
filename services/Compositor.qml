@@ -183,6 +183,17 @@ Singleton {
     }
 
     function focusWindowByAppIdAndTitlePrefix(appId: string, titlePrefix: string): bool {
+        // A newly created Quickshell FloatingWindow can be visible to the
+        // compositor before Quickshell's HyprlandToplevel model refreshes.
+        // Focusing its cached address then targets a stale/nonexistent
+        // toplevel. Settings titles are unique, so use Hyprland's native title
+        // selector for this surface instead of the lagging model address.
+        if (isHyprland && appId === "org.quickshell" && titlePrefix.startsWith("Hornero Settings - ")) {
+            const escapedTitlePrefix = titlePrefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+            Hypr.dispatch(`focuswindow title:^${escapedTitlePrefix}.*$`);
+            return true;
+        }
+
         let window = null;
         if (isNiri) {
             window = Niri.windows.find(item => item.app_id === appId && String(item.title ?? "").startsWith(titlePrefix)) ?? null;

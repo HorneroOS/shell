@@ -259,6 +259,18 @@ def test_compositor_can_focus_a_shell_window_on_supported_backends():
     assert "return window === null ? false : focusWindowFor(window);" in compositor
 
 
+def test_control_center_focus_uses_hyprland_title_selector_for_new_settings_windows():
+    compositor = (ROOT / "services" / "Compositor.qml").read_text()
+    focus = compositor.split("function focusWindowByAppIdAndTitlePrefix", 1)[1].split(
+        "function closeWindowFor", 1
+    )[0]
+    assert 'appId === "org.quickshell"' in focus
+    assert 'titlePrefix.startsWith("Hornero Settings - ")' in focus
+    assert "titlePrefix.replace(" in focus
+    assert "focuswindow title:^${escapedTitlePrefix}.*$" in focus
+    assert "Hypr.toplevels.values.find" in focus
+
+
 def test_hyprland_window_actions_normalize_addresses_before_dispatch():
     compositor = (ROOT / "services" / "Compositor.qml").read_text()
     assert 'function hyprlandAddress(windowId: var): string' in compositor

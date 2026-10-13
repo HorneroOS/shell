@@ -112,6 +112,36 @@ QS_BIN=\$(command -v qs || command -v quickshell)
 \$QS_BIN ipc call drawers list")" || fail "shell IPC responds"
 [[ -n "${IPC_DRAWERS}" ]] || fail "shell IPC empty"
 
+# Exercise the Settings focus path that can race Hyprland's toplevel
+# registration. The active-window assertion proves the deep-linked Terminal
+# pane became usable, not merely that the IPC handler accepted the request.
+echo "==> opening Control Center Terminal settings"
+TERMINAL_SETTINGS="$(vm_ssh "$(vm_hypr_env)
+QS_BIN=\$(command -v qs || command -v quickshell)
+\$QS_BIN ipc call controlCenter open terminal")" || fail "Control Center Terminal IPC"
+[[ "${TERMINAL_SETTINGS}" == *"opened: terminal"* ]] || fail "Terminal pane did not open"
+vm_ssh "$(vm_hypr_env)
+for _ in \$(seq 1 20); do
+    if hyprctl -j activewindow | jq -e '.class == \"org.quickshell\" and .title == \"Hornero Settings - Terminal\"' > /dev/null; then
+        exit 0
+    fi
+    sleep 0.12
+done
+exit 1" || fail "Terminal settings window never became active"
+if vm_ssh "$(vm_hypr_env)
+timeout 10 grim /tmp/vm-controlcenter-terminal.png" > /dev/null 2>&1; then
+    vm_scp "${VM_SSH_USER}@127.0.0.1:/tmp/vm-controlcenter-terminal.png" \
+        "${SCREENSHOT_DIR}/controlcenter-terminal.png" || fail "Terminal settings screenshot fetch"
+else
+    bash "${VM_LIB_DIR}/qemu-screenshot.sh" "${SCREENSHOT_DIR}/controlcenter-terminal.png" \
+        || fail "Terminal settings framebuffer capture"
+fi
+python3 "${VM_LIB_DIR}/check_screenshot.py" "${SCREENSHOT_DIR}/controlcenter-terminal.png" \
+    || fail "Terminal settings screenshot is blank or truncated"
+vm_ssh "$(vm_hypr_env)
+QS_BIN=\$(command -v qs || command -v quickshell)
+\$QS_BIN ipc call controlCenter close" > /dev/null || fail "Control Center close IPC"
+
 # 5. Capture -------------------------------------------------------------------
 echo "==> capturing desktop output"
 # wlr-screencopy can hang on virtio-vga, so probe grim first and fall back
@@ -195,6 +225,8 @@ jq -n \
             hyprland_running: true,
             shell_running: true,
             shell_ipc_responds: true,
+            terminal_settings_focused: true,
+            terminal_settings_screenshot_captured: true,
             monitor: $monitor,
             reserved: $reserved,
             recording_captured: $rec_ok,

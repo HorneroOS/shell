@@ -177,6 +177,8 @@ A passing `vm-smoke.sh` run writes `artifacts/assertions.json` with
 | Shell alive | `pgrep -x qs` (fallback `quickshell`) in the guest |
 | Compositor IPC responds | `hyprctl -j monitors` returns an output name |
 | Shell IPC responds | `qs ipc call drawers list` returns drawer names |
+| Settings Terminal opens and focuses | `controlCenter open terminal` succeeds and Hyprland reports the Settings window as active |
+| Terminal Settings renders | `controlcenter-terminal.png` passes the nonblank/truncation screenshot check |
 | Screen is really rendering | `grim` probe, then the final capture must pass `check_screenshot.py` |
 | Recording captured | `wf-recorder` file exists and is non-empty (screencopy path only) |
 
@@ -193,7 +195,9 @@ artifacts/
 ├── console.log                  # VM serial console (boot plus cloud-init)
 ├── assertions.json              # machine-readable PASS/FAIL report
 ├── monitor.sock                 # QEMU monitor (framebuffer fallback)
-├── screenshots/desktop-final.png
+├── screenshots/
+│   ├── desktop-final.png
+│   └── controlcenter-terminal.png # deep-linked Settings pane focus check
 ├── recordings/desktop-recording.mp4
 └── logs/
     ├── hyprland.log

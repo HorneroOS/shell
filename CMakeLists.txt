@@ -30,7 +30,12 @@ if(NOT DEFINED GIT_REVISION)
     endif()
 endif()
 
+string(REGEX REPLACE "^pkg/hornero-shell-v" "" VERSION "${VERSION}")
 string(REGEX REPLACE "^v" "" VERSION "${VERSION}")
+if(NOT VERSION MATCHES "^[0-9]+\\.[0-9]+\\.[0-9]+$")
+    message(WARNING "Git tag '${VERSION}' is not a numeric release version; using 0.0.0")
+    set(VERSION "0.0.0")
+endif()
 
 project(hornero-shell VERSION ${VERSION} LANGUAGES CXX)
 

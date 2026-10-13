@@ -50,12 +50,18 @@ def test_idle_routes_through_guard():
 
 def test_policy_documented():
     """The ownership policy doc exists and names the upstream owner."""
-    doc = DOC.read_text()
+    doc = " ".join(DOC.read_text().split())
     assert "requestLock" in doc
     assert "1054" in doc
     assert "single-locker" in doc
     assert "Quickshell 0.3.2" in doc
     assert "partial containment" in doc
+    assert "read-only `secure`" in doc
+    assert "ownership check or recovery guard" in doc
+    assert "dangling manager pointer" in doc
+    assert "WlSessionLock::updateSurfaces(true)" in doc
+    assert "invalid-object Wayland protocol error" in doc
+    assert "does not repair stale lock-manager or compositor state" in doc
 
 
 def test_recovery_distinguishes_a_shell_exit_from_hyprlands_lock_fallback():

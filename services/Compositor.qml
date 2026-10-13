@@ -186,8 +186,9 @@ Singleton {
         // A newly created Quickshell FloatingWindow can be visible to the
         // compositor before Quickshell's HyprlandToplevel model refreshes.
         // Focusing its cached address then targets a stale/nonexistent
-        // toplevel. Settings titles are unique, so use Hyprland's native title
-        // selector for this surface instead of the lagging model address.
+        // toplevel. Hornero Settings titles are unique within the shell, so
+        // use Hyprland's native title selector instead of the lagging model
+        // address.
         if (isHyprland && appId === "org.quickshell" && titlePrefix.startsWith("Hornero Settings - ")) {
             const escapedTitlePrefix = titlePrefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
             Hypr.dispatch(`focuswindow title:^${escapedTitlePrefix}.*$`);

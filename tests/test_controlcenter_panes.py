@@ -268,6 +268,9 @@ def test_control_center_focus_uses_hyprland_title_selector_for_new_settings_wind
     assert 'titlePrefix.startsWith("Hornero Settings - ")' in focus
     assert "titlePrefix.replace(" in focus
     assert "focuswindow title:^${escapedTitlePrefix}.*$" in focus
+    assert focus.index("Hypr.dispatch(") < focus.index("let window = null;"), (
+        "the first Settings focus attempt must bypass the lagging toplevel model"
+    )
     assert "Hypr.toplevels.values.find" in focus
 
 

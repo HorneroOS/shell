@@ -143,7 +143,10 @@ Singleton {
             return Niri.focusWindow(windowId);
         if (!isHyprland)
             return false;
-        Hypr.dispatch(`focuswindow address:${windowId}`);
+        const address = hyprlandAddress(windowId);
+        if (address === "")
+            return false;
+        Hypr.dispatch(`focuswindow address:${address}`);
         return true;
     }
 
@@ -152,8 +155,22 @@ Singleton {
             return Niri.closeWindow(windowId);
         if (!isHyprland)
             return false;
-        Hypr.dispatch(`closewindow address:${windowId}`);
+        const address = hyprlandAddress(windowId);
+        if (address === "")
+            return false;
+        Hypr.dispatch(`closewindow address:${address}`);
         return true;
+    }
+
+    // Quickshell exposes Hyprland window addresses without the hexadecimal
+    // prefix, while Hyprland's address selector requires `address:0x...`.
+    // Normalize once at the backend boundary so focus and close requests use
+    // the native selector format and callers can keep passing native IDs.
+    function hyprlandAddress(windowId: var): string {
+        const address = String(windowId ?? "").trim();
+        if (address === "")
+            return "";
+        return address.startsWith("0x") ? address : `0x${address}`;
     }
 
     function windowIdFor(window: var): var {
@@ -187,7 +204,10 @@ Singleton {
             return Niri.toggleWindowFloating(windowIdFor(window));
         if (!isHyprland)
             return false;
-        Hypr.dispatch(`togglefloating address:0x${windowIdFor(window)}`);
+        const address = hyprlandAddress(windowIdFor(window));
+        if (address === "")
+            return false;
+        Hypr.dispatch(`togglefloating address:${address}`);
         return true;
     }
 

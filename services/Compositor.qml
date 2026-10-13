@@ -1,6 +1,7 @@
 pragma Singleton
 
 import Quickshell
+import Quickshell.Io
 import qs.services
 
 /**
@@ -8,6 +9,11 @@ import qs.services
  * surfaces. Backend-specific IPC remains in its own service.
  */
 Singleton {
+    id: root
+
+    property string pendingHyprlandFocusAppId: ""
+    property string pendingHyprlandFocusTitlePrefix: ""
+
     // Prefer the child session even when a compositor is launched nested and
     // inherits its parent's signature from the environment.
     readonly property string hyprlandInstanceSignature: Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") ?? ""
@@ -183,25 +189,41 @@ Singleton {
     }
 
     function focusWindowByAppIdAndTitlePrefix(appId: string, titlePrefix: string): bool {
-        // A newly created Quickshell FloatingWindow can be visible to the
-        // compositor before Quickshell's HyprlandToplevel model refreshes.
-        // Focusing its cached address then targets a stale/nonexistent
-        // toplevel. Hornero Settings titles are unique within the shell, so
-        // use Hyprland's native title selector instead of the lagging model
-        // address.
-        if (isHyprland && appId === "org.quickshell" && titlePrefix.startsWith("Hornero Settings - ")) {
-            const escapedTitlePrefix = titlePrefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-            Hypr.dispatch(`focuswindow title:^${escapedTitlePrefix}.*$`);
+        if (isHyprland) {
+            // Hyprland's focuswindow dispatcher accepts one selector at a
+            // time. Query its live client list so app ID and title are both
+            // checked before we dispatch the exact address; Quickshell's
+            // toplevel model can lag immediately after a window is created.
+            if (hyprlandClientsProcess.running)
+                return false;
+            pendingHyprlandFocusAppId = appId;
+            pendingHyprlandFocusTitlePrefix = titlePrefix;
+            hyprlandClientsProcess.running = true;
             return true;
         }
 
         let window = null;
         if (isNiri) {
             window = Niri.windows.find(item => item.app_id === appId && String(item.title ?? "").startsWith(titlePrefix)) ?? null;
-        } else if (isHyprland) {
-            window = Hypr.toplevels.values.find(item => item.lastIpcObject?.class === appId && String(item.title ?? "").startsWith(titlePrefix)) ?? null;
         }
         return window === null ? false : focusWindowFor(window);
+    }
+
+    function focusMatchingHyprlandClient(exitCode: int): void {
+        const appId = pendingHyprlandFocusAppId;
+        const titlePrefix = pendingHyprlandFocusTitlePrefix;
+        pendingHyprlandFocusAppId = "";
+        pendingHyprlandFocusTitlePrefix = "";
+        if (exitCode !== 0)
+            return;
+        try {
+            const clients = JSON.parse(hyprlandClientsOutput.text);
+            const client = clients.find(item => item.class === appId && String(item.title ?? "").startsWith(titlePrefix)) ?? null;
+            if (client?.address)
+                Hypr.dispatch(`focuswindow address:${hyprlandAddress(client.address)}`);
+        } catch (error) {
+            console.warn(`[Compositor] Could not inspect Hyprland clients before focusing Settings: ${error}`);
+        }
     }
 
     function closeWindowFor(window: var): bool {
@@ -269,5 +291,15 @@ Singleton {
             return true;
         const windows = windowsForWorkspace(workspaceId);
         return windows.every(window => isNiri ? window.is_floating : window.lastIpcObject?.floating);
+    }
+
+    Process {
+        id: hyprlandClientsProcess
+        running: false
+        command: ["hyprctl", "-j", "clients"]
+        stdout: StdioCollector {
+            id: hyprlandClientsOutput
+        }
+        onExited: (exitCode, exitStatus) => root.focusMatchingHyprlandClient(exitCode)
     }
 }

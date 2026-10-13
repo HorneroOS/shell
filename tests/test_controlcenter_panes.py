@@ -255,23 +255,24 @@ def test_compositor_can_focus_a_shell_window_on_supported_backends():
     compositor = (ROOT / "services" / "Compositor.qml").read_text()
     assert "function focusWindowByAppIdAndTitlePrefix(appId: string, titlePrefix: string): bool" in compositor
     assert "Niri.windows.find" in compositor
-    assert "Hypr.toplevels.values.find" in compositor
+    assert "focusMatchingHyprlandClient" in compositor
+    assert "hyprlandAddress(client.address)" in compositor
     assert "return window === null ? false : focusWindowFor(window);" in compositor
 
 
-def test_control_center_focus_uses_hyprland_title_selector_for_new_settings_windows():
+def test_control_center_focus_uses_live_hyprland_identity_before_dispatch():
     compositor = (ROOT / "services" / "Compositor.qml").read_text()
     focus = compositor.split("function focusWindowByAppIdAndTitlePrefix", 1)[1].split(
         "function closeWindowFor", 1
     )[0]
-    assert 'appId === "org.quickshell"' in focus
-    assert 'titlePrefix.startsWith("Hornero Settings - ")' in focus
-    assert "titlePrefix.replace(" in focus
-    assert "focuswindow title:^${escapedTitlePrefix}.*$" in focus
-    assert focus.index("Hypr.dispatch(") < focus.index("let window = null;"), (
-        "the first Settings focus attempt must bypass the lagging toplevel model"
+    assert 'command: ["hyprctl", "-j", "clients"]' in compositor
+    assert "item.class === appId" in compositor
+    assert 'String(item.title ?? "").startsWith(titlePrefix)' in compositor
+    assert "focuswindow address:${hyprlandAddress(client.address)}" in compositor
+    assert focus.index("hyprlandClientsProcess.running = true") < focus.index("return true;"), (
+        "Hyprland focus must query a fresh client snapshot before dispatching"
     )
-    assert "Hypr.toplevels.values.find" in focus
+    assert "focuswindow title:" not in compositor, "title-only selectors can focus another app"
 
 
 def test_hyprland_window_actions_normalize_addresses_before_dispatch():

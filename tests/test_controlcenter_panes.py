@@ -191,6 +191,8 @@ def test_terminal_settings_uses_cli_report_and_change_contract():
 
 def test_terminal_settings_uses_available_rounded_clipping_component():
     pane = (CC / "terminal" / "TerminalPane.qml").read_text()
+    assert 'import ".." as CC' in pane
+    assert "required property CC.Session session" in pane
     assert "StyledClippingRect {" in pane
     assert "ClippingRectangle {" not in pane
 

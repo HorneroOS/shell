@@ -255,8 +255,24 @@ def test_compositor_can_focus_a_shell_window_on_supported_backends():
     compositor = (ROOT / "services" / "Compositor.qml").read_text()
     assert "function focusWindowByAppIdAndTitlePrefix(appId: string, titlePrefix: string): bool" in compositor
     assert "Niri.windows.find" in compositor
-    assert "Hypr.toplevels.values.find" in compositor
+    assert "focusMatchingHyprlandClient" in compositor
+    assert "hyprlandAddress(client.address)" in compositor
     assert "return window === null ? false : focusWindowFor(window);" in compositor
+
+
+def test_control_center_focus_uses_live_hyprland_identity_before_dispatch():
+    compositor = (ROOT / "services" / "Compositor.qml").read_text()
+    focus = compositor.split("function focusWindowByAppIdAndTitlePrefix", 1)[1].split(
+        "function closeWindowFor", 1
+    )[0]
+    assert 'command: ["hyprctl", "-j", "clients"]' in compositor
+    assert "item.class === appId" in compositor
+    assert 'String(item.title ?? "").startsWith(titlePrefix)' in compositor
+    assert "focuswindow address:${hyprlandAddress(client.address)}" in compositor
+    assert focus.index("hyprlandClientsProcess.running = true") < focus.index("return true;"), (
+        "Hyprland focus must query a fresh client snapshot before dispatching"
+    )
+    assert "focuswindow title:" not in compositor, "title-only selectors can focus another app"
 
 
 def test_hyprland_window_actions_normalize_addresses_before_dispatch():

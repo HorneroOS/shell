@@ -233,10 +233,22 @@ def test_control_center_window_factory_activates_new_and_reused_settings_windows
     create_body = factory.split("function create(parent: Item, props: var): void {", 1)[1].split("function closeAll()", 1)[0]
     reuse_path = create_body.split("if (windows.length > 0) {", 1)[1].split("\n        }\n        const win", 1)[0]
     new_window_path = create_body.split("const win = controlCenter.createObject", 1)[1].split("\n        root.syncCompanion();", 1)[0]
-    assert 'Compositor.focusWindowByAppIdAndTitlePrefix("org.quickshell", "Hornero Settings - ")' in reuse_path
-    assert "Qt.callLater(() => {" in new_window_path
-    assert 'Compositor.focusWindowByAppIdAndTitlePrefix("org.quickshell", "Hornero Settings - ")' in new_window_path
+    assert "root.focusSettingsWindow(existing)" in reuse_path
+    assert "root.focusSettingsWindow(win)" in new_window_path
     assert "requestActivate()" not in factory
+
+
+def test_control_center_retries_focus_while_compositor_registers_settings_toplevel():
+    factory = (CC / "WindowFactory.qml").read_text()
+    assert "property var pendingFocusWindow: null" in factory
+    assert "property int focusAttemptsRemaining: 0" in factory
+    assert "root.focusAttemptsRemaining = 10" in factory
+    assert "interval: 120" in factory
+    assert "repeat: true" in factory
+    assert "onTriggered: root.tryFocusSettingsWindow()" in factory
+    assert "Compositor.activeWindowAppId === \"org.quickshell\"" in factory
+    assert "root.pendingFocusWindow === win" in factory
+    assert "did not become focused after retries" in factory
 
 
 def test_compositor_can_focus_a_shell_window_on_supported_backends():

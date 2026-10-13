@@ -93,10 +93,13 @@ Item {
                     color: Colours.palette.m3primaryContainer
                     radius: Appearance.rounding.small
 
-                    StateLayer {
+                    Interactive {
                         id: normalWinState
 
                         color: Colours.palette.m3onPrimaryContainer
+                        Accessible.role: Accessible.Button
+                        Accessible.name: qsTr("Float Settings window")
+                        Accessible.description: qsTr("Open the current Settings page in a floating window")
 
                         function onClicked(): void {
                             root.session.root.close();
@@ -246,7 +249,11 @@ Item {
             implicitWidth: icon.implicitWidth + icon.anchors.leftMargin * 2
             implicitHeight: icon.implicitHeight + Appearance.padding.small
 
-            StateLayer {
+            Interactive {
+                Accessible.role: Accessible.Button
+                Accessible.name: item.active ? qsTr("%1, current Settings page").arg(item.title) : item.title
+                Accessible.description: qsTr("Open the %1 Settings page").arg(item.title)
+
                 color: item.active ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
 
                 function onClicked(): void {

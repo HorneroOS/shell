@@ -214,6 +214,20 @@ def test_terminal_settings_uses_available_rounded_clipping_component():
     assert "radius: border.innerRadius" not in pane
 
 
+def test_control_center_navigation_uses_keyboard_accessible_interactive_controls():
+    nav = (CC / "NavRail.qml").read_text()
+    nav_items = nav.split("component NavItem:", 1)[1]
+    assert "Interactive {" in nav_items
+    assert "Accessible.role: Accessible.Button" in nav_items
+    assert "Accessible.name: item.active ? qsTr(\"%1, current Settings page\").arg(item.title) : item.title" in nav_items
+    assert 'Accessible.description: qsTr("Open the %1 Settings page").arg(item.title)' in nav_items
+    assert "Keys.onReturnPressed" not in nav_items, "use the shared Interactive keyboard contract"
+
+    float_action = nav.split("sourceComponent: StyledRect {", 1)[1].split("MaterialIcon {", 1)[0]
+    assert "Interactive {" in float_action
+    assert 'Accessible.name: qsTr("Float Settings window")' in float_action
+
+
 def test_no_dead_wrappers_in_panes():
     hits = []
     for path in CC.rglob("*.qml"):

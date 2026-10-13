@@ -18,7 +18,11 @@ Item {
 
     anchors.fill: parent
 
-    property list<string> terminals: []
+    // Keep the supported choices visible even when only one is installed.
+    // Availability is runtime data; the chooser itself is a stable product
+    // contract and must not disappear when that query returns an empty list.
+    readonly property var supportedTerminals: ["kitty", "alacritty", "ghostty"]
+    property var installedTerminals: []
     property string selectedTerminal: "kitty"
     property string statusMessage: ""
     property bool loading: true
@@ -33,6 +37,18 @@ Item {
         } catch (e) {
             return null;
         }
+    }
+
+    function availableTerminalIds(value: var): var {
+        const supported = ["kitty", "alacritty", "ghostty"];
+        const candidates = Array.isArray(value) ? value : String(value || "").split(",");
+        const ids = [];
+        for (const candidate of candidates) {
+            const id = String(candidate).trim().toLowerCase();
+            if (supported.indexOf(id) >= 0 && ids.indexOf(id) < 0)
+                ids.push(id);
+        }
+        return ids;
     }
 
     function refresh(): void {
@@ -67,14 +83,14 @@ Item {
                 root.listAnswered = response !== null;
                 root.loading = false;
                 if (!response || response.ok !== true) {
-                    root.terminals = [];
+                    root.installedTerminals = [];
                     root.statusMessage = response && response.message ? response.message : qsTr("Could not read terminal settings.");
                     return;
                 }
                 const data = response.data || {};
                 root.selectedTerminal = String(data.terminal_shell_id || "kitty");
-                root.terminals = String(data.terminals_available || "").split(",").filter(id => id.length > 0);
-                root.statusMessage = root.terminals.length === 0 ? qsTr("Install Kitty, Alacritty, or Ghostty to choose a terminal.") : "";
+                root.installedTerminals = root.availableTerminalIds(data.terminals_available);
+                root.statusMessage = root.installedTerminals.length === 0 ? qsTr("Install Kitty, Alacritty, or Ghostty to choose a terminal.") : "";
             }
         }
         onExited: (exitCode, exitStatus) => {
@@ -160,7 +176,7 @@ Item {
                     }
 
                     StyledText {
-                        visible: !root.loading && root.terminals.indexOf(root.selectedTerminal) < 0
+                        visible: !root.loading && root.installedTerminals.indexOf(root.selectedTerminal) < 0
                         Layout.fillWidth: true
                         text: qsTr("The saved default (%1) is not currently installed. Install it or choose an available terminal below.").arg(root.selectedTerminal)
                         color: Colours.palette.m3tertiary
@@ -168,12 +184,13 @@ Item {
                     }
 
                     Repeater {
-                        model: root.terminals
+                        model: root.supportedTerminals
 
                         delegate: StyledRect {
                             id: terminalCard
 
                             required property string modelData
+                            readonly property bool installed: root.installedTerminals.indexOf(modelData) >= 0
 
                             Layout.fillWidth: true
                             implicitHeight: row.implicitHeight + Appearance.padding.normal * 2
@@ -189,7 +206,7 @@ Item {
 
                                 MaterialIcon {
                                     text: "terminal"
-                                    color: terminalCard.modelData === root.selectedTerminal ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+                                    color: terminalCard.installed && terminalCard.modelData === root.selectedTerminal ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
                                     font.pointSize: Appearance.font.size.large
                                 }
 
@@ -204,16 +221,16 @@ Item {
                                     }
 
                                     StyledText {
-                                        text: terminalCard.modelData === root.selectedTerminal ? qsTr("Selected default") : qsTr("Installed and ready to use")
+                                        text: !terminalCard.installed ? qsTr("Not installed") : terminalCard.modelData === root.selectedTerminal ? qsTr("Selected default") : qsTr("Installed and ready to use")
                                         color: Colours.palette.m3onSurfaceVariant
                                         font.pointSize: Appearance.font.size.smaller
                                     }
                                 }
 
                                 TextButton {
-                                    text: terminalCard.modelData === root.selectedTerminal ? qsTr("Selected") : qsTr("Use this")
-                                    type: terminalCard.modelData === root.selectedTerminal ? TextButton.Tonal : TextButton.Text
-                                    enabled: !root.busy && terminalCard.modelData !== root.selectedTerminal
+                                    text: !terminalCard.installed ? qsTr("Install first") : terminalCard.modelData === root.selectedTerminal ? qsTr("Selected") : qsTr("Use this")
+                                    type: terminalCard.installed && terminalCard.modelData === root.selectedTerminal ? TextButton.Tonal : TextButton.Text
+                                    enabled: terminalCard.installed && !root.busy && terminalCard.modelData !== root.selectedTerminal
                                     Accessible.role: Accessible.Button
                                     Accessible.name: qsTr("Use %1 as the default terminal").arg(terminalCard.modelData)
                                     onClicked: root.applyTerminal(terminalCard.modelData)
@@ -240,7 +257,7 @@ Item {
                     }
 
                     TextButton {
-                        visible: root.terminals.length === 0 && !root.loading
+                        visible: root.installedTerminals.length === 0 && !root.loading
                         text: qsTr("Refresh")
                         type: TextButton.Tonal
                         enabled: !root.loading

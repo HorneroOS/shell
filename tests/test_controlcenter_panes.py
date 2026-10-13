@@ -189,6 +189,21 @@ def test_terminal_settings_uses_cli_report_and_change_contract():
     assert 'Install Kitty, Alacritty, or Ghostty' in pane
 
 
+def test_terminal_settings_keeps_supported_choices_visible_and_marks_missing_apps():
+    pane = (CC / "terminal" / "TerminalPane.qml").read_text()
+    assert 'readonly property var supportedTerminals: ["kitty", "alacritty", "ghostty"]' in pane
+    assert "property var installedTerminals: []" in pane
+    assert "function availableTerminalIds(value: var): var" in pane
+    assert 'Array.isArray(value) ? value : String(value || "").split(",")' in pane
+    assert 'supported.indexOf(id) >= 0 && ids.indexOf(id) < 0' in pane
+    assert "root.installedTerminals = root.availableTerminalIds(data.terminals_available)" in pane
+    assert "model: root.supportedTerminals" in pane
+    assert "readonly property bool installed: root.installedTerminals.indexOf(modelData) >= 0" in pane
+    assert 'qsTr("Not installed")' in pane
+    assert 'qsTr("Install first")' in pane
+    assert "enabled: terminalCard.installed && !root.busy" in pane
+
+
 def test_terminal_settings_uses_available_rounded_clipping_component():
     pane = (CC / "terminal" / "TerminalPane.qml").read_text()
     assert 'import ".." as CC' in pane

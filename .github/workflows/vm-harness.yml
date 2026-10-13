@@ -1,12 +1,16 @@
 name: VM harness
 
-# Manual-only checks for the graphical VM harness (tests/vm). This workflow
+# Deterministic checks for the graphical VM harness (tests/vm). This workflow
 # never boots a VM: runners lack KVM and a compositor job would flake, so it
-# covers exactly what is deterministic without hardware (lint, unit tests,
-# and the end-to-end dry-run probe). Real KVM runs stay host-side per
-# docs/VM_TESTING.md.
+# covers lint, unit tests, and the end-to-end dry-run probe. Real KVM runs stay
+# host-side per docs/VM_TESTING.md.
 
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/vm-harness.yml'
+      - 'tests/vm/**'
+      - 'docs/VM_TESTING.md'
   workflow_dispatch:
 
 jobs:

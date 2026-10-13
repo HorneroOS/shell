@@ -228,6 +228,16 @@ def test_control_center_navigation_uses_keyboard_accessible_interactive_controls
     assert 'Accessible.name: qsTr("Float Settings window")' in float_action
 
 
+def test_control_center_window_factory_activates_new_and_reused_settings_windows():
+    factory = (CC / "WindowFactory.qml").read_text()
+    create_body = factory.split("function create(parent: Item, props: var): void {", 1)[1].split("function closeAll()", 1)[0]
+    reuse_path = create_body.split("if (windows.length > 0) {", 1)[1].split("\n        }\n        const win", 1)[0]
+    new_window_path = create_body.split("const win = controlCenter.createObject", 1)[1].split("\n        root.syncCompanion();", 1)[0]
+    assert "existing.requestActivate()" in reuse_path
+    assert "Qt.callLater(() => {" in new_window_path
+    assert "win.requestActivate()" in new_window_path
+
+
 def test_no_dead_wrappers_in_panes():
     hits = []
     for path in CC.rglob("*.qml"):

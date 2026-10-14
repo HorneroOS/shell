@@ -127,12 +127,20 @@ Step by step (same stages the scenario chains):
 ./tests/vm/lib/record.sh fetch
 ```
 
-Validate the harness without any hypervisor (used by CI too):
+Validate the harness without any hypervisor (used by routine CI too):
 
 ```bash
 ./tests/vm/scenarios/vm-smoke.sh --dry-run
 python3 -m pytest tests/vm/ -q
 ```
+
+For rendered Settings evidence without using a developer workstation, dispatch
+the **VM harness** workflow on the branch under review and enable
+`graphical_matrix`. The hosted runner provisions a disposable Arch guest,
+captures each registered Control Center destination, and uploads the images
+and assertion report as `controlcenter-visual-matrix`. This lane uses QEMU TCG
+when KVM is unavailable and can take substantially longer than routine CI; it
+is opt-in and does not run on every pull request.
 
 ## Welcome scenario
 

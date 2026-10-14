@@ -21,7 +21,6 @@ Item {
     // Keep the supported choices visible even when only one is installed.
     // Availability is runtime data; the chooser itself is a stable product
     // contract and must not disappear when that query returns an empty list.
-    readonly property var supportedTerminals: ["kitty", "alacritty", "ghostty"]
     readonly property real actionColumnWidth: 136
     property var installedTerminals: []
     property string selectedTerminal: "kitty"
@@ -69,6 +68,67 @@ Item {
         root.busy = true;
         actionProc.command = ["horneroctl", "--json", "config", "default-apps", "set", "terminal", id, "--yes"];
         actionProc.running = true;
+    }
+
+    component TerminalCard: StyledRect {
+        id: terminalCard
+
+        required property string terminalId
+        readonly property bool installed: root.installedTerminals.indexOf(terminalId) >= 0
+
+        Layout.fillWidth: true
+        implicitHeight: row.implicitHeight + Appearance.padding.normal * 2
+        radius: Appearance.rounding.normal
+        color: Colours.layer(Colours.palette.m3surfaceContainerHigh, 2)
+
+        RowLayout {
+            id: row
+
+            anchors.fill: parent
+            anchors.margins: Appearance.padding.normal
+            spacing: Appearance.spacing.normal
+
+            MaterialIcon {
+                Layout.minimumWidth: Appearance.font.size.extraLarge * 1.5
+                Layout.preferredWidth: Appearance.font.size.extraLarge * 1.5
+                Layout.maximumWidth: Appearance.font.size.extraLarge * 1.5
+                Layout.alignment: Qt.AlignVCenter
+                text: "terminal"
+                color: terminalCard.installed && terminalCard.terminalId === root.selectedTerminal ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+                font.pointSize: Appearance.font.size.large
+                horizontalAlignment: Text.AlignHCenter
+            }
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 2
+
+                StyledText {
+                    text: terminalCard.terminalId === "kitty" ? "Kitty" : terminalCard.terminalId === "alacritty" ? "Alacritty" : "Ghostty"
+                    font.pointSize: Appearance.font.size.normal
+                    font.weight: 600
+                }
+
+                StyledText {
+                    text: !terminalCard.installed ? qsTr("Not installed") : terminalCard.terminalId === root.selectedTerminal ? qsTr("Selected default") : qsTr("Installed and ready to use")
+                    color: Colours.palette.m3onSurfaceVariant
+                    font.pointSize: Appearance.font.size.smaller
+                }
+            }
+
+            TextButton {
+                Layout.minimumWidth: root.actionColumnWidth
+                Layout.preferredWidth: root.actionColumnWidth
+                Layout.maximumWidth: root.actionColumnWidth
+                text: !terminalCard.installed ? qsTr("Unavailable") : terminalCard.terminalId === root.selectedTerminal ? qsTr("Selected") : qsTr("Use")
+                type: terminalCard.terminalId === root.selectedTerminal ? TextButton.Tonal : TextButton.Text
+                enabled: terminalCard.installed && terminalCard.terminalId !== root.selectedTerminal && !root.busy
+                disabled: !terminalCard.installed || terminalCard.terminalId === root.selectedTerminal || root.busy
+                Accessible.role: terminalCard.terminalId === root.selectedTerminal || !terminalCard.installed ? Accessible.StaticText : Accessible.Button
+                Accessible.name: terminalCard.terminalId === root.selectedTerminal ? qsTr("%1 is the default terminal").arg(terminalCard.terminalId) : !terminalCard.installed ? qsTr("%1 is not installed").arg(terminalCard.terminalId) : qsTr("Use %1 as the default terminal").arg(terminalCard.terminalId)
+                onClicked: root.applyTerminal(terminalCard.terminalId)
+            }
+        }
     }
 
     Component.onCompleted: root.refresh()
@@ -184,109 +244,9 @@ Item {
                         wrapMode: Text.Wrap
                     }
 
-                    Repeater {
-                        model: root.supportedTerminals
-
-                        delegate: StyledRect {
-                            id: terminalCard
-
-                            required property string modelData
-                            readonly property bool installed: root.installedTerminals.indexOf(modelData) >= 0
-
-                            Layout.fillWidth: true
-                            implicitHeight: row.implicitHeight + Appearance.padding.normal * 2
-                            radius: Appearance.rounding.normal
-                            color: Colours.layer(Colours.palette.m3surfaceContainerHigh, 2)
-
-                            RowLayout {
-                                id: row
-
-                                anchors.fill: parent
-                                anchors.margins: Appearance.padding.normal
-                                spacing: Appearance.spacing.normal
-
-                                MaterialIcon {
-                                    Layout.minimumWidth: Appearance.font.size.extraLarge * 1.5
-                                    Layout.preferredWidth: Appearance.font.size.extraLarge * 1.5
-                                    Layout.maximumWidth: Appearance.font.size.extraLarge * 1.5
-                                    Layout.alignment: Qt.AlignVCenter
-                                    text: "terminal"
-                                    color: terminalCard.installed && terminalCard.modelData === root.selectedTerminal ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
-                                    font.pointSize: Appearance.font.size.large
-                                    horizontalAlignment: Text.AlignHCenter
-                                }
-
-                                ColumnLayout {
-                                    Layout.fillWidth: true
-                                    spacing: 2
-
-                                    StyledText {
-                                        text: terminalCard.modelData === "kitty" ? "Kitty" : terminalCard.modelData === "alacritty" ? "Alacritty" : "Ghostty"
-                                        font.pointSize: Appearance.font.size.normal
-                                        font.weight: 600
-                                    }
-
-                                    StyledText {
-                                        text: !terminalCard.installed ? qsTr("Not installed") : terminalCard.modelData === root.selectedTerminal ? qsTr("Selected default") : qsTr("Installed and ready to use")
-                                        color: Colours.palette.m3onSurfaceVariant
-                                        font.pointSize: Appearance.font.size.smaller
-                                    }
-                                }
-
-                                Item {
-                                    Layout.minimumWidth: root.actionColumnWidth
-                                    Layout.preferredWidth: root.actionColumnWidth
-                                    Layout.maximumWidth: root.actionColumnWidth
-                                    implicitHeight: Math.max(selectedLabel.implicitHeight + Appearance.padding.smaller * 2, unavailableLabel.implicitHeight, useButton.implicitHeight)
-
-                                    StyledRect {
-                                        anchors.centerIn: parent
-                                        visible: terminalCard.installed && terminalCard.modelData === root.selectedTerminal
-                                        implicitWidth: selectedLabel.implicitWidth + Appearance.padding.normal * 2
-                                        implicitHeight: selectedLabel.implicitHeight + Appearance.padding.smaller * 2
-                                        radius: implicitHeight / 2 * Math.min(1, Appearance.rounding.scale)
-                                        color: Colours.layer(Colours.palette.m3secondaryContainer, 2)
-
-                                        StyledText {
-                                            id: selectedLabel
-
-                                            anchors.centerIn: parent
-                                            text: qsTr("Selected")
-                                            color: Colours.palette.m3primary
-                                            horizontalAlignment: Text.AlignHCenter
-                                            Accessible.role: Accessible.StaticText
-                                        }
-                                    }
-
-                                    StyledText {
-                                        id: unavailableLabel
-
-                                        anchors.centerIn: parent
-                                        visible: !terminalCard.installed
-                                        text: qsTr("Unavailable")
-                                        color: Colours.palette.m3outline
-                                        horizontalAlignment: Text.AlignHCenter
-                                        Accessible.role: Accessible.StaticText
-                                    }
-
-                                    TextButton {
-                                        id: useButton
-
-                                        anchors.centerIn: parent
-                                        width: parent.width
-                                        visible: terminalCard.installed && terminalCard.modelData !== root.selectedTerminal
-                                        text: qsTr("Use")
-                                        type: TextButton.Text
-                                        enabled: !root.busy
-                                        disabled: root.busy
-                                        Accessible.role: Accessible.Button
-                                        Accessible.name: qsTr("Use %1 as the default terminal").arg(terminalCard.modelData)
-                                        onClicked: root.applyTerminal(terminalCard.modelData)
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    TerminalCard { terminalId: "kitty" }
+                    TerminalCard { terminalId: "alacritty" }
+                    TerminalCard { terminalId: "ghostty" }
 
                     StyledText {
                         visible: root.loading

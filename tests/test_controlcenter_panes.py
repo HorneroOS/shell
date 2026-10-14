@@ -239,6 +239,12 @@ def test_power_actions_keep_a_stable_confirmation_column():
     assert "Layout.maximumWidth: root.actionColumnWidth" in action
 
 
+def test_system_lock_action_description_is_compositor_neutral():
+    pane = (CC / "system" / "SystemPane.qml").read_text()
+    assert 'description: qsTr("Activate the configured lock screen immediately")' in pane
+    assert 'description: qsTr("Activate hyprlock immediately")' not in pane
+
+
 def test_power_tiles_keep_variable_icons_from_shifting_the_label_column():
     pane = (CC / "power" / "PowerPane.qml").read_text()
     tile = pane.split("component PowerTile:", 1)[1].split("ClippingRectangle {", 1)[0]
@@ -249,6 +255,18 @@ def test_power_tiles_keep_variable_icons_from_shifting_the_label_column():
     assert icon.count(f"Layout.preferredWidth: {slot_width}") == 1
     assert icon.count(f"Layout.maximumWidth: {slot_width}") == 1
     assert "horizontalAlignment: Text.AlignHCenter" in icon
+
+
+def test_audio_device_labels_keep_a_stable_icon_column():
+    pane = (CC / "audio" / "AudioPane.qml").read_text()
+    slot_width = "Appearance.font.size.extraLarge * 1.5"
+
+    for section in ("outputRowLayout", "inputRowLayout"):
+        row = pane.split(f"id: {section}", 1)[1].split("StyledText {", 1)[0]
+        icon = row.split("MaterialIcon {", 1)[1]
+        for constraint in ("minimumWidth", "preferredWidth", "maximumWidth"):
+            assert f"Layout.{constraint}: {slot_width}" in icon
+        assert "horizontalAlignment: Text.AlignHCenter" in icon
 
 
 def test_control_center_navigation_uses_keyboard_accessible_interactive_controls():

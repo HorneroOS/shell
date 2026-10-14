@@ -23,6 +23,13 @@ Item {
     anchors.fill: parent
     clip: true
 
+    function compactTitle(paneId: string, title: string): string {
+        // The narrow icon rail puts labels below their icons. Spell out the
+        // full name when expanded, but use the familiar acronym when compact
+        // so this long label stays inside the rail.
+        return paneId === "osd" ? qsTr("OSD") : title;
+    }
+
     // Auto-scrolling Flickable — interactive:false so the outer
     // CustomMouseArea on the left panel keeps handling wheel events
     // for pane switching. contentY animates to keep active item visible.
@@ -190,6 +197,7 @@ Item {
                         icon: pane.icon
                         label: pane.label
                         title: pane.title
+                        compactTitle: root.compactTitle(pane.id, pane.title)
                         badgeVisible: pane.id === "network" ? !Network.active && !Network.activeEthernet : pane.id === "notifications" ? Notifs.notClosed.length > 0 : false
                     }
                 }
@@ -208,6 +216,7 @@ Item {
         required property string icon
         required property string label
         required property string title
+        required property string compactTitle
         property bool badgeVisible: false
         readonly property bool active: root.session.active === label
 
@@ -326,7 +335,7 @@ Item {
                 anchors.top: icon.bottom
                 anchors.topMargin: Appearance.spacing.small / 2
 
-                text: item.title
+                text: item.compactTitle
                 font.pointSize: Appearance.font.size.small
                 font.capitalization: Font.Capitalize
             }

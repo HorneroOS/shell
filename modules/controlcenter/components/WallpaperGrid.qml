@@ -134,7 +134,7 @@ Item {
         readonly property real itemMargin: Appearance.spacing.normal / 2
         readonly property real itemRadius: Appearance.rounding.normal
 
-        StateLayer {
+        Interactive {
             anchors.fill: parent
             anchors.leftMargin: itemMargin
             anchors.rightMargin: itemMargin

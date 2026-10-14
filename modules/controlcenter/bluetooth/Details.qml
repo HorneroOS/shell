@@ -240,7 +240,7 @@ StyledFlickable {
                                         opacity: root.session.bt.editingDeviceName ? 1 : 0
                                         scale: root.session.bt.editingDeviceName ? 1 : 0.5
 
-                                        StateLayer {
+                                        Interactive {
                                             color: Colours.palette.m3onSecondaryContainer
                                             disabled: !root.session.bt.editingDeviceName
 
@@ -278,7 +278,7 @@ StyledFlickable {
                                         radius: root.session.bt.editingDeviceName ? Appearance.rounding.small : implicitHeight / 2 * Math.min(1, Appearance.rounding.scale)
                                         color: Qt.alpha(Colours.palette.m3primary, root.session.bt.editingDeviceName ? 1 : 0)
 
-                                        StateLayer {
+                                        Interactive {
                                             color: root.session.bt.editingDeviceName ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
 
                                             function onClicked(): void {
@@ -530,8 +530,17 @@ StyledFlickable {
                     }
                 ]
 
-                StateLayer {
+                Interactive {
+                    // These menu actions remain in the scene while the FAB
+                    // collapses. Keep them out of the tab chain and reject
+                    // stale keyboard activation once the menu is closed.
+                    disabled: !root.session.bt.fabMenuOpen
+
                     function onClicked(): void {
+                        if (!root.session.bt.fabMenuOpen)
+                            return;
+
+                        fabState.forceActiveFocus();
                         root.session.bt.fabMenuOpen = false;
 
                         const name = fabMenuItem.modelData.name;
@@ -626,7 +635,7 @@ StyledFlickable {
                 level: fabState.containsMouse && !fabState.pressed ? 4 : 3
             }
 
-            StateLayer {
+            Interactive {
                 id: fabState
 
                 color: root.session.bt.fabMenuOpen ? Colours.palette.m3onPrimary : Colours.palette.m3onPrimaryContainer

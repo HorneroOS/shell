@@ -55,7 +55,7 @@ CollapsibleSection {
                     border.width: isCurrent ? 1 : 0
                     border.color: Colours.palette.m3primary
 
-                    StateLayer {
+                    Interactive {
                         function onClicked(): void {
                             rootPane.fontFamilyMaterial = modelData;
                             rootPane.saveConfig();
@@ -148,7 +148,7 @@ CollapsibleSection {
                     border.width: isCurrent ? 1 : 0
                     border.color: Colours.palette.m3primary
 
-                    StateLayer {
+                    Interactive {
                         function onClicked(): void {
                             rootPane.fontFamilyMono = modelData;
                             rootPane.saveConfig();
@@ -241,7 +241,7 @@ CollapsibleSection {
                     border.width: isCurrent ? 1 : 0
                     border.color: Colours.palette.m3primary
 
-                    StateLayer {
+                    Interactive {
                         function onClicked(): void {
                             rootPane.fontFamilySans = modelData;
                             rootPane.saveConfig();
@@ -334,7 +334,7 @@ CollapsibleSection {
                     border.width: isCurrent ? 1 : 0
                     border.color: Colours.palette.m3primary
 
-                    StateLayer {
+                    Interactive {
                         function onClicked(): void {
                             rootPane.fontFamilyClock = modelData;
                             rootPane.saveConfig();

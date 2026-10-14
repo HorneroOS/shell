@@ -142,7 +142,7 @@ DeviceList {
             color: Qt.alpha(Colours.tPalette.m3surfaceContainer, root.activeItem === modelData ? Colours.tPalette.m3surfaceContainer.a : 0)
             radius: Appearance.rounding.normal
 
-            StateLayer {
+            Interactive {
                 id: stateLayer
 
                 function onClicked(): void {
@@ -221,7 +221,7 @@ DeviceList {
                         running: device.loading
                     }
 
-                    StateLayer {
+                    Interactive {
                         color: device.connected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
                         disabled: device.loading
 

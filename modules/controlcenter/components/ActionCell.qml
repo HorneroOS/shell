@@ -17,13 +17,21 @@ Item {
     property int accessibilityRole: Accessible.Button
     property string accessibilityName: text
 
+    // Keep the shared action rail wide enough as the user increases the
+    // interface type scale. A fixed 136 px slot lets longer action labels
+    // overlap the setting text at larger sizes.
+    readonly property real actionColumnWidth: Math.max(
+        Config.controlCenter.actionColumnWidth,
+        Config.controlCenter.actionColumnWidth * Appearance.font.size.scale
+    )
+
     signal clicked
 
-    Layout.minimumWidth: Config.controlCenter.actionColumnWidth
-    Layout.preferredWidth: Config.controlCenter.actionColumnWidth
-    Layout.maximumWidth: Config.controlCenter.actionColumnWidth
+    Layout.minimumWidth: actionColumnWidth
+    Layout.preferredWidth: actionColumnWidth
+    Layout.maximumWidth: actionColumnWidth
     Layout.alignment: Qt.AlignVCenter
-    implicitWidth: Config.controlCenter.actionColumnWidth
+    implicitWidth: actionColumnWidth
     implicitHeight: button.implicitHeight
 
     TextButton {

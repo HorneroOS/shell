@@ -531,7 +531,15 @@ StyledFlickable {
                 ]
 
                 Interactive {
+                    // These menu actions remain in the scene while the FAB
+                    // collapses. Keep them out of the tab chain and reject
+                    // stale keyboard activation once the menu is closed.
+                    disabled: !root.session.bt.fabMenuOpen
+
                     function onClicked(): void {
+                        if (!root.session.bt.fabMenuOpen)
+                            return;
+
                         root.session.bt.fabMenuOpen = false;
 
                         const name = fabMenuItem.modelData.name;

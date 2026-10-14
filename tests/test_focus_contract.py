@@ -176,6 +176,17 @@ def test_menu_keyboard_and_escape_first():
     assert "StateLayer {" in src  # items stay mouse-driven
 
 
+def test_bluetooth_fab_actions_cannot_fire_after_menu_closes():
+    src = (CONTROL_CENTER / "bluetooth" / "Details.qml").read_text()
+    action = src.split("// These menu actions remain", 1)[1]
+    action = action.split("RowLayout {\n                    id: fabMenuItemInner", 1)[0]
+    assert "disabled: !root.session.bt.fabMenuOpen" in action
+    assert "if (!root.session.bt.fabMenuOpen)" in action
+    assert action.index("if (!root.session.bt.fabMenuOpen)") < action.index(
+        "root.session.bt.fabMenuOpen = false"
+    )
+
+
 def test_rows_have_single_tab_stop():
     """Rows focus their inner control, never row + control."""
     for rel in (

@@ -115,7 +115,12 @@ void CachingImageManager::updateSource(const QString& path) {
     connect(watcher, &QFutureWatcher<QString>::finished, this, [watcher, path, this]() {
         if (m_path != path) {
             // Object is destroyed or path has changed, ignore
-            m_shaPath = QString();
+            // A newer path may already be hashing. Only clear the marker if
+            // this stale request still owns it; otherwise a resize can start
+            // a duplicate hash for the current image.
+            if (m_shaPath == path) {
+                m_shaPath = QString();
+            }
             watcher->deleteLater();
             return;
         }

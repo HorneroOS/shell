@@ -240,9 +240,8 @@ Item {
                         wrapMode: Text.Wrap
                     }
 
-                    // Keep the layout attached to each instance. The
-                    // component-level size hint is useful to other callers,
-                    // but the parent ColumnLayout owns these row widths.
+                    // Keep the sizing contract on the instances consumed by
+                    // this ColumnLayout so each row uses the full section width.
                     TerminalCard {
                         Layout.fillWidth: true
                         terminalId: "kitty"

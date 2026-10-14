@@ -1,12 +1,12 @@
 pragma ComponentBehavior: Bound
 
 import "../components"
-import ".." as CC
 import qs.components
 import qs.components.controls
 import qs.components.containers
 import qs.services
 import qs.config
+import qs.modules.controlcenter
 import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
@@ -14,7 +14,7 @@ import QtQuick.Layouts
 Item {
     id: root
 
-    required property CC.Session session
+    required property Session session
 
     anchors.fill: parent
 

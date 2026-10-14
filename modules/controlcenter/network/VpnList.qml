@@ -101,7 +101,7 @@ ColumnLayout {
                 color: Qt.alpha(Colours.tPalette.m3surfaceContainer, (root.session && root.session.vpn && root.session.vpn.active === modelData) ? Colours.tPalette.m3surfaceContainer.a : 0)
                 radius: Appearance.rounding.normal
 
-                StateLayer {
+                Interactive {
                     function onClicked(): void {
                         if (root.session && root.session.vpn) {
                             root.session.vpn.active = modelData;
@@ -180,8 +180,8 @@ ColumnLayout {
                         radius: Appearance.rounding.full
                         color: Qt.alpha(Colours.palette.m3primaryContainer, VPN.connected && modelData.enabled ? 1 : 0)
 
-                        StateLayer {
-                            enabled: !VPN.connecting
+                        Interactive {
+                            disabled: VPN.connecting
                             function onClicked(): void {
                                 const clickedIndex = modelData.index;
 
@@ -234,7 +234,7 @@ ColumnLayout {
                         radius: Appearance.rounding.full
                         color: "transparent"
 
-                        StateLayer {
+                        Interactive {
                             function onClicked(): void {
                                 const providers = [];
                                 for (let i = 0; i < Config.utilities.vpn.provider.length; i++) {

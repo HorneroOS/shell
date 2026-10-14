@@ -108,7 +108,7 @@ DeviceList {
             color: Qt.alpha(Colours.tPalette.m3surfaceContainer, root.activeItem === modelData ? Colours.tPalette.m3surfaceContainer.a : 0)
             radius: Appearance.rounding.normal
 
-            StateLayer {
+            Interactive {
                 function onClicked(): void {
                     root.session.network.active = modelData;
                     if (modelData && modelData.ssid) {
@@ -189,7 +189,7 @@ DeviceList {
                     radius: Appearance.rounding.full
                     color: Qt.alpha(Colours.palette.m3primaryContainer, modelData.active ? 1 : 0)
 
-                    StateLayer {
+                    Interactive {
                         function onClicked(): void {
                             if (modelData.active) {
                                 Nmcli.disconnectFromNetwork();

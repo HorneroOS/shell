@@ -1,4 +1,5 @@
 import qs.components
+import qs.components.controls
 import qs.services
 import qs.config
 import Quickshell
@@ -33,7 +34,7 @@ StyledRect {
         implicitWidth: implicitHeight
         implicitHeight: closeIcon.implicitHeight + Appearance.padding.small
 
-        StateLayer {
+        Interactive {
             radius: Appearance.rounding.full
 
             function onClicked(): void {

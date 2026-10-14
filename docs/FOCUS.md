@@ -37,6 +37,9 @@ action) stay unfocusable. Never add tab stops to decoration.
   `Enter`/`Space` activation + outer ring + focus-reason report.
   Every StateLayer-based activatable control uses it (one-line
   swap); nothing else duplicates its `Keys` / focus / ring code.
+  Selectable rows and cards in Control Center use this layer too. The
+  settings-search result list keeps its arrow/Enter list model, and the
+  password editor's click surface only transfers focus into the editor.
 - QtQuick Templates controls (`StyledSwitch`, sliders, radio,
   text fields) keep native key handling and only gain the shared
   ring + focus-reason report — no reimplemented key tables.

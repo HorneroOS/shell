@@ -67,7 +67,7 @@ DeviceList {
             color: Qt.alpha(Colours.tPalette.m3surfaceContainer, ethernetItem.isActive ? Colours.tPalette.m3surfaceContainer.a : 0)
             radius: Appearance.rounding.normal
 
-            StateLayer {
+            Interactive {
                 id: stateLayer
 
                 function onClicked(): void {
@@ -146,7 +146,7 @@ DeviceList {
                     radius: Appearance.rounding.full
                     color: Qt.alpha(Colours.palette.m3primaryContainer, modelData.connected ? 1 : 0)
 
-                    StateLayer {
+                    Interactive {
                         color: modelData.connected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
 
                         function onClicked(): void {

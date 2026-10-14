@@ -540,6 +540,7 @@ StyledFlickable {
                         if (!root.session.bt.fabMenuOpen)
                             return;
 
+                        fabState.forceActiveFocus();
                         root.session.bt.fabMenuOpen = false;
 
                         const name = fabMenuItem.modelData.name;

@@ -182,6 +182,10 @@ def test_bluetooth_fab_actions_cannot_fire_after_menu_closes():
     action = action.split("RowLayout {\n                    id: fabMenuItemInner", 1)[0]
     assert "disabled: !root.session.bt.fabMenuOpen" in action
     assert "if (!root.session.bt.fabMenuOpen)" in action
+    assert "fabState.forceActiveFocus()" in action
+    assert action.index("fabState.forceActiveFocus()") < action.index(
+        "root.session.bt.fabMenuOpen = false"
+    )
     assert action.index("if (!root.session.bt.fabMenuOpen)") < action.index(
         "root.session.bt.fabMenuOpen = false"
     )

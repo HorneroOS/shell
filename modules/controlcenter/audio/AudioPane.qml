@@ -531,8 +531,8 @@ Item {
                                             }
 
                                             Connections {
-                                                target: modelData
-                                                function onAudioChanged() {
+                                                target: modelData?.audio
+                                                function onVolumesChanged() {
                                                     if (!streamVolumeInput.hasFocus && modelData?.audio) {
                                                         streamVolumeInput.text = Math.round(modelData.audio.volume * 100).toString();
                                                     }
@@ -601,8 +601,8 @@ Item {
                                         }
 
                                         Connections {
-                                            target: modelData
-                                            function onAudioChanged() {
+                                            target: modelData?.audio
+                                            function onVolumesChanged() {
                                                 if (modelData?.audio) {
                                                     value = modelData.audio.volume;
                                                 }

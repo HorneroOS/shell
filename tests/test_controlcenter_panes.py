@@ -199,25 +199,60 @@ def test_terminal_settings_uses_cli_report_and_change_contract():
 
 def test_terminal_settings_keeps_supported_choices_visible_and_marks_missing_apps():
     pane = (CC / "terminal" / "TerminalPane.qml").read_text()
-    assert 'readonly property var supportedTerminals: ["kitty", "alacritty", "ghostty"]' in pane
+    assert 'TerminalCard { terminalId: "kitty" }' in pane
+    assert 'TerminalCard { terminalId: "alacritty" }' in pane
+    assert 'TerminalCard { terminalId: "ghostty" }' in pane
+    assert "Repeater {" not in pane, "fixed terminal options should share one full-width layout"
     assert "property var installedTerminals: []" in pane
     assert "function availableTerminalIds(value: var): var" in pane
     assert 'Array.isArray(value) ? value : String(value || "").split(",")' in pane
     assert 'supported.indexOf(id) >= 0 && ids.indexOf(id) < 0' in pane
     assert "root.installedTerminals = root.availableTerminalIds(data.terminals_available)" in pane
-    assert "model: root.supportedTerminals" in pane
-    assert "readonly property bool installed: root.installedTerminals.indexOf(modelData) >= 0" in pane
+    assert "readonly property bool installed: root.installedTerminals.indexOf(terminalId) >= 0" in pane
     assert 'qsTr("Not installed")' in pane
     assert 'qsTr("Unavailable")' in pane
-    assert 'text: qsTr("Use")' in pane
+    assert 'qsTr("Selected")' in pane
+    assert 'qsTr("Use")' in pane
+    assert "Layout.fillWidth: true" in pane
     assert "Layout.minimumWidth: root.actionColumnWidth" in pane
     assert "Layout.preferredWidth: root.actionColumnWidth" in pane
     assert "Layout.maximumWidth: root.actionColumnWidth" in pane
     assert "Layout.minimumWidth: Appearance.font.size.extraLarge * 1.5" in pane
     assert "Layout.preferredWidth: Appearance.font.size.extraLarge * 1.5" in pane
     assert "Layout.maximumWidth: Appearance.font.size.extraLarge * 1.5" in pane
-    assert "enabled: !root.busy" in pane
-    assert 'Accessible.name: qsTr("Use %1 as the default terminal").arg(terminalCard.modelData)' in pane
+    assert "enabled: terminalCard.installed && terminalCard.terminalId !== root.selectedTerminal && !root.busy" in pane
+    assert 'Accessible.name: terminalCard.terminalId === root.selectedTerminal ? qsTr("%1 is the default terminal").arg(terminalCard.terminalId)' in pane
+
+
+def test_repeated_control_center_action_columns_share_a_stable_width():
+    terminal = (CC / "terminal" / "TerminalPane.qml").read_text()
+    power = (CC / "power" / "PowerPane.qml").read_text()
+    system = (CC / "system" / "SystemPane.qml").read_text()
+
+    for pane in (terminal, power, system):
+        assert "readonly property real actionColumnWidth: Config.controlCenter.actionColumnWidth" in pane
+        assert "Layout.minimumWidth: root.actionColumnWidth" in pane
+        assert "Layout.preferredWidth: root.actionColumnWidth" in pane
+        assert "Layout.maximumWidth: root.actionColumnWidth" in pane
+
+    config = (ROOT / "config" / "ControlCenterConfig.qml").read_text()
+    assert "readonly property real actionColumnWidth: 136" in config
+
+
+def test_system_action_tiles_keep_one_right_aligned_action_rail():
+    pane = (CC / "system" / "SystemPane.qml").read_text()
+    action_tile = pane.split("component ActionTile:", 1)[1].split("// ── Stat row", 1)[0]
+    assert "Layout.fillWidth: true" in action_tile
+    assert 'text: qsTr("Run")' in action_tile
+    assert "Layout.minimumWidth: root.actionColumnWidth" in action_tile
+    assert "Layout.maximumWidth: root.actionColumnWidth" in action_tile
+
+
+def test_audio_stream_controls_listen_to_pipewire_volume_notifications():
+    pane = (CC / "audio" / "AudioPane.qml").read_text()
+    assert "function onAudioChanged()" not in pane
+    assert pane.count("target: modelData?.audio") == 2
+    assert pane.count("function onVolumesChanged()") == 2
 
 
 def test_terminal_settings_uses_available_rounded_clipping_component():

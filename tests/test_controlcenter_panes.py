@@ -199,9 +199,6 @@ def test_terminal_settings_uses_cli_report_and_change_contract():
 
 def test_terminal_settings_keeps_supported_choices_visible_and_marks_missing_apps():
     pane = (CC / "terminal" / "TerminalPane.qml").read_text()
-    assert 'TerminalCard { terminalId: "kitty" }' in pane
-    assert 'TerminalCard { terminalId: "alacritty" }' in pane
-    assert 'TerminalCard { terminalId: "ghostty" }' in pane
     assert "Repeater {" not in pane, "fixed terminal options should share one full-width layout"
     assert "property var installedTerminals: []" in pane
     assert "function availableTerminalIds(value: var): var" in pane
@@ -220,6 +217,11 @@ def test_terminal_settings_keeps_supported_choices_visible_and_marks_missing_app
     assert "Layout.maximumWidth: Appearance.font.size.extraLarge * 1.5" in pane
     assert "controlEnabled: terminalCard.installed && terminalCard.terminalId !== root.selectedTerminal && !root.busy" in pane
     assert 'accessibilityName: terminalCard.terminalId === root.selectedTerminal ? qsTr("%1 is the default terminal").arg(terminalCard.terminalId)' in pane
+    terminal_rows = re.findall(r'TerminalCard\s*\{([^{}]*)\}', pane, re.DOTALL)
+    assert len(terminal_rows) == 3
+    assert all("Layout.fillWidth: true" in row for row in terminal_rows), (
+        "each terminal row must fill its SectionContainer so action cells share the same trailing edge"
+    )
 
 
 def test_control_center_action_cells_share_a_visible_trailing_edge():
@@ -267,6 +269,18 @@ def test_system_action_tiles_keep_one_right_aligned_action_rail():
     assert "Layout.fillWidth: true" in action_tile
     assert 'text: qsTr("Run")' in action_tile
     assert "ActionCell {" in action_tile
+    assert all("Layout.fillWidth: true" in block for block in re.findall(r"ActionTile\s*\{([^{}]*)\}", pane, re.DOTALL)), (
+        "every System action row must fill its ColumnLayout so the shared action rail is stable"
+    )
+
+
+def test_power_tiles_fill_the_settings_column_before_aligning_actions():
+    pane = (CC / "power" / "PowerPane.qml").read_text()
+    power_tiles = re.findall(r"PowerTile\s*\{([^{}]*)\}", pane, re.DOTALL)
+    assert len(power_tiles) == 5
+    assert all("Layout.fillWidth: true" in block for block in power_tiles), (
+        "each Power row must fill its settings column so the action rail remains stable"
+    )
 
 
 def test_audio_stream_controls_listen_to_pipewire_volume_notifications():

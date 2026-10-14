@@ -208,30 +208,35 @@ Item {
                 }
 
                 PowerTile {
+                    Layout.fillWidth: true
                     icon: "lock"
                     label: qsTr("Lock screen")
                     action: "lock"
                 }
 
                 PowerTile {
+                    Layout.fillWidth: true
                     icon: "logout"
                     label: qsTr("Log out")
                     action: "logout"
                 }
 
                 PowerTile {
+                    Layout.fillWidth: true
                     icon: "bedtime"
                     label: qsTr("Suspend")
                     action: "suspend"
                 }
 
                 PowerTile {
+                    Layout.fillWidth: true
                     icon: "restart_alt"
                     label: qsTr("Reboot")
                     action: "reboot"
                 }
 
                 PowerTile {
+                    Layout.fillWidth: true
                     icon: "power_settings_new"
                     label: qsTr("Shut down")
                     action: "shutdown"

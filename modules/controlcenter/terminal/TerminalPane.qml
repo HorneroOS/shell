@@ -240,9 +240,23 @@ Item {
                         wrapMode: Text.Wrap
                     }
 
-                    TerminalCard { terminalId: "kitty" }
-                    TerminalCard { terminalId: "alacritty" }
-                    TerminalCard { terminalId: "ghostty" }
+                    // Keep the layout attached to each instance. The
+                    // component-level size hint is useful to other callers,
+                    // but the parent ColumnLayout owns these row widths.
+                    TerminalCard {
+                        Layout.fillWidth: true
+                        terminalId: "kitty"
+                    }
+
+                    TerminalCard {
+                        Layout.fillWidth: true
+                        terminalId: "alacritty"
+                    }
+
+                    TerminalCard {
+                        Layout.fillWidth: true
+                        terminalId: "ghostty"
+                    }
 
                     StyledText {
                         visible: root.loading

@@ -311,6 +311,7 @@ Item {
                         }
 
                         ActionTile {
+                            Layout.fillWidth: true
                             icon: "waving_hand"
                             label: qsTr("Hornero Welcome")
                             description: qsTr("Open the Welcome Center tour")
@@ -318,6 +319,7 @@ Item {
                         }
 
                         ActionTile {
+                            Layout.fillWidth: true
                             icon: "lock"
                             label: qsTr("Lock screen")
                             description: qsTr("Activate the configured lock screen immediately")
@@ -325,6 +327,7 @@ Item {
                         }
 
                         ActionTile {
+                            Layout.fillWidth: true
                             icon: "screenshot_monitor"
                             label: qsTr("Screenshot")
                             description: qsTr("Capture the screen with selection")
@@ -332,6 +335,7 @@ Item {
                         }
 
                         ActionTile {
+                            Layout.fillWidth: true
                             icon: "fiber_manual_record"
                             label: qsTr("Screen recorder")
                             description: qsTr("Open GPU screen recorder")
@@ -339,6 +343,7 @@ Item {
                         }
 
                         ActionTile {
+                            Layout.fillWidth: true
                             icon: "content_paste"
                             label: qsTr("Clipboard")
                             description: qsTr("Open clipboard history")
@@ -346,6 +351,7 @@ Item {
                         }
 
                         ActionTile {
+                            Layout.fillWidth: true
                             icon: "dark_mode"
                             label: qsTr("Night mode")
                             description: qsTr("Toggle blue-light filter")
@@ -353,6 +359,7 @@ Item {
                         }
 
                         ActionTile {
+                            Layout.fillWidth: true
                             icon: "system_update_alt"
                             label: qsTr("System updates")
                             description: qsTr("Pending updates and backups")
@@ -382,6 +389,7 @@ Item {
                         }
 
                         ActionTile {
+                            Layout.fillWidth: true
                             icon: "monitor"
                             label: qsTr("Monitor layout")
                             description: qsTr("Configure display arrangement")
@@ -389,6 +397,7 @@ Item {
                         }
 
                         ActionTile {
+                            Layout.fillWidth: true
                             icon: "bolt"
                             label: qsTr("Performance profile")
                             description: qsTr("CPU frequency and power mode")
@@ -396,6 +405,7 @@ Item {
                         }
 
                         ActionTile {
+                            Layout.fillWidth: true
                             icon: "palette"
                             label: qsTr("GTK theme")
                             description: qsTr("Open Appearance to pick GTK theme and icons")
@@ -403,6 +413,7 @@ Item {
                         }
 
                         ActionTile {
+                            Layout.fillWidth: true
                             icon: "keyboard"
                             label: qsTr("Keyboard shortcuts")
                             description: qsTr("Show current keybinding reference")

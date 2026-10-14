@@ -104,6 +104,14 @@ def test_menu_keyboard_and_escape_first():
     assert "StateLayer {" in src  # items stay mouse-driven
 
 
+def test_floating_settings_close_button_is_keyboard_accessible():
+    src = (ROOT / "modules" / "controlcenter" / "WindowTitle.qml").read_text()
+    assert "Interactive {" in src
+    assert "Accessible.role: Accessible.Button" in src
+    assert 'Accessible.name: qsTr("Close Settings window")' in src
+    assert 'Accessible.description: qsTr("Close the floating Settings window")' in src
+
+
 def test_rows_have_single_tab_stop():
     """Rows focus their inner control, never row + control."""
     for rel in (

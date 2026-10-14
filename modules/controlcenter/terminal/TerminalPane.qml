@@ -21,7 +21,6 @@ Item {
     // Keep the supported choices visible even when only one is installed.
     // Availability is runtime data; the chooser itself is a stable product
     // contract and must not disappear when that query returns an empty list.
-    readonly property real actionColumnWidth: Config.controlCenter.actionColumnWidth
     property var installedTerminals: []
     property string selectedTerminal: "kitty"
     property string statusMessage: ""
@@ -81,18 +80,20 @@ Item {
         radius: Appearance.rounding.normal
         color: Colours.layer(Colours.palette.m3surfaceContainerHigh, 2)
 
-        RowLayout {
+        Item {
             id: row
 
             anchors.fill: parent
             anchors.margins: Appearance.padding.normal
-            spacing: Appearance.spacing.normal
+            implicitHeight: Math.max(icon.implicitHeight, details.implicitHeight, action.implicitHeight)
 
             MaterialIcon {
-                Layout.minimumWidth: Appearance.font.size.extraLarge * 1.5
-                Layout.preferredWidth: Appearance.font.size.extraLarge * 1.5
-                Layout.maximumWidth: Appearance.font.size.extraLarge * 1.5
-                Layout.alignment: Qt.AlignVCenter
+                id: icon
+
+                anchors.left: parent.left
+                anchors.leftMargin: Appearance.spacing.normal
+                anchors.verticalCenter: parent.verticalCenter
+                width: Appearance.font.size.extraLarge * 1.5
                 text: "terminal"
                 color: terminalCard.installed && terminalCard.terminalId === root.selectedTerminal ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
                 font.pointSize: Appearance.font.size.large
@@ -100,7 +101,13 @@ Item {
             }
 
             ColumnLayout {
-                Layout.fillWidth: true
+                id: details
+
+                anchors.left: icon.right
+                anchors.leftMargin: Appearance.spacing.normal
+                anchors.right: action.left
+                anchors.rightMargin: Appearance.spacing.normal
+                anchors.verticalCenter: parent.verticalCenter
                 spacing: 2
 
                 StyledText {
@@ -116,16 +123,18 @@ Item {
                 }
             }
 
-            TextButton {
-                Layout.minimumWidth: root.actionColumnWidth
-                Layout.preferredWidth: root.actionColumnWidth
-                Layout.maximumWidth: root.actionColumnWidth
-                text: !terminalCard.installed ? qsTr("Unavailable") : terminalCard.terminalId === root.selectedTerminal ? qsTr("Selected") : qsTr("Use")
+            ActionCell {
+                id: action
+
+                width: action.actionColumnWidth
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                text: !terminalCard.installed ? qsTr("Install first") : terminalCard.terminalId === root.selectedTerminal ? qsTr("Selected") : qsTr("Use this")
                 type: terminalCard.terminalId === root.selectedTerminal ? TextButton.Tonal : TextButton.Text
-                enabled: terminalCard.installed && terminalCard.terminalId !== root.selectedTerminal && !root.busy
+                controlEnabled: terminalCard.installed && terminalCard.terminalId !== root.selectedTerminal && !root.busy
                 disabled: !terminalCard.installed || terminalCard.terminalId === root.selectedTerminal || root.busy
-                Accessible.role: terminalCard.terminalId === root.selectedTerminal || !terminalCard.installed ? Accessible.StaticText : Accessible.Button
-                Accessible.name: terminalCard.terminalId === root.selectedTerminal ? qsTr("%1 is the default terminal").arg(terminalCard.terminalId) : !terminalCard.installed ? qsTr("%1 is not installed").arg(terminalCard.terminalId) : qsTr("Use %1 as the default terminal").arg(terminalCard.terminalId)
+                accessibilityRole: terminalCard.terminalId === root.selectedTerminal || !terminalCard.installed ? Accessible.StaticText : Accessible.Button
+                accessibilityName: terminalCard.terminalId === root.selectedTerminal ? qsTr("%1 is the default terminal").arg(terminalCard.terminalId) : !terminalCard.installed ? qsTr("%1 is not installed").arg(terminalCard.terminalId) : qsTr("Use %1 as the default terminal").arg(terminalCard.terminalId)
                 onClicked: root.applyTerminal(terminalCard.terminalId)
             }
         }
@@ -244,9 +253,22 @@ Item {
                         wrapMode: Text.Wrap
                     }
 
-                    TerminalCard { terminalId: "kitty" }
-                    TerminalCard { terminalId: "alacritty" }
-                    TerminalCard { terminalId: "ghostty" }
+                    // Keep the sizing contract on the instances consumed by
+                    // this ColumnLayout so each row uses the full section width.
+                    TerminalCard {
+                        Layout.fillWidth: true
+                        terminalId: "kitty"
+                    }
+
+                    TerminalCard {
+                        Layout.fillWidth: true
+                        terminalId: "alacritty"
+                    }
+
+                    TerminalCard {
+                        Layout.fillWidth: true
+                        terminalId: "ghostty"
+                    }
 
                     StyledText {
                         visible: root.loading

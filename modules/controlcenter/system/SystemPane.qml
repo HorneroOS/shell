@@ -25,9 +25,6 @@ Item {
     required property CC.Session session
 
     anchors.fill: parent
-    // Keep trailing actions on the same vertical rail as Terminal and Power.
-    readonly property real actionColumnWidth: Config.controlCenter.actionColumnWidth
-
     function run(command: var): void {
         if (Array.isArray(command) && command.length > 0) {
             Quickshell.execDetached(command);
@@ -66,9 +63,12 @@ Item {
             spacing: Appearance.spacing.normal
 
             StyledRect {
+                Layout.minimumWidth: Appearance.font.size.extraLarge * 1.5
+                Layout.preferredWidth: Appearance.font.size.extraLarge * 1.5
+                Layout.maximumWidth: Appearance.font.size.extraLarge * 1.5
+                Layout.alignment: Qt.AlignVCenter
                 radius: Appearance.rounding.normal
                 color: Colours.layer(Colours.palette.m3primaryContainer, 2)
-                implicitWidth: 36
                 implicitHeight: 36
 
                 MaterialIcon {
@@ -98,10 +98,7 @@ Item {
                 }
             }
 
-            TextButton {
-                Layout.minimumWidth: root.actionColumnWidth
-                Layout.preferredWidth: root.actionColumnWidth
-                Layout.maximumWidth: root.actionColumnWidth
+            ActionCell {
                 text: qsTr("Run")
                 type: TextButton.Tonal
                 onClicked: tile.action()
@@ -317,6 +314,7 @@ Item {
                         }
 
                         ActionTile {
+                            Layout.fillWidth: true
                             icon: "waving_hand"
                             label: qsTr("Hornero Welcome")
                             description: qsTr("Open the Welcome Center tour")
@@ -324,6 +322,7 @@ Item {
                         }
 
                         ActionTile {
+                            Layout.fillWidth: true
                             icon: "lock"
                             label: qsTr("Lock screen")
                             description: qsTr("Activate the configured lock screen immediately")
@@ -331,6 +330,7 @@ Item {
                         }
 
                         ActionTile {
+                            Layout.fillWidth: true
                             icon: "screenshot_monitor"
                             label: qsTr("Screenshot")
                             description: qsTr("Capture the screen with selection")
@@ -338,6 +338,7 @@ Item {
                         }
 
                         ActionTile {
+                            Layout.fillWidth: true
                             icon: "fiber_manual_record"
                             label: qsTr("Screen recorder")
                             description: qsTr("Open GPU screen recorder")
@@ -345,6 +346,7 @@ Item {
                         }
 
                         ActionTile {
+                            Layout.fillWidth: true
                             icon: "content_paste"
                             label: qsTr("Clipboard")
                             description: qsTr("Open clipboard history")
@@ -352,6 +354,7 @@ Item {
                         }
 
                         ActionTile {
+                            Layout.fillWidth: true
                             icon: "dark_mode"
                             label: qsTr("Night mode")
                             description: qsTr("Toggle blue-light filter")
@@ -359,6 +362,7 @@ Item {
                         }
 
                         ActionTile {
+                            Layout.fillWidth: true
                             icon: "system_update_alt"
                             label: qsTr("System updates")
                             description: qsTr("Pending updates and backups")
@@ -388,6 +392,7 @@ Item {
                         }
 
                         ActionTile {
+                            Layout.fillWidth: true
                             icon: "monitor"
                             label: qsTr("Monitor layout")
                             description: qsTr("Configure display arrangement")
@@ -395,6 +400,7 @@ Item {
                         }
 
                         ActionTile {
+                            Layout.fillWidth: true
                             icon: "bolt"
                             label: qsTr("Performance profile")
                             description: qsTr("CPU frequency and power mode")
@@ -402,6 +408,7 @@ Item {
                         }
 
                         ActionTile {
+                            Layout.fillWidth: true
                             icon: "palette"
                             label: qsTr("GTK theme")
                             description: qsTr("Open Appearance to pick GTK theme and icons")
@@ -409,6 +416,7 @@ Item {
                         }
 
                         ActionTile {
+                            Layout.fillWidth: true
                             icon: "keyboard"
                             label: qsTr("Keyboard shortcuts")
                             description: qsTr("Show current keybinding reference")

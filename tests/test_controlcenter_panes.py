@@ -222,6 +222,22 @@ def test_terminal_settings_keeps_supported_choices_visible_and_marks_missing_app
     assert 'accessibilityName: terminalCard.terminalId === root.selectedTerminal ? qsTr("%1 is the default terminal").arg(terminalCard.terminalId)' in pane
 
 
+def test_control_center_action_cells_share_a_visible_trailing_edge():
+    action_cell = (CC / "components" / "ActionCell.qml").read_text()
+
+    assert "Layout.minimumWidth: Config.controlCenter.actionColumnWidth" in action_cell
+    assert "Layout.preferredWidth: Config.controlCenter.actionColumnWidth" in action_cell
+    assert "Layout.maximumWidth: Config.controlCenter.actionColumnWidth" in action_cell
+    assert "anchors.right: parent.right" in action_cell
+    assert "anchors.verticalCenter: parent.verticalCenter" in action_cell
+    assert "anchors.centerIn: parent" not in action_cell
+
+    # These panes contain repeatable setting rows with trailing actions; keep
+    # them on the shared cell so label changes cannot shift the right edge.
+    for pane in ("terminal/TerminalPane.qml", "system/SystemPane.qml", "power/PowerPane.qml"):
+        assert "ActionCell {" in (CC / pane).read_text(), f"{pane} must use the shared action cell"
+
+
 def test_repeated_control_center_action_columns_share_a_stable_width():
     terminal = (CC / "terminal" / "TerminalPane.qml").read_text()
     power = (CC / "power" / "PowerPane.qml").read_text()
@@ -234,7 +250,8 @@ def test_repeated_control_center_action_columns_share_a_stable_width():
     assert "Layout.minimumWidth: Config.controlCenter.actionColumnWidth" in action_cell
     assert "Layout.preferredWidth: Config.controlCenter.actionColumnWidth" in action_cell
     assert "Layout.maximumWidth: Config.controlCenter.actionColumnWidth" in action_cell
-    assert "anchors.centerIn: parent" in action_cell
+    assert "anchors.right: parent.right" in action_cell
+    assert "anchors.verticalCenter: parent.verticalCenter" in action_cell
     assert "width: implicitWidth" in action_cell
     assert "height: implicitHeight" in action_cell
     assert "Layout.alignment: Qt.AlignVCenter" in action_cell

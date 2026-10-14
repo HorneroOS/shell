@@ -5,7 +5,7 @@ import qs.config
 import QtQuick
 import QtQuick.Layouts
 
-// Keeps trailing actions centered on one stable rail even when their labels
+// Keeps trailing actions on one stable right edge even when their labels
 // have different widths (for example Selected, Install first, and Use this).
 Item {
     id: root
@@ -30,12 +30,13 @@ Item {
         id: button
 
         // TextButton is a project Item-based control rather than Qt Quick
-        // Controls' Button. Give it a concrete size before centering it so
-        // the visual action stays on the same rail across labels of different
+        // Controls' Button. Give it a concrete size so the visual action
+        // stays on the same trailing edge across labels of different
         // lengths.
         width: implicitWidth
         height: implicitHeight
-        anchors.centerIn: parent
+        anchors.right: parent.right
+        anchors.verticalCenter: parent.verticalCenter
         enabled: root.controlEnabled
         disabled: root.disabled
         Accessible.role: root.accessibilityRole

@@ -25,6 +25,7 @@ Singleton {
             fullscreenState: false,
             keyboardLayoutState: true,
             keyboardLayoutSwitch: true,
+            screencastState: screencastStateKnown,
             lockStatus: false,
             specialWorkspaces: false,
             compositorLayoutControls: false,
@@ -41,6 +42,8 @@ Singleton {
 
     property var workspaces: null
     property var windows: []
+    property var casts: []
+    property bool screencastStateKnown: false
     property var focusedWindowId: null
     property var keyboardLayouts: null
     property string lastError: ""
@@ -56,6 +59,27 @@ Singleton {
 
     signal stateChanged
 
+    function castsAfterEvent(currentCasts: var, event: var): var {
+        const current = currentCasts instanceof Array ? currentCasts : [];
+        if (event.CastsChanged?.casts instanceof Array)
+            return event.CastsChanged.casts;
+
+        const changedCast = event.CastStartedOrChanged?.cast;
+        if (changedCast && typeof changedCast === "object" && "stream_id" in changedCast) {
+            const index = current.findIndex(cast => cast.stream_id === changedCast.stream_id);
+            if (index === -1)
+                return current.concat([changedCast]);
+            const updated = current.slice();
+            updated[index] = changedCast;
+            return updated;
+        }
+
+        if (event.CastStopped && typeof event.CastStopped === "object" && "stream_id" in event.CastStopped)
+            return current.filter(cast => cast.stream_id !== event.CastStopped.stream_id);
+
+        return current;
+    }
+
     function consumeEventLine(line: string): void {
         let event;
         try {
@@ -67,6 +91,14 @@ Singleton {
 
         if (!event || typeof event !== "object")
             return;
+
+        const castStopped = event.CastStopped
+            && typeof event.CastStopped === "object"
+            && "stream_id" in event.CastStopped;
+        if (event.CastsChanged?.casts instanceof Array || event.CastStartedOrChanged?.cast || castStopped) {
+            screencastStateKnown = true;
+            casts = castsAfterEvent(casts, event);
+        }
 
         if (event.WorkspacesChanged?.workspaces instanceof Array)
             workspaces = event.WorkspacesChanged.workspaces;
@@ -280,6 +312,8 @@ Singleton {
             // unavailable.
             root.workspaces = null;
             root.windows = [];
+            root.casts = [];
+            root.screencastStateKnown = false;
             root.focusedWindowId = null;
             root.keyboardLayouts = null;
             root.pendingWorkspaceFocus = null;

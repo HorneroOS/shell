@@ -321,7 +321,7 @@ Item {
                         ActionTile {
                             icon: "lock"
                             label: qsTr("Lock screen")
-                            description: qsTr("Activate hyprlock immediately")
+                            description: qsTr("Activate the configured lock screen immediately")
                             action: () => root.run(["horneroctl", "lock", "now", "--yes"])
                         }
 

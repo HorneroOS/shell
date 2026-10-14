@@ -239,6 +239,12 @@ def test_power_actions_keep_a_stable_confirmation_column():
     assert "Layout.maximumWidth: root.actionColumnWidth" in action
 
 
+def test_system_lock_action_description_is_compositor_neutral():
+    pane = (CC / "system" / "SystemPane.qml").read_text()
+    assert 'description: qsTr("Activate the configured lock screen immediately")' in pane
+    assert 'description: qsTr("Activate hyprlock immediately")' not in pane
+
+
 def test_power_tiles_keep_variable_icons_from_shifting_the_label_column():
     pane = (CC / "power" / "PowerPane.qml").read_text()
     tile = pane.split("component PowerTile:", 1)[1].split("ClippingRectangle {", 1)[0]

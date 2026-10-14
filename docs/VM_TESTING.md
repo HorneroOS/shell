@@ -44,8 +44,16 @@ verified base image is never resized (see `Image verification`).
 
 ## Native plugin in the guest
 
-`deploy-shell.sh` builds the shell's native QML plugin from the deployed
-checkout with the guest's `cmake` + Qt6, installing to a user prefix
+`deploy-shell.sh` installs the `libcava` development package by building the
+reviewed AUR source at pinned commit `39403443c8208f5d9adaaed7c8347c439efe52cf`
+inside the disposable guest. The official Arch `cava` package is CLI-only and
+does not include the library/header/pkg-config files needed by Hornero's native
+plugin. The pinned package recipe downloads Cava 1.0.0 and verifies its source
+SHA256 before compilation. The harness does not install an AUR helper or change
+the host.
+
+Then it builds the shell's native QML plugin from the deployed checkout with
+the guest's `cmake` + Qt6, installing to a user prefix
 (`VM_GUEST_PREFIX`, default guest `~/.local`, no sudo), and
 `start-session.sh` exposes it via `QML2_IMPORT_PATH`. Rebuilds happen only
 when the working tree changed (marker in the guest cache); a failed build

@@ -24,6 +24,7 @@ fi
 if vm_is_dry_run; then
     echo "dry-run: would copy ${SHELL_ROOT} working tree to guest ~/.config/quickshell"
     echo "dry-run: would install tests/vm/guest/hyprland.conf to guest ~/.config/hypr/hyprland.conf"
+    echo "dry-run: would install libcava from its pinned AUR revision before building the native plugin"
     echo "dry-run: would build the native QML plugin in the guest (prefix ${VM_GUEST_PREFIX}, skipped when unchanged)"
     if [[ -n "${HX_CONFIG_PIN}" || -n "${HX_MATERIALIZE_BIN}" ]]; then
         echo "dry-run: would materialize the config pin (${HX_CONFIG_PIN:-override}) in the guest"
@@ -75,10 +76,11 @@ else
         echo "error: cmake missing in guest (provision.sh installs it)" >&2
         exit 1
     }
-    # libcava is AUR-only: install it when the AUR knows it, else let the
-    # build tell us whether it was actually required.
-    # shellcheck disable=SC2016
-    vm_ssh 'yay -Si libcava > /dev/null 2>&1 && yay -S --noconfirm --needed libcava || true'
+    # The official Arch `cava` package provides only the CLI. Hornero's native
+    # plugin needs libcava's headers/shared library/pkg-config file, so build
+    # the reviewed AUR source at a pinned commit inside this disposable guest.
+    vm_scp "${VM_LIB_DIR}/install-libcava.sh" "${VM_SSH_USER}@127.0.0.1:/tmp/hornero-vm-install-libcava.sh"
+    vm_ssh 'bash /tmp/hornero-vm-install-libcava.sh && rm -f /tmp/hornero-vm-install-libcava.sh'
     # Guest-side variables stay escaped so they expand inside the VM.
     if vm_ssh "set -e
 rm -rf ~/.cache/hornero-shell-build

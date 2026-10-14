@@ -213,6 +213,9 @@ def test_terminal_settings_keeps_supported_choices_visible_and_marks_missing_app
     assert "Layout.minimumWidth: root.actionColumnWidth" in pane
     assert "Layout.preferredWidth: root.actionColumnWidth" in pane
     assert "Layout.maximumWidth: root.actionColumnWidth" in pane
+    assert "Layout.minimumWidth: Appearance.font.size.extraLarge * 1.5" in pane
+    assert "Layout.preferredWidth: Appearance.font.size.extraLarge * 1.5" in pane
+    assert "Layout.maximumWidth: Appearance.font.size.extraLarge * 1.5" in pane
     assert "enabled: !root.busy" in pane
     assert 'Accessible.name: qsTr("Use %1 as the default terminal").arg(terminalCard.modelData)' in pane
 
@@ -234,6 +237,18 @@ def test_power_actions_keep_a_stable_confirmation_column():
     assert "Layout.minimumWidth: root.actionColumnWidth" in action
     assert "Layout.preferredWidth: root.actionColumnWidth" in action
     assert "Layout.maximumWidth: root.actionColumnWidth" in action
+
+
+def test_power_tiles_keep_variable_icons_from_shifting_the_label_column():
+    pane = (CC / "power" / "PowerPane.qml").read_text()
+    tile = pane.split("component PowerTile:", 1)[1].split("ClippingRectangle {", 1)[0]
+    icon = tile.split("MaterialIcon {", 1)[1].split("StyledText {", 1)[0]
+    slot_width = "Appearance.font.size.extraLarge * 1.5"
+
+    assert icon.count(f"Layout.minimumWidth: {slot_width}") == 1
+    assert icon.count(f"Layout.preferredWidth: {slot_width}") == 1
+    assert icon.count(f"Layout.maximumWidth: {slot_width}") == 1
+    assert "horizontalAlignment: Text.AlignHCenter" in icon
 
 
 def test_control_center_navigation_uses_keyboard_accessible_interactive_controls():

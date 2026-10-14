@@ -129,9 +129,14 @@ Item {
             spacing: Appearance.spacing.normal
 
             MaterialIcon {
+                Layout.minimumWidth: Appearance.font.size.extraLarge * 1.5
+                Layout.preferredWidth: Appearance.font.size.extraLarge * 1.5
+                Layout.maximumWidth: Appearance.font.size.extraLarge * 1.5
+                Layout.alignment: Qt.AlignVCenter
                 text: tile.icon
                 color: tile.armed ? Colours.palette.m3onErrorContainer : Colours.palette.m3onSurfaceVariant
                 font.pointSize: Appearance.font.size.extraLarge
+                horizontalAlignment: Text.AlignHCenter
             }
 
             StyledText {

@@ -22,6 +22,7 @@ Item {
     // Availability is runtime data; the chooser itself is a stable product
     // contract and must not disappear when that query returns an empty list.
     readonly property var supportedTerminals: ["kitty", "alacritty", "ghostty"]
+    readonly property real actionColumnWidth: 136
     property var installedTerminals: []
     property string selectedTerminal: "kitty"
     property string statusMessage: ""
@@ -205,9 +206,12 @@ Item {
                                 spacing: Appearance.spacing.normal
 
                                 MaterialIcon {
+                                    Layout.preferredWidth: Appearance.font.size.extraLarge * 1.5
+                                    Layout.alignment: Qt.AlignVCenter
                                     text: "terminal"
                                     color: terminalCard.installed && terminalCard.modelData === root.selectedTerminal ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
                                     font.pointSize: Appearance.font.size.large
+                                    horizontalAlignment: Text.AlignHCenter
                                 }
 
                                 ColumnLayout {
@@ -227,13 +231,56 @@ Item {
                                     }
                                 }
 
-                                TextButton {
-                                    text: !terminalCard.installed ? qsTr("Install first") : terminalCard.modelData === root.selectedTerminal ? qsTr("Selected") : qsTr("Use this")
-                                    type: terminalCard.installed && terminalCard.modelData === root.selectedTerminal ? TextButton.Tonal : TextButton.Text
-                                    enabled: terminalCard.installed && !root.busy && terminalCard.modelData !== root.selectedTerminal
-                                    Accessible.role: Accessible.Button
-                                    Accessible.name: qsTr("Use %1 as the default terminal").arg(terminalCard.modelData)
-                                    onClicked: root.applyTerminal(terminalCard.modelData)
+                                Item {
+                                    Layout.minimumWidth: root.actionColumnWidth
+                                    Layout.preferredWidth: root.actionColumnWidth
+                                    Layout.maximumWidth: root.actionColumnWidth
+                                    implicitHeight: Math.max(selectedLabel.implicitHeight + Appearance.padding.smaller * 2, unavailableLabel.implicitHeight, useButton.implicitHeight)
+
+                                    StyledRect {
+                                        anchors.centerIn: parent
+                                        visible: terminalCard.installed && terminalCard.modelData === root.selectedTerminal
+                                        implicitWidth: selectedLabel.implicitWidth + Appearance.padding.normal * 2
+                                        implicitHeight: selectedLabel.implicitHeight + Appearance.padding.smaller * 2
+                                        radius: implicitHeight / 2 * Math.min(1, Appearance.rounding.scale)
+                                        color: Colours.layer(Colours.palette.m3secondaryContainer, 2)
+
+                                        StyledText {
+                                            id: selectedLabel
+
+                                            anchors.centerIn: parent
+                                            text: qsTr("Selected")
+                                            color: Colours.palette.m3primary
+                                            horizontalAlignment: Text.AlignHCenter
+                                            Accessible.role: Accessible.StaticText
+                                        }
+                                    }
+
+                                    StyledText {
+                                        id: unavailableLabel
+
+                                        anchors.centerIn: parent
+                                        visible: !terminalCard.installed
+                                        text: qsTr("Unavailable")
+                                        color: Colours.palette.m3outline
+                                        horizontalAlignment: Text.AlignHCenter
+                                        Accessible.role: Accessible.StaticText
+                                    }
+
+                                    TextButton {
+                                        id: useButton
+
+                                        anchors.centerIn: parent
+                                        width: parent.width
+                                        visible: terminalCard.installed && terminalCard.modelData !== root.selectedTerminal
+                                        text: qsTr("Use")
+                                        type: TextButton.Text
+                                        enabled: !root.busy
+                                        disabled: root.busy
+                                        Accessible.role: Accessible.Button
+                                        Accessible.name: qsTr("Use %1 as the default terminal").arg(terminalCard.modelData)
+                                        onClicked: root.applyTerminal(terminalCard.modelData)
+                                    }
                                 }
                             }
                         }

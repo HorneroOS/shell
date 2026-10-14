@@ -29,6 +29,12 @@ Item {
     TextButton {
         id: button
 
+        // TextButton is a project Item-based control rather than Qt Quick
+        // Controls' Button. Give it a concrete size before centering it so
+        // the visual action stays on the same rail across labels of different
+        // lengths.
+        width: implicitWidth
+        height: implicitHeight
         anchors.centerIn: parent
         enabled: root.controlEnabled
         disabled: root.disabled

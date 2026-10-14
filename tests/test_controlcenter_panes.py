@@ -235,6 +235,8 @@ def test_repeated_control_center_action_columns_share_a_stable_width():
     assert "Layout.preferredWidth: Config.controlCenter.actionColumnWidth" in action_cell
     assert "Layout.maximumWidth: Config.controlCenter.actionColumnWidth" in action_cell
     assert "anchors.centerIn: parent" in action_cell
+    assert "width: implicitWidth" in action_cell
+    assert "height: implicitHeight" in action_cell
     assert "Layout.alignment: Qt.AlignVCenter" in action_cell
 
     config = (ROOT / "config" / "ControlCenterConfig.qml").read_text()

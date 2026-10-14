@@ -18,8 +18,8 @@ Item {
     property string accessibilityName: text
 
     // Keep the shared action rail wide enough as the user increases the
-    // interface type scale. A fixed 136 px slot lets longer action labels
-    // overlap the setting text at larger sizes.
+    // interface type scale. A fixed 136 px slot can make longer action
+    // labels overlap the setting text at larger sizes.
     readonly property real actionColumnWidth: Math.max(
         Config.controlCenter.actionColumnWidth,
         Config.controlCenter.actionColumnWidth * Appearance.font.size.scale

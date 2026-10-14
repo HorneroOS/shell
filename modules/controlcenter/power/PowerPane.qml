@@ -31,7 +31,7 @@ Item {
     property bool busy: false
     property string armedAction: ""
     property string lastResult: ""
-    readonly property real actionColumnWidth: 120
+    readonly property real actionColumnWidth: 136
 
     function envelope(text: string): var {
         try {

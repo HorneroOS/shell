@@ -224,6 +224,27 @@ def test_terminal_settings_keeps_supported_choices_visible_and_marks_missing_app
     assert 'Accessible.name: terminalCard.terminalId === root.selectedTerminal ? qsTr("%1 is the default terminal").arg(terminalCard.terminalId)' in pane
 
 
+def test_repeated_control_center_action_columns_share_a_stable_width():
+    terminal = (CC / "terminal" / "TerminalPane.qml").read_text()
+    power = (CC / "power" / "PowerPane.qml").read_text()
+    system = (CC / "system" / "SystemPane.qml").read_text()
+
+    for pane in (terminal, power, system):
+        assert "readonly property real actionColumnWidth: 136" in pane
+        assert "Layout.minimumWidth: root.actionColumnWidth" in pane
+        assert "Layout.preferredWidth: root.actionColumnWidth" in pane
+        assert "Layout.maximumWidth: root.actionColumnWidth" in pane
+
+
+def test_system_action_tiles_keep_one_right_aligned_action_rail():
+    pane = (CC / "system" / "SystemPane.qml").read_text()
+    action_tile = pane.split("component ActionTile:", 1)[1].split("// ── Stat row", 1)[0]
+    assert "Layout.fillWidth: true" in action_tile
+    assert 'text: qsTr("Run")' in action_tile
+    assert "Layout.minimumWidth: root.actionColumnWidth" in action_tile
+    assert "Layout.maximumWidth: root.actionColumnWidth" in action_tile
+
+
 def test_audio_stream_controls_listen_to_pipewire_volume_notifications():
     pane = (CC / "audio" / "AudioPane.qml").read_text()
     assert "function onAudioChanged()" not in pane

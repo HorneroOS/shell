@@ -25,6 +25,8 @@ Item {
     required property CC.Session session
 
     anchors.fill: parent
+    // Keep trailing actions on the same vertical rail as Terminal and Power.
+    readonly property real actionColumnWidth: 136
 
     function run(command: var): void {
         if (Array.isArray(command) && command.length > 0) {
@@ -97,6 +99,9 @@ Item {
             }
 
             TextButton {
+                Layout.minimumWidth: root.actionColumnWidth
+                Layout.preferredWidth: root.actionColumnWidth
+                Layout.maximumWidth: root.actionColumnWidth
                 text: qsTr("Run")
                 type: TextButton.Tonal
                 onClicked: tile.action()

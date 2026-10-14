@@ -21,7 +21,7 @@ Item {
     // Keep the supported choices visible even when only one is installed.
     // Availability is runtime data; the chooser itself is a stable product
     // contract and must not disappear when that query returns an empty list.
-    readonly property real actionColumnWidth: 136
+    readonly property real actionColumnWidth: Config.controlCenter.actionColumnWidth
     property var installedTerminals: []
     property string selectedTerminal: "kitty"
     property string statusMessage: ""

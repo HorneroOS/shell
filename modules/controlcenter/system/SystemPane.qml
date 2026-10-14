@@ -26,7 +26,7 @@ Item {
 
     anchors.fill: parent
     // Keep trailing actions on the same vertical rail as Terminal and Power.
-    readonly property real actionColumnWidth: 136
+    readonly property real actionColumnWidth: Config.controlCenter.actionColumnWidth
 
     function run(command: var): void {
         if (Array.isArray(command) && command.length > 0) {

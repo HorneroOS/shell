@@ -230,10 +230,13 @@ def test_repeated_control_center_action_columns_share_a_stable_width():
     system = (CC / "system" / "SystemPane.qml").read_text()
 
     for pane in (terminal, power, system):
-        assert "readonly property real actionColumnWidth: 136" in pane
+        assert "readonly property real actionColumnWidth: Config.controlCenter.actionColumnWidth" in pane
         assert "Layout.minimumWidth: root.actionColumnWidth" in pane
         assert "Layout.preferredWidth: root.actionColumnWidth" in pane
         assert "Layout.maximumWidth: root.actionColumnWidth" in pane
+
+    config = (ROOT / "config" / "ControlCenterConfig.qml").read_text()
+    assert "readonly property real actionColumnWidth: 136" in config
 
 
 def test_system_action_tiles_keep_one_right_aligned_action_rail():

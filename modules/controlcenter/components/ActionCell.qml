@@ -5,8 +5,8 @@ import qs.config
 import QtQuick
 import QtQuick.Layouts
 
-// Keeps trailing actions on one stable right edge even when their labels
-// have different widths (for example Selected, Install first, and Use this).
+// Keeps actions in one stable visual column even when their labels have
+// different widths (for example Selected, Install first, and Use this).
 Item {
     id: root
 
@@ -39,13 +39,12 @@ Item {
 
         // TextButton is a project Item-based control rather than Qt Quick
         // Controls' Button. Give it a concrete size so the visual action
-        // occupies the same full-width action slot across labels of
-        // different lengths. Keeping the slot itself visible makes the
-        // action column read as one aligned column rather than a ragged
-        // collection of label-sized buttons.
-        width: parent.width
+        // keep their natural visual width; center each label in the fixed
+        // action slot so variable copy does not make a ragged column or
+        // stretch tonal button backgrounds across the whole row.
+        width: implicitWidth
         height: implicitHeight
-        anchors.right: parent.right
+        anchors.horizontalCenter: parent.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter
         enabled: root.controlEnabled
         // Keep visual and interaction state aligned even when a caller only

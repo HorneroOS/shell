@@ -220,7 +220,7 @@ def test_terminal_settings_keeps_supported_choices_visible_and_marks_missing_app
     terminal_rows = re.findall(r'TerminalCard\s*\{([^{}]*)\}', pane, re.DOTALL)
     assert len(terminal_rows) == 3
     assert all("Layout.fillWidth: true" in row for row in terminal_rows), (
-        "each terminal row must fill its SectionContainer so action cells share the same trailing edge"
+        "each terminal row must fill its SectionContainer so action cells share the same centered column"
     )
 
 
@@ -232,15 +232,14 @@ def test_control_center_action_cells_share_a_visible_trailing_edge():
     assert "Layout.minimumWidth: actionColumnWidth" in action_cell
     assert "Layout.preferredWidth: actionColumnWidth" in action_cell
     assert "Layout.maximumWidth: actionColumnWidth" in action_cell
-    assert "anchors.right: parent.right" in action_cell
+    assert "anchors.horizontalCenter: parent.horizontalCenter" in action_cell
     assert "anchors.verticalCenter: parent.verticalCenter" in action_cell
     assert "anchors.centerIn: parent" not in action_cell
-    assert "width: parent.width" in action_cell
-    assert "width: implicitWidth" not in action_cell
+    assert "width: implicitWidth" in action_cell
     assert "disabled: root.disabled || !root.controlEnabled" in action_cell
 
     # These panes contain repeatable setting rows with trailing actions; keep
-    # them on the shared cell so label changes cannot shift the right edge.
+    # them on the shared cell so label changes cannot shift the action center.
     for pane in ("terminal/TerminalPane.qml", "system/SystemPane.qml", "power/PowerPane.qml"):
         assert "ActionCell {" in (CC / pane).read_text(), f"{pane} must use the shared action cell"
 
@@ -257,9 +256,9 @@ def test_repeated_control_center_action_columns_share_a_stable_width():
     assert "Layout.minimumWidth: actionColumnWidth" in action_cell
     assert "Layout.preferredWidth: actionColumnWidth" in action_cell
     assert "Layout.maximumWidth: actionColumnWidth" in action_cell
-    assert "anchors.right: parent.right" in action_cell
+    assert "anchors.horizontalCenter: parent.horizontalCenter" in action_cell
     assert "anchors.verticalCenter: parent.verticalCenter" in action_cell
-    assert "width: parent.width" in action_cell
+    assert "width: implicitWidth" in action_cell
     assert "height: implicitHeight" in action_cell
     assert "Layout.alignment: Qt.AlignVCenter" in action_cell
 
@@ -267,7 +266,7 @@ def test_repeated_control_center_action_columns_share_a_stable_width():
     assert "readonly property real actionColumnWidth: 136" in config
 
 
-def test_system_action_tiles_keep_one_right_aligned_action_rail():
+def test_system_action_tiles_keep_one_centered_action_column():
     pane = (CC / "system" / "SystemPane.qml").read_text()
     action_tile = pane.split("component ActionTile:", 1)[1].split("// ── Stat row", 1)[0]
     assert "Layout.fillWidth: true" in action_tile

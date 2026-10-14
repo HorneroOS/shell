@@ -63,9 +63,12 @@ Item {
             spacing: Appearance.spacing.normal
 
             StyledRect {
+                Layout.minimumWidth: Appearance.font.size.extraLarge * 1.5
+                Layout.preferredWidth: Appearance.font.size.extraLarge * 1.5
+                Layout.maximumWidth: Appearance.font.size.extraLarge * 1.5
+                Layout.alignment: Qt.AlignVCenter
                 radius: Appearance.rounding.normal
                 color: Colours.layer(Colours.palette.m3primaryContainer, 2)
-                implicitWidth: 36
                 implicitHeight: 36
 
                 MaterialIcon {

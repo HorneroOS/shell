@@ -38,8 +38,8 @@ Item {
         id: button
 
         // TextButton is a project Item-based control rather than Qt Quick
-        // Controls' Button. Give it a concrete size so the visual action
-        // keep their natural visual width; center each label in the fixed
+        // Controls' Button. Give it a concrete size so each action
+        // keeps its natural visual width; center each label in the fixed
         // action slot so variable copy does not make a ragged column or
         // stretch tonal button backgrounds across the whole row.
         width: implicitWidth

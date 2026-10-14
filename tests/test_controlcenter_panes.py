@@ -224,7 +224,7 @@ def test_terminal_settings_keeps_supported_choices_visible_and_marks_missing_app
     )
 
 
-def test_control_center_action_cells_share_a_visible_trailing_edge():
+def test_control_center_action_cells_share_a_centered_column():
     action_cell = (CC / "components" / "ActionCell.qml").read_text()
 
     assert "readonly property real actionColumnWidth: Math.max(" in action_cell
@@ -278,6 +278,9 @@ def test_system_action_tiles_keep_one_centered_action_column():
     pane = (CC / "system" / "SystemPane.qml").read_text()
     action_tile = pane.split("component ActionTile:", 1)[1].split("// ── Stat row", 1)[0]
     assert "Layout.fillWidth: true" in action_tile
+    assert action_tile.count("Layout.minimumWidth: Appearance.font.size.extraLarge * 1.5") == 1
+    assert action_tile.count("Layout.preferredWidth: Appearance.font.size.extraLarge * 1.5") == 1
+    assert action_tile.count("Layout.maximumWidth: Appearance.font.size.extraLarge * 1.5") == 1
     assert 'text: qsTr("Run")' in action_tile
     assert "ActionCell {" in action_tile
     assert all("Layout.fillWidth: true" in block for block in re.findall(r"ActionTile\s*\{([^{}]*)\}", pane, re.DOTALL)), (

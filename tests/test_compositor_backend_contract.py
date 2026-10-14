@@ -114,6 +114,7 @@ def test_shared_surfaces_use_output_identity_and_native_keyboard_events():
     assert "keyboardLayoutSwitch: true" in NIRI
     assert "event.KeyboardLayoutsChanged?.keyboard_layouts" in NIRI
     assert "Compositor.switchKeyboardLayout(idx)" in KEYBOARD_MODEL
+    assert "import qs.services" in KEYBOARD_MODEL
 
 
 def test_shared_shell_services_do_not_send_hyprland_commands_to_niri():

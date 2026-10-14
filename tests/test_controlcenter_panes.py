@@ -251,6 +251,18 @@ def test_power_tiles_keep_variable_icons_from_shifting_the_label_column():
     assert "horizontalAlignment: Text.AlignHCenter" in icon
 
 
+def test_audio_device_labels_keep_a_stable_icon_column():
+    pane = (CC / "audio" / "AudioPane.qml").read_text()
+    slot_width = "Appearance.font.size.extraLarge * 1.5"
+
+    for section in ("outputRowLayout", "inputRowLayout"):
+        row = pane.split(f"id: {section}", 1)[1].split("StyledText {", 1)[0]
+        icon = row.split("MaterialIcon {", 1)[1]
+        for constraint in ("minimumWidth", "preferredWidth", "maximumWidth"):
+            assert f"Layout.{constraint}: {slot_width}" in icon
+        assert "horizontalAlignment: Text.AlignHCenter" in icon
+
+
 def test_control_center_navigation_uses_keyboard_accessible_interactive_controls():
     nav = (CC / "NavRail.qml").read_text()
     nav_items = nav.split("component NavItem:", 1)[1]

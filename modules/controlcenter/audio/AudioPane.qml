@@ -112,8 +112,12 @@ Item {
                                         spacing: Appearance.spacing.normal
 
                                         MaterialIcon {
+                                            Layout.minimumWidth: Appearance.font.size.extraLarge * 1.5
+                                            Layout.preferredWidth: Appearance.font.size.extraLarge * 1.5
+                                            Layout.maximumWidth: Appearance.font.size.extraLarge * 1.5
                                             text: Audio.sink?.id === modelData.id ? "speaker" : "speaker_group"
                                             font.pointSize: Appearance.font.size.large
+                                            horizontalAlignment: Text.AlignHCenter
                                             fill: Audio.sink?.id === modelData.id ? 1 : 0
                                         }
 
@@ -190,8 +194,12 @@ Item {
                                         spacing: Appearance.spacing.normal
 
                                         MaterialIcon {
+                                            Layout.minimumWidth: Appearance.font.size.extraLarge * 1.5
+                                            Layout.preferredWidth: Appearance.font.size.extraLarge * 1.5
+                                            Layout.maximumWidth: Appearance.font.size.extraLarge * 1.5
                                             text: "mic"
                                             font.pointSize: Appearance.font.size.large
+                                            horizontalAlignment: Text.AlignHCenter
                                             fill: Audio.source?.id === modelData.id ? 1 : 0
                                         }
 

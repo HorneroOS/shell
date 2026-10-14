@@ -231,6 +231,7 @@ def test_control_center_action_cells_share_a_visible_trailing_edge():
     assert "anchors.right: parent.right" in action_cell
     assert "anchors.verticalCenter: parent.verticalCenter" in action_cell
     assert "anchors.centerIn: parent" not in action_cell
+    assert "disabled: root.disabled || !root.controlEnabled" in action_cell
 
     # These panes contain repeatable setting rows with trailing actions; keep
     # them on the shared cell so label changes cannot shift the right edge.

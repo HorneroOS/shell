@@ -38,7 +38,9 @@ Item {
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
         enabled: root.controlEnabled
-        disabled: root.disabled
+        // Keep visual and interaction state aligned even when a caller only
+        // marks the action unavailable through controlEnabled.
+        disabled: root.disabled || !root.controlEnabled
         Accessible.role: root.accessibilityRole
         Accessible.name: root.accessibilityName
 

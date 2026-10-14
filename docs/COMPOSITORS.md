@@ -19,6 +19,12 @@ display the captured target or consuming application. The bar workspace view
 and Dashboard window list use these native models. Layer-shell surfaces can
 take explicit keyboard focus without using Hyprland's focus-grab object.
 
+The indicator distinguishes an open stream from one currently sending frames.
+It is status-only and does not disclose the captured window, output, or
+consumer. It does not provide the capture path itself: portal capture still
+depends on a running Niri session, PipeWire, and the GNOME ScreenCast portal,
+as described in [Niri's screencasting guide](https://niri-wm.github.io/niri/Screencasting.html).
+
 This experimental integration now has a passing single-output graphical
 baseline in the disposable Hornero QA guest, but that acceptance does not
 make every Shell feature or hardware topology available under Niri.
@@ -89,7 +95,8 @@ website and edition metadata must use the same maturity label as that evidence.
 
 ## Upstream references
 
-- [Niri IPC and event stream](https://niri-wm.github.io/niri/IPC.html)
+- [Niri IPC and event stream](https://niri-wm.github.io/niri/IPC.html), including
+  the [screencast events](https://niri-wm.github.io/niri/niri_ipc/enum.Event.html)
 - [Niri workspaces](https://niri-wm.github.io/niri/Workspaces.html)
 - [Niri screencasting](https://niri-wm.github.io/niri/Screencasting.html)
 - [Labwc integration](https://labwc.github.io/integration.html)

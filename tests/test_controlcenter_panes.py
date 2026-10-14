@@ -212,9 +212,11 @@ def test_terminal_settings_keeps_supported_choices_visible_and_marks_missing_app
     assert 'qsTr("Use this")' in pane
     assert "Layout.fillWidth: true" in pane
     assert "ActionCell {" in pane
-    assert "Layout.minimumWidth: Appearance.font.size.extraLarge * 1.5" in pane
-    assert "Layout.preferredWidth: Appearance.font.size.extraLarge * 1.5" in pane
-    assert "Layout.maximumWidth: Appearance.font.size.extraLarge * 1.5" in pane
+    card = pane.split("component TerminalCard:", 1)[1].split("Component.onCompleted", 1)[0]
+    assert "anchors.right: parent.right" in card
+    assert "width: action.actionColumnWidth" in card
+    assert "anchors.right: action.left" in card
+    assert "width: Appearance.font.size.extraLarge * 1.5" in card
     assert "controlEnabled: terminalCard.installed && terminalCard.terminalId !== root.selectedTerminal && !root.busy" in pane
     assert 'accessibilityName: terminalCard.terminalId === root.selectedTerminal ? qsTr("%1 is the default terminal").arg(terminalCard.terminalId)' in pane
     terminal_rows = re.findall(r'TerminalCard\s*\{([^{}]*)\}', pane, re.DOTALL)

@@ -80,18 +80,20 @@ Item {
         radius: Appearance.rounding.normal
         color: Colours.layer(Colours.palette.m3surfaceContainerHigh, 2)
 
-        RowLayout {
+        Item {
             id: row
 
             anchors.fill: parent
             anchors.margins: Appearance.padding.normal
-            spacing: Appearance.spacing.normal
+            implicitHeight: Math.max(icon.implicitHeight, details.implicitHeight, action.implicitHeight)
 
             MaterialIcon {
-                Layout.minimumWidth: Appearance.font.size.extraLarge * 1.5
-                Layout.preferredWidth: Appearance.font.size.extraLarge * 1.5
-                Layout.maximumWidth: Appearance.font.size.extraLarge * 1.5
-                Layout.alignment: Qt.AlignVCenter
+                id: icon
+
+                anchors.left: parent.left
+                anchors.leftMargin: Appearance.spacing.normal
+                anchors.verticalCenter: parent.verticalCenter
+                width: Appearance.font.size.extraLarge * 1.5
                 text: "terminal"
                 color: terminalCard.installed && terminalCard.terminalId === root.selectedTerminal ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
                 font.pointSize: Appearance.font.size.large
@@ -99,7 +101,13 @@ Item {
             }
 
             ColumnLayout {
-                Layout.fillWidth: true
+                id: details
+
+                anchors.left: icon.right
+                anchors.leftMargin: Appearance.spacing.normal
+                anchors.right: action.left
+                anchors.rightMargin: Appearance.spacing.normal
+                anchors.verticalCenter: parent.verticalCenter
                 spacing: 2
 
                 StyledText {
@@ -116,6 +124,11 @@ Item {
             }
 
             ActionCell {
+                id: action
+
+                width: action.actionColumnWidth
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
                 text: !terminalCard.installed ? qsTr("Install first") : terminalCard.terminalId === root.selectedTerminal ? qsTr("Selected") : qsTr("Use this")
                 type: terminalCard.terminalId === root.selectedTerminal ? TextButton.Tonal : TextButton.Text
                 controlEnabled: terminalCard.installed && terminalCard.terminalId !== root.selectedTerminal && !root.busy

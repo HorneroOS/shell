@@ -142,6 +142,14 @@ def test_settings_search_has_keyboard_entry_and_layered_escape():
     assert "searchQuery.length > 0" in factory
 
 
+def test_compact_settings_rail_shortens_osd_label_and_keeps_full_accessible_name():
+    nav = (CC / "NavRail.qml").read_text()
+    assert 'paneId === "osd" ? qsTr("OSD") : title' in nav
+    assert "compactTitle: root.compactTitle(pane.id, pane.title)" in nav
+    assert "text: item.compactTitle" in nav
+    assert 'Accessible.name: item.active ? qsTr("%1, current Settings page").arg(item.title) : item.title' in nav
+
+
 def test_appearance_section_routes_use_the_sidebar_component_scope():
     appearance = (CC / "appearance" / "AppearancePane.qml").read_text()
     keys = re.search(r"readonly property var _sectionKeys:\s*\[([^]]*)\]", appearance)

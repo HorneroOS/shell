@@ -8,6 +8,19 @@ from scripts.stamp_aur_package import REPOSITORY, stamp
 
 WORKFLOW = Path(__file__).parents[1] / ".github/workflows/aur-publish.yml"
 RELEASE_SHA = "a" * 40
+ROOT = Path(__file__).parents[1]
+
+
+def test_release_version_matches_nix_and_arch_package_metadata() -> None:
+    nix = (ROOT / "nix/default.nix").read_text(encoding="utf-8")
+    pkgbuild = (ROOT / "packaging/PKGBUILD").read_text(encoding="utf-8")
+    nix_version = next(line for line in nix.splitlines() if 'version = "' in line)
+    pkg_version = next(line for line in pkgbuild.splitlines() if line.startswith("pkgver="))
+    source_tag = next(line for line in pkgbuild.splitlines() if line.startswith("source="))
+    release_version = nix_version.split('"')[1]
+
+    assert pkg_version == f"pkgver={release_version}"
+    assert f"#tag=pkg/hornero-shell-v{release_version}" in source_tag
 
 
 def test_aur_workflow_only_listens_to_the_shell_package_namespace() -> None:

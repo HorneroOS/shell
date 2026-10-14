@@ -206,7 +206,9 @@ Item {
                                 spacing: Appearance.spacing.normal
 
                                 MaterialIcon {
+                                    Layout.minimumWidth: Appearance.font.size.extraLarge * 1.5
                                     Layout.preferredWidth: Appearance.font.size.extraLarge * 1.5
+                                    Layout.maximumWidth: Appearance.font.size.extraLarge * 1.5
                                     Layout.alignment: Qt.AlignVCenter
                                     text: "terminal"
                                     color: terminalCard.installed && terminalCard.modelData === root.selectedTerminal ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant

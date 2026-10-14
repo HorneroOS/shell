@@ -55,11 +55,11 @@ jobs:
     env:
       VM_MEM: '3072'
       VM_SMP: '2'
-      VM_ARTIFACTS_DIR: ${{ runner.temp }}/hornero-controlcenter-artifacts
-      VM_CACHE_DIR: ${{ runner.temp }}/hornero-controlcenter-cache
-      VM_SHARED_DIR: ${{ runner.temp }}/hornero-controlcenter-shared
-      VM_SSH_DIR: ${{ runner.temp }}/hornero-controlcenter-ssh
-      VM_SSH_KEY: ${{ runner.temp }}/hornero-controlcenter-ssh/id_ed25519
+      VM_ARTIFACTS_DIR: /tmp/hornero-controlcenter-artifacts
+      VM_CACHE_DIR: /tmp/hornero-controlcenter-cache
+      VM_SHARED_DIR: /tmp/hornero-controlcenter-shared
+      VM_SSH_DIR: /tmp/hornero-controlcenter-ssh
+      VM_SSH_KEY: /tmp/hornero-controlcenter-ssh/id_ed25519
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       - name: Install ephemeral QEMU guest tools
@@ -83,5 +83,5 @@ jobs:
         if: always()
         with:
           name: controlcenter-visual-matrix
-          path: ${{ runner.temp }}/hornero-controlcenter-artifacts
+          path: /tmp/hornero-controlcenter-artifacts
           if-no-files-found: warn

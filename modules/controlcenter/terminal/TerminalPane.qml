@@ -21,7 +21,6 @@ Item {
     // Keep the supported choices visible even when only one is installed.
     // Availability is runtime data; the chooser itself is a stable product
     // contract and must not disappear when that query returns an empty list.
-    readonly property real actionColumnWidth: Config.controlCenter.actionColumnWidth
     property var installedTerminals: []
     property string selectedTerminal: "kitty"
     property string statusMessage: ""
@@ -116,16 +115,13 @@ Item {
                 }
             }
 
-            TextButton {
-                Layout.minimumWidth: root.actionColumnWidth
-                Layout.preferredWidth: root.actionColumnWidth
-                Layout.maximumWidth: root.actionColumnWidth
-                text: !terminalCard.installed ? qsTr("Unavailable") : terminalCard.terminalId === root.selectedTerminal ? qsTr("Selected") : qsTr("Use")
+            ActionCell {
+                text: !terminalCard.installed ? qsTr("Install first") : terminalCard.terminalId === root.selectedTerminal ? qsTr("Selected") : qsTr("Use this")
                 type: terminalCard.terminalId === root.selectedTerminal ? TextButton.Tonal : TextButton.Text
-                enabled: terminalCard.installed && terminalCard.terminalId !== root.selectedTerminal && !root.busy
+                controlEnabled: terminalCard.installed && terminalCard.terminalId !== root.selectedTerminal && !root.busy
                 disabled: !terminalCard.installed || terminalCard.terminalId === root.selectedTerminal || root.busy
-                Accessible.role: terminalCard.terminalId === root.selectedTerminal || !terminalCard.installed ? Accessible.StaticText : Accessible.Button
-                Accessible.name: terminalCard.terminalId === root.selectedTerminal ? qsTr("%1 is the default terminal").arg(terminalCard.terminalId) : !terminalCard.installed ? qsTr("%1 is not installed").arg(terminalCard.terminalId) : qsTr("Use %1 as the default terminal").arg(terminalCard.terminalId)
+                accessibilityRole: terminalCard.terminalId === root.selectedTerminal || !terminalCard.installed ? Accessible.StaticText : Accessible.Button
+                accessibilityName: terminalCard.terminalId === root.selectedTerminal ? qsTr("%1 is the default terminal").arg(terminalCard.terminalId) : !terminalCard.installed ? qsTr("%1 is not installed").arg(terminalCard.terminalId) : qsTr("Use %1 as the default terminal").arg(terminalCard.terminalId)
                 onClicked: root.applyTerminal(terminalCard.terminalId)
             }
         }

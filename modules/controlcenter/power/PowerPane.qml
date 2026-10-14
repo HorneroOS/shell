@@ -31,7 +31,6 @@ Item {
     property bool busy: false
     property string armedAction: ""
     property string lastResult: ""
-    readonly property real actionColumnWidth: Config.controlCenter.actionColumnWidth
 
     function envelope(text: string): var {
         try {
@@ -146,13 +145,10 @@ Item {
                 font.weight: tile.armed ? 600 : 400
             }
 
-            TextButton {
-                Layout.minimumWidth: root.actionColumnWidth
-                Layout.preferredWidth: root.actionColumnWidth
-                Layout.maximumWidth: root.actionColumnWidth
+            ActionCell {
                 text: tile.armed ? qsTr("Confirm") : qsTr("Run")
                 type: tile.armed ? TextButton.Filled : TextButton.Tonal
-                enabled: !root.busy
+                controlEnabled: !root.busy
                 onClicked: root.runPower(tile.action)
             }
         }

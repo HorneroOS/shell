@@ -39,12 +39,12 @@ Item {
 
         // TextButton is a project Item-based control rather than Qt Quick
         // Controls' Button. Give it a concrete size so each action
-        // keeps its natural visual width; center each label in the fixed
-        // action slot so variable copy does not make a ragged column or
+        // keeps its natural visual width; align each action to the same
+        // trailing edge so variable copy does not make a ragged column or
         // stretch tonal button backgrounds across the whole row.
         width: implicitWidth
         height: implicitHeight
-        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
         enabled: root.controlEnabled
         // Keep visual and interaction state aligned even when a caller only

@@ -222,11 +222,11 @@ def test_terminal_settings_keeps_supported_choices_visible_and_marks_missing_app
     terminal_rows = re.findall(r'TerminalCard\s*\{([^{}]*)\}', pane, re.DOTALL)
     assert len(terminal_rows) == 3
     assert all("Layout.fillWidth: true" in row for row in terminal_rows), (
-        "each terminal row must fill its SectionContainer so action cells share the same centered column"
+        "each terminal row must fill its SectionContainer so action cells share the same trailing edge"
     )
 
 
-def test_control_center_action_cells_share_a_centered_column():
+def test_control_center_action_cells_share_a_trailing_edge():
     action_cell = (CC / "components" / "ActionCell.qml").read_text()
 
     assert "readonly property real actionColumnWidth: Math.max(" in action_cell
@@ -234,7 +234,7 @@ def test_control_center_action_cells_share_a_centered_column():
     assert "Layout.minimumWidth: actionColumnWidth" in action_cell
     assert "Layout.preferredWidth: actionColumnWidth" in action_cell
     assert "Layout.maximumWidth: actionColumnWidth" in action_cell
-    assert "anchors.horizontalCenter: parent.horizontalCenter" in action_cell
+    assert "anchors.right: parent.right" in action_cell
     assert "anchors.verticalCenter: parent.verticalCenter" in action_cell
     assert "anchors.centerIn: parent" not in action_cell
     assert "width: implicitWidth" in action_cell
@@ -266,7 +266,7 @@ def test_repeated_control_center_action_columns_share_a_stable_width():
     assert "Layout.minimumWidth: actionColumnWidth" in action_cell
     assert "Layout.preferredWidth: actionColumnWidth" in action_cell
     assert "Layout.maximumWidth: actionColumnWidth" in action_cell
-    assert "anchors.horizontalCenter: parent.horizontalCenter" in action_cell
+    assert "anchors.right: parent.right" in action_cell
     assert "anchors.verticalCenter: parent.verticalCenter" in action_cell
     assert "width: implicitWidth" in action_cell
     assert "height: implicitHeight" in action_cell
@@ -276,7 +276,7 @@ def test_repeated_control_center_action_columns_share_a_stable_width():
     assert "readonly property real actionColumnWidth: 136" in config
 
 
-def test_system_action_tiles_keep_one_centered_action_column():
+def test_system_action_tiles_keep_one_trailing_action_edge():
     pane = (CC / "system" / "SystemPane.qml").read_text()
     action_tile = pane.split("component ActionTile:", 1)[1].split("// ── Stat row", 1)[0]
     assert "Layout.fillWidth: true" in action_tile

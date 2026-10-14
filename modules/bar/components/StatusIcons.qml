@@ -137,21 +137,27 @@ StyledRect {
             Layout.alignment: Qt.AlignCenter
 
             Accessible.role: Accessible.StaticText
-            Accessible.name: qsTr("Screen capture session open")
+            Accessible.name: Compositor.hasActiveScreencast
+                ? qsTr("Screen capture is active")
+                : qsTr("Screen capture session is paused")
 
             MaterialIcon {
                 id: icon
 
                 anchors.centerIn: parent
                 text: "screen_record"
-                color: Colours.palette.m3error
+                color: Compositor.hasActiveScreencast
+                    ? Colours.palette.m3error
+                    : Colours.palette.m3onSurfaceVariant
                 fill: 1
                 Accessible.ignored: true
             }
 
             Tooltip {
                 target: screencastIndicator
-                text: qsTr("A screen capture session is open")
+                text: Compositor.hasActiveScreencast
+                    ? qsTr("A screen capture is active")
+                    : qsTr("A screen capture session is paused")
             }
         }
 

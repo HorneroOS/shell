@@ -45,6 +45,8 @@ Singleton {
     readonly property bool hasScreencastSession: isNiri
         && supports("screencastState")
         && Niri.casts.length > 0
+    readonly property bool hasActiveScreencast: hasScreencastSession
+        && Niri.casts.some(cast => cast.is_active === true)
     readonly property var capabilities: isNiri ? Niri.capabilities : isHyprland ? ({
         workspaceEvents: true,
         windowEvents: true,

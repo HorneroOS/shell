@@ -146,10 +146,17 @@ def test_screencast_status_is_capability_gated_and_does_not_expose_capture_metad
     assert 'readonly property bool hasScreencastSession: isNiri' in COMPOSITOR_FACADE
     assert '&& supports("screencastState")' in COMPOSITOR_FACADE
     assert "&& Niri.casts.length > 0" in COMPOSITOR_FACADE
+    assert "readonly property bool hasActiveScreencast: hasScreencastSession" in COMPOSITOR_FACADE
+    assert "Niri.casts.some(cast => cast.is_active === true)" in COMPOSITOR_FACADE
     assert "screencastState: false" in COMPOSITOR_FACADE
     assert "visible: Compositor.hasScreencastSession" in status_icons
-    assert 'Accessible.name: qsTr("Screen capture session open")' in status_icons
-    assert 'text: qsTr("A screen capture session is open")' in status_icons
+    assert 'Accessible.name: Compositor.hasActiveScreencast' in status_icons
+    assert 'qsTr("Screen capture is active")' in status_icons
+    assert 'qsTr("Screen capture session is paused")' in status_icons
+    assert 'color: Compositor.hasActiveScreencast' in status_icons
+    assert 'text: Compositor.hasActiveScreencast' in status_icons
+    assert 'qsTr("A screen capture is active")' in status_icons
+    assert 'qsTr("A screen capture session is paused")' in status_icons
     assert "cast.target" not in status_icons
     assert "cast.pid" not in status_icons
 

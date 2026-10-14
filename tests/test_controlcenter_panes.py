@@ -208,8 +208,13 @@ def test_terminal_settings_keeps_supported_choices_visible_and_marks_missing_app
     assert "model: root.supportedTerminals" in pane
     assert "readonly property bool installed: root.installedTerminals.indexOf(modelData) >= 0" in pane
     assert 'qsTr("Not installed")' in pane
-    assert 'qsTr("Install first")' in pane
-    assert "enabled: terminalCard.installed && !root.busy" in pane
+    assert 'qsTr("Unavailable")' in pane
+    assert 'text: qsTr("Use")' in pane
+    assert "Layout.minimumWidth: root.actionColumnWidth" in pane
+    assert "Layout.preferredWidth: root.actionColumnWidth" in pane
+    assert "Layout.maximumWidth: root.actionColumnWidth" in pane
+    assert "enabled: !root.busy" in pane
+    assert 'Accessible.name: qsTr("Use %1 as the default terminal").arg(terminalCard.modelData)' in pane
 
 
 def test_terminal_settings_uses_available_rounded_clipping_component():
@@ -220,6 +225,15 @@ def test_terminal_settings_uses_available_rounded_clipping_component():
     assert "ClippingRectangle {" not in pane
     assert "radius: Appearance.rounding.normal" in pane
     assert "radius: border.innerRadius" not in pane
+
+
+def test_power_actions_keep_a_stable_confirmation_column():
+    pane = (CC / "power" / "PowerPane.qml").read_text()
+    action = pane.split("TextButton {", 1)[1].split("\n            }", 1)[0]
+    assert "text: tile.armed ? qsTr(\"Confirm\") : qsTr(\"Run\")" in action
+    assert "Layout.minimumWidth: root.actionColumnWidth" in action
+    assert "Layout.preferredWidth: root.actionColumnWidth" in action
+    assert "Layout.maximumWidth: root.actionColumnWidth" in action
 
 
 def test_control_center_navigation_uses_keyboard_accessible_interactive_controls():

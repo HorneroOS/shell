@@ -31,6 +31,7 @@ Item {
     property bool busy: false
     property string armedAction: ""
     property string lastResult: ""
+    readonly property real actionColumnWidth: 120
 
     function envelope(text: string): var {
         try {
@@ -141,6 +142,9 @@ Item {
             }
 
             TextButton {
+                Layout.minimumWidth: root.actionColumnWidth
+                Layout.preferredWidth: root.actionColumnWidth
+                Layout.maximumWidth: root.actionColumnWidth
                 text: tile.armed ? qsTr("Confirm") : qsTr("Run")
                 type: tile.armed ? TextButton.Filled : TextButton.Tonal
                 enabled: !root.busy

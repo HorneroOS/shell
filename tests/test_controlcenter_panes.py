@@ -214,8 +214,8 @@ def test_terminal_settings_keeps_supported_choices_visible_and_marks_missing_app
 
 def test_terminal_settings_uses_available_rounded_clipping_component():
     pane = (CC / "terminal" / "TerminalPane.qml").read_text()
-    assert 'import ".." as CC' in pane
-    assert "required property CC.Session session" in pane
+    assert "import qs.modules.controlcenter" in pane
+    assert "required property Session session" in pane
     assert "StyledClippingRect {" in pane
     assert "ClippingRectangle {" not in pane
     assert "radius: Appearance.rounding.normal" in pane

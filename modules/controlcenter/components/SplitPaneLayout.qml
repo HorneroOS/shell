@@ -27,7 +27,11 @@ RowLayout {
         id: leftPane
 
         Layout.preferredWidth: Math.floor(parent.width * root.leftWidthRatio)
-        Layout.minimumWidth: root.leftMinimumWidth
+        // Keep the established minimum on wide windows, but let the list
+        // pane follow its share of the available width on compact displays.
+        // A fixed 420 px minimum otherwise steals space from device details
+        // and settings on laptop-sized windows.
+        Layout.minimumWidth: Math.min(root.leftMinimumWidth, parent.width * root.leftWidthRatio)
         Layout.fillHeight: true
 
         ClippingRectangle {

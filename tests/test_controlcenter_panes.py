@@ -244,6 +244,14 @@ def test_control_center_action_cells_share_a_visible_trailing_edge():
         assert "ActionCell {" in (CC / pane).read_text(), f"{pane} must use the shared action cell"
 
 
+def test_control_center_split_keeps_details_space_on_compact_windows():
+    split_layout = (CC / "components" / "SplitPaneLayout.qml").read_text()
+
+    assert "property real leftWidthRatio: 0.4" in split_layout
+    assert "property int leftMinimumWidth: 420" in split_layout
+    assert "Layout.minimumWidth: Math.min(root.leftMinimumWidth, parent.width * root.leftWidthRatio)" in split_layout
+
+
 def test_repeated_control_center_action_columns_share_a_stable_width():
     terminal = (CC / "terminal" / "TerminalPane.qml").read_text()
     power = (CC / "power" / "PowerPane.qml").read_text()

@@ -33,6 +33,7 @@
     "author": { "type": "string", "minLength": 1, "maxLength": 120, "pattern": "\\S" },
     "license": { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "\\S" },
     "homepage": { "type": "string", "maxLength": 500, "format": "uri", "pattern": "^https://[^\\s/]+(?:/.*)?$" },
+    "placement": { "type": "string", "enum": ["background", "bar"], "default": "background", "description": "Where the entrypoint runs: background (headless, default) or bar (rendered in the bar end group)." },
     "entrypoint": {
       "type": "string",
       "maxLength": 240,

@@ -16,5 +16,6 @@
     "processCommands": [],
     "networkHosts": [],
     "settings": {}
-  }
+  },
+  "placement": "bar"
 }

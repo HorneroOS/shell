@@ -11,10 +11,11 @@ import QtQuick
 // own Loader so a plugin that fails to compile or instantiate is
 // marked failed and never takes the shell (or other plugins) down.
 //
-// Slice 1 is headless: entrypoints are instantiated under an invisible
-// root, which suits background/logic plugins. Visual placement (bar,
-// dashboard, desktop widgets) arrives with the placement contract
-// extension; until then a visual plugin loads but renders nothing.
+// Slice 1 is headless for `background` plugins (the default):
+// entrypoints are instantiated under an invisible root. Plugins whose
+// manifest declares `placement: "bar"` are not loaded here; the bar
+// renders them in its end group (modules/plugins/PluginBarWidgets.qml
+// via modules/bar/Bar.qml). Other placements are rejected.
 // Plugin QML runs with full user privileges — see services/Plugins.qml
 // for the trust label.
 Scope {
@@ -29,6 +30,7 @@ Scope {
             required property var modelData
             readonly property string pluginDir: `${Plugins.pluginsDir}/${modelData.id}`
             property string entrypoint: ""
+            property string placement: ""
 
             FileView {
                 id: manifestView
@@ -47,6 +49,13 @@ Scope {
                             Plugins.markFailed(slot.modelData.id, "manifest entrypoint is not a safe relative path");
                             return;
                         }
+                        const placement = typeof manifest.placement === "string" ? manifest.placement : "background";
+                        if (placement !== "background" && placement !== "bar") {
+                            Plugins.markFailed(slot.modelData.id, "manifest placement must be background or bar");
+                            return;
+                        }
+                        slot.placement = placement;
+                        Plugins.markPlacement(slot.modelData.id, placement, manifest.entrypoint);
                         slot.entrypoint = manifest.entrypoint;
                     } catch (e) {
                         Plugins.markFailed(slot.modelData.id, "manifest.json is not readable JSON");
@@ -59,7 +68,7 @@ Scope {
             Loader {
                 id: pluginLoader
 
-                active: slot.entrypoint !== ""
+                active: slot.entrypoint !== "" && slot.placement !== "bar"
                 source: active ? `file://${slot.pluginDir}/${slot.entrypoint}` : ""
                 asynchronous: true
 

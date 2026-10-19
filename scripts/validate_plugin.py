@@ -98,7 +98,7 @@ def _string_list(value: object, where: str, item_pattern: re.Pattern[str]) -> li
 def _validate_manifest(manifest: dict, root: Path) -> None:
     allowed = {
         "schemaVersion", "id", "name", "version", "description", "author",
-        "license", "homepage", "entrypoint", "files", "capabilities",
+        "license", "homepage", "entrypoint", "files", "capabilities", "placement",
     }
     unknown = manifest.keys() - allowed
     missing = {
@@ -127,6 +127,10 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
         parsed = urlparse(_string(homepage, "homepage", 500))
         if parsed.scheme != "https" or not parsed.netloc:
             raise ValidationError("homepage must be an HTTPS URL")
+
+    placement = manifest.get("placement", "background")
+    if placement not in ("background", "bar"):
+        raise ValidationError("placement must be background or bar")
 
     entrypoint = _safe_relative(manifest["entrypoint"], "entrypoint", qml=True)
     files = manifest["files"]

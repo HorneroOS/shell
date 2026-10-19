@@ -104,6 +104,7 @@ def test_schema_and_validator_reject_mismatched_setting_types(tmp_path, setting)
             {"twentyFourHour": {"type": "boolean", "default": True, "description": "  "}}
         ),
         lambda manifest: manifest["capabilities"]["processCommands"].append("BASH"),
+        lambda manifest: manifest.update({"placement": "sidebar"}),
     ],
 )
 def test_schema_and_validator_reject_review_hazards(tmp_path, mutate):

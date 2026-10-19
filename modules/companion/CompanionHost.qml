@@ -76,6 +76,11 @@ Scope {
     // never in the store itself).
     CompanionPersist {}
 
+    // Hermes assistant bridge (slice 1): horneroctl-mediated ask/cancel.
+    AssistantBridge {
+        id: assistantBridge
+    }
+
     Variants {
         model: CompanionStore.enabled ? Quickshell.screens : []
 
@@ -692,6 +697,14 @@ Scope {
 
         function status(): string {
             return JSON.stringify(CompanionStore.status());
+        }
+
+        function ask(text: string): void {
+            assistantBridge.ask((text ?? "").toString());
+        }
+
+        function askStop(): void {
+            assistantBridge.askStop();
         }
     }
 }

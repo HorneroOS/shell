@@ -3,7 +3,15 @@
 The companion is presentation; the assistant will be a separate daemon
 (see `docs/adr/002-companion-assistant-boundary.md`). This page is the
 reserved vocabulary the daemon will drive over the `companion` IPC
-target — no AI backend exists behind these states today.
+target. Slice 1 now has a real backend path behind two of them:
+`AssistantBridge.qml` runs `horneroctl assistant ask --json` (Hermes
+Agent via horneroctl's consent and read-only allowlist), mapping
+`thinking` while a run is in flight and `success`/`error` when the
+answer or an honest failure line lands in the bubble. Drive it with
+`qs ipc call companion ask "<prompt>"`; `askStop()` cancels locally
+(the Hermes run may still finish server-side until run-id streaming
+lands). Full chat UI, sessions, and approval prompts remain future
+work; the assistant is disabled by default and never required.
 
 ## Reserved states → animations (live now)
 

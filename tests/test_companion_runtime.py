@@ -14,6 +14,7 @@ PLAYER = (COMPANION / "Player.qml").read_text()
 HOST = (COMPANION / "CompanionHost.qml").read_text()
 BUBBLE = (COMPANION / "Bubble.qml").read_text()
 RESOLVER = (COMPANION / "Companion.qml").read_text()
+BRIDGE = (COMPANION / "AssistantBridge.qml").read_text()
 
 BEHAVIOR_STATES = ["hidden", "peeking", "entering", "idle", "hovering",
                    "talking", "excited", "dragging", "leaving", "sleeping"]
@@ -176,6 +177,29 @@ def test_companion_ipc_names_avoid_cli_subcommand_collision():
     names = set(re.findall(r"function (\w+)\(", HOST))
     clash = names & reserved
     assert not clash, f"IPC names collide with qs subcommands: {clash}"
+
+
+def test_assistant_bridge_horneroctl_mediated():
+    # The bridge talks only to horneroctl (consent + allowlist live
+    # there), never to Hermes or the network directly.
+    assert '"horneroctl", "assistant", "ask"' in BRIDGE
+    for banned in ("XMLHttpRequest", "WebSocket", "8642", "Bearer"):
+        assert banned not in BRIDGE, f"bridge must stay horneroctl-mediated: {banned}"
+    # State mapping: thinking while running, success/error on answer.
+    for state in ("thinking", "success", "error"):
+        assert f'requestState("{state}")' in BRIDGE
+    # Answers and failures both surface through the bubble.
+    assert "CompanionStore.say" in BRIDGE
+    # Busy guard: a second ask never overlaps the first.
+    assert "root.busy" in BRIDGE
+
+
+def test_assistant_ipc_surface():
+    assert "AssistantBridge" in HOST
+    for fn in ("ask(", "askStop("):
+        assert f"function {fn}" in HOST, f"companion IPC missing {fn}"
+    doc = (ROOT / "docs" / "IPC.md").read_text()
+    assert "askStop()" in doc
 
 
 def test_shell_wires_host():

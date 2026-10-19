@@ -33,7 +33,7 @@
     "author": { "type": "string", "minLength": 1, "maxLength": 120, "pattern": "\\S" },
     "license": { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "\\S" },
     "homepage": { "type": "string", "maxLength": 500, "format": "uri", "pattern": "^https://[^\\s/]+(?:/.*)?$" },
-    "placement": { "type": "string", "enum": ["background", "bar", "dashboard"], "default": "background", "description": "Where the entrypoint runs: background (headless, default), bar (rendered in the bar end group) or dashboard (rendered as a card in the dashboard Extensions tab)." },
+    "placement": { "type": "string", "enum": ["background", "bar", "dashboard", "desktop"], "default": "background", "description": "Where the entrypoint runs: background (headless, default), bar (rendered in the bar end group) or dashboard (rendered as a card in the dashboard Extensions tab) or desktop (rendered as a widget on the desktop background layer)." },
     "entrypoint": {
       "type": "string",
       "maxLength": 240,

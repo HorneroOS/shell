@@ -4,6 +4,7 @@ import qs.components
 import qs.components.containers
 import qs.services
 import qs.config
+import qs.modules.plugins
 import Quickshell
 import Quickshell.Wayland
 import QtQuick
@@ -155,6 +156,13 @@ Loader {
                     absX: clockLoader.x
                     absY: clockLoader.y
                 }
+            }
+
+            PluginDesktopWidgets {
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                anchors.rightMargin: Appearance.padding.large * 2 + (Config.bar.positionFor(win.screen.name) === "right" ? win.barOffset : 0)
+                anchors.bottomMargin: Appearance.padding.large * 2 + (Config.bar.positionFor(win.screen.name) === "bottom" ? win.barOffset : 0)
             }
         }
     }

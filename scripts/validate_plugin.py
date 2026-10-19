@@ -129,8 +129,8 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
             raise ValidationError("homepage must be an HTTPS URL")
 
     placement = manifest.get("placement", "background")
-    if placement not in ("background", "bar", "dashboard"):
-        raise ValidationError("placement must be background, bar or dashboard")
+    if placement not in ("background", "bar", "dashboard", "desktop"):
+        raise ValidationError("placement must be background, bar, dashboard or desktop")
 
     entrypoint = _safe_relative(manifest["entrypoint"], "entrypoint", qml=True)
     files = manifest["files"]

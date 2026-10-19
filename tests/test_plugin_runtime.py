@@ -95,3 +95,23 @@ def test_dashboard_placement_contract():
     # The shipped example validates the placement end to end.
     example = ROOT / "examples" / "plugins" / "example-dashboard-note" / "manifest.json"
     assert '"placement": "dashboard"' in example.read_text()
+
+
+WIDGETS_DESKTOP = (ROOT / "modules" / "plugins" / "PluginDesktopWidgets.qml").read_text()
+BACKGROUND = (ROOT / "modules" / "background" / "Background.qml").read_text()
+
+
+def test_desktop_placement_contract():
+    assert '"desktop"' in SCHEMA
+    assert '"desktop"' in VALIDATOR
+    assert 'placement !== "desktop"' in HOST
+    # Desktop plugins are not double-loaded by the headless host.
+    assert 'slot.placement !== "desktop"' in HOST
+    assert "function desktopPlugins()" in SERVICE
+    assert "Plugins.desktopPlugins()" in WIDGETS_DESKTOP
+    assert "Loader.Error" in WIDGETS_DESKTOP and "Plugins.markFailed" in WIDGETS_DESKTOP
+    assert "Plugins.markLoaded" in WIDGETS_DESKTOP
+    # Rendered on the desktop background layer, per screen.
+    assert "PluginDesktopWidgets" in BACKGROUND
+    example = ROOT / "examples" / "plugins" / "example-desktop-note" / "manifest.json"
+    assert '"placement": "desktop"' in example.read_text()

@@ -42,6 +42,11 @@ Singleton {
         : isHyprland ? Hypr.kbLayout === Hypr.defaultKbLayout : true
     readonly property bool capsLock: isHyprland && Hypr.capsLock
     readonly property bool numLock: isHyprland && Hypr.numLock
+    readonly property bool hasScreencastSession: isNiri
+        && supports("screencastState")
+        && Niri.casts.length > 0
+    readonly property bool hasActiveScreencast: hasScreencastSession
+        && Niri.casts.some(cast => cast.is_active === true)
     readonly property var capabilities: isNiri ? Niri.capabilities : isHyprland ? ({
         workspaceEvents: true,
         windowEvents: true,
@@ -64,6 +69,7 @@ Singleton {
         workspaceRename: true,
         nativeScreenshotSelection: false,
         customScreenshotRegion: true,
+        screencastState: false,
         hyprlandTuning: true
     }) : ({})
 

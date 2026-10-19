@@ -13,9 +13,17 @@ The shipped Shell is integrated with Hyprland through Quickshell's native
 is the capability-aware boundary for shared UI. Niri currently supplies live
 workspace/window events, focus/close/floating/fullscreen actions, workspace
 navigation, monitor power, keyboard layout state/switching, and focused-output
-routing. The bar workspace view and Dashboard window list use these native
-models. Layer-shell surfaces can take explicit keyboard focus without using
-Hyprland's focus-grab object.
+routing. It also tracks Niri's native screencast session events and shows a
+generic status indicator while a capture session is open; the Shell does not
+display the captured target or consuming application. The bar workspace view
+and Dashboard window list use these native models. Layer-shell surfaces can
+take explicit keyboard focus without using Hyprland's focus-grab object.
+
+The indicator distinguishes an open stream from one currently sending frames.
+It is status-only and does not disclose the captured window, output, or
+consumer. It does not provide the capture path itself: portal capture still
+depends on a running Niri session, PipeWire, and the GNOME ScreenCast portal,
+as described in [Niri's screencasting guide](https://niri-wm.github.io/niri/Screencasting.html).
 
 This experimental integration now has a passing single-output graphical
 baseline in the disposable Hornero QA guest, but that acceptance does not
@@ -70,7 +78,7 @@ to cover:
 | Workspaces | list, active/focused state, focus, move | Preserve native IDs and activation semantics. |
 | Windows | active/list state, focus, close, fullscreen | Thumbnail capture is optional. |
 | Outputs | enumerate, focused output, screen mapping | Hotplug and scaling behavior must be stated. |
-| Session | launch, lock, idle, screenshot, screencast | Use compositor-specific session integration where needed. |
+| Session | launch, lock, idle, screenshot, screencast | Niri alone reports open screencast sessions to the bar; never claim capture-state support for an adapter that does not expose it. |
 
 Labwc is a future backend candidate. Its `wlr-layer-shell` and
 `wlr-foreign-toplevel-management` integration is distinct from Niri's IPC; it
@@ -87,7 +95,8 @@ website and edition metadata must use the same maturity label as that evidence.
 
 ## Upstream references
 
-- [Niri IPC and event stream](https://niri-wm.github.io/niri/IPC.html)
+- [Niri IPC and event stream](https://niri-wm.github.io/niri/IPC.html), including
+  the [screencast events](https://niri-wm.github.io/niri/niri_ipc/enum.Event.html)
 - [Niri workspaces](https://niri-wm.github.io/niri/Workspaces.html)
 - [Niri screencasting](https://niri-wm.github.io/niri/Screencasting.html)
 - [Labwc integration](https://labwc.github.io/integration.html)

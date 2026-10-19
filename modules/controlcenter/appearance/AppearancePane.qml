@@ -137,7 +137,7 @@ Item {
         if (theme) {
             if (previewSource === "theme" && previewThemeId === theme.id)
                 return;
-            startThemePreview(theme, Themes.palettePreviewPathFor(theme, true));
+            startThemePreview(theme, Themes.palettePreviewPathFor(theme, true), "");
             previewSubtitle = previewSubtitle
                 ? `${previewSubtitle} · ${qsTr("Current look")}`
                 : qsTr("Current look");
@@ -249,6 +249,7 @@ Item {
     property string previewSource: ""
     property string previewTitle: ""
     property string previewSubtitle: ""
+    property string previewReadinessDetails: ""
     property string previewVariant: ""
     property string previewMode: ""
     property string previewWallpaperPath: ""
@@ -526,7 +527,7 @@ Item {
         scheduleGeneratedPreview(path, previewMode || pendingMode, previewSchemeType);
     }
 
-    function startThemePreview(modelData: var, resolvedWallpaper: string): void {
+    function startThemePreview(modelData: var, resolvedWallpaper: string, readinessDetails: string): void {
         if (!modelData)
             return;
 
@@ -534,6 +535,7 @@ Item {
         previewSource = "theme";
         previewTitle = modelData.name ?? modelData.id ?? qsTr("Theme");
         previewSubtitle = modelData.description ?? qsTr("Theme pack");
+        previewReadinessDetails = readinessDetails;
         previewVariant = modelData.schemeType ?? "";
         previewMode = modelData.darkMode ? "dark" : "light";
         previewWallpaperPath = resolvedWallpaper || Wallpapers.actualCurrent || "";
@@ -570,6 +572,7 @@ Item {
         previewSource = "";
         previewTitle = "";
         previewSubtitle = "";
+        previewReadinessDetails = "";
         previewVariant = "";
         previewMode = "";
         previewWallpaperPath = "";
@@ -885,6 +888,7 @@ Item {
                     source: root.previewSource
                     titleText: root.previewTitle
                     subtitleText: root.previewSubtitle
+                    readinessDetails: root.previewReadinessDetails
                     variantText: root.previewVariant
                     modeText: root.previewMode
                     wallpaperPath: root.previewWallpaperPath || root.pendingWallpaperPath

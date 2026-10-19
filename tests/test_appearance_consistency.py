@@ -156,7 +156,7 @@ def test_color_only_theme_preview_preserves_the_current_wallpaper():
     launcher = (ROOT / "modules" / "launcher" / "services" / "Themes.qml").read_text()
     pane = (ROOT / "modules" / "controlcenter" / "appearance" / "AppearancePane.qml").read_text()
     section = (ROOT / "modules" / "controlcenter" / "appearance" / "sections" / "ThemesSection.qml").read_text()
-    preview = pane.split("function startThemePreview(modelData: var, resolvedWallpaper: string): void", 1)[1].split(
+    preview = pane.split("function startThemePreview(modelData: var, resolvedWallpaper: string, readinessDetails: string): void", 1)[1].split(
         "function clearPreviewFor", 1
     )[0]
 
@@ -176,8 +176,8 @@ def test_color_only_theme_preview_preserves_the_current_wallpaper():
     assert "if (useCurrentFallback)" in palette_preview_path
     assert 'return Wallpapers.actualCurrent || "";' in palette_preview_path
     assert 'return palettePreviewPathFor(theme, false) || theme.preview || Wallpapers.actualCurrent || "";' in theme_preview_path
-    assert "startThemePreview(themeItem.modelData, Themes.palettePreviewPathFor(themeItem.modelData, true))" in section
-    assert "startThemePreview(theme, Themes.palettePreviewPathFor(theme, true))" in pane
+    assert "startThemePreview(themeItem.modelData, Themes.palettePreviewPathFor(themeItem.modelData, true), themeItem.readinessDetails)" in section
+    assert 'startThemePreview(theme, Themes.palettePreviewPathFor(theme, true), "")' in pane
 
 
 def test_recipe_without_wallpaper_uses_the_current_wallpaper_when_applying():
@@ -294,6 +294,23 @@ def test_theme_cards_distinguish_unverified_gtk_and_icon_dependencies():
     assert "Checking installed icon styles…" in icons
     assert "!ThemeCatalogue.appearanceChoicesLoading" in gtk
     assert "!ThemeCatalogue.appearanceChoicesLoading" in icons
+
+
+def test_theme_readiness_keeps_theme_rows_compact_and_explains_requirements_in_preview():
+    themes = (ROOT / "modules" / "controlcenter" / "appearance" / "sections" / "ThemesSection.qml").read_text()
+    pane = (ROOT / "modules" / "controlcenter" / "appearance" / "AppearancePane.qml").read_text()
+    preview = (ROOT / "modules" / "controlcenter" / "appearance" / "AppearancePreviewPane.qml").read_text()
+
+    assert "text: themeItem.readinessText" in themes
+    assert "maximumLineCount: 1" in themes
+    assert "Accessible.description: themeItem.readinessDetails" in themes
+    assert "themeItem.readinessText + (themeItem.readinessDetails" not in themes
+    assert "themeItem.readinessDetails);" in themes
+    assert 'property string previewReadinessDetails: ""' in pane
+    assert "previewReadinessDetails = readinessDetails;" in pane
+    assert "readinessDetails: root.previewReadinessDetails" in pane
+    assert "root.readinessDetails" in preview
+    assert 'qsTr("Theme requirements")' in preview
 
 
 def test_generated_theme_preview_keeps_latest_request_authoritative():

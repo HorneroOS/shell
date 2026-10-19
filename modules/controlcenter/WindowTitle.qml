@@ -35,6 +35,10 @@ StyledRect {
         implicitHeight: closeIcon.implicitHeight + Appearance.padding.small
 
         Interactive {
+            Accessible.role: Accessible.Button
+            Accessible.name: qsTr("Close Settings window")
+            Accessible.description: qsTr("Close the floating Settings window")
+
             radius: Appearance.rounding.full
 
             function onClicked(): void {

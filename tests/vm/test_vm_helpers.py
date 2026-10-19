@@ -455,6 +455,12 @@ def test_provision_installs_native_plugin_deps():
     # requires libqalculate, so provision.sh must install it.
     provision = (LIB_DIR / "provision.sh").read_text()
     assert "libqalculate" in provision
+    # The official Arch cava package is CLI-only; the graphical harness builds
+    # the required shared library from a pinned AUR source revision.
+    installer = (LIB_DIR / "install-libcava.sh").read_text()
+    assert "pkg-config --exists libcava" in installer
+    assert "39403443c8208f5d9adaaed7c8347c439efe52cf" in installer
+    assert "makepkg --syncdeps --install" in installer
 
 
 def test_provision_installs_shell_icon_font():

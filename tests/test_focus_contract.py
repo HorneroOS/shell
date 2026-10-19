@@ -189,6 +189,12 @@ def test_bluetooth_fab_actions_cannot_fire_after_menu_closes():
     assert action.index("if (!root.session.bt.fabMenuOpen)") < action.index(
         "root.session.bt.fabMenuOpen = false"
     )
+def test_floating_settings_close_button_is_keyboard_accessible():
+    src = (ROOT / "modules" / "controlcenter" / "WindowTitle.qml").read_text()
+    assert "Interactive {" in src
+    assert "Accessible.role: Accessible.Button" in src
+    assert 'Accessible.name: qsTr("Close Settings window")' in src
+    assert 'Accessible.description: qsTr("Close the floating Settings window")' in src
 
 
 def test_rows_have_single_tab_stop():

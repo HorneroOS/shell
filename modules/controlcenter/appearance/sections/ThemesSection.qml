@@ -193,7 +193,7 @@ CollapsibleSection {
                         function onClicked(): void {
                             sectionRoot.selectedThemeId = themeItem.modelData.id;
                             previewController.stageThemeApply(themeItem.modelData.id);
-                            previewController.startThemePreview(themeItem.modelData, Themes.palettePreviewPathFor(themeItem.modelData, true));
+                            previewController.startThemePreview(themeItem.modelData, Themes.palettePreviewPathFor(themeItem.modelData, true), themeItem.readinessDetails);
                             previewController.commitPending();
                         }
                     }
@@ -202,7 +202,7 @@ CollapsibleSection {
                         anchors.fill: parent
                         acceptedButtons: Qt.NoButton
                         hoverEnabled: true
-                        onEntered: previewController.startThemePreview(themeItem.modelData, Themes.palettePreviewPathFor(themeItem.modelData, true))
+                        onEntered: previewController.startThemePreview(themeItem.modelData, Themes.palettePreviewPathFor(themeItem.modelData, true), themeItem.readinessDetails)
                     }
 
                     ColumnLayout {
@@ -282,11 +282,13 @@ CollapsibleSection {
                                 StyledText {
                                     visible: themeItem.hasReadinessNotice
                                     width: parent.width
-                                    text: themeItem.readinessText + (themeItem.readinessDetails ? ". " + themeItem.readinessDetails : "")
+                                    text: themeItem.readinessText
                                     font.pointSize: Appearance.font.size.smaller
                                     color: Colours.palette.m3tertiary
-                                    wrapMode: Text.WordWrap
-                                    maximumLineCount: 5
+                                    elide: Text.ElideRight
+                                    maximumLineCount: 1
+                                    Accessible.name: themeItem.readinessText
+                                    Accessible.description: themeItem.readinessDetails
                                 }
 
                             }

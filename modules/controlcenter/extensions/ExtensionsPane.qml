@@ -10,18 +10,55 @@ import qs.services
 import qs.config
 import QtQuick
 import QtQuick.Layouts
+import Quickshell.Io
 
-// Control Center › Extensions: read-only view of community plugins.
-// horneroctl is the single writer of plugin lifecycle state
-// (install/enable/disable/remove), so this pane never mutates
-// receipts or payloads: it shows what the Plugins service discovered,
-// each plugin's load state, and offers re-discovery (reload). Enable
-// and disable stay explicit CLI actions until a GUI lifecycle with
-// the same consent gates exists.
+// Control Center › Extensions: community plugin lifecycle.
+// horneroctl stays the single writer of plugin lifecycle state: this
+// pane never writes receipts or payloads itself, it only invokes
+// `horneroctl plugin enable|disable <id> --yes` — the exact CLI
+// commands — and re-reads state through the Plugins service. Enable
+// (the direction that runs third-party QML as your user) requires an
+// explicit inline confirmation, mirroring the CLI --yes gate.
+// Install and remove stay CLI-only.
 Item {
     id: root
 
     required property Session session
+
+    property string pendingEnable: ""
+    property string actionError: ""
+    property var actionEnvelope: null
+
+    function runLifecycle(action, pluginId) {
+        root.actionError = "";
+        root.actionEnvelope = null;
+        lifecycleProc.command = ["horneroctl", "--json", "plugin", action, pluginId, "--yes"];
+        lifecycleProc.running = true;
+    }
+
+    Process {
+        id: lifecycleProc
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    root.actionEnvelope = JSON.parse(text);
+                } catch (e) {
+                    root.actionEnvelope = null;
+                }
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            const env = root.actionEnvelope;
+            if (env && env.ok === true) {
+                root.pendingEnable = "";
+                root.actionError = "";
+                Plugins.reload();
+            } else {
+                root.actionError = (env && env.message) ? String(env.message) : qsTr("Plugin action failed (exit %1).").arg(exitCode);
+            }
+        }
+    }
 
     anchors.fill: parent
 
@@ -62,7 +99,7 @@ Item {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: qsTr("Community plugins run with your user's permissions — they are not sandboxed. Only enable plugins whose source you have reviewed. Manage them with: horneroctl plugin list / enable / disable")
+                    text: qsTr("Community plugins run with your user's permissions — they are not sandboxed. Only enable plugins whose source you have reviewed. Enabling asks for confirmation here; install and remove stay in the CLI: horneroctl plugin install / remove")
                     font.pointSize: Appearance.font.size.small
                     color: Colours.palette.m3outline
                     wrapMode: Text.Wrap
@@ -72,6 +109,15 @@ Item {
                     text: qsTr("Reload plugin list")
                     type: TextButton.Tonal
                     onClicked: Plugins.reload()
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
+                    visible: root.actionError.length > 0
+                    text: root.actionError
+                    font.pointSize: Appearance.font.size.small
+                    color: Colours.palette.m3error
+                    wrapMode: Text.Wrap
                 }
 
                 StyledText {
@@ -123,6 +169,54 @@ Item {
                                 font.pointSize: Appearance.font.size.small
                                 color: Colours.palette.m3error
                                 wrapMode: Text.Wrap
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                visible: root.pendingEnable === row.modelData.id
+                                text: qsTr("This plugin's QML will run as your user, without a sandbox. Enable only if you reviewed its source.")
+                                font.pointSize: Appearance.font.size.small
+                                color: Colours.palette.m3error
+                                wrapMode: Text.Wrap
+                            }
+
+                            RowLayout {
+                                spacing: Appearance.spacing.small
+
+                                TextButton {
+                                    visible: !row.modelData.enabled && root.pendingEnable !== row.modelData.id
+                                    enabled: !lifecycleProc.running
+                                    text: qsTr("Enable…")
+                                    type: TextButton.Tonal
+                                    onClicked: {
+                                        root.actionError = "";
+                                        root.pendingEnable = row.modelData.id;
+                                    }
+                                }
+
+                                TextButton {
+                                    visible: root.pendingEnable === row.modelData.id
+                                    enabled: !lifecycleProc.running
+                                    text: qsTr("Confirm enable")
+                                    type: TextButton.Filled
+                                    onClicked: root.runLifecycle("enable", row.modelData.id)
+                                }
+
+                                TextButton {
+                                    visible: root.pendingEnable === row.modelData.id
+                                    enabled: !lifecycleProc.running
+                                    text: qsTr("Cancel")
+                                    type: TextButton.Text
+                                    onClicked: root.pendingEnable = ""
+                                }
+
+                                TextButton {
+                                    visible: row.modelData.enabled
+                                    enabled: !lifecycleProc.running
+                                    text: qsTr("Disable")
+                                    type: TextButton.Tonal
+                                    onClicked: root.runLifecycle("disable", row.modelData.id)
+                                }
                             }
                         }
                     }

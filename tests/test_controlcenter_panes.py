@@ -477,12 +477,17 @@ def test_settings_close_releases_window_and_uses_registered_titles():
     assert "WindowFactory.closeWindow(QsWindow.window)" in title
 
 
-def test_extensions_pane_is_read_only_over_plugins_service():
+def test_extensions_pane_lifecycle_goes_through_horneroctl_with_consent():
     pane = (CC / "extensions" / "ExtensionsPane.qml").read_text()
     assert "Plugins.entries" in pane and "Plugins.reload()" in pane
-    # Lifecycle writes stay in horneroctl (single writer): the pane must
-    # never invoke plugin install/enable/disable/remove itself.
-    for banned in ("plugin\", \"install", "plugin\", \"enable",
-                   "plugin\", \"disable", "plugin\", \"remove"):
-        assert banned not in pane, f"extensions pane must stay read-only: {banned}"
+    # horneroctl stays the single writer: the pane never writes receipts
+    # or payloads; enable/disable go through the exact CLI argv (with
+    # --json first), and enable requires an inline confirmation step
+    # mirroring the CLI --yes gate. Install/remove stay CLI-only.
+    assert '["horneroctl", "--json", "plugin", action, pluginId, "--yes"]' in pane
+    assert "pendingEnable" in pane and "Confirm enable" in pane
+    assert "runLifecycle(\"enable\"" in pane and "runLifecycle(\"disable\"" in pane
+    for banned in ('"plugin", "install', '"plugin", "remove',
+                   "plugins-receipts"):
+        assert banned not in pane, f"extensions pane must not do this itself: {banned}"
     assert "not sandboxed" in pane

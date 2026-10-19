@@ -147,6 +147,16 @@ QtObject {
             readonly property list<string> keywords: ["about", "hardware", "diagnostics", "version"]
         },
         QtObject {
+            readonly property string id: "extensions"
+            readonly property string label: "extensions"
+            readonly property string title: qsTr("Extensions")
+            readonly property string icon: "extension"
+            readonly property string component: "extensions/ExtensionsPane.qml"
+            readonly property string category: "system"
+            readonly property string description: qsTr("Community plugins and their load state")
+            readonly property list<string> keywords: ["plugins", "addons", "community"]
+        },
+        QtObject {
             readonly property string id: "updates"
             readonly property string label: "updates"
             readonly property string title: qsTr("Updates")

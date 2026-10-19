@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "example-dashboard-note",
+  "name": "Example Dashboard Note",
+  "version": "1.0.0",
+  "description": "A minimal dashboard-placement example for the Hornero Shell extension contract.",
+  "author": "HorneroOS contributors",
+  "license": "MIT",
+  "entrypoint": "Main.qml",
+  "files": [
+    "Main.qml",
+    "README.md",
+    "LICENSE"
+  ],
+  "capabilities": {
+    "processCommands": [],
+    "networkHosts": [],
+    "settings": {}
+  },
+  "placement": "dashboard"
+}

@@ -57,6 +57,11 @@ Item {
             iconName: "workspaces"
             text: qsTr("Workspaces")
         }
+
+        Tab {
+            iconName: "extension"
+            text: qsTr("Extensions")
+        }
     }
 
     Item {

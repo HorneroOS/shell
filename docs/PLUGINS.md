@@ -1,6 +1,6 @@
 # Hornero Shell extension contract
 
-**Status: runtime slice 2 (headless loader + bar placement).** The
+**Status: runtime slice 3 (headless loader + bar + dashboard placements).** The
 Shell now discovers plugins that `horneroctl plugin list` reports as
 enabled and installed, and instantiates each manifest entrypoint in
 its own Loader (`modules/plugins/PluginHost.qml`, state in
@@ -12,7 +12,10 @@ enabling re-validates the installed payload. Background plugins
 declare `"placement": "bar"`: the plugin is then rendered in the
 bar's end group (`modules/plugins/PluginBarWidgets.qml`), still in
 its own Loader, so one failing plugin cannot take the bar down.
-Dashboard/desktop placements do not exist yet.
+With `"placement": "dashboard"` the entrypoint renders as a card
+in the dashboard Extensions tab
+(`modules/plugins/PluginDashboardCards.qml`), under the same
+per-plugin Loader isolation. Desktop placement does not exist yet.
 `Hornero.PluginKit` remains a reserved import surface; it is not yet
 provided by the Shell package.
 
@@ -61,9 +64,10 @@ Minimal manifest:
 }
 ```
 
-`placement` is optional: `"background"` (default, headless) or
-`"bar"` (rendered in the bar end group). Unknown values are
-rejected by the validator and by the runtime host.
+`placement` is optional: `"background"` (default, headless),
+`"bar"` (rendered in the bar end group), or `"dashboard"`
+(rendered as a card in the dashboard Extensions tab). Unknown
+values are rejected by the validator and by the runtime host.
 
 Use `processCommands` to disclose exact executable basenames and
 `networkHosts` to disclose intended network hosts. These fields support code

@@ -15,7 +15,10 @@ import QtQuick
 // entrypoints are instantiated under an invisible root. Plugins whose
 // manifest declares `placement: "bar"` are not loaded here; the bar
 // renders them in its end group (modules/plugins/PluginBarWidgets.qml
-// via modules/bar/Bar.qml). Other placements are rejected.
+// via modules/bar/Bar.qml). `placement: "dashboard"` plugins are
+// rendered as cards by the dashboard Extensions tab
+// (modules/plugins/PluginDashboardCards.qml). Other placements are
+// rejected.
 // Plugin QML runs with full user privileges — see services/Plugins.qml
 // for the trust label.
 Scope {
@@ -50,8 +53,8 @@ Scope {
                             return;
                         }
                         const placement = typeof manifest.placement === "string" ? manifest.placement : "background";
-                        if (placement !== "background" && placement !== "bar") {
-                            Plugins.markFailed(slot.modelData.id, "manifest placement must be background or bar");
+                        if (placement !== "background" && placement !== "bar" && placement !== "dashboard") {
+                            Plugins.markFailed(slot.modelData.id, "manifest placement must be background, bar or dashboard");
                             return;
                         }
                         slot.placement = placement;
@@ -68,7 +71,7 @@ Scope {
             Loader {
                 id: pluginLoader
 
-                active: slot.entrypoint !== "" && slot.placement !== "bar"
+                active: slot.entrypoint !== "" && slot.placement !== "bar" && slot.placement !== "dashboard"
                 source: active ? `file://${slot.pluginDir}/${slot.entrypoint}` : ""
                 asynchronous: true
 

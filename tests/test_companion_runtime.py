@@ -196,7 +196,7 @@ def test_assistant_bridge_horneroctl_mediated():
 
 def test_assistant_ipc_surface():
     assert "AssistantBridge" in HOST
-    for fn in ("ask(", "askStop("):
+    for fn in ("ask(", "askStop(", "approve(", "clarify(", "events("):
         assert f"function {fn}" in HOST, f"companion IPC missing {fn}"
     doc = (ROOT / "docs" / "IPC.md").read_text()
     assert "askStop()" in doc
@@ -324,3 +324,12 @@ def test_control_center_dead_close_stub_removed():
     # teardown. The stub must not come back.
     cc = (ROOT / "modules" / "controlcenter" / "ControlCenter.qml").read_text()
     assert "function close()" not in cc
+
+
+def test_bridge_approval_ux_is_explicit_and_cli_mediated():
+    for verb in ("approve", "clarify", "events"):
+        assert f'"assistant", "{verb}"' in BRIDGE
+    # Decisions are never auto-answered: approve only forwards the
+    # exact user-typed choice, validated before any process runs.
+    assert 'choice !== "approve" && choice !== "deny"' in BRIDGE
+    assert "approve(runId" in BRIDGE and "clarify(runId" in BRIDGE

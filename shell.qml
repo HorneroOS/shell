@@ -7,6 +7,7 @@ import "modules/drawers"
 import "modules/background"
 import "modules/areapicker"
 import "modules/companion"
+import "modules/plugins"
 import "modules/lock"
 import "modules/welcome"
 import Quickshell
@@ -23,6 +24,7 @@ ShellRoot {
     CompanionHost {
         lock: lock.lock
     }
+    PluginHost {}
     Startup {}
     BatteryMonitor {}
     IdleMonitors {

@@ -1,9 +1,17 @@
 # Hornero Shell extension contract
 
-**Status: contract and static validator only.** The Shell does not yet discover,
-load, configure, or install third-party extensions. `Hornero.PluginKit` is a
-reserved stable import surface for a future host implementation; it is not
-provided by the current Shell package.
+**Status: runtime slice 1 (headless loader).** The Shell now discovers
+plugins that `horneroctl plugin list` reports as enabled and installed,
+and instantiates each manifest entrypoint in its own Loader
+(`modules/plugins/PluginHost.qml`, state in `services/Plugins.qml`,
+inspect via `qs ipc call plugins status`, re-discover with
+`qs ipc call plugins reload`). Lifecycle (install, enable, disable,
+remove) is owned by `horneroctl plugin ...`; enabling re-validates the
+installed payload. Slice 1 is headless: entrypoints run under an
+invisible root, so background/logic plugins work and visual plugins
+load but render nothing until the placement contract lands.
+`Hornero.PluginKit` remains a reserved import surface; it is not yet
+provided by the Shell package.
 
 This contract gives community authors and maintainers a reviewable package
 shape before a runtime loader exists. The manifest schema is

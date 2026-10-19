@@ -30,6 +30,7 @@ other HorneroOS components script against; renames must update
 | `picker` | `modules/areapicker/AreaPicker.qml` | `open()`, `openFreeze()` (+ close variants per file) |
 | `lock` | `modules/lock/Lock.qml` | `lock()`, `unlock()` |
 | `companion` | `modules/companion/CompanionHost.qml` | `summon()`, `hide()`, `toggle()`, `say(text, timeoutMs)`, `tip()`, `play(animation)`, `setState(state)`, `setSkin(skin)`, `resetPosition()`, `status()`, `ask(text)`, `askStop()` |
+| `plugins` | `modules/plugins/PluginHost.qml` | `status()`, `reload()` |
 | `debug` | `modules/drawers/Drawers.qml` | `borders()`, `dump()`, `focusState()` (debug only) |
 
 Drawer names accepted by `drawers toggle` are the boolean keys of

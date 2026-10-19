@@ -52,8 +52,8 @@ def test_dashboard_layout_tab_removed_per_adr003():
         assert "Math.min(root.state.currentTab" in path.read_text(), \
             f"{path.name} must clamp a stale persisted tab index"
     pane_ids = re.findall(r"index:\s*(\d+)", CONTENT.read_text())
-    assert sorted(pane_ids) == ["0", "1", "2", "3", "4"], \
-        f"dashboard panes must be 0-4 contiguous, got {pane_ids}"
+    assert sorted(pane_ids) == ["0", "1", "2", "3", "4", "5"], \
+        f"dashboard panes must be 0-5 contiguous, got {pane_ids}"
 
 
 def test_dash_media_empty_state_says_no_media_once():

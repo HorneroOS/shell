@@ -67,3 +67,31 @@ def test_bar_placement_contract():
     assert "Plugins.barPlugins()" in WIDGETS
     assert "PluginBarWidgets" in BAR and 'group.name === "end"' in BAR
     assert "Loader.Error" in WIDGETS and "Plugins.markFailed" in WIDGETS
+
+
+CARDS = (ROOT / "modules" / "plugins" / "PluginDashboardCards.qml").read_text()
+EXTENSIONS_PANE = (ROOT / "modules" / "dashboard" / "Extensions.qml").read_text()
+DASH_CONTENT = (ROOT / "modules" / "dashboard" / "Content.qml").read_text()
+DASH_TABS = (ROOT / "modules" / "dashboard" / "Tabs.qml").read_text()
+VALIDATOR = (ROOT / "scripts" / "validate_plugin.py").read_text()
+
+
+def test_dashboard_placement_contract():
+    assert '"dashboard"' in SCHEMA
+    assert '"dashboard"' in VALIDATOR
+    assert 'placement !== "dashboard"' in HOST
+    # Dashboard plugins are not double-loaded by the headless host.
+    assert 'slot.placement !== "dashboard"' in HOST
+    assert "function dashboardPlugins()" in SERVICE
+    assert "Plugins.dashboardPlugins()" in CARDS
+    # Per-plugin Loader isolation and honest failure marking, same
+    # contract as the bar placement.
+    assert "Loader.Error" in CARDS and "Plugins.markFailed" in CARDS
+    assert "Plugins.markLoaded" in CARDS
+    # The dashboard exposes the placement as its own tab (index 5).
+    assert "PluginDashboardCards" in EXTENSIONS_PANE
+    assert "sourceComponent: Extensions {}" in DASH_CONTENT
+    assert 'text: qsTr("Extensions")' in DASH_TABS
+    # The shipped example validates the placement end to end.
+    example = ROOT / "examples" / "plugins" / "example-dashboard-note" / "manifest.json"
+    assert '"placement": "dashboard"' in example.read_text()

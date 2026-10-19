@@ -129,6 +129,11 @@ Item {
                     index: 4
                     sourceComponent: Workspaces {}
                 }
+
+                Pane {
+                    index: 5
+                    sourceComponent: Extensions {}
+                }
             }
 
             Behavior on contentX {

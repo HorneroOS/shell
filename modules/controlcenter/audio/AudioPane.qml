@@ -95,7 +95,7 @@ Item {
                                     color: Audio.sink?.id === modelData.id ? Colours.layer(Colours.palette.m3surfaceContainer, 2) : "transparent"
                                     radius: Appearance.rounding.normal
 
-                                    StateLayer {
+                                    Interactive {
                                         function onClicked(): void {
                                             Audio.setAudioSink(modelData);
                                         }
@@ -177,7 +177,7 @@ Item {
                                     color: Audio.source?.id === modelData.id ? Colours.layer(Colours.palette.m3surfaceContainer, 2) : "transparent"
                                     radius: Appearance.rounding.normal
 
-                                    StateLayer {
+                                    Interactive {
                                         function onClicked(): void {
                                             Audio.setAudioSource(modelData);
                                         }
@@ -324,7 +324,7 @@ Item {
                                     radius: Appearance.rounding.normal
                                     color: Audio.muted ? Colours.palette.m3secondary : Colours.palette.m3secondaryContainer
 
-                                    StateLayer {
+                                    Interactive {
                                         function onClicked(): void {
                                             if (Audio.sink?.audio) {
                                                 Audio.sink.audio.muted = !Audio.sink.audio.muted;
@@ -439,7 +439,7 @@ Item {
                                     radius: Appearance.rounding.normal
                                     color: Audio.sourceMuted ? Colours.palette.m3secondary : Colours.palette.m3secondaryContainer
 
-                                    StateLayer {
+                                    Interactive {
                                         function onClicked(): void {
                                             if (Audio.source?.audio) {
                                                 Audio.source.audio.muted = !Audio.source.audio.muted;
@@ -570,7 +570,7 @@ Item {
                                             radius: Appearance.rounding.normal
                                             color: Audio.getStreamMuted(modelData) ? Colours.palette.m3secondary : Colours.palette.m3secondaryContainer
 
-                                            StateLayer {
+                                            Interactive {
                                                 function onClicked(): void {
                                                     Audio.setStreamMuted(modelData, !Audio.getStreamMuted(modelData));
                                                 }

@@ -36,7 +36,7 @@ CollapsibleSection {
                 border.width: modelData.variant === previewController.pendingVariant ? 1 : 0
                 border.color: Colours.palette.m3primary
 
-                StateLayer {
+                Interactive {
                     function onClicked(): void {
                         const variant = modelData.variant;
 

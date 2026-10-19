@@ -187,7 +187,7 @@ CollapsibleSection {
                     border.width: themeItem.isStaged ? 1 : 0
                     border.color: Colours.palette.m3primary
 
-                    StateLayer {
+                    Interactive {
                         disabled: themeItem.cannotApply
 
                         function onClicked(): void {
@@ -412,7 +412,7 @@ CollapsibleSection {
                                     }
                                 }
 
-                                StateLayer {
+                                Interactive {
                                     radius: Appearance.rounding.small
                                     disabled: !wallpaperThumb.available
 

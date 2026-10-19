@@ -327,7 +327,7 @@ Item {
                                 opacity = 1;
                             }
 
-                            StateLayer {
+                            Interactive {
                                 function onClicked(): void {
                                     root.session.launcher.active = modelData;
                                 }

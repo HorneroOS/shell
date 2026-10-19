@@ -8,6 +8,57 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 CONTROLS = ROOT / "components" / "controls"
+CONTROL_CENTER = ROOT / "modules" / "controlcenter"
+
+
+def _state_layer_blocks(source: str):
+    """Return complete StateLayer blocks without matching nested items."""
+    start = 0
+    while (index := source.find("StateLayer {", start)) >= 0:
+        opening = index + len("StateLayer ")
+        depth = 0
+        quote = None
+        escaped = False
+        line_comment = False
+        block_comment = False
+        cursor = opening
+        while cursor < len(source):
+            char = source[cursor]
+            following = source[cursor + 1] if cursor + 1 < len(source) else ""
+            if line_comment:
+                if char == "\n":
+                    line_comment = False
+            elif block_comment:
+                if char == "*" and following == "/":
+                    block_comment = False
+                    cursor += 1
+            elif quote:
+                if escaped:
+                    escaped = False
+                elif char == "\\":
+                    escaped = True
+                elif char == quote:
+                    quote = None
+            elif char == "/" and following == "/":
+                line_comment = True
+                cursor += 1
+            elif char == "/" and following == "*":
+                block_comment = True
+                cursor += 1
+            elif char in ("'", '"', "`"):
+                quote = char
+            elif char == "{":
+                depth += 1
+            elif char == "}":
+                depth -= 1
+                if depth == 0:
+                    end = cursor + 1
+                    yield source[index:end]
+                    start = end
+                    break
+            cursor += 1
+        else:
+            raise AssertionError("unclosed StateLayer block")
 
 
 def test_interactive_owns_the_contract():
@@ -54,6 +105,27 @@ def test_migrated_controls_use_interactive():
         src = (ROOT / rel).read_text()
         assert "Interactive {" in src, f"{rel} not migrated"
         assert "StateLayer {" not in src, f"{rel} still has bare StateLayer"
+
+
+def test_control_center_activations_use_the_keyboard_interactive_layer():
+    """Clickable rows are keyboard controls; only the custom list and text
+    editor keep mouse-only StateLayers for their existing keyboard model."""
+    mouse_only = {
+        CONTROL_CENTER / "SettingsSearch.qml",
+        CONTROL_CENTER / "network" / "WirelessPasswordDialog.qml",
+    }
+    remaining = {}
+    for path in CONTROL_CENTER.rglob("*.qml"):
+        for block in _state_layer_blocks(path.read_text()):
+            if "onClicked" in block:
+                remaining[path] = remaining.get(path, 0) + 1
+
+    assert remaining == {path: 1 for path in mouse_only}
+
+    settings_search = (CONTROL_CENTER / "SettingsSearch.qml").read_text()
+    assert "Qt.Key_Down" in settings_search and "Qt.Key_Return" in settings_search
+    password_dialog = (CONTROL_CENTER / "network" / "WirelessPasswordDialog.qml").read_text()
+    assert "passwordContainer.forceActiveFocus()" in password_dialog
 
 
 def test_presentational_statelayer_stays_unfocusable():
@@ -104,6 +176,19 @@ def test_menu_keyboard_and_escape_first():
     assert "StateLayer {" in src  # items stay mouse-driven
 
 
+def test_bluetooth_fab_actions_cannot_fire_after_menu_closes():
+    src = (CONTROL_CENTER / "bluetooth" / "Details.qml").read_text()
+    action = src.split("// These menu actions remain", 1)[1]
+    action = action.split("RowLayout {\n                    id: fabMenuItemInner", 1)[0]
+    assert "disabled: !root.session.bt.fabMenuOpen" in action
+    assert "if (!root.session.bt.fabMenuOpen)" in action
+    assert "fabState.forceActiveFocus()" in action
+    assert action.index("fabState.forceActiveFocus()") < action.index(
+        "root.session.bt.fabMenuOpen = false"
+    )
+    assert action.index("if (!root.session.bt.fabMenuOpen)") < action.index(
+        "root.session.bt.fabMenuOpen = false"
+    )
 def test_floating_settings_close_button_is_keyboard_accessible():
     src = (ROOT / "modules" / "controlcenter" / "WindowTitle.qml").read_text()
     assert "Interactive {" in src

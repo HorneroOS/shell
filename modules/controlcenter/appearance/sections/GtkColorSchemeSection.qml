@@ -74,7 +74,7 @@ CollapsibleSection {
                 border.width: isCurrent ? 1 : 0
                 border.color: Colours.palette.m3primary
 
-                StateLayer {
+                Interactive {
                     function onClicked(): void {
                         previewController.startGtkColorSchemePreview(modelData.id);
                         previewController.stageGtkColorScheme(modelData.id);

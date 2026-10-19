@@ -131,7 +131,7 @@ ColumnLayout {
                     implicitWidth: adapterPicker.implicitWidth + Appearance.padding.normal * 2
                     implicitHeight: adapterPicker.implicitHeight + Appearance.padding.smaller * 2
 
-                    StateLayer {
+                    Interactive {
                         radius: Appearance.rounding.small
 
                         function onClicked(): void {
@@ -210,7 +210,7 @@ ColumnLayout {
                                     Layout.fillWidth: true
                                     implicitHeight: adapterInner.implicitHeight + Appearance.padding.normal * 2
 
-                                    StateLayer {
+                                    Interactive {
                                         disabled: !adapterPickerButton.expanded
 
                                         function onClicked(): void {
@@ -386,7 +386,7 @@ ColumnLayout {
                     opacity: root.session.bt.editingAdapterName ? 1 : 0
                     scale: root.session.bt.editingAdapterName ? 1 : 0.5
 
-                    StateLayer {
+                    Interactive {
                         color: Colours.palette.m3onSecondaryContainer
                         disabled: !root.session.bt.editingAdapterName
 
@@ -424,7 +424,7 @@ ColumnLayout {
                     radius: root.session.bt.editingAdapterName ? Appearance.rounding.small : implicitHeight / 2 * Math.min(1, Appearance.rounding.scale)
                     color: Qt.alpha(Colours.palette.m3primary, root.session.bt.editingAdapterName ? 1 : 0)
 
-                    StateLayer {
+                    Interactive {
                         color: root.session.bt.editingAdapterName ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
 
                         function onClicked(): void {

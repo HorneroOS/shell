@@ -475,3 +475,14 @@ def test_settings_close_releases_window_and_uses_registered_titles():
     assert "readonly property string activeTitle: PaneRegistry.getById(active)?.title ?? active" in session
     assert "root.session.activeTitle" in title
     assert "WindowFactory.closeWindow(QsWindow.window)" in title
+
+
+def test_extensions_pane_is_read_only_over_plugins_service():
+    pane = (CC / "extensions" / "ExtensionsPane.qml").read_text()
+    assert "Plugins.entries" in pane and "Plugins.reload()" in pane
+    # Lifecycle writes stay in horneroctl (single writer): the pane must
+    # never invoke plugin install/enable/disable/remove itself.
+    for banned in ("plugin\", \"install", "plugin\", \"enable",
+                   "plugin\", \"disable", "plugin\", \"remove"):
+        assert banned not in pane, f"extensions pane must stay read-only: {banned}"
+    assert "not sandboxed" in pane

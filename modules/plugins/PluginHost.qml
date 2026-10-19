@@ -53,8 +53,8 @@ Scope {
                             return;
                         }
                         const placement = typeof manifest.placement === "string" ? manifest.placement : "background";
-                        if (placement !== "background" && placement !== "bar" && placement !== "dashboard") {
-                            Plugins.markFailed(slot.modelData.id, "manifest placement must be background, bar or dashboard");
+                        if (placement !== "background" && placement !== "bar" && placement !== "dashboard" && placement !== "desktop") {
+                            Plugins.markFailed(slot.modelData.id, "manifest placement must be background, bar, dashboard or desktop");
                             return;
                         }
                         slot.placement = placement;
@@ -71,7 +71,7 @@ Scope {
             Loader {
                 id: pluginLoader
 
-                active: slot.entrypoint !== "" && slot.placement !== "bar" && slot.placement !== "dashboard"
+                active: slot.entrypoint !== "" && slot.placement !== "bar" && slot.placement !== "dashboard" && slot.placement !== "desktop"
                 source: active ? `file://${slot.pluginDir}/${slot.entrypoint}` : ""
                 asynchronous: true
 

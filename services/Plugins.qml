@@ -45,6 +45,10 @@ Singleton {
         return root.entries.filter(e => e.enabled && e.installed && e.placement === "dashboard");
     }
 
+    function desktopPlugins(): var {
+        return root.entries.filter(e => e.enabled && e.installed && e.placement === "desktop");
+    }
+
     function markLoaded(id: string): void {
         root.setState(id, "loaded", "");
     }

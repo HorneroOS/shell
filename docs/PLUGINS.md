@@ -19,7 +19,11 @@ its own Loader, so one failing plugin cannot take the bar down.
 With `"placement": "dashboard"` the entrypoint renders as a card
 in the dashboard Extensions tab
 (`modules/plugins/PluginDashboardCards.qml`), under the same
-per-plugin Loader isolation. Desktop placement does not exist yet.
+per-plugin Loader isolation. With `"placement": "desktop"` the
+entrypoint renders as a widget stacked bottom-right on the
+desktop background layer, per screen
+(`modules/plugins/PluginDesktopWidgets.qml`); widget positioning
+and persistence are not configurable yet.
 `Hornero.PluginKit` remains a reserved import surface; it is not yet
 provided by the Shell package.
 

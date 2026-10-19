@@ -706,5 +706,17 @@ Scope {
         function askStop(): void {
             assistantBridge.askStop();
         }
+
+        function approve(runId: string, decision: string): void {
+            assistantBridge.approve((runId ?? "").toString(), (decision ?? "").toString());
+        }
+
+        function clarify(runId: string, answer: string): void {
+            assistantBridge.clarify((runId ?? "").toString(), (answer ?? "").toString());
+        }
+
+        function events(runId: string): void {
+            assistantBridge.events((runId ?? "").toString());
+        }
     }
 }

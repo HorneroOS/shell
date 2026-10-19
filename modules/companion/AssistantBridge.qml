@@ -24,6 +24,7 @@ Scope {
     id: root
 
     property string buffer: ""
+    property string decisionBuffer: ""
     property bool busy: false
 
     function ask(text: string): void {
@@ -41,6 +42,45 @@ Scope {
         askProcess.running = true;
     }
 
+    // Approval / clarification UX: decisions are always explicit user
+    // actions. Nothing here answers Hermes on its own; each function
+    // forwards exactly the decision the user picked through horneroctl,
+    // which remains the only holder of the gateway credential.
+    function approve(runId: string, decision: string): void {
+        const id = (runId ?? "").toString().trim();
+        const choice = (decision ?? "").toString().trim();
+        if (id === "" || (choice !== "approve" && choice !== "deny")) {
+            CompanionStore.say("I need a run id and an approve or deny decision.", 6000);
+            return;
+        }
+        root.decisionBuffer = "";
+        decisionProcess.command = ["horneroctl", "assistant", "approve", id, choice, "--json"];
+        decisionProcess.running = true;
+    }
+
+    function clarify(runId: string, answer: string): void {
+        const id = (runId ?? "").toString().trim();
+        const text = (answer ?? "").toString().trim();
+        if (id === "" || text === "") {
+            CompanionStore.say("I need a run id and your answer.", 6000);
+            return;
+        }
+        root.decisionBuffer = "";
+        decisionProcess.command = ["horneroctl", "assistant", "clarify", id, text, "--json"];
+        decisionProcess.running = true;
+    }
+
+    function events(runId: string): void {
+        const id = (runId ?? "").toString().trim();
+        if (id === "" || root.busy)
+            return;
+        root.buffer = "";
+        root.busy = true;
+        CompanionStore.requestState("thinking");
+        askProcess.command = ["horneroctl", "assistant", "events", id, "--json"];
+        askProcess.running = true;
+    }
+
     function askStop(): void {
         if (!root.busy)
             return;
@@ -48,6 +88,35 @@ Scope {
         root.busy = false;
         CompanionStore.requestState("idle");
         CompanionStore.say("Stopped. The answer may still finish on the Hermes side.", 5000);
+    }
+
+    Process {
+        id: decisionProcess
+
+        stdout: SplitParser {
+            onRead: data => {
+                root.decisionBuffer += data;
+            }
+        }
+
+        onExited: (exitCode, exitStatus) => {
+            let payload = null;
+            try {
+                payload = JSON.parse(root.decisionBuffer.trim());
+            } catch (e) {
+                payload = null;
+            }
+            if (payload && payload.ok === true && payload.message) {
+                CompanionStore.requestState("success");
+                CompanionStore.say(payload.message.toString(), 9000);
+            } else if (payload && payload.message) {
+                CompanionStore.requestState("error");
+                CompanionStore.say(payload.message.toString(), 9000);
+            } else {
+                CompanionStore.requestState("error");
+                CompanionStore.say("The decision was not recorded. Check: horneroctl assistant status", 9000);
+            }
+        }
     }
 
     Process {

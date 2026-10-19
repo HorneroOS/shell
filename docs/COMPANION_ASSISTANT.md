@@ -10,8 +10,13 @@ Agent via horneroctl's consent and read-only allowlist), mapping
 answer or an honest failure line lands in the bubble. Drive it with
 `qs ipc call companion ask "<prompt>"`; `askStop()` cancels locally
 (the Hermes run may still finish server-side until run-id streaming
-lands). Full chat UI, sessions, and approval prompts remain future
-work; the assistant is disabled by default and never required.
+lands). Approval UX slice: when a run waits on Hermes, `ask` /
+`events(runId)` surface the pending approval or question in the
+bubble, and the user decides explicitly with
+`qs ipc call companion approve <run-id> approve|deny` or
+`qs ipc call companion clarify <run-id> "<answer>"`. Decisions are
+never auto-answered. Full chat UI and sessions remain future work;
+the assistant is disabled by default and never required.
 
 ## Reserved states → animations (live now)
 

@@ -42,6 +42,14 @@ JsonObject {
             dangerous: false
         },
         {
+            name: "Ask Hornero",
+            icon: "raven",
+            description: "Ask the Hornero assistant (needs horneroctl assistant enable)",
+            command: ["autocomplete", "ai"],
+            enabled: true,
+            dangerous: false
+        },
+        {
             name: "Calculator",
             icon: "calculate",
             description: "Do simple math equations (powered by Qalc)",

@@ -95,7 +95,17 @@ Item {
                     } else if (text.startsWith(Config.launcher.actionPrefix)) {
                         if (text.startsWith(`${Config.launcher.actionPrefix}calc `))
                             currentItem.onClicked();
-                        else
+                        else if (text.startsWith(`${Config.launcher.actionPrefix}ai `)) {
+                            // Ask Hornero: forward the prompt to the
+                            // Companion assistant IPC. horneroctl (via
+                            // the bridge) owns consent and credentials;
+                            // a disabled assistant answers with its
+                            // enable instructions in the bubble.
+                            const prompt = text.slice(Config.launcher.actionPrefix.length + 3).trim();
+                            if (prompt !== "")
+                                Quickshell.execDetached(["quickshell", "ipc", "call", "companion", "ask", prompt]);
+                            root.visibilities.launcher = false;
+                        } else
                             currentItem.modelData.onClicked(list.currentList);
                     } else {
                         Apps.launch(currentItem.modelData);

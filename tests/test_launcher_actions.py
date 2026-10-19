@@ -39,3 +39,16 @@ def test_actions_never_trust_persisted_list_alone():
     # default would otherwise stay invisible for existing users.
     bare = re.search(r"model:\s*Config\.launcher\.actions\.filter", ACTIONS)
     assert bare is None, "persisted list used without defaults merge"
+
+
+CONTENT = (ROOT / "modules" / "launcher" / "Content.qml").read_text()
+
+
+def test_ask_hornero_action_and_ai_prompt_route():
+    m = re.search(r'name:\s*"Ask Hornero".*?command:\s*\[(.*?)\]',
+                  DEFAULTS, re.DOTALL)
+    assert m and '"autocomplete", "ai"' in m.group(1)
+    # `>ai <prompt>` forwards to the Companion IPC; the launcher never
+    # talks to Hermes or horneroctl assistant directly.
+    assert '"companion", "ask", prompt' in CONTENT
+    assert '"horneroctl", "assistant"' not in CONTENT

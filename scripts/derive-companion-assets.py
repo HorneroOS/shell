@@ -190,6 +190,20 @@ def _sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _pixels(path: Path) -> tuple:
+    """Decoded RGBA pixels: encoder-version-proof content fingerprint.
+
+    PNG byte output varies between Pillow releases (compression and
+    filtering choices), so comparing file hashes reports false drift
+    whenever CI and the authoring machine run different Pillow
+    versions. The gate exists to catch content drift, not encoder
+    drift, so frames are compared as decoded pixels.
+    """
+    with Image.open(path) as im:
+        rgba = im.convert("RGBA")
+        return (rgba.size, rgba.tobytes())
+
+
 def check() -> int:
     with tempfile.TemporaryDirectory() as tmp:
         fresh = Path(tmp)
@@ -201,6 +215,9 @@ def check() -> int:
             a, b = fresh / rel, COMPANION / rel
             if not b.exists():
                 problems.append(f"missing committed file: {rel}")
+            elif rel.endswith(".png"):
+                if _pixels(a) != _pixels(b):
+                    problems.append(f"drift: {rel}")
             elif _sha(a) != _sha(b):
                 problems.append(f"drift: {rel}")
         fresh_frames = sorted(str(p.relative_to(fresh)) for p in (fresh / FRAMES).glob("*.png"))

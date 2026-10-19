@@ -211,6 +211,38 @@ def test_derive_check():
     assert proc.returncode == 0, proc.stderr
 
 
+def test_pixel_fingerprint_ignores_encoder_bytes(tmp_path):
+    """Re-encoded PNGs with identical pixels must not read as drift.
+
+    PNG bytes vary between Pillow releases; the drift gate compares
+    decoded pixels so CI and authoring machines agree. A changed
+    pixel must still change the fingerprint.
+    """
+    _needs_pil()
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "derive_companion_assets", ROOT / "scripts" / "derive-companion-assets.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    from PIL import Image
+
+    frame = Image.open(FRAMES / "red-idle.png").convert("RGBA")
+    a = tmp_path / "a.png"
+    b = tmp_path / "b.png"
+    frame.save(a, optimize=True)
+    frame.save(b, optimize=False, compress_level=0)
+    assert a.read_bytes() != b.read_bytes()  # encoder bytes really differ
+    assert module._pixels(a) == module._pixels(b)
+
+    tampered = frame.copy()
+    tampered.putpixel((10, 10), (255, 0, 0, 255))
+    c = tmp_path / "c.png"
+    tampered.save(c, optimize=True)
+    assert module._pixels(a) != module._pixels(c)
+
+
 def test_preview_check():
     _needs_pil()
     proc = subprocess.run(["scripts/preview-companion-assets", "--check"],

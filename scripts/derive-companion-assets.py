@@ -211,7 +211,9 @@ def _drifted(a_path: Path, b_path: Path) -> bool:
         diff = ImageChops.difference(a, b)
         total = a.size[0] * a.size[1] * 4
         hist = diff.histogram()
-        weighted = sum(i * count for i, count in enumerate(hist[:256 * 4]))
+        weighted = sum(
+            (i % 256) * count for i, count in enumerate(hist[:256 * 4])
+        )
         mean_abs = weighted / total
         strong = sum(
             count

@@ -190,6 +190,41 @@ def _sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _drifted(a_path: Path, b_path: Path) -> bool:
+    """True when two frames differ beyond encoder/resampler noise.
+
+    PNG byte output and even LANCZOS resampling results vary slightly
+    between Pillow releases, so byte- or pixel-exact comparison reports
+    false drift whenever CI and the authoring machine run different
+    Pillow versions. The gate exists to catch content drift (a pose,
+    skin or geometry change), which moves many pixels by a lot; version
+    noise moves few edge pixels by a little. Both signals are checked:
+    mean absolute difference and the share of strongly-changed pixels.
+    """
+    from PIL import ImageChops
+
+    with Image.open(a_path) as fa, Image.open(b_path) as fb:
+        a = fa.convert("RGBA")
+        b = fb.convert("RGBA")
+        if a.size != b.size:
+            return True
+        diff = ImageChops.difference(a, b)
+        total = a.size[0] * a.size[1] * 4
+        hist = diff.histogram()
+        weighted = sum(
+            (i % 256) * count for i, count in enumerate(hist[:256 * 4])
+        )
+        mean_abs = weighted / total
+        strong = sum(
+            count
+            for band in range(4)
+            for i, count in enumerate(hist[band * 256:(band + 1) * 256])
+            if i > 32
+        ) / 4
+        strong_share = strong / (a.size[0] * a.size[1])
+        return mean_abs > 0.5 or strong_share > 0.001
+
+
 def check() -> int:
     with tempfile.TemporaryDirectory() as tmp:
         fresh = Path(tmp)
@@ -201,6 +236,9 @@ def check() -> int:
             a, b = fresh / rel, COMPANION / rel
             if not b.exists():
                 problems.append(f"missing committed file: {rel}")
+            elif rel.endswith(".png"):
+                if _drifted(a, b):
+                    problems.append(f"drift: {rel}")
             elif _sha(a) != _sha(b):
                 problems.append(f"drift: {rel}")
         fresh_frames = sorted(str(p.relative_to(fresh)) for p in (fresh / FRAMES).glob("*.png"))

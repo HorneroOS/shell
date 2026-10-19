@@ -77,6 +77,7 @@ audio|Audio
 notifications|Notifications
 osd|On-screen display
 system|System
+extensions|Extensions
 updates|Updates
 terminal|Terminal
 power|Power

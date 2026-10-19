@@ -51,3 +51,19 @@ def test_trust_label_stays_honest():
     assert "NOT" in SERVICE and "sandboxed" in SERVICE
     assert "logged-in user's permissions" in DOCS
     assert "headless" in DOCS
+
+
+BAR = (ROOT / "modules" / "bar" / "Bar.qml").read_text()
+WIDGETS = (ROOT / "modules" / "plugins" / "PluginBarWidgets.qml").read_text()
+SCHEMA = (ROOT / "schemas" / "plugin-manifest.schema.json").read_text()
+
+
+def test_bar_placement_contract():
+    assert '"placement"' in SCHEMA and '"bar"' in SCHEMA
+    assert 'placement !== "background" && placement !== "bar"' in HOST
+    # Bar plugins are not double-loaded by the headless host.
+    assert 'slot.placement !== "bar"' in HOST
+    assert "function barPlugins()" in SERVICE
+    assert "Plugins.barPlugins()" in WIDGETS
+    assert "PluginBarWidgets" in BAR and 'group.name === "end"' in BAR
+    assert "Loader.Error" in WIDGETS and "Plugins.markFailed" in WIDGETS

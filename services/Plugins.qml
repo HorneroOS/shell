@@ -29,6 +29,18 @@ Singleton {
         listProcess.running = true;
     }
 
+    function markPlacement(id: string, placement: string, entrypoint: string): void {
+        const next = root.entries.map(e => e.id === id ? Object.assign({}, e, {
+            placement: placement,
+            entrypoint: entrypoint
+        }) : e);
+        root.entries = next;
+    }
+
+    function barPlugins(): var {
+        return root.entries.filter(e => e.enabled && e.installed && e.placement === "bar");
+    }
+
     function markLoaded(id: string): void {
         root.setState(id, "loaded", "");
     }
@@ -80,6 +92,7 @@ Singleton {
                 parsed = [];
             }
             root.entries = parsed.map(e => Object.assign({}, e, {
+                placement: typeof e.placement === "string" ? e.placement : "",
                 state: e.enabled && e.installed ? "pending" : "disabled",
                 detail: ""
             }));

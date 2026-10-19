@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import qs.components
 import qs.services
 import qs.config
+import qs.modules.plugins
 import "popouts" as BarPopouts
 import "components"
 import "components/workspaces"
@@ -661,6 +662,14 @@ Item {
                         }
                     }
                 }
+            }
+
+            // Community plugins with placement "bar" render at the end
+            // of the end group, each in its own Loader (fault-isolated
+            // through the Plugins service). Empty when none are enabled.
+            PluginBarWidgets {
+                vertical: root.vertical
+                surfaceActive: group.name === "end"
             }
         }
     }

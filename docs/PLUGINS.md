@@ -1,15 +1,18 @@
 # Hornero Shell extension contract
 
-**Status: runtime slice 1 (headless loader).** The Shell now discovers
-plugins that `horneroctl plugin list` reports as enabled and installed,
-and instantiates each manifest entrypoint in its own Loader
-(`modules/plugins/PluginHost.qml`, state in `services/Plugins.qml`,
-inspect via `qs ipc call plugins status`, re-discover with
-`qs ipc call plugins reload`). Lifecycle (install, enable, disable,
-remove) is owned by `horneroctl plugin ...`; enabling re-validates the
-installed payload. Slice 1 is headless: entrypoints run under an
-invisible root, so background/logic plugins work and visual plugins
-load but render nothing until the placement contract lands.
+**Status: runtime slice 2 (headless loader + bar placement).** The
+Shell now discovers plugins that `horneroctl plugin list` reports as
+enabled and installed, and instantiates each manifest entrypoint in
+its own Loader (`modules/plugins/PluginHost.qml`, state in
+`services/Plugins.qml`, inspect via `qs ipc call plugins status`,
+re-discover with `qs ipc call plugins reload`). Lifecycle (install,
+enable, disable, remove) is owned by `horneroctl plugin ...`;
+enabling re-validates the installed payload. Background plugins
+(the default) run headless under an invisible root. A manifest may
+declare `"placement": "bar"`: the plugin is then rendered in the
+bar's end group (`modules/plugins/PluginBarWidgets.qml`), still in
+its own Loader, so one failing plugin cannot take the bar down.
+Dashboard/desktop placements do not exist yet.
 `Hornero.PluginKit` remains a reserved import surface; it is not yet
 provided by the Shell package.
 
@@ -57,6 +60,10 @@ Minimal manifest:
   }
 }
 ```
+
+`placement` is optional: `"background"` (default, headless) or
+`"bar"` (rendered in the bar end group). Unknown values are
+rejected by the validator and by the runtime host.
 
 Use `processCommands` to disclose exact executable basenames and
 `networkHosts` to disclose intended network hosts. These fields support code

@@ -214,19 +214,19 @@ def test_derive_check():
 def test_pixel_fingerprint_ignores_encoder_bytes(tmp_path):
     """Re-encoded PNGs with identical pixels must not read as drift.
 
-    PNG bytes vary between Pillow releases; the drift gate compares
-    decoded pixels so CI and authoring machines agree. A changed
-    pixel must still change the fingerprint.
+    PNG bytes and resampling results vary between Pillow releases;
+    the drift gate tolerates that noise so CI and authoring machines
+    agree, while a real content change (a painted block standing in
+    for a pose/skin edit) must still read as drift.
     """
     _needs_pil()
-    sys.path.insert(0, str(ROOT / "scripts"))
     import importlib.util
 
     spec = importlib.util.spec_from_file_location(
         "derive_companion_assets", ROOT / "scripts" / "derive-companion-assets.py")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    from PIL import Image
+    from PIL import Image, ImageDraw
 
     frame = Image.open(FRAMES / "red-idle.png").convert("RGBA")
     a = tmp_path / "a.png"
@@ -234,13 +234,23 @@ def test_pixel_fingerprint_ignores_encoder_bytes(tmp_path):
     frame.save(a, optimize=True)
     frame.save(b, optimize=False, compress_level=0)
     assert a.read_bytes() != b.read_bytes()  # encoder bytes really differ
-    assert module._pixels(a) == module._pixels(b)
+    assert not module._drifted(a, b)
+
+    noisy = frame.copy()
+    px = noisy.load()
+    for x in range(0, noisy.width, 7):  # sparse ±1 resampler-style noise
+        for y in range(0, noisy.height, 7):
+            r, g, bl, al = px[x, y]
+            px[x, y] = (min(r + 1, 255), g, bl, al)
+    n = tmp_path / "n.png"
+    noisy.save(n, optimize=True)
+    assert not module._drifted(a, n)
 
     tampered = frame.copy()
-    tampered.putpixel((10, 10), (255, 0, 0, 255))
+    ImageDraw.Draw(tampered).rectangle([100, 100, 180, 180], fill=(255, 0, 0, 255))
     c = tmp_path / "c.png"
     tampered.save(c, optimize=True)
-    assert module._pixels(a) != module._pixels(c)
+    assert module._drifted(a, c)
 
 
 def test_preview_check():

@@ -190,18 +190,37 @@ def _sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _pixels(path: Path) -> tuple:
-    """Decoded RGBA pixels: encoder-version-proof content fingerprint.
+def _drifted(a_path: Path, b_path: Path) -> bool:
+    """True when two frames differ beyond encoder/resampler noise.
 
-    PNG byte output varies between Pillow releases (compression and
-    filtering choices), so comparing file hashes reports false drift
-    whenever CI and the authoring machine run different Pillow
-    versions. The gate exists to catch content drift, not encoder
-    drift, so frames are compared as decoded pixels.
+    PNG byte output and even LANCZOS resampling results vary slightly
+    between Pillow releases, so byte- or pixel-exact comparison reports
+    false drift whenever CI and the authoring machine run different
+    Pillow versions. The gate exists to catch content drift (a pose,
+    skin or geometry change), which moves many pixels by a lot; version
+    noise moves few edge pixels by a little. Both signals are checked:
+    mean absolute difference and the share of strongly-changed pixels.
     """
-    with Image.open(path) as im:
-        rgba = im.convert("RGBA")
-        return (rgba.size, rgba.tobytes())
+    from PIL import ImageChops
+
+    with Image.open(a_path) as fa, Image.open(b_path) as fb:
+        a = fa.convert("RGBA")
+        b = fb.convert("RGBA")
+        if a.size != b.size:
+            return True
+        diff = ImageChops.difference(a, b)
+        total = a.size[0] * a.size[1] * 4
+        hist = diff.histogram()
+        weighted = sum(i * count for i, count in enumerate(hist[:256 * 4]))
+        mean_abs = weighted / total
+        strong = sum(
+            count
+            for band in range(4)
+            for i, count in enumerate(hist[band * 256:(band + 1) * 256])
+            if i > 32
+        ) / 4
+        strong_share = strong / (a.size[0] * a.size[1])
+        return mean_abs > 0.5 or strong_share > 0.001
 
 
 def check() -> int:
@@ -216,7 +235,7 @@ def check() -> int:
             if not b.exists():
                 problems.append(f"missing committed file: {rel}")
             elif rel.endswith(".png"):
-                if _pixels(a) != _pixels(b):
+                if _drifted(a, b):
                     problems.append(f"drift: {rel}")
             elif _sha(a) != _sha(b):
                 problems.append(f"drift: {rel}")

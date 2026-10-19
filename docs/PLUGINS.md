@@ -7,7 +7,11 @@ its own Loader (`modules/plugins/PluginHost.qml`, state in
 `services/Plugins.qml`, inspect via `qs ipc call plugins status`,
 re-discover with `qs ipc call plugins reload`). Lifecycle (install,
 enable, disable, remove) is owned by `horneroctl plugin ...`;
-enabling re-validates the installed payload. Background plugins
+enabling re-validates the installed payload. The Control Center
+Extensions pane can enable/disable by invoking those exact
+`horneroctl` commands (never writing receipts itself); enable
+requires an inline confirmation there, mirroring the CLI `--yes`
+gate, while install/remove stay CLI-only. Background plugins
 (the default) run headless under an invisible root. A manifest may
 declare `"placement": "bar"`: the plugin is then rendered in the
 bar's end group (`modules/plugins/PluginBarWidgets.qml`), still in

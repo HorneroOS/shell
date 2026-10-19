@@ -199,9 +199,6 @@ def test_terminal_settings_uses_cli_report_and_change_contract():
 
 def test_terminal_settings_keeps_supported_choices_visible_and_marks_missing_apps():
     pane = (CC / "terminal" / "TerminalPane.qml").read_text()
-    assert 'TerminalCard { terminalId: "kitty" }' in pane
-    assert 'TerminalCard { terminalId: "alacritty" }' in pane
-    assert 'TerminalCard { terminalId: "ghostty" }' in pane
     assert "Repeater {" not in pane, "fixed terminal options should share one full-width layout"
     assert "property var installedTerminals: []" in pane
     assert "function availableTerminalIds(value: var): var" in pane
@@ -210,18 +207,51 @@ def test_terminal_settings_keeps_supported_choices_visible_and_marks_missing_app
     assert "root.installedTerminals = root.availableTerminalIds(data.terminals_available)" in pane
     assert "readonly property bool installed: root.installedTerminals.indexOf(terminalId) >= 0" in pane
     assert 'qsTr("Not installed")' in pane
-    assert 'qsTr("Unavailable")' in pane
+    assert 'qsTr("Install first")' in pane
     assert 'qsTr("Selected")' in pane
-    assert 'qsTr("Use")' in pane
+    assert 'qsTr("Use this")' in pane
     assert "Layout.fillWidth: true" in pane
-    assert "Layout.minimumWidth: root.actionColumnWidth" in pane
-    assert "Layout.preferredWidth: root.actionColumnWidth" in pane
-    assert "Layout.maximumWidth: root.actionColumnWidth" in pane
-    assert "Layout.minimumWidth: Appearance.font.size.extraLarge * 1.5" in pane
-    assert "Layout.preferredWidth: Appearance.font.size.extraLarge * 1.5" in pane
-    assert "Layout.maximumWidth: Appearance.font.size.extraLarge * 1.5" in pane
-    assert "enabled: terminalCard.installed && terminalCard.terminalId !== root.selectedTerminal && !root.busy" in pane
-    assert 'Accessible.name: terminalCard.terminalId === root.selectedTerminal ? qsTr("%1 is the default terminal").arg(terminalCard.terminalId)' in pane
+    assert "ActionCell {" in pane
+    card = pane.split("component TerminalCard:", 1)[1].split("Component.onCompleted", 1)[0]
+    assert "anchors.right: parent.right" in card
+    assert "width: action.actionColumnWidth" in card
+    assert "anchors.right: action.left" in card
+    assert "width: Appearance.font.size.extraLarge * 1.5" in card
+    assert "controlEnabled: terminalCard.installed && terminalCard.terminalId !== root.selectedTerminal && !root.busy" in pane
+    assert 'accessibilityName: terminalCard.terminalId === root.selectedTerminal ? qsTr("%1 is the default terminal").arg(terminalCard.terminalId)' in pane
+    terminal_rows = re.findall(r'TerminalCard\s*\{([^{}]*)\}', pane, re.DOTALL)
+    assert len(terminal_rows) == 3
+    assert all("Layout.fillWidth: true" in row for row in terminal_rows), (
+        "each terminal row must fill its SectionContainer so action cells share the same trailing edge"
+    )
+
+
+def test_control_center_action_cells_share_a_trailing_edge():
+    action_cell = (CC / "components" / "ActionCell.qml").read_text()
+
+    assert "readonly property real actionColumnWidth: Math.max(" in action_cell
+    assert "Config.controlCenter.actionColumnWidth * Appearance.font.size.scale" in action_cell
+    assert "Layout.minimumWidth: actionColumnWidth" in action_cell
+    assert "Layout.preferredWidth: actionColumnWidth" in action_cell
+    assert "Layout.maximumWidth: actionColumnWidth" in action_cell
+    assert "anchors.right: parent.right" in action_cell
+    assert "anchors.verticalCenter: parent.verticalCenter" in action_cell
+    assert "anchors.centerIn: parent" not in action_cell
+    assert "width: implicitWidth" in action_cell
+    assert "disabled: root.disabled || !root.controlEnabled" in action_cell
+
+    # These panes contain repeatable setting rows with trailing actions; keep
+    # them on the shared cell so label changes cannot shift the action center.
+    for pane in ("terminal/TerminalPane.qml", "system/SystemPane.qml", "power/PowerPane.qml"):
+        assert "ActionCell {" in (CC / pane).read_text(), f"{pane} must use the shared action cell"
+
+
+def test_control_center_split_keeps_details_space_on_compact_windows():
+    split_layout = (CC / "components" / "SplitPaneLayout.qml").read_text()
+
+    assert "property real leftWidthRatio: 0.4" in split_layout
+    assert "property int leftMinimumWidth: 420" in split_layout
+    assert "Layout.minimumWidth: Math.min(root.leftMinimumWidth, parent.width * root.leftWidthRatio)" in split_layout
 
 
 def test_repeated_control_center_action_columns_share_a_stable_width():
@@ -229,23 +259,44 @@ def test_repeated_control_center_action_columns_share_a_stable_width():
     power = (CC / "power" / "PowerPane.qml").read_text()
     system = (CC / "system" / "SystemPane.qml").read_text()
 
+    action_cell = (CC / "components" / "ActionCell.qml").read_text()
     for pane in (terminal, power, system):
-        assert "readonly property real actionColumnWidth: Config.controlCenter.actionColumnWidth" in pane
-        assert "Layout.minimumWidth: root.actionColumnWidth" in pane
-        assert "Layout.preferredWidth: root.actionColumnWidth" in pane
-        assert "Layout.maximumWidth: root.actionColumnWidth" in pane
+        assert "ActionCell {" in pane
+
+    assert "Layout.minimumWidth: actionColumnWidth" in action_cell
+    assert "Layout.preferredWidth: actionColumnWidth" in action_cell
+    assert "Layout.maximumWidth: actionColumnWidth" in action_cell
+    assert "anchors.right: parent.right" in action_cell
+    assert "anchors.verticalCenter: parent.verticalCenter" in action_cell
+    assert "width: implicitWidth" in action_cell
+    assert "height: implicitHeight" in action_cell
+    assert "Layout.alignment: Qt.AlignVCenter" in action_cell
 
     config = (ROOT / "config" / "ControlCenterConfig.qml").read_text()
     assert "readonly property real actionColumnWidth: 136" in config
 
 
-def test_system_action_tiles_keep_one_right_aligned_action_rail():
+def test_system_action_tiles_keep_one_trailing_action_edge():
     pane = (CC / "system" / "SystemPane.qml").read_text()
     action_tile = pane.split("component ActionTile:", 1)[1].split("// ── Stat row", 1)[0]
     assert "Layout.fillWidth: true" in action_tile
+    assert action_tile.count("Layout.minimumWidth: Appearance.font.size.extraLarge * 1.5") == 1
+    assert action_tile.count("Layout.preferredWidth: Appearance.font.size.extraLarge * 1.5") == 1
+    assert action_tile.count("Layout.maximumWidth: Appearance.font.size.extraLarge * 1.5") == 1
     assert 'text: qsTr("Run")' in action_tile
-    assert "Layout.minimumWidth: root.actionColumnWidth" in action_tile
-    assert "Layout.maximumWidth: root.actionColumnWidth" in action_tile
+    assert "ActionCell {" in action_tile
+    assert all("Layout.fillWidth: true" in block for block in re.findall(r"ActionTile\s*\{([^{}]*)\}", pane, re.DOTALL)), (
+        "every System action row must fill its ColumnLayout so the shared action rail is stable"
+    )
+
+
+def test_power_tiles_fill_the_settings_column_before_aligning_actions():
+    pane = (CC / "power" / "PowerPane.qml").read_text()
+    power_tiles = re.findall(r"PowerTile\s*\{([^{}]*)\}", pane, re.DOTALL)
+    assert len(power_tiles) == 5
+    assert all("Layout.fillWidth: true" in block for block in power_tiles), (
+        "each Power row must fill its settings column so the action rail remains stable"
+    )
 
 
 def test_audio_stream_controls_listen_to_pipewire_volume_notifications():
@@ -267,11 +318,9 @@ def test_terminal_settings_uses_available_rounded_clipping_component():
 
 def test_power_actions_keep_a_stable_confirmation_column():
     pane = (CC / "power" / "PowerPane.qml").read_text()
-    action = pane.split("TextButton {", 1)[1].split("\n            }", 1)[0]
+    action = pane.split("ActionCell {", 1)[1].split("\n            }", 1)[0]
     assert "text: tile.armed ? qsTr(\"Confirm\") : qsTr(\"Run\")" in action
-    assert "Layout.minimumWidth: root.actionColumnWidth" in action
-    assert "Layout.preferredWidth: root.actionColumnWidth" in action
-    assert "Layout.maximumWidth: root.actionColumnWidth" in action
+    assert "controlEnabled: !root.busy" in action
 
 
 def test_system_lock_action_description_is_compositor_neutral():

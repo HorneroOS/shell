@@ -17,6 +17,7 @@ StyledRect {
     required property string source
     required property string titleText
     required property string subtitleText
+    property string readinessDetails: ""
     required property string variantText
     required property string modeText
     required property string wallpaperPath
@@ -237,13 +238,38 @@ StyledRect {
                     text: {
                         if (root.rootPane.previewPaletteQueued || (!!root.rootPane.previewRunningKey && Object.keys(root.rootPane.previewPalette ?? {}).length === 0))
                             return qsTr("Generating palette preview…");
-                        return root.subtitleText || qsTr("Preview updates here — click to apply");
+                        const subtitle = root.subtitleText || qsTr("Preview updates here — click to apply");
+                        return root.compact && root.readinessDetails ? `${subtitle} · ${root.readinessDetails}` : subtitle;
                     }
                     color: previewColor("m3outline", Colours.palette.m3outline)
                     font.pointSize: Appearance.font.size.small
                     elide: Text.ElideRight
                     maximumLineCount: 2
                     wrapMode: Text.WordWrap
+                }
+
+                RowLayout {
+                    visible: root.isThemePreview && !root.compact && !!root.readinessDetails
+                    Layout.fillWidth: true
+                    spacing: Appearance.spacing.small
+
+                    MaterialIcon {
+                        Layout.alignment: Qt.AlignTop
+                        text: "info"
+                        font.pointSize: Appearance.font.size.small
+                        color: previewColor("m3tertiary", Colours.palette.m3tertiary)
+                    }
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: root.readinessDetails
+                        color: previewColor("m3tertiary", Colours.palette.m3tertiary)
+                        font.pointSize: Appearance.font.size.smaller
+                        wrapMode: Text.WordWrap
+                        maximumLineCount: 3
+                        elide: Text.ElideRight
+                        Accessible.name: qsTr("Theme requirements")
+                    }
                 }
 
                 // Palette swatches

@@ -101,7 +101,7 @@ StyledListView {
         const text = search.text;
         const prefix = Config.launcher.actionPrefix;
         if (text.startsWith(prefix)) {
-            for (const action of ["calc", "win", "file", "scheme", "variant", "appearance", "theme"])
+            for (const action of ["calc", "win", "file", "ai", "scheme", "variant", "appearance", "theme"])
                 if (text.startsWith(`${prefix}${action} `))
                     return action === "theme" ? "appearance" : action;
 
@@ -169,6 +169,14 @@ StyledListView {
             PropertyChanges {
                 model.values: root.fileResults
                 root.delegate: fileItem
+            }
+        },
+        State {
+            name: "ai"
+
+            PropertyChanges {
+                model.values: [0]
+                root.delegate: aiItem
             }
         },
         State {
@@ -343,6 +351,14 @@ StyledListView {
         id: fileItem
 
         FileItem {
+            list: root
+        }
+    }
+
+    Component {
+        id: aiItem
+
+        AiItem {
             list: root
         }
     }

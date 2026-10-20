@@ -144,12 +144,23 @@ FloatingWindow {
                 anchors.rightMargin: Appearance.padding.normal
                 spacing: Appearance.spacing.normal
 
-                Image {
-                    Layout.preferredWidth: 28
-                    Layout.preferredHeight: 28
-                    source: Qt.resolvedUrl(`${Quickshell.shellDir}/assets/logo.svg`)
-                    fillMode: Image.PreserveAspectFit
-                    Accessible.name: qsTr("Hornero logo")
+                // The official logo is graphite on transparent: on
+                // the dark header it vanished. It sits on a warm paper
+                // tile (same in both themes), like an app-icon chip.
+                Rectangle {
+                    Layout.preferredWidth: 34
+                    Layout.preferredHeight: 34
+                    radius: 9
+                    color: "#fffdf7"
+
+                    Image {
+                        anchors.centerIn: parent
+                        width: 26
+                        height: 26
+                        source: Qt.resolvedUrl(`${Quickshell.shellDir}/assets/logo.svg`)
+                        fillMode: Image.PreserveAspectFit
+                        Accessible.name: qsTr("Hornero logo")
+                    }
                 }
 
                 StyledText {

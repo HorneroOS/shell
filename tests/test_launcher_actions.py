@@ -87,3 +87,21 @@ def test_transition_never_snapshots_model_values():
     # state-entry snapshot and emptied the list (live regression).
     assert 'properties: "values,delegate"' not in APPLIST
     assert 'properties: "delegate"' in APPLIST
+
+
+def test_launcher_ai_inline_provider():
+    app_list = (ROOT / "modules/launcher/AppList.qml").read_text()
+    assert '"ai"' in app_list
+    assert 'name: "ai"' in app_list
+    assert "aiItem" in app_list
+    item = (ROOT / "modules/launcher/items/AiItem.qml").read_text()
+    assert "InlineAsk.ask(root.question)" in item
+    assert "InlineAsk.stop()" in item
+    service = (ROOT / "modules/launcher/services/InlineAsk.qml").read_text()
+    assert "pragma Singleton" in service
+    assert '"horneroctl", "assistant", "ask"' in service
+    assert '"--stream"' in service
+    # The launcher never talks to Hermes directly and never approves.
+    assert "8642" not in service
+    assert '"assistant", "approve"' not in service
+    assert '"assistant", "clarify"' not in service

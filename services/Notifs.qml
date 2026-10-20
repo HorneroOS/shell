@@ -25,6 +25,34 @@ Singleton {
     // marked closed and drop on unlock, via Notif.close()).
     readonly property int maxListSize: 100
 
+    // Flood policy (shell#224): identical re-sends collapse inside a
+    // short window, and one chatty app cannot hold the whole list.
+    // Critical-urgency notifications are exempt from both: losing a
+    // battery/VPN-critical alert to a flood is the failure this
+    // policy exists to prevent (they also survive DND as popups via
+    // the urgency path in the popup filter below).
+    readonly property int dedupWindowMs: 60000
+    readonly property int maxPerApp: 20
+
+    function _isDuplicate(notif: var): bool {
+        const now = new Date().getTime();
+        for (const n of root.list) {
+            if (n.closed)
+                continue;
+            if (n.appName === notif.appName && n.summary === notif.summary && n.body === notif.body
+                    && now - n.time.getTime() < root.dedupWindowMs)
+                return true;
+        }
+        return false;
+    }
+
+    function _enforcePerApp(appName: string): void {
+        const open = root.list.filter(n => !n.closed && n.appName === appName);
+        // list is newest-first; close everything past the cap, oldest last.
+        for (const old of open.slice(root.maxPerApp))
+            old.close();
+    }
+
     property bool loaded
 
 
@@ -93,11 +121,20 @@ Singleton {
         onNotification: notif => {
             notif.tracked = true;
 
+            // Flood policy first (shell#224): duplicates collapse and
+            // critical urgency is never dropped by the policy.
+            if (notif.urgency !== NotificationUrgency.Critical && root._isDuplicate(notif)) {
+                notif.close();
+                return;
+            }
+
             const comp = notifComp.createObject(root, {
-                popup: !props.dnd && ![...Visibilities.screens.values()].some(v => v.sidebar),
+                popup: (notif.urgency === NotificationUrgency.Critical || !props.dnd) && ![...Visibilities.screens.values()].some(v => v.sidebar),
                 notification: notif
             });
             root.list = [comp, ...root.list];
+            if (notif.urgency !== NotificationUrgency.Critical)
+                root._enforcePerApp(notif.appName);
             if (root.list.length > root.maxListSize)
                 for (const old of root.list.slice(root.maxListSize))
                     old.close();

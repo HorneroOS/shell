@@ -372,7 +372,28 @@ Scope {
             implicitWidth: stack.implicitWidth
             implicitHeight: stack.implicitHeight
 
-            visible: win.isMine && CompanionStore.visible
+            // The layer surface only takes its size at map time on
+            // the supported Quickshell: toggling chatOpen remaps the
+            // window (surfaceOn pulse) so the surface is created at
+            // the new content size instead of clipping the card.
+            property bool surfaceOn: true
+
+            Timer {
+                id: remapTimer
+
+                interval: 40
+                onTriggered: win.surfaceOn = true
+            }
+
+            Connections {
+                target: assistantBridge
+                function onChatOpenChanged(): void {
+                    win.surfaceOn = false;
+                    remapTimer.restart();
+                }
+            }
+
+            visible: win.surfaceOn && win.isMine && CompanionStore.visible
 
             Component.onCompleted: {
                 win.syncFromStore();

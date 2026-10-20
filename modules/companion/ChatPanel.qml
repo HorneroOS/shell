@@ -115,6 +115,8 @@ Item {
                 }
 
                 ColumnLayout {
+                    Layout.fillWidth: true
+                    Layout.minimumWidth: 0
                     spacing: 0
 
                     RowLayout {
@@ -151,7 +153,7 @@ Item {
                     }
 
                     StyledText {
-                        text: root.bridge.busy ? qsTr("pensando") + ".".repeat(root.dotPhase) : (root.bridge.gatewayReachable ? qsTr("Hermes conectado · loopback") : qsTr("Hermes no disponible"))
+                        text: root.bridge.busy ? qsTr("pensando") + ".".repeat(root.dotPhase) : (root.bridge.gatewayReachable ? qsTr("Hermes conectado") : qsTr("Hermes no disponible"))
                         font.family: Appearance.font.family.mono
                         font.pointSize: Appearance.font.size.smaller
                         color: root.bridge.gatewayReachable ? Colours.palette.m3primary : Colours.palette.m3error
@@ -436,6 +438,7 @@ Item {
                     id: input
 
                     Layout.fillWidth: true
+                    Layout.minimumWidth: 48
                     horizontalAlignment: TextInput.AlignLeft
                     onEditingFinished: root.sendCurrent()
 

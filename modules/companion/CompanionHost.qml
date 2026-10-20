@@ -360,8 +360,11 @@ Scope {
 
             anchors.top: true
             anchors.left: true
-            margins.top: win.py + Math.round(win.bobY)
-            margins.left: win.px
+            // The window grows when the chat card opens (330px vs the
+            // 128px sprite): clamp against the real content size so
+            // the card never lands off-screen at the right/bottom edge.
+            margins.top: Math.max(0, Math.min(win.py + Math.round(win.bobY), win.screenH - stack.implicitHeight))
+            margins.left: Math.max(0, Math.min(win.px, win.screenW - stack.implicitWidth))
 
             // Explicit surface size from the content column: the layer
             // surface ignores implicit-size changes, so popups sized only

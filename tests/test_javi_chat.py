@@ -79,3 +79,12 @@ def test_pane_assistant_section_and_javi_name():
     assert "Javi · el Hornero" in PANE
     assert "chatStreaming" in PANE and "chatHistoryLimit" in PANE
     assert '"Javi"' in REGISTRY
+
+
+def test_bridge_sessions_and_panel_bar():
+    bridge = (ROOT / "modules/companion/AssistantBridge.qml").read_text()
+    assert '"sessions"' in bridge and '"model", "list"' in bridge
+    assert '"--session", root.currentSession' in bridge
+    assert "X-Hermes" not in bridge  # keys stay inside horneroctl
+    panel = (ROOT / "modules/companion/ChatPanel.qml").read_text()
+    assert "currentSessionTitle" in panel and "newChatSession" in panel

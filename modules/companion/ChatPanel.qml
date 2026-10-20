@@ -195,6 +195,49 @@ Item {
                 radius: 1
             }
 
+            // -- Session bar (hornero#189): named chats + model -----
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Appearance.spacing.small
+
+                MaterialIcon {
+                    text: "forum"
+                    font.pointSize: Appearance.font.size.normal
+                    color: Colours.palette.m3onSurfaceVariant
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
+                    Layout.minimumWidth: 0
+                    text: root.bridge.currentSessionTitle
+                    font.family: Appearance.font.family.mono
+                    font.pointSize: Appearance.font.size.smaller
+                    color: Colours.palette.m3onSurface
+                    elide: Text.ElideRight
+                }
+
+                StyledText {
+                    visible: root.bridge.currentModel !== ""
+                    text: root.bridge.currentModel
+                    font.family: Appearance.font.family.mono
+                    font.pointSize: Appearance.font.size.smaller
+                    color: Colours.palette.m3outline
+                }
+
+                IconButton {
+                    icon: "swap_horiz"
+                    type: IconButton.Text
+                    visible: root.bridge.chatSessions.length > 1
+                    onClicked: root.bridge.cycleChatSession()
+                }
+
+                IconButton {
+                    icon: "add_comment"
+                    type: IconButton.Text
+                    onClicked: root.bridge.newChatSession()
+                }
+            }
+
             // -- Conversation -----------------------------------------
             ListView {
                 id: view

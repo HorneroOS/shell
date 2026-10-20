@@ -46,6 +46,54 @@ Scope {
     property bool assistantEnabled: false
     property bool gatewayReachable: false
     property string statusMessage: ""
+    // Named chat sessions (hornero#189): Hermes owns the real
+    // conversations; horneroctl's registry names the continuity
+    // keys. Empty currentSession = gateway default conversation.
+    property var chatSessions: []
+    property string currentSession: ""
+    property string currentModel: ""
+
+    function refreshSessions(): void {
+        sessionsProc.out = "";
+        sessionsProc.command = ["horneroctl", "assistant", "sessions", "--json"];
+        sessionsProc.running = true;
+        modelProc.out = "";
+        modelProc.command = ["horneroctl", "assistant", "model", "list", "--json"];
+        modelProc.running = true;
+    }
+
+    function newChatSession(): void {
+        const title = qsTr("Chat %1").arg(new Date().toLocaleTimeString());
+        sessionActionProc.out = "";
+        sessionActionProc.command = ["horneroctl", "assistant", "sessions", "new", title, "--json"];
+        sessionActionProc.running = true;
+        root.clearHistory();
+    }
+
+    function useChatSession(id: string): void {
+        if (id === root.currentSession)
+            return;
+        sessionActionProc.out = "";
+        sessionActionProc.command = ["horneroctl", "assistant", "sessions", "use", id, "--json"];
+        sessionActionProc.running = true;
+        root.clearHistory();
+    }
+
+    function cycleChatSession(): void {
+        if (root.chatSessions.length === 0)
+            return;
+        let idx = root.chatSessions.findIndex(s => s.id === root.currentSession);
+        idx = (idx + 1) % root.chatSessions.length;
+        root.useChatSession(root.chatSessions[idx].id);
+    }
+
+    readonly property string currentSessionTitle: {
+        for (const s of root.chatSessions)
+            if (s.id === root.currentSession)
+                return s.title;
+        return qsTr("Default chat");
+    }
+
     // Attachments queued for the next send (absolute paths).
     property var attachments: []
     property bool recording: false
@@ -166,6 +214,8 @@ Scope {
         root.pushHistory("user", sentAttachments.length > 0 ? `${shown} 📎 ${sentAttachments.length}` : shown);
         CompanionStore.requestState("thinking");
         let cmd = ["horneroctl", "assistant", "ask", prompt === "" ? qsTr("Describe and answer based on the attached file(s).") : prompt, "--json", "--stream"];
+        if (root.currentSession !== "")
+            cmd = cmd.concat(["--session", root.currentSession]);
         for (const p of sentAttachments)
             cmd = cmd.concat(["--attach", p.toString()]);
         askProcess.command = cmd;
@@ -284,6 +334,7 @@ Scope {
     Component.onCompleted: {
         root.loadHistory();
         root.refreshStatus();
+        root.refreshSessions();
     }
 
     FileView {
@@ -296,6 +347,74 @@ Scope {
                     root.history = parsed.filter(e => e && e.text).slice(-root.historyCap);
             } catch (e) {
                 root.history = [];
+            }
+        }
+    }
+
+    Process {
+        id: sessionsProc
+
+        property string out: ""
+
+        stdout: SplitParser {
+            onRead: data => {
+                sessionsProc.out += data;
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            try {
+                const payload = JSON.parse(sessionsProc.out.trim());
+                const d = payload.data ?? {};
+                root.currentSession = (d.current ?? "").toString();
+                const ids = (d.ids ?? "").toString().split(",").filter(s => s !== "");
+                const lines = (payload.message ?? "").toString().split("\n");
+                root.chatSessions = ids.map(id => {
+                    let title = id;
+                    for (const line of lines) {
+                        const m = line.match(new RegExp(id + " — (.*) \\(since"));
+                        if (m)
+                            title = m[1];
+                    }
+                    return {
+                        "id": id,
+                        "title": title
+                    };
+                });
+            } catch (e) {
+                root.chatSessions = [];
+            }
+        }
+    }
+
+    Process {
+        id: sessionActionProc
+
+        property string out: ""
+
+        stdout: SplitParser {
+            onRead: data => {
+                sessionActionProc.out += data;
+            }
+        }
+        onExited: (exitCode, exitStatus) => root.refreshSessions()
+    }
+
+    Process {
+        id: modelProc
+
+        property string out: ""
+
+        stdout: SplitParser {
+            onRead: data => {
+                modelProc.out += data;
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            try {
+                const payload = JSON.parse(modelProc.out.trim());
+                root.currentModel = ((payload.data ?? {}).model ?? "").toString();
+            } catch (e) {
+                root.currentModel = "";
             }
         }
     }

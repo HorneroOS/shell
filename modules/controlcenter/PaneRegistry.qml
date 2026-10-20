@@ -167,6 +167,16 @@ QtObject {
             readonly property list<string> keywords: ["input", "keyboard", "layout", "keybindings", "mouse", "touchpad"]
         },
         QtObject {
+            readonly property string id: "windows"
+            readonly property string label: "windows"
+            readonly property string title: qsTr("Windows")
+            readonly property string icon: "web_asset"
+            readonly property string component: "windows/WindowsPane.qml"
+            readonly property string category: "system"
+            readonly property string description: qsTr("Window gaps, borders and rounding")
+            readonly property list<string> keywords: ["windows", "gaps", "border", "rounding", "geometry", "tiling"]
+        },
+        QtObject {
             readonly property string id: "lockscreen"
             readonly property string label: "lockscreen"
             readonly property string title: qsTr("Lock screen")

@@ -10,7 +10,14 @@ the shimmer). The assistant is a separate backend (see
 horneroctl's consent gates), consuming NDJSON delta lines for live
 streaming and the final CommandResult line for the structured
 outcome (answer, pending approval, pending clarification — read
-from payload data, never parsed from prose). `askStop()` now stops
+from payload data, never parsed from prose). The chat also renders
+the run's activity trace live (`horneroctl` NDJSON `thinking` /
+`tool` / `commentary` frames, classified in
+`assistant_event_trace`): provider reasoning previews, tool
+lifecycle with command previews, and mid-turn commentary. This is
+the gateway's emitted activity — providers do not expose raw
+chain-of-thought — and each answer bubble keeps its trace behind a
+SHOW ACTIVITY TRACE toggle. `askStop()` now stops
 the Hermes run server-side too (`assistant stop <runId>`, shell#223)
 while it is known.
 

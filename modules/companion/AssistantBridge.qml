@@ -41,6 +41,10 @@ Scope {
     property bool chatOpen: false
     // Live streamed assistant text for the in-flight run.
     property string streamText: ""
+    // Activity trace of the current/last run: provider reasoning
+    // previews, tool lifecycle and commentary, as emitted by the
+    // gateway (never the model's raw chain-of-thought).
+    property string traceText: ""
     property var finalPayload: null
     // Backend status for the panel header / settings pane.
     property bool assistantEnabled: false
@@ -103,9 +107,14 @@ Scope {
     readonly property int historyCap: CompanionStore.chatHistoryLimit > 0 ? CompanionStore.chatHistoryLimit : 50
 
     function pushHistory(role: string, text: string): void {
+        root.pushHistoryTraced(role, text, "");
+    }
+
+    function pushHistoryTraced(role: string, text: string, trace: string): void {
         const entry = {
             "role": role,
             "text": text,
+            "trace": trace ? trace.toString().slice(-2000) : "",
             "ts": Date.now()
         };
         let next = root.history.concat([entry]);
@@ -190,7 +199,12 @@ Scope {
         }
         if (obj && obj.type === "delta" && obj.text)
             root.streamText += obj.text.toString();
-        else if (obj)
+        else if (obj && obj.type === "thinking" && obj.text)
+            root.traceText = (root.traceText + obj.text.toString()).slice(-8000);
+        else if (obj && (obj.type === "tool" || obj.type === "commentary") && obj.text) {
+            const line = obj.text.toString();
+            root.traceText = ((root.traceText === "" || root.traceText.endsWith("\n")) ? root.traceText + line + "\n" : root.traceText + "\n" + line + "\n").slice(-8000);
+        } else if (obj)
             root.finalPayload = obj;
     }
 
@@ -209,6 +223,7 @@ Scope {
         root.streamText = "";
         root.finalPayload = null;
         root.busy = true;
+        root.traceText = "";
         root.lastPrompt = prompt;
         const shown = prompt === "" ? qsTr("(attachment)") : prompt;
         root.pushHistory("user", sentAttachments.length > 0 ? `${shown} 📎 ${sentAttachments.length}` : shown);
@@ -532,12 +547,12 @@ Scope {
             root.notePayload(payload);
             if (payload && payload.data && (payload.data.pending === "approval" || payload.data.pending === "clarify")) {
                 if (streamed !== "")
-                    root.pushHistory("assistant", streamed);
+                    root.pushHistoryTraced("assistant", streamed, root.traceText);
                 root.pushHistory("system", (payload.data.detail || payload.message || "").toString());
             } else if (payload && payload.ok === true) {
                 const finalText = streamed !== "" ? streamed : (payload.data && payload.data.text ? payload.data.text.toString() : "");
                 if (finalText !== "") {
-                    root.pushHistory("assistant", finalText);
+                    root.pushHistoryTraced("assistant", finalText, root.traceText);
                     CompanionStore.requestState("success");
                     CompanionStore.say(finalText, 12000);
                 } else {
@@ -548,7 +563,7 @@ Scope {
                 CompanionStore.requestState("error");
                 CompanionStore.say(payload.message.toString(), 9000);
             } else if (streamed !== "") {
-                root.pushHistory("assistant", streamed);
+                root.pushHistoryTraced("assistant", streamed, root.traceText);
                 CompanionStore.requestState("success");
             } else {
                 CompanionStore.requestState("error");

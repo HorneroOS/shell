@@ -88,3 +88,17 @@ def test_bridge_sessions_and_panel_bar():
     assert "X-Hermes" not in bridge  # keys stay inside horneroctl
     panel = (ROOT / "modules/companion/ChatPanel.qml").read_text()
     assert "currentSessionTitle" in panel and "newChatSession" in panel
+
+
+def test_chat_activity_trace_ui_and_bridge():
+    bridge = (ROOT / "modules/companion/AssistantBridge.qml").read_text()
+    assert "traceText" in bridge
+    assert 'obj.type === "thinking"' in bridge
+    assert 'obj.type === "tool"' in bridge
+    assert "pushHistoryTraced" in bridge
+    panel = (ROOT / "modules/companion/ChatPanel.qml").read_text()
+    assert "ACTIVITY TRACE · LIVE" in panel
+    assert "SHOW ACTIVITY TRACE" in panel
+    assert "modelData.trace" in panel
+    # The trace is the gateway's emitted activity, never raw CoT claims.
+    assert "chain-of-thought" not in panel.lower().replace("never the model's raw chain-of-thought", "")

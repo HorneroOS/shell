@@ -19,3 +19,17 @@ def test_list_size_bounded():
 def test_bound_documented():
     doc = (ROOT / "docs" / "NOTIFICATIONS.md").read_text()
     assert "maxListSize" in doc
+
+
+def test_duplicate_collapse_policy():
+    src = NOTIFS.read_text()
+    assert "dedupWindowMs" in src and "_isDuplicate" in src
+    # Duplicates are dropped at ingress, before entering the list.
+    assert "root._isDuplicate(notif)" in src
+
+
+def test_per_app_cap_and_critical_exemption():
+    src = NOTIFS.read_text()
+    assert "maxPerApp" in src and "_enforcePerApp" in src
+    # Critical urgency is exempt from both flood rules.
+    assert src.count("NotificationUrgency.Critical") >= 2

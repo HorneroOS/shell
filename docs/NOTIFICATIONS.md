@@ -48,7 +48,12 @@ presence without content).
 - Ingress bound (S12): at most `maxListSize` (100) live
   notifications; overflow closes oldest-first so a spammy sender
   cannot grow memory or the persisted log without limit.
-  Rate-limit/dedup rules are deferred to the test phase.
+- Flood policy (shell#224): identical re-sends (same app, summary
+  and body) collapse within `dedupWindowMs` (60 s), and one app can
+  hold at most `maxPerApp` (20) open notifications — a chatty app
+  cannot bury the rest of the list. Critical-urgency notifications
+  are exempt from both rules and still pop up under DND, so a
+  battery/VPN-critical alert survives a flood.
 
 ## Admission test
 

@@ -80,6 +80,7 @@ notifications|Notifications
 osd|On-screen display
 displays|Displays
 input|Input
+keybinds|Keybinds
 windows|Windows
 lockscreen|Lock screen
 session|Session

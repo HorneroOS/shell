@@ -177,6 +177,16 @@ QtObject {
             readonly property list<string> keywords: ["input", "keyboard", "layout", "keybindings", "mouse", "touchpad"]
         },
         QtObject {
+            readonly property string id: "keybinds"
+            readonly property string label: "keybinds"
+            readonly property string title: qsTr("Keybinds")
+            readonly property string icon: "keyboard"
+            readonly property string component: "keybinds/KeybindsPane.qml"
+            readonly property string category: "system"
+            readonly property string description: qsTr("View and search session keybindings")
+            readonly property list<string> keywords: ["keybinds", "shortcuts", "hotkeys", "keyboard", "bindings"]
+        },
+        QtObject {
             readonly property string id: "windows"
             readonly property string label: "windows"
             readonly property string title: qsTr("Windows")

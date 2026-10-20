@@ -27,7 +27,7 @@ Item {
 
     visible: root.bridge.chatOpen
     implicitWidth: 392
-    implicitHeight: 560
+    implicitHeight: card.implicitHeight
 
     Behavior on opacity {
         NumberAnimation {
@@ -56,12 +56,17 @@ Item {
     StyledRect {
         id: card
 
-        anchors.fill: parent
+        width: root.implicitWidth
+        implicitHeight: layout.implicitHeight + Appearance.padding.large * 2
         radius: Appearance.rounding.large
         color: Colours.palette.m3surfaceContainer
 
         ColumnLayout {
-            anchors.fill: parent
+            id: layout
+
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
             anchors.margins: Appearance.padding.large
             spacing: Appearance.spacing.normal
 
@@ -72,8 +77,10 @@ Item {
 
                 Image {
                     source: `${Quickshell.shellDir}/assets/companion/frames/default-idle.png`
-                    width: 34
-                    height: 34
+                    Layout.preferredWidth: 34
+                    Layout.preferredHeight: 34
+                    Layout.maximumWidth: 34
+                    Layout.maximumHeight: 34
                     fillMode: Image.PreserveAspectFit
                     smooth: false
                 }
@@ -112,14 +119,12 @@ Item {
                 IconButton {
                     icon: "delete_sweep"
                     type: IconButton.Text
-                    label.text: qsTr("Clear chat")
                     onClicked: root.bridge.clearHistory()
                 }
 
                 IconButton {
                     icon: "close"
                     type: IconButton.Text
-                    label.text: qsTr("Close chat")
                     onClicked: root.bridge.chatOpen = false
                 }
             }
@@ -138,7 +143,9 @@ Item {
                 id: view
 
                 Layout.fillWidth: true
-                Layout.fillHeight: true
+                Layout.preferredHeight: 360
+                Layout.minimumHeight: 360
+                Layout.maximumHeight: 360
                 clip: true
                 spacing: Appearance.spacing.normal
                 model: root.bridge.history
@@ -168,7 +175,7 @@ Item {
 
                         anchors.right: bubble.mine ? parent.right : undefined
                         anchors.left: bubble.mine ? undefined : parent.left
-                        width: Math.min(parent.width * 0.86, textItem.implicitWidth + Appearance.padding.large * 2)
+                        width: parent.width * 0.86
                         implicitHeight: textItem.implicitHeight + Appearance.padding.normal * 2
                         radius: Appearance.rounding.normal
                         color: bubble.system ? Qt.alpha(Colours.palette.m3error, 0.14) : bubble.mine ? Colours.palette.m3primaryContainer : Colours.palette.m3surfaceContainerHigh
@@ -349,7 +356,6 @@ Item {
                 IconButton {
                     icon: "attach_file"
                     type: IconButton.Text
-                    label.text: qsTr("Attach file")
                     onClicked: fileDialog.open()
                 }
 
@@ -357,7 +363,6 @@ Item {
                     icon: root.bridge.recording ? "stop_circle" : "mic"
                     type: IconButton.Text
                     checked: root.bridge.recording
-                    label.text: root.bridge.recording ? qsTr("Stop and send voice note") : qsTr("Record voice note")
                     onClicked: root.bridge.recording ? root.bridge.stopRecording(true) : root.bridge.startRecording()
                 }
 

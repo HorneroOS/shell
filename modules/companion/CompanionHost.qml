@@ -351,11 +351,12 @@ Scope {
             // Focus exceptions: the right-click menu (Escape dismiss)
             // and the Javi chat (its text inputs must receive keys —
             // with keyboardFocus None the input looks active but typing
-            // goes nowhere). Exclusive is safe here unlike the drawers:
-            // this surface remaps when the chat toggles, so Hyprland
-            // grants focus at map time instead of bouncing a grab on
-            // an already-mapped surface. Escape closes the chat.
-            WlrLayershell.keyboardFocus: menu.visible || assistantBridge.chatOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+            // goes nowhere). The menu keeps OnDemand: Exclusive on an
+            // already-mapped surface bounces Hyprland's focus grab and
+            // the menu instantly closed itself via onCleared. The chat
+            // can use Exclusive because this surface remaps when the
+            // chat toggles, so focus is granted at map time.
+            WlrLayershell.keyboardFocus: menu.visible ? WlrKeyboardFocus.OnDemand : assistantBridge.chatOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
             // NOTE: the grab stays menu-only. Extending it to the
             // chat made Hyprland clear the grab as soon as it engaged

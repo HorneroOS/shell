@@ -628,6 +628,15 @@ Scope {
                             }
                         }
                         Entry {
+                            label: qsTr("Chat with Hermes")
+                            onChosen: {
+                                menu.close();
+                                CompanionStore.summon();
+                                CompanionStore.forceVisible = true;
+                                assistantBridge.chatOpen = true;
+                            }
+                        }
+                        Entry {
                             label: qsTr("Take a break")
                             onChosen: {
                                 menu.close();
@@ -704,12 +713,16 @@ Scope {
         }
 
         function ask(text: string): void {
+            CompanionStore.summon();
+            CompanionStore.forceVisible = true;
             assistantBridge.chatOpen = true;
             assistantBridge.ask((text ?? "").toString());
         }
 
         function chat(): void {
+            CompanionStore.summon();
             assistantBridge.chatOpen = !assistantBridge.chatOpen;
+            CompanionStore.forceVisible = assistantBridge.chatOpen;
         }
 
         function askStop(): void {

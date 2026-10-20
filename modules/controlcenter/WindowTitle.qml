@@ -14,6 +14,27 @@ StyledRect {
     implicitHeight: text.implicitHeight + Appearance.padding.normal
     color: Colours.tPalette.m3surfaceContainer
 
+    // Brand tile (same treatment as Welcome): the graphite logo
+    // needs its paper chip to read on the title bar.
+    Rectangle {
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        anchors.leftMargin: Appearance.padding.normal
+        width: 30
+        height: 30
+        radius: 8
+        color: "#fffdf7"
+
+        Image {
+            anchors.centerIn: parent
+            width: 23
+            height: 23
+            source: Qt.resolvedUrl(`${Quickshell.shellDir}/assets/logo.svg`)
+            fillMode: Image.PreserveAspectFit
+            Accessible.name: qsTr("Hornero logo")
+        }
+    }
+
     StyledText {
         id: text
 

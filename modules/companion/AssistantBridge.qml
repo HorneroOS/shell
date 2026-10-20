@@ -172,6 +172,19 @@ Scope {
         askProcess.running = true;
     }
 
+    // Copy the latest assistant answer to the clipboard (wl-copy).
+    function copyLastAnswer(): void {
+        for (let i = root.history.length - 1; i >= 0; i--) {
+            if (root.history[i].role === "assistant") {
+                copyProcess.command = ["wl-copy", root.history[i].text.toString()];
+                copyProcess.running = true;
+                CompanionStore.say("Answer copied.", 3000);
+                return;
+            }
+        }
+        CompanionStore.say("Nothing to copy yet.", 3000);
+    }
+
     function retryLast(): void {
         if (root.lastPrompt !== "" && !root.busy)
             root.ask(root.lastPrompt);
@@ -289,6 +302,10 @@ Scope {
 
     Process {
         id: historyWriter
+    }
+
+    Process {
+        id: copyProcess
     }
 
     Process {

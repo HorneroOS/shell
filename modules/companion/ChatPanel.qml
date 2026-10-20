@@ -471,6 +471,12 @@ Item {
                     onClicked: root.bridge.retryLast()
                 }
 
+                TextButton {
+                    text: qsTr("Copy answer")
+                    type: TextButton.Text
+                    onClicked: root.bridge.copyLastAnswer()
+                }
+
                 StyledText {
                     visible: root.bridge.recording
                     text: qsTr("● Grabando… tocá el mic para enviar")

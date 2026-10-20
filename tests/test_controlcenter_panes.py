@@ -491,3 +491,14 @@ def test_extensions_pane_lifecycle_goes_through_horneroctl_with_consent():
                    "plugins-receipts"):
         assert banned not in pane, f"extensions pane must not do this itself: {banned}"
     assert "not sandboxed" in pane
+
+
+def test_extensions_marketplace_section():
+    pane = (ROOT / "modules/controlcenter/extensions/ExtensionsPane.qml").read_text()
+    assert "Official catalogue" in pane
+    assert '"plugin", "catalog"' in pane
+    assert '"catalog", "install"' in pane
+    assert "Confirm install" in pane
+    # Marketplace never writes receipts itself and never enables silently.
+    assert "pendingInstall" in pane
+    assert 'runLifecycle("enable"' in pane  # existing consent path untouched

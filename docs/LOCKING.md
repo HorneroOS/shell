@@ -62,6 +62,24 @@ orphaned. Hornero requires Quickshell 0.3.2 or later and retains the
 single-locker policy; the version floor is partial containment, not a claim
 that orphaned-lock recovery works.
 
+## Never restart the shell while locked
+
+The shell lock surface lives in the same Quickshell process as the
+desktop. Killing or restarting that process while the lock is engaged
+destroys the lock surface and orphans the compositor lock state — the
+failure in #255, which forced a reboot on a development host.
+
+Rules:
+
+- `horneroctl shell stop` and `horneroctl shell restart` refuse while
+  a lock is engaged (hyprlock process or logind `LockedHint`), since
+  horneroctl preview21+; unlock first, then restart.
+- Never `pkill quickshell` (or kill the process by hand) while locked,
+  in scripts, runbooks, or debugging sessions. Check lock state first
+  (`qs ipc call lock isLocked` or `loginctl show-session`).
+- If the shell process dies on its own while locked, see Recovery
+  below — restarting Quickshell cannot repair that state.
+
 ## Recovery
 
 There are two different failure states:

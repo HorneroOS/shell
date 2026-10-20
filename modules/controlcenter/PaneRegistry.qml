@@ -107,6 +107,16 @@ QtObject {
             readonly property list<string> keywords: ["mascot", "pet", "character"]
         },
         QtObject {
+            readonly property string id: "accessibility"
+            readonly property string label: "accessibility"
+            readonly property string title: qsTr("Accessibility")
+            readonly property string icon: "accessibility"
+            readonly property string component: "accessibility/AccessibilityPane.qml"
+            readonly property string category: "personalization"
+            readonly property string description: qsTr("Text size, motion and transparency for comfortable use")
+            readonly property list<string> keywords: ["accessibility", "text size", "font", "motion", "reduce motion", "vision", "a11y"]
+        },
+        QtObject {
             readonly property string id: "audio"
             readonly property string label: "audio"
             readonly property string title: qsTr("Audio")

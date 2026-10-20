@@ -34,7 +34,7 @@ def test_control_center_matrix_covers_every_registered_destination() -> None:
         )
     ]
 
-    assert len(scenario_panes) == 20
+    assert len(scenario_panes) == 22
     assert scenario_panes == registered_panes
 
 

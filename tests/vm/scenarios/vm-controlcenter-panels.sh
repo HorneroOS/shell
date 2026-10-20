@@ -77,6 +77,8 @@ accessibility|Accessibility
 audio|Audio
 notifications|Notifications
 osd|On-screen display
+displays|Displays
+input|Input
 lockscreen|Lock screen
 session|Session
 system|System

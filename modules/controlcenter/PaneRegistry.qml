@@ -147,6 +147,26 @@ QtObject {
             readonly property list<string> keywords: ["osd", "volume popup", "brightness popup", "feedback"]
         },
         QtObject {
+            readonly property string id: "displays"
+            readonly property string label: "displays"
+            readonly property string title: qsTr("Displays")
+            readonly property string icon: "monitor"
+            readonly property string component: "displays/DisplaysPane.qml"
+            readonly property string category: "system"
+            readonly property string description: qsTr("Connected displays and arrangement")
+            readonly property list<string> keywords: ["display", "monitor", "screen", "arrangement", "mirror", "extend"]
+        },
+        QtObject {
+            readonly property string id: "input"
+            readonly property string label: "input"
+            readonly property string title: qsTr("Input")
+            readonly property string icon: "keyboard"
+            readonly property string component: "input/InputPane.qml"
+            readonly property string category: "system"
+            readonly property string description: qsTr("Keyboard layout and input settings")
+            readonly property list<string> keywords: ["input", "keyboard", "layout", "keybindings", "mouse", "touchpad"]
+        },
+        QtObject {
             readonly property string id: "lockscreen"
             readonly property string label: "lockscreen"
             readonly property string title: qsTr("Lock screen")

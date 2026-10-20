@@ -264,6 +264,8 @@ Item {
                 delegate: Item {
                     required property var modelData
 
+                    property bool traceOpen: false
+
                     width: ListView.view.width
                     implicitHeight: bubble.implicitHeight
 
@@ -276,7 +278,7 @@ Item {
                         anchors.right: bubble.mine ? parent.right : undefined
                         anchors.left: bubble.mine ? undefined : parent.left
                         width: parent.width * 0.86
-                        implicitHeight: textItem.implicitHeight + Appearance.padding.normal * 2
+                        implicitHeight: textItem.implicitHeight + (histTrace.visible ? histTrace.implicitHeight + Appearance.spacing.small : 0) + Appearance.padding.normal * 2
                         radius: Appearance.rounding.normal
                         color: bubble.system ? Qt.alpha(Colours.palette.m3error, 0.14) : bubble.mine ? Colours.palette.m3primaryContainer : Colours.palette.m3surfaceContainerHigh
 
@@ -296,7 +298,7 @@ Item {
 
                             anchors.left: parent.left
                             anchors.right: parent.right
-                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.top: parent.top
                             anchors.margins: Appearance.padding.large
                             text: modelData.text
                             textFormat: modelData.role === "assistant" ? Text.MarkdownText : Text.PlainText
@@ -305,6 +307,41 @@ Item {
                             wrapMode: Text.Wrap
                             onLinkActivated: link => Qt.openUrlExternally(link)
                         }
+
+                        ColumnLayout {
+                            id: histTrace
+
+                            visible: !!(modelData.trace && modelData.trace !== "")
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.top: textItem.bottom
+                            anchors.margins: Appearance.padding.large
+                            spacing: Appearance.spacing.small
+
+                            StyledText {
+                                text: parent.parent.parent.traceOpen ? qsTr("HIDE ACTIVITY TRACE") : qsTr("SHOW ACTIVITY TRACE")
+                                font.family: Appearance.font.family.mono
+                                font.pointSize: Appearance.font.size.smaller
+                                color: Colours.palette.m3tertiary
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: parent.parent.parent.parent.traceOpen = !parent.parent.parent.parent.traceOpen
+                                }
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                visible: parent.parent.parent.traceOpen
+                                text: modelData.trace ?? ""
+                                textFormat: Text.PlainText
+                                font.family: Appearance.font.family.mono
+                                font.pointSize: Appearance.font.size.smaller
+                                color: Colours.palette.m3onSurfaceVariant
+                                wrapMode: Text.Wrap
+                            }
+                        }
                     }
                 }
 
@@ -312,6 +349,46 @@ Item {
                 footer: ColumnLayout {
                     width: view.width
                     spacing: Appearance.spacing.normal
+
+                    // Live activity trace (reasoning previews, tool
+                    // lifecycle, commentary) as the gateway emits it.
+                    StyledRect {
+                        visible: root.bridge.busy && root.bridge.traceText !== ""
+                        Layout.alignment: Qt.AlignLeft
+                        implicitWidth: Math.min(view.width * 0.86, traceText.implicitWidth + Appearance.padding.large * 2)
+                        implicitHeight: traceCol.implicitHeight + Appearance.padding.normal * 2
+                        radius: Appearance.rounding.normal
+                        color: Qt.alpha(Colours.palette.m3tertiaryContainer, 0.35)
+
+                        ColumnLayout {
+                            id: traceCol
+
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.margins: Appearance.padding.large
+                            spacing: Appearance.spacing.small
+
+                            StyledText {
+                                text: qsTr("ACTIVITY TRACE · LIVE")
+                                font.family: Appearance.font.family.mono
+                                font.pointSize: Appearance.font.size.smaller
+                                color: Colours.palette.m3tertiary
+                            }
+
+                            StyledText {
+                                id: traceText
+
+                                Layout.fillWidth: true
+                                text: root.bridge.traceText.split("\n").slice(-8).join("\n")
+                                textFormat: Text.PlainText
+                                font.family: Appearance.font.family.mono
+                                font.pointSize: Appearance.font.size.smaller
+                                color: Colours.palette.m3onSurfaceVariant
+                                wrapMode: Text.Wrap
+                            }
+                        }
+                    }
 
                     StyledRect {
                         visible: root.bridge.busy

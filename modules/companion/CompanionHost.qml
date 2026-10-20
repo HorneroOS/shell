@@ -369,8 +369,8 @@ Scope {
             // Explicit surface size from the content column: the layer
             // surface ignores implicit-size changes, so popups sized only
             // implicitly get clipped.
-            width: stack.implicitWidth
-            height: stack.implicitHeight
+            implicitWidth: stack.implicitWidth
+            implicitHeight: stack.implicitHeight
 
             visible: win.isMine && CompanionStore.visible
 

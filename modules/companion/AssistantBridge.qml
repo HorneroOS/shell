@@ -26,6 +26,43 @@ Scope {
     property string buffer: ""
     property string decisionBuffer: ""
     property bool busy: false
+    // Chat surface state: in-memory conversation history (never
+    // persisted by the shell; Hermes owns sessions), the last run
+    // id seen, and a pending approval awaiting the user's decision.
+    property var history: []
+    property string lastRunId: ""
+    property var pendingApproval: null
+    property bool chatOpen: false
+
+    function pushHistory(role: string, text: string): void {
+        const entry = {
+            "role": role,
+            "text": text
+        };
+        const next = root.history.concat([entry]);
+        root.history = next.length > 20 ? next.slice(next.length - 20) : next;
+    }
+
+    function notePayload(payload): void {
+        if (!payload)
+            return;
+        if (payload.data && payload.data.runId)
+            root.lastRunId = payload.data.runId.toString();
+        const msg = payload.message ? payload.message.toString() : "";
+        const marker = "waiting for approval on run ";
+        const idx = msg.indexOf(marker);
+        if (idx >= 0) {
+            const rest = msg.slice(idx + marker.length);
+            const runId = rest.split(":")[0].trim();
+            if (runId !== "") {
+                root.pendingApproval = {
+                    "runId": runId,
+                    "detail": msg
+                };
+                CompanionStore.requestState("warning");
+            }
+        }
+    }
 
     function ask(text: string): void {
         const prompt = (text ?? "").toString().trim();
@@ -37,6 +74,7 @@ Scope {
         }
         root.buffer = "";
         root.busy = true;
+        root.pushHistory("user", prompt);
         CompanionStore.requestState("thinking");
         askProcess.command = ["horneroctl", "assistant", "ask", prompt, "--json"];
         askProcess.running = true;
@@ -107,6 +145,7 @@ Scope {
                 payload = null;
             }
             if (payload && payload.ok === true && payload.message) {
+                root.pendingApproval = null;
                 CompanionStore.requestState("success");
                 CompanionStore.say(payload.message.toString(), 9000);
             } else if (payload && payload.message) {
@@ -136,7 +175,9 @@ Scope {
             } catch (e) {
                 payload = null;
             }
+            root.notePayload(payload);
             if (payload && payload.ok === true && payload.message) {
+                root.pushHistory("assistant", payload.message.toString());
                 CompanionStore.requestState("success");
                 CompanionStore.say(payload.message.toString(), 12000);
             } else if (payload && payload.message) {

@@ -333,3 +333,24 @@ def test_bridge_approval_ux_is_explicit_and_cli_mediated():
     # exact user-typed choice, validated before any process runs.
     assert 'choice !== "approve" && choice !== "deny"' in BRIDGE
     assert "approve(runId" in BRIDGE and "clarify(runId" in BRIDGE
+
+
+CHAT = (COMPANION / "ChatPanel.qml").read_text()
+
+
+def test_companion_chat_panel_contract():
+    # Bridge owns chat state; the panel is presentation over it.
+    for token in ("property var history", "property var pendingApproval",
+                  "property bool chatOpen", "pushHistory", "notePayload",
+                  "pendingApproval = null"):
+        assert token in BRIDGE, f"bridge missing chat state: {token}"
+    # Panel renders history, thinking indicator, approval buttons,
+    # and input; actions go only through the bridge.
+    for token in ("bridge.history", "bridge.pendingApproval",
+                  '"approve"', '"deny"', "bridge.ask(", "bridge.askStop()",
+                  "dotPhase"):
+        assert token in CHAT, f"chat panel missing: {token}"
+    # Bridge must never answer approvals on its own.
+    assert 'pendingApproval.runId, "approve"' in CHAT
+    assert 'chatOpen = !assistantBridge.chatOpen' in HOST
+    assert "ChatPanel" in HOST

@@ -105,3 +105,11 @@ def test_launcher_ai_inline_provider():
     assert "8642" not in service
     assert '"assistant", "approve"' not in service
     assert '"assistant", "clarify"' not in service
+
+
+def test_launcher_ai_enter_stays_inline():
+    content = (ROOT / "modules/launcher/Content.qml").read_text()
+    # Enter on >ai activates the inline item; it must not forward to
+    # the companion chat IPC or close the launcher anymore.
+    assert "currentItem.onClicked();" in content
+    assert 'companion", "ask"' not in content

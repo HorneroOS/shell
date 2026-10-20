@@ -79,3 +79,11 @@ def test_file_provider_bounded_and_opens_via_xdg():
     assert "-maxdepth 4" in APPLIST and "head -50" in APPLIST
     item = (ROOT / "modules" / "launcher" / "items" / "FileItem.qml").read_text()
     assert '"xdg-open"' in item
+
+
+def test_transition_never_snapshots_model_values():
+    # Async providers (file search) fill model.values after the state
+    # transition; a PropertyAction on "values" re-applied the empty
+    # state-entry snapshot and emptied the list (live regression).
+    assert 'properties: "values,delegate"' not in APPLIST
+    assert 'properties: "delegate"' in APPLIST

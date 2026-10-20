@@ -54,11 +54,13 @@ StyledListView {
             }
         }
         onExited: (exitCode, exitStatus) => {
+            // Only touch fileResults: the file state's PropertyChanges
+            // binding publishes it to the model. Assigning model.values
+            // here too broke that binding and the list fell back to
+            // empty a frame later (observed live: count 1 -> 0).
             root.fileResults = fileProc.out.split("\n").map(s => s.trim()).filter(s => s.length > 0);
             root.fileStatus = root.fileResults.length === 0 ? qsTr("No files found") : "";
             fileProc.out = "";
-            if (root.state === "file")
-                model.values = root.fileResults;
         }
     }
 
@@ -215,9 +217,14 @@ StyledListView {
                     easing.bezierCurve: Appearance.anim.curves.standardAccel
                 }
             }
+            // Only the delegate swaps at the animation midpoint. The
+            // model values must stay a live binding: a PropertyAction
+            // on "values" re-applies the state-entry snapshot and
+            // wiped asynchronously-filled providers (the >file results
+            // arrived, then vanished a frame later — live-verified).
             PropertyAction {
-                targets: [model, root]
-                properties: "values,delegate"
+                targets: [root]
+                properties: "delegate"
             }
             ParallelAnimation {
                 Anim {

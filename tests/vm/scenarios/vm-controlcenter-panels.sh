@@ -76,6 +76,8 @@ companion|Javi
 audio|Audio
 notifications|Notifications
 osd|On-screen display
+lockscreen|Lock screen
+session|Session
 system|System
 extensions|Extensions
 updates|Updates

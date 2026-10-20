@@ -45,6 +45,10 @@ Item {
         onTriggered: root.dotPhase = (root.dotPhase + 1) % 4
     }
 
+    function focusInput(): void {
+        input.focusInput();
+    }
+
     function sendCurrent(): void {
         const text = input.text.trim();
         if (text === "" && root.bridge.attachments.length === 0)

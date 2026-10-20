@@ -137,6 +137,26 @@ QtObject {
             readonly property list<string> keywords: ["osd", "volume popup", "brightness popup", "feedback"]
         },
         QtObject {
+            readonly property string id: "lockscreen"
+            readonly property string label: "lockscreen"
+            readonly property string title: qsTr("Lock screen")
+            readonly property string icon: "lock"
+            readonly property string component: "lockscreen/LockScreenPane.qml"
+            readonly property string category: "system"
+            readonly property string description: qsTr("Lock screen privacy, fingerprint and idle locking")
+            readonly property list<string> keywords: ["lock", "fingerprint", "privacy", "idle", "sleep"]
+        },
+        QtObject {
+            readonly property string id: "session"
+            readonly property string label: "session"
+            readonly property string title: qsTr("Session")
+            readonly property string icon: "power_settings_new"
+            readonly property string component: "session/SessionPane.qml"
+            readonly property string category: "system"
+            readonly property string description: qsTr("Session menu behavior and keybinds")
+            readonly property list<string> keywords: ["session", "power menu", "logout", "vim", "drag"]
+        },
+        QtObject {
             readonly property string id: "system"
             readonly property string label: "system"
             readonly property string title: qsTr("System")

@@ -70,6 +70,16 @@ FloatingWindow {
             label: qsTr("Tools")
         },
         {
+            id: "javi",
+            icon: "raven",
+            label: qsTr("Javi")
+        },
+        {
+            id: "settings",
+            icon: "tune",
+            label: qsTr("Settings")
+        },
+        {
             id: "system",
             icon: "settings",
             label: qsTr("System")
@@ -261,6 +271,8 @@ FloatingWindow {
                 WorkspacesPage {}
                 PersonalizePage {}
                 ToolsPage {}
+                JaviPage {}
+                SettingsPage {}
                 SystemPage {}
                 LearnPage {}
                 ShortcutsPage {}

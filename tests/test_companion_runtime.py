@@ -231,10 +231,11 @@ def test_player_completes_single_frame_one_shots():
 
 
 def test_host_window_tracks_content_size():
-    # Layer surfaces ignore implicit-size changes: the window needs an
-    # explicit size bound to the content column.
-    assert "width: stack.implicitWidth" in HOST
-    assert "height: stack.implicitHeight" in HOST
+    # On the supported Quickshell, explicit PanelWindow size is only
+    # honored at map time (chat card stayed clipped at sprite size);
+    # implicit size bound to the content column resizes the surface.
+    assert "implicitWidth: stack.implicitWidth" in HOST
+    assert "implicitHeight: stack.implicitHeight" in HOST
 
 
 def test_host_content_sizes_without_clipping():

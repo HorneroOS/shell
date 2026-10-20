@@ -57,6 +57,16 @@ QtObject {
             readonly property list<string> keywords: ["theme", "wallpaper", "dark mode", "light mode", "color", "font", "transparency", "motion"]
         },
         QtObject {
+            readonly property string id: "nightlight"
+            readonly property string label: "nightlight"
+            readonly property string title: qsTr("Night Light")
+            readonly property string icon: "nightlight"
+            readonly property string component: "nightlight/NightLightPane.qml"
+            readonly property string category: "personalization"
+            readonly property string description: qsTr("Warm the display for the night")
+            readonly property list<string> keywords: ["night light", "night mode", "warm", "temperature", "redshift", "gammastep", "eye strain"]
+        },
+        QtObject {
             readonly property string id: "taskbar"
             readonly property string label: "taskbar"
             readonly property string title: qsTr("Bars")

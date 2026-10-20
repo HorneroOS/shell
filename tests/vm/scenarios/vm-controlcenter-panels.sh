@@ -68,6 +68,7 @@ network|Network
 bluetooth|Bluetooth
 vpn|VPN
 appearance|Appearance
+nightlight|Night Light
 taskbar|Bars
 layout|Layout
 launcher|Launcher

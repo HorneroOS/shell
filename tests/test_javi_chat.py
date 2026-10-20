@@ -51,7 +51,9 @@ def test_bridge_never_talks_to_gateway_directly():
 
 
 def test_panel_is_javi_retrofuturist():
-    assert "Javi · el Hornero" in PANEL
+    assert "JAVI · EL HORNERO" in PANEL
+    assert "199X" in PANEL
+    assert "scanline" in PANEL.lower()
     assert "frames/default-idle.png" in PANEL  # Javi avatar
     assert "Appearance.font.family.mono" in PANEL  # mono micro-labels
     assert "reducedMotion" in PANEL  # scanline/pulse honors reduced motion

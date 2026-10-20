@@ -64,6 +64,31 @@ Item {
         implicitHeight: layout.implicitHeight + Appearance.padding.large * 2
         radius: Appearance.rounding.large
         color: Colours.palette.m3surfaceContainer
+        // Hornero 199X frame: a phosphor accent edge around the card.
+        border.width: 1
+        border.color: Qt.alpha(Colours.palette.m3tertiary, 0.55)
+
+        // Static CRT scanlines over the whole card (texture only —
+        // no animation, so reduced-motion is honored by construction).
+        Item {
+            anchors.fill: parent
+            clip: true
+
+            Column {
+                anchors.fill: parent
+                spacing: 3
+
+                Repeater {
+                    model: 160
+
+                    Rectangle {
+                        width: card.width
+                        height: 1
+                        color: Qt.alpha(Colours.palette.m3onSurface, 0.035)
+                    }
+                }
+            }
+        }
 
         ColumnLayout {
             id: layout
@@ -92,11 +117,37 @@ Item {
                 ColumnLayout {
                     spacing: 0
 
-                    StyledText {
-                        text: qsTr("Javi · el Hornero")
-                        font.pointSize: Appearance.font.size.normal
-                        font.bold: true
-                        color: Colours.palette.m3onSurface
+                    RowLayout {
+                        spacing: Appearance.spacing.small
+
+                        StyledText {
+                            text: qsTr("JAVI · EL HORNERO")
+                            font.family: Appearance.font.family.mono
+                            font.pointSize: Appearance.font.size.normal
+                            font.bold: true
+                            color: Colours.palette.m3onSurface
+                        }
+
+                        // 199X badge: the retrofuturist marque.
+                        Rectangle {
+                            implicitWidth: badgeText.implicitWidth + 10
+                            implicitHeight: badgeText.implicitHeight + 4
+                            radius: 3
+                            color: Qt.alpha(Colours.palette.m3tertiary, 0.18)
+                            border.width: 1
+                            border.color: Qt.alpha(Colours.palette.m3tertiary, 0.65)
+
+                            StyledText {
+                                id: badgeText
+
+                                anchors.centerIn: parent
+                                text: "199X"
+                                font.family: Appearance.font.family.mono
+                                font.pointSize: Appearance.font.size.smaller
+                                font.bold: true
+                                color: Colours.palette.m3tertiary
+                            }
+                        }
                     }
 
                     StyledText {
@@ -183,6 +234,17 @@ Item {
                         implicitHeight: textItem.implicitHeight + Appearance.padding.normal * 2
                         radius: Appearance.rounding.normal
                         color: bubble.system ? Qt.alpha(Colours.palette.m3error, 0.14) : bubble.mine ? Colours.palette.m3primaryContainer : Colours.palette.m3surfaceContainerHigh
+
+                        Rectangle {
+                            visible: modelData.role === "assistant"
+                            anchors.left: parent.left
+                            anchors.top: parent.top
+                            anchors.bottom: parent.bottom
+                            anchors.margins: 6
+                            width: 3
+                            radius: 2
+                            color: Qt.alpha(Colours.palette.m3tertiary, 0.8)
+                        }
 
                         StyledText {
                             id: textItem

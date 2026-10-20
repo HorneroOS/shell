@@ -127,26 +127,23 @@ Scope {
         root.finalPayload = payload;
     }
 
+    // SplitParser hands us one NDJSON line per read (delimiter
+    // stripped): a {type:delta} line grows the live text, anything
+    // else that parses is the final CommandResult line.
     function consumeChunk(data: string): void {
-        root.lineBuffer += data;
-        let idx = root.lineBuffer.indexOf("\n");
-        while (idx >= 0) {
-            const line = root.lineBuffer.slice(0, idx).trim();
-            root.lineBuffer = root.lineBuffer.slice(idx + 1);
-            if (line !== "") {
-                let obj = null;
-                try {
-                    obj = JSON.parse(line);
-                } catch (e) {
-                    obj = null;
-                }
-                if (obj && obj.type === "delta" && obj.text)
-                    root.streamText += obj.text.toString();
-                else if (obj)
-                    root.finalPayload = obj;
-            }
-            idx = root.lineBuffer.indexOf("\n");
+        const line = (data ?? "").toString().trim();
+        if (line === "")
+            return;
+        let obj = null;
+        try {
+            obj = JSON.parse(line);
+        } catch (e) {
+            obj = null;
         }
+        if (obj && obj.type === "delta" && obj.text)
+            root.streamText += obj.text.toString();
+        else if (obj)
+            root.finalPayload = obj;
     }
 
     function ask(text: string): void {

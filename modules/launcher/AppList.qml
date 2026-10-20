@@ -8,6 +8,7 @@ import qs.components.containers
 import qs.services
 import qs.config
 import Quickshell
+import Quickshell.Io
 import QtQuick
 
 StyledListView {
@@ -20,6 +21,52 @@ StyledListView {
         id: model
 
         onValuesChanged: root.currentIndex = 0
+    }
+
+    // File provider (shell#250 slice 2): bounded, on-demand find over
+    // the XDG user dirs — no indexing daemon, capped results, and the
+    // query is passed as a single -iname pattern with quotes stripped.
+    property list<string> fileResults: []
+    property string fileStatus: ""
+
+    function runFileSearch(): void {
+        const q = search.text.slice(`${Config.launcher.actionPrefix}file `.length).trim().replace(/['"\\]/g, "");
+        if (q.length < 2) {
+            fileResults = [];
+            fileStatus = q.length === 0 ? "" : qsTr("Type at least 2 characters");
+            return;
+        }
+        fileStatus = qsTr("Searching…");
+        const home = Quickshell.env("HOME");
+        const dirs = ["Documents", "Downloads", "Desktop", "Pictures", "Music", "Videos"].map(d => `${home}/${d}`).join(" ");
+        fileProc.command = ["sh", "-c", `find ${dirs} -maxdepth 4 -type f -iname '*${q}*' 2>/dev/null | head -50`];
+        fileProc.running = true;
+    }
+
+    Process {
+        id: fileProc
+
+        property string out: ""
+
+        stdout: SplitParser {
+            onRead: data => {
+                fileProc.out += data + "\n";
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            root.fileResults = fileProc.out.split("\n").map(s => s.trim()).filter(s => s.length > 0);
+            root.fileStatus = root.fileResults.length === 0 ? qsTr("No files found") : "";
+            fileProc.out = "";
+            if (root.state === "file")
+                model.values = root.fileResults;
+        }
+    }
+
+    Timer {
+        id: fileDebounce
+
+        interval: 250
+        onTriggered: root.runFileSearch()
     }
 
     spacing: Appearance.spacing.small
@@ -52,7 +99,7 @@ StyledListView {
         const text = search.text;
         const prefix = Config.launcher.actionPrefix;
         if (text.startsWith(prefix)) {
-            for (const action of ["calc", "win", "scheme", "variant", "appearance", "theme"])
+            for (const action of ["calc", "win", "file", "scheme", "variant", "appearance", "theme"])
                 if (text.startsWith(`${prefix}${action} `))
                     return action === "theme" ? "appearance" : action;
 
@@ -60,6 +107,15 @@ StyledListView {
         }
 
         return "apps";
+    }
+
+    Connections {
+        target: root.search
+
+        function onTextChanged(): void {
+            if (root.state === "file")
+                fileDebounce.restart();
+        }
     }
 
     onStateChanged: {
@@ -103,6 +159,14 @@ StyledListView {
                     return Hypr.toplevels.values.filter(w => !q || (w.title ?? "").toLowerCase().includes(q) || (w.lastIpcObject.class ?? "").toLowerCase().includes(q));
                 }
                 root.delegate: windowItem
+            }
+        },
+        State {
+            name: "file"
+
+            PropertyChanges {
+                model.values: root.fileResults
+                root.delegate: fileItem
             }
         },
         State {
@@ -264,6 +328,14 @@ StyledListView {
         id: windowItem
 
         WindowItem {
+            list: root
+        }
+    }
+
+    Component {
+        id: fileItem
+
+        FileItem {
             list: root
         }
     }

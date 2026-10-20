@@ -73,7 +73,9 @@ StyledListView {
 
     spacing: Appearance.spacing.small
     orientation: Qt.Vertical
-    implicitHeight: (Config.launcher.sizes.itemHeight + spacing) * Math.min(Config.launcher.maxShown, count) - spacing
+    // The ai state's single delegate grows with the streamed answer;
+    // every other state uses fixed-height rows.
+    implicitHeight: state === "ai" ? Math.min(360, Math.max(Config.launcher.sizes.itemHeight, currentItem?.implicitHeight ?? 0)) : (Config.launcher.sizes.itemHeight + spacing) * Math.min(Config.launcher.maxShown, count) - spacing
 
     preferredHighlightBegin: 0
     preferredHighlightEnd: height

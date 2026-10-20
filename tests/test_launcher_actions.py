@@ -114,3 +114,10 @@ def test_launcher_ai_enter_stays_inline():
     # the companion chat IPC or close the launcher anymore.
     assert "currentItem.onClicked();" in content
     assert 'companion", "ask"' not in content
+
+
+def test_launcher_ai_list_grows_with_answer():
+    app_list = (ROOT / "modules/launcher/AppList.qml").read_text()
+    # Fixed-height rows would clip the streamed answer (found live).
+    assert 'state === "ai"' in app_list
+    assert "currentItem?.implicitHeight" in app_list

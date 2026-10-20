@@ -23,7 +23,7 @@ StyledRect {
         width: 30
         height: 30
         radius: 8
-        color: "#fffdf7"
+        color: Colours.palette.m3inverseSurface
 
         Image {
             anchors.centerIn: parent

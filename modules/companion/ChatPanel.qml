@@ -72,8 +72,8 @@ Item {
 
                 Image {
                     source: `${Quickshell.shellDir}/assets/companion/frames/default-idle.png`
-                    implicitWidth: 34
-                    implicitHeight: 34
+                    width: 34
+                    height: 34
                     fillMode: Image.PreserveAspectFit
                     smooth: false
                 }

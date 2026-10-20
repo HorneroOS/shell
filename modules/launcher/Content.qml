@@ -96,15 +96,12 @@ Item {
                         if (text.startsWith(`${Config.launcher.actionPrefix}calc `))
                             currentItem.onClicked();
                         else if (text.startsWith(`${Config.launcher.actionPrefix}ai `)) {
-                            // Ask Hornero: forward the prompt to the
-                            // Companion assistant IPC. horneroctl (via
-                            // the bridge) owns consent and credentials;
-                            // a disabled assistant answers with its
-                            // enable instructions in the bubble.
-                            const prompt = text.slice(Config.launcher.actionPrefix.length + 3).trim();
-                            if (prompt !== "")
-                                Quickshell.execDetached(["quickshell", "ipc", "call", "companion", "ask", prompt]);
-                            root.visibilities.launcher = false;
+                            // Inline ask (shell#250 slice 3): activate
+                            // the AiItem, which streams the answer in
+                            // the launcher. The launcher stays open so
+                            // the user watches it arrive; follow-ups
+                            // live in the Javi chat panel.
+                            currentItem.onClicked();
                         } else
                             currentItem.modelData.onClicked(list.currentList);
                     } else {

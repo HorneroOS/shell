@@ -151,7 +151,7 @@ FloatingWindow {
                     Layout.preferredWidth: 34
                     Layout.preferredHeight: 34
                     radius: 9
-                    color: "#fffdf7"
+                    color: Colours.palette.m3inverseSurface
 
                     Image {
                         anchors.centerIn: parent

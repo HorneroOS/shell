@@ -15,8 +15,12 @@ lands). Approval UX slice: when a run waits on Hermes, `ask` /
 bubble, and the user decides explicitly with
 `qs ipc call companion approve <run-id> approve|deny` or
 `qs ipc call companion clarify <run-id> "<answer>"`. Decisions are
-never auto-answered. Full chat UI and sessions remain future work;
-the assistant is disabled by default and never required.
+never auto-answered. A native chat panel (`ChatPanel.qml`,
+`qs ipc call companion chat`) shows the in-memory conversation,
+an animated thinking indicator while a run is busy, and the
+pending approval with explicit Approve/Deny buttons; Hermes
+owns real sessions. The assistant is disabled by default and
+never required.
 
 ## Reserved states → animations (live now)
 

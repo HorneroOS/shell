@@ -382,6 +382,10 @@ Scope {
 
                 spacing: 2
 
+                ChatPanel {
+                    bridge: assistantBridge
+                }
+
                 Bubble {
                     id: bubble
 
@@ -700,7 +704,12 @@ Scope {
         }
 
         function ask(text: string): void {
+            assistantBridge.chatOpen = true;
             assistantBridge.ask((text ?? "").toString());
+        }
+
+        function chat(): void {
+            assistantBridge.chatOpen = !assistantBridge.chatOpen;
         }
 
         function askStop(): void {

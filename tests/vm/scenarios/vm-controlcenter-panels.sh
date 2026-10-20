@@ -79,6 +79,7 @@ notifications|Notifications
 osd|On-screen display
 displays|Displays
 input|Input
+windows|Windows
 lockscreen|Lock screen
 session|Session
 system|System

@@ -1,26 +1,33 @@
-# Companion ↔ future Assistant mapping
+# Javi (the Companion) ↔ Assistant mapping
 
-The companion is presentation; the assistant will be a separate daemon
-(see `docs/adr/002-companion-assistant-boundary.md`). This page is the
-reserved vocabulary the daemon will drive over the `companion` IPC
-target. Slice 1 now has a real backend path behind two of them:
-`AssistantBridge.qml` runs `horneroctl assistant ask --json` (Hermes
-Agent via horneroctl's consent and read-only allowlist), mapping
-`thinking` while a run is in flight and `success`/`error` when the
-answer or an honest failure line lands in the bubble. Drive it with
-`qs ipc call companion ask "<prompt>"`; `askStop()` cancels locally
-(the Hermes run may still finish server-side until run-id streaming
-lands). Approval UX slice: when a run waits on Hermes, `ask` /
-`events(runId)` surface the pending approval or question in the
-bubble, and the user decides explicitly with
-`qs ipc call companion approve <run-id> approve|deny` or
-`qs ipc call companion clarify <run-id> "<answer>"`. Decisions are
-never auto-answered. A native chat panel (`ChatPanel.qml`,
-`qs ipc call companion chat`) shows the in-memory conversation,
-an animated thinking indicator while a run is busy, and the
-pending approval with explicit Approve/Deny buttons; Hermes
-owns real sessions. The assistant is disabled by default and
-never required.
+The companion is **Javi, el Hornero** — presentation with a
+Hornero 199X retrofuturist chat aesthetic (phosphor status light,
+mono micro-labels, scanline header accent; reduced-motion disables
+the shimmer). The assistant is a separate backend (see
+`docs/adr/002-companion-assistant-boundary.md`) driven over the
+`companion` IPC target. `AssistantBridge.qml` runs
+`horneroctl assistant ask --json --stream` (Hermes Agent via
+horneroctl's consent gates), consuming NDJSON delta lines for live
+streaming and the final CommandResult line for the structured
+outcome (answer, pending approval, pending clarification — read
+from payload data, never parsed from prose). `askStop()` now stops
+the Hermes run server-side too (`assistant stop <runId>`, shell#223)
+while it is known.
+
+The native chat panel (`ChatPanel.qml`,
+`qs ipc call companion chat`) is a scrollable bubble conversation
+with markdown rendering, suggestion chips, retry, clear, and
+persistent shell-side history
+(`$XDG_STATE_HOME/hornero/companion/chat-history.json`, capped by
+the Javi pane; Hermes owns real sessions). Attachments go through
+horneroctl validation (`--attach`: images as `input_image`, text
+inlined with caps, secret-looking files refused). Voice notes are
+recorded with `pw-record` and sent as an audio attachment that
+Hermes transcribes. Approvals and clarifications are always
+explicit user actions — never auto-answered. The assistant is
+disabled by default and never required. Control Center › Javi
+carries the Assistant (Hermes) settings section (status,
+enable/disable, streaming, history retention; keys never enter QML).
 
 ## Reserved states → animations (live now)
 

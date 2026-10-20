@@ -72,7 +72,7 @@ taskbar|Bars
 layout|Layout
 launcher|Launcher
 dashboard|Dashboard
-companion|Companion
+companion|Javi
 audio|Audio
 notifications|Notifications
 osd|On-screen display

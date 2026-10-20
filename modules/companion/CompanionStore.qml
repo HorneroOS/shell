@@ -115,6 +115,8 @@ Singleton {
         property real posY: 0.72
         property string screenName: ""
         property int tipIndex: 0
+        property int chatHistoryLimit: 50
+        property bool chatStreaming: true
         // One-shot animation override (e.g. greet on click). Cleared by
         // the host when the player reports finished.
         property string overrideAnim: ""
@@ -136,6 +138,8 @@ Singleton {
     property alias posY: persist.posY
     property alias screenName: persist.screenName
     property alias overrideAnim: persist.overrideAnim
+    property alias chatHistoryLimit: persist.chatHistoryLimit
+    property alias chatStreaming: persist.chatStreaming
 
     // The animation the player should show right now.
     // NOTE: bare `persist` (not `root.persist`): qualified access through
@@ -158,6 +162,8 @@ Singleton {
             persist.edge = "right";
         if (persist.bubbleTheme !== "auto" && persist.bubbleTheme !== "dark" && persist.bubbleTheme !== "light" && persist.bubbleTheme !== "pampa")
             persist.bubbleTheme = "auto";
+        if (persist.chatHistoryLimit < 0 || persist.chatHistoryLimit > 500)
+            persist.chatHistoryLimit = 50;
         if (persist.tipIndex < 0 || persist.tipIndex > 1000000)
             persist.tipIndex = 0;
         persist.overrideAnim = "";
@@ -354,7 +360,9 @@ Singleton {
             posX: persist.posX,
             posY: persist.posY,
             screenName: persist.screenName,
-            tipIndex: persist.tipIndex
+            tipIndex: persist.tipIndex,
+            chatHistoryLimit: persist.chatHistoryLimit,
+            chatStreaming: persist.chatStreaming
         });
     }
 
@@ -415,6 +423,10 @@ Singleton {
                     persist.screenName = o.screenName;
                 if (typeof o.tipIndex === "number")
                     persist.tipIndex = o.tipIndex;
+                if (typeof o.chatHistoryLimit === "number")
+                    persist.chatHistoryLimit = o.chatHistoryLimit;
+                if (typeof o.chatStreaming === "boolean")
+                    persist.chatStreaming = o.chatStreaming;
                 if (typeof o.state === "string") {
                     switch (o.state) {
                     case "hidden":

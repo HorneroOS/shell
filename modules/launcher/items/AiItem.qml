@@ -1,5 +1,4 @@
 import qs.components
-import qs.modules.launcher.services
 import qs.services
 import qs.config
 import Quickshell

@@ -52,7 +52,7 @@ StyledListView {
         const text = search.text;
         const prefix = Config.launcher.actionPrefix;
         if (text.startsWith(prefix)) {
-            for (const action of ["calc", "scheme", "variant", "appearance", "theme"])
+            for (const action of ["calc", "win", "scheme", "variant", "appearance", "theme"])
                 if (text.startsWith(`${prefix}${action} `))
                     return action === "theme" ? "appearance" : action;
 
@@ -92,6 +92,17 @@ StyledListView {
             PropertyChanges {
                 model.values: [0]
                 root.delegate: calcItem
+            }
+        },
+        State {
+            name: "win"
+
+            PropertyChanges {
+                model.values: {
+                    const q = search.text.slice(`${Config.launcher.actionPrefix}win `.length).toLowerCase();
+                    return Hypr.toplevels.values.filter(w => !q || (w.title ?? "").toLowerCase().includes(q) || (w.lastIpcObject.class ?? "").toLowerCase().includes(q));
+                }
+                root.delegate: windowItem
             }
         },
         State {
@@ -245,6 +256,14 @@ StyledListView {
         id: calcItem
 
         CalcItem {
+            list: root
+        }
+    }
+
+    Component {
+        id: windowItem
+
+        WindowItem {
             list: root
         }
     }

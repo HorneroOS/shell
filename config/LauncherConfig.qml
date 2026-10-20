@@ -50,6 +50,14 @@ JsonObject {
             dangerous: false
         },
         {
+            name: "Windows",
+            icon: "web_asset",
+            description: "Switch to an open window",
+            command: ["autocomplete", "win"],
+            enabled: true,
+            dangerous: false
+        },
+        {
             name: "Calculator",
             icon: "calculate",
             description: "Do simple math equations (powered by Qalc)",

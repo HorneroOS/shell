@@ -52,3 +52,19 @@ def test_ask_hornero_action_and_ai_prompt_route():
     # talks to Hermes or horneroctl assistant directly.
     assert '"companion", "ask", prompt' in CONTENT
     assert '"horneroctl", "assistant"' not in CONTENT
+
+
+APPLIST = (ROOT / "modules" / "launcher" / "AppList.qml").read_text()
+
+
+def test_windows_provider_shipped_and_focuses_via_hypr():
+    m = re.search(r'name:\s*"Windows".*?command:\s*\[(.*?)\]',
+                  DEFAULTS, re.DOTALL)
+    assert m and '"autocomplete", "win"' in m.group(1)
+    # `>win <query>` state filters compositor toplevels by title/class…
+    assert '"win"' in APPLIST
+    assert "Hypr.toplevels.values.filter" in APPLIST
+    # …and the delegate focuses through the Hypr service only.
+    item = (ROOT / "modules" / "launcher" / "items" / "WindowItem.qml").read_text()
+    assert "focuswindow address:0x" in item
+    assert "horneroctl" not in item

@@ -87,8 +87,14 @@ Singleton {
     property bool areaPickerOpen: false
     property bool controlCenterOpen: false
 
+    // Set by an explicit user request (chat IPC, launcher >ai, menu):
+    // ambient suppression (fullscreen/game) must not swallow a
+    // conversation the user just asked for. Cleared when the chat
+    // closes or the companion is hidden.
+    property bool forceVisible: false
+
     readonly property bool suppressed: root.suppressLocked || root.suppressFullscreen || root.suppressGameMode || root.areaPickerOpen || root.controlCenterOpen
-    readonly property bool visible: persist.enabled && !root.suppressed && persist.state !== "hidden"
+    readonly property bool visible: persist.enabled && (!root.suppressed || root.forceVisible) && persist.state !== "hidden"
 
     property string bubbleText: ""
     property bool bubbleOpen: false
@@ -207,6 +213,7 @@ Singleton {
     }
 
     function hide(): void {
+        root.forceVisible = false;
         if (persist.state !== "hidden")
             persist.state = "leaving";
         root.dismissBubble();

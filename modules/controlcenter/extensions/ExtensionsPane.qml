@@ -11,6 +11,7 @@ import qs.config
 import QtQuick
 import QtQuick.Layouts
 import Quickshell.Io
+import Quickshell.Widgets
 
 // Control Center › Extensions: community plugin lifecycle.
 // horneroctl stays the single writer of plugin lifecycle state: this

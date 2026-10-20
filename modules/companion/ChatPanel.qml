@@ -301,7 +301,6 @@ Item {
 
                         Layout.fillWidth: true
                         horizontalAlignment: TextInput.AlignLeft
-                        placeholderText: qsTr("Tu respuesta…")
                         onEditingFinished: {
                             if (text.trim() !== "" && root.bridge.pendingClarify) {
                                 root.bridge.clarify(root.bridge.pendingClarify.runId, text);
@@ -367,7 +366,6 @@ Item {
 
                     Layout.fillWidth: true
                     horizontalAlignment: TextInput.AlignLeft
-                    placeholderText: qsTr("Preguntale a Javi…")
                     onEditingFinished: root.sendCurrent()
 
                     Keys.onEscapePressed: root.bridge.chatOpen = false

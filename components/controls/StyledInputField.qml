@@ -22,6 +22,12 @@ Item {
     signal textEdited(string text)
     signal editingFinished
 
+    // Focus the inner text field (focusing the wrapper Item alone
+    // leaves typing with nowhere to go).
+    function focusInput(): void {
+        inputField.forceActiveFocus();
+    }
+
     implicitHeight: inputField.implicitHeight + Appearance.padding.small * 2
 
     StyledRect {

@@ -10,7 +10,7 @@ import QtQuick
 Singleton {
     id: root
 
-    readonly property list<string> pages: ["start", "navigate", "shell", "workspaces", "personalize", "tools", "system", "learn", "shortcuts"]
+    readonly property list<string> pages: ["start", "navigate", "shell", "workspaces", "personalize", "tools", "javi", "settings", "system", "learn", "shortcuts"]
     property string currentPage: "start"
     property bool opened: false
     property var _win: null

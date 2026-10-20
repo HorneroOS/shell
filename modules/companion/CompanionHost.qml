@@ -348,10 +348,21 @@ Scope {
             // opened.
             WlrLayershell.layer: WlrLayer.Bottom
             WlrLayershell.exclusionMode: ExclusionMode.Ignore
-            // Menu modal exception: focus only while the right-click
-            // menu is open, so Escape can dismiss it (docs/INTERACTION.md).
-            WlrLayershell.keyboardFocus: menu.visible ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+            // Focus exceptions: the right-click menu (Escape dismiss)
+            // and the Javi chat (its text inputs must receive keys —
+            // with keyboardFocus None the input looks active but typing
+            // goes nowhere). Exclusive is safe here unlike the drawers:
+            // this surface remaps when the chat toggles, so Hyprland
+            // grants focus at map time instead of bouncing a grab on
+            // an already-mapped surface. Escape closes the chat.
+            WlrLayershell.keyboardFocus: menu.visible || assistantBridge.chatOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
+            // NOTE: the grab stays menu-only. Extending it to the
+            // chat made Hyprland clear the grab as soon as it engaged
+            // (Bottom-layer surface), which closed the chat instantly
+            // via onCleared. The chat relies on OnDemand keyboard
+            // focus alone; clicking another window simply defocuses
+            // the input, it does not dismiss the conversation.
             HyprlandFocusGrab {
                 active: Compositor.isHyprland && menu.visible
                 windows: [win]
@@ -363,8 +374,11 @@ Scope {
             // The window grows when the chat card opens (330px vs the
             // 128px sprite): clamp against the real content size so
             // the card never lands off-screen at the right/bottom edge.
-            margins.top: Math.max(0, Math.min(win.py + Math.round(win.bobY), win.screenH - stack.implicitHeight))
-            margins.left: Math.max(0, Math.min(win.px, win.screenW - stack.implicitWidth))
+            // Keep a breathing margin from every screen edge: the
+            // window never sits flush against the border, and the
+            // grown chat card never clips off-screen.
+            margins.top: Math.max(16, Math.min(win.py + Math.round(win.bobY), Math.max(16, win.screenH - stack.implicitHeight - 16)))
+            margins.left: Math.max(16, Math.min(win.px, Math.max(16, win.screenW - stack.implicitWidth - 16)))
 
             // Explicit surface size from the content column: the layer
             // surface ignores implicit-size changes, so popups sized only
@@ -390,7 +404,16 @@ Scope {
                 function onChatOpenChanged(): void {
                     win.surfaceOn = false;
                     remapTimer.restart();
+                    if (assistantBridge.chatOpen)
+                        focusTimer.restart();
                 }
+            }
+
+            Timer {
+                id: focusTimer
+
+                interval: 90
+                onTriggered: chatPanel.focusInput()
             }
 
             visible: win.surfaceOn && win.isMine && CompanionStore.visible
@@ -407,6 +430,8 @@ Scope {
                 spacing: 2
 
                 ChatPanel {
+                    id: chatPanel
+
                     bridge: assistantBridge
                 }
 

@@ -73,6 +73,7 @@ layout|Layout
 launcher|Launcher
 dashboard|Dashboard
 companion|Javi
+accessibility|Accessibility
 audio|Audio
 notifications|Notifications
 osd|On-screen display

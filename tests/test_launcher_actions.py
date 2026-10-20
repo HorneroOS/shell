@@ -48,9 +48,10 @@ def test_ask_hornero_action_and_ai_prompt_route():
     m = re.search(r'name:\s*"Ask Hornero".*?command:\s*\[(.*?)\]',
                   DEFAULTS, re.DOTALL)
     assert m and '"autocomplete", "ai"' in m.group(1)
-    # `>ai <prompt>` forwards to the Companion IPC; the launcher never
-    # talks to Hermes or horneroctl assistant directly.
-    assert '"companion", "ask", prompt' in CONTENT
+    # `>ai <prompt>` asks inline (slice 3): Content.qml activates the
+    # AiItem and never talks to Hermes/horneroctl or the companion IPC
+    # directly — InlineAsk owns the horneroctl call.
+    assert '"companion", "ask", prompt' not in CONTENT
     assert '"horneroctl", "assistant"' not in CONTENT
 
 

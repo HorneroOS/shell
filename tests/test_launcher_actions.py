@@ -68,3 +68,14 @@ def test_windows_provider_shipped_and_focuses_via_hypr():
     item = (ROOT / "modules" / "launcher" / "items" / "WindowItem.qml").read_text()
     assert "focuswindow address:0x" in item
     assert "horneroctl" not in item
+
+
+def test_file_provider_bounded_and_opens_via_xdg():
+    m = re.search(r'name:\s*"Files".*?command:\s*\[(.*?)\]',
+                  DEFAULTS, re.DOTALL)
+    assert m and '"autocomplete", "file"' in m.group(1)
+    assert '"file"' in APPLIST and "runFileSearch" in APPLIST
+    # Bounded by design: depth cap, result cap, XDG dirs only.
+    assert "-maxdepth 4" in APPLIST and "head -50" in APPLIST
+    item = (ROOT / "modules" / "launcher" / "items" / "FileItem.qml").read_text()
+    assert '"xdg-open"' in item

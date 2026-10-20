@@ -58,6 +58,14 @@ JsonObject {
             dangerous: false
         },
         {
+            name: "Files",
+            icon: "folder_open",
+            description: "Find files in your home folders",
+            command: ["autocomplete", "file"],
+            enabled: true,
+            dangerous: false
+        },
+        {
             name: "Calculator",
             icon: "calculate",
             description: "Do simple math equations (powered by Qalc)",

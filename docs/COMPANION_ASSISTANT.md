@@ -16,7 +16,7 @@ while it is known.
 
 The launcher can also ask inline (shell#250 slice 3): `>ai <question>`
 streams the answer inside the launcher via
-`modules/launcher/services/InlineAsk.qml`, using the same
+`services/InlineAsk.qml` (a shell-lifetime singleton, so the answer survives the launcher drawer closing), using the same
 `horneroctl assistant ask --json --stream` path. It is deliberately
 one-shot: no history, no attachments, and approvals/clarifications
 are never answered there — the final payload message points the user

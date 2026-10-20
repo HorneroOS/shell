@@ -10,6 +10,7 @@ import qs.modules.companion
 import qs.config
 import qs.services
 import Quickshell.Widgets
+import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 
@@ -55,14 +56,14 @@ Item {
                 spacing: Appearance.spacing.normal
 
                 StyledText {
-                    text: qsTr("Companion")
+                    text: qsTr("Javi · el Hornero")
                     font.pointSize: Appearance.font.size.large
                     font.weight: 500
                 }
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: qsTr("A small Hornero sidekick that idles, greets, and shows tips. Never wanders on its own.")
+                    text: qsTr("Javi, el Hornero: your sidekick. Idles, greets, shows tips — and, with Hermes enabled, chats, reads the system and always asks before changing anything.")
                     font.pointSize: Appearance.font.size.small
                     color: Colours.palette.m3outline
                     wrapMode: Text.Wrap
@@ -134,6 +135,90 @@ Item {
                             formatValueFunction: val => val === 0 ? qsTr("never") : `${Math.round(val)} min`
                             parseValueFunction: text => parseInt(text)
                             onValueModified: newValue => CompanionStore.sleepMinutes = Math.round(newValue)
+                        }
+                    }
+                }
+
+
+                StyledRect {
+                    Layout.fillWidth: true
+                    radius: Appearance.rounding.normal
+                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    implicitHeight: assistantCol.implicitHeight + Appearance.padding.large * 2
+
+                    ColumnLayout {
+                        id: assistantCol
+
+                        anchors.fill: parent
+                        anchors.margins: Appearance.padding.large
+                        spacing: Appearance.spacing.small
+
+                        StyledText {
+                            text: qsTr("Assistant (Hermes)")
+                            font.pointSize: Appearance.font.size.normal
+                            font.weight: 500
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: assistantStatus.text
+                            font.pointSize: Appearance.font.size.small
+                            color: Colours.palette.m3outline
+                            wrapMode: Text.Wrap
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Optional and local: Hermes runs as your user on loopback, Javi talks to it only through horneroctl, and nothing changes the system without your approval. Keys never enter this panel.")
+                            font.pointSize: Appearance.font.size.small
+                            color: Colours.palette.m3outline
+                            wrapMode: Text.Wrap
+                        }
+
+                        RowLayout {
+                            spacing: Appearance.spacing.small
+
+                            TextButton {
+                                text: qsTr("Enable assistant")
+                                type: TextButton.Filled
+                                onClicked: assistantCtl.run(["horneroctl", "assistant", "enable", "--yes", "--json"])
+                            }
+
+                            TextButton {
+                                text: qsTr("Disable")
+                                type: TextButton.Tonal
+                                onClicked: assistantCtl.run(["horneroctl", "assistant", "disable", "--yes", "--json"])
+                            }
+
+                            TextButton {
+                                text: qsTr("Refresh status")
+                                type: TextButton.Tonal
+                                onClicked: assistantStatus.refresh()
+                            }
+                        }
+
+                        SwitchRow {
+                            label: qsTr("Stream answers live")
+                            checked: CompanionStore.chatStreaming
+                            onToggled: checked => CompanionStore.chatStreaming = checked
+                        }
+
+                        SliderInput {
+                            Layout.fillWidth: true
+
+                            label: qsTr("Chat history kept")
+                            value: CompanionStore.chatHistoryLimit
+                            from: 0
+                            to: 200
+                            stepSize: 10
+                            suffix: qsTr("msgs")
+                            validator: IntValidator {
+                                bottom: 0
+                                top: 200
+                            }
+                            formatValueFunction: val => val === 0 ? qsTr("off") : `${Math.round(val)}`
+                            parseValueFunction: text => parseInt(text)
+                            onValueModified: newValue => CompanionStore.chatHistoryLimit = Math.round(newValue)
                         }
                     }
                 }
@@ -280,4 +365,53 @@ Item {
             }
         }
     }
+
+    QtObject {
+        id: assistantStatus
+
+        property string text: qsTr("Checking assistant status…")
+
+        function refresh(): void {
+            assistantStatusProc.out = "";
+            assistantStatusProc.command = ["horneroctl", "assistant", "status", "--json"];
+            assistantStatusProc.running = true;
+        }
+    }
+
+    Process {
+        id: assistantStatusProc
+
+        property string out: ""
+
+        stdout: SplitParser {
+            onRead: data => {
+                assistantStatusProc.out += data;
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            try {
+                const payload = JSON.parse(assistantStatusProc.out.trim());
+                assistantStatus.text = payload.message ? payload.message.toString() : qsTr("Unknown status");
+            } catch (e) {
+                assistantStatus.text = qsTr("horneroctl assistant unavailable on this system.");
+            }
+        }
+    }
+
+    QtObject {
+        id: assistantCtl
+
+        function run(cmd): void {
+            assistantCtlProc.command = cmd;
+            assistantCtlProc.running = true;
+        }
+    }
+
+    Process {
+        id: assistantCtlProc
+
+        onExited: (exitCode, exitStatus) => assistantStatus.refresh()
+    }
+
+    Component.onCompleted: assistantStatus.refresh()
 }

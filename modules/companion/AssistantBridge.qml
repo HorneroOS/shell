@@ -1,89 +1,228 @@
 pragma ComponentBehavior: Bound
 
 import qs.modules.companion
+import qs.utils
 import Quickshell
 import Quickshell.Io
 import QtQuick
 
-// Assistant bridge (Hermes slice 1): the only companion-side piece that
+// Assistant bridge (Javi / Hermes): the only companion-side piece that
 // talks to the assistant backend, through the public horneroctl CLI —
 // never to Hermes directly, never around horneroctl's consent gates.
 //
-// Flow: ask(text) marks the reserved `thinking` state, runs
-// `horneroctl assistant ask --json <text>`, then shows the answer in the
-// speech bubble under `success`, or a short recovery line under `error`.
-// When the assistant is disabled or Hermes is down, horneroctl answers
-// ok:false with a human message; the bridge surfaces it verbatim
-// (truncated by say()) so the failure is honest, not a silent no-op.
+// Chat flow (shell#234): ask() runs
+// `horneroctl assistant ask <text> --json --stream [--attach …]`,
+// which frames live text as NDJSON delta lines and ends with the
+// final CommandResult JSON line. Deltas grow `streamText` (rendered
+// live by the panel); the final line resolves the run: answer,
+// pending approval, or pending clarification — surfaced from the
+// structured payload, never parsed out of prose. Approvals and
+// clarifications are always explicit user actions forwarded through
+// horneroctl, the only holder of the gateway credential.
 //
-// Cancellation is local in this slice: askStop() terminates the CLI
-// process. The Hermes run may finish server-side; full run-id cancel
-// lands when the ask protocol streams run ids (see
-// docs/COMPANION_ASSISTANT.md).
+// History is shell-side presentation state: persisted (capped) at
+// $XDG_STATE_HOME/hornero/companion/chat-history.json so a restart
+// keeps the conversation; Hermes owns real sessions. The user can
+// clear it at any time. Attachments are validated by horneroctl
+// (allowlist + caps + secret-path refusal); voice notes are recorded
+// locally and sent as an audio attachment that Hermes transcribes.
 Scope {
     id: root
 
     property string buffer: ""
+    property string lineBuffer: ""
     property string decisionBuffer: ""
     property bool busy: false
-    // Chat surface state: in-memory conversation history (never
-    // persisted by the shell; Hermes owns sessions), the last run
-    // id seen, and a pending approval awaiting the user's decision.
     property var history: []
     property string lastRunId: ""
+    property string lastPrompt: ""
     property var pendingApproval: null
+    property var pendingClarify: null
     property bool chatOpen: false
+    // Live streamed assistant text for the in-flight run.
+    property string streamText: ""
+    property var finalPayload: null
+    // Backend status for the panel header / settings pane.
+    property bool assistantEnabled: false
+    property bool gatewayReachable: false
+    property string statusMessage: ""
+    // Attachments queued for the next send (absolute paths).
+    property var attachments: []
+    property bool recording: false
+    property string recordPath: ""
+
+    readonly property string historyPath: `${Paths.state}/companion/chat-history.json`
+    readonly property int historyCap: CompanionStore.chatHistoryLimit > 0 ? CompanionStore.chatHistoryLimit : 50
 
     function pushHistory(role: string, text: string): void {
         const entry = {
             "role": role,
-            "text": text
+            "text": text,
+            "ts": Date.now()
         };
-        const next = root.history.concat([entry]);
-        root.history = next.length > 20 ? next.slice(next.length - 20) : next;
+        let next = root.history.concat([entry]);
+        if (next.length > root.historyCap)
+            next = next.slice(next.length - root.historyCap);
+        root.history = next;
+        root.saveHistory();
+    }
+
+    function clearHistory(): void {
+        root.history = [];
+        root.saveHistory();
+    }
+
+    function saveHistory(): void {
+        const text = JSON.stringify(root.history);
+        if (text === root.lastSavedHistory)
+            return;
+        root.lastSavedHistory = text;
+        const quoted = text.replace(/'/g, "'\\''");
+        const path = root.historyPath;
+        historyWriter.command = ["sh", "-c", `mkdir -p "$(dirname '${path}')" && tmp="$(mktemp "$(dirname '${path}')/.chat.XXXXXX")" && printf '%s' '${quoted}' > "$tmp" && mv -f "$tmp" '${path}'`];
+        historyWriter.running = true;
+    }
+
+    property string lastSavedHistory: ""
+
+    function loadHistory(): void {
+        historyReader.path = root.historyPath;
+        historyReader.reload();
     }
 
     function notePayload(payload): void {
         if (!payload)
             return;
-        if (payload.data && payload.data.runId)
-            root.lastRunId = payload.data.runId.toString();
-        const msg = payload.message ? payload.message.toString() : "";
-        const marker = "waiting for approval on run ";
-        const idx = msg.indexOf(marker);
-        if (idx >= 0) {
-            const rest = msg.slice(idx + marker.length);
-            const runId = rest.split(":")[0].trim();
-            if (runId !== "") {
-                root.pendingApproval = {
-                    "runId": runId,
-                    "detail": msg
-                };
-                CompanionStore.requestState("warning");
+        const data = payload.data || {};
+        if (data.runId)
+            root.lastRunId = data.runId.toString();
+        const pending = (data.pending || "").toString();
+        const detail = (data.detail || payload.message || "").toString();
+        if (pending === "approval" && root.lastRunId !== "") {
+            root.pendingApproval = {
+                "runId": root.lastRunId,
+                "detail": detail
+            };
+            root.pendingClarify = null;
+            CompanionStore.requestState("warning");
+        } else if (pending === "clarify" && root.lastRunId !== "") {
+            root.pendingClarify = {
+                "runId": root.lastRunId,
+                "detail": detail
+            };
+            root.pendingApproval = null;
+            CompanionStore.requestState("warning");
+        }
+    }
+
+    function handleFinalLine(line: string): void {
+        let payload = null;
+        try {
+            payload = JSON.parse(line);
+        } catch (e) {
+            payload = null;
+        }
+        if (!payload || payload.type === "delta")
+            return;
+        root.finalPayload = payload;
+    }
+
+    function consumeChunk(data: string): void {
+        root.lineBuffer += data;
+        let idx = root.lineBuffer.indexOf("\n");
+        while (idx >= 0) {
+            const line = root.lineBuffer.slice(0, idx).trim();
+            root.lineBuffer = root.lineBuffer.slice(idx + 1);
+            if (line !== "") {
+                let obj = null;
+                try {
+                    obj = JSON.parse(line);
+                } catch (e) {
+                    obj = null;
+                }
+                if (obj && obj.type === "delta" && obj.text)
+                    root.streamText += obj.text.toString();
+                else if (obj)
+                    root.finalPayload = obj;
             }
+            idx = root.lineBuffer.indexOf("\n");
         }
     }
 
     function ask(text: string): void {
         const prompt = (text ?? "").toString().trim();
-        if (prompt === "")
+        if (prompt === "" && root.attachments.length === 0)
             return;
         if (root.busy) {
             CompanionStore.say("Still working on the last one — give me a moment.", 4000);
             return;
         }
+        const sentAttachments = root.attachments.slice();
+        root.attachments = [];
         root.buffer = "";
+        root.lineBuffer = "";
+        root.streamText = "";
+        root.finalPayload = null;
         root.busy = true;
-        root.pushHistory("user", prompt);
+        root.lastPrompt = prompt;
+        const shown = prompt === "" ? qsTr("(attachment)") : prompt;
+        root.pushHistory("user", sentAttachments.length > 0 ? `${shown} 📎 ${sentAttachments.length}` : shown);
         CompanionStore.requestState("thinking");
-        askProcess.command = ["horneroctl", "assistant", "ask", prompt, "--json"];
+        let cmd = ["horneroctl", "assistant", "ask", prompt === "" ? qsTr("Describe and answer based on the attached file(s).") : prompt, "--json", "--stream"];
+        for (const p of sentAttachments)
+            cmd = cmd.concat(["--attach", p.toString()]);
+        askProcess.command = cmd;
         askProcess.running = true;
     }
 
+    function retryLast(): void {
+        if (root.lastPrompt !== "" && !root.busy)
+            root.ask(root.lastPrompt);
+    }
+
+    function addAttachment(path: string): void {
+        const p = (path ?? "").toString().trim();
+        if (p === "" || root.attachments.indexOf(p) !== -1)
+            return;
+        if (root.attachments.length >= 8) {
+            CompanionStore.say("Up to 8 attachments per message.", 4000);
+            return;
+        }
+        root.attachments = root.attachments.concat([p]);
+    }
+
+    function removeAttachment(path: string): void {
+        root.attachments = root.attachments.filter(p => p !== path);
+    }
+
+    // Voice: record with pw-record (PipeWire) to a temp wav; on stop,
+    // the clip is attached and sent with a transcription instruction.
+    // Hermes transcribes audio attachments gateway-side; the shell
+    // never touches STT credentials.
+    function startRecording(): void {
+        if (root.recording || root.busy)
+            return;
+        root.recordPath = `${Quickshell.cacheDir}/javi-voice-${Date.now()}.wav`;
+        recordProcess.command = ["pw-record", "--rate", "16000", "--channels", "1", root.recordPath];
+        recordProcess.running = true;
+        root.recording = true;
+        CompanionStore.requestState("listening");
+    }
+
+    function stopRecording(send: bool): void {
+        if (!root.recording)
+            return;
+        root.recording = false;
+        recordProcess.running = false;
+        CompanionStore.requestState("idle");
+        if (send && root.recordPath !== "") {
+            root.addAttachment(root.recordPath);
+            root.ask(qsTr("Transcribe the attached audio and treat the transcription as my message. Answer it."));
+        }
+    }
+
     // Approval / clarification UX: decisions are always explicit user
-    // actions. Nothing here answers Hermes on its own; each function
-    // forwards exactly the decision the user picked through horneroctl,
-    // which remains the only holder of the gateway credential.
+    // actions. Nothing here answers Hermes on its own.
     function approve(runId: string, decision: string): void {
         const id = (runId ?? "").toString().trim();
         const choice = (decision ?? "").toString().trim();
@@ -99,24 +238,16 @@ Scope {
     function clarify(runId: string, answer: string): void {
         const id = (runId ?? "").toString().trim();
         const text = (answer ?? "").toString().trim();
-        if (id === "" || text === "") {
-            CompanionStore.say("I need a run id and your answer.", 6000);
+        if (id === "" || text === "")
             return;
-        }
         root.decisionBuffer = "";
         decisionProcess.command = ["horneroctl", "assistant", "clarify", id, text, "--json"];
         decisionProcess.running = true;
     }
 
-    function events(runId: string): void {
-        const id = (runId ?? "").toString().trim();
-        if (id === "" || root.busy)
-            return;
-        root.buffer = "";
-        root.busy = true;
-        CompanionStore.requestState("thinking");
-        askProcess.command = ["horneroctl", "assistant", "events", id, "--json"];
-        askProcess.running = true;
+    function refreshStatus(): void {
+        statusProcess.command = ["horneroctl", "assistant", "status", "--json"];
+        statusProcess.running = true;
     }
 
     function askStop(): void {
@@ -124,8 +255,80 @@ Scope {
             return;
         askProcess.running = false;
         root.busy = false;
+        if (root.streamText !== "") {
+            root.pushHistory("assistant", root.streamText + " ⏹");
+            root.streamText = "";
+        }
         CompanionStore.requestState("idle");
-        CompanionStore.say("Stopped. The answer may still finish on the Hermes side.", 5000);
+        if (root.lastRunId !== "") {
+            // Server-side cancel (shell#223): stop the Hermes run too,
+            // not just the local CLI process.
+            stopProcess.command = ["horneroctl", "assistant", "stop", root.lastRunId, "--json"];
+            stopProcess.running = true;
+            CompanionStore.say("Stopped — including the Hermes run.", 5000);
+        } else {
+            CompanionStore.say("Stopped locally; the run id was not known yet.", 5000);
+        }
+    }
+
+    Component.onCompleted: {
+        root.loadHistory();
+        root.refreshStatus();
+    }
+
+    FileView {
+        id: historyReader
+
+        onLoaded: {
+            try {
+                const parsed = JSON.parse(text());
+                if (Array.isArray(parsed))
+                    root.history = parsed.filter(e => e && e.text).slice(-root.historyCap);
+            } catch (e) {
+                root.history = [];
+            }
+        }
+    }
+
+    Process {
+        id: historyWriter
+    }
+
+    Process {
+        id: recordProcess
+
+        onExited: (exitCode, exitStatus) => {
+            root.recording = false;
+        }
+    }
+
+    Process {
+        id: statusProcess
+
+        property string out: ""
+
+        stdout: SplitParser {
+            onRead: data => {
+                statusProcess.out += data;
+            }
+        }
+        onStarted: statusProcess.out = ""
+        onExited: (exitCode, exitStatus) => {
+            try {
+                const payload = JSON.parse(statusProcess.out.trim());
+                root.assistantEnabled = payload.ok === true;
+                root.statusMessage = payload.message ? payload.message.toString() : "";
+                root.gatewayReachable = root.statusMessage.indexOf("reachable") !== -1;
+            } catch (e) {
+                root.assistantEnabled = false;
+                root.gatewayReachable = false;
+                root.statusMessage = "horneroctl assistant unavailable";
+            }
+        }
+    }
+
+    Process {
+        id: stopProcess
     }
 
     Process {
@@ -146,8 +349,12 @@ Scope {
             }
             if (payload && payload.ok === true && payload.message) {
                 root.pendingApproval = null;
+                root.pendingClarify = null;
                 CompanionStore.requestState("success");
                 CompanionStore.say(payload.message.toString(), 9000);
+                // The run continues after a decision; follow its events.
+                if (root.lastRunId !== "")
+                    root.followEvents(root.lastRunId);
             } else if (payload && payload.message) {
                 CompanionStore.requestState("error");
                 CompanionStore.say(payload.message.toString(), 9000);
@@ -158,31 +365,58 @@ Scope {
         }
     }
 
+    function followEvents(runId: string): void {
+        if (root.busy)
+            return;
+        root.lineBuffer = "";
+        root.streamText = "";
+        root.finalPayload = null;
+        root.busy = true;
+        CompanionStore.requestState("thinking");
+        askProcess.command = ["horneroctl", "assistant", "events", runId, "--json", "--stream"];
+        askProcess.running = true;
+    }
+
     Process {
         id: askProcess
 
         stdout: SplitParser {
             onRead: data => {
-                root.buffer += data;
+                root.consumeChunk(data);
             }
         }
 
         onExited: (exitCode, exitStatus) => {
             root.busy = false;
-            let payload = null;
-            try {
-                payload = JSON.parse(root.buffer.trim());
-            } catch (e) {
-                payload = null;
+            // Flush any unterminated trailing line.
+            if (root.lineBuffer.trim() !== "") {
+                root.handleFinalLine(root.lineBuffer.trim());
+                root.lineBuffer = "";
             }
+            const payload = root.finalPayload;
+            const streamed = root.streamText;
+            root.streamText = "";
             root.notePayload(payload);
-            if (payload && payload.ok === true && payload.message) {
-                root.pushHistory("assistant", payload.message.toString());
-                CompanionStore.requestState("success");
-                CompanionStore.say(payload.message.toString(), 12000);
+            if (payload && payload.data && (payload.data.pending === "approval" || payload.data.pending === "clarify")) {
+                if (streamed !== "")
+                    root.pushHistory("assistant", streamed);
+                root.pushHistory("system", (payload.data.detail || payload.message || "").toString());
+            } else if (payload && payload.ok === true) {
+                const finalText = streamed !== "" ? streamed : (payload.data && payload.data.text ? payload.data.text.toString() : "");
+                if (finalText !== "") {
+                    root.pushHistory("assistant", finalText);
+                    CompanionStore.requestState("success");
+                    CompanionStore.say(finalText, 12000);
+                } else {
+                    CompanionStore.requestState("success");
+                }
             } else if (payload && payload.message) {
+                root.pushHistory("system", payload.message.toString());
                 CompanionStore.requestState("error");
                 CompanionStore.say(payload.message.toString(), 9000);
+            } else if (streamed !== "") {
+                root.pushHistory("assistant", streamed);
+                CompanionStore.requestState("success");
             } else {
                 CompanionStore.requestState("error");
                 CompanionStore.say("The assistant did not answer. Check: horneroctl assistant status", 9000);

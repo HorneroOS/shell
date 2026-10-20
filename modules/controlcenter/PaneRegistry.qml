@@ -99,7 +99,7 @@ QtObject {
         QtObject {
             readonly property string id: "companion"
             readonly property string label: "companion"
-            readonly property string title: qsTr("Companion")
+            readonly property string title: qsTr("Javi")
             readonly property string icon: "raven"
             readonly property string component: "companion/CompanionPane.qml"
             readonly property string category: "personalization"

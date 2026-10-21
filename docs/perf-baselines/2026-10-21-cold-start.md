@@ -41,6 +41,18 @@ AT-SPI tree — first interactive surface, not first frame. Three
 runs: 1703, 1652 and 1666 ms (**median 1666 ms**). Error bound:
 the probe walk itself takes ~95 ms and polling granularity is
 200 ms, so read this as ≈1.7 s ± 0.3 s on this busy development
-host (checkout at `a019968`). Per-surface frame cost is still
-unmeasured; the performance gate stays FAIL and no performance
-claim is made from these numbers.
+host (checkout at `a019968`). At that point per-surface frame
+cost was still unmeasured; the performance gate stays FAIL and
+no performance claim is made from these numbers.
+
+## Launcher frame cost (same host, later that day)
+
+`tests/perf/run-framecost.sh` renders the real launcher chain in
+a full-screen window and counts `FrameAnimation` ticks over the
+first 2 s of the open animation: **120 frames in 2.000 s
+(16.67 ms average)** — exactly the 60 Hz vsync interval of this
+display, with no dropped frame observed during the animation.
+This bounds frame cost at ≤ one refresh interval on this host;
+it does not isolate GPU or CPU cost per frame, and other
+surfaces (dashboard, Control Center, lock) are unmeasured. The
+performance gate stays FAIL.

@@ -20,6 +20,10 @@ StyledRect {
 
     signal activated()
 
+    Accessible.role: root.interactive ? Accessible.Button : Accessible.StaticText
+    Accessible.name: root.title
+    Accessible.description: root.description
+
     Layout.fillWidth: true
     implicitHeight: Math.max(88, content.implicitHeight + Appearance.padding.normal * 2)
 

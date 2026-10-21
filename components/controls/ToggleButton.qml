@@ -41,6 +41,10 @@ StyledRect {
     implicitWidth: toggleBtnInner.implicitWidth + horizontalPadding * 2
     implicitHeight: toggleBtnIcon.implicitHeight + verticalPadding * 2
 
+    Accessible.role: Accessible.ToggleButton
+    Accessible.name: root.label !== "" ? root.label : root.tooltip
+    Accessible.checked: root.toggled
+
     radius: toggled || toggleStateLayer.pressed ? Appearance.rounding.small : Math.min(width, height) / 2 * Math.min(1, Appearance.rounding.scale)
     color: toggled ? Colours.palette[`m3${accent.toLowerCase()}`] : Colours.palette[`m3${accent.toLowerCase()}Container`]
     opacity: root.disabled ? 0.5 : 1

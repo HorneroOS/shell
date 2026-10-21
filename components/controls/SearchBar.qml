@@ -55,6 +55,9 @@ StyledTextField {
         color: Colours.palette.m3onSurfaceVariant
         text: "close"
 
+        Accessible.role: Accessible.Button
+        Accessible.name: qsTr("Clear search")
+
         Interactive {
             radius: Appearance.rounding.full
 

@@ -23,6 +23,11 @@ ColumnLayout {
 
     Item {
         id: sectionHeaderItem
+
+        Accessible.role: Accessible.Button
+        Accessible.name: root.title
+        Accessible.description: root.description
+
         Layout.fillWidth: true
         Layout.preferredHeight: Math.max(titleRow.implicitHeight + Appearance.padding.normal * 2, 48)
 

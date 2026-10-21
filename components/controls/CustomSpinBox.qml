@@ -92,6 +92,9 @@ RowLayout {
         implicitWidth: implicitHeight
         implicitHeight: upIcon.implicitHeight + Appearance.padding.small * 2
 
+        Accessible.role: Accessible.Button
+        Accessible.name: qsTr("Increase value")
+
         Interactive {
             id: upState
 
@@ -125,6 +128,9 @@ RowLayout {
         color: Colours.palette.m3primary
 
         implicitWidth: implicitHeight
+        Accessible.role: Accessible.Button
+        Accessible.name: qsTr("Decrease value")
+
         implicitHeight: downIcon.implicitHeight + Appearance.padding.small * 2
 
         Interactive {

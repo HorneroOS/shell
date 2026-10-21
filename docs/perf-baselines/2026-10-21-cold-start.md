@@ -56,3 +56,12 @@ This bounds frame cost at ≤ one refresh interval on this host;
 it does not isolate GPU or CPU cost per frame, and other
 surfaces (dashboard, Control Center, lock) are unmeasured. The
 performance gate stays FAIL.
+
+## Dashboard frame cost (same host, later that day)
+
+`tests/perf/run-framecost-dashboard.sh` does the same for the
+dashboard open animation: **118 frames in 2.000 s (16.95 ms
+average)** against an ideal 120 at 60 Hz — two frame slots
+missed during the heavier dashboard build-up, then steady at
+vsync. Same caveats as the launcher bound; Control Center and
+lock surfaces remain unmeasured and the gate stays FAIL.

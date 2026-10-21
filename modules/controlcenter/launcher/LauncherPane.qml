@@ -314,6 +314,9 @@ Item {
                             color: isSelected ? Colours.layer(Colours.palette.m3surfaceContainer, 2) : "transparent"
                             radius: Appearance.rounding.normal
 
+                            Accessible.role: Accessible.Button
+                            Accessible.name: modelData.name || modelData.entry?.name || qsTr("Unknown")
+
                             opacity: 0
 
                             Behavior on opacity {

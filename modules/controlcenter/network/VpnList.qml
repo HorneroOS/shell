@@ -101,6 +101,9 @@ ColumnLayout {
                 color: Qt.alpha(Colours.tPalette.m3surfaceContainer, (root.session && root.session.vpn && root.session.vpn.active === modelData) ? Colours.tPalette.m3surfaceContainer.a : 0)
                 radius: Appearance.rounding.normal
 
+                Accessible.role: Accessible.Button
+                Accessible.name: (modelData.displayName || qsTr("Unknown")) + (modelData.enabled && VPN.connected ? qsTr(", connected") : "")
+
                 Interactive {
                     function onClicked(): void {
                         if (root.session && root.session.vpn) {

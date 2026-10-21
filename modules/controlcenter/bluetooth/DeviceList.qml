@@ -142,6 +142,9 @@ DeviceList {
             color: Qt.alpha(Colours.tPalette.m3surfaceContainer, root.activeItem === modelData ? Colours.tPalette.m3surfaceContainer.a : 0)
             radius: Appearance.rounding.normal
 
+            Accessible.role: Accessible.Button
+            Accessible.name: (modelData ? modelData.name : qsTr("Unknown")) + (device.connected ? qsTr(", connected") : "")
+
             Interactive {
                 id: stateLayer
 

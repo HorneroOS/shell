@@ -1,0 +1,33 @@
+# Cold-start probe — plugin host + dashboard surface (2026-10-21)
+
+Scope, stated narrowly: process wall time from `qs` launch to exit
+for the isolated harness in `tests/perf/coldstart-harness.qml`
+(checkout shell at `e0cefdf`), which loads the plugin host and the
+dashboard plugin cards, prints `Plugins.status()` after a 100 ms
+timer, and quits. This is **not** full-shell cold start (no bar, no
+lock, no Control Center) and not a frame-cost measurement; both
+remain owed for shell#47/#228.
+
+Method: 5 sequential runs on the development host (Quickshell
+0.3.2, 24 cores, 15 GiB RAM, live Hyprland session), wall time via
+`date +%s%3N` around each run.
+
+| Run | Wall time |
+| --- | --- |
+| 1 (cold caches) | 1993 ms |
+| 2 | 517 ms |
+| 3 | 620 ms |
+| 4 | 568 ms |
+| 5 | 612 ms |
+
+Median of the warm runs (2–5): **612 ms**, including the harness's
+own 100 ms status timer and process teardown. Each run reported
+`loaded: 2` (the two enabled dashboard plugins; bar-placed plugins
+stay `pending` in this harness because it has no bar surface).
+
+Reading this honestly: the first-run penalty (~3.2× the warm
+median) is page-cache/toolchain warm-up on a busy development
+machine, not a product claim. Steady-state numbers live in
+`docs/perf-baselines/2026-10-21.md`; the release performance gate
+stays FAIL until full-shell cold start and per-surface frame cost
+are measured in the disposable QA harness.

@@ -62,6 +62,8 @@ Item {
         signal toggled
 
         radius: Appearance.rounding.full
+        Accessible.role: Accessible.Button
+        Accessible.name: chip.label
         color: chip.active
             ? Colours.palette.m3primaryContainer
             : Colours.layer(Colours.palette.m3surfaceContainer, 2)

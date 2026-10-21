@@ -24,6 +24,10 @@ Item {
     implicitWidth: chip.implicitWidth
     implicitHeight: chip.implicitHeight
 
+    Accessible.role: Accessible.Button
+    Accessible.name: qsTr("Special workspace %1").arg(root.displayName)
+    Accessible.description: root.windowCount > 0 ? qsTr("%1 windows").arg(root.windowCount) : qsTr("No windows")
+
     StyledRect {
         id: chip
 

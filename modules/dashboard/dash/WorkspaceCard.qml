@@ -26,6 +26,10 @@ Item {
     // Rectangle and does not infer height from its anchored children.
     implicitHeight: 72
 
+    Accessible.role: Accessible.Button
+    Accessible.name: qsTr("Workspace %1").arg(Compositor.workspaceLabel(root.modelData, root.modelData.id))
+    Accessible.description: root.windowCount > 0 ? qsTr("%1 windows").arg(root.windowCount) : qsTr("No windows")
+
     StyledRect {
         id: card
 

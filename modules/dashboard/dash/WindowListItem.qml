@@ -26,6 +26,9 @@ Item {
     implicitWidth: parent ? parent.width : 300
     implicitHeight: row.implicitHeight + Appearance.padding.small
 
+    Accessible.role: Accessible.Button
+    Accessible.name: root.modelData.title ?? qsTr("Unknown window")
+
     // Highlight background for active window
     StyledRect {
         anchors.fill: parent
@@ -99,6 +102,8 @@ Item {
             IconButton {
                 type: IconButton.Text
                 visible: Compositor.supports("windowFloatingToggle")
+                Accessible.role: Accessible.Button
+                Accessible.name: qsTr("Toggle floating")
                 icon: root.floating ? "select_window" : "select_window_off"
                 padding: Appearance.padding.small / 2
                 font.pointSize: Appearance.font.size.small
@@ -109,6 +114,8 @@ Item {
             IconButton {
                 type: IconButton.Text
                 icon: "close"
+                Accessible.role: Accessible.Button
+                Accessible.name: qsTr("Close window")
                 visible: Compositor.supports("windowClose")
                 padding: Appearance.padding.small / 2
                 font.pointSize: Appearance.font.size.small

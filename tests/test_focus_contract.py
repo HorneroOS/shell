@@ -354,3 +354,17 @@ def test_launcher_rows_have_accessible_names():
         src = (items / name).read_text(encoding="utf-8")
         assert "Accessible.role: Accessible.Button" in src, name
         assert "Accessible.name:" in src, name
+
+
+def test_dashboard_cards_have_accessible_names():
+    # #221 slice 3: dashboard workspace/window cards and quick-toggle
+    # chips are custom clickable Items/Rects; name them from their
+    # visible labels. Static evidence only, no AT-SPI claim.
+    dash = ROOT / "modules/dashboard/dash"
+    for name in ("WorkspaceCard.qml", "SpecialWsCard.qml", "WindowListItem.qml", "QuickToggles.qml"):
+        src = (dash / name).read_text(encoding="utf-8")
+        assert "Accessible.role: Accessible.Button" in src, name
+        assert "Accessible.name:" in src, name
+    window_item = (dash / "WindowListItem.qml").read_text(encoding="utf-8")
+    assert 'qsTr("Toggle floating")' in window_item
+    assert 'qsTr("Close window")' in window_item

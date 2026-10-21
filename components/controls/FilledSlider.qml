@@ -16,6 +16,12 @@ Slider {
     Keys.onBacktabPressed: event => FocusMode.handleTab(root, event, true)
 
     required property string icon
+    // The owning surface sets this so the slider is named for
+    // assistive tech.
+    property string accessibleName: ""
+
+    Accessible.role: Accessible.Slider
+    Accessible.name: root.accessibleName
     property real oldValue
     property bool initialized
 

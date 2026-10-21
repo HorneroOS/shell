@@ -356,6 +356,21 @@ def test_launcher_rows_have_accessible_names():
         assert "Accessible.name:" in src, name
 
 
+def test_notification_and_osd_controls_have_accessible_names():
+    # #221 slice 7: notification expand/action controls and the OSD
+    # FilledSliders (volume, microphone, brightness) are named.
+    notif = (ROOT / "modules/notifications/Notification.qml").read_text(encoding="utf-8")
+    assert 'qsTr("Collapse notification")' in notif
+    assert 'qsTr("Expand notification")' in notif
+    assert "Accessible.name: action.modelData.text" in notif
+    osd = (ROOT / "modules/osd/Content.qml").read_text(encoding="utf-8")
+    for name in ('qsTr("Volume")', 'qsTr("Microphone volume")', 'qsTr("Brightness")'):
+        assert f"accessibleName: {name}" in osd, name
+    filled = (ROOT / "components/controls/FilledSlider.qml").read_text(encoding="utf-8")
+    assert "Accessible.role: Accessible.Slider" in filled
+    assert "property string accessibleName" in filled
+
+
 def test_dashboard_cards_have_accessible_names():
     # #221 slice 3: dashboard workspace/window cards and quick-toggle
     # chips are custom clickable Items/Rects; name them from their

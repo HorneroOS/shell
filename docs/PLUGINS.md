@@ -99,3 +99,19 @@ python3 scripts/validate_plugin.py path/to/example-clock
 
 The checker is also covered by `tests/test_plugin_contract.py`. Adding this
 contract does not alter shipped plugins or enable extension loading.
+
+## Which config is my session actually running?
+
+Real installs run the packaged config at
+`/etc/xdg/quickshell/hornero/shell.qml` (installed by the
+`hornero-shell` package). A git checkout of this repository — for
+example in `~/.config/quickshell` — is **not** what a running session
+answers on unless it is the config Quickshell was started with:
+`horneroctl` resolves the packaged hornero config first, and a bare
+`qs ipc ...` without `QS_CONFIG_PATH` may target a different config
+than the checkout you just edited. Run `horneroctl shell status` to
+see the config the CLI targets. Merged shell changes reach a live
+session only when the `hornero-shell` AUR package is upgraded; to
+run a checkout instead, start Quickshell with that config explicitly
+(`QS_CONFIG_PATH=<checkout>/shell.qml`) and expect every IPC probe to
+need the same path.

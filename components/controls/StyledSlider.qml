@@ -8,7 +8,7 @@ Slider {
     id: root
 
     // Sliders have no visible label of their own; the owning row sets
-    // this so the control is named for assistive tech (#221).
+    // this so the control is named for assistive tech.
     property string accessibleName: ""
 
     Accessible.role: Accessible.Slider

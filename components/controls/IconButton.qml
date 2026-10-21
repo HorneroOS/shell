@@ -15,7 +15,7 @@ StyledRect {
 
     property alias icon: label.text
     // Icon glyphs are not human-readable; callers that know the action
-    // set this so the button is named for assistive tech (#221).
+    // set this so the button is named for assistive tech.
     property string accessibleName: ""
 
     Accessible.role: Accessible.Button

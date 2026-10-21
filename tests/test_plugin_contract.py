@@ -240,3 +240,16 @@ def test_plugin_host_repeater_has_a_visual_root():
     assert item_at < repeater_at, "Repeater must be nested inside an Item root"
     header = host[item_at:repeater_at]
     assert "visible: false" in header, "the delegate root Item must stay invisible"
+
+
+def test_extensions_pane_surfaces_trust_state():
+    # shell#251: installed rows show the horneroctl trust state and
+    # offer the two-step Trust… → Confirm trust flow for untrusted or
+    # stale-trust plugins. The pane only invokes horneroctl; it never
+    # writes receipts itself.
+    pane = (ROOT / "modules/controlcenter/extensions/ExtensionsPane.qml").read_text(encoding="utf-8")
+    assert 'qsTr("Trust: %1")' in pane
+    assert 'qsTr("Trust…")' in pane
+    assert 'qsTr("Confirm trust")' in pane
+    assert 'runLifecycle("trust", row.modelData.id)' in pane
+    assert "pendingTrust" in pane

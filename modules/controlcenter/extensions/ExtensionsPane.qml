@@ -16,7 +16,7 @@ import Quickshell.Widgets
 // Control Center › Extensions: community plugin lifecycle.
 // horneroctl stays the single writer of plugin lifecycle state: this
 // pane never writes receipts or payloads itself, it only invokes
-// `horneroctl plugin enable|disable <id> --yes` — the exact CLI
+// `horneroctl plugin enable|disable|trust <id> --yes` — the exact CLI
 // commands — and re-reads state through the Plugins service. Enable
 // (the direction that runs third-party QML as your user) requires an
 // explicit inline confirmation, mirroring the CLI --yes gate.
@@ -27,6 +27,7 @@ Item {
     required property Session session
 
     property string pendingEnable: ""
+    property string pendingTrust: ""
     property string pendingInstall: ""
     property string pendingCatalogAction: ""
     property string actionError: ""
@@ -69,6 +70,7 @@ Item {
             const env = root.actionEnvelope;
             if (env && env.ok === true) {
                 root.pendingEnable = "";
+                root.pendingTrust = "";
                 root.actionError = "";
                 Plugins.reload();
             } else {
@@ -236,6 +238,23 @@ Item {
 
                             StyledText {
                                 Layout.fillWidth: true
+                                text: qsTr("Trust: %1").arg(row.modelData.trust ?? qsTr("unknown"))
+                                font.pointSize: Appearance.font.size.small
+                                color: (row.modelData.trust === "untrusted" || row.modelData.trust === "stale-trust") ? Colours.palette.m3error : Colours.palette.m3outline
+                                wrapMode: Text.Wrap
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                visible: root.pendingTrust === row.modelData.id
+                                text: qsTr("You are trusting the exact code currently installed for this plugin. If its files change, you will be asked again. Trusting does not enable it.")
+                                font.pointSize: Appearance.font.size.small
+                                color: Colours.palette.m3error
+                                wrapMode: Text.Wrap
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
                                 visible: !!row.modelData.detail
                                 text: row.modelData.detail ?? ""
                                 font.pointSize: Appearance.font.size.small
@@ -254,6 +273,33 @@ Item {
 
                             RowLayout {
                                 spacing: Appearance.spacing.small
+
+                                TextButton {
+                                    visible: !row.modelData.enabled && (row.modelData.trust === "untrusted" || row.modelData.trust === "stale-trust") && root.pendingTrust !== row.modelData.id
+                                    enabled: !lifecycleProc.running
+                                    text: qsTr("Trust…")
+                                    type: TextButton.Tonal
+                                    onClicked: {
+                                        root.actionError = "";
+                                        root.pendingTrust = row.modelData.id;
+                                    }
+                                }
+
+                                TextButton {
+                                    visible: root.pendingTrust === row.modelData.id
+                                    enabled: !lifecycleProc.running
+                                    text: qsTr("Confirm trust")
+                                    type: TextButton.Filled
+                                    onClicked: root.runLifecycle("trust", row.modelData.id)
+                                }
+
+                                TextButton {
+                                    visible: root.pendingTrust === row.modelData.id
+                                    enabled: !lifecycleProc.running
+                                    text: qsTr("Cancel")
+                                    type: TextButton.Text
+                                    onClicked: root.pendingTrust = ""
+                                }
 
                                 TextButton {
                                     visible: !row.modelData.enabled && root.pendingEnable !== row.modelData.id

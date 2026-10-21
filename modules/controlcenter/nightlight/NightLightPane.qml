@@ -13,12 +13,13 @@ import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
 
-// Control Center › Night Light (shell#225): manual on/off plus a
-// temperature slider over `horneroctl appearance night-mode` — the
-// CLI owns the temperature backends (redshift/gammastep/wlsunset/
-// xrandr) and reports honestly when none is available. The slider
-// only appears when a backend exists to honour it; schedule
-// controls stay in #225 until the backend exposes them.
+// Control Center › Night Light (shell#225): manual on/off, a
+// temperature slider, and schedule controls over
+// `horneroctl appearance night-mode` — the CLI owns the
+// temperature backends (redshift/gammastep/wlsunset/xrandr), the
+// stored temperature, and the systemd user timers that enforce
+// the schedule. Controls only appear when a backend exists to
+// honour them.
 Item {
     id: root
 
@@ -30,6 +31,30 @@ Item {
     property string backend: ""
     property string available: ""
     property int temperature: 4000
+    property string schedule: ""
+    property bool scheduleEnforced: false
+    property int onHour: 22
+    property int onMinute: 0
+    property int offHour: 7
+    property int offMinute: 0
+
+    function pad2(n: int): string {
+        return (n < 10 ? "0" : "") + n;
+    }
+
+    function setSchedule(): void {
+        root.actionText = qsTr("Applying…");
+        setProc.out = "";
+        setProc.command = ["horneroctl", "appearance", "night-mode", "schedule", "set", "--from", root.pad2(root.onHour) + ":" + root.pad2(root.onMinute), "--to", root.pad2(root.offHour) + ":" + root.pad2(root.offMinute), "--yes", "--json"];
+        setProc.running = true;
+    }
+
+    function clearSchedule(): void {
+        root.actionText = qsTr("Applying…");
+        setProc.out = "";
+        setProc.command = ["horneroctl", "appearance", "night-mode", "schedule", "clear", "--yes", "--json"];
+        setProc.running = true;
+    }
     property string statusText: qsTr("Reading night light…")
     property string actionText: ""
 
@@ -75,6 +100,19 @@ Item {
                 root.active = (d.active ?? "false") === "true";
                 root.backend = d.backend ?? "";
                 root.temperature = parseInt(d.temperature ?? "4000") || 4000;
+                root.schedule = d.schedule ?? "";
+                root.scheduleEnforced = (d.scheduleEnforced ?? "false") === "true";
+                if (root.schedule !== "") {
+                    const win = root.schedule.split("-");
+                    if (win.length === 2) {
+                        const onParts = win[0].split(":");
+                        const offParts = win[1].split(":");
+                        root.onHour = parseInt(onParts[0]) || 0;
+                        root.onMinute = parseInt(onParts[1]) || 0;
+                        root.offHour = parseInt(offParts[0]) || 0;
+                        root.offMinute = parseInt(offParts[1]) || 0;
+                    }
+                }
                 root.statusText = payload.message ? payload.message.toString() : "";
             } catch (e) {
                 root.statusText = qsTr("horneroctl night-mode unavailable on this system.");
@@ -230,6 +268,85 @@ Item {
                             onValueModified: newValue => root.setTemperature(Math.round(newValue))
                         }
 
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            visible: root.available !== ""
+                            spacing: Appearance.spacing.small
+
+                            StyledText {
+                                text: qsTr("Schedule")
+                                font.pointSize: Appearance.font.size.normal
+                                font.weight: 500
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: root.schedule !== "" ? qsTr("On at %1 · Off at %2 · Enforced by timers: %3").arg(root.schedule.split("-")[0]).arg(root.schedule.split("-")[1]).arg(root.scheduleEnforced ? qsTr("yes") : qsTr("no")) : qsTr("No schedule set. Times use your local clock; timers catch up after login if a boundary was missed.")
+                                font.pointSize: Appearance.font.size.small
+                                color: Colours.palette.m3onSurfaceVariant
+                                wrapMode: Text.Wrap
+                            }
+
+                            SpinBoxRow {
+                                label: qsTr("Turn on — hour")
+                                value: root.onHour
+                                min: 0
+                                max: 23
+                                onValueModified: value => {
+                                    root.onHour = Math.round(value);
+                                }
+                            }
+
+                            SpinBoxRow {
+                                label: qsTr("Turn on — minutes")
+                                value: root.onMinute
+                                min: 0
+                                max: 59
+                                step: 5
+                                onValueModified: value => {
+                                    root.onMinute = Math.round(value);
+                                }
+                            }
+
+                            SpinBoxRow {
+                                label: qsTr("Turn off — hour")
+                                value: root.offHour
+                                min: 0
+                                max: 23
+                                onValueModified: value => {
+                                    root.offHour = Math.round(value);
+                                }
+                            }
+
+                            SpinBoxRow {
+                                label: qsTr("Turn off — minutes")
+                                value: root.offMinute
+                                min: 0
+                                max: 59
+                                step: 5
+                                onValueModified: value => {
+                                    root.offMinute = Math.round(value);
+                                }
+                            }
+
+                            RowLayout {
+                                spacing: Appearance.spacing.small
+
+                                TextButton {
+                                    text: qsTr("Set schedule")
+                                    type: TextButton.Filled
+                                    onClicked: root.setSchedule()
+                                }
+
+                                TextButton {
+                                    visible: root.schedule !== ""
+                                    text: qsTr("Clear schedule")
+                                    type: TextButton.Tonal
+                                    onClicked: root.clearSchedule()
+                                }
+                            }
+                        }
+
                         StyledText {
                             Layout.fillWidth: true
                             visible: root.actionText !== ""
@@ -241,7 +358,7 @@ Item {
 
                         StyledText {
                             Layout.fillWidth: true
-                            text: qsTr("Temperature applies immediately while Night Light is on and is stored for the next time otherwise. Schedule controls arrive when the backend exposes them (shell#225) — this pane never shows a control the backend cannot honour.")
+                            text: qsTr("Temperature applies immediately while Night Light is on and is stored for the next time otherwise. This pane never shows a control the backend cannot honour.")
                             font.pointSize: Appearance.font.size.small
                             color: Colours.palette.m3outline
                             wrapMode: Text.Wrap

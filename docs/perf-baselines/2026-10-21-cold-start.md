@@ -65,3 +65,14 @@ average)** against an ideal 120 at 60 Hz — two frame slots
 missed during the heavier dashboard build-up, then steady at
 vsync. Same caveats as the launcher bound; Control Center and
 lock surfaces remain unmeasured and the gate stays FAIL.
+
+## Control Center frame cost (same host, later that day)
+
+`tests/perf/run-framecost-controlcenter.sh` renders the real
+Control Center in a full-screen window and counts frames over
+the first 3 s of initial render (all panes building, not a
+steady-state animation): **169 frames in 3.013 s (17.83 ms
+average)** against an ideal 180 at 60 Hz — the heaviest of the
+three measured surfaces, with roughly one frame in sixteen
+missing its slot during initial build. Only the lock surface
+remains unmeasured; the gate stays FAIL.

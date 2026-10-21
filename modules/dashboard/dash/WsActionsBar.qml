@@ -87,6 +87,7 @@ Item {
                 IconButton {
                     type: IconButton.Tonal
                     icon: "check"
+                    accessibleName: qsTr("Confirm workspace rename")
                     padding: Appearance.padding.small / 2
                     font.pointSize: Appearance.font.size.small
 
@@ -101,6 +102,7 @@ Item {
                 IconButton {
                     type: IconButton.Text
                     icon: "close"
+                    accessibleName: qsTr("Cancel workspace rename")
                     padding: Appearance.padding.small / 2
                     font.pointSize: Appearance.font.size.small
 

@@ -212,6 +212,7 @@ Item {
             PlayerControl {
                 type: IconButton.Text
                 icon: "skip_previous"
+                accessibleName: qsTr("Previous track")
                 font.pointSize: Math.round(Appearance.font.size.large * 1.5)
                 disabled: !Players.active?.canGoPrevious
                 onClicked: Players.active?.previous()
@@ -219,6 +220,7 @@ Item {
 
             PlayerControl {
                 icon: Players.active?.isPlaying ? "pause" : "play_arrow"
+                accessibleName: Players.active?.isPlaying ? qsTr("Pause") : qsTr("Play")
                 label.animate: true
                 toggle: true
                 padding: Appearance.padding.small / 2
@@ -231,6 +233,7 @@ Item {
             PlayerControl {
                 type: IconButton.Text
                 icon: "skip_next"
+                accessibleName: qsTr("Next track")
                 font.pointSize: Math.round(Appearance.font.size.large * 1.5)
                 disabled: !Players.active?.canGoNext
                 onClicked: Players.active?.next()
@@ -312,6 +315,7 @@ Item {
             PlayerControl {
                 type: IconButton.Text
                 icon: "move_up"
+                accessibleName: qsTr("Raise player")
                 inactiveOnColour: Colours.palette.m3secondary
                 padding: Appearance.padding.small
                 font.pointSize: Appearance.font.size.large
@@ -351,6 +355,7 @@ Item {
             PlayerControl {
                 type: IconButton.Text
                 icon: "delete"
+                accessibleName: qsTr("Quit player")
                 inactiveOnColour: Colours.palette.m3error
                 padding: Appearance.padding.small
                 font.pointSize: Appearance.font.size.large

@@ -76,3 +76,15 @@ average)** against an ideal 180 at 60 Hz — the heaviest of the
 three measured surfaces, with roughly one frame in sixteen
 missing its slot during initial build. Only the lock surface
 remains unmeasured; the gate stays FAIL.
+
+## Lock content frame cost (same host, later that day)
+
+`tests/perf/run-framecost-lock.sh` renders the real lock
+content (`Center` + `InputField`, inert Pam stub — never a real
+session lock) and counts frames over the first 3 s of initial
+render: **171 frames in 3.014 s (17.63 ms average)** against an
+ideal 180 at 60 Hz, in line with the Control Center's initial
+build cost. All four surfaces are now bounded on this host;
+every number here is a development-host measurement, the
+disposable QA harness run is still owed, and the performance
+gate stays FAIL.

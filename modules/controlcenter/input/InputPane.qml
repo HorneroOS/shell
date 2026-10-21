@@ -13,11 +13,12 @@ import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
 
-// Control Center › Input (shell#226, first slice): keyboard layout
-// state and switching through `horneroctl hardware keyboard`, plus
-// the system keyboard settings GUI the CLI already owns. Pointer /
-// touchpad tuning and the keybindings editor stay tracked in #226
-// and #236 — nothing here fakes compositor ownership.
+// Control Center › Input (shell#226): keyboard layout state and
+// switching through `horneroctl hardware keyboard`, plus pointer /
+// keyboard tuning through `horneroctl hypr input` (Hyprland live
+// values, persisted by the CLI). On other compositors the pointer
+// section reports the backend's unavailable state instead of
+// faking controls. The keybindings editor stays in #236.
 Item {
     id: root
 
@@ -27,11 +28,28 @@ Item {
 
     property string layoutText: qsTr("Reading keyboard layout…")
     property string actionText: ""
+    property real sensitivity: 0
+    property string accelProfile: "flat"
+    property int repeatRate: 50
+    property int repeatDelay: 300
+    property bool naturalScroll: true
+    property bool tapToClick: true
+    property string compositor: ""
 
     function refresh(): void {
         layoutProc.out = "";
         layoutProc.command = ["horneroctl", "hardware", "keyboard", "layout", "--current", "--json"];
         layoutProc.running = true;
+        inputProc.out = "";
+        inputProc.command = ["horneroctl", "hypr", "input", "status", "--json"];
+        inputProc.running = true;
+    }
+
+    function setInput(flag: string, value: string): void {
+        root.actionText = qsTr("Applying…");
+        actionProc.out = "";
+        actionProc.command = ["horneroctl", "hypr", "input", "set", flag, value, "--yes", "--json"];
+        actionProc.running = true;
     }
 
     Component.onCompleted: root.refresh()
@@ -52,6 +70,33 @@ Item {
                 root.layoutText = payload.message ? payload.message.toString() : "";
             } catch (e) {
                 root.layoutText = qsTr("horneroctl keyboard unavailable on this system.");
+            }
+        }
+    }
+
+    Process {
+        id: inputProc
+
+        property string out: ""
+
+        stdout: SplitParser {
+            onRead: data => {
+                inputProc.out += data;
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            try {
+                const payload = JSON.parse(inputProc.out.trim());
+                const d = payload.data ?? {};
+                root.sensitivity = parseFloat(d.sensitivity ?? "0") || 0;
+                root.accelProfile = d.accel_profile ?? "flat";
+                root.repeatRate = parseInt(d.repeat_rate ?? "50") || 50;
+                root.repeatDelay = parseInt(d.repeat_delay ?? "300") || 300;
+                root.naturalScroll = (d.natural_scroll ?? "true") === "true";
+                root.tapToClick = (d.tap_to_click ?? "true") === "true";
+                root.compositor = d.compositor ?? "";
+            } catch (e) {
+                root.compositor = "";
             }
         }
     }
@@ -117,7 +162,7 @@ Item {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: qsTr("Keyboard layout today; pointer, touchpad and the keybindings editor arrive in later slices of #226/#236.")
+                    text: qsTr("Keyboard layout and pointer/keyboard tuning; the keybindings editor arrives with #236.")
                     font.pointSize: Appearance.font.size.small
                     color: Colours.palette.m3onSurfaceVariant
                     wrapMode: Text.Wrap
@@ -188,6 +233,125 @@ Item {
                             font.pointSize: Appearance.font.size.small
                             color: Colours.palette.m3onSurfaceVariant
                             wrapMode: Text.Wrap
+                        }
+                    }
+                }
+
+                StyledRect {
+                    Layout.fillWidth: true
+                    radius: Appearance.rounding.normal
+                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    implicitHeight: pointerCol.implicitHeight + Appearance.padding.large * 2
+
+                    ColumnLayout {
+                        id: pointerCol
+
+                        anchors.fill: parent
+                        anchors.margins: Appearance.padding.large
+                        spacing: Appearance.spacing.small
+
+                        StyledText {
+                            text: qsTr("Pointer & keyboard")
+                            font.pointSize: Appearance.font.size.normal
+                            font.weight: 500
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            visible: root.compositor !== "hyprland"
+                            text: qsTr("Pointer tuning needs the Hyprland backend (horneroctl hypr input); on this compositor it is unavailable and nothing is faked.")
+                            font.pointSize: Appearance.font.size.small
+                            color: Colours.palette.m3onSurfaceVariant
+                            wrapMode: Text.Wrap
+                        }
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            visible: root.compositor === "hyprland"
+                            spacing: Appearance.spacing.small
+
+                            SliderInput {
+                                Layout.fillWidth: true
+                                label: qsTr("Pointer sensitivity")
+                                value: root.sensitivity
+                                from: -1
+                                to: 1
+                                stepSize: 0.05
+                                decimals: 2
+                                validator: DoubleValidator {
+                                    bottom: -1
+                                    top: 1
+                                }
+
+                                onValueModified: newValue => root.setInput("--sensitivity", newValue.toString())
+                            }
+
+                            RowLayout {
+                                spacing: Appearance.spacing.small
+
+                                StyledText {
+                                    text: qsTr("Acceleration")
+                                    font.pointSize: Appearance.font.size.small
+                                }
+
+                                TextButton {
+                                    text: qsTr("Adaptive")
+                                    type: root.accelProfile === "adaptive" ? TextButton.Filled : TextButton.Tonal
+                                    onClicked: root.setInput("--accel-profile", "adaptive")
+                                }
+
+                                TextButton {
+                                    text: qsTr("Flat")
+                                    type: root.accelProfile === "flat" ? TextButton.Filled : TextButton.Tonal
+                                    onClicked: root.setInput("--accel-profile", "flat")
+                                }
+                            }
+
+                            SpinBoxRow {
+                                label: qsTr("Key repeat rate (per second)")
+                                value: root.repeatRate
+                                min: 1
+                                max: 100
+                                onValueModified: value => {
+                                    root.setInput("--repeat-rate", Math.round(value).toString());
+                                }
+                            }
+
+                            SpinBoxRow {
+                                label: qsTr("Key repeat delay (ms)")
+                                value: root.repeatDelay
+                                min: 100
+                                max: 1000
+                                step: 50
+                                onValueModified: value => {
+                                    root.setInput("--repeat-delay", Math.round(value).toString());
+                                }
+                            }
+
+                            ToggleRow {
+                                label: qsTr("Touchpad natural scroll")
+                                checked: root.naturalScroll
+                                toggle.onToggled: {
+                                    root.setInput("--natural-scroll", checked ? "true" : "false");
+                                }
+                            }
+
+                            ToggleRow {
+                                label: qsTr("Touchpad tap-to-click")
+                                checked: root.tapToClick
+                                toggle.onToggled: {
+                                    root.setInput("--tap-to-click", checked ? "true" : "false");
+                                }
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                visible: root.actionText !== ""
+                                text: root.actionText
+                                font.pointSize: Appearance.font.size.small
+                                color: Colours.palette.m3onSurfaceVariant
+                                wrapMode: Text.Wrap
+                            }
                         }
                     }
                 }

@@ -39,6 +39,9 @@ CollapsibleSection {
                 border.width: isCurrent ? 1 : 0
                 border.color: Colours.palette.m3primary
 
+                Accessible.role: Accessible.Button
+                Accessible.name: isCurrent ? qsTr("%1, current").arg(schemeKey) : schemeKey
+
                 Interactive {
                     function onClicked(): void {
                         const name = modelData.name;

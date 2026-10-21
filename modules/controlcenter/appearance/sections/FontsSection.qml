@@ -55,6 +55,9 @@ CollapsibleSection {
                     border.width: isCurrent ? 1 : 0
                     border.color: Colours.palette.m3primary
 
+                    Accessible.role: Accessible.Button
+                    Accessible.name: isCurrent ? qsTr("%1, current").arg(modelData) : modelData
+
                     Interactive {
                         function onClicked(): void {
                             rootPane.fontFamilyMaterial = modelData;
@@ -147,6 +150,9 @@ CollapsibleSection {
                     radius: Appearance.rounding.normal
                     border.width: isCurrent ? 1 : 0
                     border.color: Colours.palette.m3primary
+
+                    Accessible.role: Accessible.Button
+                    Accessible.name: isCurrent ? qsTr("%1, current").arg(modelData) : modelData
 
                     Interactive {
                         function onClicked(): void {

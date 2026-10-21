@@ -453,6 +453,11 @@ ColumnLayout {
         MouseArea {
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
+
+            Accessible.role: Accessible.Button
+            Accessible.name: chip.label
+            Accessible.checked: chip.selected
+
             onClicked: chip.clicked()
         }
     }

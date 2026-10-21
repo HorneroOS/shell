@@ -10,6 +10,10 @@ Item {
     MouseArea {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
+
+        Accessible.role: Accessible.Button
+        Accessible.name: qsTr("Open launcher")
+
         onClicked: {
             const visibilities = Visibilities.getForActive();
             visibilities.launcher = !visibilities.launcher;

@@ -87,6 +87,10 @@ Item {
         // D6: right-click is ignored, mirroring Notification.qml —
         // toasts dismiss on left/middle only, never on right.
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+
+        Accessible.role: Accessible.Button
+        Accessible.name: qsTr("Dismiss notification: %1").arg(modelData.title)
+
         onClicked: modelData.close()
 
         Component.onCompleted: modelData.lock(this)

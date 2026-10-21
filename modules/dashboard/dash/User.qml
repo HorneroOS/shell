@@ -72,6 +72,9 @@ Row {
                 StateLayer {
                     color: Colours.palette.m3onPrimary
 
+                    Accessible.role: Accessible.Button
+                    Accessible.name: qsTr("Change profile picture")
+
                     function onClicked(): void {
                         root.visibilities.launcher = false;
                         root.facePicker.open();

@@ -452,6 +452,10 @@ Scope {
                     MouseArea {
                         anchors.fill: parent
                         acceptedButtons: Qt.LeftButton | Qt.RightButton
+
+                        Accessible.role: Accessible.Button
+                        Accessible.name: qsTr("Dismiss Javi message")
+
                         onClicked: mouse => {
                             if (mouse.button === Qt.RightButton)
                                 menu.open();
@@ -511,6 +515,9 @@ Scope {
                         hoverEnabled: true
                         acceptedButtons: Qt.LeftButton | Qt.RightButton
                         cursorShape: win.dragging ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+
+                        Accessible.role: Accessible.Button
+                        Accessible.name: qsTr("Javi, el Hornero companion")
 
                         property int lastX: 0
                         property int lastY: 0
@@ -647,6 +654,10 @@ Scope {
                             MouseArea {
                                 anchors.fill: parent
                                 hoverEnabled: true
+
+                                Accessible.role: Accessible.Button
+                                Accessible.name: parent.label
+
                                 onEntered: parent.opacity = 0.6
                                 onExited: parent.opacity = 1.0
                                 onClicked: parent.chosen()

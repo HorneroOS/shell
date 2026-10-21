@@ -12,6 +12,9 @@ MouseArea {
 
     required property SystemTrayItem modelData
 
+    Accessible.role: Accessible.Button
+    Accessible.name: root.modelData.title || root.modelData.id
+
     acceptedButtons: Qt.LeftButton | Qt.RightButton
     implicitWidth: Appearance.font.size.small * 2
     implicitHeight: Appearance.font.size.small * 2

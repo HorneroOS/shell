@@ -49,6 +49,9 @@ Item {
             readonly property alias nonAnimHeight: notifInner.nonAnimHeight
             property int startY
 
+            Accessible.role: Accessible.Button
+            Accessible.name: qsTr("Notifications from %1").arg(modelData)
+
             function closeAll(): void {
                 for (const n of Notifs.notClosed.filter(n => n.appName === modelData))
                     n.close();

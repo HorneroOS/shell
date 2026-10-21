@@ -28,6 +28,7 @@ Item {
 
     property string pendingEnable: ""
     property string pendingInstall: ""
+    property string pendingCatalogAction: ""
     property string actionError: ""
     property var actionEnvelope: null
     property var catalogEntries: []
@@ -37,6 +38,12 @@ Item {
         root.catalogError = "";
         catalogProc.command = ["horneroctl", "--json", "plugin", "catalog"];
         catalogProc.running = true;
+    }
+
+    function runCatalogAction(action, pluginId) {
+        root.actionError = "";
+        catalogInstallProc.command = ["horneroctl", "--json", "plugin", "catalog", action, pluginId, "--yes"];
+        catalogInstallProc.running = true;
     }
 
     function runLifecycle(action, pluginId) {
@@ -111,6 +118,7 @@ Item {
                 const env = JSON.parse(catalogInstallProc.out.trim());
                 if (env.ok === true) {
                     root.pendingInstall = "";
+                    root.pendingCatalogAction = "";
                     Plugins.reload();
                     root.refreshCatalog();
                 } else {
@@ -377,6 +385,46 @@ Item {
                                     text: qsTr("Cancel")
                                     type: TextButton.Text
                                     onClicked: root.pendingInstall = ""
+                                }
+
+                                TextButton {
+                                    visible: catRow.modelData.state === "installed" && root.pendingCatalogAction !== "update:" + catRow.modelData.id
+                                    enabled: !catalogInstallProc.running
+                                    text: qsTr("Update…")
+                                    type: TextButton.Tonal
+                                    onClicked: root.pendingCatalogAction = "update:" + catRow.modelData.id
+                                }
+
+                                TextButton {
+                                    visible: root.pendingCatalogAction === "update:" + catRow.modelData.id
+                                    enabled: !catalogInstallProc.running
+                                    text: qsTr("Confirm update")
+                                    type: TextButton.Filled
+                                    onClicked: root.runCatalogAction("update", catRow.modelData.id)
+                                }
+
+                                TextButton {
+                                    visible: catRow.modelData.state === "installed" && root.pendingCatalogAction !== "rollback:" + catRow.modelData.id
+                                    enabled: !catalogInstallProc.running
+                                    text: qsTr("Roll back…")
+                                    type: TextButton.Tonal
+                                    onClicked: root.pendingCatalogAction = "rollback:" + catRow.modelData.id
+                                }
+
+                                TextButton {
+                                    visible: root.pendingCatalogAction === "rollback:" + catRow.modelData.id
+                                    enabled: !catalogInstallProc.running
+                                    text: qsTr("Confirm rollback")
+                                    type: TextButton.Filled
+                                    onClicked: root.runCatalogAction("rollback", catRow.modelData.id)
+                                }
+
+                                TextButton {
+                                    visible: root.pendingCatalogAction === "update:" + catRow.modelData.id || root.pendingCatalogAction === "rollback:" + catRow.modelData.id
+                                    enabled: !catalogInstallProc.running
+                                    text: qsTr("Cancel")
+                                    type: TextButton.Text
+                                    onClicked: root.pendingCatalogAction = ""
                                 }
 
                                 StyledText {

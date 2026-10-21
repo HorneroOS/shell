@@ -45,6 +45,7 @@ Item {
                 anchors.fill: parent
 
                 icon: Icons.getVolumeIcon(value, root.muted)
+                accessibleName: qsTr("Volume")
                 value: root.volume
                 to: Config.services.maxVolume
                 onMoved: Audio.setVolume(value)
@@ -70,6 +71,7 @@ Item {
                     anchors.fill: parent
 
                     icon: Icons.getMicVolumeIcon(value, root.sourceMuted)
+                    accessibleName: qsTr("Microphone volume")
                     value: root.sourceVolume
                     to: Config.services.maxVolume
                     onMoved: Audio.setSourceVolume(value)
@@ -99,6 +101,7 @@ Item {
                     anchors.fill: parent
 
                     icon: `brightness_${(Math.round(value * 6) + 1)}`
+                    accessibleName: qsTr("Brightness")
                     value: root.brightness
                     onMoved: root.monitor?.setBrightness(value)
                 }

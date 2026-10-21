@@ -310,6 +310,9 @@ StyledRect {
             Item {
                 id: expandBtn
 
+                Accessible.role: Accessible.Button
+                Accessible.name: root.expanded ? qsTr("Collapse notification") : qsTr("Expand notification")
+
                 anchors.right: parent.right
                 anchors.top: parent.top
 
@@ -437,6 +440,9 @@ StyledRect {
         id: action
 
         required property var modelData
+
+        Accessible.role: Accessible.Button
+        Accessible.name: action.modelData.text
 
         radius: Appearance.rounding.full
         color: root.modelData.urgency === NotificationUrgency.Critical ? Colours.palette.m3secondary : Colours.layer(Colours.palette.m3surfaceContainerHigh, 2)

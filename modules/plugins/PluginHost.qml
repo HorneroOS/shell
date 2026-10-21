@@ -24,6 +24,15 @@ import QtQuick
 Scope {
     id: root
 
+    // A Repeater placed directly under a Scope (a non-visual QObject)
+    // never materialises its delegates: they are counted but their
+    // components never complete, so manifests were never read and every
+    // plugin stayed "pending" forever. The invisible Item root gives the
+    // delegates a real parent so they instantiate; `background`
+    // entrypoints load under it, still invisible by design.
+    Item {
+        visible: false
+
     Repeater {
         model: Plugins.entries.filter(e => e.enabled && e.installed)
 
@@ -83,6 +92,7 @@ Scope {
                 }
             }
         }
+    }
     }
 
     IpcHandler {

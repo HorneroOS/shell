@@ -225,3 +225,18 @@ def test_duplicate_manifest_keys_are_rejected(tmp_path):
     (plugin / "manifest.json").write_text('{"schemaVersion": 1, "schemaVersion": 1}')
     with pytest.raises(VALIDATOR.ValidationError, match="duplicate key"):
         VALIDATOR.validate_plugin(plugin)
+
+
+def test_plugin_host_repeater_has_a_visual_root():
+    # Regression: a Repeater placed directly under PluginHost's Scope
+    # (a non-visual QObject) never materialises its delegates in
+    # Quickshell — they are counted but never complete, so manifests
+    # were never read and every plugin stayed "pending" forever.
+    # The host must wrap the Repeater in a (hidden) Item root.
+    host = (ROOT / "modules/plugins/PluginHost.qml").read_text(encoding="utf-8")
+    item_at = host.find("Item {")
+    repeater_at = host.find("Repeater {")
+    assert item_at != -1 and repeater_at != -1
+    assert item_at < repeater_at, "Repeater must be nested inside an Item root"
+    header = host[item_at:repeater_at]
+    assert "visible: false" in header, "the delegate root Item must stay invisible"

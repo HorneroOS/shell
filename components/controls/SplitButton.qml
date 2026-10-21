@@ -37,6 +37,9 @@ Row {
     spacing: Math.floor(Appearance.spacing.small / 2)
 
     StyledRect {
+        Accessible.role: Accessible.Button
+        Accessible.name: label.text
+
         radius: implicitHeight / 2 * Math.min(1, Appearance.rounding.scale)
         topRightRadius: Appearance.rounding.small / 2
         bottomRightRadius: Appearance.rounding.small / 2
@@ -96,6 +99,9 @@ Row {
 
     StyledRect {
         id: expandBtn
+
+        Accessible.role: Accessible.Button
+        Accessible.name: qsTr("More options")
 
         property real rad: root.expanded ? implicitHeight / 2 * Math.min(1, Appearance.rounding.scale) : Appearance.rounding.small / 2
 

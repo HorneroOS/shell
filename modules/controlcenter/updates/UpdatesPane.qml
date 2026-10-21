@@ -28,6 +28,11 @@ Item {
     // ── State ────────────────────────────────────────────────────────────────
     property int pendingCount: -1 // -1 = unknown yet
     property var pendingList: []
+    // Status lanes (horneroctl package status): Hornero-owned behind,
+    // system waiting, snapshot availability. -1 = unknown yet.
+    property int horneroPendingCount: -1
+    property var horneroPending: []
+    property string snapshotStatus: ""
     property string updatesError: ""
     property string backupsError: ""
     property var backupList: []
@@ -59,6 +64,8 @@ Item {
         root.updatesAnswered = false;
         root.backupsAnswered = false;
         updatesProc.running = true;
+        if (!statusProc.running)
+            statusProc.running = true;
         backupsProc.running = true;
     }
 
@@ -105,6 +112,23 @@ Item {
             if ((exitCode !== 0 || exitStatus !== 0) && !root.updatesAnswered) {
                 root.updatesError = qsTr("Update check failed (exit %1).").arg(exitCode);
                 root.pendingCount = -1;
+            }
+        }
+    }
+
+    Process {
+        id: statusProc
+
+        command: ["horneroctl", "--json", "package", "status"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const env = root.envelope(text);
+                if (!env || env.ok !== true || !env.data)
+                    return;
+                const n = parseInt(env.data.hornero_pending_count, 10);
+                root.horneroPendingCount = isNaN(n) ? 0 : n;
+                root.horneroPending = String(env.data.hornero_pending || "").split(",").map(s => s.trim()).filter(s => s.length > 0);
+                root.snapshotStatus = String(env.data.snapshot_status || "");
             }
         }
     }
@@ -236,6 +260,40 @@ Item {
                             type: TextButton.Tonal
                             enabled: !updatesProc.running
                             onClicked: root.refresh()
+                        }
+                    }
+                }
+
+                // ── Hornero lane ─────────────────────────────────────────
+                StyledRect {
+                    visible: root.horneroPendingCount >= 0
+                    Layout.fillWidth: true
+                    radius: Appearance.rounding.normal
+                    color: Colours.layer(Colours.palette.m3surfaceContainerHigh, 1)
+                    implicitHeight: horneroLane.implicitHeight + Appearance.padding.normal * 2
+
+                    ColumnLayout {
+                        id: horneroLane
+
+                        anchors.fill: parent
+                        anchors.margins: Appearance.padding.normal
+                        spacing: 2
+
+                        StyledText {
+                            text: root.horneroPendingCount > 0 ? qsTr("%n Hornero package(s) behind: %1", "", root.horneroPendingCount).arg(root.horneroPending.join(", ")) : qsTr("Hornero packages up to date")
+                            font.pointSize: Appearance.font.size.normal
+                            font.weight: 600
+                            wrapMode: Text.Wrap
+                            Layout.fillWidth: true
+                        }
+
+                        StyledText {
+                            visible: root.snapshotStatus.length > 0
+                            text: qsTr("Snapshots: %1").arg(root.snapshotStatus)
+                            color: Colours.palette.m3onSurfaceVariant
+                            font.pointSize: Appearance.font.size.smaller
+                            wrapMode: Text.Wrap
+                            Layout.fillWidth: true
                         }
                     }
                 }

@@ -14,6 +14,10 @@ Item {
     readonly property alias placeholder: placeholder
     property string buffer
 
+    Accessible.role: Accessible.EditableText
+    Accessible.name: qsTr("Password")
+    Accessible.description: qsTr("Type your password, then press Enter to unlock")
+
     Layout.fillWidth: true
     Layout.fillHeight: true
 

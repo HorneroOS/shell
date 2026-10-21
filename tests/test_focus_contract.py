@@ -320,3 +320,15 @@ def test_keyboard_root_matches_grab_owner():
     assert "interactions.dashboardKeyboardIntent" in line
     assert "interactions.utilitiesKeyboardIntent" in line
     assert "traymenu" in line
+
+
+def test_lock_controls_have_accessible_names():
+    # #221 slice 1: the safety-critical lock controls must be named:
+    # the password field (EditableText with usage description) and
+    # the icon-only Unlock button.
+    center = (ROOT / "modules/lock/Center.qml").read_text(encoding="utf-8")
+    field = (ROOT / "modules/lock/InputField.qml").read_text(encoding="utf-8")
+    assert 'Accessible.role: Accessible.Button' in center
+    assert 'Accessible.name: qsTr("Unlock")' in center
+    assert 'Accessible.role: Accessible.EditableText' in field
+    assert 'Accessible.name: qsTr("Password")' in field

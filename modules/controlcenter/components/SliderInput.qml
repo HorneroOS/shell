@@ -137,6 +137,8 @@ ColumnLayout {
     StyledSlider {
         id: slider
 
+        accessibleName: root.label
+
         Layout.fillWidth: true
         implicitHeight: Appearance.padding.normal * 3
 

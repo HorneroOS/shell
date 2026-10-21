@@ -92,6 +92,7 @@ Item {
             }
 
             StyledSlider {
+                accessibleName: qsTr("Volume")
                 anchors.left: parent.left
                 anchors.right: parent.right
                 implicitHeight: parent.implicitHeight

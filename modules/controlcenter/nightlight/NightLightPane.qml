@@ -13,12 +13,12 @@ import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
 
-// Control Center › Night Light (shell#225, first slice): manual
-// on/off over `horneroctl appearance night-mode` — the CLI owns the
-// temperature backends (redshift/gammastep/wlsunset/xrandr) and
-// reports honestly when none is available. Temperature and schedule
-// controls stay in #225 until the backend exposes them; nothing
-// here fakes a slider the backend cannot honour.
+// Control Center › Night Light (shell#225): manual on/off plus a
+// temperature slider over `horneroctl appearance night-mode` — the
+// CLI owns the temperature backends (redshift/gammastep/wlsunset/
+// xrandr) and reports honestly when none is available. The slider
+// only appears when a backend exists to honour it; schedule
+// controls stay in #225 until the backend exposes them.
 Item {
     id: root
 
@@ -29,6 +29,7 @@ Item {
     property bool active: false
     property string backend: ""
     property string available: ""
+    property int temperature: 4000
     property string statusText: qsTr("Reading night light…")
     property string actionText: ""
 
@@ -45,6 +46,13 @@ Item {
         root.actionText = qsTr("Applying…");
         setProc.out = "";
         setProc.command = ["horneroctl", "appearance", "night-mode", mode, "--yes", "--json"];
+        setProc.running = true;
+    }
+
+    function setTemperature(kelvin: int): void {
+        root.actionText = qsTr("Applying…");
+        setProc.out = "";
+        setProc.command = ["horneroctl", "appearance", "night-mode", "set", "--temperature", kelvin.toString(), "--yes", "--json"];
         setProc.running = true;
     }
 
@@ -66,6 +74,7 @@ Item {
                 const d = payload.data ?? {};
                 root.active = (d.active ?? "false") === "true";
                 root.backend = d.backend ?? "";
+                root.temperature = parseInt(d.temperature ?? "4000") || 4000;
                 root.statusText = payload.message ? payload.message.toString() : "";
             } catch (e) {
                 root.statusText = qsTr("horneroctl night-mode unavailable on this system.");
@@ -203,6 +212,24 @@ Item {
                             }
                         }
 
+                        SliderInput {
+                            Layout.fillWidth: true
+                            visible: root.available !== ""
+                            label: qsTr("Temperature")
+                            value: root.temperature
+                            from: 1000
+                            to: 6500
+                            stepSize: 100
+                            decimals: 0
+                            suffix: "K"
+                            validator: IntValidator {
+                                bottom: 1000
+                                top: 6500
+                            }
+
+                            onValueModified: newValue => root.setTemperature(Math.round(newValue))
+                        }
+
                         StyledText {
                             Layout.fillWidth: true
                             visible: root.actionText !== ""
@@ -214,7 +241,7 @@ Item {
 
                         StyledText {
                             Layout.fillWidth: true
-                            text: qsTr("Temperature and schedule controls arrive when the night-mode backend exposes them (shell#225) — this pane never shows a control the backend cannot honour.")
+                            text: qsTr("Temperature applies immediately while Night Light is on and is stored for the next time otherwise. Schedule controls arrive when the backend exposes them (shell#225) — this pane never shows a control the backend cannot honour.")
                             font.pointSize: Appearance.font.size.small
                             color: Colours.palette.m3outline
                             wrapMode: Text.Wrap

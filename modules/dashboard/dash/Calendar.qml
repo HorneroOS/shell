@@ -53,6 +53,9 @@ CustomMouseArea {
 
                     radius: Appearance.rounding.full
 
+                    Accessible.role: Accessible.Button
+                    Accessible.name: qsTr("Previous month")
+
                     function onClicked(): void {
                         root.state.currentDate = new Date(root.currYear, root.currMonth - 1, 1);
                     }
@@ -87,6 +90,9 @@ CustomMouseArea {
                         return root.currMonth === now.getMonth() && root.currYear === now.getFullYear();
                     }
 
+                    Accessible.role: Accessible.Button
+                    Accessible.name: qsTr("Go to current month")
+
                     function onClicked(): void {
                         root.state.currentDate = new Date();
                     }
@@ -112,6 +118,9 @@ CustomMouseArea {
                     id: nextMonthStateLayer
 
                     radius: Appearance.rounding.full
+
+                    Accessible.role: Accessible.Button
+                    Accessible.name: qsTr("Next month")
 
                     function onClicked(): void {
                         root.state.currentDate = new Date(root.currYear, root.currMonth + 1, 1);

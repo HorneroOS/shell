@@ -79,6 +79,9 @@ Item {
             }
             property int startY
 
+            Accessible.role: Accessible.Button
+            Accessible.name: modelData.summary || modelData.appName
+
             y: {
                 root.flag; // Force update
                 let y = 0;

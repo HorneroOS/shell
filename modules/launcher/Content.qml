@@ -182,6 +182,9 @@ Item {
                 hoverEnabled: true
                 cursorShape: search.text ? Qt.PointingHandCursor : undefined
 
+                Accessible.role: Accessible.Button
+                Accessible.name: qsTr("Clear search")
+
                 onClicked: search.text = ""
             }
 

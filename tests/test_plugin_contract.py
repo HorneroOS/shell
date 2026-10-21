@@ -127,6 +127,22 @@ def test_valid_package_passes(tmp_path):
     VALIDATOR.validate_plugin(plugin)
 
 
+def test_signed_package_passes(tmp_path):
+    # shell#251 phase 2: the optional author-signature block is a
+    # legal manifest field. Shape is schema-checked here; the
+    # cryptographic verification itself is horneroctl's job.
+    plugin = make_plugin(tmp_path)
+    manifest = json.loads((plugin / "manifest.json").read_text())
+    manifest["signing"] = {
+        "publicKey": "Ulcr" + "A" * 52,
+        "signature": "RWQ" + "B" * 96,
+    }
+    (plugin / "manifest.json").write_text(json.dumps(manifest))
+    schema = json.loads((ROOT / "schemas/plugin-manifest.schema.json").read_text())
+    Draft202012Validator(schema).validate(manifest)
+    VALIDATOR.validate_plugin(plugin)
+
+
 def test_in_tree_example_passes_schema_and_static_validation():
     plugin = ROOT / "examples/plugins/example-clock"
     manifest = json.loads((plugin / "manifest.json").read_text())

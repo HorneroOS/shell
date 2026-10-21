@@ -33,6 +33,16 @@
     "author": { "type": "string", "minLength": 1, "maxLength": 120, "pattern": "\\S" },
     "license": { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "\\S" },
     "homepage": { "type": "string", "maxLength": 500, "format": "uri", "pattern": "^https://[^\\s/]+(?:/.*)?$" },
+    "signing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["publicKey", "signature"],
+      "properties": {
+        "publicKey": { "type": "string", "minLength": 40, "maxLength": 80, "pattern": "^[A-Za-z0-9+/]+={0,2}$" },
+        "signature": { "type": "string", "minLength": 80, "maxLength": 120, "pattern": "^[A-Za-z0-9+/]+={0,2}$" }
+      },
+      "description": "Optional author signature (minisign framing) over the files-only payload hash; verified by horneroctl (trust state 'signed'). Absence is fine: local hash-pinned trust applies instead."
+    },
     "placement": { "type": "string", "enum": ["background", "bar", "dashboard", "desktop"], "default": "background", "description": "Where the entrypoint runs: background (headless, default), bar (rendered in the bar end group) or dashboard (rendered as a card in the dashboard Extensions tab) or desktop (rendered as a widget on the desktop background layer)." },
     "entrypoint": {
       "type": "string",

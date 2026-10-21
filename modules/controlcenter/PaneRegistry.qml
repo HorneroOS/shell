@@ -193,8 +193,8 @@ QtObject {
             readonly property string icon: "web_asset"
             readonly property string component: "windows/WindowsPane.qml"
             readonly property string category: "system"
-            readonly property string description: qsTr("Window gaps, borders and rounding")
-            readonly property list<string> keywords: ["windows", "gaps", "border", "rounding", "geometry", "tiling"]
+            readonly property string description: qsTr("Window gaps, borders, focus and rules")
+            readonly property list<string> keywords: ["windows", "gaps", "border", "rounding", "geometry", "tiling", "focus", "float", "rules"]
         },
         QtObject {
             readonly property string id: "lockscreen"

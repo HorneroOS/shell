@@ -14,7 +14,7 @@ found = []
 
 
 def walk(bus_name, path, depth=0):
-    if depth > 10:
+    if depth > 30:
         return
     try:
         obj = bus.get_object(bus_name, path)

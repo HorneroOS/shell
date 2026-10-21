@@ -22,6 +22,9 @@ Item {
     anchors.left: parent?.left
     anchors.right: parent?.right
 
+    Accessible.role: Accessible.Button
+    Accessible.name: root.math.length > 0 ? qsTr("Copy calculation result: %1").arg(root.math) : qsTr("Calculator")
+
     StateLayer {
         radius: Appearance.rounding.normal
 

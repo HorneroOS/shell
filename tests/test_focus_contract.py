@@ -332,3 +332,25 @@ def test_lock_controls_have_accessible_names():
     assert 'Accessible.name: qsTr("Unlock")' in center
     assert 'Accessible.role: Accessible.EditableText' in field
     assert 'Accessible.name: qsTr("Password")' in field
+
+
+def test_launcher_rows_have_accessible_names():
+    # #221 slice 2: every clickable launcher row is a custom Item, so
+    # without an explicit name it is invisible to assistive tech. Each
+    # row must expose Button role + a name from its visible label.
+    items = ROOT / "modules/launcher/items"
+    for name in (
+        "ActionItem.qml",
+        "AiItem.qml",
+        "AppearanceItem.qml",
+        "AppItem.qml",
+        "CalcItem.qml",
+        "FileItem.qml",
+        "SchemeItem.qml",
+        "VariantItem.qml",
+        "WallpaperItem.qml",
+        "WindowItem.qml",
+    ):
+        src = (items / name).read_text(encoding="utf-8")
+        assert "Accessible.role: Accessible.Button" in src, name
+        assert "Accessible.name:" in src, name

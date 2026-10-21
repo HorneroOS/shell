@@ -25,6 +25,9 @@ Item {
     anchors.left: parent?.left
     anchors.right: parent?.right
 
+    Accessible.role: Accessible.Button
+    Accessible.name: root.fileName
+
     StateLayer {
         radius: Appearance.rounding.normal
 

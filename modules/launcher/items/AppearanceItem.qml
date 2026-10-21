@@ -16,6 +16,9 @@ Item {
     anchors.left: parent?.left
     anchors.right: parent?.right
 
+    Accessible.role: Accessible.Button
+    Accessible.name: root.modelData?.name ?? ""
+
     StateLayer {
         radius: Appearance.rounding.normal
 

@@ -27,6 +27,9 @@ Item {
     anchors.left: parent?.left
     anchors.right: parent?.right
 
+    Accessible.role: Accessible.Button
+    Accessible.name: InlineAsk.busy ? qsTr("Stop Javi") : (root.question !== "" ? qsTr("Ask Javi: %1").arg(root.question) : qsTr("Ask Javi"))
+
     StateLayer {
         radius: Appearance.rounding.normal
 

@@ -26,6 +26,9 @@ Item {
     implicitWidth: image.width + Appearance.padding.larger * 2
     implicitHeight: image.height + label.height + Appearance.spacing.small / 2 + Appearance.padding.large + Appearance.padding.normal
 
+    Accessible.role: Accessible.Button
+    Accessible.name: Strings.wallpaperDisplayName(root.modelData.name)
+
     StateLayer {
         radius: Appearance.rounding.normal
 

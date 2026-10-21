@@ -116,6 +116,7 @@ ColumnLayout {
 
                         IconButton {
                             icon: modelData.isActive ? "arrow_downward" : "arrow_upward"
+                            accessibleName: modelData.isActive ? qsTr("Move VPN provider down") : qsTr("Move VPN provider up")
                             visible: !modelData.isActive || Config.utilities.vpn.provider.length > 1
                             onClicked: {
                                 if (modelData.isActive && index < Config.utilities.vpn.provider.length - 1) {
@@ -139,6 +140,7 @@ ColumnLayout {
 
                         IconButton {
                             icon: "delete"
+                            accessibleName: qsTr("Remove VPN provider")
                             onClicked: {
                                 const providers = [...Config.utilities.vpn.provider];
                                 providers.splice(index, 1);

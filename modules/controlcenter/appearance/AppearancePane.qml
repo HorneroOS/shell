@@ -1070,6 +1070,7 @@ Item {
 
                         IconButton {
                             icon: sidebarLayout.allSectionsExpanded ? "unfold_less" : "unfold_more"
+                            accessibleName: sidebarLayout.allSectionsExpanded ? qsTr("Collapse all sections") : qsTr("Expand all sections")
                             type: IconButton.Text
                             label.animate: true
                             onClicked: {
@@ -1208,7 +1209,7 @@ Item {
                             icon: "refresh"
                             type: IconButton.Text
                             enabled: root.hasPendingChanges && !root.pipelineBusy
-                            Accessible.name: qsTr("Reset pending appearance changes")
+                            accessibleName: qsTr("Reset pending appearance changes")
                             onClicked: root.resetPendingSelections()
                         }
 
@@ -1216,7 +1217,7 @@ Item {
                             icon: root.pipelineBusy ? "hourglass_top" : "check"
                             type: IconButton.Filled
                             enabled: root.canApply
-                            Accessible.name: qsTr("Apply appearance changes")
+                            accessibleName: qsTr("Apply appearance changes")
                             onClicked: root.commitPending()
                         }
                     }

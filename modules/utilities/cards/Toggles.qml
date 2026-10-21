@@ -38,12 +38,14 @@ StyledRect {
 
             Toggle {
                 icon: "wifi"
+                accessibleName: qsTr("Toggle Wi-Fi")
                 checked: Network.wifiEnabled
                 onClicked: Network.toggleWifi()
             }
 
             Toggle {
                 icon: "bluetooth"
+                accessibleName: qsTr("Toggle Bluetooth")
                 checked: Bluetooth.defaultAdapter?.enabled ?? false
                 onClicked: {
                     const adapter = Bluetooth.defaultAdapter;
@@ -54,6 +56,7 @@ StyledRect {
 
             Toggle {
                 icon: "mic"
+                accessibleName: qsTr("Toggle microphone")
                 checked: !Audio.sourceMuted
                 onClicked: {
                     const audio = Audio.source?.audio;
@@ -64,6 +67,7 @@ StyledRect {
 
             Toggle {
                 icon: "settings"
+                accessibleName: qsTr("Open network settings")
                 inactiveOnColour: Colours.palette.m3onSurfaceVariant
                 toggle: false
                 onClicked: {
@@ -74,6 +78,7 @@ StyledRect {
 
             Toggle {
                 icon: "gamepad"
+                accessibleName: qsTr("Toggle game mode")
                 checked: GameMode.enabled
                 visible: Compositor.supports("hyprlandTuning")
                 onClicked: GameMode.enabled = !GameMode.enabled
@@ -81,12 +86,14 @@ StyledRect {
 
             Toggle {
                 icon: "notifications_off"
+                accessibleName: qsTr("Toggle do not disturb")
                 checked: Notifs.dnd
                 onClicked: Notifs.dnd = !Notifs.dnd
             }
 
             Toggle {
                 icon: "vpn_key"
+                accessibleName: qsTr("Toggle VPN")
                 checked: VPN.connected
                 enabled: !VPN.connecting
                 visible: Config.utilities.vpn.provider.some(p => typeof p === "object" ? (p.enabled === true) : false)

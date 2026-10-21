@@ -176,6 +176,7 @@ FloatingWindow {
                 IconButton {
                     type: IconButton.Text
                     icon: "close"
+                    accessibleName: qsTr("Close Welcome")
                     onClicked: Welcome.close()
                 }
             }

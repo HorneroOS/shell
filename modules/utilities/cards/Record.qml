@@ -255,6 +255,7 @@ StyledRect {
             IconButton {
                 label.animate: true
                 icon: Recorder.paused ? "play_arrow" : "pause"
+                accessibleName: Recorder.paused ? qsTr("Resume recording") : qsTr("Pause recording")
                 toggle: true
                 checked: Recorder.paused
                 type: IconButton.Tonal
@@ -267,6 +268,7 @@ StyledRect {
 
             IconButton {
                 icon: "stop"
+                accessibleName: qsTr("Stop recording")
                 inactiveColour: Colours.palette.m3error
                 inactiveOnColour: Colours.palette.m3onError
                 font.pointSize: Appearance.font.size.large

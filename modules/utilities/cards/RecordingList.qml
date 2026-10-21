@@ -45,6 +45,7 @@ ColumnLayout {
 
             IconButton {
                 icon: root.props.recordingListExpanded ? "unfold_less" : "unfold_more"
+                accessibleName: root.props.recordingListExpanded ? qsTr("Collapse recordings") : qsTr("Expand recordings")
                 type: IconButton.Text
                 label.animate: true
                 onClicked: root.props.recordingListExpanded = !root.props.recordingListExpanded
@@ -101,6 +102,7 @@ ColumnLayout {
 
             IconButton {
                 icon: "play_arrow"
+                accessibleName: qsTr("Play recording")
                 type: IconButton.Text
                 onClicked: {
                     root.visibilities.utilities = false;
@@ -111,6 +113,7 @@ ColumnLayout {
 
             IconButton {
                 icon: "folder"
+                accessibleName: qsTr("Open recordings folder")
                 type: IconButton.Text
                 onClicked: {
                     root.visibilities.utilities = false;
@@ -121,6 +124,7 @@ ColumnLayout {
 
             IconButton {
                 icon: "delete_forever"
+                accessibleName: qsTr("Delete recording")
                 type: IconButton.Text
                 label.color: Colours.palette.m3error
                 stateLayer.color: Colours.palette.m3error

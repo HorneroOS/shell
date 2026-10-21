@@ -82,7 +82,7 @@ Item {
                 IconButton {
                     icon: "close"
                     type: IconButton.Text
-                    Accessible.name: qsTr("Close layout picker")
+                    accessibleName: qsTr("Close layout picker")
                     onClicked: root.visibilities.layoutPicker = false
                 }
             }

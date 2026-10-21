@@ -392,3 +392,40 @@ def test_shared_controls_have_accessible_names():
         src = (controls / name).read_text(encoding="utf-8")
         assert "Accessible.role: Accessible.CheckBox" in src, name
         assert "Accessible.name: root.label" in src, name
+
+
+def test_icon_buttons_have_accessible_names():
+    # #221 slice 5: icon-only IconButtons are named via accessibleName
+    # at every call site (welcome close, appearance expand/reset/apply,
+    # Javi chat actions, media transport, utility toggles/recordings,
+    # notifications clear, workspace rename, VPN priority/delete).
+    expected = {
+        "modules/welcome/Window.qml": ["Close Welcome"],
+        "modules/controlcenter/appearance/AppearancePane.qml": [
+            "Collapse all sections", "Reset pending appearance changes",
+            "Apply appearance changes"],
+        "modules/controlcenter/network/VpnSettings.qml": [
+            "Move VPN provider down", "Remove VPN provider"],
+        "modules/dashboard/dash/WsActionsBar.qml": [
+            "Confirm workspace rename", "Cancel workspace rename"],
+        "modules/companion/ChatPanel.qml": [
+            "Clear chat history", "Close chat", "Switch chat session",
+            "New chat", "Attach file", "Record voice message"],
+        "modules/dashboard/Media.qml": [
+            "Previous track", "Next track", "Raise player", "Quit player"],
+        "modules/utilities/cards/Record.qml": [
+            "Pause recording", "Stop recording"],
+        "modules/utilities/cards/Toggles.qml": [
+            "Toggle Wi-Fi", "Toggle Bluetooth", "Toggle microphone",
+            "Toggle game mode", "Toggle do not disturb", "Toggle VPN"],
+        "modules/utilities/cards/RecordingList.qml": [
+            "Expand recordings", "Play recording",
+            "Open recordings folder", "Delete recording"],
+        "modules/sidebar/NotifDock.qml": ["Clear all notifications"],
+        "modules/layoutpicker/Content.qml": ["Close layout picker"],
+    }
+    for rel, names in expected.items():
+        src = (ROOT / rel).read_text(encoding="utf-8")
+        for name in names:
+            assert f'qsTr("{name}")' in src, f"{rel}: {name}"
+        assert "accessibleName:" in src, rel

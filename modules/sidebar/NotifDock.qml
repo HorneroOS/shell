@@ -178,6 +178,7 @@ Item {
             id: clearBtn
 
             icon: "clear_all"
+            accessibleName: qsTr("Clear all notifications")
             radius: Appearance.rounding.normal
             padding: Appearance.padding.normal
             font.pointSize: Math.round(Appearance.font.size.large * 1.2)

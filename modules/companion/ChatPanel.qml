@@ -175,6 +175,7 @@ Item {
 
                 IconButton {
                     icon: "delete_sweep"
+                    accessibleName: qsTr("Clear chat history")
                     type: IconButton.Text
                     onClicked: root.bridge.clearHistory()
                 }
@@ -182,6 +183,7 @@ Item {
                 IconButton {
                     icon: "close"
                     type: IconButton.Text
+                    accessibleName: qsTr("Close chat")
                     onClicked: root.bridge.chatOpen = false
                 }
             }
@@ -226,6 +228,7 @@ Item {
 
                 IconButton {
                     icon: "swap_horiz"
+                    accessibleName: qsTr("Switch chat session")
                     type: IconButton.Text
                     visible: root.bridge.chatSessions.length > 1
                     onClicked: root.bridge.cycleChatSession()
@@ -233,6 +236,7 @@ Item {
 
                 IconButton {
                     icon: "add_comment"
+                    accessibleName: qsTr("New chat")
                     type: IconButton.Text
                     onClicked: root.bridge.newChatSession()
                 }
@@ -543,12 +547,14 @@ Item {
 
                 IconButton {
                     icon: "attach_file"
+                    accessibleName: qsTr("Attach file")
                     type: IconButton.Text
                     onClicked: fileDialog.open()
                 }
 
                 IconButton {
                     icon: root.bridge.recording ? "stop_circle" : "mic"
+                    accessibleName: root.bridge.recording ? qsTr("Stop recording") : qsTr("Record voice message")
                     type: IconButton.Text
                     checked: root.bridge.recording
                     onClicked: root.bridge.recording ? root.bridge.stopRecording(true) : root.bridge.startRecording()

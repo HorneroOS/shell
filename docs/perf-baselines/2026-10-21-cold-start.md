@@ -31,3 +31,16 @@ machine, not a product claim. Steady-state numbers live in
 `docs/perf-baselines/2026-10-21.md`; the release performance gate
 stays FAIL until full-shell cold start and per-surface frame cost
 are measured in the disposable QA harness.
+
+## Full-shell cold start (same host, later that day)
+
+`tests/perf/run-fullshell-coldstart.sh` launches the real
+checkout shell as a second instance and times from process start
+until the bar's `Volume controls` accessible appears in the
+AT-SPI tree — first interactive surface, not first frame. Three
+runs: 1703, 1652 and 1666 ms (**median 1666 ms**). Error bound:
+the probe walk itself takes ~95 ms and polling granularity is
+200 ms, so read this as ≈1.7 s ± 0.3 s on this busy development
+host (checkout at `a019968`). Per-surface frame cost is still
+unmeasured; the performance gate stays FAIL and no performance
+claim is made from these numbers.

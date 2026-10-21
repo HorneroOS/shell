@@ -1,4 +1,5 @@
 import qs.config
+import qs.services
 import Hornero
 import Quickshell
 import Quickshell.Services.UPower
@@ -37,11 +38,17 @@ Scope {
                 if (p <= level.level && !level.warned) {
                     level.warned = true;
                     Toaster.toast(level.title ?? qsTr("Battery warning"), level.message ?? qsTr("Battery level is low"), level.icon ?? "battery_android_alert", level.critical ? Toast.Error : Toast.Warning);
+                    // Critical levels also file a durable, DND-aware
+                    // notification (shell#224); plain warnings stay
+                    // momentary toasts.
+                    if (level.critical)
+                        Notifs.promoteCritical(level.title ?? qsTr("Battery warning"), level.message ?? qsTr("Battery level is low"), level.icon ?? "battery_android_alert");
                 }
             }
 
             if (!hibernateTimer.running && p <= Config.general.battery.criticalLevel) {
                 Toaster.toast(qsTr("Hibernating in 5 seconds"), qsTr("Hibernating to prevent data loss"), "battery_android_alert", Toast.Error);
+                Notifs.promoteCritical(qsTr("Hibernating in 5 seconds"), qsTr("Hibernating to prevent data loss"), "battery_android_alert");
                 hibernateTimer.start();
             }
         }

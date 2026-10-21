@@ -53,6 +53,30 @@ Singleton {
             old.close();
     }
 
+    // Critical promotion (shell#224): shell-detected critical
+    // conditions (battery critical, unexpected VPN drop) are filed
+    // as real notifications so they remain in history and pop up
+    // under DND, exactly like external critical-urgency ingress.
+    // This is the one deliberate exception to the "shell never files
+    // its own messages" source rule in docs/NOTIFICATIONS.md, and it
+    // is reserved for conditions the user must be able to review
+    // after the moment has passed. Callers keep their toast as the
+    // momentary voice; this files the durable record.
+    function promoteCritical(summary: string, body: string, appIcon: string): void {
+        const comp = notifComp.createObject(root, {
+            popup: ![...Visibilities.screens.values()].some(v => v.sidebar),
+            summary: summary,
+            body: body,
+            appName: qsTr("HorneroOS"),
+            appIcon: appIcon,
+            urgency: NotificationUrgency.Critical
+        });
+        root.list = [comp, ...root.list];
+        if (root.list.length > root.maxListSize)
+            for (const old of root.list.slice(root.maxListSize))
+                old.close();
+    }
+
     property bool loaded
 
 

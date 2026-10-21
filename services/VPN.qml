@@ -11,6 +11,11 @@ Singleton {
 
     property bool connected: false
 
+    // Set by disconnect() so onConnectedChanged can tell a drop the
+    // user did not ask for (promoted, shell#224) from a deliberate
+    // disconnect (toast only).
+    property bool userInitiatedDisconnect: false
+
     readonly property bool connecting: connectProc.running || disconnectProc.running
     readonly property bool enabled: Config.utilities.vpn.provider.some(p => typeof p === "object" ? (p.enabled === true) : false)
     readonly property var providerInput: {
@@ -82,6 +87,7 @@ Singleton {
 
     function disconnect(): void {
         if (connected && !connecting && root.currentConfig && root.currentConfig.disconnectCmd) {
+            root.userInitiatedDisconnect = true;
             disconnectProc.exec(root.currentConfig.disconnectCmd);
         }
     }
@@ -106,9 +112,16 @@ Singleton {
 
         const displayName = root.currentConfig ? (root.currentConfig.displayName || "VPN") : "VPN";
         if (connected) {
+            root.userInitiatedDisconnect = false;
             Toaster.toast(qsTr("VPN connected"), qsTr("Connected to %1").arg(displayName), "vpn_key");
         } else {
             Toaster.toast(qsTr("VPN disconnected"), qsTr("Disconnected from %1").arg(displayName), "vpn_key_off");
+            // An unexpected drop is a critical condition: file a
+            // durable, DND-aware notification (shell#224). A
+            // disconnect the user requested stays a toast.
+            if (!root.userInitiatedDisconnect)
+                Notifs.promoteCritical(qsTr("VPN disconnected"), qsTr("Disconnected from %1").arg(displayName), "vpn_key_off");
+            root.userInitiatedDisconnect = false;
         }
     }
 

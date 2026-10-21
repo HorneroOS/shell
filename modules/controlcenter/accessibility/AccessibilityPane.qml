@@ -9,20 +9,77 @@ import qs.components.containers
 import qs.modules.companion
 import qs.config
 import qs.services
+import Quickshell.Io
 import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
 
-// Control Center › Accessibility (shell#221, first slice): the
-// shell-wide knobs that already exist — text size, motion, and
-// transparency — grouped where people look for them. Every control
-// binds a real config key; nothing here is decorative.
+// Control Center › Accessibility (shell#221): the shell-wide knobs
+// that already exist — text size, motion, transparency — plus the
+// cursor size through `horneroctl hypr cursor`, grouped where
+// people look for them. Every control binds a real mechanism;
+// nothing here is decorative.
 Item {
     id: root
 
     required property Session session
 
     anchors.fill: parent
+
+    property int cursorSize: 24
+    property string cursorText: qsTr("Reading cursor…")
+    property string cursorAction: ""
+
+    function refreshCursor(): void {
+        cursorProc.out = "";
+        cursorProc.command = ["horneroctl", "hypr", "cursor", "status", "--json"];
+        cursorProc.running = true;
+    }
+
+    Component.onCompleted: root.refreshCursor()
+
+    Process {
+        id: cursorProc
+
+        property string out: ""
+
+        stdout: SplitParser {
+            onRead: data => {
+                cursorProc.out += data;
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            try {
+                const payload = JSON.parse(cursorProc.out.trim());
+                const d = payload.data ?? {};
+                root.cursorSize = parseInt(d.size ?? "24") || 24;
+                root.cursorText = qsTr("Cursor theme %1 · size %2 (from %3)").arg(d.theme ?? "default").arg(d.size ?? "24").arg(d.size_source ?? "default");
+            } catch (e) {
+                root.cursorText = qsTr("horneroctl cursor unavailable on this system.");
+            }
+        }
+    }
+
+    Process {
+        id: cursorSetProc
+
+        property string out: ""
+
+        stdout: SplitParser {
+            onRead: data => {
+                cursorSetProc.out += data;
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            try {
+                const payload = JSON.parse(cursorSetProc.out.trim());
+                root.cursorAction = payload.message ? payload.message.toString() : "";
+            } catch (e) {
+                root.cursorAction = "";
+            }
+            root.refreshCursor();
+        }
+    }
 
     ClippingRectangle {
         id: clipRect
@@ -162,6 +219,73 @@ Item {
                         StyledText {
                             Layout.fillWidth: true
                             text: qsTr("Javi's chat also honors reduced motion: no pulse or scanline shimmer while it is on.")
+                            font.pointSize: Appearance.font.size.small
+                            color: Colours.palette.m3outline
+                            wrapMode: Text.Wrap
+                        }
+                    }
+                }
+
+                StyledRect {
+                    Layout.fillWidth: true
+                    radius: Appearance.rounding.normal
+                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    implicitHeight: cursorCol.implicitHeight + Appearance.padding.large * 2
+
+                    ColumnLayout {
+                        id: cursorCol
+
+                        anchors.fill: parent
+                        anchors.margins: Appearance.padding.large
+                        spacing: Appearance.spacing.small
+
+                        StyledText {
+                            text: qsTr("Cursor")
+                            font.pointSize: Appearance.font.size.normal
+                            font.weight: 500
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: root.cursorText
+                            font.pointSize: Appearance.font.size.small
+                            color: Colours.palette.m3onSurfaceVariant
+                            wrapMode: Text.Wrap
+                        }
+
+                        SliderInput {
+                            Layout.fillWidth: true
+
+                            label: qsTr("Cursor size")
+                            value: root.cursorSize
+                            from: 16
+                            to: 64
+                            stepSize: 2
+                            suffix: "px"
+                            validator: IntValidator {
+                                bottom: 16
+                                top: 64
+                            }
+                            onValueModified: newValue => {
+                                root.cursorAction = qsTr("Applying…");
+                                cursorSetProc.out = "";
+                                cursorSetProc.command = ["horneroctl", "hypr", "cursor", "set", "--size", Math.round(newValue).toString(), "--yes", "--json"];
+                                cursorSetProc.running = true;
+                            }
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            visible: root.cursorAction !== ""
+                            text: root.cursorAction
+                            font.pointSize: Appearance.font.size.small
+                            color: Colours.palette.m3onSurfaceVariant
+                            wrapMode: Text.Wrap
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Applies to the Hyprland cursor immediately and is restored at login; other apps pick up the size when they start.")
                             font.pointSize: Appearance.font.size.small
                             color: Colours.palette.m3outline
                             wrapMode: Text.Wrap

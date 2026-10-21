@@ -131,6 +131,9 @@ Item {
                 height: grid.cellHeight
 
                 readonly property bool isCurrent: modelData && modelData.path === root.previewController.pendingWallpaperPath
+
+                Accessible.role: Accessible.Button
+                Accessible.name: modelData ? (isCurrent ? qsTr("%1, current").arg(Strings.wallpaperDisplayName(modelData.name)) : Strings.wallpaperDisplayName(modelData.name)) : ""
         readonly property real itemMargin: Appearance.spacing.normal / 2
         readonly property real itemRadius: Appearance.rounding.normal
 

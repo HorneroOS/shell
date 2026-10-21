@@ -28,6 +28,24 @@ Item {
 
     property string layoutText: qsTr("Reading keyboard layout…")
     property string actionText: ""
+    property string curLayout: ""
+    property string curVariant: ""
+    property string layoutsField: ""
+    property string variantField: ""
+    property int layoutCount: 0
+
+    function applyLayoutSet(): void {
+        if (root.layoutsField.trim() === "")
+            return;
+        root.actionText = qsTr("Applying…");
+        const cmd = ["horneroctl", "hardware", "keyboard", "layout", "--set", root.layoutsField];
+        if (root.variantField.trim() !== "")
+            cmd.push("--variant", root.variantField);
+        cmd.push("--yes", "--json");
+        actionProc.out = "";
+        actionProc.command = cmd;
+        actionProc.running = true;
+    }
     property real sensitivity: 0
     property string accelProfile: "flat"
     property int repeatRate: 50
@@ -40,6 +58,9 @@ Item {
         layoutProc.out = "";
         layoutProc.command = ["horneroctl", "hardware", "keyboard", "layout", "--current", "--json"];
         layoutProc.running = true;
+        listProc.out = "";
+        listProc.command = ["horneroctl", "hardware", "keyboard", "layout", "--list", "--json"];
+        listProc.running = true;
         inputProc.out = "";
         inputProc.command = ["horneroctl", "hypr", "input", "status", "--json"];
         inputProc.running = true;
@@ -68,8 +89,36 @@ Item {
             try {
                 const payload = JSON.parse(layoutProc.out.trim());
                 root.layoutText = payload.message ? payload.message.toString() : "";
+                const d = payload.data ?? {};
+                root.curLayout = d.layout ?? "";
+                root.curVariant = d.variant ?? "";
+                if (root.layoutsField === "")
+                    root.layoutsField = root.curLayout;
+                if (root.variantField === "")
+                    root.variantField = root.curVariant;
             } catch (e) {
                 root.layoutText = qsTr("horneroctl keyboard unavailable on this system.");
+            }
+        }
+    }
+
+    Process {
+        id: listProc
+
+        property string out: ""
+
+        stdout: SplitParser {
+            onRead: data => {
+                listProc.out += data;
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            try {
+                const payload = JSON.parse(listProc.out.trim());
+                const d = payload.data ?? {};
+                root.layoutCount = parseInt(d.count ?? "0") || 0;
+            } catch (e) {
+                root.layoutCount = 0;
             }
         }
     }
@@ -162,7 +211,7 @@ Item {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: qsTr("Keyboard layout and pointer/keyboard tuning; the keybindings editor arrives with #236.")
+                    text: qsTr("Keyboard layout, layout list and pointer/keyboard tuning; keybindings live in the Keybinds pane.")
                     font.pointSize: Appearance.font.size.small
                     color: Colours.palette.m3onSurfaceVariant
                     wrapMode: Text.Wrap
@@ -224,6 +273,51 @@ Item {
                                 type: TextButton.Tonal
                                 onClicked: root.refresh()
                             }
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Layout list (comma-separated XKB names, e.g. us,latam)")
+                            font.pointSize: Appearance.font.size.small
+                            color: Colours.palette.m3onSurfaceVariant
+                            wrapMode: Text.Wrap
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Appearance.spacing.small
+
+                            StyledTextField {
+                                Layout.fillWidth: true
+                                placeholderText: qsTr("us,latam")
+                                text: root.layoutsField
+                                onTextChanged: root.layoutsField = text
+                                onAccepted: root.applyLayoutSet()
+                            }
+
+                            StyledTextField {
+                                Layout.preferredWidth: 140
+                                placeholderText: qsTr("Variant (intl,)")
+                                text: root.variantField
+                                onTextChanged: root.variantField = text
+                                onAccepted: root.applyLayoutSet()
+                            }
+
+                            TextButton {
+                                text: qsTr("Apply layouts")
+                                type: TextButton.Filled
+                                enabled: root.layoutsField.trim() !== ""
+                                onClicked: root.applyLayoutSet()
+                            }
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            visible: root.layoutCount > 0
+                            text: qsTr("%1 XKB layouts available on this system (horneroctl hardware keyboard layout --list)").arg(root.layoutCount)
+                            font.pointSize: Appearance.font.size.small
+                            color: Colours.palette.m3outline
+                            wrapMode: Text.Wrap
                         }
 
                         StyledText {

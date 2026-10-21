@@ -99,6 +99,7 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
     allowed = {
         "schemaVersion", "id", "name", "version", "description", "author",
         "license", "homepage", "entrypoint", "files", "capabilities", "placement",
+        "signing",
     }
     unknown = manifest.keys() - allowed
     missing = {

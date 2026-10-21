@@ -67,6 +67,9 @@ DeviceList {
             color: Qt.alpha(Colours.tPalette.m3surfaceContainer, ethernetItem.isActive ? Colours.tPalette.m3surfaceContainer.a : 0)
             radius: Appearance.rounding.normal
 
+            Accessible.role: Accessible.Button
+            Accessible.name: (modelData.interface || qsTr("Unknown")) + (modelData.connected ? qsTr(", connected") : qsTr(", disconnected"))
+
             Interactive {
                 id: stateLayer
 
@@ -145,6 +148,9 @@ DeviceList {
 
                     radius: Appearance.rounding.full
                     color: Qt.alpha(Colours.palette.m3primaryContainer, modelData.connected ? 1 : 0)
+
+                    Accessible.role: Accessible.Button
+                    Accessible.name: modelData.connected ? qsTr("Disconnect") : qsTr("Connect")
 
                     Interactive {
                         color: modelData.connected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface

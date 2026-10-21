@@ -108,6 +108,9 @@ DeviceList {
             color: Qt.alpha(Colours.tPalette.m3surfaceContainer, root.activeItem === modelData ? Colours.tPalette.m3surfaceContainer.a : 0)
             radius: Appearance.rounding.normal
 
+            Accessible.role: Accessible.Button
+            Accessible.name: (modelData.ssid || qsTr("Unknown")) + (modelData.active ? qsTr(", connected") : "")
+
             Interactive {
                 function onClicked(): void {
                     root.session.network.active = modelData;
@@ -188,6 +191,9 @@ DeviceList {
 
                     radius: Appearance.rounding.full
                     color: Qt.alpha(Colours.palette.m3primaryContainer, modelData.active ? 1 : 0)
+
+                    Accessible.role: Accessible.Button
+                    Accessible.name: modelData.active ? qsTr("Disconnect") : qsTr("Connect")
 
                     Interactive {
                         function onClicked(): void {

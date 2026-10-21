@@ -95,6 +95,9 @@ Item {
                                     color: Audio.sink?.id === modelData.id ? Colours.layer(Colours.palette.m3surfaceContainer, 2) : "transparent"
                                     radius: Appearance.rounding.normal
 
+                                    Accessible.role: Accessible.Button
+                                    Accessible.name: (modelData.description || qsTr("Unknown")) + (Audio.sink?.id === modelData.id ? qsTr(", current output") : "")
+
                                     Interactive {
                                         function onClicked(): void {
                                             Audio.setAudioSink(modelData);
@@ -176,6 +179,9 @@ Item {
 
                                     color: Audio.source?.id === modelData.id ? Colours.layer(Colours.palette.m3surfaceContainer, 2) : "transparent"
                                     radius: Appearance.rounding.normal
+
+                                    Accessible.role: Accessible.Button
+                                    Accessible.name: (modelData.description || qsTr("Unknown")) + (Audio.source?.id === modelData.id ? qsTr(", current input") : "")
 
                                     Interactive {
                                         function onClicked(): void {

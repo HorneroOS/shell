@@ -23,6 +23,10 @@ RowLayout {
     StyledSwitch {
         id: toggle
 
+        Accessible.role: Accessible.CheckBox
+        Accessible.name: root.label
+        Accessible.checked: toggle.checked
+
         cLayer: 2
     }
 }

@@ -38,6 +38,10 @@ StyledRect {
         }
 
         StyledSwitch {
+            Accessible.role: Accessible.CheckBox
+            Accessible.name: root.label
+            Accessible.checked: root.checked
+
             checked: root.checked
             enabled: root.enabled
             onToggled: {

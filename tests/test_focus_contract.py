@@ -368,3 +368,27 @@ def test_dashboard_cards_have_accessible_names():
     window_item = (dash / "WindowListItem.qml").read_text(encoding="utf-8")
     assert 'qsTr("Toggle floating")' in window_item
     assert 'qsTr("Close window")' in window_item
+
+
+def test_shared_controls_have_accessible_names():
+    # #221 slice 4: the shared controls carry names into every Control
+    # Center pane that uses them. Text-bearing buttons name themselves
+    # from their visible label; icon-only buttons and sliders expose
+    # an accessibleName the caller fills in.
+    controls = ROOT / "components/controls"
+    for name in ("TextButton.qml", "IconTextButton.qml", "ButtonBase.qml"):
+        src = (controls / name).read_text(encoding="utf-8")
+        assert "Accessible.role: Accessible.Button" in src, name
+        assert "Accessible.name: label.text" in src, name
+    icon_button = (controls / "IconButton.qml").read_text(encoding="utf-8")
+    assert "property string accessibleName" in icon_button
+    assert "Accessible.name: root.accessibleName" in icon_button
+    slider = (controls / "StyledSlider.qml").read_text(encoding="utf-8")
+    assert "Accessible.role: Accessible.Slider" in slider
+    assert "property string accessibleName" in slider
+    radio = (controls / "StyledRadioButton.qml").read_text(encoding="utf-8")
+    assert "Accessible.role: Accessible.RadioButton" in radio
+    for name in ("ToggleRow.qml", "SwitchRow.qml"):
+        src = (controls / name).read_text(encoding="utf-8")
+        assert "Accessible.role: Accessible.CheckBox" in src, name
+        assert "Accessible.name: root.label" in src, name

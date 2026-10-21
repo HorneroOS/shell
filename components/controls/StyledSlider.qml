@@ -7,6 +7,13 @@ import QtQuick.Templates
 Slider {
     id: root
 
+    // Sliders have no visible label of their own; the owning row sets
+    // this so the control is named for assistive tech (#221).
+    property string accessibleName: ""
+
+    Accessible.role: Accessible.Slider
+    Accessible.name: root.accessibleName
+
     onActiveFocusChanged: {
         if (activeFocus)
             FocusMode.reportFocus(root.pressed);

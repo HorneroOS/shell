@@ -102,8 +102,7 @@ Item {
             IconButton {
                 type: IconButton.Text
                 visible: Compositor.supports("windowFloatingToggle")
-                Accessible.role: Accessible.Button
-                Accessible.name: qsTr("Toggle floating")
+                accessibleName: qsTr("Toggle floating")
                 icon: root.floating ? "select_window" : "select_window_off"
                 padding: Appearance.padding.small / 2
                 font.pointSize: Appearance.font.size.small
@@ -114,8 +113,7 @@ Item {
             IconButton {
                 type: IconButton.Text
                 icon: "close"
-                Accessible.role: Accessible.Button
-                Accessible.name: qsTr("Close window")
+                accessibleName: qsTr("Close window")
                 visible: Compositor.supports("windowClose")
                 padding: Appearance.padding.small / 2
                 font.pointSize: Appearance.font.size.small

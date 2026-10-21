@@ -22,6 +22,9 @@ StyledRect {
     property alias font: label.font
     property int type: TextButton.Filled
 
+    Accessible.role: Accessible.Button
+    Accessible.name: label.text
+
     property alias stateLayer: stateLayer
     property alias label: label
 

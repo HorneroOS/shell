@@ -17,6 +17,9 @@ StyledRect {
     property alias icon: iconLabel.text
     property alias text: label.text
     property alias font: label.font
+
+    Accessible.role: Accessible.Button
+    Accessible.name: label.text
     property bool checked
     property bool toggle
     property bool disabled

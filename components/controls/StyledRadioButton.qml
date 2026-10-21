@@ -7,6 +7,10 @@ import QtQuick.Templates
 RadioButton {
     id: root
 
+    Accessible.role: Accessible.RadioButton
+    Accessible.name: root.text
+    Accessible.checked: root.checked
+
     onActiveFocusChanged: {
         if (activeFocus)
             FocusMode.reportFocus(root.pressed);

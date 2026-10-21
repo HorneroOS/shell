@@ -33,3 +33,41 @@ def test_per_app_cap_and_critical_exemption():
     assert "maxPerApp" in src and "_enforcePerApp" in src
     # Critical urgency is exempt from both flood rules.
     assert src.count("NotificationUrgency.Critical") >= 2
+
+
+BATTERY = ROOT / "modules" / "BatteryMonitor.qml"
+VPN = ROOT / "services" / "VPN.qml"
+
+
+def test_critical_promotion_entry_point():
+    """Shell-detected critical conditions file real notifications.
+
+    They must enter the same list (history + persistence), carry
+    critical urgency, and pop up under DND like external critical
+    ingress — not vanish with the toast.
+    """
+    src = NOTIFS.read_text()
+    assert "function promoteCritical(" in src
+    assert "urgency: NotificationUrgency.Critical" in src
+    # Promoted entries are filed by the shell itself.
+    assert 'qsTr("HorneroOS")' in src
+
+
+def test_battery_critical_promotes():
+    src = BATTERY.read_text()
+    assert "Notifs.promoteCritical" in src
+    # Only the critical level promotes; plain warnings stay toasts.
+    assert "level.critical" in src
+
+
+def test_vpn_drop_promotes_but_user_disconnect_does_not():
+    src = VPN.read_text()
+    assert "Notifs.promoteCritical" in src
+    # A disconnect the user asked for is not a "drop": the flag set
+    # by disconnect() must gate the promotion.
+    assert "userInitiatedDisconnect" in src
+
+
+def test_promotion_documented():
+    doc = (ROOT / "docs" / "NOTIFICATIONS.md").read_text()
+    assert "promoteCritical" in doc

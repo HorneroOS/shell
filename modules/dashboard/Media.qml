@@ -242,6 +242,7 @@ Item {
 
         StyledSlider {
             id: slider
+            accessibleName: qsTr("Playback position")
 
             // No player: the slider (and its -1:-1 timestamps) add noise to
             // the empty state, so collapse it away

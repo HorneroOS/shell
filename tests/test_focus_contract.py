@@ -429,3 +429,23 @@ def test_icon_buttons_have_accessible_names():
         for name in names:
             assert f'qsTr("{name}")' in src, f"{rel}: {name}"
         assert "accessibleName:" in src, rel
+
+
+def test_sliders_have_accessible_names():
+    # #221 slice 6: every StyledSlider call site names itself (the
+    # bar InlineSlider already carried its own Accessible name).
+    expected = {
+        "modules/controlcenter/components/SliderInput.qml": [
+            "accessibleName: root.label"],
+        "modules/controlcenter/audio/AudioPane.qml": [
+            'qsTr("Output volume")', 'qsTr("Input volume")',
+            "Volume for %1"],
+        "modules/dashboard/Media.qml": ['qsTr("Playback position")'],
+        "modules/bar/popouts/Audio.qml": ['qsTr("Volume")'],
+        "modules/bar/components/InlineSlider.qml": [
+            'qsTr("Volume")', 'qsTr("Brightness")'],
+    }
+    for rel, needles in expected.items():
+        src = (ROOT / rel).read_text(encoding="utf-8")
+        for needle in needles:
+            assert needle in src, f"{rel}: {needle}"

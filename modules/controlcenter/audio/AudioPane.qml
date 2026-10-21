@@ -344,6 +344,7 @@ Item {
 
                             StyledSlider {
                                 id: outputVolumeSlider
+                                accessibleName: qsTr("Output volume")
                                 Layout.fillWidth: true
                                 implicitHeight: Appearance.padding.normal * 3
 
@@ -459,6 +460,7 @@ Item {
 
                             StyledSlider {
                                 id: inputVolumeSlider
+                                accessibleName: qsTr("Input volume")
                                 Layout.fillWidth: true
                                 implicitHeight: Appearance.padding.normal * 3
 
@@ -587,6 +589,7 @@ Item {
                                     }
 
                                     StyledSlider {
+                                        accessibleName: qsTr("Volume for %1").arg(Audio.getStreamName(modelData))
                                         Layout.fillWidth: true
                                         implicitHeight: Appearance.padding.normal * 3
 

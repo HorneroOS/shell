@@ -194,6 +194,9 @@ ColumnLayout {
                 StateLayer {
                     color: root.lock.pam.buffer ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
 
+                    Accessible.role: Accessible.Button
+                    Accessible.name: qsTr("Unlock")
+
                     function onClicked(): void {
                         root.lock.pam.passwd.start();
                     }

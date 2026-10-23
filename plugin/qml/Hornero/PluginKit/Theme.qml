@@ -4,7 +4,8 @@ import qs.config
 import QtQuick
 
 QtObject {
-    readonly property bool light: Colours.currentLight
+    // Expose the effective palette mode, including accessibility overrides.
+    readonly property bool light: Colours.light
     readonly property color primary: Colours.palette.m3primary
     readonly property color onPrimary: Colours.palette.m3onPrimary
     readonly property color surface: Colours.palette.m3surface

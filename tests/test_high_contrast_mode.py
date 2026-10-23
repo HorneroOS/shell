@@ -24,10 +24,24 @@ TEXT_PAIRS = (
     ("m3onErrorContainer", "m3errorContainer"),
     ("m3onSuccess", "m3success"),
     ("m3onSuccessContainer", "m3successContainer"),
+    ("m3onPrimaryFixed", "m3primaryFixed"),
+    ("m3onPrimaryFixed", "m3primaryFixedDim"),
+    ("m3onPrimaryFixedVariant", "m3primaryFixed"),
+    ("m3onPrimaryFixedVariant", "m3primaryFixedDim"),
+    ("m3onSecondaryFixed", "m3secondaryFixed"),
+    ("m3onSecondaryFixed", "m3secondaryFixedDim"),
+    ("m3onSecondaryFixedVariant", "m3secondaryFixed"),
+    ("m3onSecondaryFixedVariant", "m3secondaryFixedDim"),
+    ("m3onTertiaryFixed", "m3tertiaryFixed"),
+    ("m3onTertiaryFixed", "m3tertiaryFixedDim"),
+    ("m3onTertiaryFixedVariant", "m3tertiaryFixed"),
+    ("m3onTertiaryFixedVariant", "m3tertiaryFixedDim"),
 )
 SURFACES = (
     "m3background",
     "m3surface",
+    "m3surfaceDim",
+    "m3surfaceBright",
     "m3surfaceVariant",
     "m3surfaceContainerLowest",
     "m3surfaceContainerLow",
@@ -62,6 +76,11 @@ def test_high_contrast_text_roles_meet_wcag_aa() -> None:
         assert contrast(tokens[foreground], tokens[background]) >= 4.5, (
             f"{foreground} on {background} misses 4.5:1"
         )
+    for foreground in ("m3onSurface", "m3onSurfaceVariant"):
+        for background in SURFACES:
+            assert contrast(tokens[foreground], tokens[background]) >= 4.5, (
+                f"{foreground} on {background} misses 4.5:1"
+            )
 
 
 def test_high_contrast_boundaries_and_focus_are_visible() -> None:

@@ -103,16 +103,17 @@ for _ in $(seq 1 45); do
         fi
     done
     font_rows="$(awk '
-        /push button: Material font family/ { in_fonts = 1; next }
-        /push button: Monospace font family/ { in_fonts = 0 }
-        in_fonts && /^push button: / { print }
+        /^push button: Material font family$/ { in_fonts = 1; next }
+        /^push button: (Monospace|Sans-serif|Clock) font family$/ { in_fonts = 0 }
+        /^push button: Probe Wallpaper/ { in_fonts = 0 }
+        in_fonts && /^push button: Adwaita Sans(, current)?$/ { print }
     ' <<<"$out")"
-    if [[ -z "$font_rows" ]]; then
+    if [[ "$font_rows" != *"Adwaita Sans"* ]]; then
         ready=false
     fi
     if [[ "$ready" == true ]]; then
         echo "$out"
-        if rg -q '^MUTATION_ATTEMPT$' "$scratch/user-state/hornero/atspi-cli.log" 2>/dev/null; then
+        if grep -q '^MUTATION_ATTEMPT$' "$scratch/user-state/hornero/atspi-cli.log" 2>/dev/null; then
             echo "FAIL: fixture observed a mutating CLI request" >&2
             cat "$scratch/user-state/hornero/atspi-cli.log" >&2
             exit 1

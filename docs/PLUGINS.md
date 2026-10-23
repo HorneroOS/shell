@@ -84,8 +84,9 @@ Minimal manifest:
 
 `placement` is optional: `"background"` (default, headless),
 `"bar"` (rendered in the bar end group), or `"dashboard"`
-(rendered as a card in the dashboard Extensions tab). Unknown
-values are rejected by the validator and by the runtime host.
+(rendered as a card in the dashboard Extensions tab), or `"desktop"`
+(rendered in a configurable slot on each display's background layer).
+Unknown values are rejected by the validator and by the runtime host.
 
 Use `processCommands` to disclose exact executable basenames and
 `networkHosts` to disclose intended network hosts. These fields support code

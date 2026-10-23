@@ -5,6 +5,8 @@ JsonObject {
     // built-in semantic palettes (services/Colours.qml); any other value
     // resolves through the shared theme registry (ThemePipeline).
     property string theme: "hornero-dark"
+    // Shell-wide accessibility override; external applications keep their theme.
+    property bool highContrast: false
     property Rounding rounding: Rounding {}
     property Spacing spacing: Spacing {}
     property Padding padding: Padding {}

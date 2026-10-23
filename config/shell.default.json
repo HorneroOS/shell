@@ -1,6 +1,7 @@
 {
   "appearance": {
     "theme": "hornero-dark",
+    "highContrast": false,
     "rounding": {
       "scale": 1
     },

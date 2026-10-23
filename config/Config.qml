@@ -126,6 +126,7 @@ Singleton {
     function serializeAppearance(): var {
         return {
             theme: appearance.theme,
+            highContrast: appearance.highContrast,
             rounding: {
                 scale: appearance.rounding.scale
             },

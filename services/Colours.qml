@@ -69,10 +69,86 @@ Singleton {
             "colours": {}
         }));
     }
-    readonly property bool light: showPreview ? previewLight : currentLight
+    readonly property bool light: Config.appearance.highContrast ? false : (showPreview ? previewLight : currentLight)
     property bool currentLight
     property bool previewLight
-    readonly property M3Palette palette: showPreview ? preview : current
+    readonly property M3Palette palette: Config.appearance.highContrast ? highContrastPalette : (showPreview ? preview : current)
+    readonly property M3Palette highContrastPalette: M3Palette {
+        m3primary_paletteKeyColor: "#ffd166"
+        m3secondary_paletteKeyColor: "#8ed8ff"
+        m3tertiary_paletteKeyColor: "#c8a6ff"
+        m3neutral_paletteKeyColor: "#8293a4"
+        m3neutral_variant_paletteKeyColor: "#8293a4"
+        m3background: "#0a0f14"
+        m3onBackground: "#f5f8fc"
+        m3surface: "#111a22"
+        m3surfaceDim: "#0a0f14"
+        m3surfaceBright: "#33404d"
+        m3surfaceContainerLowest: "#05080b"
+        m3surfaceContainerLow: "#0a0f14"
+        m3surfaceContainer: "#111a22"
+        m3surfaceContainerHigh: "#1b2833"
+        m3surfaceContainerHighest: "#263746"
+        m3onSurface: "#f5f8fc"
+        m3surfaceVariant: "#1b2833"
+        m3onSurfaceVariant: "#e4edf5"
+        m3inverseSurface: "#f5f8fc"
+        m3inverseOnSurface: "#111820"
+        m3outline: "#ffffff"
+        m3outlineVariant: "#b8c8d8"
+        m3shadow: "#000000"
+        m3scrim: "#000000"
+        m3surfaceTint: "#ffd166"
+        m3primary: "#ffd166"
+        m3onPrimary: "#111820"
+        m3primaryContainer: "#ffd166"
+        m3onPrimaryContainer: "#111820"
+        m3inversePrimary: "#7a5700"
+        m3secondary: "#8ed8ff"
+        m3onSecondary: "#07131a"
+        m3secondaryContainer: "#8ed8ff"
+        m3onSecondaryContainer: "#07131a"
+        m3tertiary: "#c8a6ff"
+        m3onTertiary: "#130c1f"
+        m3tertiaryContainer: "#c8a6ff"
+        m3onTertiaryContainer: "#130c1f"
+        m3error: "#ff8a80"
+        m3onError: "#1a0808"
+        m3errorContainer: "#ff8a80"
+        m3onErrorContainer: "#1a0808"
+        m3success: "#a8e6a1"
+        m3onSuccess: "#07150c"
+        m3successContainer: "#a8e6a1"
+        m3onSuccessContainer: "#07150c"
+        m3primaryFixed: "#ffd166"
+        m3primaryFixedDim: "#ffd166"
+        m3onPrimaryFixed: "#111820"
+        m3onPrimaryFixedVariant: "#111820"
+        m3secondaryFixed: "#8ed8ff"
+        m3secondaryFixedDim: "#8ed8ff"
+        m3onSecondaryFixed: "#07131a"
+        m3onSecondaryFixedVariant: "#07131a"
+        m3tertiaryFixed: "#c8a6ff"
+        m3tertiaryFixedDim: "#c8a6ff"
+        m3onTertiaryFixed: "#130c1f"
+        m3onTertiaryFixedVariant: "#130c1f"
+        term0: "#8293a4"
+        term1: "#ff8a80"
+        term2: "#a8e6a1"
+        term3: "#ffd166"
+        term4: "#8ed8ff"
+        term5: "#c8a6ff"
+        term6: "#8ed8ff"
+        term7: "#f5f8fc"
+        term8: "#b8c8d8"
+        term9: "#ff8a80"
+        term10: "#a8e6a1"
+        term11: "#ffd166"
+        term12: "#8ed8ff"
+        term13: "#c8a6ff"
+        term14: "#8ed8ff"
+        term15: "#ffffff"
+    }
     // Semantic keyboard-focus ring color (S4 contract, docs/FOCUS.md).
     // Primary by design: theme-derived, so Dark / Light / Pampa follow
     // automatically. The ring floats 2 px off-shape, so it never sits
@@ -397,7 +473,7 @@ Singleton {
     }
 
     component Transparency: QtObject {
-        readonly property bool enabled: Appearance.transparency.enabled
+        readonly property bool enabled: Appearance.transparency.enabled && !Config.appearance.highContrast
         readonly property real base: Appearance.transparency.base - (root.light ? 0.1 : 0)
         readonly property real layers: Appearance.transparency.layers
         readonly property var elements: Appearance.transparency.elements ?? ({})

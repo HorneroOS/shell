@@ -292,14 +292,14 @@ Item {
 
         visible: root.clear
         anchors.fill: parent
-        opacity: 0.62 * Colours.elementAlpha("bar")
+        opacity: Config.appearance.highContrast ? 1 : 0.62 * Colours.elementAlpha("bar")
 
         gradient: Gradient {
             orientation: root.vertical ? Gradient.Horizontal : Gradient.Vertical
 
             GradientStop {
                 position: 0
-                color: scrim.fromStart ? Colours.palette.m3surface : "transparent"
+                color: Config.appearance.highContrast || scrim.fromStart ? Colours.palette.m3surface : "transparent"
             }
             GradientStop {
                 position: scrim.fromStart ? 0.65 : 0.35
@@ -307,7 +307,7 @@ Item {
             }
             GradientStop {
                 position: 1
-                color: scrim.fromStart ? "transparent" : Colours.palette.m3surface
+                color: Config.appearance.highContrast || !scrim.fromStart ? Colours.palette.m3surface : "transparent"
             }
         }
     }

@@ -146,6 +146,23 @@ Item {
                             font.weight: 500
                         }
 
+                        SwitchRow {
+                            label: qsTr("High contrast")
+                            checked: Config.appearance.highContrast
+                            onToggled: checked => {
+                                Config.appearance.highContrast = checked;
+                                Config.save();
+                            }
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Uses an opaque high-contrast palette across Hornero Shell. Other applications keep their current theme.")
+                            font.pointSize: Appearance.font.size.small
+                            color: Colours.palette.m3onSurfaceVariant
+                            wrapMode: Text.Wrap
+                        }
+
                         SliderInput {
                             Layout.fillWidth: true
 
@@ -165,10 +182,20 @@ Item {
                         SwitchRow {
                             label: qsTr("Transparency effects")
                             checked: Config.appearance.transparency.enabled
+                            enabled: !Config.appearance.highContrast
                             onToggled: checked => {
                                 Config.appearance.transparency.enabled = checked;
                                 Config.save();
                             }
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            visible: Config.appearance.highContrast
+                            text: qsTr("Transparency is disabled while high contrast is on.")
+                            font.pointSize: Appearance.font.size.small
+                            color: Colours.palette.m3onSurfaceVariant
+                            wrapMode: Text.Wrap
                         }
                     }
                 }

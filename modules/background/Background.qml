@@ -159,10 +159,13 @@ Loader {
             }
 
             PluginDesktopWidgets {
-                anchors.right: parent.right
-                anchors.bottom: parent.bottom
-                anchors.rightMargin: Appearance.padding.large * 2 + (Config.bar.positionFor(win.screen.name) === "right" ? win.barOffset : 0)
-                anchors.bottomMargin: Appearance.padding.large * 2 + (Config.bar.positionFor(win.screen.name) === "bottom" ? win.barOffset : 0)
+                screenName: win.screen.name
+                anchors.fill: parent
+                anchors.margins: Appearance.padding.large * 2
+                anchors.leftMargin: anchors.margins + (Config.bar.positionFor(win.screen.name) === "left" ? win.barOffset : 0)
+                anchors.rightMargin: anchors.margins + (Config.bar.positionFor(win.screen.name) === "right" ? win.barOffset : 0)
+                anchors.topMargin: anchors.margins + (Config.bar.positionFor(win.screen.name) === "top" ? win.barOffset : 0)
+                anchors.bottomMargin: anchors.margins + (Config.bar.positionFor(win.screen.name) === "bottom" ? win.barOffset : 0)
             }
         }
     }

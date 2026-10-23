@@ -27,7 +27,7 @@ fi
 
 echo "lint-qml: using $QMLLINT"
 out="$(mktemp)"
-mapfile -t files < <(find shell.qml modules services config utils components -name '*.qml')
+mapfile -t files < <(find shell.qml modules services config utils components plugin/qml examples/plugins -name '*.qml')
 "$QMLLINT" "${files[@]}" >"$out" 2>&1 || true
 
 fail=0

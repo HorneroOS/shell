@@ -29,12 +29,27 @@ Singleton {
         listProcess.running = true;
     }
 
-    function markPlacement(id: string, placement: string, entrypoint: string): void {
+    function markPlacement(id: string, placement: string, entrypoint: string, settings: var): void {
         const next = root.entries.map(e => e.id === id ? Object.assign({}, e, {
             placement: placement,
-            entrypoint: entrypoint
+            entrypoint: entrypoint,
+            settings: settings && typeof settings === "object" && !Array.isArray(settings) ? settings : ({})
         }) : e);
         root.entries = next;
+    }
+
+    function hasPlacement(id: string, placement: string): bool {
+        const entry = root.entries.find(e => e.id === id);
+        return !!entry && entry.placement === placement && entry.enabled && entry.installed;
+    }
+
+    function settingDeclaration(id: string, key: string): var {
+        const entry = root.entries.find(e => e.id === id);
+        if (!entry || !entry.settings || typeof entry.settings !== "object")
+            return null;
+
+        const declaration = entry.settings[key];
+        return declaration && typeof declaration === "object" ? declaration : null;
     }
 
     function barPlugins(): var {

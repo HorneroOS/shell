@@ -17,8 +17,9 @@ import QtQuick
 // renders them in its end group (modules/plugins/PluginBarWidgets.qml
 // via modules/bar/Bar.qml). `placement: "dashboard"` plugins are
 // rendered as cards by the dashboard Extensions tab
-// (modules/plugins/PluginDashboardCards.qml). Other placements are
-// rejected.
+// (modules/plugins/PluginDashboardCards.qml); desktop plugins are
+// placed by modules/plugins/PluginDesktopWidgets.qml. Unknown
+// placements are rejected.
 // Plugin QML runs with full user privileges — see services/Plugins.qml
 // for the trust label.
 Scope {
@@ -67,7 +68,8 @@ Scope {
                             return;
                         }
                         slot.placement = placement;
-                        Plugins.markPlacement(slot.modelData.id, placement, manifest.entrypoint);
+                        const settings = manifest.capabilities && manifest.capabilities.settings;
+                        Plugins.markPlacement(slot.modelData.id, placement, manifest.entrypoint, settings || ({}));
                         slot.entrypoint = manifest.entrypoint;
                     } catch (e) {
                         Plugins.markFailed(slot.modelData.id, "manifest.json is not readable JSON");

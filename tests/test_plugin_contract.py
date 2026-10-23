@@ -156,6 +156,12 @@ def test_public_plugin_kit_import_is_accepted(tmp_path):
     VALIDATOR.validate_plugin(plugin)
 
 
+def test_plugin_theme_reports_effective_palette_mode():
+    theme = (ROOT / "plugin/qml/Hornero/PluginKit/Theme.qml").read_text()
+    assert "property bool light: Colours.light" in theme
+    assert "Colours.currentLight" not in theme
+
+
 def test_internal_shell_import_is_rejected(tmp_path):
     plugin = make_plugin(tmp_path, "import Hornero.Services\nItem {}")
     with pytest.raises(VALIDATOR.ValidationError, match="unsupported module"):

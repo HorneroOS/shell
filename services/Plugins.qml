@@ -99,11 +99,20 @@ Singleton {
             } catch (e) {
                 parsed = [];
             }
-            root.entries = parsed.map(e => Object.assign({}, e, {
-                placement: typeof e.placement === "string" ? e.placement : "",
-                state: e.enabled && e.installed ? "pending" : "disabled",
-                detail: ""
-            }));
+            root.entries = parsed.map(e => {
+                const requestedEnabled = !!e.enabled && !!e.installed;
+                const trusted = ["official", "trusted", "signed"].includes(e.trust);
+                const enabled = requestedEnabled && trusted;
+                return Object.assign({}, e, {
+                    placement: typeof e.placement === "string" ? e.placement : "",
+                    requestedEnabled: requestedEnabled,
+                    enabled: enabled,
+                    state: requestedEnabled && !trusted ? "blocked" : enabled ? "pending" : "disabled",
+                    detail: requestedEnabled && !trusted
+                        ? qsTr("This plugin is marked enabled, but its payload is not trusted. Review and trust it, then enable it again.")
+                        : ""
+                });
+            });
             root.discovered = true;
         }
     }

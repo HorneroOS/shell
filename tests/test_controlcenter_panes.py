@@ -484,21 +484,27 @@ def test_extensions_pane_lifecycle_goes_through_horneroctl_with_consent():
     # or payloads; enable/disable go through the exact CLI argv (with
     # --json first), and enable requires an inline confirmation step
     # mirroring the CLI --yes gate. Install/remove stay CLI-only.
-    assert '["horneroctl", "--json", "plugin", action, pluginId, "--yes"]' in pane
+    assert '["horneroctl", "--json", "plugin", action, pluginId,' in pane
+    assert 'if (action === "install" || action === "update")' in pane
+    assert 'command.push("--revision", root.catalogRevision)' in pane
     assert "pendingEnable" in pane and "Confirm enable" in pane
     assert "runLifecycle(\"enable\"" in pane and "runLifecycle(\"disable\"" in pane
     for banned in ('"plugin", "install', '"plugin", "remove',
                    "plugins-receipts"):
         assert banned not in pane, f"extensions pane must not do this itself: {banned}"
-    assert "not sandboxed" in pane
+    assert "without a sandbox" in pane
 
 
 def test_extensions_marketplace_section():
     pane = (ROOT / "modules/controlcenter/extensions/ExtensionsPane.qml").read_text()
     assert "Official catalogue" in pane
     assert '"plugin", "catalog"' in pane
-    assert '"catalog", "install"' in pane
+    assert 'runCatalogAction("install", catRow.modelData.id)' in pane
+    assert "Payload SHA-256" in pane
+    assert "declaredCapabilities" in pane
     assert "Confirm install" in pane
+    assert "rollback_available" in pane
+    assert 'Settings: %4' in pane
     # Marketplace never writes receipts itself and never enables silently.
     assert "pendingInstall" in pane
     assert 'runLifecycle("enable"' in pane  # existing consent path untouched

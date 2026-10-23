@@ -12,6 +12,7 @@ StyledRect {
     id: root
 
     required property string label
+    property string accessibleName: ""
     property int expandedZ: 100
     property bool enabled: true
 
@@ -45,6 +46,7 @@ StyledRect {
 
         SplitButton {
             id: splitButton
+            accessibleName: root.accessibleName
             enabled: root.enabled
             type: SplitButton.Filled
 

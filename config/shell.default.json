@@ -712,5 +712,9 @@
   "paths": {
     "sessionGif": "root:/assets/kurukuru.gif",
     "mediaGif": "root:/assets/bongocat.gif"
+  },
+  "plugins": {
+    "settings": {},
+    "desktopWidgetSlots": {}
   }
 }

@@ -11,6 +11,7 @@ import qs.config
 import QtQuick
 import QtQuick.Layouts
 import Quickshell.Io
+import Quickshell
 import Quickshell.Widgets
 
 // Control Center › Extensions: community plugin lifecycle.
@@ -332,6 +333,18 @@ Item {
                                 font.pointSize: Appearance.font.size.small
                                 color: Colours.palette.m3error
                                 wrapMode: Text.Wrap
+                            }
+
+                            Repeater {
+                                model: row.modelData.placement === "desktop" ? Quickshell.screens : []
+
+                                delegate: DesktopWidgetPosition {
+                                    required property var modelData
+
+                                    Layout.fillWidth: true
+                                    pluginId: row.modelData.id
+                                    screenName: modelData.name
+                                }
                             }
 
                             RowLayout {

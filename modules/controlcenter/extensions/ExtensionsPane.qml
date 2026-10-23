@@ -34,16 +34,48 @@ Item {
     property var actionEnvelope: null
     property var catalogEntries: []
     property string catalogError: ""
+    property string catalogRevision: ""
+    property string catalogSearch: ""
+    property string actionMessage: ""
+
+    function filteredCatalogEntries(): var {
+        const query = root.catalogSearch.trim().toLowerCase();
+        if (!query)
+            return root.catalogEntries;
+        return root.catalogEntries.filter(entry => [entry.name, entry.description, entry.author, entry.category, entry.placement]
+            .some(value => String(value || "").toLowerCase().includes(query)));
+    }
+
+    function declaredCapabilities(capabilities, verified): string {
+        const declared = capabilities || {};
+        const commands = Array.isArray(declared.processCommands) ? declared.processCommands : [];
+        const hosts = Array.isArray(declared.networkHosts) ? declared.networkHosts : [];
+        const settings = declared.settings && typeof declared.settings === "object" ? declared.settings : {};
+        const settingsSummary = Object.keys(settings).sort().map(key => `${key}: ${JSON.stringify(settings[key])}`).join(", ");
+        const provenance = verified === false
+            ? qsTr("Unverified plugin-manifest declarations")
+            : qsTr("Plugin-declared capabilities");
+        return qsTr("%1\nProcess commands: %2\nNetwork hosts: %3\nSettings: %4")
+            .arg(provenance)
+            .arg(commands.length ? commands.join(", ") : qsTr("None declared"))
+            .arg(hosts.length ? hosts.join(", ") : qsTr("None declared"))
+            .arg(settingsSummary || qsTr("None declared"));
+    }
 
     function refreshCatalog() {
         root.catalogError = "";
+        root.catalogRevision = "";
         catalogProc.command = ["horneroctl", "--json", "plugin", "catalog"];
         catalogProc.running = true;
     }
 
     function runCatalogAction(action, pluginId) {
         root.actionError = "";
-        catalogInstallProc.command = ["horneroctl", "--json", "plugin", "catalog", action, pluginId, "--yes"];
+        root.actionMessage = "";
+        catalogInstallProc.command = ["horneroctl", "--json", "plugin", "catalog", action, pluginId];
+        if (action === "install" || action === "update")
+            catalogInstallProc.command.push("--revision", root.catalogRevision);
+        catalogInstallProc.command.push("--yes");
         catalogInstallProc.running = true;
     }
 
@@ -95,6 +127,7 @@ Item {
                 const env = JSON.parse(catalogProc.out.trim());
                 if (env.ok === true) {
                     root.catalogEntries = JSON.parse((env.data && env.data.plugins) || "[]");
+                    root.catalogRevision = (env.data && env.data.revision) ? String(env.data.revision) : "";
                 } else {
                     root.catalogError = (env.message || "Catalogue unavailable").toString();
                 }
@@ -121,6 +154,11 @@ Item {
                 if (env.ok === true) {
                     root.pendingInstall = "";
                     root.pendingCatalogAction = "";
+                    const data = env.data || {};
+                    root.actionMessage = [env.message || qsTr("Catalogue action completed."),
+                        data.revision ? qsTr("Catalogue revision: %1").arg(data.revision) : "",
+                        data.sha256 ? qsTr("Payload SHA-256: %1").arg(data.sha256) : ""]
+                        .filter(Boolean).join("\n");
                     Plugins.reload();
                     root.refreshCatalog();
                 } else {
@@ -173,7 +211,7 @@ Item {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: qsTr("Community plugins run with your user's permissions — they are not sandboxed. Only enable plugins whose source you have reviewed. Enabling asks for confirmation here; install and remove stay in the CLI: horneroctl plugin install / remove")
+                    text: qsTr("Every enabled QML plugin runs as your user without a sandbox. Command and network declarations come from each plugin's manifest and are not enforced permissions. Review a plugin's source before enabling it.")
                     font.pointSize: Appearance.font.size.small
                     color: Colours.palette.m3outline
                     wrapMode: Text.Wrap
@@ -196,8 +234,17 @@ Item {
 
                 StyledText {
                     Layout.fillWidth: true
+                    visible: root.actionMessage.length > 0
+                    text: root.actionMessage
+                    font.pointSize: Appearance.font.size.small
+                    color: Colours.palette.m3primary
+                    wrapMode: Text.Wrap
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
                     visible: Plugins.discovered && Plugins.entries.length === 0
-                    text: qsTr("No community plugins installed. Install one with: horneroctl plugin install <path>")
+                    text: qsTr("No plugins installed. Add one with: horneroctl plugin install <path>")
                     font.pointSize: Appearance.font.size.small
                     color: Colours.palette.m3outline
                     wrapMode: Text.Wrap
@@ -230,7 +277,11 @@ Item {
 
                             StyledText {
                                 Layout.fillWidth: true
-                                text: row.modelData.enabled ? qsTr("Enabled — state: %1").arg(row.modelData.state) : qsTr("Disabled")
+                                text: row.modelData.enabled
+                                    ? qsTr("Enabled — state: %1").arg(row.modelData.state)
+                                    : row.modelData.requestedEnabled
+                                        ? qsTr("Blocked — payload trust check failed")
+                                        : qsTr("Disabled")
                                 font.pointSize: Appearance.font.size.small
                                 color: Colours.palette.m3outline
                                 wrapMode: Text.Wrap
@@ -240,7 +291,18 @@ Item {
                                 Layout.fillWidth: true
                                 text: qsTr("Trust: %1").arg(row.modelData.trust ?? qsTr("unknown"))
                                 font.pointSize: Appearance.font.size.small
-                                color: (row.modelData.trust === "untrusted" || row.modelData.trust === "stale-trust") ? Colours.palette.m3error : Colours.palette.m3outline
+                                color: (["untrusted", "stale-trust", "modified", "unverified"].includes(row.modelData.trust)) ? Colours.palette.m3error : Colours.palette.m3outline
+                                wrapMode: Text.Wrap
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                visible: row.modelData.source === "https://github.com/HorneroOS/plugins.git"
+                                text: qsTr("Catalogue revision: %1\nExpected payload SHA-256: %2")
+                                    .arg(row.modelData.revision || qsTr("Not recorded"))
+                                    .arg(row.modelData.catalog_sha256 || qsTr("Not recorded"))
+                                font.pointSize: Appearance.font.size.smaller
+                                color: Colours.palette.m3outline
                                 wrapMode: Text.Wrap
                             }
 
@@ -265,7 +327,8 @@ Item {
                             StyledText {
                                 Layout.fillWidth: true
                                 visible: root.pendingEnable === row.modelData.id
-                                text: qsTr("This plugin's QML will run as your user, without a sandbox. Enable only if you reviewed its source.")
+                                text: qsTr("This plugin's QML will run as your user, without a sandbox. Enable only if you reviewed its source.\n%1")
+                                    .arg(root.declaredCapabilities(row.modelData.capabilities, row.modelData.capabilities_verified))
                                 font.pointSize: Appearance.font.size.small
                                 color: Colours.palette.m3error
                                 wrapMode: Text.Wrap
@@ -275,7 +338,7 @@ Item {
                                 spacing: Appearance.spacing.small
 
                                 TextButton {
-                                    visible: !row.modelData.enabled && (row.modelData.trust === "untrusted" || row.modelData.trust === "stale-trust") && root.pendingTrust !== row.modelData.id
+                                    visible: !row.modelData.enabled && (["untrusted", "stale-trust", "modified", "unverified"].includes(row.modelData.trust)) && root.pendingTrust !== row.modelData.id
                                     enabled: !lifecycleProc.running
                                     text: qsTr("Trust…")
                                     type: TextButton.Tonal
@@ -302,7 +365,7 @@ Item {
                                 }
 
                                 TextButton {
-                                    visible: !row.modelData.enabled && root.pendingEnable !== row.modelData.id
+                                    visible: !row.modelData.enabled && !row.modelData.requestedEnabled && root.pendingEnable !== row.modelData.id
                                     enabled: !lifecycleProc.running
                                     text: qsTr("Enable…")
                                     type: TextButton.Tonal
@@ -329,7 +392,7 @@ Item {
                                 }
 
                                 TextButton {
-                                    visible: row.modelData.enabled
+                                    visible: row.modelData.enabled || row.modelData.requestedEnabled
                                     enabled: !lifecycleProc.running
                                     text: qsTr("Disable")
                                     type: TextButton.Tonal
@@ -348,10 +411,27 @@ Item {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: qsTr("First-party extensions, hash-verified and pinned by the catalogue. Installing copies inert data; enabling stays a separate confirmed step above. Community plugins are not listed yet.")
+                    text: qsTr("Official extensions from HorneroOS/plugins. Installing copies hash-verified, pinned data but does not run it. Enabling is a separate confirmed step. Capability lists describe plugin declarations; they do not restrict what QML can do.")
                     font.pointSize: Appearance.font.size.small
                     color: Colours.palette.m3outline
                     wrapMode: Text.Wrap
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
+                    visible: root.catalogRevision.length > 0
+                    text: qsTr("Catalogue revision: %1").arg(root.catalogRevision)
+                    font.pointSize: Appearance.font.size.small
+                    color: Colours.palette.m3outline
+                    wrapMode: Text.Wrap
+                }
+
+                SearchBar {
+                    Layout.fillWidth: true
+                    placeholderText: qsTr("Search official extensions")
+                    Accessible.name: qsTr("Search official extensions")
+                    text: root.catalogSearch
+                    onTextChanged: root.catalogSearch = text
                 }
 
                 TextButton {
@@ -370,8 +450,17 @@ Item {
                     wrapMode: Text.Wrap
                 }
 
+                StyledText {
+                    Layout.fillWidth: true
+                    visible: root.catalogEntries.length > 0 && root.filteredCatalogEntries().length === 0
+                    text: qsTr("No official extensions match this search.")
+                    font.pointSize: Appearance.font.size.small
+                    color: Colours.palette.m3outline
+                    wrapMode: Text.Wrap
+                }
+
                 Repeater {
-                    model: root.catalogEntries
+                    model: root.filteredCatalogEntries()
 
                     delegate: StyledRect {
                         id: catRow
@@ -397,6 +486,45 @@ Item {
 
                             StyledText {
                                 Layout.fillWidth: true
+                                text: catRow.modelData.description || qsTr("No description provided.")
+                                font.pointSize: Appearance.font.size.small
+                                color: Colours.palette.m3onSurface
+                                wrapMode: Text.Wrap
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: qsTr("By %1 · %2 · %3 · %4")
+                                    .arg(catRow.modelData.author || qsTr("Unknown author"))
+                                    .arg(catRow.modelData.license || qsTr("License not listed"))
+                                    .arg(catRow.modelData.category || qsTr("Uncategorized"))
+                                    .arg(catRow.modelData.placement || qsTr("Placement not listed"))
+                                font.pointSize: Appearance.font.size.small
+                                color: Colours.palette.m3outline
+                                wrapMode: Text.Wrap
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: root.declaredCapabilities(catRow.modelData.capabilities)
+                                font.pointSize: Appearance.font.size.small
+                                color: Colours.palette.m3outline
+                                wrapMode: Text.Wrap
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: qsTr("Source: %1\nPayload SHA-256: %2\nPlugin snapshot: %3")
+                                    .arg(catRow.modelData.homepage || qsTr("Not listed"))
+                                    .arg(catRow.modelData.sha256 || qsTr("Not listed"))
+                                    .arg(catRow.modelData.generatedFrom || qsTr("Not listed"))
+                                font.pointSize: Appearance.font.size.smaller
+                                color: Colours.palette.m3outline
+                                wrapMode: Text.Wrap
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
                                 text: qsTr("%1 · %2 · %3").arg(catRow.modelData.category || "").arg(catRow.modelData.placement || "").arg(catRow.modelData.state || "")
                                 font.pointSize: Appearance.font.size.small
                                 color: Colours.palette.m3outline
@@ -408,7 +536,7 @@ Item {
 
                                 TextButton {
                                     visible: catRow.modelData.state !== "installed" && root.pendingInstall !== catRow.modelData.id
-                                    enabled: !catalogInstallProc.running
+                                    enabled: !catalogInstallProc.running && root.catalogRevision.length > 0
                                     text: qsTr("Install…")
                                     type: TextButton.Tonal
                                     onClicked: root.pendingInstall = catRow.modelData.id
@@ -416,12 +544,11 @@ Item {
 
                                 TextButton {
                                     visible: root.pendingInstall === catRow.modelData.id
-                                    enabled: !catalogInstallProc.running
+                                    enabled: !catalogInstallProc.running && root.catalogRevision.length > 0
                                     text: qsTr("Confirm install")
                                     type: TextButton.Filled
                                     onClicked: {
-                                        catalogInstallProc.command = ["horneroctl", "--json", "plugin", "catalog", "install", catRow.modelData.id, "--yes"];
-                                        catalogInstallProc.running = true;
+                                        root.runCatalogAction("install", catRow.modelData.id);
                                     }
                                 }
 
@@ -443,14 +570,14 @@ Item {
 
                                 TextButton {
                                     visible: root.pendingCatalogAction === "update:" + catRow.modelData.id
-                                    enabled: !catalogInstallProc.running
+                                    enabled: !catalogInstallProc.running && root.catalogRevision.length > 0
                                     text: qsTr("Confirm update")
                                     type: TextButton.Filled
                                     onClicked: root.runCatalogAction("update", catRow.modelData.id)
                                 }
 
                                 TextButton {
-                                    visible: catRow.modelData.state === "installed" && root.pendingCatalogAction !== "rollback:" + catRow.modelData.id
+                                    visible: catRow.modelData.state === "installed" && catRow.modelData.rollback_available && root.pendingCatalogAction !== "rollback:" + catRow.modelData.id
                                     enabled: !catalogInstallProc.running
                                     text: qsTr("Roll back…")
                                     type: TextButton.Tonal
@@ -458,7 +585,7 @@ Item {
                                 }
 
                                 TextButton {
-                                    visible: root.pendingCatalogAction === "rollback:" + catRow.modelData.id
+                                    visible: catRow.modelData.rollback_available && root.pendingCatalogAction === "rollback:" + catRow.modelData.id
                                     enabled: !catalogInstallProc.running
                                     text: qsTr("Confirm rollback")
                                     type: TextButton.Filled

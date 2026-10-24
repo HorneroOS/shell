@@ -79,10 +79,10 @@ The original extraction source and upstream license are recorded in
 
 ## Extension contract
 
-The repository documents a proposed community extension package contract and
-static validator in [`docs/PLUGINS.md`](docs/PLUGINS.md). Third-party plugin
-discovery, loading, and installation are not implemented; Quickshell code is
-not sandboxed.
+The repository documents the community extension package contract, runtime,
+and public `Hornero.PluginKit` API in [`docs/PLUGINS.md`](docs/PLUGINS.md).
+`horneroctl` owns plugin lifecycle and provenance. Quickshell code is not
+sandboxed.
 
 ## Structure
 

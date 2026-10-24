@@ -42,7 +42,7 @@ def test_spinbox_steppers_are_named():
 
 def test_split_button_halves_are_named():
     src = _src("components/controls/SplitButton.qml")
-    assert "Accessible.name: label.text" in src
+    assert "Accessible.name: root.accessibleName || label.text" in src
     assert 'Accessible.name: qsTr("More options")' in src
 
 

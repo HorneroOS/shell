@@ -15,7 +15,12 @@
   "capabilities": {
     "processCommands": [],
     "networkHosts": [],
-    "settings": {}
+    "settings": {
+      "note": {
+        "type": "string",
+        "default": "El futuro se construye acá."
+      }
+    }
   },
   "placement": "desktop"
 }

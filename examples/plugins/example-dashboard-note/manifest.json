@@ -15,7 +15,12 @@
   "capabilities": {
     "processCommands": [],
     "networkHosts": [],
-    "settings": {}
+    "settings": {
+      "showGreeting": {
+        "type": "boolean",
+        "default": true
+      }
+    }
   },
   "placement": "dashboard"
 }

@@ -15,7 +15,12 @@
   "capabilities": {
     "processCommands": [],
     "networkHosts": [],
-    "settings": {}
+    "settings": {
+      "twentyFourHour": {
+        "type": "boolean",
+        "default": true
+      }
+    }
   },
   "placement": "bar"
 }

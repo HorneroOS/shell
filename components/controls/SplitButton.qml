@@ -20,6 +20,7 @@ Row {
     property bool menuOnTop
     property string fallbackIcon
     property string fallbackText
+    property string accessibleName
 
     property alias menuItems: menu.items
     property alias active: menu.active
@@ -38,7 +39,7 @@ Row {
 
     StyledRect {
         Accessible.role: Accessible.Button
-        Accessible.name: label.text
+        Accessible.name: root.accessibleName || label.text
 
         radius: implicitHeight / 2 * Math.min(1, Appearance.rounding.scale)
         topRightRadius: Appearance.rounding.small / 2

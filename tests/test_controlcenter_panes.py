@@ -521,3 +521,22 @@ def test_extensions_marketplace_section():
     # Marketplace never writes receipts itself and never enables silently.
     assert "pendingInstall" in pane
     assert 'runLifecycle("enable"' in pane  # existing consent path untouched
+
+
+def test_extensions_community_registry_is_verified_read_only_cli_output():
+    pane = (ROOT / "modules/controlcenter/extensions/ExtensionsPane.qml").read_text()
+    section = (ROOT / "modules/controlcenter/extensions/CommunityRegistrySection.qml").read_text()
+    assert "CommunityRegistrySection" in pane
+    assert '["horneroctl", "--json", "plugin", "community", "list"]' in section
+    assert "root.entries = entries" in section and "env.ok !== true" in section
+    assert 'typeof data.plugins !== "string"' in section
+    assert "entries.some(entry => !entry" in section
+    assert '(env.data && env.data.plugins) || "[]"' not in section
+    assert "index signature identifies who published the list" in section
+    assert "does not mean HorneroOS reviewed the code or that the code is safe" in section
+    assert "has no sandbox" in section
+    assert "Pinned revision" in section and "Payload SHA-256" in section
+    assert "Community install, update, and rollback are unavailable until horneroctl preserves the verified revision and payload hash through those actions." in section
+    # Community discovery is read-only until it has a provenance-preserving lifecycle.
+    assert '"plugin", "community", "install"' not in pane + section
+    assert '"plugin", "community", "enable"' not in pane + section

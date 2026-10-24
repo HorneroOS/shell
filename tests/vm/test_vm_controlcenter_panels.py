@@ -47,4 +47,5 @@ def test_matrix_uses_the_isolated_vm_and_checks_every_capture() -> None:
     assert 'write_result PASS ""' in script
     assert "controlCenter close" in script
     assert script.count("</dev/null") == 4
+    assert "sleep 1" in script
     assert '[[ "$captured_count" -eq 25 ]]' in script

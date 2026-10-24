@@ -27,6 +27,7 @@ fi
 
 # makepkg must run as the unprivileged VM user; --syncdeps uses sudo only for
 # pacman dependencies and package installation inside this disposable guest.
+cd "$BUILD_DIR"
 makepkg --syncdeps --install --noconfirm --cleanbuild --clean
 pkg-config --modversion libcava >/dev/null
 echo "libcava development library installed from pinned AUR revision $AUR_COMMIT"

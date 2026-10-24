@@ -2,6 +2,7 @@ pragma Singleton
 
 import qs.config
 import qs.modules.controlcenter
+import qs.modules.welcome as WelcomeModule
 import qs.services
 import Quickshell
 import QtQuick
@@ -62,6 +63,9 @@ Singleton {
     // `controlCenter` IPC target): unknown panes open the default view.
     function openControlCenter(pane: string): void {
         const id = (pane ?? "").toString().trim();
+        // Welcome is a top-level onboarding surface. Close it before opening
+        // Settings so it cannot remain above the newly focused window.
+        WelcomeModule.Welcome.close();
         if (id !== "" && PaneRegistry.getById(id))
             WindowFactory.create(null, {
                 pane: id

@@ -115,3 +115,13 @@ def test_smoke_failure_artifact_includes_process_and_quickshell_diagnostics() ->
     assert "pgrep -af 'horneroctl|qs|quickshell|Hyprland'" in script
     assert "/run/user/1000/quickshell/by-id/*/log.qslog" in script
     assert "VM_SSH_TIMEOUT=30s vm_ssh" in script
+
+
+def test_smoke_closes_and_verifies_welcome_before_control_center_capture() -> None:
+    script = SMOKE.read_text(encoding="utf-8")
+
+    welcome_close = script.index("ipc call welcome close")
+    welcome_status = script.index("ipc call welcome status")
+    terminal_settings = script.index("ipc call controlCenter open terminal")
+    assert welcome_close < welcome_status < terminal_settings
+    assert "jq -e '.open == false'" in script

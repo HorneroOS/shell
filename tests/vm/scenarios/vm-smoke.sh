@@ -135,6 +135,20 @@ QS_BIN=\$(command -v qs || command -v quickshell)
 \$QS_BIN ipc call drawers list")" || fail "shell IPC responds"
 [[ -n "${IPC_DRAWERS}" ]] || fail "shell IPC empty"
 
+# A first-login Welcome window is a top-level onboarding surface that can
+# cover Settings in a fresh VM. Close it before exercising Control Center IPC.
+echo "==> dismissing first-login Welcome before Settings checks"
+vm_ssh "$(vm_hypr_env)
+QS_BIN=\$(command -v qs || command -v quickshell)
+\$QS_BIN ipc call welcome close" > /dev/null || fail "Welcome close IPC"
+WELCOME_STATUS="$(vm_ssh "$(vm_hypr_env)
+QS_BIN=\$(command -v qs || command -v quickshell)
+\$QS_BIN ipc call welcome status")" || fail "Welcome status IPC"
+if ! jq -e '.open == false' <<<"${WELCOME_STATUS}" > /dev/null; then
+    echo "Welcome remained open before Settings checks: ${WELCOME_STATUS}" >&2
+    fail "Welcome overlay still open"
+fi
+
 # Run the exact read-only CLI query used by TerminalPane before opening the
 # window. This separates a stalled horneroctl backend from a QML process that
 # fails to consume an otherwise successful response.

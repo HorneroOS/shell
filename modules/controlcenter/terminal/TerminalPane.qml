@@ -154,6 +154,7 @@ Item {
             if (!root.loading || root.listAnswered)
                 return;
             root.listTimedOut = true;
+            root.installedTerminals = [];
             root.loading = false;
             root.statusMessage = qsTr("Terminal settings request timed out.");
             if (listProc.running)
@@ -168,6 +169,8 @@ Item {
 
         stdout: StdioCollector {
             onStreamFinished: {
+                if (root.listTimedOut)
+                    return;
                 listTimeout.stop();
                 const response = root.envelope(text);
                 root.listAnswered = response !== null;

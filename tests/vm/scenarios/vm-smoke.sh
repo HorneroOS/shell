@@ -48,7 +48,7 @@ fail() {
     if [[ -S "${VM_ARTIFACTS_DIR}/monitor.sock" ]]; then
         bash "${VM_LIB_DIR}/qemu-screenshot.sh" \
             "${SCREENSHOT_DIR}/failure.png" >&2 || true
-        vm_ssh "$(vm_hypr_env)
+        VM_SSH_TIMEOUT=30s vm_ssh "$(vm_hypr_env)
 echo '==> graphical failure process snapshot'
 ps -eo pid,ppid,stat,pcpu,wchan:24,comm,args | awk 'NR == 1 || \$6 ~ /^(Hyprland|qs|quickshell|horneroctl)$/'
 echo '==> horneroctl lookup'

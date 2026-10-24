@@ -194,7 +194,8 @@ A passing `vm-smoke.sh` run writes `artifacts/assertions.json` with
 | Compositor IPC responds | `hyprctl -j monitors` returns an output name |
 | Shell IPC responds | `qs ipc call drawers list` returns drawer names |
 | Settings Terminal opens and focuses | `controlCenter open terminal` succeeds and Hyprland reports the Settings window as active |
-| Terminal Settings renders | `controlcenter-terminal.png` passes the nonblank/truncation screenshot check |
+| Terminal Settings renders | `controlcenter-terminal.png` passes the nonblank check and the content-region color floor |
+| Control Center destinations render | Each Settings window is mapped, and its right-hand content region contains at least 500 sampled colors |
 | Screen is really rendering | `grim` probe, then the final capture must pass `check_screenshot.py` |
 | Recording captured | `wf-recorder` file exists and is non-empty (screencopy path only) |
 

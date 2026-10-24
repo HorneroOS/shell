@@ -91,6 +91,46 @@ def test_two_tone_screenshot_fails_color_floor(tmp_path):
     assert "distinct colors" in proc.stdout
 
 
+def test_region_check_rejects_blank_panel_inside_nonblank_window(tmp_path):
+    width, height = 128, 64
+    rows = []
+    for y in range(height):
+        row = bytearray()
+        for x in range(width):
+            if x < width // 2:
+                row.extend((x * 2, y * 4, 128))
+            else:
+                row.extend((24, 24, 24))
+        rows.append(bytes(row))
+    shot = tmp_path / "blank-panel.png"
+    write_png(shot, width, height, rows)
+
+    whole = run_checker("--min-bytes", "0", str(shot))
+    panel = run_checker(
+        "--min-bytes",
+        "0",
+        "--min-colors",
+        "50",
+        "--region",
+        "64,0,64,64",
+        str(shot),
+    )
+
+    assert whole.returncode == 0
+    assert panel.returncode == 1
+    assert "distinct colors" in panel.stdout
+
+
+def test_region_check_rejects_out_of_bounds_region(tmp_path):
+    shot = tmp_path / "small.png"
+    write_png(shot, 32, 24, gradient_rows(32, 24))
+
+    proc = run_checker("--min-bytes", "0", "--region", "16,0,32,24", str(shot))
+
+    assert proc.returncode == 2
+    assert "outside image bounds" in proc.stdout
+
+
 def test_color_floor_is_tunable(tmp_path):
     shot = tmp_path / "two.png"
     write_png(shot, 64, 48, [bytes([10, 10, 10]) * 32 + bytes([240, 240, 240]) * 32] * 48)

@@ -154,6 +154,11 @@ if [[ \$quickshell_pid =~ ^[0-9]+\$ ]]; then
     echo \"==> Quickshell coredump details for pid \$quickshell_pid\" >&2
     coredumpctl --no-pager info \"\$quickshell_pid\" >&2 || true
 fi
+quickshell_crash_dir=\$(sed -nE 's/.*Further crash information is stored under \"([^\"]+)\".*/\1/p' /tmp/qs.log | tail -n 1)
+if [[ -n \$quickshell_crash_dir && -f \$quickshell_crash_dir/report.txt ]]; then
+    echo \"==> Quickshell crash report: \$quickshell_crash_dir/report.txt\" >&2
+    cat \"\$quickshell_crash_dir/report.txt\" >&2 || true
+fi
 exit 1" || fail "Terminal settings window never became active"
 if vm_ssh "$(vm_hypr_env)
 timeout 10 grim /tmp/vm-controlcenter-terminal.png" > /dev/null 2>&1; then

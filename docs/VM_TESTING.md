@@ -201,7 +201,7 @@ A passing `vm-smoke.sh` run writes `artifacts/assertions.json` with
 | Shell alive | `pgrep -x qs` (fallback `quickshell`) in the guest |
 | Compositor IPC responds | `hyprctl -j monitors` returns an output name |
 | Shell IPC responds | `qs ipc call drawers list` returns drawer names |
-| Settings Terminal opens and focuses | `controlCenter open terminal` succeeds and Hyprland reports the Settings window as active |
+| Settings Terminal opens and focuses | The exact read-only `horneroctl --json config default-apps list` query returns valid JSON within 15 seconds; `controlCenter open terminal` succeeds and Hyprland reports the Settings window as active |
 | Terminal Settings renders | `horneroctl` responds and `controlcenter-terminal.png` passes the nonblank check and content-region color floor |
 | Control Center destinations render | Each Settings window is mapped, its right-hand content region contains at least 500 sampled colors, and at least 5% of sampled pixels differ from a framebuffer capture taken immediately before opening the pane |
 | Screen is really rendering | `grim` probe, then the final capture must pass `check_screenshot.py` |

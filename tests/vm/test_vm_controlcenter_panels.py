@@ -50,6 +50,9 @@ def test_matrix_uses_the_isolated_vm_and_checks_every_capture() -> None:
     assert 'assert_no_quickshell_crash "initial smoke"' in script
     assert 'assert_no_quickshell_crash "$pane"' in script
     assert ".cache/quickshell/crashes" in script and "-name report.txt" in script
+    assert 'echo "==> checking Terminal settings CLI contract"' in smoke
+    assert 'timeout 15s horneroctl --json config default-apps list' in smoke
+    assert "'.ok == true and (.data.terminals_available | type == \"string\")'" in smoke
     assert 'baseline_image="$SCREENSHOT_DIR/$pane-before.png"' in script
     assert 'qemu-screenshot.sh" "$baseline_image"' in script
     assert 'vm_capture_controlcenter_content "$remote_image" "$image" "$baseline_image"' in script

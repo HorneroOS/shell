@@ -27,6 +27,7 @@ Item {
     property bool loading: true
     property bool busy: false
     property bool listAnswered: false
+    property bool listTimedOut: false
     property bool actionAnswered: false
     property bool actionSucceeded: false
 
@@ -55,6 +56,8 @@ Item {
             return;
         root.loading = true;
         root.listAnswered = false;
+        root.listTimedOut = false;
+        listTimeout.restart();
         listProc.running = true;
     }
 
@@ -142,6 +145,23 @@ Item {
 
     Component.onCompleted: root.refresh()
 
+    Timer {
+        id: listTimeout
+
+        interval: 15000
+        repeat: false
+        onTriggered: {
+            if (!root.loading || root.listAnswered)
+                return;
+            root.listTimedOut = true;
+            root.installedTerminals = [];
+            root.loading = false;
+            root.statusMessage = qsTr("Terminal settings request timed out.");
+            if (listProc.running)
+                listProc.running = false;
+        }
+    }
+
     Process {
         id: listProc
 
@@ -149,6 +169,9 @@ Item {
 
         stdout: StdioCollector {
             onStreamFinished: {
+                if (root.listTimedOut)
+                    return;
+                listTimeout.stop();
                 const response = root.envelope(text);
                 root.listAnswered = response !== null;
                 root.loading = false;
@@ -164,9 +187,16 @@ Item {
             }
         }
         onExited: (exitCode, exitStatus) => {
-            if ((exitCode !== 0 || exitStatus !== 0) && !root.listAnswered) {
-                root.loading = false;
-                root.statusMessage = qsTr("Terminal settings could not be loaded (exit %1).").arg(exitCode);
+            listTimeout.stop();
+            root.loading = false;
+            if (!root.listAnswered) {
+                if (root.listTimedOut) {
+                    return;
+                }
+                root.installedTerminals = [];
+                root.statusMessage = (exitCode !== 0 || exitStatus !== 0)
+                    ? qsTr("Terminal settings could not be loaded (exit %1).").arg(exitCode)
+                    : qsTr("Terminal settings returned no data.");
             }
         }
     }

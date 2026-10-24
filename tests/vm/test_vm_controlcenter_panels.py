@@ -7,6 +7,7 @@ import re
 ROOT = Path(__file__).resolve().parents[2]
 SCENARIO = ROOT / "tests/vm/scenarios/vm-controlcenter-panels.sh"
 REGISTRY = ROOT / "modules/controlcenter/PaneRegistry.qml"
+SMOKE = ROOT / "tests/vm/scenarios/vm-smoke.sh"
 
 
 def test_control_center_matrix_covers_every_registered_destination() -> None:
@@ -46,3 +47,13 @@ def test_matrix_uses_the_isolated_vm_and_checks_every_capture() -> None:
     assert 'hyprctl -j activewindow' in script
     assert 'write_result PASS ""' in script
     assert "controlCenter close" in script
+
+
+def test_smoke_failure_artifact_includes_process_and_quickshell_diagnostics() -> None:
+    script = SMOKE.read_text(encoding="utf-8")
+
+    assert 'logs/vm-smoke-failure.log' in script
+    assert "graphical failure process snapshot" in script
+    assert "pgrep -af 'horneroctl|qs|quickshell|Hyprland'" in script
+    assert "/run/user/1000/quickshell/by-id/*/log.qslog" in script
+    assert "VM_SSH_TIMEOUT=30s vm_ssh" in script

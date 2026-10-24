@@ -44,7 +44,7 @@ while IFS='|' read -r pane title; do
     echo "==> opening Control Center pane: $pane"
     response="$(vm_ssh "$(vm_hypr_env)
 QS_BIN=\$(command -v qs || command -v quickshell)
-\$QS_BIN ipc call controlCenter open $pane")" || fail "open IPC failed for $pane" "$pane"
+\$QS_BIN ipc call controlCenter open $pane" </dev/null)" || fail "open IPC failed for $pane" "$pane"
     [[ "$response" == *"opened: $pane"* ]] || fail "pane did not report open: $pane" "$pane"
     vm_ssh "$(vm_hypr_env)
 for _ in \$(seq 1 40); do
@@ -53,15 +53,15 @@ for _ in \$(seq 1 40); do
     fi
     sleep 0.25
 done
-exit 1" || fail "Settings window did not focus for $pane" "$pane"
+exit 1" </dev/null || fail "Settings window did not focus for $pane" "$pane"
     vm_ssh "$(vm_hypr_env)
-timeout 15 grim '$remote_image'" > /dev/null 2>&1 || fail "screenshot capture failed for $pane" "$pane"
+timeout 15 grim '$remote_image'" </dev/null > /dev/null 2>&1 || fail "screenshot capture failed for $pane" "$pane"
     vm_scp "$VM_SSH_USER@127.0.0.1:$remote_image" "$image" || fail "screenshot transfer failed for $pane" "$pane"
     python3 "$VM_LIB_DIR/check_screenshot.py" "$image" || fail "screenshot is blank or truncated for $pane" "$pane"
     printf 'screenshots/controlcenter/%s.png\n' "$pane" >> "$CAPTURE_LIST"
     vm_ssh "$(vm_hypr_env)
 QS_BIN=\$(command -v qs || command -v quickshell)
-\$QS_BIN ipc call controlCenter close" > /dev/null || fail "close IPC failed for $pane" "$pane"
+\$QS_BIN ipc call controlCenter close" </dev/null > /dev/null || fail "close IPC failed for $pane" "$pane"
     sleep 0.25
 done <<'PANE_LIST'
 network|Network
@@ -90,7 +90,9 @@ updates|Updates
 terminal|Terminal
 power|Power
 PANE_LIST
+captured_count="$(wc -l < "$CAPTURE_LIST" | tr -d '[:space:]')"
+[[ "$captured_count" -eq 25 ]] || fail "captured $captured_count of 25 Control Center panes" ""
 write_result PASS ""
 jq --slurpfile matrix "$RESULT_FILE" '. + {controlcenter_panel_matrix: $matrix[0]}' "$VM_ARTIFACTS_DIR/assertions.json" > "$VM_ARTIFACTS_DIR/assertions.json.tmp"
 mv "$VM_ARTIFACTS_DIR/assertions.json.tmp" "$VM_ARTIFACTS_DIR/assertions.json"
-echo "PASS: captured $(wc -l < "$CAPTURE_LIST") Control Center panes"
+echo "PASS: captured $captured_count Control Center panes"

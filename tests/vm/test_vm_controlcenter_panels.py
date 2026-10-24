@@ -105,3 +105,12 @@ def test_vm_settings_window_rule_matches_factory_layout() -> None:
         "center = true",
     ):
         assert snippet in guest_config
+
+
+def test_smoke_failure_artifact_includes_process_and_quickshell_diagnostics() -> None:
+    script = SMOKE.read_text(encoding="utf-8")
+
+    assert 'logs/vm-smoke-failure.log' in script
+    assert "graphical failure process snapshot" in script
+    assert "pgrep -af 'horneroctl|qs|quickshell|Hyprland'" in script
+    assert "/run/user/1000/quickshell/by-id/*/log.qslog" in script

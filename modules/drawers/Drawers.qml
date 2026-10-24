@@ -476,9 +476,16 @@ Variants {
                                 rects: outputBar.visualRects,
                                 islands: (outputBar.children[0]?.item?.islands ?? []).map(i => ({
                                     align: i.align,
-                                    geom: [i.x, i.y, i.width, i.height],
+                                    geom: [outputBar.x + i.x, outputBar.y + i.y, i.width, i.height],
                                     visible: i.visible,
-                                    groups: i.groupItems.map(g => [g.name, g.visible, g.width, g.height, g.x, g.y])
+                                    groups: i.groupItems.map(g => [
+                                        g.name,
+                                        g.visible,
+                                        g.width,
+                                        g.height,
+                                        outputBar.x + i.x + g.x,
+                                        outputBar.y + i.y + g.y
+                                    ])
                                 }))
                             });
                     }

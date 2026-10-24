@@ -63,9 +63,13 @@ def test_debug_bars_report_every_screen_and_keep_local_geometry():
     assert "for (const outputScreen of Quickshell.screens)" in bars
     assert "Visibilities.bars.get(outputScreen)" in bars
     assert "screen: outputScreen.name" in bars
+    assert "outputBar.x + i.x" in bars
+    assert "outputBar.y + i.y" in bars
+    assert "outputBar.x + i.x + g.x" in bars
+    assert "outputBar.y + i.y + g.y" in bars
     ipc = (ROOT / "docs" / "IPC.md").read_text()
     assert "`debug bars()` returns bar geometry for every connected screen" in ipc
-    assert "`geom` and visual rectangles are local to that screen" in ipc
+    assert "bar, island, group, and visual rectangle coordinates are local" in ipc
 
 
 def _handler_functions(source, target):

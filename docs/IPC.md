@@ -34,9 +34,9 @@ other HorneroOS components script against; renames must update
 | `debug` | `modules/drawers/Drawers.qml` | `borders()`, `bars()`, `dump()`, `focusState()` (debug only) |
 
 `debug bars()` returns bar geometry for every connected screen. Each entry has
-a `screen` name; `geom` and visual rectangles are local to that screen. Use
-`screen` to group entries rather than treating local x-coordinates as global
-desktop positions.
+a `screen` name; bar, island, group, and visual rectangle coordinates are local
+to that screen. Use `screen` to group entries rather than treating local
+x-coordinates as global desktop positions.
 
 Drawer names accepted by `drawers toggle` are the boolean keys of
 `Visibilities` for the active monitor (e.g. `launcher`, `dashboard`,

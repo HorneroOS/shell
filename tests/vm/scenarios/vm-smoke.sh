@@ -149,6 +149,7 @@ for _ in \$(seq 1 20); do
     sleep 0.12
 done
 echo \"last activewindow response: \$active_window\" >&2
+hyprctl -j clients | jq '[.[] | {class, title, mapped, visible, workspace: .workspace.name}]' >&2
 exit 1" || fail "Terminal settings window never became active"
 if vm_ssh "$(vm_hypr_env)
 timeout 10 grim /tmp/vm-controlcenter-terminal.png" > /dev/null 2>&1; then

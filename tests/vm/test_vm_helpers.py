@@ -8,9 +8,11 @@ exercised through --dry-run and --help only.
 import hashlib
 import os
 import shutil
+import socket
 import struct
 import subprocess
 import sys
+import threading
 import zlib
 from pathlib import Path
 
@@ -285,6 +287,55 @@ def test_stage_dry_runs_without_hypervisor(stage):
     )
     assert proc.returncode == 0, proc.stderr
     assert "dry-run:" in proc.stdout
+
+
+def test_qemu_screenshot_waits_for_monitor_reply_and_frame():
+    screenshot = (LIB_DIR / "qemu-screenshot.sh").read_text()
+    assert "def receive_prompt(sock):" in screenshot
+    assert "response = receive_prompt(sock)" in screenshot
+    assert "for _ in {1..50}; do" in screenshot
+
+
+def test_qemu_screenshot_waits_for_hmp_completion(tmp_path):
+    artifacts = tmp_path / "artifacts"
+    artifacts.mkdir()
+    monitor = artifacts / "monitor.sock"
+    output = tmp_path / "frame.png"
+    server_errors = []
+
+    def serve_monitor():
+        try:
+            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as server:
+                server.bind(str(monitor))
+                server.listen(1)
+                connection, _ = server.accept()
+                with connection:
+                    connection.sendall(b"QEMU monitor\n(qemu) ")
+                    command = bytearray()
+                    while not command.endswith(b"\n"):
+                        command.extend(connection.recv(4096))
+                    ppm = command.removeprefix(b"screendump ").strip().decode()
+                    Path(ppm).write_bytes(b"P6\n1 1\n255\n\xff\x00\x00")
+                    connection.sendall(b"\r\n(qemu) ")
+        except Exception as error:  # surfaced in the calling test thread
+            server_errors.append(error)
+
+    server_thread = threading.Thread(target=serve_monitor, daemon=True)
+    server_thread.start()
+    proc = subprocess.run(
+        ["bash", str(LIB_DIR / "qemu-screenshot.sh"), str(output)],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "VM_ARTIFACTS_DIR": str(artifacts)},
+        timeout=10,
+        check=False,
+    )
+    server_thread.join(timeout=2)
+
+    assert not server_errors, server_errors
+    assert proc.returncode == 0, proc.stderr
+    assert output.is_file()
+    assert output.read_bytes().startswith(b"\x89PNG\r\n\x1a\n")
 
 
 def _write_image_with_sidecar(tmp_path, payload):

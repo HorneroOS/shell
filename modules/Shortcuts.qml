@@ -159,14 +159,16 @@ Scope {
         function open(pane: string): string {
             const id = (pane ?? "").toString().trim();
             if (id === "") {
-                WindowFactory.create();
+                if (!WindowFactory.create())
+                    return "error: could not create Settings window";
                 return "opened";
             }
             if (!PaneRegistry.getById(id)) {
                 console.warn(`[IPC] Unknown control-center pane "${id}"`);
                 return `error: unknown control-center pane ${id}`;
             }
-            WindowFactory.create(null, { pane: id });
+            if (!WindowFactory.create(null, { pane: id }))
+                return "error: could not create Settings window";
             return `opened: ${id}`;
         }
 

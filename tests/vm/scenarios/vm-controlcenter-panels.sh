@@ -70,6 +70,9 @@ while IFS='|' read -r pane title; do
     expected_title="Hornero Settings - $title"
     image="$SCREENSHOT_DIR/$pane.png"
     remote_image="/tmp/hornero-controlcenter-$pane.png"
+    baseline_image="$SCREENSHOT_DIR/$pane-before.png"
+    bash "$VM_LIB_DIR/qemu-screenshot.sh" "$baseline_image" \
+        || fail "pre-open screenshot failed for $pane" "$pane"
     echo "==> opening Control Center pane: $pane"
     response="$(vm_ssh "$(vm_hypr_env)
 QS_BIN=\$(command -v qs || command -v quickshell)
@@ -88,7 +91,7 @@ for _ in \$(seq 1 40); do
 done
 exit 1" </dev/null || fail "Settings window did not focus for $pane" "$pane"
     assert_no_quickshell_crash "$pane"
-    if vm_capture_controlcenter_content "$remote_image" "$image"; then
+    if vm_capture_controlcenter_content "$remote_image" "$image" "$baseline_image"; then
         :
     else
         capture_status=$?

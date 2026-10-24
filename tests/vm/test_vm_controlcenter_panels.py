@@ -118,3 +118,11 @@ def test_vm_settings_window_rule_matches_factory_layout() -> None:
         "center = true",
     ):
         assert snippet in guest_config
+def test_smoke_closes_and_verifies_welcome_before_control_center_capture() -> None:
+    script = SMOKE.read_text(encoding="utf-8")
+
+    welcome_close = script.index("ipc call welcome close")
+    welcome_status = script.index("ipc call welcome status")
+    terminal_settings = script.index("ipc call controlCenter open terminal")
+    assert welcome_close < welcome_status < terminal_settings
+    assert "jq -e '.open == false'" in script

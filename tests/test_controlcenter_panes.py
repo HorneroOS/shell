@@ -393,6 +393,17 @@ def test_control_center_window_factory_activates_new_and_reused_settings_windows
     assert "requestActivate()" not in factory
 
 
+def test_welcome_settings_actions_close_the_overlay_before_opening_settings():
+    actions = (ROOT / "modules" / "welcome" / "Actions.qml").read_text()
+    open_settings = actions.split("function openControlCenter", 1)[1].split(
+        "function shellQuote", 1
+    )[0]
+    assert "WelcomeModule.Welcome.close();" in open_settings
+    assert open_settings.index("WelcomeModule.Welcome.close();") < open_settings.index(
+        "WindowFactory.create"
+    )
+
+
 def test_control_center_retries_focus_while_compositor_registers_settings_toplevel():
     factory = (CC / "WindowFactory.qml").read_text()
     assert "property var pendingFocusWindow: null" in factory

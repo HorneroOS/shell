@@ -24,6 +24,9 @@ fi
 if vm_is_dry_run; then
     echo "dry-run: would copy ${SHELL_ROOT} working tree to guest ~/.config/quickshell"
     echo "dry-run: would install tests/vm/guest/hyprland.conf to guest ~/.config/hypr/hyprland.conf"
+    if [[ -n "${HX_HOREROCTL_BIN}" ]]; then
+        echo "dry-run: would install horneroctl into guest ~/.local/bin for shell process calls"
+    fi
     echo "dry-run: would install libcava from its pinned AUR revision before building the native plugin"
     echo "dry-run: would build the native QML plugin in the guest (prefix ${VM_GUEST_PREFIX}, skipped when unchanged)"
     if [[ -n "${HX_CONFIG_PIN}" || -n "${HX_MATERIALIZE_BIN}" ]]; then
@@ -58,6 +61,20 @@ vm_ssh 'test -f ~/.config/quickshell/shell.qml && test -f ~/.config/hypr/hyprlan
     echo "error: deployed tree is missing shell.qml or hyprland.conf" >&2
     exit 1
 }
+
+# A shell-local VM can still exercise features whose runtime contract is owned
+# by horneroctl (Welcome writes and Control Center settings). Keep the CLI in
+# the guest session PATH even when no full config composition is requested.
+if [[ -n "${HX_HOREROCTL_BIN}" ]]; then
+    [[ -x "${HX_HOREROCTL_BIN}" ]] || {
+        echo "error: HX_HOREROCTL_BIN is not executable: ${HX_HOREROCTL_BIN}" >&2
+        exit 1
+    }
+    echo "==> installing horneroctl into the guest session PATH"
+    vm_scp "${HX_HOREROCTL_BIN}" "${VM_SSH_USER}@127.0.0.1:~/horneroctl"
+    # shellcheck disable=SC2016
+    vm_ssh 'install -D -m 0755 ~/horneroctl ~/.local/bin/horneroctl && test -x ~/.local/bin/horneroctl'
+fi
 
 # --- native QML plugin (built from the deployed checkout, user prefix) ------
 # Rebuilt only when the working tree changed (marker in the guest cache).
@@ -157,17 +174,9 @@ if [[ -n "${HX_CONFIG_PIN}" || -n "${HX_MATERIALIZE_BIN}" ]]; then
     }
 
     if [[ -n "${HX_HOREROCTL_BIN}" ]]; then
-        [[ -x "${HX_HOREROCTL_BIN}" ]] || {
-            echo "error: HX_HOREROCTL_BIN is not executable: ${HX_HOREROCTL_BIN}" >&2
-            exit 1
-        }
-        echo "==> copying horneroctl into the guest"
-        vm_scp "${HX_HOREROCTL_BIN}" "${VM_SSH_USER}@127.0.0.1:~/horneroctl"
-        # shellcheck disable=SC2016
-        vm_ssh 'test -x ~/horneroctl' || {
-            echo "error: horneroctl did not land executable in the guest" >&2
-            exit 1
-        }
+        # The shared deploy step installed the CLI in ~/.local/bin and at
+        # ~/horneroctl so both session processes and composition validation
+        # use the same binary.
         echo "==> materializing the composition in the guest"
         # shellcheck disable=SC2016
         vm_ssh 'HORNERO_MATERIALIZE_BIN=$HOME/hx-config/scripts/materialize.sh $HOME/horneroctl config materialize --dest $HOME/hx-root --yes' || {

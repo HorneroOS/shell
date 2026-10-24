@@ -44,6 +44,7 @@ def test_matrix_uses_the_isolated_vm_and_checks_every_capture() -> None:
     smoke = SMOKE.read_text(encoding="utf-8")
 
     assert 'bash "$VM_DIR/scenarios/vm-smoke.sh"' in script
+    assert 'if ! bash "$VM_DIR/scenarios/vm-smoke.sh"; then' in script
     assert 'assert_no_quickshell_crash "initial smoke"' in script
     assert 'assert_no_quickshell_crash "$pane"' in script
     assert ".cache/quickshell/crashes" in script and "-name report.txt" in script
@@ -62,6 +63,7 @@ def test_matrix_uses_the_isolated_vm_and_checks_every_capture() -> None:
     assert 'Hyprland and Quickshell process snapshot' in smoke
     assert "coredumpctl --no-pager info" in smoke and "quickshell_pid" in smoke
     assert 'report.txt' in smoke
+    assert 'export PATH=\\$HOME/.local/bin:\\$PATH' in (ROOT / "tests/vm/lib/start-session.sh").read_text()
     assert 'timeout 2s hyprctl -j activewindow 2>/dev/null' in script
     assert '.mapped == true' in script
     assert 'write_result PASS ""' in script

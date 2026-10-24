@@ -42,6 +42,10 @@ mkdir -p "${SCREENSHOT_DIR}" "${VM_ARTIFACTS_DIR}/recordings" "${VM_ARTIFACTS_DI
 
 fail() {
     echo "FAIL: $1" >&2
+    if [[ -S "${VM_ARTIFACTS_DIR}/monitor.sock" ]]; then
+        bash "${VM_LIB_DIR}/qemu-screenshot.sh" \
+            "${SCREENSHOT_DIR}/failure.png" >&2 || true
+    fi
     jq -n --arg reason "$1" \
         '{ scenario: "vm-smoke", result: "FAIL", reason: $reason }' \
         > "${VM_ARTIFACTS_DIR}/assertions.json" 2> /dev/null || true

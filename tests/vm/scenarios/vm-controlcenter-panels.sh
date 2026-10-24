@@ -23,7 +23,7 @@ fi
 SCREENSHOT_DIR="$VM_ARTIFACTS_DIR/screenshots/controlcenter"
 RESULT_FILE="$VM_ARTIFACTS_DIR/controlcenter-panels.json"
 CAPTURE_LIST="$VM_ARTIFACTS_DIR/controlcenter-panels-captured.txt"
-mkdir -p "$SCREENSHOT_DIR"
+mkdir -p "$SCREENSHOT_DIR" "$VM_ARTIFACTS_DIR/logs"
 : > "$CAPTURE_LIST"
 write_result() {
     result="$1"
@@ -33,6 +33,21 @@ write_result() {
 }
 fail() {
     echo "FAIL: $1" >&2
+    vm_ssh "$(vm_hypr_env)
+if [[ -r /tmp/qs.log ]]; then
+    echo '==> /tmp/qs.log'
+    tail -n 300 /tmp/qs.log
+fi
+for log in /run/user/1000/quickshell/by-id/*/log.qslog; do
+    if [[ -r \$log ]]; then
+        echo \"==> \$log\"
+        tail -n 300 \"\$log\"
+    fi
+done
+if [[ -r /tmp/hypr.log ]]; then
+    echo '==> /tmp/hypr.log'
+    tail -n 200 /tmp/hypr.log
+fi" </dev/null > "$VM_ARTIFACTS_DIR/logs/controlcenter-failure.log" 2>&1 || true
     write_result FAIL "$2"
     exit 1
 }
@@ -61,7 +76,7 @@ for _ in \$(seq 1 40); do
         sleep 0.25
         continue
     }
-    if jq -e --arg title '$expected_title' '.class == \"org.quickshell\" and .title == \$title and .floating == true and .size[0] >= 1100 and .size[1] >= 600' <<<\"\$active_window\" > /dev/null 2>&1; then
+    if jq -e --arg title '$expected_title' '.mapped == true and .class == \"org.quickshell\" and .title == \$title and .floating == true and .size[0] >= 1100 and .size[1] >= 600' <<<\"\$active_window\" > /dev/null 2>&1; then
         exit 0
     fi
     sleep 0.25
@@ -70,10 +85,15 @@ exit 1" </dev/null || fail "Settings window did not focus for $pane" "$pane"
     # The title changes before Panes.qml's asynchronous loader paints the target.
     sleep 2
     assert_no_quickshell_crash "$pane"
-    vm_ssh "$(vm_hypr_env)
-timeout 15 grim '$remote_image'" </dev/null > /dev/null 2>&1 || fail "screenshot capture failed for $pane" "$pane"
-    vm_scp "$VM_SSH_USER@127.0.0.1:$remote_image" "$image" || fail "screenshot transfer failed for $pane" "$pane"
+    if vm_ssh "$(vm_hypr_env)
+timeout 15 grim '$remote_image'" </dev/null > /dev/null 2>&1; then
+        vm_scp "$VM_SSH_USER@127.0.0.1:$remote_image" "$image" || fail "screenshot transfer failed for $pane" "$pane"
+    else
+        echo "grim did not answer for $pane; falling back to the QEMU framebuffer"
+        bash "$VM_LIB_DIR/qemu-screenshot.sh" "$image" || fail "screenshot capture failed for $pane" "$pane"
+    fi
     python3 "$VM_LIB_DIR/check_screenshot.py" "$image" || fail "screenshot is blank or truncated for $pane" "$pane"
+    python3 "$VM_LIB_DIR/check_screenshot.py" --min-colors 500 --region 320,80,940,620 "$image" || fail "Settings content did not render for $pane" "$pane"
     printf 'screenshots/controlcenter/%s.png\n' "$pane" >> "$CAPTURE_LIST"
 done <<'PANE_LIST'
 network|Network

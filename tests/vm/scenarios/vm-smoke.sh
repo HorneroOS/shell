@@ -127,7 +127,7 @@ QS_BIN=\$(command -v qs || command -v quickshell)
 vm_ssh "$(vm_hypr_env)
 for _ in \$(seq 1 20); do
     if active_window=\$(timeout 2s hyprctl -j activewindow 2>/dev/null) && \
-        jq -e '.class == \"org.quickshell\" and .title == \"Hornero Settings - Terminal\"' <<<\"\$active_window\" > /dev/null 2>&1; then
+        jq -e '.mapped == true and .class == \"org.quickshell\" and .title == \"Hornero Settings - Terminal\"' <<<\"\$active_window\" > /dev/null 2>&1; then
         exit 0
     fi
     sleep 0.12
@@ -178,6 +178,9 @@ else
 fi
 python3 "${VM_LIB_DIR}/check_screenshot.py" "${SCREENSHOT_DIR}/controlcenter-terminal.png" \
     || fail "Terminal settings screenshot is blank or truncated"
+python3 "${VM_LIB_DIR}/check_screenshot.py" --min-colors 500 --region 320,80,940,620 \
+    "${SCREENSHOT_DIR}/controlcenter-terminal.png" \
+    || fail "Terminal Settings content did not render"
 vm_ssh "$(vm_hypr_env)
 QS_BIN=\$(command -v qs || command -v quickshell)
 \$QS_BIN ipc call controlCenter close" > /dev/null || fail "Control Center close IPC"

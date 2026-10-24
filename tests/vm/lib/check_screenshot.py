@@ -2,12 +2,13 @@
 """Reject blank or truncated screenshots without third-party dependencies.
 
 Usage: check_screenshot.py [--min-colors N] [--min-stddev F] [--min-bytes N]
-                            [--quiet] FILE...
+                            [--region X,Y,WIDTH,HEIGHT] [--quiet] FILE...
 
 A capture counts as non-blank when it holds at least --min-colors distinct
 sampled colors and the population standard deviation of sampled luminance
-reaches --min-stddev. Only 8-bit non-interlaced PNG files (what grim and
-ppm_to_png.py produce) are accepted.
+reaches --min-stddev. `--region` limits those measurements to a rectangle.
+Only 8-bit non-interlaced PNG files (what grim and ppm_to_png.py produce) are
+accepted.
 
 Exit status: 0 when every file passes, 1 when any file fails, 2 on usage
 or unreadable-file errors.
@@ -100,7 +101,7 @@ def luminance(pixel, channels):
     return 0.2126 * pixel[0] + 0.7152 * pixel[1] + 0.0722 * pixel[2]
 
 
-def assess(path, min_colors, min_stddev, min_bytes):
+def assess(path, min_colors, min_stddev, min_bytes, region=None):
     import os
 
     # Parse first: an unparseable artifact is a harness error (the caller
@@ -110,18 +111,35 @@ def assess(path, min_colors, min_stddev, min_bytes):
     size = os.path.getsize(path)
     if size < min_bytes:
         return False, f"only {size} bytes (minimum {min_bytes})"
-    total = width * height
-    step = max(1, total // MAX_SAMPLES)
+    if region is None:
+        x0, y0, region_width, region_height = 0, 0, width, height
+    else:
+        x0, y0, region_width, region_height = region
+        if (
+            x0 < 0
+            or y0 < 0
+            or region_width <= 0
+            or region_height <= 0
+            or x0 + region_width > width
+            or y0 + region_height > height
+        ):
+            raise ValueError(
+                f"region {region} is outside image bounds {width}x{height}"
+            )
+
+    total = region_width * region_height
+    step = max(1, math.ceil(math.sqrt(total / MAX_SAMPLES)))
     colors, total_luma, total_sq, count = set(), 0.0, 0.0, 0
-    for index in range(0, total, step):
-        base = index * channels
-        pixel = pixels[base:base + channels]
-        if len(colors) < 4096:
-            colors.add(bytes(pixel))
-        luma = luminance(pixel, channels)
-        total_luma += luma
-        total_sq += luma * luma
-        count += 1
+    for y in range(y0, y0 + region_height, step):
+        for x in range(x0, x0 + region_width, step):
+            base = (y * width + x) * channels
+            pixel = pixels[base:base + channels]
+            if len(colors) < 4096:
+                colors.add(bytes(pixel))
+            luma = luminance(pixel, channels)
+            total_luma += luma
+            total_sq += luma * luma
+            count += 1
     mean = total_luma / count
     stddev = math.sqrt(max(0.0, total_sq / count - mean * mean))
     if len(colors) < min_colors:
@@ -136,14 +154,30 @@ def main(argv=None):
     parser.add_argument("--min-colors", type=int, default=16)
     parser.add_argument("--min-stddev", type=float, default=3.0)
     parser.add_argument("--min-bytes", type=int, default=1024)
+    parser.add_argument(
+        "--region",
+        help="measure only x,y,width,height inside each image",
+    )
     parser.add_argument("--quiet", action="store_true")
     parser.add_argument("files", nargs="+")
     args = parser.parse_args(argv)
 
+    region = None
+    if args.region:
+        try:
+            values = tuple(int(value) for value in args.region.split(","))
+        except ValueError:
+            parser.error("--region must contain four comma-separated integers")
+        if len(values) != 4:
+            parser.error("--region must contain four comma-separated integers")
+        region = values
+
     failed, errors = False, False
     for path in args.files:
         try:
-            ok, detail = assess(path, args.min_colors, args.min_stddev, args.min_bytes)
+            ok, detail = assess(
+                path, args.min_colors, args.min_stddev, args.min_bytes, region
+            )
         except (OSError, ValueError, struct.error, zlib.error) as exc:
             errors = True
             if not args.quiet:

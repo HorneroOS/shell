@@ -48,6 +48,10 @@ def test_matrix_uses_the_isolated_vm_and_checks_every_capture() -> None:
     assert 'assert_no_quickshell_crash "$pane"' in script
     assert ".cache/quickshell/crashes" in script and "-name report.txt" in script
     assert 'python3 "$VM_LIB_DIR/check_screenshot.py" "$image"' in script
+    assert '--min-colors 500 --region 320,80,940,620 "$image"' in script
+    assert 'grim did not answer for $pane; falling back to the QEMU framebuffer' in script
+    assert 'logs/controlcenter-failure.log' in script
+    assert '--min-colors 500 --region 320,80,940,620' in smoke
     assert 'hyprctl -j activewindow' in smoke
     assert 'timeout 2s hyprctl -j activewindow 2>/dev/null' in smoke
     assert 'qemu-screenshot.sh' in smoke
@@ -59,6 +63,7 @@ def test_matrix_uses_the_isolated_vm_and_checks_every_capture() -> None:
     assert "coredumpctl --no-pager info" in smoke and "quickshell_pid" in smoke
     assert 'report.txt' in smoke
     assert 'timeout 2s hyprctl -j activewindow 2>/dev/null' in script
+    assert '.mapped == true' in script
     assert 'write_result PASS ""' in script
     assert "controlCenter close" in script
     assert '.floating == true and .size[0] >= 1100 and .size[1] >= 600' in script

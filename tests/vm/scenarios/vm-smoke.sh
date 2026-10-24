@@ -119,6 +119,23 @@ QS_BIN=\$(command -v qs || command -v quickshell)
 \$QS_BIN ipc call drawers list")" || fail "shell IPC responds"
 [[ -n "${IPC_DRAWERS}" ]] || fail "shell IPC empty"
 
+# Run the exact read-only CLI query used by TerminalPane before opening the
+# window. This separates a stalled horneroctl backend from a QML process that
+# fails to consume an otherwise successful response.
+echo "==> checking Terminal settings CLI contract"
+if TERMINAL_DEFAULTS="$(vm_ssh "$(vm_hypr_env)
+export PATH=\$HOME/.local/bin:\$PATH
+timeout 15s horneroctl --json config default-apps list")"; then
+    if ! jq -e '.ok == true and (.data.terminals_available | type == "string")' \
+        <<<"${TERMINAL_DEFAULTS}" > /dev/null; then
+        echo "Terminal settings CLI returned an invalid response: ${TERMINAL_DEFAULTS}" >&2
+        fail "Terminal settings CLI contract"
+    fi
+else
+    echo "Terminal settings CLI failed or timed out: ${TERMINAL_DEFAULTS}" >&2
+    fail "Terminal settings CLI contract"
+fi
+
 # Exercise the Settings focus path that can race Hyprland's toplevel
 # registration. The active-window assertion proves the deep-linked Terminal
 # pane became usable, not merely that the IPC handler accepted the request.

@@ -6,6 +6,9 @@ VM_LIB_DIR="$VM_ROOT/lib"
 # shellcheck source=tests/vm/lib/env.sh
 # shellcheck disable=SC1091
 source "$VM_LIB_DIR/env.sh"
+# shellcheck source=tests/vm/lib/controlcenter-capture.sh
+# shellcheck disable=SC1091
+source "$VM_LIB_DIR/controlcenter-capture.sh"
 arg="${1-}"
 if [[ "$arg" == "--help" ]]; then
     echo "usage: vm-controlcenter-panels.sh [--dry-run]"
@@ -84,18 +87,16 @@ for _ in \$(seq 1 40); do
     sleep 0.25
 done
 exit 1" </dev/null || fail "Settings window did not focus for $pane" "$pane"
-    # The title changes before Panes.qml's asynchronous loader paints the target.
-    sleep 2
     assert_no_quickshell_crash "$pane"
-    if vm_ssh "$(vm_hypr_env)
-timeout 15 grim '$remote_image'" </dev/null > /dev/null 2>&1; then
-        vm_scp "$VM_SSH_USER@127.0.0.1:$remote_image" "$image" || fail "screenshot transfer failed for $pane" "$pane"
+    if vm_capture_controlcenter_content "$remote_image" "$image"; then
+        :
     else
-        echo "grim did not answer for $pane; falling back to the QEMU framebuffer"
-        bash "$VM_LIB_DIR/qemu-screenshot.sh" "$image" || fail "screenshot capture failed for $pane" "$pane"
+        capture_status=$?
+        if [[ "$capture_status" -eq 1 ]]; then
+            fail "Settings content did not render for $pane" "$pane"
+        fi
+        fail "screenshot capture failed for $pane (status $capture_status)" "$pane"
     fi
-    python3 "$VM_LIB_DIR/check_screenshot.py" "$image" || fail "screenshot is blank or truncated for $pane" "$pane"
-    python3 "$VM_LIB_DIR/check_screenshot.py" --min-colors 500 --region 320,80,940,620 "$image" || fail "Settings content did not render for $pane" "$pane"
     printf 'screenshots/controlcenter/%s.png\n' "$pane" >> "$CAPTURE_LIST"
 done <<'PANE_LIST'
 network|Network

@@ -43,17 +43,22 @@ def test_control_center_matrix_covers_every_registered_destination() -> None:
 def test_matrix_uses_the_isolated_vm_and_checks_every_capture() -> None:
     script = SCENARIO.read_text(encoding="utf-8")
     smoke = SMOKE.read_text(encoding="utf-8")
+    capture = (ROOT / "tests/vm/lib/controlcenter-capture.sh").read_text(encoding="utf-8")
 
     assert 'bash "$VM_DIR/scenarios/vm-smoke.sh"' in script
     assert 'if ! bash "$VM_DIR/scenarios/vm-smoke.sh"; then' in script
     assert 'assert_no_quickshell_crash "initial smoke"' in script
     assert 'assert_no_quickshell_crash "$pane"' in script
     assert ".cache/quickshell/crashes" in script and "-name report.txt" in script
-    assert 'python3 "$VM_LIB_DIR/check_screenshot.py" "$image"' in script
-    assert '--min-colors 500 --region 320,80,940,620 "$image"' in script
-    assert 'grim did not answer for $pane; falling back to the QEMU framebuffer' in script
+    assert 'vm_capture_controlcenter_content "$remote_image" "$image"' in script
+    assert 'vm_capture_controlcenter_content /tmp/vm-controlcenter-terminal.png' in smoke
+    assert 'python3 "$VM_LIB_DIR/check_screenshot.py" "$image" --quiet' in capture
+    assert '--region 320,80,940,620 --quiet "$image"' in capture
+    assert 'local max_attempts=10' in capture
+    assert 'sleep 0.5' in capture
+    assert 'grim did not answer; falling back to the QEMU framebuffer' in capture
     assert 'logs/controlcenter-failure.log' in script
-    assert '--min-colors 500 --region 320,80,940,620' in smoke
+    assert '--region 320,80,940,620' in capture
     assert 'hyprctl -j activewindow' in smoke
     assert 'timeout 2s hyprctl -j activewindow 2>/dev/null' in smoke
     assert 'qemu-screenshot.sh' in smoke
@@ -82,7 +87,7 @@ def test_smoke_failure_artifact_includes_process_and_quickshell_diagnostics() ->
     assert script.count("</dev/null") == 4
     assert "sleep 1" in script
     assert '.floating == true and .size[0] >= 1100 and .size[1] >= 600' in script
-    assert "sleep 2" in script
+    assert "sleep 2" not in script
     assert '[[ "$captured_count" -eq 25 ]]' in script
 
     loop = script.split("done <<'PANE_LIST'", maxsplit=1)[0]

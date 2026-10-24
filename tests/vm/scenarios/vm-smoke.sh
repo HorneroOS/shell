@@ -14,6 +14,9 @@ VM_LIB_DIR="${VM_ROOT_SMOKE}/lib"
 # shellcheck source=tests/vm/lib/env.sh
 # shellcheck disable=SC1091 # path resolves at runtime; use shellcheck -x to follow it
 source "${VM_LIB_DIR}/env.sh"
+# shellcheck source=tests/vm/lib/controlcenter-capture.sh
+# shellcheck disable=SC1091
+source "${VM_LIB_DIR}/controlcenter-capture.sh"
 
 SKIP_PROVISION=0
 for arg in "$@"; do
@@ -184,19 +187,16 @@ if [[ -n \$quickshell_crash_dir && -f \$quickshell_crash_dir/report.txt ]]; then
     cat \"\$quickshell_crash_dir/report.txt\" >&2 || true
 fi
 exit 1" || fail "Terminal settings window never became active"
-if vm_ssh "$(vm_hypr_env)
-timeout 10 grim /tmp/vm-controlcenter-terminal.png" > /dev/null 2>&1; then
-    vm_scp "${VM_SSH_USER}@127.0.0.1:/tmp/vm-controlcenter-terminal.png" \
-        "${SCREENSHOT_DIR}/controlcenter-terminal.png" || fail "Terminal settings screenshot fetch"
+if vm_capture_controlcenter_content /tmp/vm-controlcenter-terminal.png \
+    "${SCREENSHOT_DIR}/controlcenter-terminal.png"; then
+    :
 else
-    bash "${VM_LIB_DIR}/qemu-screenshot.sh" "${SCREENSHOT_DIR}/controlcenter-terminal.png" \
-        || fail "Terminal settings framebuffer capture"
+    capture_status=$?
+    if [[ "${capture_status}" -eq 1 ]]; then
+        fail "Terminal Settings content did not render"
+    fi
+    fail "Terminal settings screenshot capture failed (status ${capture_status})"
 fi
-python3 "${VM_LIB_DIR}/check_screenshot.py" "${SCREENSHOT_DIR}/controlcenter-terminal.png" \
-    || fail "Terminal settings screenshot is blank or truncated"
-python3 "${VM_LIB_DIR}/check_screenshot.py" --min-colors 500 --region 320,80,940,620 \
-    "${SCREENSHOT_DIR}/controlcenter-terminal.png" \
-    || fail "Terminal Settings content did not render"
 vm_ssh "$(vm_hypr_env)
 QS_BIN=\$(command -v qs || command -v quickshell)
 \$QS_BIN ipc call controlCenter close" > /dev/null || fail "Control Center close IPC"

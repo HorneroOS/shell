@@ -12,7 +12,7 @@ if [[ "$arg" == "--help" ]]; then
     exit 0
 fi
 if [[ "$arg" == "--dry-run" ]]; then
-    echo "dry-run: would run VM smoke setup, then capture all 16 Control Center panes"
+    echo "dry-run: would run VM smoke setup, then capture all 25 Control Center panes"
     bash "$VM_DIR/scenarios/vm-smoke.sh" --dry-run
     exit 0
 fi
@@ -48,7 +48,11 @@ QS_BIN=\$(command -v qs || command -v quickshell)
     [[ "$response" == *"opened: $pane"* ]] || fail "pane did not report open: $pane" "$pane"
     vm_ssh "$(vm_hypr_env)
 for _ in \$(seq 1 40); do
-    if hyprctl -j activewindow | jq -e --arg title '$expected_title' '.class == \"org.quickshell\" and .title == \$title' > /dev/null; then
+    active_window=\$(timeout 2s hyprctl -j activewindow 2>/dev/null) || {
+        sleep 0.25
+        continue
+    }
+    if jq -e --arg title '$expected_title' '.class == \"org.quickshell\" and .title == \$title' <<<\"\$active_window\" > /dev/null 2>&1; then
         exit 0
     fi
     sleep 0.25

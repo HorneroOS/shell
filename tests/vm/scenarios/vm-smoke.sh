@@ -165,6 +165,14 @@ if [[ -n \$hyprland_log ]]; then
     tail -n 80 \"\$hyprland_log\" >&2 || true
 fi
 tail -n 80 /tmp/hypr.log /tmp/qs.log >&2 || true
+quickshell_log_dir=\${XDG_RUNTIME_DIR:-/run/user/\$(id -u)}/quickshell
+quickshell_runtime_log=\$(find \"\$quickshell_log_dir\" -type f -name log.qslog -print -quit 2>/dev/null || true)
+if [[ -n \$quickshell_runtime_log && -r \$quickshell_runtime_log ]]; then
+    echo \"==> tail of Quickshell runtime log: \$quickshell_runtime_log\" >&2
+    tail -n 200 \"\$quickshell_runtime_log\" >&2 || true
+fi
+echo \"==> Hyprland and Quickshell process snapshot\" >&2
+ps -eo pid,ppid,stat,pcpu,wchan:24,comm,args | awk 'NR == 1 || \$6 ~ /^(Hyprland|qs|quickshell|hyprctl)$/' >&2 || true
 quickshell_pid=\$(sed -nE 's/.*Quickshell has crashed under pid ([0-9]+).*/\1/p' /tmp/qs.log | tail -n 1)
 if [[ \$quickshell_pid =~ ^[0-9]+\$ ]]; then
     echo \"==> Quickshell coredump details for pid \$quickshell_pid\" >&2

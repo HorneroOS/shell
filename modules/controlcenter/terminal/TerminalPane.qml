@@ -151,14 +151,27 @@ Item {
         interval: 15000
         repeat: false
         onTriggered: {
-            if (!root.loading || root.listAnswered)
+            if (!listProc.running)
                 return;
-            root.listTimedOut = true;
-            root.installedTerminals = [];
-            root.loading = false;
-            root.statusMessage = qsTr("Terminal settings request timed out.");
+            if (root.loading && !root.listAnswered) {
+                root.listTimedOut = true;
+                root.installedTerminals = [];
+                root.loading = false;
+                root.statusMessage = qsTr("Terminal settings request timed out.");
+            }
+            listProc.running = false;
+            listKillTimeout.start();
+        }
+    }
+
+    Timer {
+        id: listKillTimeout
+
+        interval: 2000
+        repeat: false
+        onTriggered: {
             if (listProc.running)
-                listProc.running = false;
+                listProc.signal(9); // POSIX SIGKILL after the SIGTERM grace period.
         }
     }
 
@@ -171,7 +184,6 @@ Item {
             onStreamFinished: {
                 if (root.listTimedOut)
                     return;
-                listTimeout.stop();
                 const response = root.envelope(text);
                 root.listAnswered = response !== null;
                 root.loading = false;
@@ -188,6 +200,7 @@ Item {
         }
         onExited: (exitCode, exitStatus) => {
             listTimeout.stop();
+            listKillTimeout.stop();
             root.loading = false;
             if (!root.listAnswered) {
                 if (root.listTimedOut) {

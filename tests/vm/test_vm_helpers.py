@@ -425,35 +425,38 @@ def test_qemu_screenshot_waits_for_hmp_completion(tmp_path):
     monitor = artifacts / "monitor.sock"
     output = tmp_path / "frame.png"
     server_errors = []
+    server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    server.bind(str(monitor))
+    server.listen(1)
 
     def serve_monitor():
         try:
-            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as server:
-                server.bind(str(monitor))
-                server.listen(1)
-                connection, _ = server.accept()
-                with connection:
-                    connection.sendall(b"QEMU monitor\n(qemu) ")
-                    command = bytearray()
-                    while not command.endswith(b"\n"):
-                        command.extend(connection.recv(4096))
-                    ppm = command.removeprefix(b"screendump ").strip().decode()
-                    Path(ppm).write_bytes(b"P6\n1 1\n255\n\xff\x00\x00")
-                    connection.sendall(b"\r\n(qemu) ")
+            connection, _ = server.accept()
+            with connection:
+                connection.sendall(b"QEMU monitor\n(qemu) ")
+                command = bytearray()
+                while not command.endswith(b"\n"):
+                    command.extend(connection.recv(4096))
+                ppm = command.removeprefix(b"screendump ").strip().decode()
+                Path(ppm).write_bytes(b"P6\n1 1\n255\n\xff\x00\x00")
+                connection.sendall(b"\r\n(qemu) ")
         except Exception as error:  # surfaced in the calling test thread
             server_errors.append(error)
 
     server_thread = threading.Thread(target=serve_monitor, daemon=True)
     server_thread.start()
-    proc = subprocess.run(
-        ["bash", str(LIB_DIR / "qemu-screenshot.sh"), str(output)],
-        capture_output=True,
-        text=True,
-        env={**os.environ, "VM_ARTIFACTS_DIR": str(artifacts)},
-        timeout=10,
-        check=False,
-    )
-    server_thread.join(timeout=2)
+    try:
+        proc = subprocess.run(
+            ["bash", str(LIB_DIR / "qemu-screenshot.sh"), str(output)],
+            capture_output=True,
+            text=True,
+            env={**os.environ, "VM_ARTIFACTS_DIR": str(artifacts)},
+            timeout=10,
+            check=False,
+        )
+    finally:
+        server.close()
+        server_thread.join(timeout=2)
 
     assert not server_errors, server_errors
     assert proc.returncode == 0, proc.stderr

@@ -63,15 +63,13 @@ Singleton {
     // `controlCenter` IPC target): unknown panes open the default view.
     function openControlCenter(pane: string): void {
         const id = (pane ?? "").toString().trim();
-        // Welcome is a top-level onboarding surface. Close it before opening
-        // Settings so it cannot remain above the newly focused window.
-        WelcomeModule.Welcome.close();
-        if (id !== "" && PaneRegistry.getById(id))
-            WindowFactory.create(null, {
-                pane: id
-            });
-        else
-            WindowFactory.create();
+        const opened = id !== "" && PaneRegistry.getById(id)
+            ? WindowFactory.create(null, { pane: id })
+            : WindowFactory.create();
+        // Welcome is a top-level onboarding surface. Close it only after
+        // Settings exists so an allocation failure leaves onboarding usable.
+        if (opened)
+            WelcomeModule.Welcome.close();
     }
 
     function shellQuote(arg: var): string {

@@ -66,6 +66,8 @@ jobs:
       HX_HOREROCTL_BIN: ${{ github.workspace }}/hornero-cli/cli/build/horneroctl
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
       # Pin the CLI source used by Settings panes that call horneroctl.
       - name: Checkout Hornero CLI source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -73,6 +75,7 @@ jobs:
           repository: HorneroOS/hornero
           ref: 78ff5f4249e84ef18142ca6a6f0a3188657f3144
           path: hornero-cli
+          persist-credentials: false
       - name: Stage Hornero's locked V toolchain pins
         run: |
           mkdir -p toolchain

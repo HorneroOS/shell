@@ -17,7 +17,8 @@ vm_capture_controlcenter_content() {
     local max_attempts=10
 
     for attempt in $(seq 1 "$max_attempts"); do
-        if vm_ssh "$(vm_hypr_env) timeout 5 grim '$remote_image'" </dev/null > /dev/null 2>&1; then
+        if vm_ssh "$(vm_hypr_env)
+timeout 5 grim '$remote_image'" </dev/null > /dev/null 2>&1; then
             vm_scp "${VM_SSH_USER}@127.0.0.1:${remote_image}" "$image" || return 2
         else
             echo "grim did not answer; falling back to the QEMU framebuffer"

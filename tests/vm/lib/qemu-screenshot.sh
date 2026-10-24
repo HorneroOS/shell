@@ -45,14 +45,29 @@ python3 - "${MONITOR}" "${PPM}" << 'PYEOF'
 import socket, sys
 
 sock_path, ppm_path = sys.argv[1], sys.argv[2]
-sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-sock.settimeout(10)
-sock.connect(sock_path)
-sock.recv(65536)  # banner
-sock.sendall(b"screendump " + ppm_path.encode() + b"\n")
-sock.close()
+def receive_prompt(sock):
+    response = bytearray()
+    while b"(qemu)" not in response:
+        chunk = sock.recv(4096)
+        if not chunk:
+            raise RuntimeError("QEMU monitor closed before returning its prompt")
+        response.extend(chunk)
+    return bytes(response)
+
+with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
+    sock.settimeout(10)
+    sock.connect(sock_path)
+    receive_prompt(sock)  # Wait for the monitor banner and initial prompt.
+    sock.sendall(b"screendump " + ppm_path.encode() + b"\n")
+    response = receive_prompt(sock)
+    if b"Error" in response or b"error" in response:
+        raise RuntimeError(response.decode(errors="replace"))
 PYEOF
 
+for _ in {1..50}; do
+    [[ -s "${PPM}" ]] && break
+    sleep 0.1
+done
 [[ -s "${PPM}" ]] || {
     echo "error: QEMU did not produce the screendump" >&2
     rm -f "${PPM}"

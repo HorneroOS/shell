@@ -60,7 +60,7 @@ Singleton {
         CompanionStore.controlCenterOpen = windows.length > 0;
     }
 
-    function create(parent: Item, props: var): void {
+    function create(parent: Item, props: var): bool {
         prune();
         if (windows.length > 0) {
             const existing = windows[0];
@@ -69,16 +69,19 @@ Singleton {
                 existing.active = pane;
             root.focusSettingsWindow(existing);
             root.syncCompanion();
-            return;
+            return true;
         }
-        const win = controlCenter.createObject(parent ?? dummy, props);
-        if (win) {
-            root.nextWindowToken += 1;
-            win.registryToken = root.nextWindowToken;
-            windows.push(win);
-            root.focusSettingsWindow(win);
+        const win = controlCenter.createObject(parent ?? null, props);
+        if (!win) {
+            console.warn("[WindowFactory] could not create Settings window");
+            return false;
         }
+        root.nextWindowToken += 1;
+        win.registryToken = root.nextWindowToken;
+        windows.push(win);
+        root.focusSettingsWindow(win);
         root.syncCompanion();
+        return true;
     }
 
     function closeAll(): void {
@@ -147,10 +150,6 @@ Singleton {
         interval: 120
         repeat: true
         onTriggered: root.tryFocusSettingsWindow()
-    }
-
-    QtObject {
-        id: dummy
     }
 
     Component {

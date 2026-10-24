@@ -382,11 +382,14 @@ def test_control_center_navigation_uses_keyboard_accessible_interactive_controls
 
 def test_control_center_window_factory_activates_new_and_reused_settings_windows():
     factory = (CC / "WindowFactory.qml").read_text()
-    create_body = factory.split("function create(parent: Item, props: var): void {", 1)[1].split("function closeAll()", 1)[0]
+    create_body = factory.split("function create(parent: Item, props: var): bool {", 1)[1].split("function closeAll()", 1)[0]
     reuse_path = create_body.split("if (windows.length > 0) {", 1)[1].split("\n        }\n        const win", 1)[0]
     new_window_path = create_body.split("const win = controlCenter.createObject", 1)[1].split("\n        root.syncCompanion();", 1)[0]
     assert "root.focusSettingsWindow(existing)" in reuse_path
     assert "root.focusSettingsWindow(win)" in new_window_path
+    assert "parent ?? null" in create_body
+    assert "could not create Settings window" in create_body
+    assert "id: dummy" not in factory
     assert "requestActivate()" not in factory
 
 

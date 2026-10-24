@@ -56,6 +56,8 @@ def test_matrix_uses_the_isolated_vm_and_checks_every_capture() -> None:
     assert 'baseline_image="$SCREENSHOT_DIR/$pane-before.png"' in script
     assert 'qemu-screenshot.sh" "$baseline_image"' in script
     assert 'vm_capture_controlcenter_content "$remote_image" "$image" "$baseline_image"' in script
+    assert 'vm_ssh "$(vm_hypr_env)\ntimeout 5 grim' in capture
+    assert script.count("VM_SSH_TIMEOUT=30s vm_ssh") == 3
     assert 'vm_capture_controlcenter_content /tmp/vm-controlcenter-terminal.png \\' in smoke
     assert '"${BASELINE_SCREENSHOT}"; then' in smoke
     assert 'BASELINE_SCREENSHOT="${SCREENSHOT_DIR}/desktop-before-settings.png"' in smoke

@@ -36,7 +36,7 @@ write_result() {
 }
 fail() {
     echo "FAIL: $1" >&2
-    vm_ssh "$(vm_hypr_env)
+    VM_SSH_TIMEOUT=30s vm_ssh "$(vm_hypr_env)
 if [[ -r /tmp/qs.log ]]; then
     echo '==> /tmp/qs.log'
     tail -n 300 /tmp/qs.log
@@ -55,10 +55,10 @@ fi" </dev/null > "$VM_ARTIFACTS_DIR/logs/controlcenter-failure.log" 2>&1 || true
     exit 1
 }
 assert_no_quickshell_crash() {
-    crash_report="$(vm_ssh "find \"\$HOME/.cache/quickshell/crashes\" -type f -name report.txt -print -quit 2>/dev/null" </dev/null || true)"
+    crash_report="$(VM_SSH_TIMEOUT=30s vm_ssh "find \"\$HOME/.cache/quickshell/crashes\" -type f -name report.txt -print -quit 2>/dev/null" </dev/null || true)"
     if [[ -n "$crash_report" ]]; then
         echo "Quickshell crash report found: $crash_report" >&2
-        vm_ssh "cat '$crash_report'" </dev/null >&2 || true
+        VM_SSH_TIMEOUT=30s vm_ssh "cat '$crash_report'" </dev/null >&2 || true
         fail "Quickshell crashed while displaying $1" "$1"
     fi
 }

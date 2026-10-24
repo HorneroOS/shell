@@ -567,7 +567,7 @@ def test_deploy_dry_run_mentions_plugin_build():
     assert "native QML plugin" in proc.stdout
 
 
-def test_session_dry_run_mentions_qml_import_path():
+def test_session_dry_run_mentions_vm_qml_renderer_and_import_path():
     proc = subprocess.run(
         ["bash", str(LIB_DIR / "start-session.sh"), "--dry-run"],
         capture_output=True,
@@ -576,3 +576,4 @@ def test_session_dry_run_mentions_qml_import_path():
     )
     assert proc.returncode == 0, proc.stderr
     assert "QML2_IMPORT_PATH" in proc.stdout
+    assert "software adaptation" in proc.stdout

@@ -56,3 +56,4 @@ def test_smoke_failure_artifact_includes_process_and_quickshell_diagnostics() ->
     assert "graphical failure process snapshot" in script
     assert "pgrep -af 'horneroctl|qs|quickshell|Hyprland'" in script
     assert "/run/user/1000/quickshell/by-id/*/log.qslog" in script
+    assert "VM_SSH_TIMEOUT=30s vm_ssh" in script

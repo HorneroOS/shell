@@ -44,6 +44,9 @@ def test_matrix_uses_the_isolated_vm_and_checks_every_capture() -> None:
     smoke = SMOKE.read_text(encoding="utf-8")
 
     assert 'bash "$VM_DIR/scenarios/vm-smoke.sh"' in script
+    assert 'assert_no_quickshell_crash "initial smoke"' in script
+    assert 'assert_no_quickshell_crash "$pane"' in script
+    assert ".cache/quickshell/crashes" in script and "-name report.txt" in script
     assert 'python3 "$VM_LIB_DIR/check_screenshot.py" "$image"' in script
     assert 'hyprctl -j activewindow' in smoke
     assert 'timeout 2s hyprctl -j activewindow 2>/dev/null' in smoke
@@ -58,6 +61,22 @@ def test_matrix_uses_the_isolated_vm_and_checks_every_capture() -> None:
     assert 'timeout 2s hyprctl -j activewindow 2>/dev/null' in script
     assert 'write_result PASS ""' in script
     assert "controlCenter close" in script
-    assert script.count("</dev/null") == 4
-    assert "sleep 1" in script
+    assert '.floating == true and .size[0] >= 1100 and .size[1] >= 600' in script
+    assert "sleep 2" in script
     assert '[[ "$captured_count" -eq 25 ]]' in script
+
+    loop = script.split("done <<'PANE_LIST'", maxsplit=1)[0]
+    assert 'controlCenter close' not in loop
+    assert script.count('controlCenter close') == 1
+    assert 'assert_no_quickshell_crash "panel matrix"' in script
+
+
+def test_vm_settings_window_rule_matches_factory_layout() -> None:
+    guest_config = (ROOT / "tests/vm/guest/hyprland.conf").read_text(encoding="utf-8")
+    for snippet in (
+        "match:class = ^org[.]quickshell$",
+        "match:title = ^Hornero Settings.*$",
+        "float = true",
+        "center = true",
+    ):
+        assert snippet in guest_config

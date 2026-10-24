@@ -36,7 +36,16 @@ fail() {
     write_result FAIL "$2"
     exit 1
 }
+assert_no_quickshell_crash() {
+    crash_report="$(vm_ssh "find \"\$HOME/.cache/quickshell/crashes\" -type f -name report.txt -print -quit 2>/dev/null" </dev/null || true)"
+    if [[ -n "$crash_report" ]]; then
+        echo "Quickshell crash report found: $crash_report" >&2
+        vm_ssh "cat '$crash_report'" </dev/null >&2 || true
+        fail "Quickshell crashed while displaying $1" "$1"
+    fi
+}
 bash "$VM_DIR/scenarios/vm-smoke.sh"
+assert_no_quickshell_crash "initial smoke"
 while IFS='|' read -r pane title; do
     expected_title="Hornero Settings - $title"
     image="$SCREENSHOT_DIR/$pane.png"
@@ -52,23 +61,20 @@ for _ in \$(seq 1 40); do
         sleep 0.25
         continue
     }
-    if jq -e --arg title '$expected_title' '.class == \"org.quickshell\" and .title == \$title' <<<\"\$active_window\" > /dev/null 2>&1; then
+    if jq -e --arg title '$expected_title' '.class == \"org.quickshell\" and .title == \$title and .floating == true and .size[0] >= 1100 and .size[1] >= 600' <<<\"\$active_window\" > /dev/null 2>&1; then
         exit 0
     fi
     sleep 0.25
 done
 exit 1" </dev/null || fail "Settings window did not focus for $pane" "$pane"
     # The title changes before Panes.qml's asynchronous loader paints the target.
-    sleep 1
+    sleep 2
+    assert_no_quickshell_crash "$pane"
     vm_ssh "$(vm_hypr_env)
 timeout 15 grim '$remote_image'" </dev/null > /dev/null 2>&1 || fail "screenshot capture failed for $pane" "$pane"
     vm_scp "$VM_SSH_USER@127.0.0.1:$remote_image" "$image" || fail "screenshot transfer failed for $pane" "$pane"
     python3 "$VM_LIB_DIR/check_screenshot.py" "$image" || fail "screenshot is blank or truncated for $pane" "$pane"
     printf 'screenshots/controlcenter/%s.png\n' "$pane" >> "$CAPTURE_LIST"
-    vm_ssh "$(vm_hypr_env)
-QS_BIN=\$(command -v qs || command -v quickshell)
-\$QS_BIN ipc call controlCenter close" </dev/null > /dev/null || fail "close IPC failed for $pane" "$pane"
-    sleep 0.25
 done <<'PANE_LIST'
 network|Network
 bluetooth|Bluetooth
@@ -96,6 +102,10 @@ updates|Updates
 terminal|Terminal
 power|Power
 PANE_LIST
+vm_ssh "$(vm_hypr_env)
+QS_BIN=\$(command -v qs || command -v quickshell)
+\$QS_BIN ipc call controlCenter close" </dev/null > /dev/null || fail "close IPC failed after panel matrix" ""
+assert_no_quickshell_crash "panel matrix"
 captured_count="$(wc -l < "$CAPTURE_LIST" | tr -d '[:space:]')"
 [[ "$captured_count" -eq 25 ]] || fail "captured $captured_count of 25 Control Center panes" ""
 write_result PASS ""

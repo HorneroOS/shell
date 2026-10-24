@@ -23,6 +23,7 @@ LIB_DIR = VM_DIR / "lib"
 VERIFY_IMAGE = LIB_DIR / "verify-image.sh"
 CHECK = LIB_DIR / "check_screenshot.py"
 PPM_TO_PNG = LIB_DIR / "ppm_to_png.py"
+LAST_JSON_OBJECT = LIB_DIR / "last-json-object.py"
 SMOKE = VM_DIR / "scenarios" / "vm-smoke.sh"
 
 
@@ -81,6 +82,36 @@ def test_colorful_screenshot_passes(tmp_path):
     proc = run_checker(str(shot))
     assert proc.returncode == 0
     assert f"PASS {shot}" in proc.stdout
+
+
+def test_last_json_object_ignores_locale_warnings():
+    proc = subprocess.run(
+        [sys.executable, str(LAST_JSON_OBJECT)],
+        input=(
+            'WARN: Qt changed locale to C.UTF-8\n'
+            'still not JSON\n'
+            '{"open":false,"page":"start"}\n'
+        ),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert proc.returncode == 0
+    assert proc.stdout.strip() == '{"open":false,"page":"start"}'
+
+
+def test_last_json_object_fails_without_json_output():
+    proc = subprocess.run(
+        [sys.executable, str(LAST_JSON_OBJECT)],
+        input="WARN: Qt changed locale to C.UTF-8\n",
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert proc.returncode == 1
+    assert "no JSON object found" in proc.stderr
 
 
 def test_two_tone_screenshot_fails_color_floor(tmp_path):

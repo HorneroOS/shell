@@ -141,9 +141,13 @@ echo "==> dismissing first-login Welcome before Settings checks"
 vm_ssh "$(vm_hypr_env)
 QS_BIN=\$(command -v qs || command -v quickshell)
 \$QS_BIN ipc call welcome close" > /dev/null || fail "Welcome close IPC"
-WELCOME_STATUS="$(vm_ssh "$(vm_hypr_env)
+WELCOME_STATUS_RAW="$(vm_ssh "$(vm_hypr_env)
 QS_BIN=\$(command -v qs || command -v quickshell)
 \$QS_BIN ipc call welcome status")" || fail "Welcome status IPC"
+if ! WELCOME_STATUS="$(python3 "$VM_LIB_DIR/last-json-object.py" <<<"${WELCOME_STATUS_RAW}")"; then
+    echo "Welcome status IPC did not return a JSON object: ${WELCOME_STATUS_RAW}" >&2
+    fail "Welcome status JSON"
+fi
 if ! jq -e '.open == false' <<<"${WELCOME_STATUS}" > /dev/null; then
     echo "Welcome remained open before Settings checks: ${WELCOME_STATUS}" >&2
     fail "Welcome overlay still open"

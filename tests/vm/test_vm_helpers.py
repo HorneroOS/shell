@@ -460,6 +460,7 @@ def test_provision_installs_native_plugin_deps():
     installer = (LIB_DIR / "install-libcava.sh").read_text()
     assert "pkg-config --exists libcava" in installer
     assert "39403443c8208f5d9adaaed7c8347c439efe52cf" in installer
+    assert 'cd "$BUILD_DIR"\nmakepkg --syncdeps --install' in installer
     assert "makepkg --syncdeps --install" in installer
 
 

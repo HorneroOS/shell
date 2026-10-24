@@ -6,6 +6,7 @@ import re
 
 ROOT = Path(__file__).resolve().parents[2]
 SCENARIO = ROOT / "tests/vm/scenarios/vm-controlcenter-panels.sh"
+SMOKE = ROOT / "tests/vm/scenarios/vm-smoke.sh"
 REGISTRY = ROOT / "modules/controlcenter/PaneRegistry.qml"
 
 
@@ -40,10 +41,14 @@ def test_control_center_matrix_covers_every_registered_destination() -> None:
 
 def test_matrix_uses_the_isolated_vm_and_checks_every_capture() -> None:
     script = SCENARIO.read_text(encoding="utf-8")
+    smoke = SMOKE.read_text(encoding="utf-8")
 
     assert 'bash "$VM_DIR/scenarios/vm-smoke.sh"' in script
     assert 'python3 "$VM_LIB_DIR/check_screenshot.py" "$image"' in script
-    assert 'hyprctl -j activewindow' in script
+    assert 'hyprctl -j activewindow' in smoke
+    assert 'timeout 2s hyprctl -j activewindow 2>/dev/null' in smoke
+    assert 'tail -n 40 /tmp/hypr.log /tmp/qs.log' in smoke
+    assert 'timeout 2s hyprctl -j activewindow 2>/dev/null' in script
     assert 'write_result PASS ""' in script
     assert "controlCenter close" in script
     assert script.count("</dev/null") == 4

@@ -122,14 +122,24 @@ QS_BIN=\$(command -v qs || command -v quickshell)
 [[ "${TERMINAL_SETTINGS}" == *"opened: terminal"* ]] || fail "Terminal pane did not open"
 vm_ssh "$(vm_hypr_env)
 for _ in \$(seq 1 20); do
-    active_window=\$(hyprctl -j activewindow) || { echo \"hyprctl activewindow failed\" >&2; exit 1; }
-    if jq -e '.class == \"org.quickshell\" and .title == \"Hornero Settings - Terminal\"' <<<\"\$active_window\" > /dev/null 2>&1; then
+    if active_window=\$(timeout 2s hyprctl -j activewindow 2>/dev/null) && \
+        jq -e '.class == \"org.quickshell\" and .title == \"Hornero Settings - Terminal\"' <<<\"\$active_window\" > /dev/null 2>&1; then
         exit 0
     fi
     sleep 0.12
 done
 echo \"last activewindow response: \$active_window\" >&2
-hyprctl -j clients | jq '[.[] | {class, title, mapped, visible, workspace: .workspace.name}]' >&2
+if active_window=\$(timeout 3s hyprctl -j activewindow 2>&1); then
+    echo \"activewindow response: \$active_window\" >&2
+else
+    echo \"hyprctl activewindow did not respond: \$active_window\" >&2
+fi
+if clients=\$(timeout 3s hyprctl -j clients 2>/dev/null); then
+    jq '[.[] | {class, title, mapped, visible, workspace: .workspace.name}]' <<<\"\$clients\" >&2
+else
+    echo \"hyprctl clients did not respond\" >&2
+fi
+tail -n 40 /tmp/hypr.log /tmp/qs.log >&2 || true
 exit 1" || fail "Terminal settings window never became active"
 if vm_ssh "$(vm_hypr_env)
 timeout 10 grim /tmp/vm-controlcenter-terminal.png" > /dev/null 2>&1; then

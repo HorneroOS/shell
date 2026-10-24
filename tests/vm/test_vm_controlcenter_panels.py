@@ -84,6 +84,9 @@ def test_matrix_uses_the_isolated_vm_and_checks_every_capture() -> None:
     assert '.floating == true and .size[0] >= 1100 and .size[1] >= 600' in script
     assert "sleep 2" not in script
     assert '[[ "$captured_count" -eq 25 ]]' in script
+    assert 'last-json-object.py' in smoke
+    assert 'WELCOME_STATUS_RAW=' in smoke
+    assert 'Welcome status IPC did not return a JSON object' in smoke
 
     provision = (ROOT / "tests/vm/lib/provision.sh").read_text(encoding="utf-8")
     assert "networkmanager bluez" in provision

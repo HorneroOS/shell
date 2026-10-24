@@ -18,6 +18,9 @@ on:
         default: false
         type: boolean
 
+permissions:
+  contents: read
+
 jobs:
   harness-lint:
     runs-on: ubuntu-latest

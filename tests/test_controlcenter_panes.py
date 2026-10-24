@@ -205,7 +205,9 @@ def test_terminal_settings_loading_is_bounded_and_reports_empty_process_output()
     assert 'qsTr("Terminal settings returned no data.")' in pane
     assert "if (root.listTimedOut)\n                    return;" in pane
     assert "root.installedTerminals = [];" in pane.split("id: listTimeout", 1)[1].split("Process {", 1)[0]
-    assert "root.loading = false;" in pane.split("onExited:", 1)[1].split("\n        }", 1)[0]
+    list_exit = pane.split("onExited:", 1)[1].split("\n        }", 1)[0]
+    assert "root.loading = false;" in list_exit
+    assert "root.listTimedOut = false;" not in list_exit
 
 
 def test_terminal_settings_keeps_supported_choices_visible_and_marks_missing_apps():

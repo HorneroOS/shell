@@ -191,7 +191,6 @@ Item {
             root.loading = false;
             if (!root.listAnswered) {
                 if (root.listTimedOut) {
-                    root.listTimedOut = false;
                     return;
                 }
                 root.installedTerminals = [];

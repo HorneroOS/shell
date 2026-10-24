@@ -139,6 +139,9 @@ QS_BIN=\$(command -v qs || command -v quickshell)
 # registration. The active-window assertion proves the deep-linked Terminal
 # pane became usable, not merely that the IPC handler accepted the request.
 echo "==> opening Control Center Terminal settings"
+BASELINE_SCREENSHOT="${SCREENSHOT_DIR}/desktop-before-settings.png"
+bash "${VM_LIB_DIR}/qemu-screenshot.sh" "${BASELINE_SCREENSHOT}" \
+    || fail "pre-settings baseline screenshot"
 TERMINAL_SETTINGS="$(vm_ssh "$(vm_hypr_env)
 QS_BIN=\$(command -v qs || command -v quickshell)
 \$QS_BIN ipc call controlCenter open terminal")" || fail "Control Center Terminal IPC"
@@ -188,7 +191,7 @@ if [[ -n \$quickshell_crash_dir && -f \$quickshell_crash_dir/report.txt ]]; then
 fi
 exit 1" || fail "Terminal settings window never became active"
 if vm_capture_controlcenter_content /tmp/vm-controlcenter-terminal.png \
-    "${SCREENSHOT_DIR}/controlcenter-terminal.png"; then
+    "${SCREENSHOT_DIR}/controlcenter-terminal.png" "${BASELINE_SCREENSHOT}"; then
     :
 else
     capture_status=$?

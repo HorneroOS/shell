@@ -50,10 +50,15 @@ def test_matrix_uses_the_isolated_vm_and_checks_every_capture() -> None:
     assert 'assert_no_quickshell_crash "initial smoke"' in script
     assert 'assert_no_quickshell_crash "$pane"' in script
     assert ".cache/quickshell/crashes" in script and "-name report.txt" in script
-    assert 'vm_capture_controlcenter_content "$remote_image" "$image"' in script
-    assert 'vm_capture_controlcenter_content /tmp/vm-controlcenter-terminal.png' in smoke
+    assert 'baseline_image="$SCREENSHOT_DIR/$pane-before.png"' in script
+    assert 'qemu-screenshot.sh" "$baseline_image"' in script
+    assert 'vm_capture_controlcenter_content "$remote_image" "$image" "$baseline_image"' in script
+    assert 'vm_capture_controlcenter_content /tmp/vm-controlcenter-terminal.png \\' in smoke
+    assert '"${BASELINE_SCREENSHOT}"; then' in smoke
+    assert 'BASELINE_SCREENSHOT="${SCREENSHOT_DIR}/desktop-before-settings.png"' in smoke
     assert 'python3 "$VM_LIB_DIR/check_screenshot.py" "$image" --quiet' in capture
-    assert '--region 320,80,940,620 --quiet "$image"' in capture
+    assert '--region 320,80,940,620 --different-from "$baseline"' in capture
+    assert '--min-diff-ratio 0.05 --quiet "$image"' in capture
     assert 'local max_attempts=10' in capture
     assert 'sleep 0.5' in capture
     assert 'grim did not answer; falling back to the QEMU framebuffer' in capture
@@ -89,6 +94,11 @@ def test_smoke_failure_artifact_includes_process_and_quickshell_diagnostics() ->
     assert '.floating == true and .size[0] >= 1100 and .size[1] >= 600' in script
     assert "sleep 2" not in script
     assert '[[ "$captured_count" -eq 25 ]]' in script
+
+    provision = (ROOT / "tests/vm/lib/provision.sh").read_text(encoding="utf-8")
+    assert "networkmanager bluez" in provision
+    assert "unmanaged-devices=interface-name:eth0" in provision
+    assert "systemctl enable --now NetworkManager bluetooth" in provision
 
     loop = script.split("done <<'PANE_LIST'", maxsplit=1)[0]
     assert 'controlCenter close' not in loop

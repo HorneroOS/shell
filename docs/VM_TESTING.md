@@ -36,7 +36,10 @@ sudo pacman -S --needed qemu-desktop curl openssh jq python3 cdrtools
 | Network access | first run downloads the Arch cloud image (cached afterwards) |
 
 The guest installs everything else itself (`provision.sh`): Hyprland,
-Quickshell (AUR), `grim`, `wf-recorder`, Qt6 modules, `cmake`, and fonts.
+Quickshell (AUR), `grim`, `wf-recorder`, Qt6 modules, `cmake`, NetworkManager,
+BlueZ, and fonts. NetworkManager leaves the cloud image's `eth0` under its
+systemd-networkd configuration; both NetworkManager and Bluetooth are enabled so
+Control Center can exercise their real service interfaces.
 `provision.sh` fails fast when the guest has less than
 `VM_MIN_GUEST_FREE_GB` GB free (default 6); `boot.sh` grows the ephemeral
 boot overlay to `VM_MIN_IMAGE_GB` GiB virtual size (default 14). The
@@ -200,7 +203,7 @@ A passing `vm-smoke.sh` run writes `artifacts/assertions.json` with
 | Shell IPC responds | `qs ipc call drawers list` returns drawer names |
 | Settings Terminal opens and focuses | `controlCenter open terminal` succeeds and Hyprland reports the Settings window as active |
 | Terminal Settings renders | `horneroctl` responds and `controlcenter-terminal.png` passes the nonblank check and content-region color floor |
-| Control Center destinations render | Each Settings window is mapped, and its right-hand content region contains at least 500 sampled colors |
+| Control Center destinations render | Each Settings window is mapped, its right-hand content region contains at least 500 sampled colors, and at least 5% of sampled pixels differ from a framebuffer capture taken immediately before opening the pane |
 | Screen is really rendering | `grim` probe, then the final capture must pass `check_screenshot.py` |
 | Recording captured | `wf-recorder` file exists and is non-empty (screencopy path only) |
 

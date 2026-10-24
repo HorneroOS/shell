@@ -2,7 +2,8 @@
 """Reject blank or truncated screenshots without third-party dependencies.
 
 Usage: check_screenshot.py [--min-colors N] [--min-stddev F] [--min-bytes N]
-                            [--region X,Y,WIDTH,HEIGHT] [--quiet] FILE...
+                            [--region X,Y,WIDTH,HEIGHT] [--different-from FILE]
+                            [--min-diff-ratio F] [--quiet] FILE...
 
 A capture counts as non-blank when it holds at least --min-colors distinct
 sampled colors and the population standard deviation of sampled luminance
@@ -149,6 +150,43 @@ def assess(path, min_colors, min_stddev, min_bytes, region=None):
     return True, f"{width}x{height}, colors={len(colors)}, stddev={stddev:.2f}"
 
 
+def compare_to_reference(path, reference, region=None, min_diff_ratio=0.05):
+    width, height, channels, pixels = parse_png(path)
+    ref_width, ref_height, ref_channels, ref_pixels = parse_png(reference)
+    if (width, height, channels) != (ref_width, ref_height, ref_channels):
+        raise ValueError(
+            "screenshot and reference dimensions or color formats differ "
+            f"({width}x{height}/{channels}, {ref_width}x{ref_height}/{ref_channels})"
+        )
+    if region is None:
+        x0, y0, region_width, region_height = 0, 0, width, height
+    else:
+        x0, y0, region_width, region_height = region
+        if (
+            x0 < 0
+            or y0 < 0
+            or region_width <= 0
+            or region_height <= 0
+            or x0 + region_width > width
+            or y0 + region_height > height
+        ):
+            raise ValueError(
+                f"region {region} is outside image bounds {width}x{height}"
+            )
+
+    total = region_width * region_height
+    step = max(1, math.ceil(math.sqrt(total / MAX_SAMPLES)))
+    changed = count = 0
+    for y in range(y0, y0 + region_height, step):
+        for x in range(x0, x0 + region_width, step):
+            offset = (y * width + x) * channels
+            if pixels[offset:offset + channels] != ref_pixels[offset:offset + channels]:
+                changed += 1
+            count += 1
+    ratio = changed / count
+    return ratio >= min_diff_ratio, f"{ratio:.1%} of sampled pixels differ from reference"
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--min-colors", type=int, default=16)
@@ -158,9 +196,22 @@ def main(argv=None):
         "--region",
         help="measure only x,y,width,height inside each image",
     )
+    parser.add_argument(
+        "--different-from",
+        help="require each screenshot to differ from this reference image",
+    )
+    parser.add_argument(
+        "--min-diff-ratio",
+        type=float,
+        default=0.05,
+        help="minimum changed sample ratio when --different-from is used (default: 0.05)",
+    )
     parser.add_argument("--quiet", action="store_true")
     parser.add_argument("files", nargs="+")
     args = parser.parse_args(argv)
+
+    if not 0.0 <= args.min_diff_ratio <= 1.0:
+        parser.error("--min-diff-ratio must be between 0 and 1")
 
     region = None
     if args.region:
@@ -178,6 +229,13 @@ def main(argv=None):
             ok, detail = assess(
                 path, args.min_colors, args.min_stddev, args.min_bytes, region
             )
+            if args.different_from:
+                differs, difference = compare_to_reference(
+                    path, args.different_from, region, args.min_diff_ratio
+                )
+                if not differs:
+                    ok = False
+                detail += f", {difference}"
         except (OSError, ValueError, struct.error, zlib.error) as exc:
             errors = True
             if not args.quiet:

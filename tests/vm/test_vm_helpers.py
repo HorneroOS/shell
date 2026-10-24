@@ -138,6 +138,58 @@ def test_color_floor_is_tunable(tmp_path):
     assert proc.returncode == 0
 
 
+def test_reference_check_rejects_an_unchanged_screen(tmp_path):
+    shot = tmp_path / "current.png"
+    reference = tmp_path / "reference.png"
+    rows = gradient_rows(128, 72)
+    write_png(shot, 128, 72, rows)
+    write_png(reference, 128, 72, rows)
+
+    proc = run_checker(
+        "--different-from",
+        str(reference),
+        "--region",
+        "16,8,96,56",
+        str(shot),
+    )
+
+    assert proc.returncode == 1
+    assert "0.0% of sampled pixels differ from reference" in proc.stdout
+
+
+def test_reference_check_accepts_a_materially_changed_screen(tmp_path):
+    shot = tmp_path / "current.png"
+    reference = tmp_path / "reference.png"
+    original = gradient_rows(128, 72)
+    inverted = [
+        bytes(255 - value for value in row)
+        for row in original
+    ]
+    write_png(shot, 128, 72, inverted)
+    write_png(reference, 128, 72, original)
+
+    proc = run_checker(
+        "--different-from",
+        str(reference),
+        "--region",
+        "16,8,96,56",
+        str(shot),
+    )
+
+    assert proc.returncode == 0
+    assert "100.0% of sampled pixels differ from reference" in proc.stdout
+
+
+def test_reference_check_rejects_an_invalid_difference_threshold(tmp_path):
+    shot = tmp_path / "current.png"
+    write_png(shot, 128, 72, gradient_rows(128, 72))
+
+    proc = run_checker("--min-diff-ratio", "1.1", str(shot))
+
+    assert proc.returncode == 2
+    assert "--min-diff-ratio must be between 0 and 1" in proc.stderr
+
+
 def test_sub_filtered_rows_decode(tmp_path):
     # grim-style encoders use Sub/Up/Paeth filters; a decoder that only
     # handles None rows would misread these as noise or stripes.

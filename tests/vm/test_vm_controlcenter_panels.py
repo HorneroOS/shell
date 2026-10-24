@@ -48,7 +48,9 @@ def test_matrix_uses_the_isolated_vm_and_checks_every_capture() -> None:
     assert 'python3 "$VM_LIB_DIR/check_screenshot.py" "$image"' in script
     assert 'hyprctl -j activewindow' in smoke
     assert 'timeout 2s hyprctl -j activewindow 2>/dev/null' in smoke
-    assert 'tail -n 40 /tmp/hypr.log /tmp/qs.log' in smoke
+    assert 'find /run/user/1000/hypr -maxdepth 2 -type f -name hyprland.log' in smoke
+    assert 'tail -n 80 /tmp/hypr.log /tmp/qs.log' in smoke
+    assert "coredumpctl --no-pager info" in smoke and "quickshell_pid" in smoke
     assert 'timeout 2s hyprctl -j activewindow 2>/dev/null' in script
     assert 'write_result PASS ""' in script
     assert "controlCenter close" in script

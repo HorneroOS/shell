@@ -159,7 +159,17 @@ if clients=\$(timeout 3s hyprctl -j clients 2>/dev/null); then
 else
     echo \"hyprctl clients did not respond\" >&2
 fi
-tail -n 40 /tmp/hypr.log /tmp/qs.log >&2 || true
+hyprland_log=\$(find /run/user/1000/hypr -maxdepth 2 -type f -name hyprland.log -print -quit 2>/dev/null || true)
+if [[ -n \$hyprland_log ]]; then
+    echo \"==> tail of active Hyprland log: \$hyprland_log\" >&2
+    tail -n 80 \"\$hyprland_log\" >&2 || true
+fi
+tail -n 80 /tmp/hypr.log /tmp/qs.log >&2 || true
+quickshell_pid=\$(sed -nE 's/.*Quickshell has crashed under pid ([0-9]+).*/\1/p' /tmp/qs.log | tail -n 1)
+if [[ \$quickshell_pid =~ ^[0-9]+\$ ]]; then
+    echo \"==> Quickshell coredump details for pid \$quickshell_pid\" >&2
+    coredumpctl --no-pager info \"\$quickshell_pid\" >&2 || true
+fi
 exit 1" || fail "Terminal settings window never became active"
 if vm_ssh "$(vm_hypr_env)
 timeout 10 grim /tmp/vm-controlcenter-terminal.png" > /dev/null 2>&1; then

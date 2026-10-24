@@ -20,7 +20,7 @@ fi
 
 if vm_is_dry_run; then
     echo "dry-run: would restart Hyprland (DRM backend) in the guest"
-    echo "dry-run: would start the deployed shell with qs (fallback: quickshell) using Qt Quick's software adaptation in the llvmpipe VM"
+    echo "dry-run: would start the deployed shell with qs (fallback: quickshell)"
     echo "dry-run: would expose the native plugin via QML2_IMPORT_PATH=${VM_GUEST_PREFIX}/lib/qt6/qml"
     echo "dry-run: would verify Hyprland plus shell processes are alive"
     exit 0
@@ -74,7 +74,7 @@ else
     vm_ssh_bg "$(vm_hypr_env)
 export QML2_IMPORT_PATH=${guest_qml_path}:\$QML2_IMPORT_PATH
 if command -v qs > /dev/null; then QS_BIN=qs; else QS_BIN=quickshell; fi
-cd \$HOME/.config/quickshell && nohup env QT_QUICK_BACKEND=software \$QS_BIN > /tmp/qs.log 2>&1 < /dev/null & disown"
+cd \$HOME/.config/quickshell && nohup \$QS_BIN > /tmp/qs.log 2>&1 < /dev/null & disown"
     sleep 10
 fi
 

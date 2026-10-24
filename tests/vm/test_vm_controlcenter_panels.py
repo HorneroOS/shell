@@ -58,4 +58,5 @@ def test_smoke_failure_artifact_includes_process_and_quickshell_diagnostics() ->
     assert "/run/user/1000/quickshell/by-id/*/log.qslog" in script
     assert "VM_SSH_TIMEOUT=30s vm_ssh" in script
     assert script.count("</dev/null") == 4
+    assert "sleep 1" in script
     assert '[[ "$captured_count" -eq 25 ]]' in script

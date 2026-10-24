@@ -54,6 +54,8 @@ for _ in \$(seq 1 40); do
     sleep 0.25
 done
 exit 1" </dev/null || fail "Settings window did not focus for $pane" "$pane"
+    # The title changes before Panes.qml's asynchronous loader paints the target.
+    sleep 1
     vm_ssh "$(vm_hypr_env)
 timeout 15 grim '$remote_image'" </dev/null > /dev/null 2>&1 || fail "screenshot capture failed for $pane" "$pane"
     vm_scp "$VM_SSH_USER@127.0.0.1:$remote_image" "$image" || fail "screenshot transfer failed for $pane" "$pane"

@@ -141,3 +141,4 @@ def test_control_center_open_rejects_unknown_pane():
     assert handler["open"][0] == "string"
     assert "error: unknown control-center pane" in handler["open"][1]
     assert "opening default" not in handler["open"][1]
+    assert "error: could not create Settings window" in handler["open"][1]

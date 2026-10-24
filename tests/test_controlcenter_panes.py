@@ -197,6 +197,34 @@ def test_terminal_settings_uses_cli_report_and_change_contract():
     assert 'Install Kitty, Alacritty, or Ghostty' in pane
 
 
+def test_terminal_settings_loading_is_bounded_and_reports_empty_process_output():
+    pane = (CC / "terminal" / "TerminalPane.qml").read_text()
+    assert "property bool listTimedOut: false" in pane
+    assert "interval: 15000" in pane
+    assert "interval: 2000" in pane
+    assert 'qsTr("Terminal settings request timed out.")' in pane
+    assert 'qsTr("Terminal settings returned no data.")' in pane
+    assert "if (root.listTimedOut)\n                    return;" in pane
+    assert "root.installedTerminals = [];" in pane.split("id: listTimeout", 1)[1].split("Process {", 1)[0]
+    timeout = pane.split("id: listTimeout", 1)[1].split("Timer {", 1)[0]
+    assert "running: root.loading || listProc.running" in timeout
+    assert "if (root.loading && !root.listAnswered)" in timeout
+    assert "root.statusMessage = qsTr(\"Terminal settings request timed out.\");" in timeout
+    assert "if (!listProc.running)" not in timeout
+    assert "if (listProc.running)" in timeout
+    assert "listKillTimeout.start();" in timeout
+    refresh = pane.split("function refresh", 1)[1].split("function applyTerminal", 1)[0]
+    assert "listTimeout.restart()" not in refresh
+    kill_timeout = pane.split("id: listKillTimeout", 1)[1].split("Process {", 1)[0]
+    assert "listProc.signal(9)" in kill_timeout
+    stream_finished = pane.split("onStreamFinished:", 1)[1].split("onExited:", 1)[0]
+    assert "listTimeout.stop()" not in stream_finished
+    list_exit = pane.split("onExited:", 1)[1].split("\n        }", 1)[0]
+    assert "root.loading = false;" in list_exit
+    assert "listKillTimeout.stop();" in list_exit
+    assert "root.listTimedOut = false;" not in list_exit
+
+
 def test_terminal_settings_keeps_supported_choices_visible_and_marks_missing_apps():
     pane = (CC / "terminal" / "TerminalPane.qml").read_text()
     assert "Repeater {" not in pane, "fixed terminal options should share one full-width layout"
@@ -369,12 +397,27 @@ def test_control_center_navigation_uses_keyboard_accessible_interactive_controls
 
 def test_control_center_window_factory_activates_new_and_reused_settings_windows():
     factory = (CC / "WindowFactory.qml").read_text()
-    create_body = factory.split("function create(parent: Item, props: var): void {", 1)[1].split("function closeAll()", 1)[0]
+    create_body = factory.split("function create(parent: Item, props: var): bool {", 1)[1].split("function closeAll()", 1)[0]
     reuse_path = create_body.split("if (windows.length > 0) {", 1)[1].split("\n        }\n        const win", 1)[0]
     new_window_path = create_body.split("const win = controlCenter.createObject", 1)[1].split("\n        root.syncCompanion();", 1)[0]
     assert "root.focusSettingsWindow(existing)" in reuse_path
     assert "root.focusSettingsWindow(win)" in new_window_path
+    assert "parent ?? null" in create_body
+    assert "could not create Settings window" in create_body
+    assert "id: dummy" not in factory
     assert "requestActivate()" not in factory
+
+
+def test_welcome_settings_actions_keep_the_overlay_if_window_creation_fails():
+    actions = (ROOT / "modules" / "welcome" / "Actions.qml").read_text()
+    open_settings = actions.split("function openControlCenter", 1)[1].split(
+        "function shellQuote", 1
+    )[0]
+    assert "WelcomeModule.Welcome.close();" in open_settings
+    assert "if (opened)" in open_settings
+    assert open_settings.index("WindowFactory.create") < open_settings.index(
+        "WelcomeModule.Welcome.close();"
+    )
 
 
 def test_control_center_retries_focus_while_compositor_registers_settings_toplevel():
@@ -508,3 +551,22 @@ def test_extensions_marketplace_section():
     # Marketplace never writes receipts itself and never enables silently.
     assert "pendingInstall" in pane
     assert 'runLifecycle("enable"' in pane  # existing consent path untouched
+
+
+def test_extensions_community_registry_is_verified_read_only_cli_output():
+    pane = (ROOT / "modules/controlcenter/extensions/ExtensionsPane.qml").read_text()
+    section = (ROOT / "modules/controlcenter/extensions/CommunityRegistrySection.qml").read_text()
+    assert "CommunityRegistrySection" in pane
+    assert '["horneroctl", "--json", "plugin", "community", "list"]' in section
+    assert "root.entries = entries" in section and "env.ok !== true" in section
+    assert 'typeof data.plugins !== "string"' in section
+    assert "entries.some(entry => !entry" in section
+    assert '(env.data && env.data.plugins) || "[]"' not in section
+    assert "index signature identifies who published the list" in section
+    assert "does not mean HorneroOS reviewed the code or that the code is safe" in section
+    assert "has no sandbox" in section
+    assert "Pinned revision" in section and "Payload SHA-256" in section
+    assert "Community install, update, and rollback are unavailable until horneroctl preserves the verified revision and payload hash through those actions." in section
+    # Community discovery is read-only until it has a provenance-preserving lifecycle.
+    assert '"plugin", "community", "install"' not in pane + section
+    assert '"plugin", "community", "enable"' not in pane + section

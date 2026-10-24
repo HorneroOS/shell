@@ -19,6 +19,9 @@ VM_SSH_PORT="${VM_SSH_PORT:-2222}"
 VM_SSH_USER="${VM_SSH_USER:-hornero}"
 VM_SSH_DIR="${VM_SSH_DIR:-${VM_DIR}/ssh}"
 VM_SSH_KEY="${VM_SSH_KEY:-${VM_SSH_DIR}/id_ed25519}"
+# Optional wall-clock bound for diagnostic SSH calls that must not block
+# failure reporting. Normal guest operations keep the SSH default behavior.
+VM_SSH_TIMEOUT="${VM_SSH_TIMEOUT:-}"
 
 # Host-side state directories (gitignored, see tests/vm/.gitignore).
 VM_ARTIFACTS_DIR="${VM_ARTIFACTS_DIR:-${VM_DIR}/artifacts}"
@@ -79,7 +82,7 @@ VM_QEMU_DNS="${VM_QEMU_DNS:-9.9.9.9}"
 VM_DRY_RUN="${VM_DRY_RUN:-0}"
 
 export VM_DIR SHELL_ROOT
-export VM_SSH_PORT VM_SSH_USER VM_SSH_DIR VM_SSH_KEY
+export VM_SSH_PORT VM_SSH_USER VM_SSH_DIR VM_SSH_KEY VM_SSH_TIMEOUT
 export VM_ARTIFACTS_DIR VM_CACHE_DIR VM_SHARED_DIR VM_PID_FILE
 export VM_MEM VM_SMP VM_CLOUD_IMAGE_URL VM_CLOUD_IMAGE VM_OVERLAY VM_SEED_ISO
 export VM_MIN_IMAGE_GB VM_MIN_GUEST_FREE_GB VM_GUEST_PREFIX
@@ -113,14 +116,21 @@ vm_usage_error() {
 
 # SSH into the harness VM.
 vm_ssh() {
-    ssh -4 \
+    local -a ssh_command=(
+        ssh -4 \
         -o StrictHostKeyChecking=no \
         -o UserKnownHostsFile=/dev/null \
         -o LogLevel=ERROR \
         -o ConnectTimeout=5 \
         -i "${VM_SSH_KEY}" \
         -p "${VM_SSH_PORT}" \
-        "${VM_SSH_USER}@127.0.0.1" "$@"
+        "${VM_SSH_USER}@127.0.0.1"
+    )
+    if [[ -n "${VM_SSH_TIMEOUT}" ]]; then
+        timeout --kill-after=5s "${VM_SSH_TIMEOUT}" "${ssh_command[@]}" "$@"
+    else
+        "${ssh_command[@]}" "$@"
+    fi
 }
 
 # SSH that detaches immediately after auth. Use it for launching long-lived
@@ -173,9 +183,9 @@ vm_shell_ready() {
 # The command substitution must expand on the guest, not locally.
 # shellcheck disable=SC2016
 vm_hypr_env() {
-    echo 'export HYPRLAND_INSTANCE_SIGNATURE=$(ls -t $XDG_RUNTIME_DIR/hypr/ | grep -v ".lock" | head -1)
+    echo 'export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export HYPRLAND_INSTANCE_SIGNATURE=$(ls -t "$XDG_RUNTIME_DIR"/hypr/ | grep -v ".lock" | head -1)
 export WAYLAND_DISPLAY=wayland-1
-export XDG_RUNTIME_DIR=/run/user/$(id -u)
 export XDG_SESSION_TYPE=wayland
 export XDG_CURRENT_DESKTOP=Hyprland
 export XDG_CONFIG_HOME=$HOME/.config

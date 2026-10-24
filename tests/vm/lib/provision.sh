@@ -25,7 +25,7 @@ fi
 if vm_is_dry_run; then
     echo "dry-run: would pin guest DNS to ${VM_GUEST_DNS} when DHCP DNS does not resolve"
     echo "dry-run: would check guest free disk space (fail fast below ${VM_MIN_GUEST_FREE_GB} GB)"
-    echo "dry-run: would install guest packages (pacman incl. cmake, libqalculate, quickshell>=0.3.2)"
+    echo "dry-run: would install guest packages (pacman incl. cmake, libqalculate, networkmanager, bluez, quickshell>=0.3.2)"
     echo "dry-run: would enable seatd and grant seat/video/render groups"
     echo "dry-run: would write the provision marker when done"
     exit 0
@@ -114,6 +114,7 @@ vm_ssh 'sudo pacman -Syu --noconfirm --needed --overwrite "/usr/lib/*" \
     kitty qt6-base qt6-declarative qt6-svg qt6-multimedia qt6-wayland \
     base-devel cmake git curl jq \
     pipewire-jack aubio libqalculate \
+    networkmanager bluez \
     noto-fonts noto-fonts-emoji ttf-jetbrains-mono-nerd ttf-material-symbols-variable'
 
 echo "==> checking the installed stable Quickshell version"
@@ -129,6 +130,10 @@ echo "==> granting DRM and seat access"
 # SSH sessions have no logind seat, so seatd handles DRM device access.
 # shellcheck disable=SC2016
 vm_ssh 'sudo systemctl enable --now seatd && \
+    sudo install -d /etc/NetworkManager/conf.d && \
+    printf "[keyfile]\\nunmanaged-devices=interface-name:eth0\\n" | \
+        sudo tee /etc/NetworkManager/conf.d/10-vm-harness-unmanaged.conf > /dev/null && \
+    sudo systemctl enable --now NetworkManager bluetooth && \
     sudo gpasswd -a "$USER" seat > /dev/null && \
     sudo gpasswd -a "$USER" video > /dev/null && \
     sudo gpasswd -a "$USER" render > /dev/null'

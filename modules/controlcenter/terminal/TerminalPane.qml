@@ -151,16 +151,16 @@ Item {
         interval: 15000
         repeat: false
         onTriggered: {
-            if (!listProc.running)
-                return;
             if (root.loading && !root.listAnswered) {
                 root.listTimedOut = true;
                 root.installedTerminals = [];
                 root.loading = false;
                 root.statusMessage = qsTr("Terminal settings request timed out.");
             }
-            listProc.running = false;
-            listKillTimeout.start();
+            if (listProc.running) {
+                listProc.running = false;
+                listKillTimeout.start();
+            }
         }
     }
 

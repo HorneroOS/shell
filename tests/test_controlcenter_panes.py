@@ -207,7 +207,10 @@ def test_terminal_settings_loading_is_bounded_and_reports_empty_process_output()
     assert "if (root.listTimedOut)\n                    return;" in pane
     assert "root.installedTerminals = [];" in pane.split("id: listTimeout", 1)[1].split("Process {", 1)[0]
     timeout = pane.split("id: listTimeout", 1)[1].split("Timer {", 1)[0]
-    assert "if (!listProc.running)" in timeout
+    assert "if (root.loading && !root.listAnswered)" in timeout
+    assert "root.statusMessage = qsTr(\"Terminal settings request timed out.\");" in timeout
+    assert "if (!listProc.running)" not in timeout
+    assert "if (listProc.running)" in timeout
     assert "listKillTimeout.start();" in timeout
     kill_timeout = pane.split("id: listKillTimeout", 1)[1].split("Process {", 1)[0]
     assert "listProc.signal(9)" in kill_timeout

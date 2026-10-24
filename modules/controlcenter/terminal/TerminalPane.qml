@@ -57,7 +57,6 @@ Item {
         root.loading = true;
         root.listAnswered = false;
         root.listTimedOut = false;
-        listTimeout.restart();
         listProc.running = true;
     }
 
@@ -148,6 +147,9 @@ Item {
     Timer {
         id: listTimeout
 
+        // Start with the initial request and keep running until both the UI
+        // has a response and the process has exited.
+        running: root.loading || listProc.running
         interval: 15000
         repeat: false
         onTriggered: {
@@ -199,7 +201,6 @@ Item {
             }
         }
         onExited: (exitCode, exitStatus) => {
-            listTimeout.stop();
             listKillTimeout.stop();
             root.loading = false;
             if (!root.listAnswered) {

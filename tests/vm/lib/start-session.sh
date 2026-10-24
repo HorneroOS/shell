@@ -72,6 +72,7 @@ else
     guest_home="$(vm_ssh 'printf %s "$HOME"')"
     guest_qml_path="${VM_GUEST_PREFIX//\$HOME/${guest_home}}/lib/qt6/qml"
     vm_ssh_bg "$(vm_hypr_env)
+export PATH=\$HOME/.local/bin:\$PATH
 export QML2_IMPORT_PATH=${guest_qml_path}:\$QML2_IMPORT_PATH
 if command -v qs > /dev/null; then QS_BIN=qs; else QS_BIN=quickshell; fi
 # Qt's default RHI stalls dynamic window creation under the VM's llvmpipe

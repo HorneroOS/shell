@@ -148,7 +148,12 @@ the **VM harness** workflow on the branch under review and enable
 captures each registered Control Center destination, and uploads the images
 and assertion report as `controlcenter-visual-matrix`. This lane uses QEMU TCG
 when KVM is unavailable and can take substantially longer than routine CI; it
-is opt-in and does not run on every pull request.
+is opt-in and does not run on every pull request. The workflow builds
+`horneroctl` from Hornero commit
+[`78ff5f4`](https://github.com/HorneroOS/hornero/commit/78ff5f4249e84ef18142ca6a6f0a3188657f3144)
+and places it in the guest session PATH so Terminal Settings and Welcome
+exercise their real CLI contract. For a local run, set `HX_HOREROCTL_BIN` to an
+executable `horneroctl` build.
 
 ## Welcome scenario
 
@@ -194,7 +199,7 @@ A passing `vm-smoke.sh` run writes `artifacts/assertions.json` with
 | Compositor IPC responds | `hyprctl -j monitors` returns an output name |
 | Shell IPC responds | `qs ipc call drawers list` returns drawer names |
 | Settings Terminal opens and focuses | `controlCenter open terminal` succeeds and Hyprland reports the Settings window as active |
-| Terminal Settings renders | `controlcenter-terminal.png` passes the nonblank check and the content-region color floor |
+| Terminal Settings renders | `horneroctl` responds and `controlcenter-terminal.png` passes the nonblank check and content-region color floor |
 | Control Center destinations render | Each Settings window is mapped, and its right-hand content region contains at least 500 sampled colors |
 | Screen is really rendering | `grim` probe, then the final capture must pass `check_screenshot.py` |
 | Recording captured | `wf-recorder` file exists and is non-empty (screencopy path only) |

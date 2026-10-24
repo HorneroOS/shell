@@ -499,6 +499,19 @@ def test_deploy_dry_run_without_pin_stays_shell_local():
     assert "materialize the config pin" not in proc.stdout
 
 
+def test_deploy_dry_run_with_horneroctl_adds_it_to_the_session_path():
+    env = dict(os.environ, HX_HOREROCTL_BIN="/tmp/horneroctl")
+    proc = subprocess.run(
+        ["bash", str(LIB_DIR / "deploy-shell.sh"), "--dry-run"],
+        capture_output=True,
+        text=True,
+        check=False,
+        env=env,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "install horneroctl into guest ~/.local/bin" in proc.stdout
+
+
 def test_deploy_dry_run_with_pin_mentions_composition():
     env = dict(
         os.environ,

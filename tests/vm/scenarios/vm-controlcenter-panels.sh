@@ -59,7 +59,9 @@ assert_no_quickshell_crash() {
         fail "Quickshell crashed while displaying $1" "$1"
     fi
 }
-bash "$VM_DIR/scenarios/vm-smoke.sh"
+if ! bash "$VM_DIR/scenarios/vm-smoke.sh"; then
+    fail "initial graphical smoke failed before panel capture" "terminal"
+fi
 assert_no_quickshell_crash "initial smoke"
 while IFS='|' read -r pane title; do
     expected_title="Hornero Settings - $title"

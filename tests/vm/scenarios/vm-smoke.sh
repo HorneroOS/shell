@@ -142,7 +142,7 @@ QS_BIN=\$(command -v qs || command -v quickshell)
 [[ "${TERMINAL_SETTINGS}" == *"opened: terminal"* ]] || fail "Terminal pane did not open"
 vm_ssh "$(vm_hypr_env)
 for _ in \$(seq 1 20); do
-    active_window=\$(hyprctl -j activewindow 2>&1) || { echo \"hyprctl activewindow failed: \$active_window\" >&2; exit 1; }
+    active_window=\$(hyprctl -j activewindow) || { echo \"hyprctl activewindow failed\" >&2; exit 1; }
     if jq -e '.class == \"org.quickshell\" and .title == \"Hornero Settings - Terminal\"' <<<\"\$active_window\" > /dev/null 2>&1; then
         exit 0
     fi

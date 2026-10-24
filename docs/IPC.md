@@ -31,7 +31,12 @@ other HorneroOS components script against; renames must update
 | `lock` | `modules/lock/Lock.qml` | `lock()`, `unlock()` |
 | `companion` | `modules/companion/CompanionHost.qml` | `summon()`, `hide()`, `toggle()`, `say(text, timeoutMs)`, `tip()`, `play(animation)`, `setState(state)`, `setSkin(skin)`, `resetPosition()`, `status()`, `ask(text)`, `askStop()`, `approve(runId, decision)`, `clarify(runId, answer)`, `events(runId)` |
 | `plugins` | `modules/plugins/PluginHost.qml` | `status()`, `reload()` |
-| `debug` | `modules/drawers/Drawers.qml` | `borders()`, `dump()`, `focusState()` (debug only) |
+| `debug` | `modules/drawers/Drawers.qml` | `borders()`, `bars()`, `dump()`, `focusState()` (debug only) |
+
+`debug bars()` returns bar geometry for every connected screen. Each entry has
+a `screen` name; `geom` and visual rectangles are local to that screen. Use
+`screen` to group entries rather than treating local x-coordinates as global
+desktop positions.
 
 Drawer names accepted by `drawers toggle` are the boolean keys of
 `Visibilities` for the active monitor (e.g. `launcher`, `dashboard`,

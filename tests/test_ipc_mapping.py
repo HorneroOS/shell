@@ -55,6 +55,19 @@ def test_process_contract_documents_the_configured_terminal():
     assert "foot -e" not in doc
 
 
+def test_debug_bars_report_every_screen_and_keep_local_geometry():
+    source = (ROOT / "modules" / "drawers" / "Drawers.qml").read_text()
+    functions = _handler_functions(source, "debug")
+    bars = functions["bars"][1]
+
+    assert "for (const outputScreen of Quickshell.screens)" in bars
+    assert "Visibilities.bars.get(outputScreen)" in bars
+    assert "screen: outputScreen.name" in bars
+    ipc = (ROOT / "docs" / "IPC.md").read_text()
+    assert "`debug bars()` returns bar geometry for every connected screen" in ipc
+    assert "`geom` and visual rectangles are local to that screen" in ipc
+
+
 def _handler_functions(source, target):
     m = re.search(r'target:\s*"' + re.escape(target) + r'"(.*?)(?=target:\s*"|\Z)',
                   source, re.S)

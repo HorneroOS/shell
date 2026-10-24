@@ -462,20 +462,27 @@ Variants {
                 }
 
                 function bars(): string {
-                    return JSON.stringify(bar.bars.map(b => ({
-                                    edge: b.position,
-                                    style: b.style,
-                                    geom: [b.x, b.y, b.width, b.height],
-                                    visible: b.visible,
-                                    shouldBeVisible: b.shouldBeVisible,
-                                    rects: b.visualRects,
-                                    islands: (b.children[0]?.item?.islands ?? []).map(i => ({
-                                                align: i.align,
-                                                geom: [i.x, i.y, i.width, i.height],
-                                                visible: i.visible,
-                                                groups: i.groupItems.map(g => [g.name, g.visible, g.width, g.height, g.x, g.y])
-                                            }))
-                                })));
+                    const output = [];
+                    for (const outputScreen of Quickshell.screens) {
+                        const outputBars = Visibilities.bars.get(outputScreen)?.bars ?? [];
+                        for (const outputBar of outputBars)
+                            output.push({
+                                screen: outputScreen.name,
+                                edge: outputBar.position,
+                                style: outputBar.style,
+                                geom: [outputBar.x, outputBar.y, outputBar.width, outputBar.height],
+                                visible: outputBar.visible,
+                                shouldBeVisible: outputBar.shouldBeVisible,
+                                rects: outputBar.visualRects,
+                                islands: (outputBar.children[0]?.item?.islands ?? []).map(i => ({
+                                    align: i.align,
+                                    geom: [i.x, i.y, i.width, i.height],
+                                    visible: i.visible,
+                                    groups: i.groupItems.map(g => [g.name, g.visible, g.width, g.height, g.x, g.y])
+                                }))
+                            });
+                    }
+                    return JSON.stringify(output);
                 }
 
                 function dump(): string {

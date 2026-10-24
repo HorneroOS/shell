@@ -212,6 +212,22 @@ def test_env_defaults_are_documented():
     assert "port=2222 user=hornero mem=3072 smp=2 fps=10" in proc.stdout
 
 
+def test_hyprland_environment_sets_runtime_dir_before_instance_signature():
+    proc = subprocess.run(
+        ["bash", "-c", "source lib/env.sh && vm_hypr_env"],
+        capture_output=True,
+        text=True,
+        check=False,
+        cwd=VM_DIR,
+    )
+    assert proc.returncode == 0, proc.stderr
+    lines = proc.stdout.splitlines()
+    assert lines[0] == "export XDG_RUNTIME_DIR=/run/user/$(id -u)"
+    assert lines[1].startswith(
+        'export HYPRLAND_INSTANCE_SIGNATURE=$(ls -t "$XDG_RUNTIME_DIR"/hypr/'
+    )
+
+
 def test_env_overrides_are_honored():
     env = dict(os.environ, VM_SSH_PORT="2233", VM_MEM="1024")
     proc = subprocess.run(

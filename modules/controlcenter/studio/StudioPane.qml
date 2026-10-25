@@ -14,9 +14,10 @@ import QtQuick.Layouts
 
 // Control Center › Studio: workload and application selection manager.
 // horneroctl is the single writer of Studio selection state: this pane
-// only invokes `horneroctl studio selection show|set` and
-// `horneroctl studio doctor` with fixed argv (no shell, no package
-// manager) and re-reads state after every run. Recording a selection is
+// only invokes `horneroctl studio selection show|set`,
+// `horneroctl studio doctor` and `horneroctl studio mode …` with fixed
+// argv (no shell, no package manager) and re-reads state after every
+// run. Recording a selection is
 // user intent only — no package is installed or removed here, and
 // removing a workload never touches user data, settings, or projects.
 // Studio remains Planned; nothing here claims QA-validated support.
@@ -70,15 +71,33 @@ Item {
     property string actionError: ""
     property var doctorChecks: []
     property bool busy: false
+    property string audioMode: "unknown"
+    property string previousAudioMode: ""
+    property bool performanceActive: false
+    property bool modeKnown: false
 
     function refresh(): void {
-        if (selectionProc.running || doctorProc.running)
+        if (selectionProc.running || doctorProc.running || modeProc.running)
             return;
         root.selectionError = "";
         selectionProc.command = ["horneroctl", "--json", "studio", "selection", "show"];
         selectionProc.running = true;
         doctorProc.command = ["horneroctl", "--json", "studio", "doctor"];
         doctorProc.running = true;
+        modeProc.command = ["horneroctl", "--json", "studio", "mode"];
+        modeProc.running = true;
+    }
+
+    // Mode actions go through the same fixed-argv writer as selection:
+    // horneroctl owns opt-in checks, previous-state recording, and
+    // restore. This pane never touches power or PipeWire directly.
+    function runModeAction(argv: var): void {
+        if (root.busy)
+            return;
+        root.busy = true;
+        root.actionError = "";
+        setProc.command = argv;
+        setProc.running = true;
     }
 
     function applyEnvelope(proc: Process, onOk: var): void {
@@ -163,6 +182,32 @@ Item {
                         }));
             } catch (e) {
                 root.doctorChecks = [];
+            }
+        }
+    }
+
+    Process {
+        id: modeProc
+
+        property string out: ""
+
+        stdout: SplitParser {
+            onRead: data => {
+                modeProc.out += data;
+            }
+        }
+        onStarted: modeProc.out = ""
+        onExited: {
+            try {
+                const env = JSON.parse(modeProc.out.trim());
+                const data = env.data || {};
+                root.audioMode = (data.audio_mode || "unknown").toString();
+                root.previousAudioMode = (data.previous_audio_mode || "").toString();
+                root.performanceActive = data.performance_active === "true";
+                root.modeKnown = env.ok === true;
+            } catch (e) {
+                root.modeKnown = false;
+                root.audioMode = "unknown";
             }
         }
     }
@@ -374,6 +419,72 @@ Item {
                             wrapMode: Text.WordWrap
                             color: Colours.palette.m3onSurfaceVariant
                             font.pointSize: Appearance.font.size.small
+                        }
+                    }
+
+                    SectionContainer {
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Performance")
+                            font.pointSize: Appearance.font.size.large
+                            font.weight: 600
+                        }
+
+                        // Presentation over `horneroctl studio mode`
+                        // (HorneroOS/hornero#286/#287) only. No QML-side
+                        // power, CPU, IRQ, GPU, or PipeWire tuning exists
+                        // here, and no performance gain is promised:
+                        // Temporary Performance can raise heat, fan noise,
+                        // and battery use.
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: root.modeKnown ? qsTr("Audio mode: %1").arg(root.audioMode) + (root.previousAudioMode.length > 0 ? qsTr(" (previous: %1)").arg(root.previousAudioMode) : "") : qsTr("Mode state unavailable (is horneroctl installed?)")
+                            wrapMode: Text.WordWrap
+                            color: Colours.palette.m3onSurfaceVariant
+                            font.pointSize: Appearance.font.size.small
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: root.performanceActive ? qsTr("Temporary Performance is active. Restoring returns the exact previous power profile.") : qsTr("Temporary Performance is off. Enabling switches the power profile through power-profiles-daemon and records the previous profile for exact restore; it can increase heat, fan noise, and battery use. No performance improvement is guaranteed.")
+                            wrapMode: Text.WordWrap
+                            color: Colours.palette.m3onSurfaceVariant
+                            font.pointSize: Appearance.font.size.small
+                        }
+
+                        TextButton {
+                            text: qsTr("Balanced")
+                            Accessible.name: qsTr("Set Studio audio mode to Balanced")
+                            enabled: !root.busy && root.modeKnown && root.audioMode !== "balanced"
+                            onClicked: root.runModeAction(["horneroctl", "--json", "studio", "mode", "audio", "balanced"])
+                        }
+
+                        TextButton {
+                            text: qsTr("Low Latency")
+                            Accessible.name: qsTr("Set Studio audio mode to Low Latency (explicit opt-in)")
+                            enabled: !root.busy && root.modeKnown && root.audioMode !== "low-latency"
+                            onClicked: root.runModeAction(["horneroctl", "--json", "studio", "mode", "audio", "low-latency", "--yes"])
+                        }
+
+                        TextButton {
+                            text: qsTr("Advanced")
+                            Accessible.name: qsTr("Set Studio audio mode to Advanced (explicit opt-in)")
+                            enabled: !root.busy && root.modeKnown && root.audioMode !== "advanced"
+                            onClicked: root.runModeAction(["horneroctl", "--json", "studio", "mode", "audio", "advanced", "--yes"])
+                        }
+
+                        TextButton {
+                            text: qsTr("Enable Temporary Performance")
+                            Accessible.name: qsTr("Enable Temporary Performance (explicit opt-in)")
+                            enabled: !root.busy && root.modeKnown && !root.performanceActive
+                            onClicked: root.runModeAction(["horneroctl", "--json", "studio", "mode", "performance", "--yes"])
+                        }
+
+                        TextButton {
+                            text: qsTr("Restore previous mode")
+                            Accessible.name: qsTr("Restore previous Studio mode and power profile")
+                            enabled: !root.busy && root.modeKnown && (root.previousAudioMode.length > 0 || root.performanceActive)
+                            onClicked: root.runModeAction(["horneroctl", "--json", "studio", "mode", "restore"])
                         }
                     }
 

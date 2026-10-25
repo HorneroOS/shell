@@ -75,6 +75,41 @@ Item {
                         text: qsTr("This plugin failed to load.")
                         color: Colours.palette.m3error
                     }
+
+                    RowLayout {
+                        spacing: Appearance.spacing.small
+
+                        StyledRect {
+                            Layout.preferredHeight: stateLabel.implicitHeight + 6
+                            Layout.preferredWidth: stateLabel.implicitWidth + 14
+                            radius: Appearance.rounding.full
+                            color: card.modelData.state === "failed" || card.modelData.state === "blocked" ? Colours.palette.m3errorContainer : card.modelData.state === "loaded" ? Colours.palette.m3primaryContainer : Colours.palette.m3surfaceContainerHigh
+
+                            StyledText {
+                                id: stateLabel
+
+                                anchors.centerIn: parent
+                                text: card.modelData.state === "loaded" ? qsTr("Loaded") : card.modelData.state === "failed" ? qsTr("Failed") : card.modelData.state === "blocked" ? qsTr("Blocked") : qsTr("Pending")
+                                font.pointSize: Appearance.font.size.smaller
+                                font.weight: 600
+                                color: card.modelData.state === "failed" || card.modelData.state === "blocked" ? Colours.palette.m3onErrorContainer : card.modelData.state === "loaded" ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurfaceVariant
+                            }
+                        }
+
+                        StyledText {
+                            visible: !!card.modelData.version
+                            text: "v" + (card.modelData.version || "")
+                            font.pointSize: Appearance.font.size.smaller
+                            color: Colours.palette.m3onSurfaceVariant
+                        }
+
+                        StyledText {
+                            visible: !!card.modelData.trust
+                            text: card.modelData.trust || ""
+                            font.pointSize: Appearance.font.size.smaller
+                            color: Colours.palette.m3onSurfaceVariant
+                        }
+                    }
                 }
             }
         }

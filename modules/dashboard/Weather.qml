@@ -429,7 +429,6 @@ Item {
                             Layout.alignment: Qt.AlignHCenter
                             text: new Date(forecastItem.modelData.date).toLocaleDateString(Qt.locale(), "MMM d")
                             font.pointSize: Appearance.font.size.small
-                            opacity: 0.7
                             color: Colours.palette.m3onSurfaceVariant
                         }
 
@@ -483,7 +482,7 @@ Item {
                 StyledText {
                     text: detailRoot.label
                     font.pointSize: Appearance.font.size.smaller
-                    opacity: 0.7
+                    color: Colours.palette.m3onSurfaceVariant
                     horizontalAlignment: Text.AlignLeft
                 }
                 StyledText {

@@ -271,21 +271,44 @@ Item {
                             anchors.margins: Appearance.padding.large
                             spacing: Appearance.spacing.small
 
-                            StyledText {
-                                text: `${row.modelData.name} ${row.modelData.version}`
-                                font.weight: 500
-                            }
-
-                            StyledText {
+                            RowLayout {
                                 Layout.fillWidth: true
-                                text: row.modelData.enabled
-                                    ? qsTr("Enabled — state: %1").arg(row.modelData.state)
-                                    : row.modelData.requestedEnabled
-                                        ? qsTr("Blocked — payload trust check failed")
-                                        : qsTr("Disabled")
-                                font.pointSize: Appearance.font.size.small
-                                color: Colours.palette.m3outline
-                                wrapMode: Text.Wrap
+                                spacing: Appearance.spacing.small
+
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 2
+
+                                    StyledText {
+                                        text: `${row.modelData.name} ${row.modelData.version}`
+                                        font.weight: 500
+                                    }
+
+                                    StyledText {
+                                        Layout.fillWidth: true
+                                        text: row.modelData.placement ? qsTr("Placement: %1").arg(row.modelData.placement) : qsTr("No placement")
+                                        font.pointSize: Appearance.font.size.small
+                                        color: Colours.palette.m3onSurfaceVariant
+                                        wrapMode: Text.Wrap
+                                    }
+                                }
+
+                                StyledRect {
+                                    Layout.preferredHeight: rowStateLabel.implicitHeight + 6
+                                    Layout.preferredWidth: rowStateLabel.implicitWidth + 14
+                                    radius: Appearance.rounding.full
+                                    color: !row.modelData.enabled && !row.modelData.requestedEnabled ? Colours.palette.m3surfaceContainerHigh : row.modelData.state === "loaded" ? Colours.palette.m3primaryContainer : row.modelData.state === "failed" || row.modelData.state === "blocked" ? Colours.palette.m3errorContainer : Colours.palette.m3surfaceContainerHigh
+
+                                    StyledText {
+                                        id: rowStateLabel
+
+                                        anchors.centerIn: parent
+                                        text: !row.modelData.enabled && !row.modelData.requestedEnabled ? qsTr("Disabled") : row.modelData.state === "loaded" ? qsTr("Loaded") : row.modelData.state === "failed" ? qsTr("Failed") : row.modelData.state === "blocked" ? qsTr("Blocked") : qsTr("Pending")
+                                        font.pointSize: Appearance.font.size.smaller
+                                        font.weight: 600
+                                        color: !row.modelData.enabled && !row.modelData.requestedEnabled ? Colours.palette.m3onSurfaceVariant : row.modelData.state === "loaded" ? Colours.palette.m3onPrimaryContainer : row.modelData.state === "failed" || row.modelData.state === "blocked" ? Colours.palette.m3onErrorContainer : Colours.palette.m3onSurfaceVariant
+                                    }
+                                }
                             }
 
                             StyledText {

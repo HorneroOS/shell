@@ -364,35 +364,46 @@ ColumnLayout {
                 Repeater {
                     model: groupCard.filteredRows
 
-                    RowLayout {
+                    StyledRect {
                         id: shortcutRow
 
                         required property var modelData
 
                         Layout.fillWidth: true
-                        spacing: Appearance.spacing.small
+                        implicitHeight: rowInner.implicitHeight + Appearance.padding.normal
+                        radius: Appearance.rounding.normal
+                        color: Colours.layer(Colours.palette.m3surfaceContainerHigh, 1)
 
                         RowLayout {
-                            Layout.preferredWidth: 230
-                            spacing: 4
+                            id: rowInner
 
-                            Repeater {
-                                model: shortcutRow.modelData.parts
+                            anchors.fill: parent
+                            anchors.leftMargin: Appearance.padding.normal
+                            anchors.rightMargin: Appearance.padding.normal
+                            spacing: Appearance.spacing.small
 
-                                Keycap {
-                                    required property var modelData
+                            RowLayout {
+                                Layout.preferredWidth: 230
+                                spacing: 4
 
-                                    text: modelData
+                                Repeater {
+                                    model: shortcutRow.modelData.parts
+
+                                    Keycap {
+                                        required property var modelData
+
+                                        text: modelData
+                                    }
                                 }
                             }
-                        }
 
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: shortcutRow.modelData.label
-                            font.pointSize: Appearance.font.size.smaller
-                            color: Colours.palette.m3onSurface
-                            clip: true
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: shortcutRow.modelData.label
+                                font.pointSize: Appearance.font.size.smaller
+                                color: Colours.palette.m3onSurface
+                                clip: true
+                            }
                         }
                     }
                 }

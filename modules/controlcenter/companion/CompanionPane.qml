@@ -276,6 +276,26 @@ Item {
                             value: hermesSessions.text
                         }
 
+                        DetailRow {
+                            label: qsTr("Tokens in")
+                            value: hermesUsage.data.inputTokens || "—"
+                        }
+
+                        DetailRow {
+                            label: qsTr("Tokens out")
+                            value: hermesUsage.data.outputTokens || "—"
+                        }
+
+                        DetailRow {
+                            label: qsTr("API calls")
+                            value: hermesUsage.data.apiCalls || "—"
+                        }
+
+                        DetailRow {
+                            label: qsTr("Usage sessions")
+                            value: hermesUsage.data.sessions || "—"
+                        }
+
                         RowLayout {
                             Layout.fillWidth: true
                             spacing: Appearance.spacing.small
@@ -467,6 +487,7 @@ Item {
             assistantStatusProc.running = true;
             hermesModel.refresh();
             hermesSessions.refresh();
+            hermesUsage.refresh();
         }
     }
 
@@ -552,6 +573,38 @@ Item {
                 hermesSessions.text = payload.ok ? ((payload.data ?? {}).count ?? "—").toString() : "—";
             } catch (e) {
                 hermesSessions.text = "—";
+            }
+        }
+    }
+
+    QtObject {
+        id: hermesUsage
+
+        property var data: ({})
+
+        function refresh(): void {
+            hermesUsageProc.out = "";
+            hermesUsageProc.command = ["horneroctl", "assistant", "usage", "--json"];
+            hermesUsageProc.running = true;
+        }
+    }
+
+    Process {
+        id: hermesUsageProc
+
+        property string out: ""
+
+        stdout: SplitParser {
+            onRead: data => {
+                hermesUsageProc.out += data;
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            try {
+                const payload = JSON.parse(hermesUsageProc.out.trim());
+                hermesUsage.data = payload.ok ? (payload.data ?? {}) : {};
+            } catch (e) {
+                hermesUsage.data = {};
             }
         }
     }

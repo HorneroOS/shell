@@ -54,6 +54,48 @@ Item {
         return c;
     }
 
+    function categoryOf(line: string): string {
+        if (!line.startsWith("["))
+            return qsTr("General");
+        const i = line.indexOf("] ");
+        return i > 1 ? line.slice(1, i) : qsTr("General");
+    }
+
+    // Friendly action label: Lua binds arrive as hl.dsp.* expressions,
+    // hyprlang binds as dispatcher text; show the command for exec_cmd
+    // and the bare dispatcher otherwise.
+    function actionOf(line: string): string {
+        const a = line.indexOf(" -> ");
+        if (a < 0)
+            return line;
+        let action = line.slice(a + 4).trim();
+        const exec = /^hl\.dsp\.exec_cmd\("((?:[^"\\]|\\.)*)"\)$/.exec(action);
+        if (exec)
+            return exec[1];
+        if (action.startsWith("hl.dsp."))
+            action = action.slice(7);
+        return action;
+    }
+
+    function chipsOf(line: string): var {
+        return comboOf(line).split("+").map(p => p.trim()).filter(p => p !== "");
+    }
+
+    // Shown binds grouped by their [Category] prefix, first-seen order.
+    readonly property var grouped: {
+        const byName = {};
+        const order = [];
+        for (const line of shown) {
+            const cat = categoryOf(line);
+            if (byName[cat] === undefined) {
+                byName[cat] = [];
+                order.push(cat);
+            }
+            byName[cat].push(line);
+        }
+        return order.map(name => ({ name, rows: byName[name] }));
+    }
+
     function applyRebind(): void {
         if (root.editOld === "" || root.newCombo.trim() === "")
             return;
@@ -236,31 +278,98 @@ Item {
                         }
 
                         Repeater {
-                            model: root.shown
+                            model: root.grouped
 
-                            delegate: RowLayout {
-                                required property string modelData
+                            delegate: ColumnLayout {
+                                required property var modelData
 
                                 Layout.fillWidth: true
                                 spacing: Appearance.spacing.small
 
-                                StyledText {
+                                RowLayout {
                                     Layout.fillWidth: true
-                                    text: modelData
-                                    font.family: Appearance.font.family.mono
-                                    font.pointSize: Appearance.font.size.small
-                                    color: Colours.palette.m3onSurface
-                                    wrapMode: Text.Wrap
+                                    spacing: Appearance.spacing.small
+
+                                    MaterialIcon {
+                                        text: "keyboard"
+                                        color: Colours.palette.m3primary
+                                        font.pointSize: Appearance.font.size.small
+                                    }
+
+                                    StyledText {
+                                        text: modelData.name
+                                        font.pointSize: Appearance.font.size.small
+                                        font.weight: 600
+                                        color: Colours.palette.m3onSurface
+                                    }
+
+                                    StyledRect {
+                                        Layout.preferredHeight: countLabel.implicitHeight + 6
+                                        Layout.preferredWidth: countLabel.implicitWidth + 14
+                                        color: Colours.palette.m3primaryContainer
+                                        radius: Appearance.rounding.full
+
+                                        StyledText {
+                                            id: countLabel
+
+                                            anchors.centerIn: parent
+                                            text: modelData.rows.length
+                                            font.pointSize: Appearance.font.size.smaller
+                                            font.weight: 600
+                                            color: Colours.palette.m3onPrimaryContainer
+                                        }
+                                    }
+
+                                    Rectangle {
+                                        Layout.fillWidth: true
+                                        Layout.preferredHeight: 1
+                                        Layout.alignment: Qt.AlignVCenter
+                                        color: Colours.palette.m3outlineVariant
+                                    }
                                 }
 
-                                TextButton {
-                                    visible: root.managed && root.comboOf(modelData) !== ""
-                                    text: qsTr("Rebind")
-                                    type: TextButton.Tonal
-                                    onClicked: {
-                                        root.editOld = root.comboOf(modelData);
-                                        root.newCombo = "";
-                                        root.resetArmed = false;
+                                Repeater {
+                                    model: modelData.rows
+
+                                    delegate: RowLayout {
+                                        required property string modelData
+
+                                        Layout.fillWidth: true
+                                        spacing: Appearance.spacing.small
+
+                                        RowLayout {
+                                            Layout.preferredWidth: 250
+                                            spacing: 4
+
+                                            Repeater {
+                                                model: root.chipsOf(modelData)
+
+                                                Keycap {
+                                                    required property string modelData
+
+                                                    text: modelData
+                                                }
+                                            }
+                                        }
+
+                                        StyledText {
+                                            Layout.fillWidth: true
+                                            text: root.actionOf(modelData)
+                                            font.pointSize: Appearance.font.size.small
+                                            color: Colours.palette.m3onSurface
+                                            wrapMode: Text.Wrap
+                                        }
+
+                                        TextButton {
+                                            visible: root.managed && root.comboOf(modelData) !== ""
+                                            text: qsTr("Rebind")
+                                            type: TextButton.Tonal
+                                            onClicked: {
+                                                root.editOld = root.comboOf(modelData);
+                                                root.newCombo = "";
+                                                root.resetArmed = false;
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -389,5 +498,29 @@ Item {
 
         leftThickness: 0
         rightThickness: Appearance.padding.normal
+    }
+
+    // One physical-looking key, same treatment as the Welcome cheatsheet.
+    component Keycap: StyledRect {
+        required property string text
+
+        implicitWidth: capLabel.implicitWidth + 16
+        implicitHeight: capLabel.implicitHeight + 8
+
+        color: Colours.palette.m3surfaceContainerHighest
+        radius: Appearance.rounding.small
+        border.width: 1
+        border.color: Colours.palette.m3outlineVariant
+
+        StyledText {
+            id: capLabel
+
+            anchors.centerIn: parent
+            text: parent.text
+            mono: true
+            font.pointSize: Appearance.font.size.smaller
+            font.weight: 600
+            color: Colours.palette.m3onSurface
+        }
     }
 }

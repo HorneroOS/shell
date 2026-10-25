@@ -197,13 +197,14 @@ A passing `vm-smoke.sh` run writes `artifacts/assertions.json` with
 | VM booted, SSH reachable | `boot.sh` pidfile plus `wait-ssh.sh` probe |
 | Guest stack installed | `provision.sh` marker plus package installs |
 | Checkout deployed intact | `shell.qml` and `hyprland.conf` exist in the guest |
+| Stable desktop background | A valid composed wallpaper is retained; shell-only runs seed the checked-in `docs/assets/desktop-hero.png` image |
 | Compositor alive | `pgrep -x Hyprland` in the guest |
 | Shell alive | `pgrep -x qs` (fallback `quickshell`) in the guest |
 | Compositor IPC responds | `hyprctl -j monitors` returns an output name |
 | Shell IPC responds | `qs ipc call drawers list` returns drawer names |
 | Settings Terminal opens and focuses | The exact read-only `horneroctl --json config default-apps list` query returns valid JSON within 15 seconds; `controlCenter open terminal` succeeds and Hyprland reports the Settings window as active |
 | Terminal Settings renders | `horneroctl` responds and `controlcenter-terminal.png` passes the nonblank check and content-region color floor |
-| Control Center destinations render | Each Settings window is mapped, its right-hand content region contains at least 500 sampled colors, and at least 5% of sampled pixels differ from a framebuffer capture taken immediately before opening the pane |
+| Control Center destinations render | Each Settings window is mapped; only the interior Settings body (excluding the desktop and navigation rail) is checked for at least 500 sampled colors and at least 5% changed pixels from a framebuffer capture taken immediately before opening the pane |
 | Screen is really rendering | `grim` probe, then the final capture must pass `check_screenshot.py` |
 | Recording captured | `wf-recorder` file exists and is non-empty (screencopy path only) |
 

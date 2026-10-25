@@ -31,7 +31,7 @@ timeout 5 grim '$remote_image'" </dev/null > /dev/null 2>&1; then
 
         python3 "$VM_LIB_DIR/check_screenshot.py" "$image" --quiet || return 2
         if python3 "$VM_LIB_DIR/check_screenshot.py" --min-colors 500 \
-            --region 320,80,940,620 --different-from "$baseline" \
+            --region 200,80,1030,600 --different-from "$baseline" \
             --min-diff-ratio 0.05 --quiet "$image"; then
             echo "Settings content rendered after ${attempt} capture(s)"
             return 0
@@ -39,7 +39,7 @@ timeout 5 grim '$remote_image'" </dev/null > /dev/null 2>&1; then
 
         if [[ "$attempt" -eq "$max_attempts" ]]; then
             python3 "$VM_LIB_DIR/check_screenshot.py" --min-colors 500 \
-                --region 320,80,940,620 --different-from "$baseline" \
+                --region 200,80,1030,600 --different-from "$baseline" \
                 --min-diff-ratio 0.05 "$image"
             return 1
         fi

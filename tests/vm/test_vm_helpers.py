@@ -84,6 +84,27 @@ def test_colorful_screenshot_passes(tmp_path):
     assert f"PASS {shot}" in proc.stdout
 
 
+def test_region_check_rejects_colorful_background_around_blank_settings(tmp_path):
+    shot = tmp_path / "blank-settings-over-colorful-desktop.png"
+    rows = []
+    for y in range(72):
+        row = bytearray()
+        for x in range(128):
+            if 32 <= x < 96 and 12 <= y < 60:
+                row.extend((16, 12, 10))
+            else:
+                row.extend(((x * 17) % 256, (y * 29) % 256, ((x + y) * 11) % 256))
+        rows.append(bytes(row))
+    write_png(shot, 128, 72, rows)
+
+    whole_frame = run_checker(str(shot))
+    blank_settings = run_checker("--region", "32,12,64,48", str(shot))
+
+    assert whole_frame.returncode == 0, whole_frame.stdout
+    assert blank_settings.returncode == 1
+    assert f"FAIL {shot}" in blank_settings.stdout
+
+
 def test_last_json_object_ignores_locale_warnings():
     proc = subprocess.run(
         [sys.executable, str(LAST_JSON_OBJECT)],

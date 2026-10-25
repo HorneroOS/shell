@@ -123,7 +123,14 @@ ClippingRectangle {
             if (pane.paneIndex !== root.session.activeIndex)
                 return;
             const item = loader.item;
-            console.log(`[ControlCenter] active-pane=${pane.paneIndex} root=${root.width}x${root.height} stack=${layout.width}x${layout.height}+${layout.y} pane=${pane.x},${pane.y} ${pane.width}x${pane.height} loader=${loader.status} item=${item ? `${item.width}x${item.height}` : "null"}`);
+            console.log(`[ControlCenter] active-pane=${pane.paneIndex} root=${root.width}x${root.height} visible=${root.visible}/${root.opacity} stack=${layout.width}x${layout.height}+${layout.y} visible=${layout.visible}/${layout.opacity} pane=${pane.x},${pane.y} ${pane.width}x${pane.height} visible=${pane.visible}/${pane.opacity} loader=${loader.status}/${loader.visible}/${loader.opacity} item=${item ? `${item.width}x${item.height} visible=${item.visible} opacity=${item.opacity} scale=${item.scale}` : "null"}`);
+        }
+
+        Timer {
+            id: settledGeometryTimer
+            interval: Appearance.anim.durations.small + 100
+            repeat: false
+            onTriggered: pane.logActiveGeometry()
         }
 
         Loader {
@@ -152,6 +159,8 @@ ClippingRectangle {
             target: root.session
             function onActiveIndexChanged(): void {
                 pane.updateActive();
+                if (pane.paneIndex === root.session.activeIndex)
+                    settledGeometryTimer.restart();
                 Qt.callLater(pane.logActiveGeometry);
             }
             function onWarmLabelChanged(): void {

@@ -27,7 +27,7 @@ RowLayout {
         interval: 1200
         running: true
         repeat: false
-        onTriggered: console.log(`[SplitPaneLayout] root=${root.width}x${root.height} implicit=${root.implicitWidth}x${root.implicitHeight} left=${leftPane.x},${leftPane.y} ${leftPane.width}x${leftPane.height} loader=${leftLoader.width}x${leftLoader.height} item=${leftLoader.item ? `${leftLoader.item.width}x${leftLoader.item.height}` : "null"} right=${rightPane.x},${rightPane.y} ${rightPane.width}x${rightPane.height} loader=${rightLoader.width}x${rightLoader.height} item=${rightLoader.item ? `${rightLoader.item.width}x${rightLoader.item.height}` : "null"}`)
+        onTriggered: console.log(`[SplitPaneLayout] root=${root.width}x${root.height} visible=${root.visible}/${root.opacity} implicit=${root.implicitWidth}x${root.implicitHeight} left=${leftPane.x},${leftPane.y} ${leftPane.width}x${leftPane.height} visible=${leftPane.visible}/${leftPane.opacity} loader=${leftLoader.width}x${leftLoader.height} visible=${leftLoader.visible}/${leftLoader.opacity} item=${leftLoader.item ? `${leftLoader.item.width}x${leftLoader.item.height} visible=${leftLoader.item.visible} opacity=${leftLoader.item.opacity} scale=${leftLoader.item.scale}` : "null"} right=${rightPane.x},${rightPane.y} ${rightPane.width}x${rightPane.height} visible=${rightPane.visible}/${rightPane.opacity} loader=${rightLoader.width}x${rightLoader.height} visible=${rightLoader.visible}/${rightLoader.opacity} item=${rightLoader.item ? `${rightLoader.item.width}x${rightLoader.item.height} visible=${rightLoader.item.visible} opacity=${rightLoader.item.opacity} scale=${rightLoader.item.scale}` : "null"}`)
     }
 
     Item {

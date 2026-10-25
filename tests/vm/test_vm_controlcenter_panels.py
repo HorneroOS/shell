@@ -63,13 +63,13 @@ def test_matrix_uses_the_isolated_vm_and_checks_every_capture() -> None:
     assert '"${BASELINE_SCREENSHOT}"; then' in smoke
     assert 'BASELINE_SCREENSHOT="${SCREENSHOT_DIR}/desktop-before-settings.png"' in smoke
     assert 'python3 "$VM_LIB_DIR/check_screenshot.py" "$image" --quiet' in capture
-    assert '--region 320,80,940,620 --different-from "$baseline"' in capture
+    assert '--region 200,80,1030,600 --different-from "$baseline"' in capture
     assert '--min-diff-ratio 0.05 --quiet "$image"' in capture
     assert 'local max_attempts=10' in capture
     assert 'sleep 0.5' in capture
     assert 'grim did not answer; falling back to the QEMU framebuffer' in capture
     assert 'logs/controlcenter-failure.log' in script
-    assert '--region 320,80,940,620' in capture
+    assert '--region 200,80,1030,600' in capture
     assert 'hyprctl -j activewindow' in smoke
     assert 'timeout 2s hyprctl -j activewindow 2>/dev/null' in smoke
     assert 'qemu-screenshot.sh' in smoke

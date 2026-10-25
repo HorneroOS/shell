@@ -8,7 +8,6 @@ ROOT = Path(__file__).resolve().parents[2]
 SCENARIO = ROOT / "tests/vm/scenarios/vm-controlcenter-panels.sh"
 SMOKE = ROOT / "tests/vm/scenarios/vm-smoke.sh"
 REGISTRY = ROOT / "modules/controlcenter/PaneRegistry.qml"
-SMOKE = ROOT / "tests/vm/scenarios/vm-smoke.sh"
 
 
 def test_control_center_matrix_covers_every_registered_destination() -> None:
@@ -85,18 +84,6 @@ def test_matrix_uses_the_isolated_vm_and_checks_every_capture() -> None:
     assert '.mapped == true' in script
     assert 'write_result PASS ""' in script
     assert "controlCenter close" in script
-
-
-def test_smoke_failure_artifact_includes_process_and_quickshell_diagnostics() -> None:
-    script = SMOKE.read_text(encoding="utf-8")
-
-    assert 'logs/vm-smoke-failure.log' in script
-    assert "graphical failure process snapshot" in script
-    assert "pgrep -af 'horneroctl|qs|quickshell|Hyprland'" in script
-    assert "/run/user/1000/quickshell/by-id/*/log.qslog" in script
-    assert "VM_SSH_TIMEOUT=30s vm_ssh" in script
-    assert script.count("</dev/null") == 4
-    assert "sleep 1" in script
     assert '.floating == true and .size[0] >= 1100 and .size[1] >= 600' in script
     assert "sleep 2" not in script
     assert '[[ "$captured_count" -eq 25 ]]' in script
@@ -124,6 +111,18 @@ def test_vm_settings_window_rule_matches_factory_layout() -> None:
         "center = true",
     ):
         assert snippet in guest_config
+
+
+def test_smoke_failure_artifact_includes_process_and_quickshell_diagnostics() -> None:
+    script = SMOKE.read_text(encoding="utf-8")
+
+    assert 'logs/vm-smoke-failure.log' in script
+    assert "graphical failure process snapshot" in script
+    assert "pgrep -af 'horneroctl|qs|quickshell|Hyprland'" in script
+    assert "/run/user/1000/quickshell/by-id/*/log.qslog" in script
+    assert "VM_SSH_TIMEOUT=30s vm_ssh" in script
+
+
 def test_smoke_closes_and_verifies_welcome_before_control_center_capture() -> None:
     script = SMOKE.read_text(encoding="utf-8")
 

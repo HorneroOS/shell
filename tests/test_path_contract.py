@@ -28,7 +28,7 @@ def test_no_hardcoded_home_in_qml():
 def test_presets_installed_by_cmake():
     cmake = (ROOT / "CMakeLists.txt").read_text()
     assert "presets" in cmake
-    assert len(list((ROOT / "presets").glob("*.json"))) == 15
+    assert len(list((ROOT / "presets").glob("*.json"))) == 16
 
 
 def test_shell_appearance_uses_native_hornero_contracts():

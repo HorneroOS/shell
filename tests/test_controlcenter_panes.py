@@ -679,3 +679,13 @@ def test_studio_pane_audio_section_reuses_audio_service_without_inventing_metric
     # Empty/unsupported states are explicit accessible text.
     assert "No output device detected" in pane
     assert "No active application streams" in pane
+
+
+def test_studio_pane_readiness_checklist_never_fakes_external_gates():
+    pane = (CC / "studio" / "StudioPane.qml").read_text(encoding="utf-8")
+    assert 'qsTr("Readiness")' in pane
+    assert "Selection recorded" in pane
+    assert "pending evidence, not passed" in pane
+    # Checklist state derives from recorded selection + doctor data only.
+    assert "root.selectionState" in pane
+    assert "root.doctorChecks" in pane

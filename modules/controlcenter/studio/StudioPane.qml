@@ -228,6 +228,27 @@ Item {
                     SectionContainer {
                         StyledText {
                             Layout.fillWidth: true
+                            text: qsTr("Readiness")
+                            font.pointSize: Appearance.font.size.large
+                            font.weight: 600
+                        }
+
+                        // First-run checklist derived only from recorded
+                        // selection state and read-only doctor data.
+                        // Anything owned by the installer or QA is shown
+                        // as pending evidence, never as passed.
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: (root.selectionState === "recorded" ? qsTr("✓ Selection recorded") : qsTr("○ Record a selection below")) + "\n" + (root.doctorChecks.length > 0 ? qsTr("✓ Audio stack health reported by horneroctl") : qsTr("○ Audio stack health unavailable (is horneroctl installed?)")) + "\n" + qsTr("○ Installer onboarding and QA acceptance: pending evidence, not passed")
+                            wrapMode: Text.WordWrap
+                            color: Colours.palette.m3onSurfaceVariant
+                            font.pointSize: Appearance.font.size.small
+                        }
+                    }
+
+                    SectionContainer {
+                        StyledText {
+                            Layout.fillWidth: true
                             text: qsTr("Selection")
                             font.pointSize: Appearance.font.size.large
                             font.weight: 600

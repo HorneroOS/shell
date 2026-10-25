@@ -59,6 +59,7 @@ def test_matrix_uses_the_isolated_vm_and_checks_every_capture() -> None:
     assert 'vm_ssh "$(vm_hypr_env)\ntimeout 5 grim' in capture
     assert script.count("VM_SSH_TIMEOUT=30s vm_ssh") == 3
     assert 'vm_capture_controlcenter_content /tmp/vm-controlcenter-terminal.png \\' in smoke
+    assert 'sleep 2' in (ROOT / "tests/vm/lib/controlcenter-capture.sh").read_text()
     assert '"${BASELINE_SCREENSHOT}"; then' in smoke
     assert 'BASELINE_SCREENSHOT="${SCREENSHOT_DIR}/desktop-before-settings.png"' in smoke
     assert 'python3 "$VM_LIB_DIR/check_screenshot.py" "$image" --quiet' in capture

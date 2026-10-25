@@ -294,6 +294,34 @@ def test_control_center_split_keeps_details_space_on_compact_windows():
     assert "Layout.minimumWidth: Math.min(root.leftMinimumWidth, parent.width * root.leftWidthRatio)" in split_layout
 
 
+def test_flickable_column_content_uses_its_implicit_height():
+    for relative in (
+        "components/DeviceList.qml",
+        "components/DeviceDetails.qml",
+        "bluetooth/Settings.qml",
+        "launcher/Settings.qml",
+        "network/NetworkSettings.qml",
+        "network/EthernetSettings.qml",
+        "network/WirelessSettings.qml",
+        "network/VpnSettings.qml",
+    ):
+        source = (CC / relative).read_text()
+        assert "height: implicitHeight" in source, f"{relative} must expose its Flickable content height"
+
+    for relative, layout_id in (
+        ("network/NetworkingPane.qml", "leftContent"),
+        ("dashboard/DashboardPane.qml", "dashboardLayout"),
+        ("taskbar/TaskbarPane.qml", "sidebarLayout"),
+        ("appearance/AppearancePane.qml", "sidebarLayout"),
+        ("audio/AudioPane.qml", "leftContent"),
+        ("audio/AudioPane.qml", "contentLayout"),
+        ("launcher/LauncherPane.qml", "debugLayout"),
+    ):
+        source = (CC / relative).read_text()
+        layout = source.split(f"id: {layout_id}", 1)[1].split("\n                }", 1)[0]
+        assert "height: implicitHeight" in layout, f"{relative} {layout_id} must expose its Flickable content height"
+
+
 def test_repeated_control_center_action_columns_share_a_stable_width():
     terminal = (CC / "terminal" / "TerminalPane.qml").read_text()
     power = (CC / "power" / "PowerPane.qml").read_text()

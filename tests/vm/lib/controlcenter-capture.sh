@@ -16,6 +16,10 @@ vm_capture_controlcenter_content() {
     local attempt
     local max_attempts=10
 
+    # The window title can update before the first composed Settings frame
+    # reaches QEMU's framebuffer.
+    sleep 2
+
     for attempt in $(seq 1 "$max_attempts"); do
         if vm_ssh "$(vm_hypr_env)
 timeout 5 grim '$remote_image'" </dev/null > /dev/null 2>&1; then

@@ -15,6 +15,8 @@ import QtQuick.Layouts
 ColumnLayout {
     id: root
 
+    height: implicitHeight
+
     required property Session session
 
     spacing: Appearance.spacing.normal
@@ -164,6 +166,7 @@ ColumnLayout {
 
                 anchors.left: parent.left
                 anchors.right: parent.right
+                anchors.top: parent.top
                 session: root.session
             }
         }

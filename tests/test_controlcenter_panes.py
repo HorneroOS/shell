@@ -66,10 +66,14 @@ def test_registry_components_exist():
 
 def test_pane_stack_layout_has_geometry_for_translated_pages():
     panes = (CC / "Panes.qml").read_text()
-    layout = panes.split("ColumnLayout {", 1)[1].split("\n    }", 1)[0]
+    layout = panes.split("Item {\n        id: layout", 1)[1].split("\n    }", 1)[0]
     assert "width: root.width" in layout
-    assert "height: implicitHeight" in layout
+    assert "height: root.height * PaneRegistry.count" in layout
     assert "y: -root.session.activeIndex * root.height" in layout
+    pane = layout.split("Pane {", 1)[1].split("\n            }", 1)[0]
+    assert "y: index * root.height" in pane
+    assert "height: root.height" in pane
+    assert "width: root.width" in pane
 
 
 def test_registry_ids_unique_and_labels_sane():

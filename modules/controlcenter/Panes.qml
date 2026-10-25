@@ -51,17 +51,14 @@ ClippingRectangle {
         }
     }
 
-    ColumnLayout {
+    Item {
         id: layout
 
-        // This layout is translated vertically to reveal one pane at a time.
-        // Give it the full stacked geometry explicitly; an unanchored layout
-        // has zero actual size even though its children have implicit sizes.
+        // Keep every page exactly one viewport tall so translating the stack
+        // by activeIndex cannot expose a neighbouring pane's contents.
         width: root.width
-        height: implicitHeight
-        spacing: 0
+        height: root.height * PaneRegistry.count
         y: -root.session.activeIndex * root.height
-        clip: true
 
         property bool initialOpeningComplete: false
 
@@ -80,6 +77,10 @@ ClippingRectangle {
                 required property int index
                 paneIndex: index
                 componentPath: PaneRegistry.getByIndex(index).component
+                x: 0
+                y: index * root.height
+                width: root.width
+                height: root.height
             }
         }
 
@@ -107,8 +108,8 @@ ClippingRectangle {
             const isWarm = warmIndex >= 0 && pane.paneIndex === warmIndex;
 
             // Keep only the active pane, its immediate neighbours, and a hovered
-            // (prefetched) pane. Never keep every visited pane alive — that made
-            // the ColumnLayout grow and y-animation feel increasingly sluggish.
+            // (prefetched) pane. Never keep every visited pane alive; it made
+            // the page stack grow and y-animation feel increasingly sluggish.
             let shouldBeActive = false;
             if (!layout.initialOpeningComplete)
                 shouldBeActive = isActivePane;

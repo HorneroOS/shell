@@ -712,3 +712,26 @@ def test_studio_pane_performance_controls_use_only_horneroctl_mode():
     assert "No performance improvement is guaranteed" in pane
     assert "Mode state unavailable" in pane
     assert 'Accessible.name: qsTr("Restore previous Studio mode and power profile")' in pane
+
+
+def test_studio_pane_render_jobs_surface_is_typed_and_approval_gated():
+    pane = (CC / "studio" / "StudioPane.qml").read_text(encoding="utf-8")
+    assert 'qsTr("Render jobs (experimental)")' in pane
+    # Typed horneroctl job state only (HorneroOS/hornero#289): list/log
+    # reads and explicit per-job cancel; no submission or inference.
+    assert '"horneroctl", "--json", "studio", "jobs", "list"' in pane
+    assert '"studio", "jobs", "log", id' in pane
+    assert '"studio", "jobs", "cancel", modelData.id' in pane
+    assert '"studio", "jobs", "submit"' not in pane
+    assert '"studio", "jobs", "run"' not in pane
+    # Cancel is only offered for queued jobs and never deletes files.
+    assert 'modelData.state === "queued"' in pane
+    assert "never deletes source or output files" in pane
+    # No agent/Companion runtime, no process inference, no shell.
+    for forbidden in ("ps aux", "pgrep", "pkill", "sh -c", "bash -c",
+                      "hermes", "Hermes", "companion", "Companion"):
+        assert forbidden not in pane, forbidden
+    # Logs come from horneroctl (redacted on read), shown as text only.
+    assert "redacted log" in pane.lower()
+    assert "No Studio jobs recorded yet" in pane
+    assert 'Accessible.name: qsTr("Cancel queued job %1")' in pane

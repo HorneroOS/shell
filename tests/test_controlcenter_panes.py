@@ -321,6 +321,13 @@ def test_flickable_column_content_uses_its_implicit_height():
         layout = source.split(f"id: {layout_id}", 1)[1].split("\n                }", 1)[0]
         assert "height: implicitHeight" in layout, f"{relative} {layout_id} must expose its Flickable content height"
 
+    section = (ROOT / "components" / "SectionContainer.qml").read_text()
+    assert "id: contentColumn" in section
+    assert "height: implicitHeight" in section
+    header = (CC / "components" / "SettingsHeader.qml").read_text()
+    assert "id: column" in header
+    assert "height: implicitHeight" in header
+
 
 def test_repeated_control_center_action_columns_share_a_stable_width():
     terminal = (CC / "terminal" / "TerminalPane.qml").read_text()

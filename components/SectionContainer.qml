@@ -26,6 +26,7 @@ StyledRect {
         anchors.top: root.alignTop ? parent.top : undefined
         anchors.verticalCenter: root.alignTop ? undefined : parent.verticalCenter
         anchors.margins: Appearance.padding.large
+        height: implicitHeight
 
         spacing: root.contentSpacing
     }

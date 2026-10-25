@@ -51,12 +51,14 @@ ClippingRectangle {
         }
     }
 
-    ColumnLayout {
+    Item {
         id: layout
 
-        spacing: 0
+        // Keep every page exactly one viewport tall so translating the stack
+        // by activeIndex cannot expose a neighbouring pane's contents.
+        width: root.width
+        height: root.height * PaneRegistry.count
         y: -root.session.activeIndex * root.height
-        clip: true
 
         property bool initialOpeningComplete: false
 
@@ -75,6 +77,10 @@ ClippingRectangle {
                 required property int index
                 paneIndex: index
                 componentPath: PaneRegistry.getByIndex(index).component
+                x: 0
+                y: index * root.height
+                width: root.width
+                height: root.height
             }
         }
 
@@ -102,8 +108,8 @@ ClippingRectangle {
             const isWarm = warmIndex >= 0 && pane.paneIndex === warmIndex;
 
             // Keep only the active pane, its immediate neighbours, and a hovered
-            // (prefetched) pane. Never keep every visited pane alive — that made
-            // the ColumnLayout grow and y-animation feel increasingly sluggish.
+            // (prefetched) pane. Never keep every visited pane alive; it made
+            // the page stack grow and y-animation feel increasingly sluggish.
             let shouldBeActive = false;
             if (!layout.initialOpeningComplete)
                 shouldBeActive = isActivePane;
@@ -111,6 +117,20 @@ ClippingRectangle {
                 shouldBeActive = isActivePane || diff <= 1 || isWarm;
 
             loader.active = shouldBeActive;
+        }
+
+        function logActiveGeometry(): void {
+            if (pane.paneIndex !== root.session.activeIndex)
+                return;
+            const item = loader.item;
+            console.log(`[ControlCenter] active-pane=${pane.paneIndex} root=${root.width}x${root.height} visible=${root.visible}/${root.opacity} stack=${layout.width}x${layout.height}+${layout.y} visible=${layout.visible}/${layout.opacity} pane=${pane.x},${pane.y} ${pane.width}x${pane.height} visible=${pane.visible}/${pane.opacity} loader=${loader.status}/${loader.visible}/${loader.opacity} item=${item ? `${item.width}x${item.height} visible=${item.visible} opacity=${item.opacity} scale=${item.scale}` : "null"}`);
+        }
+
+        Timer {
+            id: settledGeometryTimer
+            interval: Appearance.anim.durations.small + 100
+            repeat: false
+            onTriggered: pane.logActiveGeometry()
         }
 
         Loader {
@@ -122,6 +142,9 @@ ClippingRectangle {
             asynchronous: true
 
             Component.onCompleted: Qt.callLater(pane.updateActive)
+
+            onStatusChanged: pane.logActiveGeometry()
+            onLoaded: pane.logActiveGeometry()
 
             onActiveChanged: {
                 if (active && !item) {
@@ -136,6 +159,9 @@ ClippingRectangle {
             target: root.session
             function onActiveIndexChanged(): void {
                 pane.updateActive();
+                if (pane.paneIndex === root.session.activeIndex)
+                    settledGeometryTimer.restart();
+                Qt.callLater(pane.logActiveGeometry);
             }
             function onWarmLabelChanged(): void {
                 pane.updateActive();

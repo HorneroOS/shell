@@ -1027,6 +1027,7 @@ Item {
                     id: sidebarLayout
                     anchors.left: parent.left
                     anchors.right: parent.right
+                    height: implicitHeight
                     spacing: Appearance.spacing.small
 
                     readonly property var rootPane: sidebarFlickable.rootPane

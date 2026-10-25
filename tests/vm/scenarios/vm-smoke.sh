@@ -14,6 +14,9 @@ VM_LIB_DIR="${VM_ROOT_SMOKE}/lib"
 # shellcheck source=tests/vm/lib/env.sh
 # shellcheck disable=SC1091 # path resolves at runtime; use shellcheck -x to follow it
 source "${VM_LIB_DIR}/env.sh"
+# shellcheck source=tests/vm/lib/controlcenter-capture.sh
+# shellcheck disable=SC1091
+source "${VM_LIB_DIR}/controlcenter-capture.sh"
 
 SKIP_PROVISION=0
 for arg in "$@"; do
@@ -132,32 +135,106 @@ QS_BIN=\$(command -v qs || command -v quickshell)
 \$QS_BIN ipc call drawers list")" || fail "shell IPC responds"
 [[ -n "${IPC_DRAWERS}" ]] || fail "shell IPC empty"
 
+# A first-login Welcome window is a top-level onboarding surface that can
+# cover Settings in a fresh VM. Close it before exercising Control Center IPC.
+echo "==> dismissing first-login Welcome before Settings checks"
+vm_ssh "$(vm_hypr_env)
+QS_BIN=\$(command -v qs || command -v quickshell)
+\$QS_BIN ipc call welcome close" > /dev/null || fail "Welcome close IPC"
+WELCOME_STATUS_RAW="$(vm_ssh "$(vm_hypr_env)
+QS_BIN=\$(command -v qs || command -v quickshell)
+\$QS_BIN ipc call welcome status")" || fail "Welcome status IPC"
+if ! WELCOME_STATUS="$(python3 "$VM_LIB_DIR/last-json-object.py" <<<"${WELCOME_STATUS_RAW}")"; then
+    echo "Welcome status IPC did not return a JSON object: ${WELCOME_STATUS_RAW}" >&2
+    fail "Welcome status JSON"
+fi
+if ! jq -e '.open == false' <<<"${WELCOME_STATUS}" > /dev/null; then
+    echo "Welcome remained open before Settings checks: ${WELCOME_STATUS}" >&2
+    fail "Welcome overlay still open"
+fi
+
+# Run the exact read-only CLI query used by TerminalPane before opening the
+# window. This separates a stalled horneroctl backend from a QML process that
+# fails to consume an otherwise successful response.
+echo "==> checking Terminal settings CLI contract"
+if TERMINAL_DEFAULTS="$(vm_ssh "$(vm_hypr_env)
+export PATH=\$HOME/.local/bin:\$PATH
+timeout 15s horneroctl --json config default-apps list")"; then
+    if ! jq -e '.ok == true and (.data.terminals_available | type == "string")' \
+        <<<"${TERMINAL_DEFAULTS}" > /dev/null; then
+        echo "Terminal settings CLI returned an invalid response: ${TERMINAL_DEFAULTS}" >&2
+        fail "Terminal settings CLI contract"
+    fi
+else
+    echo "Terminal settings CLI failed or timed out: ${TERMINAL_DEFAULTS}" >&2
+    fail "Terminal settings CLI contract"
+fi
+
 # Exercise the Settings focus path that can race Hyprland's toplevel
 # registration. The active-window assertion proves the deep-linked Terminal
 # pane became usable, not merely that the IPC handler accepted the request.
 echo "==> opening Control Center Terminal settings"
+BASELINE_SCREENSHOT="${SCREENSHOT_DIR}/desktop-before-settings.png"
+bash "${VM_LIB_DIR}/qemu-screenshot.sh" "${BASELINE_SCREENSHOT}" \
+    || fail "pre-settings baseline screenshot"
 TERMINAL_SETTINGS="$(vm_ssh "$(vm_hypr_env)
 QS_BIN=\$(command -v qs || command -v quickshell)
 \$QS_BIN ipc call controlCenter open terminal")" || fail "Control Center Terminal IPC"
 [[ "${TERMINAL_SETTINGS}" == *"opened: terminal"* ]] || fail "Terminal pane did not open"
 vm_ssh "$(vm_hypr_env)
 for _ in \$(seq 1 20); do
-    if hyprctl -j activewindow | jq -e '.class == \"org.quickshell\" and .title == \"Hornero Settings - Terminal\"' > /dev/null; then
+    if active_window=\$(timeout 2s hyprctl -j activewindow 2>/dev/null) && \
+        jq -e '.mapped == true and .class == \"org.quickshell\" and .title == \"Hornero Settings - Terminal\"' <<<\"\$active_window\" > /dev/null 2>&1; then
         exit 0
     fi
     sleep 0.12
 done
-exit 1" || fail "Terminal settings window never became active"
-if vm_ssh "$(vm_hypr_env)
-timeout 10 grim /tmp/vm-controlcenter-terminal.png" > /dev/null 2>&1; then
-    vm_scp "${VM_SSH_USER}@127.0.0.1:/tmp/vm-controlcenter-terminal.png" \
-        "${SCREENSHOT_DIR}/controlcenter-terminal.png" || fail "Terminal settings screenshot fetch"
+echo \"last activewindow response: \$active_window\" >&2
+if active_window=\$(timeout 3s hyprctl -j activewindow 2>&1); then
+    echo \"activewindow response: \$active_window\" >&2
 else
-    bash "${VM_LIB_DIR}/qemu-screenshot.sh" "${SCREENSHOT_DIR}/controlcenter-terminal.png" \
-        || fail "Terminal settings framebuffer capture"
+    echo \"hyprctl activewindow did not respond: \$active_window\" >&2
 fi
-python3 "${VM_LIB_DIR}/check_screenshot.py" "${SCREENSHOT_DIR}/controlcenter-terminal.png" \
-    || fail "Terminal settings screenshot is blank or truncated"
+if clients=\$(timeout 3s hyprctl -j clients 2>/dev/null); then
+    jq '[.[] | {class, title, mapped, visible, workspace: .workspace.name}]' <<<\"\$clients\" >&2
+else
+    echo \"hyprctl clients did not respond\" >&2
+fi
+hyprland_log=\$(find /run/user/1000/hypr -maxdepth 2 -type f -name hyprland.log -print -quit 2>/dev/null || true)
+if [[ -n \$hyprland_log ]]; then
+    echo \"==> tail of active Hyprland log: \$hyprland_log\" >&2
+    tail -n 80 \"\$hyprland_log\" >&2 || true
+fi
+tail -n 80 /tmp/hypr.log /tmp/qs.log >&2 || true
+quickshell_log_dir=\${XDG_RUNTIME_DIR:-/run/user/\$(id -u)}/quickshell
+quickshell_runtime_log=\$(find \"\$quickshell_log_dir\" -type f -name log.qslog -print -quit 2>/dev/null || true)
+if [[ -n \$quickshell_runtime_log && -r \$quickshell_runtime_log ]]; then
+    echo \"==> tail of Quickshell runtime log: \$quickshell_runtime_log\" >&2
+    tail -n 200 \"\$quickshell_runtime_log\" >&2 || true
+fi
+echo \"==> Hyprland and Quickshell process snapshot\" >&2
+ps -eo pid,ppid,stat,pcpu,wchan:24,comm,args | awk 'NR == 1 || \$6 ~ /^(Hyprland|qs|quickshell|hyprctl)$/' >&2 || true
+quickshell_pid=\$(sed -nE 's/.*Quickshell has crashed under pid ([0-9]+).*/\1/p' /tmp/qs.log | tail -n 1)
+if [[ \$quickshell_pid =~ ^[0-9]+\$ ]]; then
+    echo \"==> Quickshell coredump details for pid \$quickshell_pid\" >&2
+    coredumpctl --no-pager info \"\$quickshell_pid\" >&2 || true
+fi
+quickshell_crash_dir=\$(sed -nE 's/.*Further crash information is stored under \"([^\"]+)\".*/\1/p' /tmp/qs.log | tail -n 1)
+if [[ -n \$quickshell_crash_dir && -f \$quickshell_crash_dir/report.txt ]]; then
+    echo \"==> Quickshell crash report: \$quickshell_crash_dir/report.txt\" >&2
+    cat \"\$quickshell_crash_dir/report.txt\" >&2 || true
+fi
+exit 1" || fail "Terminal settings window never became active"
+if vm_capture_controlcenter_content /tmp/vm-controlcenter-terminal.png \
+    "${SCREENSHOT_DIR}/controlcenter-terminal.png" "${BASELINE_SCREENSHOT}"; then
+    :
+else
+    capture_status=$?
+    if [[ "${capture_status}" -eq 1 ]]; then
+        fail "Terminal Settings content did not render"
+    fi
+    fail "Terminal settings screenshot capture failed (status ${capture_status})"
+fi
 vm_ssh "$(vm_hypr_env)
 QS_BIN=\$(command -v qs || command -v quickshell)
 \$QS_BIN ipc call controlCenter close" > /dev/null || fail "Control Center close IPC"

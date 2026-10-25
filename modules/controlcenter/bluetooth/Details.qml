@@ -33,6 +33,7 @@ StyledFlickable {
         anchors.right: parent.right
         anchors.top: parent.top
         implicitHeight: details.implicitHeight
+        height: implicitHeight
 
         DeviceDetails {
             id: details

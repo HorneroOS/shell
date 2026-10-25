@@ -610,6 +610,10 @@ Item {
                         }
                     }
                 }
+
+                CommunityRegistrySection {
+                    Layout.fillWidth: true
+                }
             }
         }
     }

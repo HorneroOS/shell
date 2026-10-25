@@ -72,9 +72,12 @@ else
     guest_home="$(vm_ssh 'printf %s "$HOME"')"
     guest_qml_path="${VM_GUEST_PREFIX//\$HOME/${guest_home}}/lib/qt6/qml"
     vm_ssh_bg "$(vm_hypr_env)
+export PATH=\$HOME/.local/bin:\$PATH
 export QML2_IMPORT_PATH=${guest_qml_path}:\$QML2_IMPORT_PATH
 if command -v qs > /dev/null; then QS_BIN=qs; else QS_BIN=quickshell; fi
-cd \$HOME/.config/quickshell && nohup \$QS_BIN > /tmp/qs.log 2>&1 < /dev/null & disown"
+# Qt's default RHI stalls dynamic window creation under the VM's llvmpipe
+# renderer. The software adaptation keeps IPC responsive for visual QA.
+cd \$HOME/.config/quickshell && nohup env QT_QUICK_BACKEND=software \$QS_BIN > /tmp/qs.log 2>&1 < /dev/null & disown"
     sleep 10
 fi
 

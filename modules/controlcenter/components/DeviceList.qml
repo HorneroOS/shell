@@ -13,6 +13,10 @@ import QtQuick.Layouts
 ColumnLayout {
     id: root
 
+    // DeviceList is frequently placed directly inside a Flickable rather than
+    // a parent Layout. Preserve the content size for the Flickable viewport.
+    height: implicitHeight
+
     property Session session: null
     property var model: null
     property Component delegate: null

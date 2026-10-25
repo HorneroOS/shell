@@ -64,6 +64,18 @@ def test_registry_components_exist():
         assert (CC / entry["component"]).is_file(), f"pane {entry['id']}: missing {entry['component']}"
 
 
+def test_pane_stack_layout_has_geometry_for_translated_pages():
+    panes = (CC / "Panes.qml").read_text()
+    layout = panes.split("Item {\n        id: layout", 1)[1].split("\n    }", 1)[0]
+    assert "width: root.width" in layout
+    assert "height: root.height * PaneRegistry.count" in layout
+    assert "y: -root.session.activeIndex * root.height" in layout
+    pane = layout.split("Pane {", 1)[1].split("\n            }", 1)[0]
+    assert "y: index * root.height" in pane
+    assert "height: root.height" in pane
+    assert "width: root.width" in pane
+
+
 def test_registry_ids_unique_and_labels_sane():
     entries = _registry_entries()
     ids = [e["id"] for e in entries]
@@ -201,12 +213,27 @@ def test_terminal_settings_loading_is_bounded_and_reports_empty_process_output()
     pane = (CC / "terminal" / "TerminalPane.qml").read_text()
     assert "property bool listTimedOut: false" in pane
     assert "interval: 15000" in pane
+    assert "interval: 2000" in pane
     assert 'qsTr("Terminal settings request timed out.")' in pane
     assert 'qsTr("Terminal settings returned no data.")' in pane
     assert "if (root.listTimedOut)\n                    return;" in pane
     assert "root.installedTerminals = [];" in pane.split("id: listTimeout", 1)[1].split("Process {", 1)[0]
+    timeout = pane.split("id: listTimeout", 1)[1].split("Timer {", 1)[0]
+    assert "running: root.loading || listProc.running" in timeout
+    assert "if (root.loading && !root.listAnswered)" in timeout
+    assert "root.statusMessage = qsTr(\"Terminal settings request timed out.\");" in timeout
+    assert "if (!listProc.running)" not in timeout
+    assert "if (listProc.running)" in timeout
+    assert "listKillTimeout.start();" in timeout
+    refresh = pane.split("function refresh", 1)[1].split("function applyTerminal", 1)[0]
+    assert "listTimeout.restart()" not in refresh
+    kill_timeout = pane.split("id: listKillTimeout", 1)[1].split("Process {", 1)[0]
+    assert "listProc.signal(9)" in kill_timeout
+    stream_finished = pane.split("onStreamFinished:", 1)[1].split("onExited:", 1)[0]
+    assert "listTimeout.stop()" not in stream_finished
     list_exit = pane.split("onExited:", 1)[1].split("\n        }", 1)[0]
     assert "root.loading = false;" in list_exit
+    assert "listKillTimeout.stop();" in list_exit
     assert "root.listTimedOut = false;" not in list_exit
 
 
@@ -265,6 +292,41 @@ def test_control_center_split_keeps_details_space_on_compact_windows():
     assert "property real leftWidthRatio: 0.4" in split_layout
     assert "property int leftMinimumWidth: 420" in split_layout
     assert "Layout.minimumWidth: Math.min(root.leftMinimumWidth, parent.width * root.leftWidthRatio)" in split_layout
+
+
+def test_flickable_column_content_uses_its_implicit_height():
+    for relative in (
+        "components/DeviceList.qml",
+        "components/DeviceDetails.qml",
+        "bluetooth/Settings.qml",
+        "launcher/Settings.qml",
+        "network/NetworkSettings.qml",
+        "network/EthernetSettings.qml",
+        "network/WirelessSettings.qml",
+        "network/VpnSettings.qml",
+    ):
+        source = (CC / relative).read_text()
+        assert "height: implicitHeight" in source, f"{relative} must expose its Flickable content height"
+
+    for relative, layout_id in (
+        ("network/NetworkingPane.qml", "leftContent"),
+        ("dashboard/DashboardPane.qml", "dashboardLayout"),
+        ("taskbar/TaskbarPane.qml", "sidebarLayout"),
+        ("appearance/AppearancePane.qml", "sidebarLayout"),
+        ("audio/AudioPane.qml", "leftContent"),
+        ("audio/AudioPane.qml", "contentLayout"),
+        ("launcher/LauncherPane.qml", "debugLayout"),
+    ):
+        source = (CC / relative).read_text()
+        layout = source.split(f"id: {layout_id}", 1)[1].split("\n                }", 1)[0]
+        assert "height: implicitHeight" in layout, f"{relative} {layout_id} must expose its Flickable content height"
+
+    section = (ROOT / "components" / "SectionContainer.qml").read_text()
+    assert "id: contentColumn" in section
+    assert "height: implicitHeight" in section
+    header = (CC / "components" / "SettingsHeader.qml").read_text()
+    assert "id: column" in header
+    assert "height: implicitHeight" in header
 
 
 def test_repeated_control_center_action_columns_share_a_stable_width():
@@ -382,12 +444,27 @@ def test_control_center_navigation_uses_keyboard_accessible_interactive_controls
 
 def test_control_center_window_factory_activates_new_and_reused_settings_windows():
     factory = (CC / "WindowFactory.qml").read_text()
-    create_body = factory.split("function create(parent: Item, props: var): void {", 1)[1].split("function closeAll()", 1)[0]
+    create_body = factory.split("function create(parent: Item, props: var): bool {", 1)[1].split("function closeAll()", 1)[0]
     reuse_path = create_body.split("if (windows.length > 0) {", 1)[1].split("\n        }\n        const win", 1)[0]
     new_window_path = create_body.split("const win = controlCenter.createObject", 1)[1].split("\n        root.syncCompanion();", 1)[0]
     assert "root.focusSettingsWindow(existing)" in reuse_path
     assert "root.focusSettingsWindow(win)" in new_window_path
+    assert "parent ?? null" in create_body
+    assert "could not create Settings window" in create_body
+    assert "id: dummy" not in factory
     assert "requestActivate()" not in factory
+
+
+def test_welcome_settings_actions_keep_the_overlay_if_window_creation_fails():
+    actions = (ROOT / "modules" / "welcome" / "Actions.qml").read_text()
+    open_settings = actions.split("function openControlCenter", 1)[1].split(
+        "function shellQuote", 1
+    )[0]
+    assert "WelcomeModule.Welcome.close();" in open_settings
+    assert "if (opened)" in open_settings
+    assert open_settings.index("WindowFactory.create") < open_settings.index(
+        "WelcomeModule.Welcome.close();"
+    )
 
 
 def test_control_center_retries_focus_while_compositor_registers_settings_toplevel():
@@ -521,3 +598,22 @@ def test_extensions_marketplace_section():
     # Marketplace never writes receipts itself and never enables silently.
     assert "pendingInstall" in pane
     assert 'runLifecycle("enable"' in pane  # existing consent path untouched
+
+
+def test_extensions_community_registry_is_verified_read_only_cli_output():
+    pane = (ROOT / "modules/controlcenter/extensions/ExtensionsPane.qml").read_text()
+    section = (ROOT / "modules/controlcenter/extensions/CommunityRegistrySection.qml").read_text()
+    assert "CommunityRegistrySection" in pane
+    assert '["horneroctl", "--json", "plugin", "community", "list"]' in section
+    assert "root.entries = entries" in section and "env.ok !== true" in section
+    assert 'typeof data.plugins !== "string"' in section
+    assert "entries.some(entry => !entry" in section
+    assert '(env.data && env.data.plugins) || "[]"' not in section
+    assert "index signature identifies who published the list" in section
+    assert "does not mean HorneroOS reviewed the code or that the code is safe" in section
+    assert "has no sandbox" in section
+    assert "Pinned revision" in section and "Payload SHA-256" in section
+    assert "Community install, update, and rollback are unavailable until horneroctl preserves the verified revision and payload hash through those actions." in section
+    # Community discovery is read-only until it has a provenance-preserving lifecycle.
+    assert '"plugin", "community", "install"' not in pane + section
+    assert '"plugin", "community", "enable"' not in pane + section

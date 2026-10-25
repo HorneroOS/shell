@@ -124,6 +124,7 @@ Item {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
+                height: implicitHeight
 
                 spacing: Appearance.spacing.normal
 

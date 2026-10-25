@@ -23,6 +23,7 @@ Item {
 
     implicitWidth: layout.implicitWidth
     implicitHeight: layout.implicitHeight
+    height: implicitHeight
 
     ColumnLayout {
         id: layout

@@ -57,8 +57,33 @@ Item {
         root.loading = true;
         root.listAnswered = false;
         root.listTimedOut = false;
-        listTimeout.restart();
         listProc.running = true;
+    }
+
+    function logLayout(): void {
+        const headerLayout = header.children.length > 0 ? header.children[0] : null;
+        const sectionLayout = terminalSection.children.length > 0 ? terminalSection.children[0] : null;
+        const firstSectionChild = sectionLayout && sectionLayout.children.length > 0 ? sectionLayout.children[0] : null;
+        function describe(item: var): string {
+            if (!item)
+                return "none";
+            const label = item.text !== undefined ? String(item.text) : item.terminalId !== undefined ? String(item.terminalId) : item.toString();
+            const color = item.color !== undefined ? String(item.color) : "n/a";
+            return `${label}@${item.x},${item.y} ${item.width}x${item.height} visible=${item.visible} opacity=${item.opacity} color=${color}`;
+        }
+        const headerDescriptions = [];
+        if (headerLayout) {
+            for (let index = 0; index < headerLayout.children.length; index++)
+                headerDescriptions.push(describe(headerLayout.children[index]));
+        }
+        const sectionDescriptions = [];
+        if (sectionLayout) {
+            for (let index = 0; index < sectionLayout.children.length; index++)
+                sectionDescriptions.push(describe(sectionLayout.children[index]));
+        }
+        const headerChildren = headerDescriptions.length > 0 ? headerDescriptions.join(" | ") : "none";
+        const sectionChildren = sectionDescriptions.length > 0 ? sectionDescriptions.join(" | ") : "none";
+        console.log(`[TerminalPane] root=${root.x},${root.y} ${root.width}x${root.height} visible=${root.visible}/${root.opacity} surface=${surface.x},${surface.y} ${surface.width}x${surface.height} visible=${surface.visible}/${surface.opacity} flick=${flick.x},${flick.y} ${flick.width}x${flick.height} visible=${flick.visible}/${flick.opacity} contentY=${flick.contentY} content=${content.x},${content.y} ${content.width}x${content.height} implicit=${content.implicitHeight} visible=${content.visible} opacity=${content.opacity} header=${header.x},${header.y} ${header.width}x${header.height} layout=${headerLayout ? `${headerLayout.x},${headerLayout.y} ${headerLayout.width}x${headerLayout.height} implicit=${headerLayout.implicitHeight} visible=${headerLayout.visible}/${headerLayout.opacity}` : "none"} headerChildren=${headerChildren} section=${terminalSection.x},${terminalSection.y} ${terminalSection.width}x${terminalSection.height} visible=${terminalSection.visible}/${terminalSection.opacity} layout=${sectionLayout ? `${sectionLayout.x},${sectionLayout.y} ${sectionLayout.width}x${sectionLayout.height} implicit=${sectionLayout.implicitHeight} visible=${sectionLayout.visible}/${sectionLayout.opacity} children=${sectionLayout.children.length}` : "none"} first=${describe(firstSectionChild)} sectionChildren=${sectionChildren} loading=${root.loading} status=${root.statusMessage}`);
     }
 
     function applyTerminal(id: string): void {
@@ -143,22 +168,43 @@ Item {
         }
     }
 
-    Component.onCompleted: root.refresh()
+    Component.onCompleted: {
+        root.refresh();
+        Qt.callLater(root.logLayout);
+    }
+
+    onLoadingChanged: Qt.callLater(root.logLayout)
 
     Timer {
         id: listTimeout
 
+        // Start with the initial request and keep running until both the UI
+        // has a response and the process has exited.
+        running: root.loading || listProc.running
         interval: 15000
         repeat: false
         onTriggered: {
-            if (!root.loading || root.listAnswered)
-                return;
-            root.listTimedOut = true;
-            root.installedTerminals = [];
-            root.loading = false;
-            root.statusMessage = qsTr("Terminal settings request timed out.");
-            if (listProc.running)
+            if (root.loading && !root.listAnswered) {
+                root.listTimedOut = true;
+                root.installedTerminals = [];
+                root.loading = false;
+                root.statusMessage = qsTr("Terminal settings request timed out.");
+            }
+            if (listProc.running) {
                 listProc.running = false;
+                listKillTimeout.start();
+            }
+        }
+    }
+
+    Timer {
+        id: listKillTimeout
+
+        interval: 2000
+        repeat: false
+        onTriggered: {
+            if (listProc.running)
+                listProc.signal(9); // POSIX SIGKILL after the SIGTERM grace period.
         }
     }
 
@@ -171,7 +217,6 @@ Item {
             onStreamFinished: {
                 if (root.listTimedOut)
                     return;
-                listTimeout.stop();
                 const response = root.envelope(text);
                 root.listAnswered = response !== null;
                 root.loading = false;
@@ -187,7 +232,7 @@ Item {
             }
         }
         onExited: (exitCode, exitStatus) => {
-            listTimeout.stop();
+            listKillTimeout.stop();
             root.loading = false;
             if (!root.listAnswered) {
                 if (root.listTimedOut) {
@@ -230,6 +275,8 @@ Item {
     }
 
     StyledClippingRect {
+        id: surface
+
         anchors.fill: parent
         anchors.margins: Appearance.padding.normal
         anchors.leftMargin: 0
@@ -237,8 +284,8 @@ Item {
         radius: Appearance.rounding.normal
         color: "transparent"
 
-        StyledFlickable {
-            id: flick
+            StyledFlickable {
+                id: flick
 
             anchors.fill: parent
             anchors.margins: Appearance.padding.large + Appearance.padding.normal
@@ -260,11 +307,15 @@ Item {
                 spacing: Appearance.spacing.normal
 
                 SettingsHeader {
+                    id: header
+
                     icon: "terminal"
                     title: qsTr("Terminal")
                 }
 
                 SectionContainer {
+                    id: terminalSection
+
                     Layout.fillWidth: true
                     alignTop: true
 

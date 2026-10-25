@@ -18,6 +18,7 @@ Item {
         id: column
 
         anchors.centerIn: parent
+        height: implicitHeight
         spacing: Appearance.spacing.normal
 
         MaterialIcon {

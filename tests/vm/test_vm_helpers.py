@@ -8,9 +8,11 @@ exercised through --dry-run and --help only.
 import hashlib
 import os
 import shutil
+import socket
 import struct
 import subprocess
 import sys
+import threading
 import zlib
 from pathlib import Path
 
@@ -21,6 +23,7 @@ LIB_DIR = VM_DIR / "lib"
 VERIFY_IMAGE = LIB_DIR / "verify-image.sh"
 CHECK = LIB_DIR / "check_screenshot.py"
 PPM_TO_PNG = LIB_DIR / "ppm_to_png.py"
+LAST_JSON_OBJECT = LIB_DIR / "last-json-object.py"
 SMOKE = VM_DIR / "scenarios" / "vm-smoke.sh"
 
 
@@ -81,6 +84,57 @@ def test_colorful_screenshot_passes(tmp_path):
     assert f"PASS {shot}" in proc.stdout
 
 
+def test_region_check_rejects_colorful_background_around_blank_settings(tmp_path):
+    shot = tmp_path / "blank-settings-over-colorful-desktop.png"
+    rows = []
+    for y in range(72):
+        row = bytearray()
+        for x in range(128):
+            if 32 <= x < 96 and 12 <= y < 60:
+                row.extend((16, 12, 10))
+            else:
+                row.extend(((x * 17) % 256, (y * 29) % 256, ((x + y) * 11) % 256))
+        rows.append(bytes(row))
+    write_png(shot, 128, 72, rows)
+
+    whole_frame = run_checker(str(shot))
+    blank_settings = run_checker("--region", "32,12,64,48", str(shot))
+
+    assert whole_frame.returncode == 0, whole_frame.stdout
+    assert blank_settings.returncode == 1
+    assert f"FAIL {shot}" in blank_settings.stdout
+
+
+def test_last_json_object_ignores_locale_warnings():
+    proc = subprocess.run(
+        [sys.executable, str(LAST_JSON_OBJECT)],
+        input=(
+            'WARN: Qt changed locale to C.UTF-8\n'
+            'still not JSON\n'
+            '{"open":false,"page":"start"}\n'
+        ),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert proc.returncode == 0
+    assert proc.stdout.strip() == '{"open":false,"page":"start"}'
+
+
+def test_last_json_object_fails_without_json_output():
+    proc = subprocess.run(
+        [sys.executable, str(LAST_JSON_OBJECT)],
+        input="WARN: Qt changed locale to C.UTF-8\n",
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert proc.returncode == 1
+    assert "no JSON object found" in proc.stderr
+
+
 def test_two_tone_screenshot_fails_color_floor(tmp_path):
     shot = tmp_path / "two.png"
     write_png(shot, 64, 48, [bytes([10, 10, 10]) * 32 + bytes([240, 240, 240]) * 32] * 48)
@@ -89,11 +143,103 @@ def test_two_tone_screenshot_fails_color_floor(tmp_path):
     assert "distinct colors" in proc.stdout
 
 
+def test_region_check_rejects_blank_panel_inside_nonblank_window(tmp_path):
+    width, height = 128, 64
+    rows = []
+    for y in range(height):
+        row = bytearray()
+        for x in range(width):
+            if x < width // 2:
+                row.extend((x * 2, y * 4, 128))
+            else:
+                row.extend((24, 24, 24))
+        rows.append(bytes(row))
+    shot = tmp_path / "blank-panel.png"
+    write_png(shot, width, height, rows)
+
+    whole = run_checker("--min-bytes", "0", str(shot))
+    panel = run_checker(
+        "--min-bytes",
+        "0",
+        "--min-colors",
+        "50",
+        "--region",
+        "64,0,64,64",
+        str(shot),
+    )
+
+    assert whole.returncode == 0
+    assert panel.returncode == 1
+    assert "distinct colors" in panel.stdout
+
+
+def test_region_check_rejects_out_of_bounds_region(tmp_path):
+    shot = tmp_path / "small.png"
+    write_png(shot, 32, 24, gradient_rows(32, 24))
+
+    proc = run_checker("--min-bytes", "0", "--region", "16,0,32,24", str(shot))
+
+    assert proc.returncode == 2
+    assert "outside image bounds" in proc.stdout
+
+
 def test_color_floor_is_tunable(tmp_path):
     shot = tmp_path / "two.png"
     write_png(shot, 64, 48, [bytes([10, 10, 10]) * 32 + bytes([240, 240, 240]) * 32] * 48)
     proc = run_checker("--min-bytes", "0", "--min-colors", "2", str(shot))
     assert proc.returncode == 0
+
+
+def test_reference_check_rejects_an_unchanged_screen(tmp_path):
+    shot = tmp_path / "current.png"
+    reference = tmp_path / "reference.png"
+    rows = gradient_rows(128, 72)
+    write_png(shot, 128, 72, rows)
+    write_png(reference, 128, 72, rows)
+
+    proc = run_checker(
+        "--different-from",
+        str(reference),
+        "--region",
+        "16,8,96,56",
+        str(shot),
+    )
+
+    assert proc.returncode == 1
+    assert "0.0% of sampled pixels differ from reference" in proc.stdout
+
+
+def test_reference_check_accepts_a_materially_changed_screen(tmp_path):
+    shot = tmp_path / "current.png"
+    reference = tmp_path / "reference.png"
+    original = gradient_rows(128, 72)
+    inverted = [
+        bytes(255 - value for value in row)
+        for row in original
+    ]
+    write_png(shot, 128, 72, inverted)
+    write_png(reference, 128, 72, original)
+
+    proc = run_checker(
+        "--different-from",
+        str(reference),
+        "--region",
+        "16,8,96,56",
+        str(shot),
+    )
+
+    assert proc.returncode == 0
+    assert "100.0% of sampled pixels differ from reference" in proc.stdout
+
+
+def test_reference_check_rejects_an_invalid_difference_threshold(tmp_path):
+    shot = tmp_path / "current.png"
+    write_png(shot, 128, 72, gradient_rows(128, 72))
+
+    proc = run_checker("--min-diff-ratio", "1.1", str(shot))
+
+    assert proc.returncode == 2
+    assert "--min-diff-ratio must be between 0 and 1" in proc.stderr
 
 
 def test_sub_filtered_rows_decode(tmp_path):
@@ -212,6 +358,22 @@ def test_env_defaults_are_documented():
     assert "port=2222 user=hornero mem=3072 smp=2 fps=10" in proc.stdout
 
 
+def test_hyprland_environment_sets_runtime_dir_before_instance_signature():
+    proc = subprocess.run(
+        ["bash", "-c", "source lib/env.sh && vm_hypr_env"],
+        capture_output=True,
+        text=True,
+        check=False,
+        cwd=VM_DIR,
+    )
+    assert proc.returncode == 0, proc.stderr
+    lines = proc.stdout.splitlines()
+    assert lines[0] == "export XDG_RUNTIME_DIR=/run/user/$(id -u)"
+    assert lines[1].startswith(
+        'export HYPRLAND_INSTANCE_SIGNATURE=$(ls -t "$XDG_RUNTIME_DIR"/hypr/'
+    )
+
+
 def test_env_overrides_are_honored():
     env = dict(os.environ, VM_SSH_PORT="2233", VM_MEM="1024")
     proc = subprocess.run(
@@ -269,6 +431,58 @@ def test_stage_dry_runs_without_hypervisor(stage):
     )
     assert proc.returncode == 0, proc.stderr
     assert "dry-run:" in proc.stdout
+
+
+def test_qemu_screenshot_waits_for_monitor_reply_and_frame():
+    screenshot = (LIB_DIR / "qemu-screenshot.sh").read_text()
+    assert "def receive_prompt(sock):" in screenshot
+    assert "response = receive_prompt(sock)" in screenshot
+    assert "for _ in {1..50}; do" in screenshot
+
+
+def test_qemu_screenshot_waits_for_hmp_completion(tmp_path):
+    artifacts = tmp_path / "artifacts"
+    artifacts.mkdir()
+    monitor = artifacts / "monitor.sock"
+    output = tmp_path / "frame.png"
+    server_errors = []
+    server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    server.bind(str(monitor))
+    server.listen(1)
+
+    def serve_monitor():
+        try:
+            connection, _ = server.accept()
+            with connection:
+                connection.sendall(b"QEMU monitor\n(qemu) ")
+                command = bytearray()
+                while not command.endswith(b"\n"):
+                    command.extend(connection.recv(4096))
+                ppm = command.removeprefix(b"screendump ").strip().decode()
+                Path(ppm).write_bytes(b"P6\n1 1\n255\n\xff\x00\x00")
+                connection.sendall(b"\r\n(qemu) ")
+        except Exception as error:  # surfaced in the calling test thread
+            server_errors.append(error)
+
+    server_thread = threading.Thread(target=serve_monitor, daemon=True)
+    server_thread.start()
+    try:
+        proc = subprocess.run(
+            ["bash", str(LIB_DIR / "qemu-screenshot.sh"), str(output)],
+            capture_output=True,
+            text=True,
+            env={**os.environ, "VM_ARTIFACTS_DIR": str(artifacts)},
+            timeout=10,
+            check=False,
+        )
+    finally:
+        server.close()
+        server_thread.join(timeout=2)
+
+    assert not server_errors, server_errors
+    assert proc.returncode == 0, proc.stderr
+    assert output.is_file()
+    assert output.read_bytes().startswith(b"\x89PNG\r\n\x1a\n")
 
 
 def _write_image_with_sidecar(tmp_path, payload):
@@ -392,6 +606,19 @@ def test_deploy_dry_run_without_pin_stays_shell_local():
     assert "materialize the config pin" not in proc.stdout
 
 
+def test_deploy_dry_run_with_horneroctl_adds_it_to_the_session_path():
+    env = dict(os.environ, HX_HOREROCTL_BIN="/tmp/horneroctl")
+    proc = subprocess.run(
+        ["bash", str(LIB_DIR / "deploy-shell.sh"), "--dry-run"],
+        capture_output=True,
+        text=True,
+        check=False,
+        env=env,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "install horneroctl into guest ~/.local/bin" in proc.stdout
+
+
 def test_deploy_dry_run_with_pin_mentions_composition():
     env = dict(
         os.environ,
@@ -428,6 +655,13 @@ def test_deploy_guards_guest_against_dotfiles_clone():
     body = (LIB_DIR / "deploy-shell.sh").read_text()
     assert ".git/config" in body
     assert "~/dotfiles" in body
+
+
+def test_deploy_seeds_a_stable_wallpaper_for_shell_only_captures():
+    body = (LIB_DIR / "deploy-shell.sh").read_text()
+    assert "desktop-hero.png" in body
+    assert 'pointer="$HOME/.local/state/hornero/wallpaper/path"' in body
+    assert "retain a valid composed wallpaper or seed docs/assets/desktop-hero.png" in body
 
 
 def test_deploy_rebuilds_or_rejects_broken_cached_qml_plugin():

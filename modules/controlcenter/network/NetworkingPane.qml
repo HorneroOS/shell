@@ -43,6 +43,7 @@ Item {
 
                     anchors.left: parent.left
                     anchors.right: parent.right
+                    height: implicitHeight
                     spacing: Appearance.spacing.normal
 
                     RowLayout {
@@ -314,6 +315,7 @@ Item {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
+                height: implicitHeight
                 session: root.session
             }
         }
@@ -337,6 +339,7 @@ Item {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
+                height: implicitHeight
                 session: root.session
             }
         }
@@ -360,6 +363,7 @@ Item {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
+                height: implicitHeight
                 session: root.session
             }
         }

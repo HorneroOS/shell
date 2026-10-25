@@ -735,3 +735,12 @@ def test_studio_pane_render_jobs_surface_is_typed_and_approval_gated():
     assert "redacted log" in pane.lower()
     assert "No Studio jobs recorded yet" in pane
     assert 'Accessible.name: qsTr("Cancel queued job %1")' in pane
+
+def test_control_center_panes_have_no_diagnostic_geometry_logging():
+    for relative in (
+        "Panes.qml",
+        "components/SplitPaneLayout.qml",
+        "terminal/TerminalPane.qml",
+    ):
+        source = (CC / relative).read_text(encoding="utf-8")
+        assert "console.log" not in source, relative

@@ -194,6 +194,9 @@ Item {
                     text: qsTr("Weather: [Open-Meteo](https://open-meteo.com/) · Geocoding: [© OpenStreetMap contributors](https://www.openstreetmap.org/copyright)")
                     font.pointSize: Appearance.font.size.smaller
                     color: Colours.palette.m3onSurfaceVariant
+                    // Themed link color: the Qt default link blue clashes
+                    // with the dashboard surface in both colour schemes.
+                    linkColor: Colours.palette.m3primary
                     onLinkActivated: link => Quickshell.execDetached(["app2unit", "-O", "--", link])
                 }
             }

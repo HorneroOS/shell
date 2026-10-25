@@ -308,6 +308,7 @@ Item {
                             textFormat: modelData.role === "assistant" ? Text.MarkdownText : Text.PlainText
                             font.pointSize: Appearance.font.size.small
                             color: bubble.mine ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+                            linkColor: bubble.mine ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3primary
                             wrapMode: Text.Wrap
                             onLinkActivated: link => Qt.openUrlExternally(link)
                         }
@@ -413,6 +414,7 @@ Item {
                             textFormat: Text.MarkdownText
                             font.pointSize: Appearance.font.size.small
                             color: Colours.palette.m3onSurface
+                            linkColor: Colours.palette.m3primary
                             wrapMode: Text.Wrap
                         }
                     }

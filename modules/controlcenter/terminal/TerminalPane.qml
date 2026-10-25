@@ -64,7 +64,26 @@ Item {
         const headerLayout = header.children.length > 0 ? header.children[0] : null;
         const sectionLayout = terminalSection.children.length > 0 ? terminalSection.children[0] : null;
         const firstSectionChild = sectionLayout && sectionLayout.children.length > 0 ? sectionLayout.children[0] : null;
-        console.log(`[TerminalPane] root=${root.x},${root.y} ${root.width}x${root.height} visible=${root.visible} surface=${surface.x},${surface.y} ${surface.width}x${surface.height} visible=${surface.visible} flick=${flick.x},${flick.y} ${flick.width}x${flick.height} contentY=${flick.contentY} content=${content.x},${content.y} ${content.width}x${content.height} implicit=${content.implicitHeight} visible=${content.visible} opacity=${content.opacity} header=${header.x},${header.y} ${header.width}x${header.height} layout=${headerLayout ? `${headerLayout.x},${headerLayout.y} ${headerLayout.width}x${headerLayout.height} implicit=${headerLayout.implicitHeight} visible=${headerLayout.visible}` : "none"} section=${terminalSection.x},${terminalSection.y} ${terminalSection.width}x${terminalSection.height} visible=${terminalSection.visible} layout=${sectionLayout ? `${sectionLayout.x},${sectionLayout.y} ${sectionLayout.width}x${sectionLayout.height} implicit=${sectionLayout.implicitHeight} visible=${sectionLayout.visible} children=${sectionLayout.children.length}` : "none"} first=${firstSectionChild ? `${firstSectionChild.x},${firstSectionChild.y} ${firstSectionChild.width}x${firstSectionChild.height} visible=${firstSectionChild.visible}` : "none"} loading=${root.loading} status=${root.statusMessage}`);
+        function describe(item: var): string {
+            if (!item)
+                return "none";
+            const label = item.text !== undefined ? String(item.text) : item.terminalId !== undefined ? String(item.terminalId) : item.toString();
+            const color = item.color !== undefined ? String(item.color) : "n/a";
+            return `${label}@${item.x},${item.y} ${item.width}x${item.height} visible=${item.visible} opacity=${item.opacity} color=${color}`;
+        }
+        const headerDescriptions = [];
+        if (headerLayout) {
+            for (let index = 0; index < headerLayout.children.length; index++)
+                headerDescriptions.push(describe(headerLayout.children[index]));
+        }
+        const sectionDescriptions = [];
+        if (sectionLayout) {
+            for (let index = 0; index < sectionLayout.children.length; index++)
+                sectionDescriptions.push(describe(sectionLayout.children[index]));
+        }
+        const headerChildren = headerDescriptions.length > 0 ? headerDescriptions.join(" | ") : "none";
+        const sectionChildren = sectionDescriptions.length > 0 ? sectionDescriptions.join(" | ") : "none";
+        console.log(`[TerminalPane] root=${root.x},${root.y} ${root.width}x${root.height} visible=${root.visible} surface=${surface.x},${surface.y} ${surface.width}x${surface.height} visible=${surface.visible} flick=${flick.x},${flick.y} ${flick.width}x${flick.height} contentY=${flick.contentY} content=${content.x},${content.y} ${content.width}x${content.height} implicit=${content.implicitHeight} visible=${content.visible} opacity=${content.opacity} header=${header.x},${header.y} ${header.width}x${header.height} layout=${headerLayout ? `${headerLayout.x},${headerLayout.y} ${headerLayout.width}x${headerLayout.height} implicit=${headerLayout.implicitHeight} visible=${headerLayout.visible}` : "none"} headerChildren=${headerChildren} section=${terminalSection.x},${terminalSection.y} ${terminalSection.width}x${terminalSection.height} visible=${terminalSection.visible} layout=${sectionLayout ? `${sectionLayout.x},${sectionLayout.y} ${sectionLayout.width}x${sectionLayout.height} implicit=${sectionLayout.implicitHeight} visible=${sectionLayout.visible} children=${sectionLayout.children.length}` : "none"} first=${describe(firstSectionChild)} sectionChildren=${sectionChildren} loading=${root.loading} status=${root.statusMessage}`);
     }
 
     function applyTerminal(id: string): void {

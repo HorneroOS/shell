@@ -312,6 +312,53 @@ Item {
                     SectionContainer {
                         StyledText {
                             Layout.fillWidth: true
+                            text: qsTr("Audio routing & health")
+                            font.pointSize: Appearance.font.size.large
+                            font.weight: 600
+                        }
+
+                        // Read-only view over the existing Audio service
+                        // (Quickshell Pipewire). Shell owns no second
+                        // audio graph: devices and streams come from the
+                        // shared backend, and anything the backend does
+                        // not expose reliably is labelled unsupported
+                        // instead of being estimated.
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Output: %1").arg(Audio.sink ? (Audio.sink.description || Audio.sink.name) : qsTr("No output device detected"))
+                            wrapMode: Text.WordWrap
+                            color: Colours.palette.m3onSurfaceVariant
+                            font.pointSize: Appearance.font.size.small
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Input: %1").arg(Audio.source ? (Audio.source.description || Audio.source.name) : qsTr("No input device detected"))
+                            wrapMode: Text.WordWrap
+                            color: Colours.palette.m3onSurfaceVariant
+                            font.pointSize: Appearance.font.size.small
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: Audio.streams.length > 0 ? qsTr("Active streams: %1").arg(Audio.streams.map(stream => Audio.getStreamName(stream)).join(", ")) : qsTr("No active application streams.")
+                            wrapMode: Text.WordWrap
+                            color: Colours.palette.m3onSurfaceVariant
+                            font.pointSize: Appearance.font.size.small
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Effective rate/quantum and XRUN counts are not exposed by this backend, so they are not estimated here. Use Balanced unless you measured otherwise; no audio is recorded by this view.")
+                            wrapMode: Text.WordWrap
+                            color: Colours.palette.m3onSurfaceVariant
+                            font.pointSize: Appearance.font.size.small
+                        }
+                    }
+
+                    SectionContainer {
+                        StyledText {
+                            Layout.fillWidth: true
                             text: qsTr("Health")
                             font.pointSize: Appearance.font.size.large
                             font.weight: 600

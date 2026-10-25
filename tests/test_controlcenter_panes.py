@@ -664,3 +664,18 @@ def test_studio_pane_models_match_canonical_catalogue_ids():
     # Interactive rows are accessible switches with names.
     assert "SwitchRow" in pane
     assert 'Accessible.name: qsTr("Refresh Studio selection and health")' in pane
+
+
+def test_studio_pane_audio_section_reuses_audio_service_without_inventing_metrics():
+    pane = (CC / "studio" / "StudioPane.qml").read_text(encoding="utf-8")
+    assert 'qsTr("Audio routing & health")' in pane
+    # Shared backend state only: no second graph service, no capture.
+    assert "Audio.sink" in pane and "Audio.source" in pane and "Audio.streams" in pane
+    assert "Audio.getStreamName" in pane
+    assert "not exposed by this backend" in pane
+    assert "no audio is recorded" in pane.lower()
+    for forbidden in ("pw-dump", "pw-top", "wpctl", "pactl", "arecord", "parecord"):
+        assert forbidden not in pane, forbidden
+    # Empty/unsupported states are explicit accessible text.
+    assert "No output device detected" in pane
+    assert "No active application streams" in pane

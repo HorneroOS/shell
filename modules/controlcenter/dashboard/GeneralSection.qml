@@ -101,6 +101,7 @@ SectionContainer {
         wrapMode: Text.WordWrap
         font.pointSize: Appearance.font.size.small
         color: Colours.palette.m3onSurfaceVariant
+        linkColor: Colours.palette.m3primary
 
         onLinkActivated: link => Quickshell.execDetached(["app2unit", "-O", "--", link])
     }

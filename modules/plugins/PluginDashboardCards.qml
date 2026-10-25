@@ -56,6 +56,9 @@ Item {
                     Loader {
                         id: pluginLoader
 
+                        // Same contract as the bar host: plugin default
+                        // text inherits the card's themed foreground.
+                        palette.windowText: Colours.palette.m3onSurface
                         source: card.modelData.entrypoint ? `file://${Plugins.pluginsDir}/${card.modelData.id}/${card.modelData.entrypoint}` : ""
                         asynchronous: true
 

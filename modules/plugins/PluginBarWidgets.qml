@@ -25,6 +25,10 @@ Repeater {
         required property var modelData
 
         Layout.alignment: root.vertical ? Qt.AlignHCenter : Qt.AlignVCenter
+        // Plugins cannot import Shell theming; give their default text the
+        // bar's themed foreground through palette inheritance instead of
+        // Qt's default black (invisible on the dark bar).
+        palette.windowText: Colours.palette.m3onSurface
         source: modelData.entrypoint ? `file://${Plugins.pluginsDir}/${modelData.id}/${modelData.entrypoint}` : ""
         asynchronous: true
 

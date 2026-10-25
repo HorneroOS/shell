@@ -64,6 +64,14 @@ def test_registry_components_exist():
         assert (CC / entry["component"]).is_file(), f"pane {entry['id']}: missing {entry['component']}"
 
 
+def test_pane_stack_layout_has_geometry_for_translated_pages():
+    panes = (CC / "Panes.qml").read_text()
+    layout = panes.split("ColumnLayout {", 1)[1].split("\n    }", 1)[0]
+    assert "width: root.width" in layout
+    assert "height: implicitHeight" in layout
+    assert "y: -root.session.activeIndex * root.height" in layout
+
+
 def test_registry_ids_unique_and_labels_sane():
     entries = _registry_entries()
     ids = [e["id"] for e in entries]

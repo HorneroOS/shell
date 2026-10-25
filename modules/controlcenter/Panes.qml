@@ -54,6 +54,11 @@ ClippingRectangle {
     ColumnLayout {
         id: layout
 
+        // This layout is translated vertically to reveal one pane at a time.
+        // Give it the full stacked geometry explicitly; an unanchored layout
+        // has zero actual size even though its children have implicit sizes.
+        width: root.width
+        height: implicitHeight
         spacing: 0
         y: -root.session.activeIndex * root.height
         clip: true

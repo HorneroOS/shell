@@ -9,6 +9,7 @@ import qs.components.containers
 import qs.modules.companion
 import qs.config
 import qs.services
+import Quickshell
 import Quickshell.Widgets
 import Quickshell.Io
 import QtQuick
@@ -227,6 +228,94 @@ Item {
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
                     color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    implicitHeight: hermesCol.implicitHeight + Appearance.padding.large * 2
+
+                    ColumnLayout {
+                        id: hermesCol
+
+                        anchors.fill: parent
+                        anchors.margins: Appearance.padding.large
+                        spacing: Appearance.spacing.small
+
+                        StyledText {
+                            text: qsTr("Hermes agent")
+                            font.pointSize: Appearance.font.size.normal
+                            font.weight: 500
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Live state from horneroctl. Model, provider, API keys and token usage are managed in the Hermes dashboard — keys never enter this panel.")
+                            font.pointSize: Appearance.font.size.small
+                            color: Colours.palette.m3outline
+                            wrapMode: Text.Wrap
+                        }
+
+                        DetailRow {
+                            label: qsTr("Endpoint")
+                            value: assistantStatus.data.endpoint || "—"
+                        }
+
+                        DetailRow {
+                            label: qsTr("Gateway")
+                            value: assistantStatus.data.gateway || "—"
+                        }
+
+                        DetailRow {
+                            label: qsTr("Protocol")
+                            value: assistantStatus.data.protocol || "—"
+                        }
+
+                        DetailRow {
+                            label: qsTr("Model")
+                            value: hermesModel.text
+                        }
+
+                        DetailRow {
+                            label: qsTr("Chat sessions")
+                            value: hermesSessions.text
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Appearance.spacing.small
+
+                            TextButton {
+                                text: qsTr("Start gateway")
+                                type: TextButton.Filled
+                                onClicked: assistantCtl.run(["horneroctl", "assistant", "gateway", "start", "--yes", "--json"])
+                            }
+
+                            TextButton {
+                                text: qsTr("Stop gateway")
+                                type: TextButton.Tonal
+                                onClicked: assistantCtl.run(["horneroctl", "assistant", "gateway", "stop", "--yes", "--json"])
+                            }
+
+                            TextButton {
+                                text: qsTr("Open Hermes dashboard")
+                                type: TextButton.Tonal
+                                onClicked: {
+                                    Quickshell.execDetached(["hermes", "dashboard", "--no-open"]);
+                                    dashboardTimer.restart();
+                                }
+                            }
+                        }
+
+                        Timer {
+                            id: dashboardTimer
+
+                            interval: 1800
+                            repeat: false
+                            onTriggered: Quickshell.execDetached(["app2unit", "-O", "--", "http://127.0.0.1:9119"])
+                        }
+                    }
+                }
+
+                StyledRect {
+                    Layout.fillWidth: true
+                    radius: Appearance.rounding.normal
+                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
                     implicitHeight: charCol.implicitHeight + Appearance.padding.large * 2
 
                     ColumnLayout {
@@ -370,11 +459,14 @@ Item {
         id: assistantStatus
 
         property string text: qsTr("Checking assistant status…")
+        property var data: ({})
 
         function refresh(): void {
             assistantStatusProc.out = "";
             assistantStatusProc.command = ["horneroctl", "assistant", "status", "--json"];
             assistantStatusProc.running = true;
+            hermesModel.refresh();
+            hermesSessions.refresh();
         }
     }
 
@@ -392,9 +484,99 @@ Item {
             try {
                 const payload = JSON.parse(assistantStatusProc.out.trim());
                 assistantStatus.text = payload.message ? payload.message.toString() : qsTr("Unknown status");
+                assistantStatus.data = payload.data ?? {};
             } catch (e) {
                 assistantStatus.text = qsTr("horneroctl assistant unavailable on this system.");
+                assistantStatus.data = {};
             }
+        }
+    }
+
+    QtObject {
+        id: hermesModel
+
+        property string text: "—"
+
+        function refresh(): void {
+            hermesModelProc.out = "";
+            hermesModelProc.command = ["horneroctl", "assistant", "model", "list", "--json"];
+            hermesModelProc.running = true;
+        }
+    }
+
+    Process {
+        id: hermesModelProc
+
+        property string out: ""
+
+        stdout: SplitParser {
+            onRead: data => {
+                hermesModelProc.out += data;
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            try {
+                const payload = JSON.parse(hermesModelProc.out.trim());
+                hermesModel.text = payload.ok ? ((payload.data ?? {}).models ?? "—").toString() : "—";
+            } catch (e) {
+                hermesModel.text = "—";
+            }
+        }
+    }
+
+    QtObject {
+        id: hermesSessions
+
+        property string text: "—"
+
+        function refresh(): void {
+            hermesSessionsProc.out = "";
+            hermesSessionsProc.command = ["horneroctl", "assistant", "sessions", "list", "--json"];
+            hermesSessionsProc.running = true;
+        }
+    }
+
+    Process {
+        id: hermesSessionsProc
+
+        property string out: ""
+
+        stdout: SplitParser {
+            onRead: data => {
+                hermesSessionsProc.out += data;
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            try {
+                const payload = JSON.parse(hermesSessionsProc.out.trim());
+                hermesSessions.text = payload.ok ? ((payload.data ?? {}).count ?? "—").toString() : "—";
+            } catch (e) {
+                hermesSessions.text = "—";
+            }
+        }
+    }
+
+    // Label/value row for live Hermes state.
+    component DetailRow: RowLayout {
+        required property string label
+        required property string value
+
+        Layout.fillWidth: true
+        spacing: Appearance.spacing.small
+
+        StyledText {
+            Layout.preferredWidth: 130
+            text: label
+            font.pointSize: Appearance.font.size.small
+            color: Colours.palette.m3onSurfaceVariant
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+            text: value
+            font.pointSize: Appearance.font.size.small
+            color: Colours.palette.m3onSurface
+            wrapMode: Text.Wrap
         }
     }
 

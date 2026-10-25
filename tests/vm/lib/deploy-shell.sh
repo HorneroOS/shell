@@ -24,6 +24,7 @@ fi
 if vm_is_dry_run; then
     echo "dry-run: would copy ${SHELL_ROOT} working tree to guest ~/.config/quickshell"
     echo "dry-run: would install tests/vm/guest/hyprland.conf to guest ~/.config/hypr/hyprland.conf"
+    echo "dry-run: would retain a valid composed wallpaper or seed docs/assets/desktop-hero.png for captures"
     if [[ -n "${HX_HOREROCTL_BIN}" ]]; then
         echo "dry-run: would install horneroctl into guest ~/.local/bin for shell process calls"
     fi
@@ -259,4 +260,21 @@ printf "{}\n" > $HOME/.config/hornero/shell.json
     echo "==> re-installing the harness Hyprland config over factory defaults"
     vm_scp "${VM_DIR}/guest/hyprland.conf" "${VM_SSH_USER}@127.0.0.1:~/.config/hypr/hyprland.conf"
 fi
+
+# Keep the wallpaper empty-state artwork from covering the desktop in VM
+# captures. Composed runs normally get the factory wallpaper above; local
+# shell-only runs use a checked-in image when no renderer is available.
+echo "==> ensuring a stable desktop wallpaper for VM captures"
+# shellcheck disable=SC2016
+vm_ssh 'set -e
+pointer="$HOME/.local/state/hornero/wallpaper/path"
+if [ -r "$pointer" ] && [ -r "$(cat "$pointer")" ]; then
+    exit 0
+fi
+fallback="$HOME/.config/quickshell/docs/assets/desktop-hero.png"
+test -r "$fallback"
+wallpaper="$HOME/.local/share/hornero/wallpapers/vm-harness.png"
+install -D -m 0644 "$fallback" "$wallpaper"
+install -d "$(dirname "$pointer")"
+printf "%s\\n" "$wallpaper" > "$pointer"'
 echo "==> shell deployed"

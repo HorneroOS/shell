@@ -636,6 +636,13 @@ def test_deploy_guards_guest_against_dotfiles_clone():
     assert "~/dotfiles" in body
 
 
+def test_deploy_seeds_a_stable_wallpaper_for_shell_only_captures():
+    body = (LIB_DIR / "deploy-shell.sh").read_text()
+    assert "desktop-hero.png" in body
+    assert 'pointer="$HOME/.local/state/hornero/wallpaper/path"' in body
+    assert "retain a valid composed wallpaper or seed docs/assets/desktop-hero.png" in body
+
+
 def test_deploy_rebuilds_or_rejects_broken_cached_qml_plugin():
     body = (LIB_DIR / "deploy-shell.sh").read_text()
     assert "ldd -r" in body

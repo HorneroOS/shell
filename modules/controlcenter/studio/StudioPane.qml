@@ -75,9 +75,12 @@ Item {
     property string previousAudioMode: ""
     property bool performanceActive: false
     property bool modeKnown: false
+    property var jobsModel: []
+    property bool jobsKnown: false
+    property string jobLogText: ""
 
     function refresh(): void {
-        if (selectionProc.running || doctorProc.running || modeProc.running)
+        if (selectionProc.running || doctorProc.running || modeProc.running || jobsProc.running)
             return;
         root.selectionError = "";
         selectionProc.command = ["horneroctl", "--json", "studio", "selection", "show"];
@@ -86,6 +89,23 @@ Item {
         doctorProc.running = true;
         modeProc.command = ["horneroctl", "--json", "studio", "mode"];
         modeProc.running = true;
+        jobsProc.command = ["horneroctl", "--json", "studio", "jobs", "list"];
+        jobsProc.running = true;
+    }
+
+    // Job actions reuse the single fixed-argv writer: cancellation is
+    // an explicit per-job user action, and horneroctl owns the state
+    // transition. No job is submitted, inferred, or polled from
+    // application processes here.
+    function runJobAction(argv: var): void {
+        root.runModeAction(argv);
+    }
+
+    function showJobLog(id: string): void {
+        if (root.busy)
+            return;
+        logProc.command = ["horneroctl", "--json", "studio", "jobs", "log", id];
+        logProc.running = true;
     }
 
     // Mode actions go through the same fixed-argv writer as selection:
@@ -208,6 +228,67 @@ Item {
             } catch (e) {
                 root.modeKnown = false;
                 root.audioMode = "unknown";
+            }
+        }
+    }
+
+    Process {
+        id: jobsProc
+
+        property string out: ""
+
+        stdout: SplitParser {
+            onRead: data => {
+                jobsProc.out += data;
+            }
+        }
+        onStarted: jobsProc.out = ""
+        onExited: {
+            try {
+                const env = JSON.parse(jobsProc.out.trim());
+                const data = env.data || {};
+                const count = parseInt(data.count || "0", 10);
+                const rows = [];
+                for (let i = 0; i < count; i++) {
+                    const parts = (data["job_" + i] || "").toString().split("\t");
+                    if (parts.length === 5) {
+                        rows.push({
+                            "id": parts[0],
+                            "state": parts[1],
+                            "adapter": parts[2],
+                            "input": parts[3],
+                            "output": parts[4]
+                        });
+                    }
+                }
+                root.jobsModel = rows;
+                root.jobsKnown = env.ok === true;
+            } catch (e) {
+                root.jobsModel = [];
+                root.jobsKnown = false;
+            }
+        }
+    }
+
+    Process {
+        id: logProc
+
+        property string out: ""
+
+        stdout: SplitParser {
+            onRead: data => {
+                logProc.out += data;
+            }
+        }
+        onStarted: logProc.out = ""
+        onExited: {
+            try {
+                const env = JSON.parse(logProc.out.trim());
+                // horneroctl redacts secrets on every log read; this
+                // pane only displays what the CLI returns.
+                root.jobLogText = (env.message || "").toString();
+            } catch (e) {
+                root.jobLogText = qsTr("Job log unavailable (is horneroctl installed?).");
             }
         }
     }
@@ -485,6 +566,83 @@ Item {
                             Accessible.name: qsTr("Restore previous Studio mode and power profile")
                             enabled: !root.busy && root.modeKnown && (root.previousAudioMode.length > 0 || root.performanceActive)
                             onClicked: root.runModeAction(["horneroctl", "--json", "studio", "mode", "restore"])
+                        }
+                    }
+
+                    SectionContainer {
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Render jobs (experimental)")
+                            font.pointSize: Appearance.font.size.large
+                            font.weight: 600
+                        }
+
+                        // Read-only typed job state from horneroctl
+                        // (HorneroOS/hornero#289). Jobs are submitted
+                        // explicitly from the CLI; this surface lists
+                        // them, shows redacted logs, and cancels queued
+                        // jobs on explicit user action. Cancellation
+                        // never deletes source or output files. There
+                        // is no assistant/agent surface here: assisted
+                        // workflows stay optional and disabled.
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: root.jobsKnown ? (root.jobsModel.length > 0 ? qsTr("Jobs recorded by horneroctl. Submit new jobs from the CLI: horneroctl studio jobs submit …") : qsTr("No Studio jobs recorded yet. Submit one from the CLI: horneroctl studio jobs submit …")) : qsTr("Job state unavailable (is horneroctl installed?).")
+                            wrapMode: Text.WordWrap
+                            color: Colours.palette.m3onSurfaceVariant
+                            font.pointSize: Appearance.font.size.small
+                        }
+
+                        Repeater {
+                            model: root.jobsModel
+
+                            ColumnLayout {
+                                required property var modelData
+
+                                Layout.fillWidth: true
+                                spacing: Appearance.spacing.small
+
+                                StyledText {
+                                    Layout.fillWidth: true
+                                    text: `${modelData.id} — ${modelData.state} (${modelData.adapter})`
+                                    wrapMode: Text.WordWrap
+                                    font.pointSize: Appearance.font.size.small
+                                }
+
+                                StyledText {
+                                    Layout.fillWidth: true
+                                    text: `${modelData.input} → ${modelData.output}`
+                                    wrapMode: Text.WordWrap
+                                    color: Colours.palette.m3onSurfaceVariant
+                                    font.pointSize: Appearance.font.size.small
+                                }
+
+                                RowLayout {
+                                    TextButton {
+                                        text: qsTr("Log")
+                                        Accessible.name: qsTr("Show redacted log for job %1").arg(modelData.id)
+                                        enabled: !root.busy
+                                        onClicked: root.showJobLog(modelData.id)
+                                    }
+
+                                    TextButton {
+                                        text: qsTr("Cancel job")
+                                        Accessible.name: qsTr("Cancel queued job %1").arg(modelData.id)
+                                        visible: modelData.state === "queued"
+                                        enabled: !root.busy
+                                        onClicked: root.runJobAction(["horneroctl", "--json", "studio", "jobs", "cancel", modelData.id])
+                                    }
+                                }
+                            }
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            visible: root.jobLogText.length > 0
+                            text: root.jobLogText
+                            wrapMode: Text.WordWrap
+                            color: Colours.palette.m3onSurfaceVariant
+                            font.pointSize: Appearance.font.size.small
                         }
                     }
 

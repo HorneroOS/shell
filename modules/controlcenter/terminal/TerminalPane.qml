@@ -60,6 +60,10 @@ Item {
         listProc.running = true;
     }
 
+    function logLayout(): void {
+        console.log(`[TerminalPane] root=${root.width}x${root.height} visible=${root.visible} surface=${surface.width}x${surface.height} visible=${surface.visible} flick=${flick.width}x${flick.height} content=${content.width}x${content.height} implicit=${content.implicitHeight} header=${header.width}x${header.height} section=${terminalSection.width}x${terminalSection.height} loading=${root.loading}`);
+    }
+
     function applyTerminal(id: string): void {
         if (root.busy || id === root.selectedTerminal)
             return;
@@ -142,7 +146,12 @@ Item {
         }
     }
 
-    Component.onCompleted: root.refresh()
+    Component.onCompleted: {
+        root.refresh();
+        Qt.callLater(root.logLayout);
+    }
+
+    onLoadingChanged: Qt.callLater(root.logLayout)
 
     Timer {
         id: listTimeout
@@ -244,6 +253,8 @@ Item {
     }
 
     StyledClippingRect {
+        id: surface
+
         anchors.fill: parent
         anchors.margins: Appearance.padding.normal
         anchors.leftMargin: 0
@@ -251,8 +262,8 @@ Item {
         radius: Appearance.rounding.normal
         color: "transparent"
 
-        StyledFlickable {
-            id: flick
+            StyledFlickable {
+                id: flick
 
             anchors.fill: parent
             anchors.margins: Appearance.padding.large + Appearance.padding.normal
@@ -274,11 +285,15 @@ Item {
                 spacing: Appearance.spacing.normal
 
                 SettingsHeader {
+                    id: header
+
                     icon: "terminal"
                     title: qsTr("Terminal")
                 }
 
                 SectionContainer {
+                    id: terminalSection
+
                     Layout.fillWidth: true
                     alignTop: true
 

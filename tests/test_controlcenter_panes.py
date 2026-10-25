@@ -617,3 +617,50 @@ def test_extensions_community_registry_is_verified_read_only_cli_output():
     # Community discovery is read-only until it has a provenance-preserving lifecycle.
     assert '"plugin", "community", "install"' not in pane + section
     assert '"plugin", "community", "enable"' not in pane + section
+
+
+def test_studio_pane_is_registered_and_uses_only_horneroctl_studio():
+    registry = REGISTRY.read_text(encoding="utf-8")
+    assert 'readonly property string id: "studio"' in registry
+    assert '"studio/StudioPane.qml"' in registry
+
+    pane = (CC / "studio" / "StudioPane.qml").read_text(encoding="utf-8")
+    assert 'required property Session session' in pane
+    # Fixed horneroctl argv only: no shell, no package manager, no AUR.
+    assert '"horneroctl", "--json", "studio", "selection", "show"' in pane
+    assert '"horneroctl", "--json", "studio", "doctor"' in pane
+    assert '"horneroctl", "--json", "studio", "selection", "set"' in pane
+    for forbidden in ("pacman", "paru", "yay", "sh -c", "bash -c", "pkexec"):
+        assert forbidden not in pane, forbidden
+    # Truthful product state: planned, no support claim, data preservation.
+    assert "Studio is Planned" in pane
+    assert "never deletes your files, settings, or projects" in pane
+    assert "Penpot" in pane and "reference-only" in pane.lower()
+    assert "REAPER" in pane and "Proprietary" in pane
+
+
+def test_studio_pane_models_match_canonical_catalogue_ids():
+    pane = (CC / "studio" / "StudioPane.qml").read_text(encoding="utf-8")
+    specializations = [
+        "audio-music-production",
+        "video-editing-post-production",
+        "streaming-content-creation",
+        "graphic-design-illustration",
+        "photography-raw-processing",
+        "3d-animation-vfx",
+        "game-development",
+        "maker-cad",
+        "complete-creative-workstation",
+        "custom-selection",
+    ]
+    applications = [
+        "ardour", "guitarix", "carla", "audacity", "reaper", "yabridge",
+        "obs-studio", "kdenlive", "blender", "krita", "gimp", "inkscape",
+        "darktable", "rawtherapee", "graphite", "penpot", "scribus",
+        "freecad", "godot",
+    ]
+    for stable_id in specializations + applications:
+        assert f'"{stable_id}"' in pane, stable_id
+    # Interactive rows are accessible switches with names.
+    assert "SwitchRow" in pane
+    assert 'Accessible.name: qsTr("Refresh Studio selection and health")' in pane

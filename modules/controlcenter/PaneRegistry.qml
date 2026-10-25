@@ -237,6 +237,16 @@ QtObject {
             readonly property list<string> keywords: ["plugins", "addons", "community"]
         },
         QtObject {
+            readonly property string id: "studio"
+            readonly property string label: "studio"
+            readonly property string title: qsTr("Studio")
+            readonly property string icon: "movie_creation"
+            readonly property string component: "studio/StudioPane.qml"
+            readonly property string category: "system"
+            readonly property string description: qsTr("Creative workloads and applications")
+            readonly property list<string> keywords: ["studio", "creative", "workloads", "audio", "video", "streaming"]
+        },
+        QtObject {
             readonly property string id: "updates"
             readonly property string label: "updates"
             readonly property string title: qsTr("Updates")

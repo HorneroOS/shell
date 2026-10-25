@@ -23,6 +23,13 @@ RowLayout {
     property alias leftLoader: leftLoader
     property alias rightLoader: rightLoader
 
+    Timer {
+        interval: 1200
+        running: true
+        repeat: false
+        onTriggered: console.log(`[SplitPaneLayout] root=${root.width}x${root.height} implicit=${root.implicitWidth}x${root.implicitHeight} left=${leftPane.x},${leftPane.y} ${leftPane.width}x${leftPane.height} loader=${leftLoader.width}x${leftLoader.height} item=${leftLoader.item ? `${leftLoader.item.width}x${leftLoader.item.height}` : "null"} right=${rightPane.x},${rightPane.y} ${rightPane.width}x${rightPane.height} loader=${rightLoader.width}x${rightLoader.height} item=${rightLoader.item ? `${rightLoader.item.width}x${rightLoader.item.height}` : "null"}`)
+    }
+
     Item {
         id: leftPane
 

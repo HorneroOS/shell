@@ -689,3 +689,26 @@ def test_studio_pane_readiness_checklist_never_fakes_external_gates():
     # Checklist state derives from recorded selection + doctor data only.
     assert "root.selectionState" in pane
     assert "root.doctorChecks" in pane
+
+
+def test_studio_pane_performance_controls_use_only_horneroctl_mode():
+    pane = (CC / "studio" / "StudioPane.qml").read_text(encoding="utf-8")
+    assert 'qsTr("Performance")' in pane
+    # Fixed horneroctl mode argv only (HorneroOS/hornero#286/#287).
+    assert '"horneroctl", "--json", "studio", "mode"' in pane
+    assert '"studio", "mode", "audio", "balanced"' in pane
+    assert '"studio", "mode", "audio", "low-latency", "--yes"' in pane
+    assert '"studio", "mode", "audio", "advanced", "--yes"' in pane
+    assert '"studio", "mode", "performance", "--yes"' in pane
+    assert '"studio", "mode", "restore"' in pane
+    # No privileged or tuning call may be implemented in QML.
+    for forbidden in ("powerprofilesctl", "cpupower", "governor", "pkexec",
+                      "systemctl", "wpctl", "pactl"):
+        assert forbidden not in pane, forbidden
+    # Honest UI: opt-in labels, restore of exact previous state, and no
+    # performance guarantee or invented metric.
+    assert "explicit opt-in" in pane
+    assert "Restore previous mode" in pane
+    assert "No performance improvement is guaranteed" in pane
+    assert "Mode state unavailable" in pane
+    assert 'Accessible.name: qsTr("Restore previous Studio mode and power profile")' in pane

@@ -26,6 +26,7 @@ Singleton {
     property alias sidebar: adapter.sidebar
     property alias services: adapter.services
     property alias paths: adapter.paths
+    property alias plugins: adapter.plugins
 
     property bool editSessionActive: false
     property bool hasPendingChanges: false
@@ -119,7 +120,8 @@ Singleton {
             utilities: serializeUtilities(),
             sidebar: serializeSidebar(),
             services: serializeServices(),
-            paths: serializePaths()
+            paths: serializePaths(),
+            plugins: serializePlugins()
         };
     }
 
@@ -530,6 +532,13 @@ Singleton {
         };
     }
 
+    function serializePlugins(): var {
+        return {
+            settings: plugins.settings,
+            desktopWidgetSlots: plugins.desktopWidgetSlots
+        };
+    }
+
     // Runtime shell settings live at $XDG_CONFIG_HOME/hornero/shell.json.
     // A missing user file means compiled defaults apply (see onLoadFailed).
     FileView {
@@ -587,6 +596,14 @@ Singleton {
             property SidebarConfig sidebar: SidebarConfig {}
             property ServiceConfig services: ServiceConfig {}
             property UserPaths paths: UserPaths {}
+            property PluginsConfig plugins: PluginsConfig {}
+        }
+
+        Connections {
+            target: adapter.plugins
+            function onSaveRequested(): void {
+                root.save();
+            }
         }
     }
 }

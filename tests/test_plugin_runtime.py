@@ -115,3 +115,69 @@ def test_desktop_placement_contract():
     assert "PluginDesktopWidgets" in BACKGROUND
     example = ROOT / "examples" / "plugins" / "example-desktop-note" / "manifest.json"
     assert '"placement": "desktop"' in example.read_text()
+
+
+def test_public_plugin_kit_is_installed_and_exposes_only_reviewed_types():
+    kit = ROOT / "plugin" / "qml" / "Hornero" / "PluginKit"
+    qmldir = (kit / "qmldir").read_text()
+    assert "module Hornero.PluginKit" in qmldir
+    for public_type in ("Theme", "Notifications", "Desktop", "Settings"):
+        assert public_type in qmldir
+        assert (kit / f"{public_type}.qml").is_file()
+    assert "install(DIRECTORY qml/Hornero/PluginKit" in (ROOT / "plugin" / "CMakeLists.txt").read_text()
+    assert "Hornero.PluginKit.Singletons" not in VALIDATOR
+
+
+def test_plugin_settings_are_typed_namespaced_and_persisted_by_config():
+    settings_api = (ROOT / "plugin/qml/Hornero/PluginKit/Settings.qml").read_text()
+    plugin_config = (ROOT / "config/PluginsConfig.qml").read_text()
+    config = (ROOT / "config/Config.qml").read_text()
+    host = (ROOT / "modules/plugins/PluginHost.qml").read_text()
+    service = (ROOT / "services/Plugins.qml").read_text()
+    assert "Plugins.settingDeclaration(pluginId, key)" in settings_api
+    assert "validValue(value, declaration.type)" in settings_api
+    assert "next[pluginId][key] = value" in plugin_config
+    assert "saveRequested()" in plugin_config and "root.save()" in config
+    assert "serializePlugins()" in config
+    assert "manifest.capabilities.settings" in host
+    assert "function settingDeclaration" in service
+    assert "Array.isArray(candidateValues)" in settings_api
+    assert "Array.isArray(next[pluginId])" in plugin_config
+    assert config.count("function onSaveRequested()") == 1
+    notifications = (ROOT / "plugin/qml/Hornero/PluginKit/Notifications.qml").read_text()
+    assert "import Hornero" in notifications
+
+
+def test_desktop_widget_slots_persist_per_display_and_fallback_safely():
+    plugin_config = (ROOT / "config/PluginsConfig.qml").read_text()
+    desktop_api = (ROOT / "plugin/qml/Hornero/PluginKit/Desktop.qml").read_text()
+    desktop_widgets = (ROOT / "modules/plugins/PluginDesktopWidgets.qml").read_text()
+    extensions = (ROOT / "modules/controlcenter/extensions/ExtensionsPane.qml").read_text()
+    position_picker = (ROOT / "modules/controlcenter/extensions/DesktopWidgetPosition.qml").read_text()
+    assert '"top-left"' in plugin_config and '"bottom-right"' in plugin_config
+    assert 'source[screenName || "default"]' in plugin_config
+    assert '"bottom-right"' in plugin_config
+    assert "Config.plugins.desktopWidgetSlot" in desktop_api
+    assert "screenName" in desktop_widgets and "desktopWidgetSlot" in desktop_widgets
+    assert "Quickshell.screens" in extensions and "DesktopWidgetPosition" in extensions
+    assert "Config.plugins.setDesktopWidgetSlot" in position_picker
+    assert "function setPosition" not in desktop_api
+    assert "Users change placement in Control Center" in (ROOT / "docs/PLUGINS.md").read_text()
+    assert "!Array.isArray(screenSlots)" in plugin_config
+    assert "Array.isArray(next[screenId])" in plugin_config
+    assert 'accessibleName: qsTr("%1 display, vertical widget position")' in position_picker
+    assert 'accessibleName: qsTr("%1 display, horizontal widget position")' in position_picker
+    assert "accessibleName: root.accessibleName" in (ROOT / "components/controls/SplitButtonRow.qml").read_text()
+
+
+def test_all_placement_examples_use_only_public_plugin_api_and_qt():
+    examples = {
+        "bar": ROOT / "examples/plugins/example-clock/Main.qml",
+        "dashboard": ROOT / "examples/plugins/example-dashboard-note/Main.qml",
+        "desktop": ROOT / "examples/plugins/example-desktop-note/Main.qml",
+    }
+    for placement, path in examples.items():
+        source = path.read_text()
+        imports = [line.strip() for line in source.splitlines() if line.strip().startswith("import ")]
+        assert "import Hornero.PluginKit" in imports, placement
+        assert all(line == "import QtQuick" or line == "import Hornero.PluginKit" for line in imports), placement

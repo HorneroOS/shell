@@ -1,34 +1,43 @@
 # Hornero Shell extension contract
 
-**Status: runtime slice 3 (headless loader + bar + dashboard placements).** The
-Shell now discovers plugins that `horneroctl plugin list` reports as
-enabled and installed, and instantiates each manifest entrypoint in
-its own Loader (`modules/plugins/PluginHost.qml`, state in
-`services/Plugins.qml`, inspect via `qs ipc call plugins status`,
-re-discover with `qs ipc call plugins reload`). Lifecycle (install,
-enable, disable, remove) is owned by `horneroctl plugin ...`;
-enabling re-validates the installed payload. The Control Center
-Extensions pane can enable/disable by invoking those exact
-`horneroctl` commands (never writing receipts itself); enable
-requires an inline confirmation there, mirroring the CLI `--yes`
-gate, while install/remove stay CLI-only. Background plugins
-(the default) run headless under an invisible root. A manifest may
-declare `"placement": "bar"`: the plugin is then rendered in the
-bar's end group (`modules/plugins/PluginBarWidgets.qml`), still in
-its own Loader, so one failing plugin cannot take the bar down.
-With `"placement": "dashboard"` the entrypoint renders as a card
-in the dashboard Extensions tab
-(`modules/plugins/PluginDashboardCards.qml`), under the same
-per-plugin Loader isolation. With `"placement": "desktop"` the
-entrypoint renders as a widget stacked bottom-right on the
-desktop background layer, per screen
-(`modules/plugins/PluginDesktopWidgets.qml`); widget positioning
-and persistence are not configurable yet.
-`Hornero.PluginKit` remains a reserved import surface; it is not yet
-provided by the Shell package.
+**Status: runtime slice 4 (loader, three visible placements, and public PluginKit API).** The
+Shell discovers plugins that `horneroctl plugin list` reports as enabled and
+installed, then instantiates each manifest entrypoint in its own Loader
+(`modules/plugins/PluginHost.qml`, state in `services/Plugins.qml`; inspect
+with `qs ipc call plugins status` and rediscover with
+`qs ipc call plugins reload`). `horneroctl plugin ...` owns install, enable,
+disable, trust, and remove. Enabling revalidates the installed payload. The
+Control Center can trust and enable with explicit confirmation; install,
+update, and remove remain CLI actions.
 
-This contract gives community authors and maintainers a reviewable package
-shape for the runtime loader. The manifest schema is
+Background plugins (the default) run headless. `placement: "bar"` renders in
+the bar's end group; `placement: "dashboard"` renders in the dashboard
+Extensions tab; `placement: "desktop"` renders on each display's background
+layer. Each plugin gets a separate Loader so one failure does not take down
+the shell or neighbouring extensions. Desktop widgets use nine named slots
+per display. Their locations persist in the user's shell config, reflow when
+resolution changes, and remain saved while a display is disconnected. A new
+or unrecognized display and malformed slot data fall back to `bottom-right`.
+Users select a widget's vertical and horizontal slot in Control Center.
+
+The package installs the stable `Hornero.PluginKit` QML module. It exposes
+`Settings`, `Theme`, `Notifications`, and `Desktop` without requiring plugins
+to import Shell internals:
+
+- `Settings { pluginId: "example-clock" }` reads and writes keys declared by
+  the selected manifest ID. Defaults and types come from
+  `capabilities.settings`; user values are stored under that ID in
+  `$XDG_CONFIG_HOME/hornero/shell.json`. The ID is a namespace selector, not
+  proof of the caller's identity or an access boundary between extensions.
+- `Theme` exposes semantic colors and light-mode state. Token names form the
+  compatibility contract; internal palette implementation may change.
+- `Notifications.toast(summary, body, icon)` shows a bounded in-shell toast.
+  It does not create a persistent desktop notification.
+- `Desktop.position(pluginId, Screen.name)` reads the current named slot.
+  Users change placement in Control Center; plugin code has no PluginKit
+  setter for canonical widget positions.
+
+The manifest schema is
 [`schemas/plugin-manifest.schema.json`](../schemas/plugin-manifest.schema.json)
 and the local checker is `scripts/validate_plugin.py`.
 
@@ -38,7 +47,8 @@ Quickshell QML executes with the logged-in user's permissions. Hornero Shell
 does not sandbox QML, and a manifest declaration cannot restrict filesystem,
 process, or network access at runtime. The validator catches a conservative
 set of malformed packages and suspicious source patterns; passing it is not a
-security certification. Review source before running a community extension.
+security certification. PluginKit's settings namespace does not isolate one
+extension from another. Review source before running a community extension.
 Never put credentials, privileged helpers, compiled binaries, or personal
 configuration into an extension package.
 
@@ -74,15 +84,16 @@ Minimal manifest:
 
 `placement` is optional: `"background"` (default, headless),
 `"bar"` (rendered in the bar end group), or `"dashboard"`
-(rendered as a card in the dashboard Extensions tab). Unknown
-values are rejected by the validator and by the runtime host.
+(rendered as a card in the dashboard Extensions tab), or `"desktop"`
+(rendered in a configurable slot on each display's background layer).
+Unknown values are rejected by the validator and by the runtime host.
 
 Use `processCommands` to disclose exact executable basenames and
 `networkHosts` to disclose intended network hosts. These fields support code
 review only; they are not an operating-system permission grant. Settings are
-typed metadata with explicit defaults. A future host must own persistence and
-expose settings through a stable API rather than letting extensions rewrite
-Shell configuration files.
+typed metadata with explicit defaults. The host owns persistence and exposes
+settings through PluginKit; extensions cannot write the canonical shell
+config through that API.
 
 ## Official and community catalogues
 
@@ -105,8 +116,8 @@ unsigned list. The product key is not shipped yet; see
 for the current client boundary and maintainer gate.
 
 The extension import surface is intentionally narrow: Qt Quick and Quickshell
-public modules plus the future `Hornero.PluginKit` API. Imports from Hornero's
-internal implementation are not stable and are rejected. The checker also
+public modules plus `Hornero.PluginKit`. Imports from Hornero's internal
+implementation and unknown PluginKit submodules are rejected. The checker also
 rejects obvious shell/privilege escalation patterns and undeclared literal
 `Process` commands. These textual checks can be evaded by dynamic code and
 must never be treated as a sandbox.

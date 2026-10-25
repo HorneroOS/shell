@@ -48,7 +48,6 @@ ALLOWED_IMPORTS = (
     "Quickshell",
     "Quickshell.Io",
     "Hornero.PluginKit",
-    "Hornero.PluginKit.Singletons",
 )
 
 

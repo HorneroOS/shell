@@ -79,8 +79,9 @@ The original extraction source and upstream license are recorded in
 
 ## Extension contract
 
-The repository documents the community extension contract and static
-validator in [`docs/PLUGINS.md`](docs/PLUGINS.md). The Control Center can show
+The repository documents the community extension package contract, runtime,
+and public `Hornero.PluginKit` API in [`docs/PLUGINS.md`](docs/PLUGINS.md).
+`horneroctl` owns plugin lifecycle and provenance. The Control Center can show
 community entries only after `horneroctl` verifies the signed registry index.
 Community install, update, and rollback are not available yet. Quickshell QML
 is not sandboxed.

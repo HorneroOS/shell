@@ -197,6 +197,19 @@ def test_terminal_settings_uses_cli_report_and_change_contract():
     assert 'Install Kitty, Alacritty, or Ghostty' in pane
 
 
+def test_terminal_settings_loading_is_bounded_and_reports_empty_process_output():
+    pane = (CC / "terminal" / "TerminalPane.qml").read_text()
+    assert "property bool listTimedOut: false" in pane
+    assert "interval: 15000" in pane
+    assert 'qsTr("Terminal settings request timed out.")' in pane
+    assert 'qsTr("Terminal settings returned no data.")' in pane
+    assert "if (root.listTimedOut)\n                    return;" in pane
+    assert "root.installedTerminals = [];" in pane.split("id: listTimeout", 1)[1].split("Process {", 1)[0]
+    list_exit = pane.split("onExited:", 1)[1].split("\n        }", 1)[0]
+    assert "root.loading = false;" in list_exit
+    assert "root.listTimedOut = false;" not in list_exit
+
+
 def test_terminal_settings_keeps_supported_choices_visible_and_marks_missing_apps():
     pane = (CC / "terminal" / "TerminalPane.qml").read_text()
     assert "Repeater {" not in pane, "fixed terminal options should share one full-width layout"

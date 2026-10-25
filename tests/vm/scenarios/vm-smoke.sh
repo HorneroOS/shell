@@ -42,6 +42,26 @@ mkdir -p "${SCREENSHOT_DIR}" "${VM_ARTIFACTS_DIR}/recordings" "${VM_ARTIFACTS_DI
 
 fail() {
     echo "FAIL: $1" >&2
+    if [[ -S "${VM_ARTIFACTS_DIR}/monitor.sock" ]]; then
+        bash "${VM_LIB_DIR}/qemu-screenshot.sh" \
+            "${SCREENSHOT_DIR}/failure.png" >&2 || true
+        VM_SSH_TIMEOUT=30s vm_ssh "$(vm_hypr_env)
+echo '==> graphical failure process snapshot'
+ps -eo pid,ppid,stat,pcpu,wchan:24,comm,args | awk 'NR == 1 || \$6 ~ /^(Hyprland|qs|quickshell|horneroctl)$/'
+echo '==> horneroctl lookup'
+command -v horneroctl || true
+echo '==> Quickshell process log'
+if [[ -r /tmp/qs.log ]]; then tail -n 300 /tmp/qs.log; fi
+for log in /run/user/1000/quickshell/by-id/*/log.qslog; do
+    if [[ -r \$log ]]; then
+        echo \"==\> \$log\"
+        tail -n 300 \"\$log\"
+    fi
+done
+echo '==> relevant process command lines'
+pgrep -af 'horneroctl|qs|quickshell|Hyprland' || true" </dev/null \
+            > "${VM_ARTIFACTS_DIR}/logs/vm-smoke-failure.log" 2>&1 || true
+    fi
     jq -n --arg reason "$1" \
         '{ scenario: "vm-smoke", result: "FAIL", reason: $reason }' \
         > "${VM_ARTIFACTS_DIR}/assertions.json" 2> /dev/null || true

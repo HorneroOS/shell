@@ -119,6 +119,13 @@ ClippingRectangle {
             loader.active = shouldBeActive;
         }
 
+        function logActiveGeometry(): void {
+            if (pane.paneIndex !== root.session.activeIndex)
+                return;
+            const item = loader.item;
+            console.log(`[ControlCenter] active-pane=${pane.paneIndex} root=${root.width}x${root.height} stack=${layout.width}x${layout.height}+${layout.y} pane=${pane.x},${pane.y} ${pane.width}x${pane.height} loader=${loader.status} item=${item ? `${item.width}x${item.height}` : "null"}`);
+        }
+
         Loader {
             id: loader
 
@@ -128,6 +135,9 @@ ClippingRectangle {
             asynchronous: true
 
             Component.onCompleted: Qt.callLater(pane.updateActive)
+
+            onStatusChanged: pane.logActiveGeometry()
+            onLoaded: pane.logActiveGeometry()
 
             onActiveChanged: {
                 if (active && !item) {
@@ -142,6 +152,7 @@ ClippingRectangle {
             target: root.session
             function onActiveIndexChanged(): void {
                 pane.updateActive();
+                Qt.callLater(pane.logActiveGeometry);
             }
             function onWarmLabelChanged(): void {
                 pane.updateActive();

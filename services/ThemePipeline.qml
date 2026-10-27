@@ -292,7 +292,10 @@ Singleton {
         }
         if (Compositor.isHyprland) {
             hyprlockProc.running = true;
-            hyprReloadProc.running = true;
+            // Regenerate the Hyprland border cache from the new scheme
+            // first; hyprlandProc starts the reload when it exits, so
+            // Hyprland never reloads against the stale palette.
+            hyprlandProc.running = true;
         }
         _awaitingGtk = true;
         GtkSettings.applyFull("", "", _pendingThemeId, _pendingGtkColorScheme, _pendingDarkMode);
@@ -557,7 +560,7 @@ done
     function _runSideEffects(): void {
         if (Compositor.isHyprland) {
             hyprlockProc.running = true;
-            hyprReloadProc.running = true;
+            hyprlandProc.running = true;
         }
 
         if (root._runThemeSideEffects && root._pendingThemeId) {
@@ -570,6 +573,23 @@ done
     Process {
         id: hyprReloadProc
         command: ["hyprctl", "reload"]
+    }
+
+    // Border colours: regenerate colors-hyprland.lua from the live
+    // scheme before reloading Hyprland, or the reload keeps the old
+    // (or factory) palette. horneroctl owns the rendering.
+    Process {
+        id: hyprlandProc
+        command: ["horneroctl", "appearance", "hyprland", "--yes"]
+
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode !== 0) {
+                notifyFailProc.message = "Could not regenerate Hyprland border colours";
+                notifyFailProc.running = true;
+            }
+            if (Compositor.isHyprland)
+                hyprReloadProc.running = true;
+        }
     }
 
     // Snappy theme side effect runs through horneroctl (backend-owned).

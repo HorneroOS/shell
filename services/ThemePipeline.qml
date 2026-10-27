@@ -583,6 +583,10 @@ done
         command: ["horneroctl", "appearance", "hyprland", "--yes"]
 
         onExited: (exitCode, exitStatus) => {
+            if (exitCode !== 0) {
+                notifyFailProc.message = "Could not regenerate Hyprland border colours";
+                notifyFailProc.running = true;
+            }
             if (Compositor.isHyprland)
                 hyprReloadProc.running = true;
         }

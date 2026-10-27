@@ -50,15 +50,21 @@ Singleton {
     }
 
     // Persist the built-in identity and mode through the same scheme file
-    // used by startup restoration. The palette itself remains owned by the
-    // generated built-in tables above; an empty colours object tells load()
-    // to restore that table instead of wallpaper-generated roles.
+    // used by startup restoration. load() restores built-ins from the
+    // generated tables above by name, so the palette in `colours` is not
+    // for the shell: it feeds the horneroctl scheme consumers
+    // (colors-hyprland.lua, colors-hyprlock.conf), which would otherwise
+    // render their fallback colours for built-in themes.
     function persistBuiltInTheme(id: string, gtkColorScheme: string): void {
         if (!isBuiltInTheme(id)) {
             builtInThemePersisted(id, false, "unknown built-in theme");
             return;
         }
         const mode = id === "hornero-light" ? "light" : "dark";
+        const table = id === "hornero-light" ? _horneroLight : _horneroDark;
+        const colours = {};
+        for (const [name, colour] of Object.entries(table))
+            colours[name] = String(colour).replace(/^#/, "");
         _pendingBuiltInPersistId = id;
         schemeFileView.setText(JSON.stringify({
             "name": id,
@@ -66,7 +72,7 @@ Singleton {
             "mode": mode,
             "variant": "tonalspot",
             "gtkColorScheme": gtkColorScheme,
-            "colours": {}
+            "colours": colours
         }));
     }
     readonly property bool light: Config.appearance.highContrast ? false : (showPreview ? previewLight : currentLight)

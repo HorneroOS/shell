@@ -35,7 +35,7 @@ def test_control_center_matrix_covers_every_registered_destination() -> None:
         )
     ]
 
-    assert len(scenario_panes) == 26
+    assert len(scenario_panes) == 27
     assert scenario_panes == registered_panes
 
 
@@ -86,7 +86,7 @@ def test_matrix_uses_the_isolated_vm_and_checks_every_capture() -> None:
     assert "controlCenter close" in script
     assert '.floating == true and .size[0] >= 1100 and .size[1] >= 600' in script
     assert "sleep 2" not in script
-    assert '[[ "$captured_count" -eq 26 ]]' in script
+    assert '[[ "$captured_count" -eq 27 ]]' in script
     assert 'last-json-object.py' in smoke
     assert 'WELCOME_STATUS_RAW=' in smoke
     assert 'Welcome status IPC did not return a JSON object' in smoke

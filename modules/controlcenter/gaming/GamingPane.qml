@@ -178,7 +178,7 @@ Item {
                         SwitchRow {
                             label: qsTr("Gaming Focus (Hyprland effects)")
                             checked: GameMode.enabled
-                            onToggled: GameMode.toggle()
+                            onToggled: checked => GameMode.enabled = checked
                         }
                     }
 

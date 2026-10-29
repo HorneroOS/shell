@@ -105,4 +105,13 @@ if("shell" IN_LIST ENABLE_MODULES)
     install(PROGRAMS scripts/validate_plugin.py
         DESTINATION "${INSTALL_LIBDIR}"
         RENAME hornero-shell-plugin-validate)
+    # Experimental Gamescope gaming session (docs/GAMING-SESSION.md):
+    # a greeter-selectable wayland-sessions entry plus its wrapper.
+    # Experimental on every device until handheld qualification exists;
+    # the wrapper never claims hardware support.
+    install(FILES assets/hornero-gaming-session.desktop
+        DESTINATION "share/wayland-sessions")
+    install(PROGRAMS scripts/hornero-gaming-session.sh
+        DESTINATION "bin"
+        RENAME hornero-gaming-session)
 endif()

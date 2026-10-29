@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=HorneroOS Gaming Session (Experimental)
+Comment=Controller-friendly Gamescope session with Steam (experimental, not hardware-qualified)
+Exec=/usr/bin/hornero-gaming-session
+Type=Application
+DesktopNames=HorneroOS-Gaming

@@ -247,6 +247,16 @@ QtObject {
             readonly property list<string> keywords: ["studio", "creative", "workloads", "audio", "video", "streaming"]
         },
         QtObject {
+            readonly property string id: "gaming"
+            readonly property string label: "gaming"
+            readonly property string title: qsTr("Gaming")
+            readonly property string icon: "sports_esports"
+            readonly property string component: "gaming/GamingPane.qml"
+            readonly property string category: "system"
+            readonly property string description: qsTr("Gaming readiness, profiles, and Gaming Focus")
+            readonly property list<string> keywords: ["gaming", "games", "steam", "proton", "gamescope", "gamemode", "controllers"]
+        },
+        QtObject {
             readonly property string id: "updates"
             readonly property string label: "updates"
             readonly property string title: qsTr("Updates")

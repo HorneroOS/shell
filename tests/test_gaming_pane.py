@@ -21,5 +21,5 @@ def test_gaming_pane_separates_focus_from_feral():
     assert "Gaming Focus" in PANE
     assert "Feral GameMode" in PANE
     assert "GameMode.enabled" in PANE
-    assert "Planned" in PANE
+    assert "Gaming is Preview" in PANE
     assert "not hardware qualification" in PANE

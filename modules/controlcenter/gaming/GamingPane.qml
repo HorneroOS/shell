@@ -13,7 +13,7 @@ import QtQuick.Layouts
 
 // Control Center › Gaming: read-only readiness from
 // `horneroctl gaming doctor --json` (fixed argv, no shell). Gaming is
-// Planned (HorneroOS/hornero#328): this pane installs nothing, writes no
+// Preview (HorneroOS/hornero#332): this pane installs nothing, writes no
 // selection state, and never claims hardware qualification, game
 // compatibility, performance, or latency.
 //
@@ -97,7 +97,7 @@ Item {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: qsTr("Gaming is Planned: this pane only reports readiness from horneroctl. Nothing is installed or changed here, and detection is not hardware qualification.")
+                    text: qsTr("Gaming is Preview: this pane only reports readiness from horneroctl. Nothing is installed or changed here, and detection is not hardware qualification.")
                     wrapMode: Text.WordWrap
                     color: Colours.palette.m3onSurfaceVariant
                     font.pointSize: Appearance.font.size.small

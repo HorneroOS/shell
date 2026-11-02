@@ -14,6 +14,8 @@ from pathlib import Path
 
 import pytest
 
+pytest.importorskip("gi", reason="hornero-bt-agent requires PyGObject (gi)")
+
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location(
     "hornero_bt_agent", ROOT / "scripts/hornero-bt-agent.py")

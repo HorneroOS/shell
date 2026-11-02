@@ -58,8 +58,21 @@ Scope {
                             Plugins.markFailed(slot.modelData.id, "manifest id does not match its directory");
                             return;
                         }
-                        if (typeof manifest.entrypoint !== "string" || manifest.entrypoint.includes("..")) {
+                        if (manifest.schemaVersion !== 1) {
+                            Plugins.markFailed(slot.modelData.id, "manifest schemaVersion must be 1");
+                            return;
+                        }
+                        if (typeof manifest.version !== "string" || !/^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/.test(manifest.version)) {
+                            Plugins.markFailed(slot.modelData.id, "manifest version must be semantic versioning");
+                            return;
+                        }
+                        if (typeof manifest.entrypoint !== "string" || manifest.entrypoint.includes("..") || manifest.entrypoint.includes("\\")
+                                || !/^(?!\/)(?!\.{1,2}(\/|$))(?!.*\/\.{1,2}(\/|$))(?!.*\/\/)[A-Za-z0-9._\/-]+\.qml$/.test(manifest.entrypoint)) {
                             Plugins.markFailed(slot.modelData.id, "manifest entrypoint is not a safe relative path");
+                            return;
+                        }
+                        if (!Array.isArray(manifest.files) || !manifest.files.includes(manifest.entrypoint)) {
+                            Plugins.markFailed(slot.modelData.id, "manifest files must list the entrypoint");
                             return;
                         }
                         const placement = typeof manifest.placement === "string" ? manifest.placement : "background";
@@ -90,7 +103,7 @@ Scope {
                     if (status === Loader.Ready)
                         Plugins.markLoaded(slot.modelData.id);
                     else if (status === Loader.Error)
-                        Plugins.markFailed(slot.modelData.id, "entrypoint failed to load (see shell log)");
+                        Plugins.markFailed(slot.modelData.id, pluginLoader.errorString || "entrypoint failed to load (see shell log)");
                 }
             }
         }

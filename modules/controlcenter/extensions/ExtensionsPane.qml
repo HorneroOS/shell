@@ -244,10 +244,19 @@ Item {
 
                 StyledText {
                     Layout.fillWidth: true
-                    visible: Plugins.discovered && Plugins.entries.length === 0
+                    visible: Plugins.discovered && Plugins.entries.length === 0 && Plugins.discoveryError.length === 0
                     text: qsTr("No plugins installed. Add one with: horneroctl plugin install <path>")
                     font.pointSize: Appearance.font.size.small
                     color: Colours.palette.m3outline
+                    wrapMode: Text.Wrap
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
+                    visible: Plugins.discoveryError.length > 0
+                    text: Plugins.discoveryError
+                    font.pointSize: Appearance.font.size.small
+                    color: Colours.palette.m3error
                     wrapMode: Text.Wrap
                 }
 

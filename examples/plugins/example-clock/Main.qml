@@ -15,7 +15,9 @@ Item {
     Text {
         id: label
         text: Qt.formatDateTime(new Date(), pluginSettings.value("twentyFourHour", true) ? "ddd, HH:mm" : "ddd, h:mm ap")
-        color: Theme.primary
+        color: Theme.onSurface
+        font.family: Theme.fontFamily
+        font.pointSize: Theme.fontSize
     }
 
     MouseArea {

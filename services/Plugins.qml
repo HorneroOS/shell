@@ -20,16 +20,26 @@ Singleton {
     // state: pending | loaded | failed | disabled
     property var entries: []
     property bool discovered: false
+    property string discoveryError: ""
     property string buffer: ""
+    readonly property bool loading: listProcess.running
 
     readonly property string pluginsDir: `${Paths.data}/plugins`
 
     function reload(): void {
+        if (listProcess.running)
+            return;
         root.buffer = "";
+        root.discoveryError = "";
         listProcess.running = true;
     }
 
     function markPlacement(id: string, placement: string, entrypoint: string, settings: var): void {
+        const current = root.entries.find(e => e.id === id);
+        const normalized = settings && typeof settings === "object" && !Array.isArray(settings) ? settings : ({});
+        if (current && current.placement === placement && current.entrypoint === entrypoint
+                && JSON.stringify(current.settings || {}) === JSON.stringify(normalized))
+            return;
         const next = root.entries.map(e => e.id === id ? Object.assign({}, e, {
             placement: placement,
             entrypoint: entrypoint,
@@ -74,6 +84,9 @@ Singleton {
     }
 
     function setState(id: string, state: string, detail: string): void {
+        const current = root.entries.find(e => e.id === id);
+        if (current && current.state === state && (current.detail || "") === detail)
+            return;
         const next = root.entries.map(e => e.id === id ? Object.assign({}, e, {
             state: state,
             detail: detail
@@ -84,6 +97,8 @@ Singleton {
     function status(): var {
         return {
             discovered: root.discovered,
+            loading: root.loading,
+            discoveryError: root.discoveryError,
             pluginsDir: root.pluginsDir,
             count: root.entries.length,
             loaded: root.entries.filter(e => e.state === "loaded").length,
@@ -104,15 +119,23 @@ Singleton {
         }
 
         onExited: (exitCode, exitStatus) => {
+            if (exitCode !== 0) {
+                root.discoveryError = qsTr("horneroctl plugin list failed (exit %1)").arg(exitCode);
+                root.discovered = true;
+                return;
+            }
             let parsed = [];
             try {
                 const envelope = JSON.parse(root.buffer.trim());
                 const raw = envelope && envelope.data ? envelope.data.plugins : null;
                 const list = typeof raw === "string" ? JSON.parse(raw) : raw;
-                if (Array.isArray(list))
-                    parsed = list;
+                if (!Array.isArray(list))
+                    throw new Error("plugins payload is not a list");
+                parsed = list;
             } catch (e) {
-                parsed = [];
+                root.discoveryError = qsTr("horneroctl plugin list returned malformed JSON");
+                root.discovered = true;
+                return;
             }
             root.entries = parsed.map(e => {
                 const requestedEnabled = !!e.enabled && !!e.installed;

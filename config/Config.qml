@@ -598,12 +598,15 @@ Singleton {
             property UserPaths paths: UserPaths {}
             property PluginsConfig plugins: PluginsConfig {}
         }
+    }
 
-        Connections {
-            target: adapter.plugins
-            function onSaveRequested(): void {
-                root.save();
-            }
+    // Kept outside FileView: its default property is the typed
+    // `adapter`, so a bare Connections child fails config load on
+    // current Quickshell ("Cannot assign ... FileViewAdapter*").
+    Connections {
+        target: adapter.plugins
+        function onSaveRequested(): void {
+            root.save();
         }
     }
 }

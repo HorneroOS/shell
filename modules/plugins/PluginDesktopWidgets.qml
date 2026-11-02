@@ -67,6 +67,7 @@ Item {
                             required property var modelData
 
                             Layout.alignment: slotCell.column === 0 ? Qt.AlignLeft : slotCell.column === 1 ? Qt.AlignHCenter : Qt.AlignRight
+                            Layout.maximumWidth: 360
                             implicitWidth: content.implicitWidth + Appearance.padding.large * 2
                             implicitHeight: content.implicitHeight + Appearance.padding.large * 2
                             radius: Appearance.rounding.large
@@ -87,6 +88,9 @@ Item {
                                 Loader {
                                     id: pluginLoader
 
+                                    Layout.maximumWidth: 300
+                                    clip: true
+                                    palette.windowText: Colours.palette.m3onSurface
                                     source: card.modelData.entrypoint ? `file://${Plugins.pluginsDir}/${card.modelData.id}/${card.modelData.entrypoint}` : ""
                                     asynchronous: true
 
@@ -94,7 +98,7 @@ Item {
                                         if (status === Loader.Ready)
                                             Plugins.markLoaded(card.modelData.id);
                                         else if (status === Loader.Error)
-                                            Plugins.markFailed(card.modelData.id, "desktop entrypoint failed to load (see shell log)");
+                                            Plugins.markFailed(card.modelData.id, pluginLoader.errorString || "desktop entrypoint failed to load (see shell log)");
                                     }
                                 }
 

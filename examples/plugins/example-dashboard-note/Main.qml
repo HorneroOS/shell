@@ -13,7 +13,9 @@ Item {
     Text {
         id: label
         text: pluginSettings.value("showGreeting", true) ? "El futuro se construye acá." : "HorneroOS"
-        color: Theme.primary
+        color: Theme.onSurface
+        font.family: Theme.fontFamily
+        font.pointSize: Theme.fontSize
     }
 
     MouseArea {

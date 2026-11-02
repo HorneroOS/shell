@@ -36,6 +36,7 @@ Item {
                 required property var modelData
 
                 Layout.alignment: Qt.AlignTop
+                Layout.maximumWidth: 440
                 implicitWidth: content.implicitWidth + Appearance.padding.large * 2
                 implicitHeight: content.implicitHeight + Appearance.padding.large * 2
                 radius: Appearance.rounding.large
@@ -56,6 +57,8 @@ Item {
                     Loader {
                         id: pluginLoader
 
+                        Layout.maximumWidth: 380
+                        clip: true
                         // Same contract as the bar host: plugin default
                         // text inherits the card's themed foreground.
                         palette.windowText: Colours.palette.m3onSurface
@@ -66,7 +69,7 @@ Item {
                             if (status === Loader.Ready)
                                 Plugins.markLoaded(card.modelData.id);
                             else if (status === Loader.Error)
-                                Plugins.markFailed(card.modelData.id, "dashboard entrypoint failed to load (see shell log)");
+                                Plugins.markFailed(card.modelData.id, pluginLoader.errorString || "dashboard entrypoint failed to load (see shell log)");
                         }
                     }
 

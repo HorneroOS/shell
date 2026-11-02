@@ -25,6 +25,9 @@ Repeater {
         required property var modelData
 
         Layout.alignment: root.vertical ? Qt.AlignHCenter : Qt.AlignVCenter
+        Layout.maximumWidth: root.vertical ? 64 : 240
+        Layout.maximumHeight: root.vertical ? 240 : 64
+        clip: true
         // Plugins cannot import Shell theming; give their default text the
         // bar's themed foreground through palette inheritance instead of
         // Qt's default black (invisible on the dark bar).
@@ -36,7 +39,7 @@ Repeater {
             if (status === Loader.Ready)
                 Plugins.markLoaded(modelData.id);
             else if (status === Loader.Error)
-                Plugins.markFailed(modelData.id, "bar entrypoint failed to load (see shell log)");
+                Plugins.markFailed(modelData.id, pluginLoader.errorString || "bar entrypoint failed to load (see shell log)");
         }
     }
 }

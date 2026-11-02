@@ -47,6 +47,7 @@ Item {
     // Two-step confirm for the mutating actions: first click arms, second
     // click runs. Any other click path resets.
     property string armedAction: ""
+    property string snapshotIdField: ""
 
     function envelope(text: string): var {
         try {
@@ -391,6 +392,63 @@ Item {
                         enabled: !backupsProc.running
                         onClicked: root.refresh()
                     }
+                }
+
+                // ── Dependencies & recovery ──────────────────────────────
+                StyledText {
+                    text: qsTr("Dependencies & recovery")
+                    font.pointSize: Appearance.font.size.normal
+                    font.weight: 600
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
+                    visible: root.snapshotStatus === "unavailable"
+                    text: qsTr("Update rollback is unavailable: no snapshot backend is recorded for this system.")
+                    color: Colours.palette.m3tertiary
+                    font.pointSize: Appearance.font.size.smaller
+                    wrapMode: Text.Wrap
+                }
+
+                CtlCard {
+                    title: qsTr("Dependencies")
+                    description: qsTr("Core compositor dependencies. Installing missing ones asks for administrator approval outside this pane.")
+                    probeArgv: ["horneroctl", "--json", "package", "deps"]
+                    actionLabel: qsTr("Install missing")
+                    actionArgv: ["horneroctl", "--json", "package", "deps", "--install", "--yes"]
+                }
+
+                CtlCard {
+                    title: qsTr("Config snapshots")
+                    description: qsTr("Snapshots archive Hornero configuration; restoring one first creates a safety snapshot. Restore a snapshot from the list by running: horneroctl config snapshot restore <id>")
+                    probeArgv: ["horneroctl", "--json", "config", "snapshot", "list"]
+                    actionLabel: qsTr("Create snapshot")
+                    actionArgv: ["horneroctl", "--json", "config", "snapshot", "create", "--yes"]
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Appearance.spacing.small
+
+                    StyledTextField {
+                        Layout.fillWidth: true
+                        placeholderText: qsTr("Snapshot id to restore")
+                        text: root.snapshotIdField
+                        onTextChanged: root.snapshotIdField = text
+                    }
+
+                    TextButton {
+                        text: root.armedAction === "snapshot-restore" ? qsTr("Click again to restore") : qsTr("Restore snapshot")
+                        type: root.armedAction === "snapshot-restore" ? TextButton.Filled : TextButton.Tonal
+                        enabled: !root.busy && root.snapshotIdField.trim() !== ""
+                        onClicked: root.runMutating("snapshot-restore", ["horneroctl", "config", "snapshot", "restore", root.snapshotIdField.trim(), "--yes"])
+                    }
+                }
+
+                CtlCard {
+                    title: qsTr("Backup schedule")
+                    description: qsTr("Automatic backups are a documented recipe, never installed from here.")
+                    probeArgv: ["horneroctl", "--json", "backup", "schedule"]
                 }
 
                 // ── Last action result ───────────────────────────────────

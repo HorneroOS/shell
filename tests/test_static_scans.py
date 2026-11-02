@@ -75,7 +75,7 @@ def test_lock_notifdock_hides_content():
 def test_appearance_sections_disclosure_wired():
     """Every Appearance section restores + persists its disclosure state.
 
-    Regression (baseline 5.6): all 13 sections rendered collapsed with no
+    Regression (baseline 5.6): all sections rendered collapsed with no
     persistence, so first-run discoverability relied on Preview hover.
     Each section must restore from Config.controlCenter and write back
     user toggles; keys must match the pane's canonical _sectionKeys.
@@ -84,7 +84,7 @@ def test_appearance_sections_disclosure_wired():
     pane = (ROOT / "modules" / "controlcenter" / "appearance"
             / "AppearancePane.qml").read_text()
     keys = re.findall(r"persistSection\(\"([a-zA-Z]+)\"", pane)
-    assert len(keys) == 13, f"expected 13 wired sections, got {len(keys)}: {keys}"
+    assert len(keys) == 14, f"expected 14 wired sections, got {len(keys)}: {keys}"
     m = re.search(r"_sectionKeys:\s*\[(.*?)\]", pane, re.S)
     assert m, "pane must declare canonical _sectionKeys"
     canonical = re.findall(r"\"([a-zA-Z]+)\"", m.group(1))

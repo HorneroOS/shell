@@ -77,7 +77,12 @@ Item {
     property bool modeKnown: false
     property var jobsModel: []
     property bool jobsKnown: false
+    property string jobsError: ""
     property string jobLogText: ""
+    property string jobAdapter: "ffmpeg-export"
+    property string jobInput: ""
+    property string jobOutput: ""
+    property string armedRunId: ""
 
     function refresh(): void {
         if (selectionProc.running || doctorProc.running || modeProc.running || jobsProc.running)
@@ -99,6 +104,33 @@ Item {
     // application processes here.
     function runJobAction(argv: var): void {
         root.runModeAction(argv);
+    }
+
+    // Queue-only submission: no --execute, so nothing runs until the
+    // user separately confirms Run for the queued job. horneroctl
+    // validates adapter/input/output and never overwrites output.
+    function queueJob(): void {
+        if (root.busy)
+            return;
+        if (root.jobInput.trim().length === 0 || root.jobOutput.trim().length === 0) {
+            root.actionError = qsTr("Choose an input and an output path first.");
+            return;
+        }
+        root.armedRunId = "";
+        root.runModeAction(["horneroctl", "--json", "studio", "jobs", "submit", "--adapter", root.jobAdapter, "--input", root.jobInput.trim(), "--output", root.jobOutput.trim()]);
+    }
+
+    // Two-step Run: first click arms, second click executes with the
+    // CLI --yes gate. Running changes files, so it is never one-click.
+    function runJob(id: string): void {
+        if (root.busy)
+            return;
+        if (root.armedRunId !== id) {
+            root.armedRunId = id;
+            return;
+        }
+        root.armedRunId = "";
+        root.runModeAction(["horneroctl", "--json", "studio", "jobs", "run", id, "--yes"]);
     }
 
     function showJobLog(id: string): void {
@@ -263,9 +295,11 @@ Item {
                 }
                 root.jobsModel = rows;
                 root.jobsKnown = env.ok === true;
+                root.jobsError = env.ok === true ? "" : qsTr("Job state unavailable (is horneroctl installed?).");
             } catch (e) {
                 root.jobsModel = [];
                 root.jobsKnown = false;
+                root.jobsError = qsTr("Job state unavailable (is horneroctl installed?).");
             }
         }
     }
@@ -577,20 +611,62 @@ Item {
                             font.weight: 600
                         }
 
-                        // Read-only typed job state from horneroctl
-                        // (HorneroOS/hornero#289). Jobs are submitted
-                        // explicitly from the CLI; this surface lists
-                        // them, shows redacted logs, and cancels queued
-                        // jobs on explicit user action. Cancellation
+                        // Typed job state from horneroctl
+                        // (HorneroOS/hornero#289). Submitting only
+                        // queues; executing is a separate two-step Run
+                        // confirm per job. Cancellation
                         // never deletes source or output files. There
                         // is no assistant/agent surface here: assisted
                         // workflows stay optional and disabled.
                         StyledText {
                             Layout.fillWidth: true
-                            text: root.jobsKnown ? (root.jobsModel.length > 0 ? qsTr("Jobs recorded by horneroctl. Submit new jobs from the CLI: horneroctl studio jobs submit …") : qsTr("No Studio jobs recorded yet. Submit one from the CLI: horneroctl studio jobs submit …")) : qsTr("Job state unavailable (is horneroctl installed?).")
+                            text: root.busy ? qsTr("Working…") : root.jobsError.length > 0 ? root.jobsError : root.jobsKnown ? (root.jobsModel.length > 0 ? qsTr("Jobs recorded by horneroctl. Queuing a job does not run it.") : qsTr("No Studio jobs recorded yet. Queue one below — queuing does not run it.")) : qsTr("Reading jobs…")
                             wrapMode: Text.WordWrap
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: root.jobsError.length > 0 ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
                             font.pointSize: Appearance.font.size.small
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+
+                            ToggleButton {
+                                toggled: root.jobAdapter === "ffmpeg-export"
+                                label: qsTr("FFmpeg export")
+                                Accessible.name: qsTr("Use FFmpeg export adapter")
+                                onClicked: root.jobAdapter = "ffmpeg-export"
+                            }
+
+                            ToggleButton {
+                                toggled: root.jobAdapter === "blender-render"
+                                label: qsTr("Blender render")
+                                Accessible.name: qsTr("Use Blender render adapter")
+                                onClicked: root.jobAdapter = "blender-render"
+                            }
+                        }
+
+                        StyledTextField {
+                            Layout.fillWidth: true
+                            placeholderText: qsTr("Input path (existing file)")
+                            text: root.jobInput
+                            enabled: !root.busy
+                            Accessible.name: qsTr("Studio job input path")
+                            onTextEdited: root.jobInput = text
+                        }
+
+                        StyledTextField {
+                            Layout.fillWidth: true
+                            placeholderText: qsTr("Output path (never overwritten)")
+                            text: root.jobOutput
+                            enabled: !root.busy
+                            Accessible.name: qsTr("Studio job output path")
+                            onTextEdited: root.jobOutput = text
+                        }
+
+                        TextButton {
+                            text: qsTr("Queue job")
+                            Accessible.name: qsTr("Queue Studio job without running it")
+                            enabled: !root.busy && root.jobInput.trim().length > 0 && root.jobOutput.trim().length > 0
+                            onClicked: root.queueJob()
                         }
 
                         Repeater {
@@ -623,6 +699,14 @@ Item {
                                         Accessible.name: qsTr("Show redacted log for job %1").arg(modelData.id)
                                         enabled: !root.busy
                                         onClicked: root.showJobLog(modelData.id)
+                                    }
+
+                                    TextButton {
+                                        text: root.armedRunId === modelData.id ? qsTr("Confirm run") : qsTr("Run job")
+                                        Accessible.name: qsTr("Run queued job %1 (two-step confirm)").arg(modelData.id)
+                                        visible: modelData.state === "queued"
+                                        enabled: !root.busy
+                                        onClicked: root.runJob(modelData.id)
                                     }
 
                                     TextButton {

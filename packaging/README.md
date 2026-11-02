@@ -5,6 +5,9 @@ desktop shell. The package builds the CMake project and installs it to the
 standard prefixes verified against a local `DESTDIR` install:
 
 - `/etc/xdg/quickshell/hornero` — shell QML runtime, assets, presets
+- `/etc/xdg/quickshell/default` — symlink to `hornero`, so a bare `qs`
+  starts the packaged shell (configs under `~/.config/quickshell` still
+  take precedence)
 - `/etc/xdg/quickshell/hornero/presets` — runtime preset definitions used by
   the Shell's Layout Picker
 - `/usr/share/doc/hornero-shell/IPC.md` — installed IPC contract for tooling

@@ -69,6 +69,14 @@ StyledFlickable {
                             color: Colours.palette.m3outline
                         }
 
+                        StyledText {
+                            Layout.fillWidth: true
+                            visible: root.session.bt.lastError !== ""
+                            wrapMode: Text.WordWrap
+                            text: root.session.bt.lastError
+                            color: Colours.palette.m3error
+                        }
+
                         StyledRect {
                             Layout.fillWidth: true
                             implicitHeight: deviceStatus.implicitHeight + Appearance.padding.large * 2
@@ -89,24 +97,29 @@ StyledFlickable {
                                 Toggle {
                                     label: qsTr("Connected")
                                     checked: root.device?.connected ?? false
-                                    toggle.onToggled: root.device.connected = checked
+                                    toggle.onToggled: checked ? root.session.bt.connectDevice(root.device) : root.session.bt.disconnectDevice(root.device)
                                 }
 
                                 Toggle {
                                     label: qsTr("Paired")
                                     checked: root.device?.paired ?? false
                                     toggle.onToggled: {
+                                        if (!root.device)
+                                            return;
                                         if (root.device.paired)
-                                            root.device.forget();
+                                            root.session.bt.forgetDevice(root.device);
                                         else
-                                            root.device.pair();
+                                            root.session.bt.pairDevice(root.device);
                                     }
                                 }
 
                                 Toggle {
                                     label: qsTr("Blocked")
                                     checked: root.device?.blocked ?? false
-                                    toggle.onToggled: root.device.blocked = checked
+                                    toggle.onToggled: {
+                                        if (root.device)
+                                            root.device.blocked = checked;
+                                    }
                                 }
                             }
                         }
@@ -205,7 +218,8 @@ StyledFlickable {
                                             readOnly: !root.session.bt.editingDeviceName
                                             onAccepted: {
                                                 root.session.bt.editingDeviceName = false;
-                                                root.device.name = text;
+                                                if (root.device)
+                                                    root.device.name = text;
                                             }
 
                                             leftPadding: Appearance.padding.normal
@@ -309,13 +323,16 @@ StyledFlickable {
                                 Toggle {
                                     label: qsTr("Trusted")
                                     checked: root.device?.trusted ?? false
-                                    toggle.onToggled: root.device.trusted = checked
+                                    toggle.onToggled: root.session.bt.setTrusted(root.device, checked)
                                 }
 
                                 Toggle {
                                     label: qsTr("Wake allowed")
                                     checked: root.device?.wakeAllowed ?? false
-                                    toggle.onToggled: root.device.wakeAllowed = checked
+                                    toggle.onToggled: {
+                                        if (root.device)
+                                            root.device.wakeAllowed = checked;
+                                    }
                                 }
                             }
                         }
@@ -544,13 +561,24 @@ StyledFlickable {
                         fabState.forceActiveFocus();
                         root.session.bt.fabMenuOpen = false;
 
+                        if (!root.device)
+                            return;
                         const name = fabMenuItem.modelData.name;
-                        if (fabMenuItem.modelData.name !== "pair")
-                            root.device[`${name}ed`] = !root.device[`${name}ed`];
-                        else if (root.device.paired)
-                            root.device.forget();
-                        else
-                            root.device.pair();
+                        if (name === "pair") {
+                            if (root.device.paired)
+                                root.session.bt.forgetDevice(root.device);
+                            else
+                                root.session.bt.pairDevice(root.device);
+                        } else if (name === "connect") {
+                            if (root.device.connected)
+                                root.session.bt.disconnectDevice(root.device);
+                            else
+                                root.session.bt.connectDevice(root.device);
+                        } else if (name === "trust") {
+                            root.session.bt.setTrusted(root.device, !root.device.trusted);
+                        } else if (name === "block") {
+                            root.device.blocked = !root.device.blocked;
+                        }
                     }
                 }
 

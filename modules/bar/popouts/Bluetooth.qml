@@ -76,7 +76,7 @@ ColumnLayout {
 
     Repeater {
         model: ScriptModel {
-            values: [...Bluetooth.devices.values].sort((a, b) => (b.connected - a.connected) || (b.paired - a.paired) || a.name.localeCompare(b.name)).slice(0, 5)
+            values: [...Bluetooth.devices.values].sort((a, b) => (b.connected - a.connected) || (b.paired - a.paired) || (a.name || a.address || "").localeCompare(b.name || b.address || "")).slice(0, 5)
         }
 
         RowLayout {
@@ -113,7 +113,7 @@ ColumnLayout {
                 Layout.leftMargin: Appearance.spacing.small / 2
                 Layout.rightMargin: Appearance.spacing.small / 2
                 Layout.fillWidth: true
-                text: device.modelData.name
+                text: device.modelData.name || device.modelData.address || qsTr("Unknown")
             }
 
             StyledRect {
@@ -135,7 +135,15 @@ ColumnLayout {
                     disabled: device.loading
 
                     function onClicked(): void {
-                        device.modelData.connected = !device.modelData.connected;
+                        // Unbonded devices must pair first; toggling
+                        // `connected` directly bypasses pairing (and its
+                        // passkey confirmation) in BlueZ.
+                        if (device.modelData.state === BluetoothDeviceState.Connected)
+                            device.modelData.connected = false;
+                        else if (device.modelData.bonded)
+                            device.modelData.connected = true;
+                        else
+                            device.modelData.pair();
                     }
                 }
 

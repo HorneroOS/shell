@@ -83,6 +83,24 @@ if("shell" IN_LIST ENABLE_MODULES)
         install(DIRECTORY ${dir} DESTINATION "${INSTALL_QSCONFDIR}")
     endforeach()
     install(FILES shell.qml LICENSE.GPL-3.0 NOTICE DESTINATION "${INSTALL_QSCONFDIR}")
+    # Bare `qs` resolves the config named "default" (Quickshell scans
+    # <xdg>/quickshell/<name>/shell.qml). Point the system default at the
+    # packaged Hornero config so a plain `qs` works on a stock install;
+    # configs under XDG_CONFIG_HOME still take precedence over /etc/xdg.
+    get_filename_component(INSTALL_QSCONF_PARENT "${INSTALL_QSCONFDIR}" DIRECTORY)
+    install(CODE "
+        if(IS_ABSOLUTE \"${INSTALL_QSCONF_PARENT}\")
+            set(_qs_default \"\$ENV{DESTDIR}${INSTALL_QSCONF_PARENT}/default\")
+        else()
+            set(_qs_default \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${INSTALL_QSCONF_PARENT}/default\")
+        endif()
+        if(IS_SYMLINK \"\${_qs_default}\")
+            file(REMOVE \"\${_qs_default}\")
+        endif()
+        if(NOT EXISTS \"\${_qs_default}\")
+            file(CREATE_LINK hornero \"\${_qs_default}\" SYMBOLIC)
+        endif()
+    ")
     install(DIRECTORY presets DESTINATION "${INSTALL_QSCONFDIR}")
     # The system layout-preset catalogue is packaged by hornero-config, which
     # carries a byte-synced copy from this repository. Do not install the same

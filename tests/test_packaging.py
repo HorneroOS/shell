@@ -74,6 +74,16 @@ def test_documented_qml_modules_exist():
         assert uri in readme, f"{uri} not documented in packaging/README.md"
 
 
+def test_cmake_installs_quickshell_default_config_link():
+    # Bare `qs` resolves the config named "default"; without a default
+    # the packaged shell only starts via `qs -c hornero` and a plain
+    # `qs` errors out on a stock HorneroOS install (pelicano report).
+    cmake = (ROOT / "CMakeLists.txt").read_text()
+    assert "CREATE_LINK" in cmake, "no default-config symlink is installed"
+    assert '"/default"' in cmake or "/default" in cmake, (
+        "symlink must be named `default` next to the hornero config")
+
+
 def test_quickshell_dependency_is_stable_release():
     # The shell must depend on the official Arch package, not the AUR VCS
     # package: stable Quickshell QML modules are used and no Quickshell C++

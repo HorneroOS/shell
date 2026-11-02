@@ -66,6 +66,20 @@ Item {
         inputProc.running = true;
     }
 
+    property string armedRestore: ""
+
+    function restoreDefaults(kind: string, argv: var): void {
+        if (root.armedRestore !== kind) {
+            root.armedRestore = kind; // first click arms, second confirms
+            return;
+        }
+        root.armedRestore = "";
+        root.actionText = qsTr("Restoring…");
+        actionProc.out = "";
+        actionProc.command = argv;
+        actionProc.running = true;
+    }
+
     function setInput(flag: string, value: string): void {
         root.actionText = qsTr("Applying…");
         actionProc.out = "";
@@ -445,6 +459,58 @@ Item {
                                 font.pointSize: Appearance.font.size.small
                                 color: Colours.palette.m3onSurfaceVariant
                                 wrapMode: Text.Wrap
+                            }
+                        }
+                    }
+                }
+
+                StyledRect {
+                    Layout.fillWidth: true
+                    radius: Appearance.rounding.normal
+                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    implicitHeight: restoreCol.implicitHeight + Appearance.padding.large * 2
+
+                    ColumnLayout {
+                        id: restoreCol
+
+                        anchors.fill: parent
+                        anchors.margins: Appearance.padding.large
+                        spacing: Appearance.spacing.small
+
+                        StyledText {
+                            text: qsTr("Restore defaults")
+                            font.pointSize: Appearance.font.size.normal
+                            font.weight: 500
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Re-apply the persisted keyboard layout, pointer/keyboard tuning and cursor size. Each restore asks for a second click to confirm.")
+                            font.pointSize: Appearance.font.size.small
+                            color: Colours.palette.m3onSurfaceVariant
+                            wrapMode: Text.Wrap
+                        }
+
+                        Flow {
+                            Layout.fillWidth: true
+                            spacing: Appearance.spacing.small
+
+                            TextButton {
+                                text: root.armedRestore === "keyboard" ? qsTr("Click again to restore layout") : qsTr("Restore keyboard layout")
+                                type: root.armedRestore === "keyboard" ? TextButton.Filled : TextButton.Tonal
+                                onClicked: root.restoreDefaults("keyboard", ["horneroctl", "hardware", "keyboard", "layout", "--restore", "--yes", "--json"])
+                            }
+
+                            TextButton {
+                                text: root.armedRestore === "input" ? qsTr("Click again to restore tuning") : qsTr("Restore pointer & keyboard")
+                                type: root.armedRestore === "input" ? TextButton.Filled : TextButton.Tonal
+                                onClicked: root.restoreDefaults("input", ["horneroctl", "hypr", "input", "restore", "--yes", "--json"])
+                            }
+
+                            TextButton {
+                                text: root.armedRestore === "cursor" ? qsTr("Click again to restore cursor") : qsTr("Restore cursor")
+                                type: root.armedRestore === "cursor" ? TextButton.Filled : TextButton.Tonal
+                                onClicked: root.restoreDefaults("cursor", ["horneroctl", "hypr", "cursor", "restore", "--yes", "--json"])
                             }
                         }
                     }

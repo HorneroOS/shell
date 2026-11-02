@@ -28,6 +28,62 @@ Item {
     property var monitors: []
     property string statusText: qsTr("Reading displays…")
     property string actionText: ""
+    property real brightness: 50
+    property string brightnessText: qsTr("Reading brightness…")
+    property string layoutCurrent: ""
+    property string compositorText: ""
+    property var animProfiles: []
+    property string animCurrent: ""
+
+    function refreshExtra(): void {
+        if (!brightProc.running) {
+            brightProc.out = "";
+            brightProc.command = ["horneroctl", "--json", "hardware", "brightness", "status"];
+            brightProc.running = true;
+        }
+        if (!layoutProc.running) {
+            layoutProc.out = "";
+            layoutProc.command = ["horneroctl", "--json", "hypr", "layout", "current"];
+            layoutProc.running = true;
+        }
+        if (!animProc.running) {
+            animProc.out = "";
+            animProc.command = ["horneroctl", "--json", "hypr", "animations", "list"];
+            animProc.running = true;
+        }
+        if (!animCurProc.running) {
+            animCurProc.out = "";
+            animCurProc.command = ["horneroctl", "--json", "hypr", "animations", "current"];
+            animCurProc.running = true;
+        }
+    }
+
+    function setBrightness(value: real): void {
+        brightProc.out = "";
+        brightProc.command = ["horneroctl", "--json", "hardware", "brightness", "set", (value / 100).toFixed(2), "--yes"];
+        brightProc.running = true;
+    }
+
+    function applyLayout(layout: string): void {
+        root.compositorText = qsTr("Applying layout…");
+        compProc.out = "";
+        compProc.command = ["horneroctl", "--json", "hypr", "layout", "set", layout, "--yes"];
+        compProc.running = true;
+    }
+
+    function applyAnimProfile(profile: string): void {
+        root.compositorText = qsTr("Applying animation profile…");
+        compProc.out = "";
+        compProc.command = ["horneroctl", "--json", "hypr", "animations", "set", profile, "--yes"];
+        compProc.running = true;
+    }
+
+    function restoreCompositor(kind: string): void {
+        root.compositorText = qsTr("Restoring…");
+        compProc.out = "";
+        compProc.command = kind === "layout" ? ["horneroctl", "--json", "hypr", "layout", "restore", "--yes"] : ["horneroctl", "--json", "hypr", "animations", "restore", "--yes"];
+        compProc.running = true;
+    }
 
     function refresh(): void {
         listProc.out = "";
@@ -42,7 +98,128 @@ Item {
         setProc.running = true;
     }
 
-    Component.onCompleted: root.refresh()
+    Component.onCompleted: {
+        root.refresh();
+        root.refreshExtra();
+    }
+
+    Timer {
+        id: brightnessTimer
+
+        interval: 400
+        onTriggered: root.setBrightness(root.brightness)
+    }
+
+    Process {
+        id: brightProc
+
+        property string out: ""
+
+        stdout: SplitParser {
+            onRead: data => {
+                brightProc.out += data;
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            try {
+                const payload = JSON.parse(brightProc.out.trim());
+                root.brightnessText = payload.message ? payload.message.toString() : "";
+                const d = payload.data ?? {};
+                const raw = d.brightness ?? d.percent ?? d.value ?? "";
+                const parsed = parseFloat(raw);
+                if (!isNaN(parsed))
+                    root.brightness = parsed <= 1 ? parsed * 100 : parsed;
+            } catch (e) {
+                root.brightnessText = qsTr("Brightness backend unavailable on this system.");
+            }
+        }
+    }
+
+    Process {
+        id: layoutProc
+
+        property string out: ""
+
+        stdout: SplitParser {
+            onRead: data => {
+                layoutProc.out += data;
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            try {
+                const payload = JSON.parse(layoutProc.out.trim());
+                const d = payload.data ?? {};
+                root.layoutCurrent = payload.ok ? (d.layout ?? "") : "";
+                if (!payload.ok)
+                    root.compositorText = payload.message ? payload.message.toString() : "";
+            } catch (e) {
+                root.layoutCurrent = "";
+            }
+        }
+    }
+
+    Process {
+        id: animProc
+
+        property string out: ""
+
+        stdout: SplitParser {
+            onRead: data => {
+                animProc.out += data;
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            try {
+                const payload = JSON.parse(animProc.out.trim());
+                const d = payload.data ?? {};
+                root.animProfiles = String(d.profiles ?? "").split(",").map(s => s.trim()).filter(s => s !== "");
+            } catch (e) {
+                root.animProfiles = [];
+            }
+        }
+    }
+
+    Process {
+        id: animCurProc
+
+        property string out: ""
+
+        stdout: SplitParser {
+            onRead: data => {
+                animCurProc.out += data;
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            try {
+                const payload = JSON.parse(animCurProc.out.trim());
+                const d = payload.data ?? {};
+                root.animCurrent = payload.ok ? (d.profile ?? "") : "";
+            } catch (e) {
+                root.animCurrent = "";
+            }
+        }
+    }
+
+    Process {
+        id: compProc
+
+        property string out: ""
+
+        stdout: SplitParser {
+            onRead: data => {
+                compProc.out += data;
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            try {
+                const payload = JSON.parse(compProc.out.trim());
+                root.compositorText = payload.message ? payload.message.toString() : "";
+            } catch (e) {
+                root.compositorText = qsTr("The compositor command did not answer.");
+            }
+            root.refreshExtra();
+        }
+    }
 
     Process {
         id: listProc
@@ -234,6 +411,157 @@ Item {
                             Layout.fillWidth: true
                             visible: root.actionText !== ""
                             text: root.actionText
+                            font.pointSize: Appearance.font.size.small
+                            color: Colours.palette.m3onSurfaceVariant
+                            wrapMode: Text.Wrap
+                        }
+                    }
+                }
+
+                StyledRect {
+                    Layout.fillWidth: true
+                    radius: Appearance.rounding.normal
+                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    implicitHeight: brightCol.implicitHeight + Appearance.padding.large * 2
+
+                    ColumnLayout {
+                        id: brightCol
+
+                        anchors.fill: parent
+                        anchors.margins: Appearance.padding.large
+                        spacing: Appearance.spacing.small
+
+                        StyledText {
+                            text: qsTr("Brightness")
+                            font.pointSize: Appearance.font.size.normal
+                            font.weight: 500
+                        }
+
+                        SliderInput {
+                            Layout.fillWidth: true
+                            label: qsTr("Brightness")
+                            value: root.brightness
+                            from: 0
+                            to: 100
+                            stepSize: 1
+                            decimals: 0
+                            suffix: "%"
+                            validator: IntValidator {
+                                bottom: 0
+                                top: 100
+                            }
+                            onValueModified: newValue => {
+                                root.brightness = newValue;
+                                brightnessTimer.restart();
+                            }
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: root.brightnessText
+                            font.pointSize: Appearance.font.size.small
+                            color: Colours.palette.m3onSurfaceVariant
+                            wrapMode: Text.Wrap
+                        }
+                    }
+                }
+
+                StyledRect {
+                    Layout.fillWidth: true
+                    radius: Appearance.rounding.normal
+                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    implicitHeight: compCol.implicitHeight + Appearance.padding.large * 2
+
+                    ColumnLayout {
+                        id: compCol
+
+                        anchors.fill: parent
+                        anchors.margins: Appearance.padding.large
+                        spacing: Appearance.spacing.small
+
+                        StyledText {
+                            text: qsTr("Compositor (Hyprland)")
+                            font.pointSize: Appearance.font.size.normal
+                            font.weight: 500
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            visible: root.layoutCurrent === ""
+                            text: qsTr("Compositor controls are unavailable on this session; nothing is faked.")
+                            font.pointSize: Appearance.font.size.small
+                            color: Colours.palette.m3onSurfaceVariant
+                            wrapMode: Text.Wrap
+                        }
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            visible: root.layoutCurrent !== ""
+                            spacing: Appearance.spacing.small
+
+                            StyledText {
+                                text: qsTr("Layout")
+                                font.pointSize: Appearance.font.size.small
+                                color: Colours.palette.m3onSurfaceVariant
+                            }
+
+                            Flow {
+                                Layout.fillWidth: true
+                                spacing: Appearance.spacing.small
+
+                                Repeater {
+                                    model: ["scrolling", "dwindle", "master"]
+
+                                    delegate: TextButton {
+                                        required property string modelData
+
+                                        text: modelData
+                                        type: root.layoutCurrent === modelData ? TextButton.Filled : TextButton.Tonal
+                                        onClicked: root.applyLayout(modelData)
+                                    }
+                                }
+
+                                TextButton {
+                                    text: qsTr("Restore layout")
+                                    type: TextButton.Tonal
+                                    onClicked: root.restoreCompositor("layout")
+                                }
+                            }
+
+                            StyledText {
+                                text: qsTr("Animation profile")
+                                font.pointSize: Appearance.font.size.small
+                                color: Colours.palette.m3onSurfaceVariant
+                            }
+
+                            Flow {
+                                Layout.fillWidth: true
+                                spacing: Appearance.spacing.small
+
+                                Repeater {
+                                    model: root.animProfiles
+
+                                    delegate: TextButton {
+                                        required property string modelData
+
+                                        text: modelData
+                                        type: root.animCurrent === modelData ? TextButton.Filled : TextButton.Tonal
+                                        onClicked: root.applyAnimProfile(modelData)
+                                    }
+                                }
+
+                                TextButton {
+                                    text: qsTr("Restore animations")
+                                    type: TextButton.Tonal
+                                    onClicked: root.restoreCompositor("animations")
+                                }
+                            }
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            visible: root.compositorText !== ""
+                            text: root.compositorText
                             font.pointSize: Appearance.font.size.small
                             color: Colours.palette.m3onSurfaceVariant
                             wrapMode: Text.Wrap

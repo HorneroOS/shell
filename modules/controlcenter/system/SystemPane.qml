@@ -11,6 +11,7 @@ import qs.services
 import qs.config
 import qs.modules.welcome
 import Quickshell
+import Quickshell.Io
 import Quickshell.Widgets
 import Quickshell.Services.UPower
 import QtQuick
@@ -423,6 +424,51 @@ Item {
                             action: () => root.run(["horneroctl", "hardware", "keyboard", "keys"])
                         }
                     }
+                }
+
+                // ── Diagnostics (read-only horneroctl probes) ────────────
+                StyledText {
+                    text: qsTr("Diagnostics")
+                    font.pointSize: Appearance.font.size.normal
+                    font.weight: 600
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
+                    text: qsTr("Run on demand. All checks are read-only; nothing is changed or fixed from here.")
+                    color: Colours.palette.m3onSurfaceVariant
+                    font.pointSize: Appearance.font.size.smaller
+                    wrapMode: Text.Wrap
+                }
+
+                CtlCard {
+                    title: qsTr("Environment doctor")
+                    description: qsTr("Session, compositor, terminal and shell-config health")
+                    probeArgv: ["horneroctl", "--json", "doctor"]
+                }
+
+                CtlCard {
+                    title: qsTr("Config validation")
+                    description: qsTr("Shell config syntax and config paths")
+                    probeArgv: ["horneroctl", "--json", "config", "validate"]
+                }
+
+                CtlCard {
+                    title: qsTr("System info")
+                    description: qsTr("Installed edition and active compositor")
+                    probeArgv: ["horneroctl", "--json", "system", "info"]
+                }
+
+                CtlCard {
+                    title: qsTr("Shell status")
+                    description: qsTr("Quickshell CLI, config and compositor wiring")
+                    probeArgv: ["horneroctl", "--json", "shell", "status"]
+                }
+
+                CtlCard {
+                    title: qsTr("Recent shell logs")
+                    description: qsTr("Last 20 shell log lines (read-only)")
+                    probeArgv: ["horneroctl", "--json", "shell", "logs", "--lines", "20"]
                 }
             }
         }

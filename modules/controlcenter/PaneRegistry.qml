@@ -164,7 +164,7 @@ QtObject {
             readonly property string component: "displays/DisplaysPane.qml"
             readonly property string category: "system"
             readonly property string description: qsTr("Connected displays and arrangement")
-            readonly property list<string> keywords: ["display", "monitor", "screen", "arrangement", "mirror", "extend"]
+            readonly property list<string> keywords: ["display", "monitor", "screen", "arrangement", "mirror", "extend", "brightness", "layout", "animations"]
         },
         QtObject {
             readonly property string id: "input"
@@ -174,7 +174,7 @@ QtObject {
             readonly property string component: "input/InputPane.qml"
             readonly property string category: "system"
             readonly property string description: qsTr("Keyboard layout and input settings")
-            readonly property list<string> keywords: ["input", "keyboard", "layout", "keybindings", "mouse", "touchpad"]
+            readonly property list<string> keywords: ["input", "keyboard", "layout", "keybindings", "mouse", "touchpad", "restore", "cursor"]
         },
         QtObject {
             readonly property string id: "keybinds"
@@ -224,7 +224,7 @@ QtObject {
             readonly property string component: "system/SystemPane.qml"
             readonly property string category: "system"
             readonly property string description: qsTr("System information and diagnostics")
-            readonly property list<string> keywords: ["about", "hardware", "diagnostics", "version"]
+            readonly property list<string> keywords: ["about", "hardware", "diagnostics", "version", "doctor", "logs"]
         },
         QtObject {
             readonly property string id: "extensions"
@@ -264,7 +264,7 @@ QtObject {
             readonly property string component: "updates/UpdatesPane.qml"
             readonly property string category: "system"
             readonly property string description: qsTr("Review available system updates")
-            readonly property list<string> keywords: ["upgrade", "packages", "maintenance"]
+            readonly property list<string> keywords: ["upgrade", "packages", "maintenance", "dependencies", "snapshots", "backup"]
         },
         QtObject {
             readonly property string id: "terminal"
@@ -303,7 +303,13 @@ QtObject {
         QtObject { readonly property string id: "scale"; readonly property string title: qsTr("Interface size"); readonly property string pane: "appearance"; readonly property string section: "scales"; readonly property string icon: "zoom_in"; readonly property string keywords: "scale sizing density text size" },
         QtObject { readonly property string id: "transparency"; readonly property string title: qsTr("Transparency"); readonly property string pane: "appearance"; readonly property string section: "transparency"; readonly property string icon: "opacity"; readonly property string keywords: "blur opacity glass launcher notifications" },
         QtObject { readonly property string id: "wallpaper"; readonly property string title: qsTr("Wallpaper and background"); readonly property string pane: "appearance"; readonly property string section: "background"; readonly property string icon: "wallpaper"; readonly property string keywords: "desktop image background clock" },
-        QtObject { readonly property string id: "notification-history"; readonly property string title: qsTr("Notification history"); readonly property string pane: "notifications"; readonly property string section: ""; readonly property string icon: "history"; readonly property string keywords: "alerts previous notifications" }
+        QtObject { readonly property string id: "notification-history"; readonly property string title: qsTr("Notification history"); readonly property string pane: "notifications"; readonly property string section: ""; readonly property string icon: "history"; readonly property string keywords: "alerts previous notifications" },
+        QtObject { readonly property string id: "appearance-health"; readonly property string title: qsTr("Appearance health & sync"); readonly property string pane: "appearance"; readonly property string section: "health"; readonly property string icon: "health_and_safety"; readonly property string keywords: "doctor sync palette consistency gtk" },
+        QtObject { readonly property string id: "brightness"; readonly property string title: qsTr("Brightness"); readonly property string pane: "displays"; readonly property string section: ""; readonly property string icon: "brightness_6"; readonly property string keywords: "brightness backlight display dim" },
+        QtObject { readonly property string id: "compositor-layout"; readonly property string title: qsTr("Compositor layout & animations"); readonly property string pane: "displays"; readonly property string section: ""; readonly property string icon: "animation"; readonly property string keywords: "hyprland layout scrolling dwindle master animation profile" },
+        QtObject { readonly property string id: "input-restore"; readonly property string title: qsTr("Restore input defaults"); readonly property string pane: "input"; readonly property string section: ""; readonly property string icon: "restart_alt"; readonly property string keywords: "restore defaults keyboard pointer cursor reset" },
+        QtObject { readonly property string id: "diagnostics"; readonly property string title: qsTr("Diagnostics"); readonly property string pane: "system"; readonly property string section: ""; readonly property string icon: "stethoscope"; readonly property string keywords: "doctor diagnostics logs config validate health" },
+        QtObject { readonly property string id: "dependencies-recovery"; readonly property string title: qsTr("Dependencies & recovery"); readonly property string pane: "updates"; readonly property string section: ""; readonly property string icon: "build_circle"; readonly property string keywords: "dependencies snapshots restore backup schedule deps" }
     ]
 
     readonly property int count: panes.length

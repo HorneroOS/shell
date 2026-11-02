@@ -27,6 +27,22 @@ ColumnLayout {
     }
 
     StyledText {
+        Layout.fillWidth: true
+        visible: !root.session.bt.hasAdapter
+        wrapMode: Text.WordWrap
+        text: qsTr("No Bluetooth adapter found. The Bluetooth service may be stopped, or this machine has no Bluetooth hardware.")
+        color: Colours.palette.m3outline
+    }
+
+    StyledText {
+        Layout.fillWidth: true
+        visible: root.session.bt.lastError !== ""
+        wrapMode: Text.WordWrap
+        text: root.session.bt.lastError
+        color: Colours.palette.m3error
+    }
+
+    StyledText {
         Layout.topMargin: Appearance.spacing.large
         text: qsTr("Adapter status")
         font.pointSize: Appearance.font.size.larger
@@ -57,31 +73,31 @@ ColumnLayout {
 
             Toggle {
                 label: qsTr("Powered")
-                checked: Bluetooth.defaultAdapter?.enabled ?? false
-                toggle.onToggled: {
-                    const adapter = Bluetooth.defaultAdapter;
-                    if (adapter)
-                        adapter.enabled = checked;
-                }
+                checked: root.session.bt.currentAdapter?.enabled ?? false
+                toggle.onToggled: root.session.bt.setPowered(checked)
             }
 
             Toggle {
                 label: qsTr("Discoverable")
-                checked: Bluetooth.defaultAdapter?.discoverable ?? false
+                checked: root.session.bt.currentAdapter?.discoverable ?? false
                 toggle.onToggled: {
-                    const adapter = Bluetooth.defaultAdapter;
-                    if (adapter)
+                    const adapter = root.session.bt.currentAdapter;
+                    if (adapter) {
+                        adapter.discoverableTimeout = checked ? 120 : 0;
                         adapter.discoverable = checked;
+                    }
                 }
             }
 
             Toggle {
                 label: qsTr("Pairable")
-                checked: Bluetooth.defaultAdapter?.pairable ?? false
+                checked: root.session.bt.currentAdapter?.pairable ?? false
                 toggle.onToggled: {
-                    const adapter = Bluetooth.defaultAdapter;
-                    if (adapter)
+                    const adapter = root.session.bt.currentAdapter;
+                    if (adapter) {
+                        adapter.pairableTimeout = checked ? 120 : 0;
                         adapter.pairable = checked;
+                    }
                 }
             }
         }
@@ -152,7 +168,7 @@ ColumnLayout {
 
                         StyledText {
                             Layout.leftMargin: Appearance.padding.small
-                            text: Bluetooth.defaultAdapter?.name ?? qsTr("None")
+                            text: root.session.bt.currentAdapter?.name ?? qsTr("None")
                         }
 
                         MaterialIcon {
@@ -463,7 +479,7 @@ ColumnLayout {
     }
 
     StyledText {
-        text: qsTr("Information about the default adapter")
+        text: qsTr("Information about the current adapter")
         color: Colours.palette.m3outline
     }
 
@@ -489,7 +505,7 @@ ColumnLayout {
             }
 
             StyledText {
-                text: Bluetooth.defaultAdapter ? BluetoothAdapterState.toString(Bluetooth.defaultAdapter.state) : qsTr("Unknown")
+                text: root.session.bt.currentAdapter ? BluetoothAdapterState.toString(root.session.bt.currentAdapter.state) : qsTr("Unknown")
                 color: Colours.palette.m3outline
                 font.pointSize: Appearance.font.size.small
             }
@@ -500,7 +516,7 @@ ColumnLayout {
             }
 
             StyledText {
-                text: Bluetooth.defaultAdapter?.dbusPath ?? ""
+                text: root.session.bt.currentAdapter?.dbusPath ?? ""
                 color: Colours.palette.m3outline
                 font.pointSize: Appearance.font.size.small
             }
@@ -511,7 +527,7 @@ ColumnLayout {
             }
 
             StyledText {
-                text: Bluetooth.defaultAdapter?.adapterId ?? ""
+                text: root.session.bt.currentAdapter?.adapterId ?? ""
                 color: Colours.palette.m3outline
                 font.pointSize: Appearance.font.size.small
             }

@@ -23,6 +23,34 @@ SplitPaneWithDetails {
         return item ? (item.address || "") : "";
     }
 
+    overlayComponent: Component {
+        PairingDialog {
+            session: root.session
+        }
+    }
+
+    // Discoverability/pairability are only offered while this pane is open:
+    // cap them at 120s and drop both (plus any scan we started) on hide, so
+    // the adapter never stays permanently discoverable after the pane closes.
+    onVisibleChanged: {
+        const adapter = session.bt.effectiveAdapter;
+        if (visible) {
+            session.bt.pruneStaleActive();
+            if (adapter) {
+                adapter.discoverableTimeout = 120;
+                adapter.pairableTimeout = 120;
+            }
+        } else {
+            session.bt.stopDiscoveryIfOwned();
+            if (adapter) {
+                adapter.discoverable = false;
+                adapter.pairable = false;
+            }
+            if (session.bt.showPairingDialog)
+                session.bt.rejectPairing();
+        }
+    }
+
     leftContent: Component {
         StyledFlickable {
             id: leftFlickable

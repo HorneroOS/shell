@@ -27,7 +27,8 @@ DeviceList {
     model: ScriptModel {
         id: deviceModel
 
-        values: [...Bluetooth.devices.values].sort((a, b) => (b.connected - a.connected) || (b.paired - a.paired) || a.name.localeCompare(b.name))
+        values: [...Bluetooth.devices.values].sort((a, b) => (b.connected - a.connected) || (b.paired - a.paired) || (a.name || a.address || "").localeCompare(b.name || b.address || ""))
+        onValuesChanged: root.session.bt.pruneStaleActive()
     }
 
     headerComponent: Component {
@@ -45,7 +46,7 @@ DeviceList {
             }
 
             ToggleButton {
-                toggled: Bluetooth.defaultAdapter?.enabled ?? false
+                toggled: root.session.bt.effectiveAdapter?.enabled ?? false
                 icon: "power"
                 accent: "Tertiary"
                 iconSize: Appearance.font.size.normal
@@ -53,15 +54,11 @@ DeviceList {
                 verticalPadding: Appearance.padding.smaller
                 tooltip: qsTr("Toggle Bluetooth")
 
-                onClicked: {
-                    const adapter = Bluetooth.defaultAdapter;
-                    if (adapter)
-                        adapter.enabled = !adapter.enabled;
-                }
+                onClicked: root.session.bt.setPowered(!toggled)
             }
 
             ToggleButton {
-                toggled: Bluetooth.defaultAdapter?.discoverable ?? false
+                toggled: root.session.bt.effectiveAdapter?.discoverable ?? false
                 icon: root.smallDiscoverable ? "group_search" : ""
                 label: root.smallDiscoverable ? "" : qsTr("Discoverable")
                 iconSize: Appearance.font.size.normal
@@ -70,14 +67,16 @@ DeviceList {
                 tooltip: qsTr("Make discoverable")
 
                 onClicked: {
-                    const adapter = Bluetooth.defaultAdapter;
-                    if (adapter)
+                    const adapter = root.session.bt.effectiveAdapter;
+                    if (adapter) {
+                        adapter.discoverableTimeout = 120;
                         adapter.discoverable = !adapter.discoverable;
+                    }
                 }
             }
 
             ToggleButton {
-                toggled: Bluetooth.defaultAdapter?.pairable ?? false
+                toggled: root.session.bt.effectiveAdapter?.pairable ?? false
                 icon: "missing_controller"
                 label: root.smallPairable ? "" : qsTr("Pairable")
                 iconSize: Appearance.font.size.normal
@@ -86,14 +85,16 @@ DeviceList {
                 tooltip: qsTr("Make pairable")
 
                 onClicked: {
-                    const adapter = Bluetooth.defaultAdapter;
-                    if (adapter)
+                    const adapter = root.session.bt.effectiveAdapter;
+                    if (adapter) {
+                        adapter.pairableTimeout = 120;
                         adapter.pairable = !adapter.pairable;
+                    }
                 }
             }
 
             ToggleButton {
-                toggled: Bluetooth.defaultAdapter?.discovering ?? false
+                toggled: root.session.bt.effectiveAdapter?.discovering ?? false
                 icon: "bluetooth_searching"
                 accent: "Secondary"
                 iconSize: Appearance.font.size.normal
@@ -102,9 +103,10 @@ DeviceList {
                 tooltip: qsTr("Scan for devices")
 
                 onClicked: {
-                    const adapter = Bluetooth.defaultAdapter;
-                    if (adapter)
-                        adapter.discovering = !adapter.discovering;
+                    if (toggled)
+                        root.session.bt.stopDiscoveryIfOwned();
+                    else
+                        root.session.bt.startDiscovery();
                 }
             }
 
@@ -197,7 +199,7 @@ DeviceList {
 
                     StyledText {
                         Layout.fillWidth: true
-                        text: device.modelData ? device.modelData.name : qsTr("Unknown")
+                        text: device.modelData ? (device.modelData.name || device.modelData.address || qsTr("Unknown")) : qsTr("Unknown")
                         elide: Text.ElideRight
                     }
 
@@ -232,15 +234,10 @@ DeviceList {
                             if (device.loading)
                                 return;
 
-                            if (device.connected) {
-                                device.modelData.connected = false;
-                            } else {
-                                if (device.modelData.bonded) {
-                                    device.modelData.connected = true;
-                                } else {
-                                    device.modelData.pair();
-                                }
-                            }
+                            if (device.connected)
+                                root.session.bt.disconnectDevice(device.modelData);
+                            else
+                                root.session.bt.connectDevice(device.modelData);
                         }
                     }
 
@@ -261,6 +258,56 @@ DeviceList {
                 }
             }
         }
+    }
+
+    StyledText {
+        Layout.fillWidth: true
+        visible: !root.session.bt.hasAdapter
+        wrapMode: Text.WordWrap
+        text: qsTr("No Bluetooth adapter found. The Bluetooth service may be stopped, or this machine has no Bluetooth hardware.")
+        color: Colours.palette.m3outline
+    }
+
+    TextButton {
+        visible: !root.session.bt.hasAdapter
+        inactiveColour: Colours.palette.m3secondaryContainer
+        inactiveOnColour: Colours.palette.m3onSecondaryContainer
+        text: qsTr("Restart Bluetooth service")
+
+        onClicked: root.session.bt.restartService()
+    }
+
+    StyledText {
+        Layout.fillWidth: true
+        visible: root.session.bt.hasAdapter && !root.session.bt.adapterPowered
+        wrapMode: Text.WordWrap
+        text: qsTr("Bluetooth is off. Turn it on to find nearby devices.")
+        color: Colours.palette.m3outline
+    }
+
+    StyledText {
+        Layout.fillWidth: true
+        visible: root.session.bt.hasAdapter && root.session.bt.adapterPowered && Bluetooth.devices.values.length === 0
+        wrapMode: Text.WordWrap
+        text: qsTr("No devices found. Use Scan to look for nearby devices.")
+        color: Colours.palette.m3outline
+    }
+
+    StyledText {
+        Layout.fillWidth: true
+        visible: root.session.bt.lastError !== ""
+        wrapMode: Text.WordWrap
+        text: root.session.bt.lastError
+        color: Colours.palette.m3error
+    }
+
+    TextButton {
+        visible: root.session.bt.lastError !== ""
+        inactiveColour: Colours.palette.m3secondaryContainer
+        inactiveOnColour: Colours.palette.m3onSecondaryContainer
+        text: qsTr("Dismiss")
+
+        onClicked: root.session.bt.clearError()
     }
 
     onItemSelected: item => session.bt.active = item

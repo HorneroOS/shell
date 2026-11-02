@@ -114,4 +114,12 @@ if("shell" IN_LIST ENABLE_MODULES)
     install(PROGRAMS scripts/hornero-gaming-session.sh
         DESTINATION "bin"
         RENAME hornero-gaming-session)
+    # Bluetooth pairing agent: registers org.bluez.Agent1 and bridges
+    # pairing confirmation to the Control Center dialog via
+    # horneroctl agent-respond (never auto-accepts).
+    install(PROGRAMS scripts/hornero-bt-agent.py
+        DESTINATION "bin"
+        RENAME hornero-bt-agent)
+    install(FILES assets/hornero-bt-agent.service
+        DESTINATION "lib/systemd/user")
 endif()

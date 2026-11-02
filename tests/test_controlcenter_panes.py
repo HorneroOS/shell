@@ -722,8 +722,15 @@ def test_studio_pane_render_jobs_surface_is_typed_and_approval_gated():
     assert '"horneroctl", "--json", "studio", "jobs", "list"' in pane
     assert '"studio", "jobs", "log", id' in pane
     assert '"studio", "jobs", "cancel", modelData.id' in pane
-    assert '"studio", "jobs", "submit"' not in pane
-    assert '"studio", "jobs", "run"' not in pane
+    # Submission only queues (no --execute); execution is the separate
+    # two-step Run confirm carrying the CLI --yes gate.
+    assert '"studio", "jobs", "submit", "--adapter", root.jobAdapter' in pane
+    assert '"--execute"' not in pane
+    assert '"studio", "jobs", "run", id, "--yes"' in pane
+    assert "armedRunId" in pane and "Confirm run" in pane
+    assert "Queuing a job does not run it" in pane
+    assert '"blender-render"' in pane and '"ffmpeg-export"' in pane
+    assert "never overwritten" in pane
     # Cancel is only offered for queued jobs and never deletes files.
     assert 'modelData.state === "queued"' in pane
     assert "never deletes source or output files" in pane

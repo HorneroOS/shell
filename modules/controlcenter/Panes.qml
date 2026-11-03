@@ -1,6 +1,9 @@
 pragma ComponentBehavior: Bound
 
 import "bluetooth"
+import "extensions"
+import "studio"
+import "gaming"
 import "network"
 import "audio"
 import "appearance"
@@ -136,6 +139,23 @@ ClippingRectangle {
                     });
                 }
             }
+
+            onStatusChanged: {
+                // Never let a pane fail silently into a black rectangle:
+                // log the exact loader error and show the fallback below.
+                if (status === Loader.Error)
+                    console.error(`ControlCenter: failed to load pane ${pane.componentPath}: ${loader.errorString}`);
+            }
+        }
+
+        StyledText {
+            anchors.centerIn: parent
+            width: parent.width - Appearance.padding.large * 2
+            horizontalAlignment: Text.AlignHCenter
+            wrapMode: Text.WordWrap
+            visible: loader.status === Loader.Error
+            text: qsTr("This panel failed to load. Restart the shell; if it keeps failing, report the error from the shell log.")
+            color: Colours.palette.m3error
         }
 
         Connections {

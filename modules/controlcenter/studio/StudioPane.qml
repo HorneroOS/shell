@@ -347,7 +347,6 @@ Item {
 
     SplitPaneLayout {
         anchors.fill: parent
-        session: root.session
 
         leftContent: Component {
             ColumnLayout {

@@ -37,6 +37,11 @@ Item {
     // ships, hornero#179). Availability UI keys on this, never on the
     // human-readable snapshot_status prose.
     property string snapshotBackend: ""
+    // Reboot-required state from package status (structured fields,
+    // hornero#359): true when the running kernel was replaced by an
+    // upgrade. Unknown/older backends simply never set it.
+    property bool rebootRequired: false
+    property string rebootReason: ""
     property string updatesError: ""
     property string backupsError: ""
     property var backupList: []
@@ -135,6 +140,8 @@ Item {
                 root.horneroPending = String(env.data.hornero_pending || "").split(",").map(s => s.trim()).filter(s => s.length > 0);
                 root.snapshotStatus = String(env.data.snapshot_status || "");
                 root.snapshotBackend = String(env.data.snapshot_backend || "");
+                root.rebootRequired = String(env.data.reboot_required || "") === "true";
+                root.rebootReason = String(env.data.reboot_reason || "");
             }
         }
     }
@@ -266,6 +273,63 @@ Item {
                             type: TextButton.Tonal
                             enabled: !updatesProc.running
                             onClicked: root.refresh()
+                        }
+                    }
+                }
+
+                // ── Reboot required ──────────────────────────────────────
+                // Informational only: restarting stays a session action
+                // the user takes from the power menu; this pane never
+                // reboots anything itself.
+                StyledRect {
+                    visible: root.rebootRequired
+                    Layout.fillWidth: true
+                    radius: Appearance.rounding.normal
+                    color: Colours.layer(Colours.palette.m3tertiaryContainer, 1)
+                    implicitHeight: rebootRow.implicitHeight + Appearance.padding.normal * 2
+
+                    RowLayout {
+                        id: rebootRow
+
+                        anchors.fill: parent
+                        anchors.margins: Appearance.padding.normal
+                        spacing: Appearance.spacing.normal
+
+                        MaterialIcon {
+                            text: "restart_alt"
+                            color: Colours.palette.m3onTertiaryContainer
+                            font.pointSize: Appearance.font.size.extraLarge
+                        }
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 2
+
+                            StyledText {
+                                text: qsTr("Reboot required to finish updating")
+                                color: Colours.palette.m3onTertiaryContainer
+                                font.pointSize: Appearance.font.size.normal
+                                font.weight: 600
+                                wrapMode: Text.Wrap
+                                Layout.fillWidth: true
+                            }
+
+                            StyledText {
+                                visible: root.rebootReason.length > 0
+                                text: root.rebootReason
+                                color: Colours.palette.m3onTertiaryContainer
+                                font.pointSize: Appearance.font.size.smaller
+                                wrapMode: Text.Wrap
+                                Layout.fillWidth: true
+                            }
+
+                            StyledText {
+                                text: qsTr("Save your work and restart from the power menu when ready. Nothing restarts automatically.")
+                                color: Colours.palette.m3onTertiaryContainer
+                                font.pointSize: Appearance.font.size.smaller
+                                wrapMode: Text.Wrap
+                                Layout.fillWidth: true
+                            }
                         }
                     }
                 }

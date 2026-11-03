@@ -33,6 +33,10 @@ Item {
     property int horneroPendingCount: -1
     property var horneroPending: []
     property string snapshotStatus: ""
+    // Machine key from the backend ('none' until an OS snapshot backend
+    // ships, hornero#179). Availability UI keys on this, never on the
+    // human-readable snapshot_status prose.
+    property string snapshotBackend: ""
     property string updatesError: ""
     property string backupsError: ""
     property var backupList: []
@@ -130,6 +134,7 @@ Item {
                 root.horneroPendingCount = isNaN(n) ? 0 : n;
                 root.horneroPending = String(env.data.hornero_pending || "").split(",").map(s => s.trim()).filter(s => s.length > 0);
                 root.snapshotStatus = String(env.data.snapshot_status || "");
+                root.snapshotBackend = String(env.data.snapshot_backend || "");
             }
         }
     }
@@ -403,7 +408,7 @@ Item {
 
                 StyledText {
                     Layout.fillWidth: true
-                    visible: root.snapshotStatus === "unavailable"
+                    visible: root.snapshotBackend === "none"
                     text: qsTr("Update rollback is unavailable: no snapshot backend is recorded for this system.")
                     color: Colours.palette.m3tertiary
                     font.pointSize: Appearance.font.size.smaller

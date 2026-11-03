@@ -62,6 +62,13 @@ def test_updates_dependencies_and_recovery_section():
     assert 'env.data.snapshot_backend' in pane
     assert 'root.snapshotStatus === "unavailable"' not in pane
     assert "Update rollback is unavailable" in pane
+    # Reboot-required state keys on the structured reboot_required
+    # field from package status, with the backend's own reason shown
+    # verbatim; the banner is informational (no fake reboot button).
+    assert 'env.data.reboot_required' in pane
+    assert 'env.data.reboot_reason' in pane
+    assert "root.rebootRequired" in pane
+    assert "Reboot required to finish updating" in pane
 
 
 def test_appearance_health_section_registered_and_searchable():

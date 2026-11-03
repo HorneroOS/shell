@@ -54,8 +54,13 @@ def test_updates_dependencies_and_recovery_section():
     assert '"config", "snapshot", "create", "--yes"' in pane
     assert '"config", "snapshot", "restore", root.snapshotIdField.trim(), "--yes"' in pane
     assert '"backup", "schedule"' in pane
-    # Honest rollback note keyed to the CLI's snapshot_status lane.
-    assert 'root.snapshotStatus === "unavailable"' in pane
+    # Honest rollback note keyed to the CLI's machine-readable
+    # snapshot_backend field, never to the human snapshot_status prose
+    # (the prose comparison made the warning dead code: the backend
+    # emits 'unavailable: ...', never the bare word).
+    assert 'root.snapshotBackend === "none"' in pane
+    assert 'env.data.snapshot_backend' in pane
+    assert 'root.snapshotStatus === "unavailable"' not in pane
     assert "Update rollback is unavailable" in pane
 
 

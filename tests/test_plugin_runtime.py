@@ -58,6 +58,20 @@ WIDGETS = (ROOT / "modules" / "plugins" / "PluginBarWidgets.qml").read_text()
 SCHEMA = (ROOT / "schemas" / "plugin-manifest.schema.json").read_text()
 
 
+def test_all_rendering_placements_inherit_themed_foreground_and_clip():
+    # Regression for the black-on-dark plugin text bug: every rendering
+    # placement Loader must give plugin default text the themed
+    # foreground (palette.windowText) and clip oversized content,
+    # instead of Qt's default black on dark surfaces.
+    for widgets in (WIDGETS, CARDS, WIDGETS_DESKTOP):
+        assert "palette.windowText: Colours.palette.m3onSurface" in widgets
+        assert "clip: true" in widgets
+    # Vertical bars cap plugin width so single-line bar plugins cannot
+    # overflow the pill; horizontal bars get a sane maximum too.
+    assert "Layout.maximumWidth: root.vertical ? 64 : 240" in WIDGETS
+    assert "Layout.maximumHeight: root.vertical ? 240 : 64" in WIDGETS
+
+
 def test_bar_placement_contract():
     assert '"placement"' in SCHEMA and '"bar"' in SCHEMA
     assert 'placement !== "background" && placement !== "bar"' in HOST

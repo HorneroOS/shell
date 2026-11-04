@@ -133,6 +133,15 @@ Item {
                                 Config.save();
                             }
                         }
+
+                        SwitchRow {
+                            label: qsTr("12-hour clock (AM/PM)")
+                            checked: Config.services.useTwelveHourClock
+                            onToggled: checked => {
+                                Config.services.useTwelveHourClock = checked;
+                                Config.save();
+                            }
+                        }
                     }
                 }
 

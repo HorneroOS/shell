@@ -267,6 +267,16 @@ QtObject {
             readonly property list<string> keywords: ["upgrade", "packages", "maintenance", "dependencies", "snapshots", "backup"]
         },
         QtObject {
+            readonly property string id: "capture"
+            readonly property string label: "capture"
+            readonly property string title: qsTr("Capture")
+            readonly property string icon: "photo_camera"
+            readonly property string component: "capture/CapturePane.qml"
+            readonly property string category: "system"
+            readonly property string description: qsTr("Screenshots, screen recording, and capture backends")
+            readonly property list<string> keywords: ["screenshot", "screen recording", "recorder", "capture", "clipboard"]
+        },
+        QtObject {
             readonly property string id: "terminal"
             readonly property string label: "terminal"
             readonly property string title: qsTr("Terminal")

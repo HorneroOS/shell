@@ -139,3 +139,9 @@ def test_pane_prompt_editor_is_real():
     assert '"assistant", "prompt", "set-text"' in PANE
     assert '"assistant", "prompt", "history", "--json"' in PANE
     assert "promptEditor" in PANE
+
+
+def test_pane_model_picker_is_real():
+    assert '"assistant", "model", "show", "--json"' in PANE
+    assert '"assistant", "model", "set", id, "--yes", "--json"' in PANE
+    assert "modelInput" in PANE

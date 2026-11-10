@@ -309,6 +309,40 @@ Item {
                         }
 
                         DetailRow {
+                            label: qsTr("Configured model")
+                            value: assistantModelConfig.text
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Appearance.spacing.small
+
+                            StyledInputField {
+                                id: modelInput
+
+                                Layout.fillWidth: true
+                            }
+
+                            TextButton {
+                                text: qsTr("Apply model")
+                                type: TextButton.Tonal
+                                onClicked: {
+                                    const id = modelInput.text.trim();
+                                    if (id !== "" && !id.includes(" "))
+                                        assistantCtl.run(["horneroctl", "assistant", "model", "set", id, "--yes", "--json"]);
+                                }
+                            }
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Applies to new chats (same as hermes model); running chats keep their model.")
+                            font.pointSize: Appearance.font.size.small
+                            color: Colours.palette.m3outline
+                            wrapMode: Text.Wrap
+                        }
+
+                        DetailRow {
                             label: qsTr("Chat sessions")
                             value: hermesSessions.text
                         }
@@ -888,6 +922,39 @@ Item {
     }
 
     QtObject {
+        id: assistantModelConfig
+
+        property string text: "—"
+
+        function refresh(): void {
+            assistantModelConfigProc.out = "";
+            assistantModelConfigProc.command = ["horneroctl", "assistant", "model", "show", "--json"];
+            assistantModelConfigProc.running = true;
+        }
+    }
+
+    Process {
+        id: assistantModelConfigProc
+
+        property string out: ""
+
+        stdout: SplitParser {
+            onRead: data => {
+                assistantModelConfigProc.out += data;
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            try {
+                const payload = JSON.parse(assistantModelConfigProc.out.trim());
+                assistantModelConfig.text = payload.data && payload.data.model ? payload.data.model.toString() : "—";
+            } catch (e) {
+                assistantModelConfig.text = "—";
+            }
+            assistantModelConfigProc.out = "";
+        }
+    }
+
+    QtObject {
         id: hermesModel
 
         property string text: "—"
@@ -1031,5 +1098,6 @@ Item {
         assistantPolicy.refresh();
         assistantProfile.refresh();
         assistantPrompt.refresh();
+        assistantModelConfig.refresh();
     }
 }

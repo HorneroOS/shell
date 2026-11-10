@@ -276,6 +276,33 @@ Item {
                             value: assistantStatus.data.workspace || "—"
                         }
 
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Appearance.spacing.small
+
+                            TextButton {
+                                text: qsTr("Reveal workspace")
+                                type: TextButton.Tonal
+                                onClicked: Quickshell.execDetached(["xdg-open", assistantStatus.data.workspace || ""])
+                            }
+
+                            TextButton {
+                                text: qsTr("Recent activity")
+                                type: TextButton.Tonal
+                                onClicked: assistantLog.refresh()
+                            }
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            visible: assistantLog.text !== ""
+                            text: assistantLog.text
+                            font.family: Appearance.font.family.mono
+                            font.pointSize: Appearance.font.size.smaller
+                            color: Colours.palette.m3outline
+                            wrapMode: Text.Wrap
+                        }
+
                         DetailRow {
                             label: qsTr("Model")
                             value: hermesModel.text
@@ -673,6 +700,38 @@ Item {
                 assistantProfile.text = payload.data && payload.data.profileOk === "true" ? qsTr("OK") : qsTr("Drift — fix recommended");
             } catch (e) {
                 assistantProfile.text = "—";
+            }
+        }
+    }
+
+    QtObject {
+        id: assistantLog
+
+        property string text: ""
+
+        function refresh(): void {
+            assistantLogProc.out = "";
+            assistantLogProc.command = ["horneroctl", "assistant", "log", "--json"];
+            assistantLogProc.running = true;
+        }
+    }
+
+    Process {
+        id: assistantLogProc
+
+        property string out: ""
+
+        stdout: SplitParser {
+            onRead: data => {
+                assistantLogProc.out += data;
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            try {
+                const payload = JSON.parse(assistantLogProc.out.trim());
+                assistantLog.text = payload.message ? payload.message.toString() : "";
+            } catch (e) {
+                assistantLog.text = "";
             }
         }
     }

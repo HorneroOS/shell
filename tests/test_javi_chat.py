@@ -127,3 +127,8 @@ def test_chat_modes_are_real_and_cannot_escalate():
     for mode in ('"ask"', '"agent"', '"chat"'):
         assert mode in PANEL
     assert "CompanionStore.chatMode ===" in PANEL
+
+
+def test_pane_workspace_reveal_and_activity():
+    assert '"xdg-open", assistantStatus.data.workspace' in PANE
+    assert '"assistant", "log", "--json"' in PANE

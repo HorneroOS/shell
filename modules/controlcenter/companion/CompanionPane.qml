@@ -267,6 +267,16 @@ Item {
                         }
 
                         DetailRow {
+                            label: qsTr("Isolation")
+                            value: assistantStatus.data.isolation === "bubblewrap" ? qsTr("Sandboxed (bubblewrap)") : qsTr("systemd only — not sandboxed")
+                        }
+
+                        DetailRow {
+                            label: qsTr("Workspace")
+                            value: assistantStatus.data.workspace || "—"
+                        }
+
+                        DetailRow {
                             label: qsTr("Model")
                             value: hermesModel.text
                         }
@@ -328,6 +338,96 @@ Item {
                             interval: 1800
                             repeat: false
                             onTriggered: Quickshell.execDetached(["app2unit", "-O", "--", "http://127.0.0.1:9119"])
+                        }
+                    }
+                }
+
+                StyledRect {
+                    Layout.fillWidth: true
+                    radius: Appearance.rounding.normal
+                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    implicitHeight: policyCol.implicitHeight + Appearance.padding.large * 2
+
+                    ColumnLayout {
+                        id: policyCol
+
+                        anchors.fill: parent
+                        anchors.margins: Appearance.padding.large
+                        spacing: Appearance.spacing.small
+
+                        StyledText {
+                            text: qsTr("Permissions & security")
+                            font.pointSize: Appearance.font.size.normal
+                            font.weight: 500
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Enforced by horneroctl, outside the agent. Deny always wins; screenshots, clipboard and shell stay off or approval-gated unless a preset allows them. The agent cannot edit its own policy.")
+                            font.pointSize: Appearance.font.size.small
+                            color: Colours.palette.m3outline
+                            wrapMode: Text.Wrap
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: assistantPolicy.text
+                            font.pointSize: Appearance.font.size.small
+                            wrapMode: Text.Wrap
+                        }
+
+                        DetailRow {
+                            label: qsTr("Secure profile")
+                            value: assistantProfile.text
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Appearance.spacing.small
+
+                            TextButton {
+                                text: qsTr("Read only")
+                                type: TextButton.Tonal
+                                onClicked: assistantCtl.run(["horneroctl", "assistant", "policy", "preset", "read-only", "--yes", "--json"])
+                            }
+
+                            TextButton {
+                                text: qsTr("Workspace agent")
+                                type: TextButton.Tonal
+                                onClicked: assistantCtl.run(["horneroctl", "assistant", "policy", "preset", "workspace-agent", "--yes", "--json"])
+                            }
+
+                            TextButton {
+                                text: qsTr("Desktop assistant")
+                                type: TextButton.Tonal
+                                onClicked: assistantCtl.run(["horneroctl", "assistant", "policy", "preset", "desktop-assistant", "--yes", "--json"])
+                            }
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Appearance.spacing.small
+
+                            TextButton {
+                                text: qsTr("Revoke all agent actions")
+                                type: TextButton.Filled
+                                onClicked: assistantCtl.run(["horneroctl", "assistant", "policy", "revoke-all", "--yes", "--json"])
+                            }
+
+                            TextButton {
+                                text: qsTr("Fix secure profile")
+                                type: TextButton.Tonal
+                                onClicked: assistantCtl.run(["horneroctl", "assistant", "profile", "fix", "--yes", "--json"])
+                            }
+
+                            TextButton {
+                                text: qsTr("Refresh")
+                                type: TextButton.Tonal
+                                onClicked: {
+                                    assistantPolicy.refresh();
+                                    assistantProfile.refresh();
+                                }
+                            }
                         }
                     }
                 }
@@ -514,6 +614,70 @@ Item {
     }
 
     QtObject {
+        id: assistantPolicy
+
+        property string text: qsTr("Checking policy…")
+
+        function refresh(): void {
+            assistantPolicyProc.out = "";
+            assistantPolicyProc.command = ["horneroctl", "assistant", "policy", "--json"];
+            assistantPolicyProc.running = true;
+        }
+    }
+
+    Process {
+        id: assistantPolicyProc
+
+        property string out: ""
+
+        stdout: SplitParser {
+            onRead: data => {
+                assistantPolicyProc.out += data;
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            try {
+                const payload = JSON.parse(assistantPolicyProc.out.trim());
+                assistantPolicy.text = payload.message ? payload.message.toString() : "";
+            } catch (e) {
+                assistantPolicy.text = qsTr("Policy unavailable (horneroctl too old?).");
+            }
+        }
+    }
+
+    QtObject {
+        id: assistantProfile
+
+        property string text: "—"
+
+        function refresh(): void {
+            assistantProfileProc.out = "";
+            assistantProfileProc.command = ["horneroctl", "assistant", "profile", "--json"];
+            assistantProfileProc.running = true;
+        }
+    }
+
+    Process {
+        id: assistantProfileProc
+
+        property string out: ""
+
+        stdout: SplitParser {
+            onRead: data => {
+                assistantProfileProc.out += data;
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            try {
+                const payload = JSON.parse(assistantProfileProc.out.trim());
+                assistantProfile.text = payload.data && payload.data.profileOk === "true" ? qsTr("OK") : qsTr("Drift — fix recommended");
+            } catch (e) {
+                assistantProfile.text = "—";
+            }
+        }
+    }
+
+    QtObject {
         id: hermesModel
 
         property string text: "—"
@@ -645,8 +809,16 @@ Item {
     Process {
         id: assistantCtlProc
 
-        onExited: (exitCode, exitStatus) => assistantStatus.refresh()
+        onExited: (exitCode, exitStatus) => {
+            assistantStatus.refresh();
+            assistantPolicy.refresh();
+            assistantProfile.refresh();
+        }
     }
 
-    Component.onCompleted: assistantStatus.refresh()
+    Component.onCompleted: {
+        assistantStatus.refresh();
+        assistantPolicy.refresh();
+        assistantProfile.refresh();
+    }
 }

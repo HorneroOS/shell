@@ -102,3 +102,19 @@ def test_chat_activity_trace_ui_and_bridge():
     assert "modelData.trace" in panel
     # The trace is the gateway's emitted activity, never raw CoT claims.
     assert "chain-of-thought" not in panel.lower().replace("never the model's raw chain-of-thought", "")
+
+
+def test_pane_shows_isolation_and_workspace():
+    assert 'assistantStatus.data.isolation' in PANE
+    assert 'Sandboxed (bubblewrap)' in PANE
+    assert 'not sandboxed' in PANE  # honest fallback label, never fake
+    assert 'assistantStatus.data.workspace' in PANE
+
+
+def test_pane_policy_controls_are_real_horneroctl_calls():
+    for preset in ("read-only", "workspace-agent", "desktop-assistant"):
+        assert f'"policy", "preset", "{preset}", "--yes"' in PANE
+    assert '"policy", "revoke-all", "--yes"' in PANE
+    assert '"profile", "fix", "--yes"' in PANE
+    assert '"assistant", "policy", "--json"' in PANE
+    assert '"assistant", "profile", "--json"' in PANE

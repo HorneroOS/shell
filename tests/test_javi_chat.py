@@ -132,3 +132,10 @@ def test_chat_modes_are_real_and_cannot_escalate():
 def test_pane_workspace_reveal_and_activity():
     assert '"xdg-open", assistantStatus.data.workspace' in PANE
     assert '"assistant", "log", "--json"' in PANE
+
+
+def test_pane_prompt_editor_is_real():
+    assert '"assistant", "prompt", "--json"' in PANE
+    assert '"assistant", "prompt", "set-text"' in PANE
+    assert '"assistant", "prompt", "history", "--json"' in PANE
+    assert "promptEditor" in PANE

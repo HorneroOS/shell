@@ -463,6 +463,80 @@ Item {
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
                     color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    implicitHeight: promptCol.implicitHeight + Appearance.padding.large * 2
+
+                    ColumnLayout {
+                        id: promptCol
+
+                        anchors.fill: parent
+                        anchors.margins: Appearance.padding.large
+                        spacing: Appearance.spacing.small
+
+                        StyledText {
+                            text: qsTr("Personality & system prompt")
+                            font.pointSize: Appearance.font.size.normal
+                            font.weight: 500
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("This is Javi's full user-configurable system prompt (Hermes SOUL.md). Saving snapshots the previous version for rollback. Behaviour only: it can never widen permissions or the sandbox.")
+                            font.pointSize: Appearance.font.size.small
+                            color: Colours.palette.m3outline
+                            wrapMode: Text.Wrap
+                        }
+
+                        StyledRect {
+                            Layout.fillWidth: true
+                            implicitHeight: 140
+                            radius: Appearance.rounding.small
+                            color: Colours.layer(Colours.palette.m3surfaceContainerHigh, 1)
+
+                            TextEdit {
+                                id: promptEditor
+
+                                anchors.fill: parent
+                                anchors.margins: Appearance.padding.small
+                                color: Colours.palette.m3onSurface
+                                font.family: Appearance.font.family.mono
+                                font.pointSize: Appearance.font.size.small
+                                wrapMode: TextEdit.Wrap
+                                selectByMouse: true
+                                text: assistantPrompt.text
+                            }
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Appearance.spacing.small
+
+                            TextButton {
+                                text: qsTr("Save prompt")
+                                type: TextButton.Filled
+                                onClicked: assistantPrompt.save(promptEditor.text)
+                            }
+
+                            TextButton {
+                                text: qsTr("Reload")
+                                type: TextButton.Tonal
+                                onClicked: assistantPrompt.refresh()
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: assistantPromptHistory.text
+                                font.pointSize: Appearance.font.size.small
+                                color: Colours.palette.m3outline
+                                elide: Text.ElideRight
+                            }
+                        }
+                    }
+                }
+
+                StyledRect {
+                    Layout.fillWidth: true
+                    radius: Appearance.rounding.normal
+                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
                     implicitHeight: charCol.implicitHeight + Appearance.padding.large * 2
 
                     ColumnLayout {
@@ -737,6 +811,83 @@ Item {
     }
 
     QtObject {
+        id: assistantPrompt
+
+        property string text: ""
+
+        function refresh(): void {
+            assistantPromptProc.out = "";
+            assistantPromptProc.command = ["horneroctl", "assistant", "prompt", "--json"];
+            assistantPromptProc.running = true;
+            assistantPromptHistory.refresh();
+        }
+
+        function save(text): void {
+            assistantPromptSaveProc.command = ["horneroctl", "assistant", "prompt", "set-text", text.toString(), "--yes", "--json"];
+            assistantPromptSaveProc.running = true;
+        }
+    }
+
+    Process {
+        id: assistantPromptProc
+
+        property string out: ""
+
+        stdout: SplitParser {
+            onRead: data => {
+                assistantPromptProc.out += data;
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            try {
+                const payload = JSON.parse(assistantPromptProc.out.trim());
+                assistantPrompt.text = payload.message ? payload.message.toString() : "";
+            } catch (e) {
+                assistantPrompt.text = "";
+            }
+        }
+    }
+
+    Process {
+        id: assistantPromptSaveProc
+
+        onExited: (exitCode, exitStatus) => assistantPrompt.refresh()
+    }
+
+    QtObject {
+        id: assistantPromptHistory
+
+        property string text: ""
+
+        function refresh(): void {
+            assistantPromptHistoryProc.out = "";
+            assistantPromptHistoryProc.command = ["horneroctl", "assistant", "prompt", "history", "--json"];
+            assistantPromptHistoryProc.running = true;
+        }
+    }
+
+    Process {
+        id: assistantPromptHistoryProc
+
+        property string out: ""
+
+        stdout: SplitParser {
+            onRead: data => {
+                assistantPromptHistoryProc.out += data;
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            try {
+                const payload = JSON.parse(assistantPromptHistoryProc.out.trim());
+                const count = payload.data && payload.data.count ? payload.data.count.toString() : "0";
+                assistantPromptHistory.text = count === "0" ? qsTr("No saved versions yet") : qsTr("%1 saved version(s) for rollback").arg(count);
+            } catch (e) {
+                assistantPromptHistory.text = "";
+            }
+        }
+    }
+
+    QtObject {
         id: hermesModel
 
         property string text: "—"
@@ -879,5 +1030,6 @@ Item {
         assistantStatus.refresh();
         assistantPolicy.refresh();
         assistantProfile.refresh();
+        assistantPrompt.refresh();
     }
 }

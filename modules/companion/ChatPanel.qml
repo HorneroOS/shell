@@ -242,6 +242,46 @@ Item {
                 }
             }
 
+            // -- Mode bar: Ask never escalates, Agent surfaces approvals,
+            // Chat has no machine authority (enforced by horneroctl). --
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Appearance.spacing.small
+
+                MaterialIcon {
+                    text: "shield"
+                    font.pointSize: Appearance.font.size.normal
+                    color: Colours.palette.m3onSurfaceVariant
+                }
+
+                Repeater {
+                    model: [
+                        { id: "ask", label: qsTr("Ask") },
+                        { id: "agent", label: qsTr("Agent") },
+                        { id: "chat", label: qsTr("Chat") }
+                    ]
+
+                    TextButton {
+                        required property var modelData
+
+                        text: modelData.label
+                        toggle: true
+                        checked: CompanionStore.chatMode === modelData.id
+                        type: TextButton.Tonal
+                        onClicked: CompanionStore.setChatMode(modelData.id)
+                    }
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
+                    text: CompanionStore.chatMode === "agent" ? qsTr("Approvals ask you first") : qsTr("Never asks for approvals")
+                    font.family: Appearance.font.family.mono
+                    font.pointSize: Appearance.font.size.smaller
+                    color: Colours.palette.m3outline
+                    elide: Text.ElideRight
+                }
+            }
+
             // -- Conversation -----------------------------------------
             ListView {
                 id: view

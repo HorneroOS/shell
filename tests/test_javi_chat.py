@@ -118,3 +118,12 @@ def test_pane_policy_controls_are_real_horneroctl_calls():
     assert '"profile", "fix", "--yes"' in PANE
     assert '"assistant", "policy", "--json"' in PANE
     assert '"assistant", "profile", "--json"' in PANE
+
+
+def test_chat_modes_are_real_and_cannot_escalate():
+    assert '"--mode", CompanionStore.chatMode' in BRIDGE
+    assert 'property string chatMode: "agent"' in STORE
+    assert "setChatMode" in STORE
+    for mode in ('"ask"', '"agent"', '"chat"'):
+        assert mode in PANEL
+    assert "CompanionStore.chatMode ===" in PANEL

@@ -117,6 +117,7 @@ Singleton {
         property int tipIndex: 0
         property int chatHistoryLimit: 50
         property bool chatStreaming: true
+        property string chatMode: "agent"
         // One-shot animation override (e.g. greet on click). Cleared by
         // the host when the player reports finished.
         property string overrideAnim: ""
@@ -140,6 +141,7 @@ Singleton {
     property alias overrideAnim: persist.overrideAnim
     property alias chatHistoryLimit: persist.chatHistoryLimit
     property alias chatStreaming: persist.chatStreaming
+    property alias chatMode: persist.chatMode
 
     // The animation the player should show right now.
     // NOTE: bare `persist` (not `root.persist`): qualified access through
@@ -164,6 +166,8 @@ Singleton {
             persist.bubbleTheme = "auto";
         if (persist.chatHistoryLimit < 0 || persist.chatHistoryLimit > 500)
             persist.chatHistoryLimit = 50;
+        if (!["ask", "agent", "chat"].includes(persist.chatMode))
+            persist.chatMode = "agent";
         if (persist.tipIndex < 0 || persist.tipIndex > 1000000)
             persist.tipIndex = 0;
         persist.overrideAnim = "";
@@ -240,6 +244,10 @@ Singleton {
             persist.state = "peeking";
         root.markActive();
         root.markDirty();
+    }
+
+    function setChatMode(mode: string): void {
+        persist.chatMode = ["ask", "agent", "chat"].includes(mode) ? mode : "agent";
     }
 
     function setSkin(skin: string): void {

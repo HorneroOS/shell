@@ -228,7 +228,7 @@ Scope {
         const shown = prompt === "" ? qsTr("(attachment)") : prompt;
         root.pushHistory("user", sentAttachments.length > 0 ? `${shown} 📎 ${sentAttachments.length}` : shown);
         CompanionStore.requestState("thinking");
-        let cmd = ["horneroctl", "assistant", "ask", prompt === "" ? qsTr("Describe and answer based on the attached file(s).") : prompt, "--json", "--stream"];
+        let cmd = ["horneroctl", "assistant", "ask", prompt === "" ? qsTr("Describe and answer based on the attached file(s).") : prompt, "--json", "--stream", "--mode", CompanionStore.chatMode];
         if (root.currentSession !== "")
             cmd = cmd.concat(["--session", root.currentSession]);
         for (const p of sentAttachments)

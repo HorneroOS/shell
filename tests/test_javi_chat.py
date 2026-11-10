@@ -145,3 +145,7 @@ def test_pane_model_picker_is_real():
     assert '"assistant", "model", "show", "--json"' in PANE
     assert '"assistant", "model", "set", id, "--yes", "--json"' in PANE
     assert "modelInput" in PANE
+    # Gateway-reported models render as chips that only fill the input;
+    # applying still goes through the explicit Apply model action.
+    assert "hermesModel.models" in PANE
+    assert "onClicked: modelInput.text = modelData" in PANE

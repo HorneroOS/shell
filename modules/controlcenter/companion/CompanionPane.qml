@@ -313,6 +313,27 @@ Item {
                             value: assistantModelConfig.text
                         }
 
+                        Flow {
+                            Layout.fillWidth: true
+                            spacing: Appearance.spacing.small
+                            visible: hermesModel.models.length > 0
+
+                            Repeater {
+                                model: hermesModel.models
+
+                                TextButton {
+                                    required property int index
+                                    required property string modelData
+
+                                    text: modelData
+                                    toggle: true
+                                    checked: modelInput.text.trim() === modelData
+                                    type: TextButton.Tonal
+                                    onClicked: modelInput.text = modelData
+                                }
+                            }
+                        }
+
                         RowLayout {
                             Layout.fillWidth: true
                             spacing: Appearance.spacing.small
@@ -958,6 +979,7 @@ Item {
         id: hermesModel
 
         property string text: "—"
+        property var models: []
 
         function refresh(): void {
             hermesModelProc.out = "";
@@ -980,8 +1002,10 @@ Item {
             try {
                 const payload = JSON.parse(hermesModelProc.out.trim());
                 hermesModel.text = payload.ok ? ((payload.data ?? {}).models ?? "—").toString() : "—";
+                hermesModel.models = payload.ok ? hermesModel.text.split(/[,\n]/).map(s => s.trim()).filter(s => s !== "" && s !== "—") : [];
             } catch (e) {
                 hermesModel.text = "—";
+                hermesModel.models = [];
             }
         }
     }

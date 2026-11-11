@@ -247,6 +247,9 @@ def _needs_pil():
 
 def test_derive_check():
     _needs_pil()
+    # Without an SVG renderer the script falls back to a structural
+    # gate (manifest/frames/SVG masters agree); pixel drift stays
+    # gated wherever a renderer exists.
     proc = subprocess.run([sys.executable, "scripts/derive-companion-assets.py",
                            "--check"], cwd=ROOT, capture_output=True, text=True,
                           timeout=300)

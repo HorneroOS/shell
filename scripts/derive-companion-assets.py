@@ -58,18 +58,45 @@ def _substitute(svg: str, skin_id: str) -> str:
     return out.replace("@EYEC@", EYE_COLOR)
 
 
-def _render(svg_text: str, out: Path, size: int) -> None:
-    rsvg = shutil.which("rsvg-convert")
-    if rsvg is None:  # pragma: no cover - authoring hosts carry librsvg
-        raise RuntimeError("rsvg-convert not found (install librsvg)")
-    with tempfile.NamedTemporaryFile("w", suffix=".svg", delete=False) as tmp:
-        tmp.write(svg_text)
-        tmp_path = tmp.name
+class SkipRender(RuntimeError):
+    """No SVG renderer on this host (mirrors the Pillow skip path)."""
+
+
+def _renderer() -> str | None:
+    if shutil.which("rsvg-convert"):
+        return "rsvg"
+    if shutil.which("inkscape"):
+        return "inkscape"
     try:
-        subprocess.run([rsvg, "-w", str(size), "-h", str(size), tmp_path,
-                        "-o", str(out)], check=True, capture_output=True)
-    finally:
-        Path(tmp_path).unlink(missing_ok=True)
+        import cairosvg  # noqa: F401
+        return "cairosvg"
+    except ImportError:
+        return None
+
+
+def _render(svg_text: str, out: Path, size: int) -> None:
+    kind = _renderer()
+    if kind is None:
+        raise SkipRender("no SVG renderer (install librsvg, inkscape or cairosvg)")
+    if kind == "cairosvg":
+        import cairosvg
+        cairosvg.svg2png(bytestring=svg_text.encode(), write_to=str(out),
+                         output_width=size, output_height=size)
+    else:
+        with tempfile.NamedTemporaryFile("w", suffix=".svg", delete=False) as tmp:
+            tmp.write(svg_text)
+            tmp_path = tmp.name
+        try:
+            if kind == "rsvg":
+                cmd = ["rsvg-convert", "-w", str(size), "-h", str(size),
+                       tmp_path, "-o", str(out)]
+            else:
+                cmd = ["inkscape", tmp_path, "--export-type=png",
+                       f"--export-filename={out}",
+                       f"--export-width={size}", f"--export-height={size}"]
+            subprocess.run(cmd, check=True, capture_output=True)
+        finally:
+            Path(tmp_path).unlink(missing_ok=True)
     if size == CANVAS:
         # Flat art quantizes losslessly at 128 colors (~75% smaller);
         # hi-res exports stay full RGBA for the website.
@@ -186,7 +213,36 @@ def _drifted(a_path: Path, b_path: Path) -> bool:
         return mean_abs > 0.5 or strong_share > 0.001
 
 
+def _structural_check() -> int:
+    """Renderer-free gate: manifest, committed frames and SVG masters
+    agree with companion_art. Used where no SVG renderer exists (CI
+    without librsvg); pixel drift stays gated on authoring hosts."""
+    problems = []
+    manifest = json.loads((COMPANION / "manifest.json").read_text())
+    for skin_id, skin in manifest.get("skins", {}).items():
+        for anim, entry in skin.get("animations", {}).items():
+            if anim not in art.ANIMATIONS:
+                problems.append(f"unknown anim in manifest: {anim}")
+            for frame in entry.get("frames", []):
+                if not (COMPANION / frame["file"]).exists():
+                    problems.append(f"missing committed file: {frame['file']}")
+    for anim, (_m, _l, _n, _an, poses) in art.ANIMATIONS.items():
+        for i, pose in enumerate(poses):
+            committed = SVG_SOURCES / f"{anim}-{i + 1:02d}.svg"
+            if not committed.exists() or committed.read_text() != art.pose_svg(pose) + "\n":
+                problems.append(f"svg drift: {committed.name}")
+    if problems:
+        print("derive-companion-assets --check (structural): FAIL", file=sys.stderr)
+        for p in problems[:20]:
+            print(f"  {p}", file=sys.stderr)
+        return 1
+    print("derive-companion-assets --check: PASS (structural; no SVG renderer)")
+    return 0
+
+
 def check() -> int:
+    if _renderer() is None:
+        return _structural_check()
     with tempfile.TemporaryDirectory() as tmp:
         fresh = Path(tmp)
         derive(fresh)
@@ -232,6 +288,11 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args()
+    if _renderer() is None:
+        if args.check:
+            return check()  # structural fallback inside check()
+        print("derive-companion-assets: SKIP (no SVG renderer)", file=sys.stderr)
+        return 3
     if args.check:
         return check()
     derive(COMPANION, write_sources=True)

@@ -536,6 +536,23 @@ Scope {
                         }
                     }
 
+                    // A scheduler-picked work trip is a LOOPING reel:
+                    // timebox it so the trip completes (and the nest
+                    // advances via Player.finished) instead of
+                    // holding the override forever.
+                    Timer {
+                        id: workTripTimer
+
+                        interval: 1600
+                        onTriggered: {
+                            if (CompanionStore.overrideAnim === "work") {
+                                CompanionStore.advanceNest();
+                                win.lastIdleAnim = "";
+                                CompanionStore.clearOverride();
+                            }
+                        }
+                    }
+
                     IdleScheduler {
                         active: CompanionStore.idleAnimEnabled && CompanionStore.state === "idle" && CompanionStore.visible && !CompanionStore.suppressed && !CompanionStore.reducedMotion
                         activityLevel: CompanionStore.activityLevel
@@ -547,6 +564,8 @@ Scope {
                         onTriggered: animation => {
                             win.lastIdleAnim = animation;
                             CompanionStore.play(animation);
+                            if (animation === "work")
+                                workTripTimer.restart();
                         }
                         onRelocate: win.flyTo(1.0 - CompanionStore.posX, CompanionStore.posY)
                     }

@@ -187,6 +187,14 @@ Singleton {
     function sanitize(): void {
         if (!root.isKnownState(persist.state))
             persist.state = "idle";
+        // Transient motion states must never survive a restart (a
+        // shell killed mid-drag would otherwise restore into a state
+        // only a mouse release can leave). sanitize() runs at
+        // startup/restore only, so normalizing here is safe.
+        if (["dragging", "entering", "flying", "landing"].includes(persist.state))
+            persist.state = "idle";
+        else if (persist.state === "leaving" || persist.state === "peeking")
+            persist.state = "hidden";
         if (persist.sizeScale < 0.5 || persist.sizeScale > 2.0)
             persist.sizeScale = 1.0;
         if (persist.posX < 0.0 || persist.posX > 1.0)

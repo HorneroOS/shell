@@ -105,7 +105,7 @@ Item {
                 spacing: Appearance.spacing.normal
 
                 Image {
-                    source: `${Quickshell.shellDir}/assets/companion/frames/default-idle.png`
+                    source: Companion.frameSource(CompanionStore.skin, "idle")
                     Layout.preferredWidth: 34
                     Layout.preferredHeight: 34
                     Layout.maximumWidth: 34

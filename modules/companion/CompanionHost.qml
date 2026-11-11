@@ -248,8 +248,13 @@ Scope {
                     if (CompanionStore.state === "entering" || CompanionStore.state === "landing" || CompanionStore.state === "flying")
                         CompanionStore.requestState("idle");
                     if (win.pendingSleep) {
-                        win.pendingSleep = false;
+                        // Keep the flag set while requesting sleeping:
+                        // onStateChanged checks it to avoid launching
+                        // the nest flight again (that ordering bug
+                        // looped flying -> landing forever). Consume
+                        // the flag only after the transition lands.
                         CompanionStore.requestState("sleeping");
+                        win.pendingSleep = false;
                     }
                 }
             }

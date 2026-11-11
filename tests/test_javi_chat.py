@@ -54,7 +54,7 @@ def test_panel_is_javi_retrofuturist():
     assert "JAVI · EL HORNERO" in PANEL
     assert "199X" in PANEL
     assert "scanline" in PANEL.lower()
-    assert "frames/default-idle.png" in PANEL  # Javi avatar
+    assert 'Companion.frameSource(CompanionStore.skin, "idle")' in PANEL  # avatar follows skin
     assert "Appearance.font.family.mono" in PANEL  # mono micro-labels
     assert "reducedMotion" in PANEL  # scanline/pulse honors reduced motion
 

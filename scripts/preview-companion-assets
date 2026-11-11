@@ -73,14 +73,15 @@ def render(out_dir: Path) -> list[str]:
     out_dir.mkdir(parents=True, exist_ok=True)
     manifest = load_manifest()
     names = []
-    anims = ["idle", "walk", "fly", "greet"]
+    anims = ["idle", "blink", "walk", "fly", "greet", "sleep", "think",
+             "work", "approve", "deny", "hop", "peek"]
     cells = []
     for anim in anims:
         rel, _ = resolve_frame(manifest, "default", anim)
         cells.append((f"default / {anim}", rel))
     sheet(cells, 4, out_dir / "preview-default-animations.png")
     names.append("preview-default-animations.png")
-    skins = ["default", "argentina", "blue-gold", "red", "gaucho"]
+    skins = ["default"] + [s for s in manifest["skins"] if s != "default"]
     cells = []
     for skin in skins:
         for anim in ["idle", "walk", "fly"]:
@@ -95,6 +96,12 @@ def render(out_dir: Path) -> list[str]:
         cells.append((f"{state} -> {anim}", rel))
     sheet(cells, 4, out_dir / "preview-assistant-states.png")
     names.append("preview-assistant-states.png")
+    cells = []
+    for stage, rel in manifest.get("nests", {}).items():
+        cells.append((f"nest / {stage}", rel))
+    if cells:
+        sheet(cells, len(cells), out_dir / "preview-nests.png")
+        names.append("preview-nests.png")
     return names
 
 
@@ -127,7 +134,7 @@ def main() -> int:
     if args.check:
         return check()
     render(PREVIEW)
-    print("preview-companion-assets: wrote 3 contact sheets")
+    print("preview-companion-assets: wrote contact sheets")
     return 0
 
 

@@ -16,10 +16,11 @@ BUBBLE = (COMPANION / "Bubble.qml").read_text()
 RESOLVER = (COMPANION / "Companion.qml").read_text()
 BRIDGE = (COMPANION / "AssistantBridge.qml").read_text()
 
-BEHAVIOR_STATES = ["hidden", "peeking", "entering", "idle", "hovering",
-                   "talking", "excited", "dragging", "leaving", "sleeping"]
+BEHAVIOR_STATES = ["hidden", "peeking", "entering", "landing", "idle",
+                   "hovering", "talking", "excited", "dragging", "flying",
+                   "leaving", "sleeping"]
 FUTURE_STATES = ["listening", "thinking", "acting",
-                 "success", "warning", "error"]
+                 "success", "warning", "error", "denied"]
 IPC_FNS = ["summon(", "hide(", "toggle(", "say(", "tip(", "play(",
            "setState(", "setSkin(", "resetPosition("]
 
@@ -33,7 +34,7 @@ def test_runtime_files_exist():
 def test_behavior_states_enumerated():
     for state in BEHAVIOR_STATES:
         assert f'"{state}"' in STORE, f"store missing behavior state {state}"
-    assert len(BEHAVIOR_STATES) == 10
+    assert len(BEHAVIOR_STATES) == 12
 
 
 def test_future_assistant_states_exposed_without_backend():
@@ -49,9 +50,38 @@ def test_animation_mapping_covers_all_states():
         # Every state maps through animationFor's switch (default covers
         # the grounded rest states; named cases cover fly/greet/walk).
         assert "animationFor" in STORE
-    assert '"fly"' in STORE and '"greet"' in STORE and '"walk"' in STORE
-    # Walk never relocates: no position writes outside drag/commit paths.
+    # Reboot acting map: each assistant state has its own reel.
+    for anim in ("fly", "greet", "takeoff", "land", "peek", "drag",
+                 "hover", "sleep", "talk", "listen", "think", "work",
+                 "approve", "worry", "deny", "error"):
+        assert f'"{anim}"' in STORE, f"store missing acting reel {anim}"
     assert "posX" in STORE and "posY" in STORE
+
+
+def test_reboot_settings_and_settle_contract():
+    for key in ("idleAnimEnabled", "activityLevel", "wanderEnabled",
+                "sleepAtNest", "nestEnabled", "nestStage", "nestProgress"):
+        assert key in STORE, f"store missing reboot key {key}"
+    # chatMode must round-trip (pre-reboot omission bug).
+    serialize = STORE.split("function serialize()")[1].split("function")[0]
+    assert "chatMode: persist.chatMode" in serialize
+    restore = STORE.split("function restore(")[1]
+    assert "o.chatMode" in restore
+    assert "stateSchemaVersion: 2" in STORE
+    assert "settleTimer" in STORE
+    assert "advanceNest" in STORE and "resetNest" in STORE
+
+
+def test_idle_scheduler_and_manifest_v2_contract():
+    scheduler = (COMPANION / "IdleScheduler.qml").read_text()
+    assert "hasAnimation" in scheduler
+    assert scheduler.count("Timer {") == 1
+    assert "o.manifestVersion === 2" in RESOLVER
+    assert "durations" in RESOLVER and "durations" in PLAYER
+    assert "holdStill" in PLAYER
+    assert "followEvents" in HOST and "assistantBridge.events(" not in HOST
+    assert "IdleScheduler {" in HOST
+    assert "nestSource" in HOST and "nestSource" in RESOLVER
 
 
 def test_store_persists_without_hand_rolled_writes():

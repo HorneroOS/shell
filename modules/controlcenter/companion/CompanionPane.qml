@@ -107,6 +107,85 @@ Item {
                             onToggled: checked => CompanionStore.reducedMotion = checked
                         }
 
+                        SwitchRow {
+                            label: qsTr("Idle animations")
+                            checked: CompanionStore.idleAnimEnabled
+                            onToggled: checked => CompanionStore.idleAnimEnabled = checked
+                        }
+
+                        StyledText {
+                            text: qsTr("Activity")
+                            font.pointSize: Appearance.font.size.small
+                            color: Colours.palette.m3outline
+                        }
+
+                        Flow {
+                            Layout.fillWidth: true
+                            spacing: Appearance.spacing.small
+                            enabled: CompanionStore.idleAnimEnabled
+
+                            Repeater {
+                                model: ["calm", "normal", "lively"]
+
+                                TextButton {
+                                    required property int index
+                                    required property string modelData
+
+                                    text: modelData === "calm" ? qsTr("Calm") : modelData === "lively" ? qsTr("Lively") : qsTr("Normal")
+                                    toggle: true
+                                    checked: CompanionStore.activityLevel === modelData
+                                    type: TextButton.Tonal
+                                    onClicked: CompanionStore.activityLevel = modelData
+                                }
+                            }
+                        }
+
+                        SwitchRow {
+                            label: qsTr("Let Javi wander")
+                            checked: CompanionStore.wanderEnabled
+                            onToggled: checked => CompanionStore.wanderEnabled = checked
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Occasionally flies to another corner. Off: stays where you put it.")
+                            font.pointSize: Appearance.font.size.small
+                            color: Colours.palette.m3outline
+                            wrapMode: Text.Wrap
+                        }
+
+                        SwitchRow {
+                            label: qsTr("Nest building")
+                            checked: CompanionStore.nestEnabled
+                            onToggled: checked => CompanionStore.nestEnabled = checked
+                        }
+
+                        SwitchRow {
+                            label: qsTr("Sleep at nest")
+                            enabled: CompanionStore.nestEnabled
+                            checked: CompanionStore.sleepAtNest
+                            onToggled: checked => CompanionStore.sleepAtNest = checked
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Appearance.spacing.small
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: qsTr("Nest stage: %1 / 4").arg(CompanionStore.nestStage)
+                                font.pointSize: Appearance.font.size.small
+                                color: Colours.palette.m3outline
+                            }
+
+                            TextButton {
+                                text: qsTr("Reset nest")
+                                type: TextButton.Tonal
+                                enabled: CompanionStore.nestEnabled && CompanionStore.nestStage > 0
+                                onClicked: CompanionStore.resetNest()
+                            }
+                        }
+
                         SliderInput {
                             Layout.fillWidth: true
 

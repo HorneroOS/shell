@@ -197,6 +197,8 @@ Scope {
             property int flyTargetX: 0
             property int flyTargetY: 0
             property int flyOutTargetX: 0
+            property int flyDuration: 1100
+            property bool pendingSleep: false
 
             ParallelAnimation {
                 id: flyAnim
@@ -205,19 +207,21 @@ Scope {
                     target: win
                     property: "px"
                     to: win.flyTargetX
-                    duration: 1100
+                    duration: win.flyDuration
                     easing.type: Easing.InOutQuad
                 }
                 NumberAnimation {
                     target: win
                     property: "py"
                     to: win.flyTargetY
-                    duration: 1100
+                    duration: win.flyDuration
                     easing.type: Easing.InOutQuad
                 }
                 onFinished: {
                     win.clampPos();
                     win.commitToStore();
+                    if (CompanionStore.state === "flying")
+                        CompanionStore.requestState("landing");
                     landAnim.start();
                 }
             }
@@ -241,8 +245,12 @@ Scope {
                     easing.type: Easing.OutBounce
                 }
                 onFinished: {
-                    if (CompanionStore.state === "entering")
+                    if (CompanionStore.state === "entering" || CompanionStore.state === "landing" || CompanionStore.state === "flying")
                         CompanionStore.requestState("idle");
+                    if (win.pendingSleep) {
+                        win.pendingSleep = false;
+                        CompanionStore.requestState("sleeping");
+                    }
                 }
             }
 
@@ -316,6 +324,11 @@ Scope {
                         peekTimer.restart();
                     else if (s === "excited")
                         excitedTimer.restart();
+                    else if (s === "sleeping" && CompanionStore.sleepAtNest && CompanionStore.nestEnabled && !win.pendingSleep) {
+                        // Fly home first, then settle into sleep there.
+                        win.pendingSleep = true;
+                        win.flyTo(CompanionStore.edge === "left" ? 0.06 : 0.94, 0.97);
+                    }
                     if (s !== "dragging" && !win.dragging)
                         win.syncFromStore();
                 }
@@ -333,10 +346,35 @@ Scope {
                 }
             }
 
-            function loadReel(): void {
-                const r = Companion.reel(CompanionStore.skin, CompanionStore.activeAnimation);
-                player.setReel(r.files, r.frameMs, r.loop);
+            property string currentReelNext: ""
+            property string lastIdleAnim: ""
+
+            function loadReelFor(animation: string): void {
+                const r = Companion.reel(CompanionStore.skin, animation);
+                win.currentReelNext = r.next ?? "";
+                player.setReel(r.files, r.frameMs, r.loop, r.durations ?? []);
                 player.playing = true;
+            }
+
+            function loadReel(): void {
+                win.loadReelFor(CompanionStore.activeAnimation);
+            }
+
+            // Relocation flight (wander): fly to fraction targets on
+            // this screen, then land into idle at the new perch.
+            function flyTo(fx: real, fy: real): void {
+                if (CompanionStore.reducedMotion) {
+                    CompanionStore.posX = fx;
+                    CompanionStore.posY = fy;
+                    win.syncFromStore();
+                    return;
+                }
+                flyTargetX = Math.round(fx * win.screenW - win.sizePx / 2);
+                flyTargetY = Math.round(fy * win.screenH - win.sizePx);
+                const dist = Math.hypot(flyTargetX - win.px, flyTargetY - win.py);
+                flyDuration = Math.max(600, Math.min(1600, Math.round(500 + dist * 0.9)));
+                CompanionStore.requestState("flying");
+                flyAnim.start();
             }
 
             screen: win.modelData
@@ -485,7 +523,52 @@ Scope {
 
                         anchors.fill: parent
                         fallbackFrame: Companion.frameSource("default", "idle")
-                        onFinished: CompanionStore.clearOverride()
+                        holdStill: CompanionStore.reducedMotion
+                        paused: CompanionStore.suppressed
+                        onFinished: {
+                            if (win.lastIdleAnim === "work")
+                                CompanionStore.advanceNest();
+                            win.lastIdleAnim = "";
+                            if (CompanionStore.overrideAnim !== "")
+                                CompanionStore.clearOverride();
+                            else if (win.currentReelNext !== "" && win.currentReelNext !== CompanionStore.activeAnimation)
+                                win.loadReelFor(win.currentReelNext);
+                        }
+                    }
+
+                    IdleScheduler {
+                        active: CompanionStore.idleAnimEnabled && CompanionStore.state === "idle" && CompanionStore.visible && !CompanionStore.suppressed && !CompanionStore.reducedMotion
+                        activityLevel: CompanionStore.activityLevel
+                        skin: CompanionStore.skin
+                        wanderEnabled: CompanionStore.wanderEnabled
+                        nestEnabled: CompanionStore.nestEnabled
+                        nestStage: CompanionStore.nestStage
+                        canDoze: CompanionStore.sleepMinutes > 0
+                        onTriggered: animation => {
+                            win.lastIdleAnim = animation;
+                            CompanionStore.play(animation);
+                        }
+                        onRelocate: win.flyTo(1.0 - CompanionStore.posX, CompanionStore.posY)
+                    }
+
+                    // Nest prop under the sprite (progression stages
+                    // from the manifest); travels with the window in v1.
+                    Image {
+                        width: win.sizePx
+                        height: win.sizePx
+                        visible: CompanionStore.nestEnabled && CompanionStore.nestStage > 0 && !win.peekMode
+                        source: Companion.nestSource(["none", "twigs", "cup", "dome", "home"][CompanionStore.nestStage] ?? "none")
+                        fillMode: Image.PreserveAspectFit
+                        cache: true
+                        asynchronous: true
+                    }
+
+                    // Next-frame preload (decode ahead, never shown).
+                    Image {
+                        visible: false
+                        source: player.nextFrame
+                        cache: true
+                        asynchronous: true
                     }
 
                     Image {
@@ -505,7 +588,8 @@ Scope {
                         fillMode: Image.PreserveAspectFit
                         cache: true
                         asynchronous: true
-                        opacity: CompanionStore.state === "sleeping" ? 0.55 : 1.0
+                        // Sleeping has a real reel now; no dimming hack.
+                        opacity: 1.0
                     }
 
                     MouseArea {
@@ -799,7 +883,7 @@ Scope {
         }
 
         function events(runId: string): void {
-            assistantBridge.events((runId ?? "").toString());
+            assistantBridge.followEvents((runId ?? "").toString());
         }
     }
 }

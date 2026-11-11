@@ -1,0 +1,125 @@
+{
+  "default": {
+    "label": "Hornero",
+    "garment": null,
+    "accessories": [],
+    "palette": {
+      "back": "#A85B32",
+      "shadow": "#7A3E22",
+      "crown": "#D98C4E",
+      "belly": "#F3DFC2",
+      "throat": "#FFF6E6",
+      "beak": "#7A4A28",
+      "outline": "#3E2417"
+    }
+  },
+  "argentina": {
+    "label": "Argentina",
+    "garment": "argentina",
+    "accessories": [],
+    "palette": {
+      "back": "#A85B32",
+      "shadow": "#7A3E22",
+      "crown": "#D98C4E",
+      "belly": "#F3DFC2",
+      "throat": "#FFF6E6",
+      "beak": "#7A4A28",
+      "outline": "#3E2417",
+      "garmentA": "#74ACDF",
+      "garmentB": "#FFF6E6"
+    }
+  },
+  "blue-gold": {
+    "label": "Blue-Gold",
+    "garment": "blue-gold",
+    "accessories": [],
+    "palette": {
+      "back": "#A85B32",
+      "shadow": "#7A3E22",
+      "crown": "#D98C4E",
+      "belly": "#F3DFC2",
+      "throat": "#FFF6E6",
+      "beak": "#7A4A28",
+      "outline": "#3E2417",
+      "garmentA": "#12306E",
+      "garmentB": "#F2B33D"
+    }
+  },
+  "red": {
+    "label": "Rojo",
+    "garment": "red",
+    "accessories": [],
+    "palette": {
+      "back": "#A85B32",
+      "shadow": "#7A3E22",
+      "crown": "#D98C4E",
+      "belly": "#F3DFC2",
+      "throat": "#FFF6E6",
+      "beak": "#7A4A28",
+      "outline": "#3E2417",
+      "garmentA": "#D03434",
+      "garmentB": "#FFF6E6"
+    }
+  },
+  "gaucho": {
+    "label": "Gaucho",
+    "garment": null,
+    "accessories": [
+      "boina",
+      "kerchief"
+    ],
+    "palette": {
+      "back": "#A85B32",
+      "shadow": "#7A3E22",
+      "crown": "#D98C4E",
+      "belly": "#F3DFC2",
+      "throat": "#FFF6E6",
+      "beak": "#7A4A28",
+      "outline": "#3E2417",
+      "garmentA": "#4A2E1E",
+      "garmentB": "#93322E"
+    }
+  },
+  "nocturnal": {
+    "label": "Nocturnal",
+    "garment": null,
+    "accessories": [],
+    "palette": {
+      "back": "#4A4364",
+      "shadow": "#2E2A45",
+      "crown": "#7C74A8",
+      "belly": "#D9D4E8",
+      "throat": "#F2EFFA",
+      "beak": "#3A3450",
+      "outline": "#1D1A2C"
+    }
+  },
+  "retro-terminal": {
+    "label": "Retro Terminal",
+    "garment": null,
+    "accessories": [],
+    "palette": {
+      "back": "#3E7C4F",
+      "shadow": "#245133",
+      "crown": "#91C8A2",
+      "belly": "#D8F0DC",
+      "throat": "#F0FFF2",
+      "beak": "#2C4A34",
+      "outline": "#12251A"
+    }
+  },
+  "mono": {
+    "label": "Mono",
+    "garment": null,
+    "accessories": [],
+    "palette": {
+      "back": "#6E6E6E",
+      "shadow": "#454545",
+      "crown": "#A8A8A8",
+      "belly": "#EDEDED",
+      "throat": "#FFFFFF",
+      "beak": "#555555",
+      "outline": "#222222"
+    }
+  }
+}

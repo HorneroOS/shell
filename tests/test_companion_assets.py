@@ -144,9 +144,10 @@ def test_manifest_version_and_shape(manifest):
                 assert len(frame["anchorPx"]) == 2
 
 
-def test_every_skin_ships_its_own_fly(manifest):
-    # Reboot: poses are authored once and recolored per skin, so no
-    # skin flies as the bare default bird any more.
+def test_fly_files_follow_the_skin_strategy(manifest):
+    # Every skin lists its own fly files; garment skins render the
+    # default bird into them (documented fallbackChain), palette
+    # skins render their recolor.
     for skin in SKINS:
         fly = manifest["skins"][skin]["animations"]["fly"]["frames"][0]
         assert fly["file"].startswith(f"frames/{skin}-fly-"), fly["file"]
@@ -164,11 +165,15 @@ def test_every_skin_ships_its_own_fly(manifest):
     }
 
 
-def test_frames_exist_real_transparency_no_checkerboard():
+def test_frames_exist_real_transparency_no_checkerboard(manifest):
     files = sorted(FRAMES.glob("*.png"))
-    per_skin = sum(v["nframes"] for v in EXPECTED_ANIM.values())
-    assert len(files) == per_skin * len(SKINS) + 5, \
-        f"expected {per_skin * len(SKINS) + 5} frames, got {len(files)}"
+    # Garment skins share the default bird's files for the new life
+    # animations, so on-disk files are the unique manifest set.
+    unique = {f["file"] for s in manifest["skins"].values()
+              for a in s["animations"].values() for f in a["frames"]}
+    unique |= set(manifest["nests"].values())
+    assert len(files) == len(unique), \
+        f"expected {len(unique)} unique frames, got {len(files)}"
     for path in files:
         w, h, alpha = read_png(path)
         assert (w, h) == (512, 512), f"{path.name} canvas {(w, h)}"

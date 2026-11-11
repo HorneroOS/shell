@@ -293,6 +293,58 @@ Item {
                             }
                         }
 
+                        Flow {
+                            Layout.fillWidth: true
+                            spacing: Appearance.spacing.small
+                            visible: assistantWorkspaces.ids.length > 1
+
+                            Repeater {
+                                model: assistantWorkspaces.ids
+
+                                TextButton {
+                                    required property int index
+                                    required property string modelData
+
+                                    text: modelData
+                                    toggle: true
+                                    checked: assistantWorkspaces.active === modelData
+                                    type: TextButton.Tonal
+                                    onClicked: assistantCtl.run(["horneroctl", "assistant", "workspace", "use", modelData, "--yes", "--json"])
+                                }
+                            }
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Appearance.spacing.small
+
+                            StyledInputField {
+                                id: workspaceNameInput
+
+                                Layout.fillWidth: true
+                            }
+
+                            TextButton {
+                                text: qsTr("Create workspace")
+                                type: TextButton.Tonal
+                                onClicked: {
+                                    const name = workspaceNameInput.text.trim();
+                                    if (name !== "") {
+                                        assistantCtl.run(["horneroctl", "assistant", "workspace", "create", name, "--yes", "--json"]);
+                                        workspaceNameInput.text = "";
+                                    }
+                                }
+                            }
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Switching workspace rebinds the gateway on its next start; chats keep the workspace they were created in.")
+                            font.pointSize: Appearance.font.size.small
+                            color: Colours.palette.m3outline
+                            wrapMode: Text.Wrap
+                        }
+
                         StyledText {
                             Layout.fillWidth: true
                             visible: assistantLog.text !== ""
@@ -742,6 +794,7 @@ Item {
             assistantStatusProc.command = ["horneroctl", "assistant", "status", "--json"];
             assistantStatusProc.running = true;
             hermesModel.refresh();
+            assistantWorkspaces.refresh();
             hermesSessions.refresh();
             hermesUsage.refresh();
         }
@@ -1007,6 +1060,43 @@ Item {
                 hermesModel.text = "—";
                 hermesModel.models = [];
             }
+        }
+    }
+
+    QtObject {
+        id: assistantWorkspaces
+
+        property var ids: []
+        property string active: ""
+
+        function refresh(): void {
+            assistantWorkspacesProc.out = "";
+            assistantWorkspacesProc.command = ["horneroctl", "assistant", "workspace", "list", "--json"];
+            assistantWorkspacesProc.running = true;
+        }
+    }
+
+    Process {
+        id: assistantWorkspacesProc
+
+        property string out: ""
+
+        stdout: SplitParser {
+            onRead: data => {
+                assistantWorkspacesProc.out += data;
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            try {
+                const payload = JSON.parse(assistantWorkspacesProc.out.trim());
+                const data = payload.data ?? {};
+                assistantWorkspaces.ids = payload.ok && data.ids ? data.ids.toString().split(",").filter(s => s !== "") : [];
+                assistantWorkspaces.active = payload.ok && data.active ? data.active.toString() : "";
+            } catch (e) {
+                assistantWorkspaces.ids = [];
+                assistantWorkspaces.active = "";
+            }
+            assistantWorkspacesProc.out = "";
         }
     }
 

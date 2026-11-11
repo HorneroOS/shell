@@ -149,3 +149,10 @@ def test_pane_model_picker_is_real():
     # applying still goes through the explicit Apply model action.
     assert "hermesModel.models" in PANE
     assert "onClicked: modelInput.text = modelData" in PANE
+
+
+def test_pane_workspace_manager_is_real():
+    assert '"assistant", "workspace", "list", "--json"' in PANE
+    assert '"assistant", "workspace", "use", modelData, "--yes", "--json"' in PANE
+    assert '"assistant", "workspace", "create", name, "--yes", "--json"' in PANE
+    assert "assistantWorkspaces.active" in PANE

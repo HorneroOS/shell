@@ -27,31 +27,51 @@ Singleton {
     id: root
 
     // Long-lived behavior states owned by the runtime.
-    readonly property list<string> behaviorStates: ["hidden", "peeking", "entering", "idle", "hovering", "talking", "excited", "dragging", "leaving", "sleeping"]
+    readonly property list<string> behaviorStates: ["hidden", "peeking", "entering", "landing", "idle", "hovering", "talking", "excited", "dragging", "flying", "leaving", "sleeping"]
     // Reserved assistant states (see docs/COMPANION_ASSISTANT.md). They
     // are accepted by requestState/setState and mapped to animations so
     // a future Assistant daemon can drive the companion over IPC, but no
     // AI backend exists behind them today.
-    readonly property list<string> futureStates: ["listening", "thinking", "acting", "success", "warning", "error"]
+    readonly property list<string> futureStates: ["listening", "thinking", "acting", "success", "warning", "error", "denied"]
 
-    // Behavior state -> manifest animation. Grounded states stay on the
-    // skinned idle frame; walk only ever plays for greet/talk/think
-    // moments — the companion never relocates on its own.
+    // Behavior state -> manifest animation. Assistant states get their
+    // own acting reels (think/listen/work/talk/approve/worry/deny/error)
+    // so the assistant's situation reads from body language alone.
     function animationFor(state: string): string {
         switch ((state ?? "").toString()) {
         case "entering":
+            return "takeoff";
+        case "flying":
         case "leaving":
             return "fly";
+        case "landing":
+            return "land";
+        case "peeking":
+            return "peek";
+        case "dragging":
+            return "drag";
+        case "hovering":
+            return "hover";
+        case "sleeping":
+            return "sleep";
         case "talking":
+            return "talk";
         case "excited":
-        case "listening":
-        case "success":
             return "greet";
+        case "listening":
+            return "listen";
         case "thinking":
+            return "think";
         case "acting":
+            return "work";
+        case "success":
+            return "approve";
         case "warning":
+            return "worry";
+        case "denied":
+            return "deny";
         case "error":
-            return "walk";
+            return "error";
         default:
             return "idle";
         }
@@ -118,6 +138,14 @@ Singleton {
         property int chatHistoryLimit: 50
         property bool chatStreaming: true
         property string chatMode: "agent"
+        // Visual reboot (schemaVersion 2): living-companion behavior.
+        property bool idleAnimEnabled: true
+        property string activityLevel: "normal"
+        property bool wanderEnabled: false
+        property bool sleepAtNest: false
+        property bool nestEnabled: true
+        property int nestStage: 0
+        property int nestProgress: 0
         // One-shot animation override (e.g. greet on click). Cleared by
         // the host when the player reports finished.
         property string overrideAnim: ""
@@ -142,6 +170,13 @@ Singleton {
     property alias chatHistoryLimit: persist.chatHistoryLimit
     property alias chatStreaming: persist.chatStreaming
     property alias chatMode: persist.chatMode
+    property alias idleAnimEnabled: persist.idleAnimEnabled
+    property alias activityLevel: persist.activityLevel
+    property alias wanderEnabled: persist.wanderEnabled
+    property alias sleepAtNest: persist.sleepAtNest
+    property alias nestEnabled: persist.nestEnabled
+    property alias nestStage: persist.nestStage
+    property alias nestProgress: persist.nestProgress
 
     // The animation the player should show right now.
     // NOTE: bare `persist` (not `root.persist`): qualified access through
@@ -168,6 +203,12 @@ Singleton {
             persist.chatHistoryLimit = 50;
         if (!["ask", "agent", "chat"].includes(persist.chatMode))
             persist.chatMode = "agent";
+        if (!["calm", "normal", "lively"].includes(persist.activityLevel))
+            persist.activityLevel = "normal";
+        if (persist.nestStage < 0 || persist.nestStage > 4)
+            persist.nestStage = 0;
+        if (persist.nestProgress < 0 || persist.nestProgress > 2)
+            persist.nestProgress = 0;
         if (persist.tipIndex < 0 || persist.tipIndex > 1000000)
             persist.tipIndex = 0;
         persist.overrideAnim = "";
@@ -180,8 +221,12 @@ Singleton {
     // Any genuine interaction wakes the companion and resets the idle clock.
     function markActive(): void {
         persist.lastActiveMs = Date.now();
-        if (persist.state === "sleeping")
+        if (persist.state === "sleeping") {
             persist.state = "idle";
+            // Wake with a stretch when the reel exists.
+            if (Companion.isKnownAnimation("stretch"))
+                persist.overrideAnim = "stretch";
+        }
     }
 
     function requestState(state: string): void {
@@ -190,9 +235,42 @@ Singleton {
             console.warn(`[companion] Unknown state "${state}" — ignoring`);
             return;
         }
+        // Motion-critical states own their transitions; only hide may
+        // interrupt them (the user asking to dismiss always wins).
+        if ((persist.state === "dragging" || persist.state === "entering" || persist.state === "leaving")
+                && s !== "hidden" && s !== "leaving"
+                && !(persist.state === "entering" && s === "idle"))
+            return;
         if (s !== "sleeping")
             root.markActive();
         persist.state = s;
+        // success/error/denied are one-shot acting beats: settle back
+        // to idle instead of sticking until the next transition.
+        if (s === "success" || s === "error" || s === "denied") {
+            settleTimer.state = s;
+            settleTimer.restart();
+        } else {
+            settleTimer.stop();
+        }
+        root.markDirty();
+    }
+
+    // Nest progression: each completed carry trip counts; every third
+    // one advances the stage (twigs -> cup -> dome -> home, capped).
+    function advanceNest(): void {
+        if (!persist.nestEnabled || persist.nestStage >= 4)
+            return;
+        persist.nestProgress = persist.nestProgress + 1;
+        if (persist.nestProgress >= 3) {
+            persist.nestProgress = 0;
+            persist.nestStage = persist.nestStage + 1;
+        }
+        root.markDirty();
+    }
+
+    function resetNest(): void {
+        persist.nestStage = 0;
+        persist.nestProgress = 0;
         root.markDirty();
     }
 
@@ -334,7 +412,9 @@ Singleton {
             skin: persist.skin,
             animation: root.activeAnimation,
             suppressed: root.suppressed,
-            bubbleOpen: root.bubbleOpen
+            bubbleOpen: root.bubbleOpen,
+            nestStage: persist.nestStage,
+            activityLevel: persist.activityLevel
         };
     }
 
@@ -344,9 +424,22 @@ Singleton {
         onTriggered: root.dismissBubble()
     }
 
+    Timer {
+        id: settleTimer
+
+        property string state: ""
+
+        interval: 3000
+        onTriggered: {
+            if (persist.state === settleTimer.state)
+                persist.state = "idle";
+            root.markDirty();
+        }
+    }
+
     // -- Restart durability (file-backed, see header) -------------------
     readonly property string stateFilePath: `${Paths.state}/companion/state.json`
-    readonly property int stateSchemaVersion: 1
+    readonly property int stateSchemaVersion: 2
     // First apply wins: the on-disk snapshot must never clobber live
     // interaction that happened before the async load completed.
     property bool _restored: false
@@ -370,7 +463,15 @@ Singleton {
             screenName: persist.screenName,
             tipIndex: persist.tipIndex,
             chatHistoryLimit: persist.chatHistoryLimit,
-            chatStreaming: persist.chatStreaming
+            chatStreaming: persist.chatStreaming,
+            chatMode: persist.chatMode,
+            idleAnimEnabled: persist.idleAnimEnabled,
+            activityLevel: persist.activityLevel,
+            wanderEnabled: persist.wanderEnabled,
+            sleepAtNest: persist.sleepAtNest,
+            nestEnabled: persist.nestEnabled,
+            nestStage: persist.nestStage,
+            nestProgress: persist.nestProgress
         });
     }
 
@@ -406,7 +507,7 @@ Singleton {
         root._restoring = true;
         try {
             const o = JSON.parse(text);
-            if (o !== null && typeof o === "object" && !Array.isArray(o) && o.schemaVersion === root.stateSchemaVersion) {
+            if (o !== null && typeof o === "object" && !Array.isArray(o) && (o.schemaVersion === 1 || o.schemaVersion === root.stateSchemaVersion)) {
                 if (typeof o.enabled === "boolean")
                     persist.enabled = o.enabled;
                 if (typeof o.skin === "string" && Companion.isKnownSkin(o.skin))
@@ -435,6 +536,22 @@ Singleton {
                     persist.chatHistoryLimit = o.chatHistoryLimit;
                 if (typeof o.chatStreaming === "boolean")
                     persist.chatStreaming = o.chatStreaming;
+                if (typeof o.chatMode === "string")
+                    persist.chatMode = o.chatMode;
+                if (typeof o.idleAnimEnabled === "boolean")
+                    persist.idleAnimEnabled = o.idleAnimEnabled;
+                if (typeof o.activityLevel === "string")
+                    persist.activityLevel = o.activityLevel;
+                if (typeof o.wanderEnabled === "boolean")
+                    persist.wanderEnabled = o.wanderEnabled;
+                if (typeof o.sleepAtNest === "boolean")
+                    persist.sleepAtNest = o.sleepAtNest;
+                if (typeof o.nestEnabled === "boolean")
+                    persist.nestEnabled = o.nestEnabled;
+                if (typeof o.nestStage === "number")
+                    persist.nestStage = o.nestStage;
+                if (typeof o.nestProgress === "number")
+                    persist.nestProgress = o.nestProgress;
                 if (typeof o.state === "string") {
                     switch (o.state) {
                     case "hidden":

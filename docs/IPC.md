@@ -68,13 +68,16 @@ itself lives in HorneroOS/hornero (`horneroctl welcome …`); see
 `companion say <text> [timeoutMs]` shows a timed speech bubble (280
 chars max, 6 s default); `tip` shows the next Welcome-linked tip and
 also returns it; `play <animation>` one-shots a known animation
-(`idle`/`walk`/`fly`/`greet`, unknown names warn and play `idle`);
+(`idle`/`blink`/`look`/`preen`/`stretch`/`hop`/`greet`/`walk`/`hover`/
+`takeoff`/`fly`/`land`/`perch`/`peek`/`drag`/`talk`/`think`/`listen`/
+`work`/`approve`/`celebrate`/`deny`/`worry`/`error`/`sleep`, unknown
+names warn and play `idle`);
 `setState <state>` requests a behavior state (unknown states warn and
 are ignored) including the reserved future assistant states, which
 only change the animation — no backend exists behind them;
 `setSkin` keeps the current skin on unknown names; `status()` prints
 JSON (`{"enabled", "state", "skin", "animation", "suppressed",
-"bubbleOpen"}`). See `docs/COMPANION.md`.
+"bubbleOpen", "nestStage", "activityLevel"}`). See `docs/COMPANION.md`.
 
 ## Global shortcuts
 

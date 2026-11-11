@@ -18,12 +18,14 @@ import QtQuick
 Singleton {
     id: root
 
-    readonly property var knownSkins: ["default", "argentina", "blue-gold", "red", "gaucho"]
-    readonly property var knownAnimations: ["idle", "walk", "fly", "greet"]
+    readonly property var knownSkins: ["default", "argentina", "blue-gold", "red", "gaucho", "nocturnal", "retro-terminal", "mono"]
+    readonly property var knownAnimations: ["idle", "blink", "look", "preen", "stretch", "hop", "greet", "walk", "hover", "takeoff", "fly", "land", "perch", "peek", "drag", "talk", "think", "listen", "work", "approve", "celebrate", "deny", "worry", "error", "sleep"]
     readonly property string defaultSkin: "default"
     readonly property string defaultAnimation: "idle"
 
     property var skins: ({})
+    property var skinMeta: ({})
+    property var nests: ({})
     property var assistantStates: ({})
     property int manifestVersion: 0
     property bool ready: false
@@ -51,7 +53,7 @@ Singleton {
             return {
                 "skin": root.defaultSkin,
                 "animation": root.defaultAnimation,
-                "file": `${root.manifestDir}/frames/default-idle.png`,
+                "file": `${root.manifestDir}/frames/default-idle-01.png`,
                 "anchor": "feet",
                 "anchorPx": [256, 472],
                 "frameMs": 900,
@@ -106,15 +108,40 @@ Singleton {
                 next = entry.next;
         }
         if (files.length === 0)
-            files.push(`${root.manifestDir}/frames/default-idle.png`);
+            files.push(`${root.manifestDir}/frames/default-idle-01.png`);
+        const durations = [];
+        if (entry !== null && Array.isArray(entry.frames)) {
+            for (const frame of entry.frames) {
+                if (frame !== null && typeof frame === "object" && typeof frame.file === "string")
+                    durations.push(typeof frame.ms === "number" && frame.ms > 0 ? frame.ms : frameMs);
+            }
+        }
+        while (durations.length < files.length)
+            durations.push(frameMs);
         return {
             "skin": s,
             "animation": a,
             "files": files,
             "frameMs": frameMs,
+            "durations": durations,
             "loop": loop,
-            "next": next
+            "next": next,
+            "anchor": entry !== null ? (entry.anchor ?? "feet") : "feet"
         };
+    }
+
+    // True when the loaded manifest actually ships this animation for
+    // the skin (IdleScheduler only picks reels that exist).
+    function hasAnimation(skin: string, animation: string): bool {
+        const s = root.isKnownSkin(skin) ? skin.toString() : root.defaultSkin;
+        const a = (animation ?? "").toString();
+        return root.skins[s] !== undefined && root.skins[s][a] !== undefined;
+    }
+
+    // Nest progression prop for a stage name ('' when unknown).
+    function nestSource(stage: string): string {
+        const rel = root.nests[(stage ?? "").toString()];
+        return typeof rel === "string" ? `${root.manifestDir}/${rel}` : "";
     }
 
     function stateSource(state: string): string {
@@ -123,15 +150,17 @@ Singleton {
     }
 
     // Tolerant parse mirroring the generator contract: manifestVersion
-    // must be 1 with a skins object; anything else keeps safe defaults.
+    // 1 or 2 with a skins object; anything else keeps safe defaults.
     function parse(text: string): void {
         const skins = {};
+        const meta = {};
         const states = {};
+        const nests = {};
         let version = 0;
         try {
             const o = JSON.parse(text);
             if (o !== null && typeof o === "object" && !Array.isArray(o)
-                    && o.manifestVersion === 1 && o.skins !== null
+                    && (o.manifestVersion === 1 || o.manifestVersion === 2) && o.skins !== null
                     && typeof o.skins === "object" && !Array.isArray(o.skins)) {
                 for (const key of Object.keys(o.skins)) {
                     const skin = o.skins[key];
@@ -140,6 +169,11 @@ Singleton {
                     if (skin.animations === null || typeof skin.animations !== "object")
                         continue;
                     skins[key] = skin.animations;
+                    meta[key] = {
+                        "label": typeof skin.label === "string" ? skin.label : key,
+                        "palette": skin.palette ?? {},
+                        "fallbackChain": Array.isArray(skin.fallbackChain) ? skin.fallbackChain : [key, "default"]
+                    };
                 }
                 if (o.assistantStates !== null && typeof o.assistantStates === "object"
                         && !Array.isArray(o.assistantStates)) {
@@ -148,13 +182,21 @@ Singleton {
                             states[key] = o.assistantStates[key];
                     }
                 }
+                if (o.nests !== null && typeof o.nests === "object" && !Array.isArray(o.nests)) {
+                    for (const key of Object.keys(o.nests)) {
+                        if (typeof o.nests[key] === "string")
+                            nests[key] = o.nests[key];
+                    }
+                }
                 if (Object.keys(skins).length > 0)
-                    version = 1;
+                    version = o.manifestVersion;
             }
         } catch (e) {
             // Malformed manifest: companion stays on safe defaults.
         }
         root.skins = skins;
+        root.skinMeta = meta;
+        root.nests = nests;
         root.assistantStates = states;
         root.manifestVersion = version;
         root.ready = true;

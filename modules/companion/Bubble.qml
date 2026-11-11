@@ -9,6 +9,9 @@ Item {
     id: root
 
     property string text: ""
+    // Accent kind: "speech" (default), "alert" (warning/error says),
+    // or "tip". Only the edge color changes; shape stays identical.
+    property string kind: "speech"
     // Resolved theme name: "dark", "light", or "pampa".
     property string theme: "dark"
     property int maxWidth: 240
@@ -17,7 +20,7 @@ Item {
 
     readonly property color bg: root.theme === "light" ? "#fffdf7" : root.theme === "pampa" ? "#faf3e3" : "#211d17"
     readonly property color fg: root.theme === "light" ? "#201d18" : root.theme === "pampa" ? "#1a1a1a" : "#f5f1e8"
-    readonly property color edge: root.theme === "pampa" ? "#74acdf" : root.theme === "light" ? "#d8d2c4" : "#4a4438"
+    readonly property color edge: root.kind === "alert" ? "#F08B43" : root.kind === "tip" ? "#91C8A2" : root.theme === "pampa" ? "#74acdf" : root.theme === "light" ? "#d8d2c4" : "#4a4438"
 
     // Natural width comes from an unwrapped measure probe, never the
     // wrapped label: the label wraps to the bubble width, so sizing the

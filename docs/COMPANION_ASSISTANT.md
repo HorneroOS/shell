@@ -48,12 +48,13 @@ enable/disable, streaming, history retention; keys never enter QML).
 
 | Future state | Animation | Shown as |
 | ------------ | --------- | -------- |
-| `listening` | `greet` | perked up, wing raised — "I'm hearing you" |
-| `thinking` | `walk` | mid-step pacing — "working on it" |
-| `acting` | `walk` | same pacing — "doing it" |
-| `success` | `greet` | cheerful greet — "done" |
-| `warning` | `walk` | pacing — "heads up" |
-| `error` | `walk` | pacing — "that failed" |
+| `listening` | `listen` | head cocked — "I'm hearing you" |
+| `thinking` | `think` | head tilt, half eye — "working on it" |
+| `acting` | `work` | carrying a twig — "doing it" |
+| `success` | `approve` | wing raised with a hop — "done" (settles to idle) |
+| `warning` | `worry` | worried crouch — "heads up" (loops until decided) |
+| `denied` | `deny` | head shake — "that was not allowed" (settles to idle) |
+| `error` | `error` | droop — "that failed" (settles to idle) |
 
 Set them exactly like behavior states:
 
@@ -70,11 +71,12 @@ daemon can verify what the user sees.
 ## Manifest assistant states (asset layer)
 
 `assets/companion/manifest.json` also carries `assistantStates`
-(`resting` → idle, `listening` → greet, `thinking` → walk,
-`speaking` → fly), consumed via `Companion.stateSource(state)` for
-static (non-overlay) surfaces. The overlay host maps the six daemon
-states above instead, so both layers agree on what each state looks
-like.
+(`resting` → idle, `listening` → listen, `thinking` → think,
+`acting` → work, `speaking` → talk, `success` → approve,
+`warning` → worry, `denied` → deny, `error` → error), consumed via
+`Companion.stateSource(state)` for static (non-overlay) surfaces.
+The overlay host maps the daemon states above to the same reels, so
+both layers agree on what each state looks like.
 
 ## Rules for the future daemon
 

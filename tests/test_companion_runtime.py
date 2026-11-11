@@ -82,6 +82,11 @@ def test_idle_scheduler_and_manifest_v2_contract():
     assert "followEvents" in HOST and "assistantBridge.events(" not in HOST
     assert "IdleScheduler {" in HOST
     assert "nestSource" in HOST and "nestSource" in RESOLVER
+    # Live-host regressions: restored transient states normalize at
+    # startup, and looping work trips are timeboxed so the nest can
+    # actually advance.
+    assert '"dragging", "entering", "flying", "landing"' in STORE
+    assert "workTripTimer" in HOST and "advanceNest" in HOST
 
 
 def test_store_persists_without_hand_rolled_writes():

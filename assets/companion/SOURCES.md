@@ -1,8 +1,21 @@
 # Companion sources — provenance
 
-Runtime frames (`frames/`, `manifest.json`) are derived from the plates
-below by `scripts/derive-companion-assets.py`. Nothing at runtime reads
+Runtime frames (`frames/`, `frames-hi/`, `manifest.json`) are derived
+by `scripts/derive-companion-assets.py`. Nothing at runtime reads
 outside this repository.
+
+## SVG masters (`sources/svg/`, visual reboot)
+
+Since the visual reboot, the source of truth is the parameterized
+flat-vector hornero in `scripts/companion_art.py`: one SVG per pose
+frame (`<anim>-<nn>.svg`, skin-neutral `@TOKEN@` palette placeholders)
+plus `skins.json` (palettes, garments, accessories) and `nest-*.svg`
+progression props. The character bible (silhouette, proportions,
+expression set, palette tokens) lives in `docs/COMPANION.md`. Poses
+are authored once; every skin is a palette/garment substitution, so
+all skins ship every animation dressed — including fly. The plates
+below remain vendored as the pre-reboot art provenance; they no
+longer feed the pipeline.
 
 ## Vendored plates (`sources/`)
 

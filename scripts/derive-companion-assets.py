@@ -1,25 +1,18 @@
 #!/usr/bin/env python3
-"""Derive normalized Companion frames + manifest from vendored source plates.
+"""Derive Companion frames + manifest from parameterized SVG masters.
 
-Pipeline (deterministic, Pillow only):
-  sources (assets/companion/sources/*.png, 1448x1086 RGBA plates, 3 poses
-  each) -> vertical slice at hand-traced seams -> autocrop alpha bbox + pad
-  -> scale to fit 448px -> place on a 512x512 canvas (feet baseline for
-  grounded poses, optical center for fly) -> optimized RGBA PNG frames +
-  versioned manifest.json.
+Pipeline (deterministic; Pillow + rsvg-convert):
+  scripts/companion_art.py (pose parameters, palettes, character bible)
+  -> assets/companion/sources/svg/*.svg (skin-neutral masters, tokens)
+  -> per-skin token substitution -> rsvg-convert 512x512 (+1024 hi set)
+  -> assets/companion/frames/*.png + manifest.json (v2).
 
-Pose order on every plate is left-to-right: idle, fly, walk.
-
-  idle: standing, wings folded, feet on ground  (anchor: feet)
-  fly:  airborne, wings raised, feet tucked     (anchor: center)
-  walk: standing, wing raised, beak open        (anchor: feet)
-
-Skins ship idle + walk + greet locally; fly resolves through the explicit
-fallbackChain to the default Hornero fly frame (partial-skin contract;
-see docs/COMPANION.md).
+Every skin ships every animation (poses are authored once; skins are
+palette + garment/accessory substitutions), so no skin flies bare.
+The pre-reboot artist plates stay under sources/ as provenance.
 
 Usage:
-  scripts/derive-companion-assets.py            # write frames + manifest
+  scripts/derive-companion-assets.py            # write sources, frames, manifest
   scripts/derive-companion-assets.py --check    # verify committed output
 """
 from __future__ import annotations
@@ -27,9 +20,14 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import shutil
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import companion_art as art  # noqa: E402
 
 try:
     from PIL import Image
@@ -39,148 +37,122 @@ except ImportError:  # pragma: no cover
 
 ROOT = Path(__file__).resolve().parent.parent
 COMPANION = ROOT / "assets" / "companion"
-SOURCES = COMPANION / "sources"
+SVG_SOURCES = COMPANION / "sources" / "svg"
 FRAMES = "frames"
+FRAMES_HI = "frames-hi"
 
 CANVAS = 512
-FIT = 448
-PAD = 6
-FEET_Y = 472  # grounded-pose feet baseline in canvas px
+FEET_Y = 472
 FLY_CENTER = (256, 256)
-MANIFEST_VERSION = 1
-
-# Hand-traced vertical seams (x of the alpha-minimum column between poses).
-# Measured with alpha>8 column profiles; seam1 sits in a true zero gap,
-# seam2 at the local minimum where wingtip/beak feathers touch.
-SEAMS = {
-    "hornero-default.png": (491, 985),
-    "skin-argentina.png": (478, 1010),
-    "skin-blue-gold.png": (488, 993),
-    "skin-red.png": (492, 988),
-    "skin-gaucho.png": (470, 1009),
-}
-
-# source plate -> (skin id, skin label)
-SKINS = {
-    "hornero-default.png": ("default", "Hornero"),
-    "skin-argentina.png": ("argentina", "Argentina"),
-    "skin-blue-gold.png": ("blue-gold", "Blue-Gold"),
-    "skin-red.png": ("red", "Rojo"),
-    "skin-gaucho.png": ("gaucho", "Gaucho"),
-}
-
-POSES = ("idle", "fly", "walk")  # left-to-right on every plate
-GROUND_ANCHOR = {"idle", "walk"}
-
-ANIMATIONS = {
-    # animation id -> (frame pose order, frameMs, loop, next, anchor)
-    "idle": (("idle",), 900, True, "idle", "feet"),
-    "walk": (("walk", "idle"), 320, True, "idle", "feet"),
-    "fly": (("fly",), 500, True, "idle", "center"),
-    "greet": (("walk",), 650, False, "idle", "feet"),
-}
-
-# Assistant states resolve to default-skin animations (preview + QML demo).
-ASSISTANT_STATES = {
-    "resting": "idle",
-    "listening": "greet",
-    "thinking": "walk",
-    "speaking": "fly",
-}
-
-# Skins that ship only grounded poses; fly falls back to default.
-SKIN_POSES = {"default": ("idle", "fly", "walk")}
-for _src, (_sid, _label) in SKINS.items():
-    if _sid != "default":
-        SKIN_POSES[_sid] = ("idle", "walk")
+MANIFEST_VERSION = 2
+EYE_COLOR = "#1D130C"
+HI_ANIMS = ("idle", "greet", "fly", "perch")
 
 
-def slice_poses(plate: Image.Image, seams: tuple[int, int]) -> list[Image.Image]:
-    s1, s2 = seams
-    w = plate.width
-    return [
-        plate.crop((0, 0, s1 + 1, plate.height)),
-        plate.crop((s1 + 1, 0, s2 + 1, plate.height)),
-        plate.crop((s2 + 1, 0, w, plate.height)),
-    ]
+def _substitute(svg: str, skin_id: str) -> str:
+    skin = art.SKINS[skin_id]
+    out = svg.replace("@GARMENT@", art._garment(skin["garment"]))
+    out = out.replace("@ACCESSORIES@", art._accessories(skin["accessories"]))
+    for key, value in skin["palette"].items():
+        out = out.replace(f"@{key.upper()}@", value)
+    return out.replace("@EYEC@", EYE_COLOR)
 
 
-def autocrop(strip: Image.Image) -> Image.Image:
-    alpha = strip.getchannel("A")
-    bbox = alpha.getbbox()
-    if bbox is None:  # pragma: no cover - every strip has content
-        raise ValueError("empty pose strip")
+def _render(svg_text: str, out: Path, size: int) -> None:
+    rsvg = shutil.which("rsvg-convert")
+    if rsvg is None:  # pragma: no cover - authoring hosts carry librsvg
+        raise RuntimeError("rsvg-convert not found (install librsvg)")
+    with tempfile.NamedTemporaryFile("w", suffix=".svg", delete=False) as tmp:
+        tmp.write(svg_text)
+        tmp_path = tmp.name
+    try:
+        subprocess.run([rsvg, "-w", str(size), "-h", str(size), tmp_path,
+                        "-o", str(out)], check=True, capture_output=True)
+    finally:
+        Path(tmp_path).unlink(missing_ok=True)
+    if size == CANVAS:
+        # Flat art quantizes losslessly at 128 colors (~75% smaller);
+        # hi-res exports stay full RGBA for the website.
+        with Image.open(out) as im:
+            im.convert("RGBA").quantize(
+                colors=128, method=Image.Quantize.FASTOCTREE).save(
+                out, optimize=True)
+
+
+def _geometry(path: Path, anchor: str) -> dict:
+    with Image.open(path) as im:
+        assert im.size == (CANVAS, CANVAS), f"{path}: {im.size}"
+        bbox = im.convert("RGBA").getchannel("A").getbbox()
+    assert bbox is not None, f"{path}: empty frame"
     x0, y0, x1, y1 = bbox
-    x0 = max(0, x0 - PAD)
-    y0 = max(0, y0 - PAD)
-    x1 = min(strip.width, x1 + PAD)
-    y1 = min(strip.height, y1 + PAD)
-    return strip.crop((x0, y0, x1, y1))
+    anchor_px = [256, FEET_Y] if anchor == "feet" else list(FLY_CENTER)
+    return {"size": [x1 - x0, y1 - y0], "offset": [x0, y0], "anchorPx": anchor_px}
 
 
-def normalize(content: Image.Image, anchor: str) -> tuple[Image.Image, dict]:
-    scale = min(1.0, FIT / max(content.width, content.height))
-    nw = max(1, round(content.width * scale))
-    nh = max(1, round(content.height * scale))
-    resized = content.resize((nw, nh), Image.LANCZOS)
-    canvas = Image.new("RGBA", (CANVAS, CANVAS), (0, 0, 0, 0))
-    if anchor == "feet":
-        ox = (CANVAS - nw) // 2
-        oy = FEET_Y - nh
-        anchor_px = [CANVAS // 2, FEET_Y]
-    else:
-        ox = FLY_CENTER[0] - nw // 2
-        oy = FLY_CENTER[1] - nh // 2
-        anchor_px = [FLY_CENTER[0], FLY_CENTER[1]]
-    canvas.paste(resized, (ox, oy), resized)
-    geometry = {"size": [nw, nh], "offset": [ox, oy], "anchorPx": anchor_px}
-    return canvas, geometry
-
-
-def derive(out_dir: Path) -> dict:
+def derive(out_dir: Path, write_sources: bool = False) -> dict:
     frames_dir = out_dir / FRAMES
+    hi_dir = out_dir / FRAMES_HI
     frames_dir.mkdir(parents=True, exist_ok=True)
+    hi_dir.mkdir(parents=True, exist_ok=True)
+    if write_sources:
+        SVG_SOURCES.mkdir(parents=True, exist_ok=True)
+
+    # Pose masters (skin-neutral), keyed (anim, index).
+    masters: dict[tuple[str, int], str] = {}
+    for anim, (_ms, _loop, _next, _anchor, poses) in art.ANIMATIONS.items():
+        for i, pose in enumerate(poses):
+            masters[(anim, i)] = art.pose_svg(pose)
+    nest_masters = {stage: art.nest_svg(stage) for stage in range(5)}
+    if write_sources:
+        for (anim, i), svg in masters.items():
+            (SVG_SOURCES / f"{anim}-{i + 1:02d}.svg").write_text(svg + "\n")
+        for stage, name in enumerate(art.NEST_STAGES):
+            (SVG_SOURCES / f"nest-{name}.svg").write_text(nest_masters[stage] + "\n")
+        (SVG_SOURCES / "skins.json").write_text(
+            json.dumps(art.SKINS, indent=2) + "\n")
+
     manifest_skins: dict[str, dict] = {}
-    geometries: dict[str, dict] = {}
-    for src_name, (skin_id, label) in sorted(SKINS.items()):
-        plate = Image.open(SOURCES / src_name).convert("RGBA")
-        assert plate.size == (1448, 1086), f"{src_name}: {plate.size}"
-        strips = slice_poses(plate, SEAMS[src_name])
-        for pose, strip in zip(POSES, strips):
-            if pose not in SKIN_POSES[skin_id]:
-                continue  # partial skin: resolved via fallbackChain
-            anchor = "feet" if pose in GROUND_ANCHOR else "center"
-            frame, geometry = normalize(autocrop(strip), anchor)
-            fname = f"{skin_id}-{pose}.png"
-            frame.save(frames_dir / fname, optimize=True)
-            geometries[f"{skin_id}/{pose}"] = {"file": f"{FRAMES}/{fname}", **geometry}
-    for skin_id, label in sorted({v[0]: v[1] for v in SKINS.values()}.items()):
-        chain = [skin_id] if skin_id == "default" else [skin_id, "default"]
+    for skin_id in sorted(art.SKINS):
+        skin = art.SKINS[skin_id]
         animations: dict[str, dict] = {}
-        for anim_id, (poses, ms, loop, nxt, anchor) in ANIMATIONS.items():
+        for anim, (ms, loop, nxt, anchor, poses) in art.ANIMATIONS.items():
             frames = []
-            for pose in poses:
-                owner = skin_id if pose in SKIN_POSES[skin_id] else "default"
-                frames.append(geometries[f"{owner}/{pose}"])
-            animations[anim_id] = {
-                "id": anim_id,
-                "frames": frames,
-                "frameMs": ms,
-                "loop": loop,
-                "next": nxt,
-                "anchor": anchor,
+            for i, _pose in enumerate(poses):
+                fname = f"{skin_id}-{anim}-{i + 1:02d}.png"
+                _render(_substitute(masters[(anim, i)], skin_id),
+                        frames_dir / fname, CANVAS)
+                if skin_id == "default" and anim in HI_ANIMS:
+                    _render(_substitute(masters[(anim, i)], skin_id),
+                            hi_dir / fname, 1024)
+                frames.append({"file": f"{FRAMES}/{fname}",
+                               **_geometry(frames_dir / fname, anchor)})
+            animations[anim] = {
+                "id": anim, "frames": frames, "frameMs": ms,
+                "loop": loop, "next": nxt, "anchor": anchor,
             }
         manifest_skins[skin_id] = {
-            "label": label,
-            "fallbackChain": chain,
+            "label": skin["label"],
+            "fallbackChain": [skin_id] if skin_id == "default" else [skin_id, "default"],
+            "palette": skin["palette"],
+            "garment": skin["garment"],
+            "accessories": skin["accessories"],
             "animations": animations,
         }
+
+    nests = {}
+    for stage, name in enumerate(art.NEST_STAGES):
+        fname = f"nest-{name}.png"
+        _render(nest_masters[stage], frames_dir / fname, CANVAS)
+        nests[name] = f"{FRAMES}/{fname}"
+
     manifest = {
         "manifestVersion": MANIFEST_VERSION,
         "canvas": {"width": CANVAS, "height": CANVAS},
         "baseline": {"feetY": FEET_Y, "flyCenter": list(FLY_CENTER)},
+        "anchors": {"feet": [256, FEET_Y], "center": list(FLY_CENTER)},
         "skins": manifest_skins,
-        "assistantStates": dict(ASSISTANT_STATES),
+        "assistantStates": dict(art.ASSISTANT_STATES),
+        "nests": nests,
     }
     (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     return manifest
@@ -191,16 +163,7 @@ def _sha(path: Path) -> str:
 
 
 def _drifted(a_path: Path, b_path: Path) -> bool:
-    """True when two frames differ beyond encoder/resampler noise.
-
-    PNG byte output and even LANCZOS resampling results vary slightly
-    between Pillow releases, so byte- or pixel-exact comparison reports
-    false drift whenever CI and the authoring machine run different
-    Pillow versions. The gate exists to catch content drift (a pose,
-    skin or geometry change), which moves many pixels by a lot; version
-    noise moves few edge pixels by a little. Both signals are checked:
-    mean absolute difference and the share of strongly-changed pixels.
-    """
+    """True when two frames differ beyond encoder/resampler noise."""
     from PIL import ImageChops
 
     with Image.open(a_path) as fa, Image.open(b_path) as fb:
@@ -211,9 +174,7 @@ def _drifted(a_path: Path, b_path: Path) -> bool:
         diff = ImageChops.difference(a, b)
         total = a.size[0] * a.size[1] * 4
         hist = diff.histogram()
-        weighted = sum(
-            (i % 256) * count for i, count in enumerate(hist[:256 * 4])
-        )
+        weighted = sum((i % 256) * count for i, count in enumerate(hist[:256 * 4]))
         mean_abs = weighted / total
         strong = sum(
             count
@@ -230,9 +191,11 @@ def check() -> int:
         fresh = Path(tmp)
         derive(fresh)
         problems = []
-        for rel in ["manifest.json"] + sorted(
-            str(p.relative_to(COMPANION)) for p in (COMPANION / FRAMES).glob("*.png")
-        ):
+        rels = ["manifest.json"]
+        for sub in (FRAMES, FRAMES_HI):
+            rels += sorted(str(p.relative_to(COMPANION))
+                           for p in (COMPANION / sub).glob("*.png"))
+        for rel in rels:
             a, b = fresh / rel, COMPANION / rel
             if not b.exists():
                 problems.append(f"missing committed file: {rel}")
@@ -241,15 +204,24 @@ def check() -> int:
                     problems.append(f"drift: {rel}")
             elif _sha(a) != _sha(b):
                 problems.append(f"drift: {rel}")
-        fresh_frames = sorted(str(p.relative_to(fresh)) for p in (fresh / FRAMES).glob("*.png"))
-        committed_frames = sorted(
-            str(p.relative_to(COMPANION)) for p in (COMPANION / FRAMES).glob("*.png")
-        )
-        if fresh_frames != committed_frames:
-            problems.append(f"frame set changed: {fresh_frames} != {committed_frames}")
+        for sub in (FRAMES, FRAMES_HI):
+            fresh_set = sorted(str(p.relative_to(fresh))
+                                for p in (fresh / sub).glob("*.png"))
+            committed_set = sorted(str(p.relative_to(COMPANION))
+                                    for p in (COMPANION / sub).glob("*.png"))
+            if fresh_set != committed_set:
+                problems.append(f"frame set changed in {sub}")
+        # Committed SVG masters must match the generator output.
+        for (anim, i), svg in sorted(
+                ((a, i), art.pose_svg(p))
+                for a, (_m, _l, _n, _an, poses) in art.ANIMATIONS.items()
+                for i, p in enumerate(poses)):
+            committed = SVG_SOURCES / f"{anim}-{i + 1:02d}.svg"
+            if not committed.exists() or committed.read_text() != svg + "\n":
+                problems.append(f"svg drift: {committed.name}")
         if problems:
             print("derive-companion-assets --check: FAIL", file=sys.stderr)
-            for p in problems:
+            for p in problems[:20]:
                 print(f"  {p}", file=sys.stderr)
             return 1
     print("derive-companion-assets --check: PASS")
@@ -262,8 +234,8 @@ def main() -> int:
     args = parser.parse_args()
     if args.check:
         return check()
-    derive(COMPANION)
-    print("derive-companion-assets: wrote frames + manifest.json")
+    derive(COMPANION, write_sources=True)
+    print("derive-companion-assets: wrote SVG sources, frames + manifest.json")
     return 0
 
 

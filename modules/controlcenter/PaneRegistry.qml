@@ -247,6 +247,16 @@ QtObject {
             readonly property list<string> keywords: ["studio", "creative", "workloads", "audio", "video", "streaming"]
         },
         QtObject {
+            readonly property string id: "agents"
+            readonly property string label: "agents"
+            readonly property string title: qsTr("Agent Center")
+            readonly property string icon: "smart_toy"
+            readonly property string component: "agents/AgentCenterPane.qml"
+            readonly property string category: "system"
+            readonly property string description: qsTr("Coding agents on this machine and Javi assistant state")
+            readonly property list<string> keywords: ["agent", "agents", "javi", "assistant", "coding"]
+        },
+        QtObject {
             readonly property string id: "gaming"
             readonly property string label: "gaming"
             readonly property string title: qsTr("Gaming")

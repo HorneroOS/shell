@@ -22,7 +22,7 @@ Users select a widget's vertical and horizontal slot in Control Center.
 
 The package installs the stable `Hornero.PluginKit` QML module. It exposes
 `Settings`, `Theme`, `Notifications`, `Desktop`, `System`, `Network`,
-`Media`, `Weather`, `Time`, and `Power` without requiring plugins
+`Media`, `Weather`, `Time`, `Power`, and `Audio` without requiring plugins
 to import Shell internals:
 
 - `Settings { pluginId: "example-clock" }` reads and writes keys declared by
@@ -57,9 +57,18 @@ to import Shell internals:
   Quickshell's `UPower` service (`Quickshell.Services.UPower`, via
   `UPower.displayDevice` / `UPower.onBattery`) rather than a
   `qs.services` singleton, mirroring `modules/bar/components/Battery.qml`.
+- `Audio` is a singleton over `qs.services` `Audio`: read-only `volume`,
+  `muted`, `sourceVolume`, and `sourceMuted` (real/bool), plus `hasSink`
+  and `hasSource`. It also exposes the user-initiated controls
+  `setVolume(v)`, `incrementVolume()`, `decrementVolume()`,
+  `toggleMute()`, and `toggleSourceMute()`, delegating to the service
+  (increment/decrement use the service default step). Call them only from
+  a user-initiated handler. No PipeWire node (`PwNode`) object is exposed,
+  and there are no source-volume, sink/source-selection, or stream setters.
 
-All six data facades are read-only except Media transport. They have no
-setters, no `Process`, and no shell execution; they wrap only the shell's
+All seven data facades are read-only except Media transport and the
+Audio controls above. They have no other setters, no `Process`, and no
+shell execution; they wrap only the shell's
 existing `qs.services` singletons, plus Quickshell's `UPower` for `Power`.
 They are QML running in-process: they
 are **not sandboxed**. Declared `capabilities` are review-only disclosures,

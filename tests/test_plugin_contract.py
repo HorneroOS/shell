@@ -157,7 +157,7 @@ def test_public_plugin_kit_import_is_accepted(tmp_path):
 
 
 FACADES = {
-    "System": (["cpuPerc", "cpuTemp", "gpuPerc", "gpuTemp", "memUsed", "memTotal", "memPerc", "storagePerc"], "SystemUsage"),
+    "System": (["cpuPerc", "cpuTemp", "gpuPerc", "gpuTemp", "memUsed", "memTotal", "memPerc", "storagePerc", "disks"], "SystemUsage"),
     "Network": (["downloadSpeed", "uploadSpeed", "downloadTotal", "uploadTotal"], "NetworkUsage"),
     "Media": (["hasPlayer", "identity", "title", "artist", "isPlaying"], "Players"),
     "Weather": (["ready", "locationConfigured", "temp", "description", "humidity", "windSpeed", "sunrise", "sunset", "lastError", "forecast"], "Weather"),
@@ -180,7 +180,7 @@ def test_data_facades_are_readonly_and_delegate_to_services():
         assert "pragma Singleton" in src
         assert "qs.services" in src and service in src
         for prop in props:
-            assert f"readonly property" in src and prop in src, (name, prop)
+            assert f"Services.{service}.{prop}" in src, (name, prop)
         # No writable facade props, setters, or shell/process internals.
         for line in src.splitlines():
             stripped = line.strip()
@@ -200,6 +200,8 @@ def test_media_facade_only_delegates_transport_to_players():
 def test_time_facade_format_delegates():
     src = (ROOT / "plugin/qml/Hornero/PluginKit/Time.qml").read_text()
     assert "function format(fmt: string): string" in src
+    assert "return Services.Time.format(fmt);" in src
+    assert "new Date(Services.Time.date)" in src
 
 
 def test_sample_plugin_importing_pluginkit_passes_validator(tmp_path):

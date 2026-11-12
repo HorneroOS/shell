@@ -12,5 +12,5 @@ QtObject {
     readonly property real memTotal: Services.SystemUsage.memTotal
     readonly property real memPerc: Services.SystemUsage.memPerc
     readonly property real storagePerc: Services.SystemUsage.storagePerc
-    readonly property var disks: Services.SystemUsage.disks
+    readonly property var disks: Services.SystemUsage.disks ? Services.SystemUsage.disks.map(d => Object.assign({}, d)) : []
 }

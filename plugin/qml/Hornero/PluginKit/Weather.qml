@@ -13,5 +13,5 @@ QtObject {
     readonly property string sunrise: Services.Weather.sunrise
     readonly property string sunset: Services.Weather.sunset
     readonly property string lastError: Services.Weather.lastError
-    readonly property var forecast: Services.Weather.forecast
+    readonly property var forecast: Services.Weather.forecast ? Services.Weather.forecast.map(f => Object.assign({}, f)) : []
 }

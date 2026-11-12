@@ -21,7 +21,8 @@ or unrecognized display and malformed slot data fall back to `bottom-right`.
 Users select a widget's vertical and horizontal slot in Control Center.
 
 The package installs the stable `Hornero.PluginKit` QML module. It exposes
-`Settings`, `Theme`, `Notifications`, and `Desktop` without requiring plugins
+`Settings`, `Theme`, `Notifications`, `Desktop`, `System`, `Network`,
+`Media`, `Weather`, and `Time` without requiring plugins
 to import Shell internals:
 
 - `Settings { pluginId: "example-clock" }` reads and writes keys declared by
@@ -36,6 +37,26 @@ to import Shell internals:
 - `Desktop.position(pluginId, Screen.name)` reads the current named slot.
   Users change placement in Control Center; plugin code has no PluginKit
   setter for canonical widget positions.
+- `System` is a read-only singleton: `cpuPerc`, `cpuTemp`, `gpuPerc`,
+  `gpuTemp`, `memUsed`, `memTotal`, `memPerc`, `storagePerc`, and `disks`.
+- `Network` is a read-only singleton: `downloadSpeed`, `uploadSpeed`,
+  `downloadTotal`, and `uploadTotal`.
+- `Media` is a read-only singleton (`hasPlayer`, `identity`, `title`,
+  `artist`, `isPlaying`) plus the only mutating facade calls:
+  `playPause()`, `previous()`, and `next()`. Call them only from a
+  user-initiated handler; PluginKit never auto-plays.
+- `Weather` is a read-only singleton: `ready`, `locationConfigured`,
+  `temp`, `description`, `humidity`, `windSpeed`, `sunrise`, `sunset`,
+  `lastError`, and `forecast`.
+- `Time` is a read-only singleton (`date`, `hours`, `minutes`, `seconds`,
+  `timeStr`) plus `format(fmt)`.
+
+All five data facades are read-only except Media transport. They have no
+setters, no `Process`, and no shell execution; they wrap only the shell's
+existing `qs.services` singletons. They are QML running in-process: they
+are **not sandboxed**. Declared `capabilities` are review-only disclosures,
+not runtime enforcement. No AI quota is exposed by PluginKit; any AI quota
+is unknown and must not be assumed or displayed as a known value.
 
 The manifest schema is
 [`schemas/plugin-manifest.schema.json`](../schemas/plugin-manifest.schema.json)

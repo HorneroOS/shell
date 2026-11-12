@@ -156,6 +156,57 @@ def test_public_plugin_kit_import_is_accepted(tmp_path):
     VALIDATOR.validate_plugin(plugin)
 
 
+FACADES = {
+    "System": (["cpuPerc", "cpuTemp", "gpuPerc", "gpuTemp", "memUsed", "memTotal", "memPerc", "storagePerc"], "SystemUsage"),
+    "Network": (["downloadSpeed", "uploadSpeed", "downloadTotal", "uploadTotal"], "NetworkUsage"),
+    "Media": (["hasPlayer", "identity", "title", "artist", "isPlaying"], "Players"),
+    "Weather": (["ready", "locationConfigured", "temp", "description", "humidity", "windSpeed", "sunrise", "sunset", "lastError", "forecast"], "Weather"),
+    "Time": (["date", "hours", "minutes", "seconds", "timeStr"], "Time"),
+}
+
+
+def test_qmldir_registers_five_data_facades():
+    kit = ROOT / "plugin/qml/Hornero/PluginKit"
+    qmldir = (kit / "qmldir").read_text()
+    for name in FACADES:
+        assert f"singleton {name} 1.0 {name}.qml" in qmldir
+        assert (kit / f"{name}.qml").is_file()
+
+
+def test_data_facades_are_readonly_and_delegate_to_services():
+    kit = ROOT / "plugin/qml/Hornero/PluginKit"
+    for name, (props, service) in FACADES.items():
+        src = (kit / f"{name}.qml").read_text()
+        assert "pragma Singleton" in src
+        assert "qs.services" in src and service in src
+        for prop in props:
+            assert f"readonly property" in src and prop in src, (name, prop)
+        # No writable facade props, setters, or shell/process internals.
+        for line in src.splitlines():
+            stripped = line.strip()
+            if "property " in stripped and "function" not in stripped:
+                assert stripped.startswith("readonly property"), (name, stripped)
+        for banned in ("Process", "Quickshell.Io", "setValue", "function set"):
+            assert banned not in src, (name, banned)
+
+
+def test_media_facade_only_delegates_transport_to_players():
+    src = (ROOT / "plugin/qml/Hornero/PluginKit/Media.qml").read_text()
+    for fn in ("function playPause()", "function previous()", "function next()"):
+        assert fn in src
+    assert "togglePlaying()" in src and ".previous()" in src and ".next()" in src
+
+
+def test_time_facade_format_delegates():
+    src = (ROOT / "plugin/qml/Hornero/PluginKit/Time.qml").read_text()
+    assert "function format(fmt: string): string" in src
+
+
+def test_sample_plugin_importing_pluginkit_passes_validator(tmp_path):
+    plugin = make_plugin(tmp_path, "import QtQuick\nimport Hornero.PluginKit\nItem { property real c: System.cpuPerc }")
+    VALIDATOR.validate_plugin(plugin)
+
+
 def test_plugin_theme_reports_effective_palette_mode():
     theme = (ROOT / "plugin/qml/Hornero/PluginKit/Theme.qml").read_text()
     assert "property bool light: Colours.light" in theme

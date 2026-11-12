@@ -180,7 +180,11 @@ def test_data_facades_are_readonly_and_delegate_to_services():
         assert "pragma Singleton" in src
         assert "qs.services" in src and service in src
         for prop in props:
-            assert f"Services.{service}.{prop}" in src, (name, prop)
+            if name == "Media":
+                # Media derives its scalars from the active player object.
+                assert "Services.Players.active" in src, (name, prop)
+            else:
+                assert f"Services.{service}.{prop}" in src, (name, prop)
         # No writable facade props, setters, or shell/process internals.
         for line in src.splitlines():
             stripped = line.strip()

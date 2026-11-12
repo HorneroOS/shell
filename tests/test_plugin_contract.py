@@ -166,10 +166,11 @@ FACADES = {
     # UPower service (Quickshell.Services.UPower), not a qs.services
     # singleton, mirroring modules/bar/components/Battery.qml.
     "Power": (["hasBattery", "percentage", "charging", "onBattery", "stateText"], "UPower"),
+    "Audio": (["volume", "muted", "sourceVolume", "sourceMuted", "hasSink", "hasSource"], "Audio"),
 }
 
 
-def test_qmldir_registers_six_data_facades():
+def test_qmldir_registers_seven_data_facades():
     kit = ROOT / "plugin/qml/Hornero/PluginKit"
     qmldir = (kit / "qmldir").read_text()
     for name in FACADES:
@@ -197,6 +198,10 @@ def test_data_facades_are_readonly_and_delegate_to_services():
                 # Power derives its scalars from UPower.displayDevice /
                 # UPower.onBattery, as in Battery.qml.
                 assert "property" in src and f" {prop}:" in src, (name, prop)
+            elif name == "Audio":
+                # Audio derives hasSink/hasSource from the service's
+                # sink/source presence; the nodes themselves are not exposed.
+                assert "property" in src and f" {prop}:" in src, (name, prop)
             else:
                 assert f"Services.{service}.{prop}" in src, (name, prop)
         # No writable facade props, setters, or shell/process internals.
@@ -204,8 +209,12 @@ def test_data_facades_are_readonly_and_delegate_to_services():
             stripped = line.strip()
             if "property " in stripped and "function" not in stripped:
                 assert stripped.startswith("readonly property"), (name, stripped)
-        for banned in ("Process", "Quickshell.Io", "setValue", "function set"):
-            assert banned not in src, (name, banned)
+        # Audio is the exception with an explicit setVolume control
+        # (see test_audio_facade_only_delegates_user_controls_to_audio);
+        # every other facade bans `function set*` outright.
+        banned = ("Process", "Quickshell.Io", "setValue") if name == "Audio" else ("Process", "Quickshell.Io", "setValue", "function set")
+        for item in banned:
+            assert item not in src, (name, item)
 
 
 def test_power_facade_delegates_to_upower_display_device():
@@ -223,6 +232,34 @@ def test_power_facade_delegates_to_upower_display_device():
     # Exactly the five readonly properties, nothing else exposed.
     props = [line.strip() for line in src.splitlines() if "property " in line]
     assert len(props) == 5 and all(p.startswith("readonly property") for p in props)
+
+
+def test_audio_facade_only_delegates_user_controls_to_audio():
+    src = (ROOT / "plugin/qml/Hornero/PluginKit/Audio.qml").read_text()
+    assert "readonly property real volume: Services.Audio.volume" in src
+    assert "readonly property bool muted: Services.Audio.muted" in src
+    assert "readonly property real sourceVolume: Services.Audio.sourceVolume" in src
+    assert "readonly property bool sourceMuted: Services.Audio.sourceMuted" in src
+    assert "Services.Audio.sink !== null && Services.Audio.sink !== undefined" in src
+    assert "Services.Audio.source !== null && Services.Audio.source !== undefined" in src
+    assert "function setVolume(v: real): void" in src
+    assert "Services.Audio.setVolume(v)" in src
+    assert "function incrementVolume(): void" in src
+    assert "Services.Audio.incrementVolume(0)" in src
+    assert "function decrementVolume(): void" in src
+    assert "Services.Audio.decrementVolume(0)" in src
+    assert "function toggleMute(): void" in src
+    assert "Services.Audio.sink.audio.muted = !Services.Audio.muted" in src
+    assert "function toggleSourceMute(): void" in src
+    assert "Services.Audio.source.audio.muted = !Services.Audio.sourceMuted" in src
+    # Exactly the six readonly scalar properties; no PwNode/node leak,
+    # no other setters, and no process internals.
+    props = [line.strip() for line in src.splitlines() if "property " in line]
+    assert len(props) == 6 and all(p.startswith("readonly property") for p in props)
+    for banned in ("PwNode", "Process", "Quickshell.Io", "setSourceVolume",
+                   "incrementSourceVolume", "decrementSourceVolume",
+                   "setAudioSink", "setAudioSource", "setStreamVolume"):
+        assert banned not in src, banned
 
 
 def test_media_facade_only_delegates_transport_to_players():

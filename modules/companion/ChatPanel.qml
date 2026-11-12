@@ -105,6 +105,7 @@ Item {
                 spacing: Appearance.spacing.normal
 
                 Image {
+                    sourceSize: Qt.size(68, 68)
                     source: Companion.frameSource(CompanionStore.skin, "idle")
                     Layout.preferredWidth: 34
                     Layout.preferredHeight: 34

@@ -580,6 +580,7 @@ Scope {
                     Image {
                         width: win.sizePx
                         height: win.sizePx
+                        sourceSize: Qt.size(Math.min(512, win.sizePx * 2), Math.min(512, win.sizePx * 2))
                         visible: CompanionStore.nestEnabled && CompanionStore.nestStage > 0 && !win.peekMode
                         source: Companion.nestSource(["none", "twigs", "cup", "dome", "home"][CompanionStore.nestStage] ?? "none")
                         fillMode: Image.PreserveAspectFit
@@ -590,6 +591,7 @@ Scope {
                     // Next-frame preload (decode ahead, never shown).
                     Image {
                         visible: false
+                        sourceSize: Qt.size(Math.min(512, win.sizePx * 2), Math.min(512, win.sizePx * 2))
                         source: player.nextFrame
                         cache: true
                         asynchronous: true
@@ -608,6 +610,7 @@ Scope {
                         // face right, so mirror on the right half to face
                         // the screen center. Peek sliver is unaffected.
                         mirror: win.mirrored
+                        sourceSize: Qt.size(Math.min(512, win.sizePx * 2), Math.min(512, win.sizePx * 2))
                         source: player.currentFrame
                         fillMode: Image.PreserveAspectFit
                         cache: true

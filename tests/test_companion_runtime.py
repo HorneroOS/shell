@@ -93,6 +93,11 @@ def test_idle_scheduler_and_manifest_v2_contract():
     # (flying -> landing -> flying loop).
     land = HOST.split("id: landAnim")[1].split("ParallelAnimation")[0]
     assert land.index('requestState("sleeping")') < land.index("win.pendingSleep = false")
+    # Companion images decode near display size, never at the 512px
+    # master size for a ~128px sprite (memory guard).
+    assert HOST.count("sourceSize: Qt.size(Math.min(512, win.sizePx * 2)") == 3
+    panel = (COMPANION / "ChatPanel.qml").read_text()
+    assert "sourceSize: Qt.size(68, 68)" in panel
 
 
 def test_store_persists_without_hand_rolled_writes():

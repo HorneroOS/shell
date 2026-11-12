@@ -61,7 +61,8 @@ Item {
         { "id": "penpot", "title": "Penpot", "note": qsTr("Reference-only — browser tool, not installed") },
         { "id": "scribus", "title": "Scribus", "note": "" },
         { "id": "freecad", "title": "FreeCAD", "note": "" },
-        { "id": "godot", "title": "Godot", "note": "" }
+        { "id": "godot", "title": "Godot", "note": "" },
+        { "id": "artcraft-launcher", "title": "ArtCraft Launcher", "note": qsTr("Experimental — managed by ArtCraft Launcher, manual opt-in only") }
     ]
 
     property var selectedSpecializations: []
@@ -70,6 +71,8 @@ Item {
     property string selectionError: ""
     property string actionError: ""
     property var doctorChecks: []
+    property string artcraftState: "unknown"
+    property string artcraftVersion: "unknown"
     property bool busy: false
     property string audioMode: "unknown"
     property string previousAudioMode: ""
@@ -96,6 +99,8 @@ Item {
         modeProc.running = true;
         jobsProc.command = ["horneroctl", "--json", "studio", "jobs", "list"];
         jobsProc.running = true;
+        appProc.command = ["horneroctl", "--json", "studio", "app", "show", "artcraft-launcher"];
+        appProc.running = true;
     }
 
     // Job actions reuse the single fixed-argv writer: cancellation is
@@ -234,6 +239,30 @@ Item {
                         }));
             } catch (e) {
                 root.doctorChecks = [];
+            }
+        }
+    }
+
+    Process {
+        id: appProc
+
+        property string out: ""
+
+        stdout: SplitParser {
+            onRead: data => {
+                appProc.out += data;
+            }
+        }
+        onStarted: appProc.out = ""
+        onExited: {
+            try {
+                const env = JSON.parse(appProc.out.trim());
+                const data = env.data || {};
+                root.artcraftState = env.ok === true ? (data.state || "unknown").toString() : "unknown";
+                root.artcraftVersion = (data.version || "unknown").toString();
+            } catch (e) {
+                root.artcraftState = "unknown";
+                root.artcraftVersion = "unknown";
             }
         }
     }
@@ -483,6 +512,29 @@ Item {
                         StyledText {
                             Layout.fillWidth: true
                             text: qsTr("Removing a workload or application from the selection never deletes your files, settings, or projects.")
+                            wrapMode: Text.WordWrap
+                            color: Colours.palette.m3onSurfaceVariant
+                            font.pointSize: Appearance.font.size.small
+                        }
+                    }
+
+                    SectionContainer {
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("ArtCraft Launcher")
+                            font.pointSize: Appearance.font.size.large
+                            font.weight: 600
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Experimental, early-alpha. State: %1. Launcher version: %2 (reported by the launcher itself).").arg(root.artcraftState).arg(root.artcraftVersion)
+                            wrapMode: Text.WordWrap
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Managed by ArtCraft Launcher, outside system package repositories. Selecting it above only records your intent; installation is a separate manual step documented in the English Studio ArtCraft runbook, and removing the selection never uninstalls it.")
                             wrapMode: Text.WordWrap
                             color: Colours.palette.m3onSurfaceVariant
                             font.pointSize: Appearance.font.size.small

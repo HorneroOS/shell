@@ -637,6 +637,11 @@ def test_studio_pane_is_registered_and_uses_only_horneroctl_studio():
     assert "never deletes your files, settings, or projects" in pane
     assert "Penpot" in pane and "reference-only" in pane.lower()
     assert "REAPER" in pane and "Proprietary" in pane
+    # ArtCraft: truthful manual opt-in state via horneroctl only, no downloader.
+    assert '"horneroctl", "--json", "studio", "app", "show", "artcraft-launcher"' in pane
+    assert "ArtCraft Launcher" in pane and "Experimental" in pane
+    for forbidden in ("curl", "wget", "AppImage", "download"):
+        assert forbidden not in pane, forbidden
 
 
 def test_studio_pane_models_match_canonical_catalogue_ids():
@@ -657,7 +662,7 @@ def test_studio_pane_models_match_canonical_catalogue_ids():
         "ardour", "guitarix", "carla", "audacity", "reaper", "yabridge",
         "obs-studio", "kdenlive", "blender", "krita", "gimp", "inkscape",
         "darktable", "rawtherapee", "graphite", "penpot", "scribus",
-        "freecad", "godot",
+        "freecad", "godot", "artcraft-launcher",
     ]
     for stable_id in specializations + applications:
         assert f'"{stable_id}"' in pane, stable_id

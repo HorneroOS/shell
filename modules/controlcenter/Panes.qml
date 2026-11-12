@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import "bluetooth"
 import "extensions"
 import "studio"
+import "agents"
 import "gaming"
 import "network"
 import "audio"

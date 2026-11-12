@@ -125,6 +125,7 @@ session|Session
 system|System
 extensions|Extensions
 studio|Studio
+agents|Agent Center
 gaming|Gaming
 updates|Updates
 capture|Capture
@@ -136,7 +137,7 @@ QS_BIN=\$(command -v qs || command -v quickshell)
 \$QS_BIN ipc call controlCenter close" </dev/null > /dev/null || fail "close IPC failed after panel matrix" ""
 assert_no_quickshell_crash "panel matrix"
 captured_count="$(wc -l < "$CAPTURE_LIST" | tr -d '[:space:]')"
-[[ "$captured_count" -eq 28 ]] || fail "captured $captured_count of 28 Control Center panes" ""
+[[ "$captured_count" -eq 29 ]] || fail "captured $captured_count of 29 Control Center panes" ""
 write_result PASS ""
 jq --slurpfile matrix "$RESULT_FILE" '. + {controlcenter_panel_matrix: $matrix[0]}' "$VM_ARTIFACTS_DIR/assertions.json" > "$VM_ARTIFACTS_DIR/assertions.json.tmp"
 mv "$VM_ARTIFACTS_DIR/assertions.json.tmp" "$VM_ARTIFACTS_DIR/assertions.json"

@@ -756,3 +756,67 @@ def test_control_center_panes_have_no_diagnostic_geometry_logging():
     ):
         source = (CC / relative).read_text(encoding="utf-8")
         assert "console.log" not in source, relative
+
+
+def test_agent_center_pane_is_registered():
+    entries = {e["id"]: e for e in _registry_entries()}
+    assert "agents" in entries, "Agent Center must be registered in PaneRegistry"
+    entry = entries["agents"]
+    assert entry["label"] == "agents"
+    assert entry["component"] == "agents/AgentCenterPane.qml"
+    assert entry["category"] == "system"
+    assert (CC / entry["component"]).is_file()
+    keywords = entry["keywords"].group(1)
+    for kw in ("agent", "agents", "javi", "assistant", "coding"):
+        assert f'"{kw}"' in keywords, kw
+    panes = (CC / "Panes.qml").read_text()
+    assert 'import "agents"' in panes
+
+
+def test_agent_center_uses_only_fixed_horneroctl_commands():
+    pane = (CC / "agents" / "AgentCenterPane.qml").read_text()
+    assert '["horneroctl", "--json", "agent", "list"]' in pane
+    assert '["horneroctl", "--json", "assistant", "status"]' in pane
+    assert '["horneroctl", "--json", "agent", "default", "show"]' in pane
+    assert '["horneroctl", "--json", "agent", "config", "status"]' in pane
+    assert '["horneroctl", "--json", "agent", "status", root.currentStatusId]' in pane
+    assert '["horneroctl", "--json", "agent", "default", "set", id, "--yes"]' in pane
+    # Refresh re-runs the same fixed commands.
+    assert "function refresh(): void" in pane
+    assert "onClicked: root.refresh()" in pane
+    assert 'text: qsTr("Refresh")' in pane
+    assert "Component.onCompleted: root.refresh()" in pane
+    # Async Process, never a blocking/shell invocation.
+    assert "Process {" in pane
+    for forbidden in ("curl", "wget", "sh -c", "bash -c", "download"):
+        assert forbidden not in pane, forbidden
+
+
+def test_agent_center_has_no_fake_action_buttons():
+    pane = (CC / "agents" / "AgentCenterPane.qml").read_text()
+    for label in ("Install", "Configure", "Apply"):
+        assert f'text: qsTr("{label}")' not in pane, label
+        assert f'text: qsTr("{label} ' not in pane, label
+    # Set default is the only recording action, from an explicit click.
+    assert 'text: qsTr("Set default")' in pane
+    assert "onClicked: root.setDefault(modelData.id)" in pane
+
+
+def test_agent_center_launch_is_truthful_dry_run_proposal():
+    pane = (CC / "agents" / "AgentCenterPane.qml").read_text()
+    assert '["horneroctl", "--json", "agent", "launch", id]' in pane
+    assert "executed=false" in pane
+    assert 'text: qsTr("Launch proposal")' in pane
+    assert 'text: qsTr("Launch")' not in pane
+
+
+def test_agent_center_shows_honest_states_and_no_invented_data():
+    pane = (CC / "agents" / "AgentCenterPane.qml").read_text()
+    assert 'qsTr("Reading agents…")' in pane
+    assert "No agents reported by horneroctl" in pane
+    assert "Agent list unavailable (is horneroctl installed?)" in pane
+    assert "Version: not reported by horneroctl" in pane
+    assert "data.enabled" in pane or 'data.enabled === "true"' in pane
+    assert "root.defaultAgent" in pane
+    for invented in ("cost", "quota", "token usage", "price"):
+        assert invented not in pane.lower(), invented

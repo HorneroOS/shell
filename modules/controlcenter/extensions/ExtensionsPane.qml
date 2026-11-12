@@ -39,6 +39,49 @@ Item {
     property string catalogRevision: ""
     property string catalogSearch: ""
     property string actionMessage: ""
+    property string pluginSearch: ""
+    property string pluginTrustFilter: "all"
+    property string pluginPlacementFilter: "all"
+    property string expandedPluginId: ""
+
+    // Installed-plugin JSON (horneroctl plugin list --json, verified live)
+    // has no category or description field: entries carry id, name,
+    // version, installed, enabled, trust, source, revision,
+    // catalog_sha256, capabilities {processCommands, networkHosts,
+    // settings}, capabilities_verified and rollback_available. Placement
+    // is added by the Plugins service / host and may be empty. Filtering
+    // therefore uses trust and placement, never an invented category.
+    function filteredPlugins(): var {
+        const query = root.pluginSearch.trim().toLowerCase();
+        return Plugins.entries.filter(entry => {
+            if (root.pluginTrustFilter !== "all" && String(entry.trust || "unknown") !== root.pluginTrustFilter)
+                return false;
+            if (root.pluginPlacementFilter !== "all" && String(entry.placement || "") !== root.pluginPlacementFilter)
+                return false;
+            if (!query)
+                return true;
+            return [entry.name, entry.id, entry.description]
+                .some(value => String(value || "").toLowerCase().includes(query));
+        });
+    }
+
+    function pluginTrustValues(): var {
+        return [...new Set(Plugins.entries.map(entry => String(entry.trust || "unknown")))].sort();
+    }
+
+    function pluginPlacementValues(): var {
+        return [...new Set(Plugins.entries.map(entry => String(entry.placement || "")))].sort();
+    }
+
+    function pluginDetail(entry): string {
+        return qsTr("ID: %1\nVersion: %2\nPlacement: %3\nTrust: %4\n%5\nDescription: %6\nQML plugins are not sandboxed: an enabled plugin runs as your user.")
+            .arg(entry.id || qsTr("Not listed"))
+            .arg(entry.version || qsTr("Not listed"))
+            .arg(entry.placement || qsTr("Not listed"))
+            .arg(entry.trust || qsTr("unknown"))
+            .arg(root.declaredCapabilities(entry.capabilities, entry.capabilities_verified))
+            .arg(entry.description || qsTr("Not listed"));
+    }
 
     function filteredCatalogEntries(): var {
         const query = root.catalogSearch.trim().toLowerCase();
@@ -261,8 +304,86 @@ Item {
                     wrapMode: Text.Wrap
                 }
 
+                SearchBar {
+                    Layout.fillWidth: true
+                    placeholderText: qsTr("Search installed plugins")
+                    Accessible.name: qsTr("Search installed plugins")
+                    text: root.pluginSearch
+                    onTextChanged: root.pluginSearch = text
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Appearance.spacing.small
+                    visible: Plugins.entries.length > 0
+
+                    StyledText {
+                        text: qsTr("Trust:")
+                        font.pointSize: Appearance.font.size.small
+                        color: Colours.palette.m3outline
+                    }
+
+                    ToggleButton {
+                        toggled: root.pluginTrustFilter === "all"
+                        label: qsTr("All")
+                        onClicked: root.pluginTrustFilter = "all"
+                    }
+
+                    Repeater {
+                        model: root.pluginTrustValues()
+
+                        delegate: ToggleButton {
+                            required property var modelData
+
+                            toggled: root.pluginTrustFilter === modelData
+                            label: modelData
+                            onClicked: root.pluginTrustFilter = toggled ? "all" : modelData
+                        }
+                    }
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Appearance.spacing.small
+                    visible: Plugins.entries.length > 0 && root.pluginPlacementValues().some(value => value.length > 0)
+
+                    StyledText {
+                        text: qsTr("Placement:")
+                        font.pointSize: Appearance.font.size.small
+                        color: Colours.palette.m3outline
+                    }
+
+                    ToggleButton {
+                        toggled: root.pluginPlacementFilter === "all"
+                        label: qsTr("All")
+                        onClicked: root.pluginPlacementFilter = "all"
+                    }
+
+                    Repeater {
+                        model: root.pluginPlacementValues()
+
+                        delegate: ToggleButton {
+                            required property var modelData
+
+                            visible: modelData.length > 0
+                            toggled: root.pluginPlacementFilter === modelData
+                            label: modelData
+                            onClicked: root.pluginPlacementFilter = toggled ? "all" : modelData
+                        }
+                    }
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
+                    visible: Plugins.entries.length > 0 && root.filteredPlugins().length === 0
+                    text: qsTr("No installed plugins match this search or filter.")
+                    font.pointSize: Appearance.font.size.small
+                    color: Colours.palette.m3outline
+                    wrapMode: Text.Wrap
+                }
+
                 Repeater {
-                    model: Plugins.entries
+                    model: root.filteredPlugins()
 
                     delegate: StyledRect {
                         id: row
@@ -368,6 +489,15 @@ Item {
                                 wrapMode: Text.Wrap
                             }
 
+                            StyledText {
+                                Layout.fillWidth: true
+                                visible: root.expandedPluginId === row.modelData.id
+                                text: root.pluginDetail(row.modelData)
+                                font.pointSize: Appearance.font.size.small
+                                color: Colours.palette.m3onSurfaceVariant
+                                wrapMode: Text.Wrap
+                            }
+
                             Repeater {
                                 model: row.modelData.placement === "desktop" ? Quickshell.screens : []
 
@@ -382,6 +512,12 @@ Item {
 
                             RowLayout {
                                 spacing: Appearance.spacing.small
+
+                                TextButton {
+                                    text: root.expandedPluginId === row.modelData.id ? qsTr("Hide details") : qsTr("Details")
+                                    type: TextButton.Text
+                                    onClicked: root.expandedPluginId = root.expandedPluginId === row.modelData.id ? "" : row.modelData.id
+                                }
 
                                 TextButton {
                                     visible: !row.modelData.enabled && (["untrusted", "stale-trust", "modified", "unverified"].includes(row.modelData.trust)) && root.pendingTrust !== row.modelData.id

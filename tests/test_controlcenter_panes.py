@@ -600,6 +600,59 @@ def test_extensions_marketplace_section():
     assert 'runLifecycle("enable"' in pane  # existing consent path untouched
 
 
+def test_extensions_installed_search_and_trust_placement_filters():
+    pane = (ROOT / "modules/controlcenter/extensions/ExtensionsPane.qml").read_text()
+    # Verified live: `horneroctl plugin list --json` entries have no
+    # category/description/placement field (keys: id, name, version,
+    # installed, enabled, trust, source, revision, catalog_sha256,
+    # capabilities, capabilities_verified, rollback_available), so the
+    # installed list filters by trust/placement, never an invented category.
+    assert "property string pluginSearch" in pane
+    assert "function filteredPlugins(): var" in pane
+    assert "[entry.name, entry.id, entry.description]" in pane
+    assert 'String(value || "")' in pane  # absent description must not crash
+    assert "model: root.filteredPlugins()" in pane
+    assert "category" not in pane.split("function filteredPlugins", 1)[1].split("function pluginTrustValues", 1)[0]
+    assert "property string pluginTrustFilter" in pane
+    assert "property string pluginPlacementFilter" in pane
+    assert "function pluginTrustValues(): var" in pane
+    assert "function pluginPlacementValues(): var" in pane
+    assert "No installed plugins match this search or filter." in pane
+
+
+def test_extensions_installed_search_is_keyboard_accessible():
+    pane = (ROOT / "modules/controlcenter/extensions/ExtensionsPane.qml").read_text()
+    start = pane.index('placeholderText: qsTr("Search installed plugins")')
+    search = pane[pane.rindex("SearchBar {", 0, start):start + 300]
+    assert 'Accessible.name: qsTr("Search installed plugins")' in search
+    assert "text: root.pluginSearch" in search
+    assert "onTextChanged: root.pluginSearch = text" in search
+    # Filter toggles expose toggle state/name via the shared ToggleButton.
+    assert 'label: qsTr("All")' in pane
+    assert "root.pluginTrustFilter = toggled ? \"all\" : modelData" in pane
+    assert "root.pluginPlacementFilter = toggled ? \"all\" : modelData" in pane
+
+
+def test_extensions_expandable_detail_is_truthful_and_reuses_lifecycle():
+    pane = (ROOT / "modules/controlcenter/extensions/ExtensionsPane.qml").read_text()
+    assert "property string expandedPluginId" in pane
+    assert "function pluginDetail(entry): string" in pane
+    detail = pane.split("function pluginDetail", 1)[1].split("function filteredCatalogEntries", 1)[0]
+    for field in ("entry.version", "entry.placement", "entry.trust",
+                  "root.declaredCapabilities(entry.capabilities, entry.capabilities_verified)",
+                  "entry.description"):
+        assert field in detail, f"detail must show {field}"
+    assert "QML plugins are not sandboxed" in detail
+    assert "visible: root.expandedPluginId === row.modelData.id" in pane
+    assert 'qsTr("Hide details")' in pane and 'qsTr("Details")' in pane
+    # No new fake actions: detail adds none, existing lifecycle/catalogue
+    # actions remain the only writers.
+    assert pane.count("catalogInstallProc.command =") == 1
+    assert pane.count("lifecycleProc.command =") == 1
+    assert "runLifecycle(\"enable\"" in pane and "runLifecycle(\"disable\"" in pane
+    assert 'runCatalogAction("install"' in pane and 'runCatalogAction("update"' in pane
+
+
 def test_extensions_community_registry_is_verified_read_only_cli_output():
     pane = (ROOT / "modules/controlcenter/extensions/ExtensionsPane.qml").read_text()
     section = (ROOT / "modules/controlcenter/extensions/CommunityRegistrySection.qml").read_text()

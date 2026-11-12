@@ -87,6 +87,12 @@ def test_idle_scheduler_and_manifest_v2_contract():
     # actually advance.
     assert '"dragging", "entering", "flying", "landing"' in STORE
     assert "workTripTimer" in HOST and "advanceNest" in HOST
+    # Regression (live host): landing into sleep must request the
+    # sleeping state BEFORE consuming pendingSleep, or the state
+    # handler relaunches the nest flight forever
+    # (flying -> landing -> flying loop).
+    land = HOST.split("id: landAnim")[1].split("ParallelAnimation")[0]
+    assert land.index('requestState("sleeping")') < land.index("win.pendingSleep = false")
 
 
 def test_store_persists_without_hand_rolled_writes():

@@ -162,10 +162,14 @@ FACADES = {
     "Media": (["hasPlayer", "identity", "title", "artist", "isPlaying"], "Players"),
     "Weather": (["ready", "locationConfigured", "temp", "description", "humidity", "windSpeed", "sunrise", "sunset", "lastError", "forecast"], "Weather"),
     "Time": (["date", "hours", "minutes", "seconds", "timeStr"], "Time"),
+    # Power is the documented exception: it delegates to Quickshell's
+    # UPower service (Quickshell.Services.UPower), not a qs.services
+    # singleton, mirroring modules/bar/components/Battery.qml.
+    "Power": (["hasBattery", "percentage", "charging", "onBattery", "stateText"], "UPower"),
 }
 
 
-def test_qmldir_registers_five_data_facades():
+def test_qmldir_registers_six_data_facades():
     kit = ROOT / "plugin/qml/Hornero/PluginKit"
     qmldir = (kit / "qmldir").read_text()
     for name in FACADES:
@@ -178,11 +182,21 @@ def test_data_facades_are_readonly_and_delegate_to_services():
     for name, (props, service) in FACADES.items():
         src = (kit / f"{name}.qml").read_text()
         assert "pragma Singleton" in src
-        assert "qs.services" in src and service in src
+        if name == "Power":
+            # Exception (see FACADES): Power delegates to Quickshell's
+            # UPower, so it imports that module instead of qs.services.
+            assert "Quickshell.Services.UPower" in src and service in src
+            assert "qs.services" not in src
+        else:
+            assert "qs.services" in src and service in src
         for prop in props:
             if name == "Media":
                 # Media derives its scalars from the active player object.
                 assert "Services.Players.active" in src, (name, prop)
+            elif name == "Power":
+                # Power derives its scalars from UPower.displayDevice /
+                # UPower.onBattery, as in Battery.qml.
+                assert "property" in src and f" {prop}:" in src, (name, prop)
             else:
                 assert f"Services.{service}.{prop}" in src, (name, prop)
         # No writable facade props, setters, or shell/process internals.
@@ -192,6 +206,23 @@ def test_data_facades_are_readonly_and_delegate_to_services():
                 assert stripped.startswith("readonly property"), (name, stripped)
         for banned in ("Process", "Quickshell.Io", "setValue", "function set"):
             assert banned not in src, (name, banned)
+
+
+def test_power_facade_delegates_to_upower_display_device():
+    src = (ROOT / "plugin/qml/Hornero/PluginKit/Power.qml").read_text()
+    # Same source of truth as modules/bar/components/Battery.qml.
+    assert "UPower.displayDevice" in src
+    assert "UPower.displayDevice.isPresent" in src
+    assert "UPower.displayDevice.isLaptopBattery" in src
+    assert "displayDevice?.percentage" in src and "* 100" in src
+    assert "readonly property int percentage" in src
+    assert "UPower.onBattery" in src
+    assert "UPowerDeviceState.Charging" in src
+    assert "UPowerDeviceState.FullyCharged" in src
+    assert "UPowerDeviceState.Discharging" in src
+    # Exactly the five readonly properties, nothing else exposed.
+    props = [line.strip() for line in src.splitlines() if "property " in line]
+    assert len(props) == 5 and all(p.startswith("readonly property") for p in props)
 
 
 def test_media_facade_only_delegates_transport_to_players():

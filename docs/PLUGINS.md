@@ -22,7 +22,7 @@ Users select a widget's vertical and horizontal slot in Control Center.
 
 The package installs the stable `Hornero.PluginKit` QML module. It exposes
 `Settings`, `Theme`, `Notifications`, `Desktop`, `System`, `Network`,
-`Media`, `Weather`, and `Time` without requiring plugins
+`Media`, `Weather`, `Time`, and `Power` without requiring plugins
 to import Shell internals:
 
 - `Settings { pluginId: "example-clock" }` reads and writes keys declared by
@@ -50,10 +50,18 @@ to import Shell internals:
   `lastError`, and `forecast`.
 - `Time` is a read-only singleton (`date`, `hours`, `minutes`, `seconds`,
   `timeStr`) plus `format(fmt)`.
+- `Power` is a read-only singleton: `hasBattery`, `percentage` (int
+  0-100), `charging`, `onBattery`, and `stateText` (`charging`,
+  `fully-charged`, `discharging`, `pending-charge`, or empty when no
+  battery or state is known). It is the one facade that delegates to
+  Quickshell's `UPower` service (`Quickshell.Services.UPower`, via
+  `UPower.displayDevice` / `UPower.onBattery`) rather than a
+  `qs.services` singleton, mirroring `modules/bar/components/Battery.qml`.
 
-All five data facades are read-only except Media transport. They have no
+All six data facades are read-only except Media transport. They have no
 setters, no `Process`, and no shell execution; they wrap only the shell's
-existing `qs.services` singletons. They are QML running in-process: they
+existing `qs.services` singletons, plus Quickshell's `UPower` for `Power`.
+They are QML running in-process: they
 are **not sandboxed**. Declared `capabilities` are review-only disclosures,
 not runtime enforcement. No AI quota is exposed by PluginKit; any AI quota
 is unknown and must not be assumed or displayed as a known value.

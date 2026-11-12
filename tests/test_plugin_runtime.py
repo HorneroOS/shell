@@ -145,7 +145,7 @@ def test_public_plugin_kit_is_installed_and_exposes_only_reviewed_types():
     kit = ROOT / "plugin" / "qml" / "Hornero" / "PluginKit"
     qmldir = (kit / "qmldir").read_text()
     assert "module Hornero.PluginKit" in qmldir
-    for public_type in ("Theme", "Notifications", "Desktop", "Settings", "System", "Network", "Media", "Weather", "Time"):
+    for public_type in ("Theme", "Notifications", "Desktop", "Settings", "System", "Network", "Media", "Weather", "Time", "Power"):
         assert public_type in qmldir
         assert (kit / f"{public_type}.qml").is_file()
     assert "install(DIRECTORY qml/Hornero/PluginKit" in (ROOT / "plugin" / "CMakeLists.txt").read_text()

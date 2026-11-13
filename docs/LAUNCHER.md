@@ -43,10 +43,56 @@ activates the current row and the Escape cascade
 | Calculator | `>calc <expr>` | Safe arithmetic with the shell's own parser (below). Enter/click copies the result and closes the launcher, the historic convention for this row. |
 | Windows | `>win <query>` | Lists open windows (title, app class, workspace) from `Hypr.toplevels` — the same toplevel source the bar uses — filtered case-insensitively on title/class in compositor order. Activation focuses through the shell's existing path, `Hypr.dispatch("focuswindow address:0x…")`; no new IPC. Hyprland-only today; Niri rows arrive with its window read model. |
 | Files | `>file <query>` | Bounded, on-demand file search (below). Section `Files`; rows show the file name and its parent path, for files and directories alike. Activation opens the path with `xdg-open`, the shell's existing open-path convention. |
+| Inline AI | `>ai <question>` | Streamed Ask-mode answer inline in the launcher (below), via `horneroctl assistant ask --json --stream`; errors fall back to summoning the Javi chat. |
 
-Inline AI (`>ai`) predates the registry and keeps its existing
-state; it migrates onto the registry incrementally, with no
-behaviour change intended.
+## Inline AI (`>ai <question>`)
+
+The `ai` provider is registered on the same registry as the
+other built-ins (`id: "ai"`, `prefix: "ai"`, icon `raven`).
+Typing `>ai <question>` routes to the `ai` state, whose single
+row (`modules/launcher/items/AiItem.qml`) asks through the
+`InlineAsk` singleton (`services/InlineAsk.qml`, pure streaming
+logic in `services/inlineask.js`) and streams the answer **in
+the launcher**: text grows incrementally as `horneroctl` emits
+NDJSON `delta` lines, a "Javi is thinking…" indicator shows
+while the run is in flight, and the launcher stays open and
+keeps focus — nothing is summoned and no focus is stolen.
+Click/Enter asks; while busy, click/Enter stops; **Escape** (the
+central drawer cascade closing the launcher) and **leaving the
+`>ai` route or typing a new query** cancel the in-flight run.
+Only the final CommandResult line resolves the run.
+
+**Modes.** This is Ask mode: read-only, one-shot, no
+attachments, and the shell executes nothing for it — the inline
+surface never approves, clarifies or runs commands, and any
+tool/proposal text only ever appears as answer text. Documented
+gap: `horneroctl assistant ask` exposes no `--mode` flag in its
+contract (its parser rejects unknown flags), so the shell
+cannot ask the gateway to suppress tool use for this consumer;
+read-only is enforced from the shell side by never answering a
+pending approval/clarification inline. Such a pending payload
+ends the run as a failure and the user continues in the Javi
+chat panel, where decisions are explicit.
+
+**Fallback.** An error, a disabled/unreachable assistant or an
+unanswered run never leaves a dead end and never fabricates an
+answer: the row shows the failure and activating it falls back
+to the previous `>ai` behaviour (shell#216) — summoning Javi
+through `qs ipc call companion ask <question>` and closing the
+launcher.
+
+**Privacy and history.** The question and answer are never
+logged (no console output anywhere on the inline-ask path), no
+new network endpoint is added, and gateway auth/session
+handling is exactly `horneroctl`'s own — the shell never holds
+the gateway credential and never talks to Hermes directly. The
+inline ask does **not** persist a conversation: the last
+question/answer live only in the singleton's memory until the
+next ask or a shell restart, and nothing is written to disk.
+Real conversation history is owned by Hermes and the chat
+panel's own history, which the inline ask neither reads nor
+writes; using the Javi-chat fallback hands the question to that
+owned history as a normal chat ask.
 
 ## File search and privacy
 

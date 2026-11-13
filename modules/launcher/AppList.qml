@@ -60,7 +60,7 @@ StyledListView {
             // action keeps its historic state below. No prefix
             // match anywhere still means the default apps flow.
             const providerState = Providers.stateFor(text);
-            if (providerState === "calc" || providerState === "win" || providerState === "file")
+            if (providerState === "calc" || providerState === "win" || providerState === "file" || providerState === "ai")
                 return providerState;
             // Plugin-defined providers (surfaces.launcher): any
             // other registered provider id routes to the generic
@@ -81,6 +81,11 @@ StyledListView {
     onStateChanged: {
         if (state !== "file")
             Files.cancel();
+        // Leaving the ai route (new query, prefix change) cancels
+        // any in-flight inline ask; the singleton keeps only the
+        // last partial text in memory.
+        if (state !== "ai")
+            InlineAsk.cancel();
         if (state === "scheme" || state === "variant")
             Schemes.reload();
         if (state === "appearance")

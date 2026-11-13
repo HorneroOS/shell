@@ -145,8 +145,13 @@ Item {
                 target: root.visibilities
 
                 function onLauncherChanged(): void {
-                    if (!root.visibilities.launcher)
+                    if (!root.visibilities.launcher) {
                         search.text = "";
+                        // Closing the launcher (including the
+                        // central Escape cascade) cancels any
+                        // in-flight inline ask.
+                        InlineAsk.cancel();
+                    }
                 }
 
                 function onSessionChanged(): void {

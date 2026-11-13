@@ -405,3 +405,52 @@ def test_extensions_pane_surfaces_trust_state():
     assert 'qsTr("Confirm trust")' in pane
     assert 'runLifecycle("trust", row.modelData.id)' in pane
     assert "pendingTrust" in pane
+
+
+# --- Accessibility warnings (#376) -----------------------------------
+# Mouse-only actions warn but never fail validation: shipped plugins
+# predate the keyboard contract and stay valid.
+
+MOUSE_ONLY_QML = (
+    "import QtQuick\nimport Hornero.PluginKit\nItem {\n"
+    "    MouseArea { anchors.fill: parent; onClicked: print(1) }\n}\n"
+)
+KEYBOARD_QML = (
+    "import QtQuick\nimport Hornero.PluginKit\nItem {\n"
+    '    UiButton { text: "Go"; onClicked: print(1) }\n}\n'
+)
+CUSTOM_KEYBOARD_QML = (
+    "import QtQuick\nItem {\n"
+    "    activeFocusOnTab: true\n"
+    "    Accessible.role: Accessible.Button\n"
+    '    Accessible.name: "Go"\n'
+    "    Keys.onReturnPressed: print(1)\n"
+    "    MouseArea { anchors.fill: parent; onClicked: print(1) }\n}\n"
+)
+
+
+def test_mouse_only_plugin_still_validates_but_warns(tmp_path):
+    plugin = make_plugin(tmp_path, MOUSE_ONLY_QML)
+    VALIDATOR.validate_plugin(plugin)  # backward compatible: no raise
+    warnings = VALIDATOR.accessibility_warnings(plugin)
+    assert len(warnings) == 1
+    assert "Main.qml" in warnings[0]
+    assert "UiButton" in warnings[0]
+
+
+def test_pluginkit_control_plugin_has_no_accessibility_warnings(tmp_path):
+    plugin = make_plugin(tmp_path, KEYBOARD_QML)
+    VALIDATOR.validate_plugin(plugin)
+    assert VALIDATOR.accessibility_warnings(plugin) == []
+
+
+def test_custom_surface_with_keyboard_evidence_has_no_warnings(tmp_path):
+    plugin = make_plugin(tmp_path, CUSTOM_KEYBOARD_QML)
+    VALIDATOR.validate_plugin(plugin)
+    assert VALIDATOR.accessibility_warnings(plugin) == []
+
+
+def test_in_tree_examples_have_no_accessibility_warnings():
+    examples = ROOT / "examples" / "plugins"
+    for plugin in sorted(p for p in examples.iterdir() if p.is_dir()):
+        assert VALIDATOR.accessibility_warnings(plugin) == [], plugin.name

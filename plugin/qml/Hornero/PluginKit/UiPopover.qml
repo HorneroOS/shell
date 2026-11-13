@@ -226,7 +226,7 @@ Popup {
             property: "opacity"
             from: 0
             to: 1
-            duration: 120
+            duration: Theme.motionDuration(120)
         }
     }
 
@@ -235,7 +235,7 @@ Popup {
             property: "opacity"
             from: 1
             to: 0
-            duration: 120
+            duration: Theme.motionDuration(120)
         }
     }
 

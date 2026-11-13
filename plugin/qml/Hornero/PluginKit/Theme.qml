@@ -49,4 +49,21 @@ QtObject {
     readonly property int roundingSmall: Appearance.rounding.small
     readonly property int rounding: Appearance.rounding.normal
     readonly property int roundingLarge: Appearance.rounding.large
+    // Accessibility inheritance (shell issue 376): plugins get the host's focus,
+    // contrast and motion preferences through Theme instead of
+    // inventing their own. The palette above already swaps to the
+    // high-contrast palette when the host enables it (Colours owns
+    // that), so `highContrast` is exposed only for layout/emphasis
+    // decisions. The host has no separate reduced-motion boolean:
+    // animation speed 0 in Accessibility settings is the host's
+    // reduced-motion signal, and `motionDuration()` applies both it
+    // and the host animation-speed scale to a nominal duration.
+    readonly property color focusRing: Colours.focusRing
+    readonly property bool highContrast: Config.appearance.highContrast
+    readonly property real animationScale: Appearance.anim.durations.scale
+    readonly property bool reducedMotion: animationScale <= 0
+
+    function motionDuration(ms: int): int {
+        return reducedMotion ? 0 : Math.round(ms * animationScale);
+    }
 }

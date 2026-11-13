@@ -460,6 +460,54 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
                 raise ValidationError(f"{path.relative_to(root)} contains an undeclared network host {hostname}")
 
 
+MOUSE_CLICK = re.compile(r"\bMouseArea\b")
+CLICK_HANDLER = re.compile(r"\bon(?:Clicked|DoubleClicked|PressAndHold)\s*:")
+A11Y_EVIDENCE = (
+    "Accessible.",
+    "accessibleName",
+    "Keys.on",
+    "activeFocusOnTab",
+    "KeyNavigation",
+)
+
+
+def accessibility_warnings(root: Path) -> list[str]:
+    """Keyboard/focus contract warnings (#376), never hard failures.
+
+    Shipped plugins predate the contract, so a mouse-only interactive
+    surface must not newly fail validation; instead it is reported so
+    authors and reviewers can fix it. A QML file that drives an
+    action from a MouseArea click handler needs keyboard evidence in
+    the same file (an Accessible name/role, a tab stop, or key
+    handling), or should use the PluginKit controls (UiButton,
+    UiToggle, UiSlider), which carry the contract. Files using those
+    controls for their actions need no MouseArea at all.
+    """
+    warnings: list[str] = []
+    if not root.is_dir():
+        return warnings
+    for path in sorted(root.rglob("*.qml")):
+        if path.is_symlink() or not path.is_file():
+            continue
+        source = path.read_text(encoding="utf-8", errors="ignore")
+        # Comments mentioning MouseArea are not mouse-only actions.
+        source = re.sub(r"//[^\n]*", "", source)
+        if not MOUSE_CLICK.search(source) or not CLICK_HANDLER.search(source):
+            continue
+        if any(token in source for token in A11Y_EVIDENCE):
+            continue
+        warnings.append(
+            f"{path.relative_to(root)}: MouseArea click action has no "
+            "keyboard/accessible evidence in the same file (no Accessible "
+            "name/role, activeFocusOnTab, or Keys handling); use a "
+            "PluginKit control (UiButton/UiToggle/UiSlider) or add an "
+            "Accessible name and role, a tab stop, visible focus, and "
+            "Enter/Space activation (docs/PLUGINS.md, accessibility "
+            "and keyboard contract)"
+        )
+    return warnings
+
+
 def validate_plugin(root: Path) -> None:
     if not root.is_dir():
         raise ValidationError("plugin path must be a directory")
@@ -496,6 +544,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"plugin validation failed: {error}", file=sys.stderr)
         return 1
     print(f"plugin validation passed: {args.plugin_dir}")
+    for warning in accessibility_warnings(args.plugin_dir.expanduser().resolve()):
+        print(f"accessibility warning: {warning}")
     print("notice: validation is a static review aid; Quickshell plugins are not sandboxed")
     return 0
 

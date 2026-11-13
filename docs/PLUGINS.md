@@ -95,7 +95,7 @@ unless `animated: true` is set (reduced-motion by default).
 | `UiCard` | Surface container | `padding`; default content slot |
 | `UiButton` | Action button | `text`, `variant`: `primary` / `ghost`, `tooltipText`, `accessibleName` |
 | `UiToggle` | Boolean switch | `value` (two-way synced with `checked`), `text`, `tooltipText`, `accessibleName`; inherits `toggled()` from `Switch`/`AbstractButton` (no argument — read `checked`/`value` in `onToggled`) |
-| `UiSlider` | Range input | `from`, `to`, `value`, `tooltipText`, `accessibleName` (defaults to `Slider`) |
+| `UiSlider` | Range input | `from`, `to`, `value`, `stepSize` (keyboard step, defaults to 1/20 of the range), `tooltipText`, `accessibleName` (defaults to `Slider`) |
 | `UiMetric` | Labelled metric | `label`, `value`, optional `unit` |
 | `UiChip` | Small label chip | `text`, `tone`: `neutral` / `primary` / `error` |
 | `UiProgress` | Progress bar | `value` (0..1), `indeterminate`, `animated` (default `false`) |
@@ -179,6 +179,66 @@ UiCard {
     UiState { kind: "empty"; message: "No data yet" }
 }
 ```
+
+## Accessibility and keyboard contract
+
+Extension UI follows the same keyboard/focus rules as native shell
+UI (shell#376; the native-pane audit is shell#221). Using the
+PluginKit controls gets the whole contract for free; hand-rolled
+interactive items must provide it themselves.
+
+- **Names and descriptions.** Every interactive control exposes an
+  accessible name and role. `UiButton`/`UiToggle` default the name
+  to their `text`; set `accessibleName` when the visible label is
+  an icon, a glyph, or ambiguous out of context, and `tooltipText`
+  doubles as the accessible description. `UiSlider` defaults to
+  `Slider` — always give it a real name (what it adjusts).
+  `UiPopover` exposes its `accessibleName` with the dialog role.
+- **Tab order.** Deterministic: controls are single tab stops in
+  declaration (visual) order, and disabled controls are not tab
+  stops (`activeFocusOnTab: enabled` in the kit). Do not add extra
+  tab stops around a control (no focusable wrappers); use
+  `KeyNavigation` only to repair an order the layout cannot express.
+- **Activation.** Enter, Return and Space all activate `UiButton`
+  and toggle `UiToggle`. Escape dismisses the innermost transient
+  first — tooltip, then popover, then the surface underneath (the
+  Escape cascade) — and is accepted at the tier that handles it.
+- **Arrows.** `UiSlider` arrows step by `stepSize` (default 1/20 of
+  the range), PageUp/PageDown by 1/10, Home/End jump to the range
+  ends. Plugin-defined lists/grids should use the same arrow +
+  Enter/Space model with a single roving tab stop.
+- **Visible focus.** The kit draws a 2 px contrasting border on the
+  focused control. Custom controls must show an equally visible
+  indication when `activeFocus` — use `Theme.focusRing` for the
+  host focus colour and never rely on hover styling alone.
+- **Focus restoration.** Opening a `UiPopover` moves focus into it;
+  closing it (Escape, or activating a control inside) returns focus
+  to the trigger. Never leave focus on a hidden or destroyed item.
+- **Reduced motion and high contrast are inherited.** Kit
+  transitions and the indeterminate `UiProgress` animation already
+  honour the host settings; for your own animations use
+  `Theme.motionDuration(ms)` (0 under reduced motion, scaled by
+  the host animation speed otherwise) and gate looping motion on
+  `!Theme.reducedMotion`. Theme colours already swap to the
+  high-contrast palette; `Theme.highContrast` is exposed for
+  emphasis decisions. Do not hardcode colours or durations.
+- **Custom interactive surfaces.** A `MouseArea` click with no
+  keyboard path is a contract violation: prefer a kit control, or
+  give the item an accessible name and role, `activeFocusOnTab`,
+  visible focus, and Enter/Space handling in the same file.
+  `scripts/validate_plugin.py` prints an `accessibility warning`
+  for mouse-only actions (a warning, not a failure — already
+  shipped plugins stay valid), and reviewers should treat new
+  warnings as blocking.
+
+The reference extensions under `examples/plugins/` follow this
+contract, and `tests/qa/tst_pluginkit_keyboard.qml` drives a
+reference surface keyboard-only (tab order, Enter/Space, slider
+keys, popover open/Escape/focus-return) in an offscreen QML probe
+run by `tests/test_pluginkit_ui.py`. That probe is QML-level
+evidence only: live compositor focus grabs and screen-reader
+(AT-SPI) announcements still need a running session to verify, so
+shell#221's live audit remains the owner of those claims.
 
 ## Host context
 

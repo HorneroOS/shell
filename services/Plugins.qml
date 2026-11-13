@@ -72,9 +72,134 @@ Singleton {
         return normalized;
     }
 
+    // Extension settings declarations (shell#374), canonical QML
+    // mirror of scripts/validate_plugin.py: closed type set
+    // (boolean, integer, number, string, enum — no path type, so no
+    // setting can name a filesystem path for the shell to open) plus
+    // per-type constraints. A declaration that does not satisfy its
+    // own rules is dropped here, so the Settings facade and the
+    // generated Control Center UI only ever see well-formed
+    // declarations; well-formed v1 declarations pass through
+    // unchanged. Defence in depth: installed manifests were already
+    // validated by horneroctl/validate_plugin.py.
+    function settingDeclarationValid(declaration: var): bool {
+        if (!declaration || typeof declaration !== "object" || Array.isArray(declaration))
+            return false;
+        const allowed = {
+            boolean: [],
+            integer: ["minimum", "maximum"],
+            number: ["minimum", "maximum"],
+            string: ["minLength", "maxLength"],
+            enum: ["options"]
+        };
+        if (!Object.prototype.hasOwnProperty.call(allowed, declaration.type))
+            return false;
+        const keys = Object.keys(declaration);
+        const known = ["type", "default", "description"].concat(allowed[declaration.type]);
+        if (!keys.every(key => known.includes(key)) || !keys.includes("default"))
+            return false;
+        if (declaration.description !== undefined
+                && (typeof declaration.description !== "string" || declaration.description.length > 160
+                    || !/\S/.test(declaration.description)))
+            return false;
+        if (declaration.type === "integer" || declaration.type === "number") {
+            for (const bound of ["minimum", "maximum"]) {
+                const limit = declaration[bound];
+                if (limit !== undefined && (typeof limit !== "number" || !Number.isFinite(limit)
+                        || (declaration.type === "integer" && !Number.isInteger(limit))))
+                    return false;
+            }
+            if (declaration.minimum !== undefined && declaration.maximum !== undefined
+                    && declaration.minimum > declaration.maximum)
+                return false;
+        }
+        if (declaration.type === "string") {
+            for (const bound of ["minLength", "maxLength"]) {
+                const limit = declaration[bound];
+                if (limit !== undefined && (typeof limit !== "number" || !Number.isInteger(limit) || limit < 0 || limit > 4096))
+                    return false;
+            }
+            if (declaration.minLength !== undefined && declaration.maxLength !== undefined
+                    && declaration.minLength > declaration.maxLength)
+                return false;
+        }
+        if (declaration.type === "enum") {
+            const options = declaration.options;
+            if (!Array.isArray(options) || options.length === 0 || options.length > 32
+                    || options.some(option => typeof option !== "string" || option === "" || option.length > 64)
+                    || new Set(options).size !== options.length)
+                return false;
+        }
+        return root.settingValueValid(declaration, declaration.default);
+    }
+
+    function normalizeSettings(settings: var): var {
+        const normalized = ({});
+        if (!settings || typeof settings !== "object" || Array.isArray(settings))
+            return normalized;
+        for (const key of Object.keys(settings)) {
+            if (/^[a-z][a-zA-Z0-9]{0,47}$/.test(key) && root.settingDeclarationValid(settings[key]))
+                normalized[key] = settings[key];
+        }
+        return normalized;
+    }
+
+    // Exact type match plus every declared constraint. This is the
+    // one QML value check: the PluginKit Settings facade layers it
+    // (via settingConstraintsSatisfied) on its own type check, and
+    // the generated settings UI calls it directly.
+    function settingValueValid(declaration: var, value: var): bool {
+        if (!declaration || typeof declaration !== "object")
+            return false;
+        if (declaration.type === "boolean")
+            return typeof value === "boolean";
+        if (declaration.type === "integer") {
+            if (typeof value !== "number" || !Number.isInteger(value))
+                return false;
+        } else if (declaration.type === "number") {
+            if (typeof value !== "number" || !Number.isFinite(value))
+                return false;
+        } else if (declaration.type === "string") {
+            // Count Unicode code points like JSON Schema/Python,
+            // not UTF-16 code units (String.length).
+            const length = typeof value === "string" ? [...value].length : -1;
+            if (length < 0 || length > 4096)
+                return false;
+            if (typeof declaration.minLength === "number" && length < declaration.minLength)
+                return false;
+            if (typeof declaration.maxLength === "number" && length > declaration.maxLength)
+                return false;
+            return true;
+        } else if (declaration.type === "enum") {
+            return typeof value === "string" && Array.isArray(declaration.options) && declaration.options.includes(value);
+        } else {
+            return false;
+        }
+        if (typeof declaration.minimum === "number" && value < declaration.minimum)
+            return false;
+        if (typeof declaration.maximum === "number" && value > declaration.maximum)
+            return false;
+        return true;
+    }
+
+    // Constraint half of settingValueValid for callers that already
+    // type-checked the value (PluginKit Settings.validValue).
+    function settingConstraintsSatisfied(value: var, declaration: var): bool {
+        return root.settingValueValid(declaration, value);
+    }
+
+    // Migration (shell#374): a stored value written under an older
+    // manifest keeps working while it still satisfies the current
+    // declaration; anything else (changed type, removed enum option,
+    // tightened range/length, malformed shape) falls back to the
+    // declared default — never coerced, never a crash.
+    function migratedSettingValue(declaration: var, stored: var): var {
+        return root.settingValueValid(declaration, stored) ? stored : declaration.default;
+    }
+
     function markPlacement(id: string, placement: string, entrypoint: string, settings: var, surfaces: var): void {
         const current = root.entries.find(e => e.id === id);
-        const normalized = settings && typeof settings === "object" && !Array.isArray(settings) ? settings : ({});
+        const normalized = root.normalizeSettings(settings);
         const normalizedSurfaces = root.normalizeSurfaces(surfaces, placement, entrypoint);
         if (current && current.placement === placement && current.entrypoint === entrypoint
                 && JSON.stringify(current.settings || {}) === JSON.stringify(normalized)
@@ -84,7 +209,7 @@ Singleton {
             placement: placement,
             entrypoint: entrypoint,
             surfaces: normalizedSurfaces,
-            settings: settings && typeof settings === "object" && !Array.isArray(settings) ? settings : ({})
+            settings: normalized
         }) : e);
         root.entries = next;
     }

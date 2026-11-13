@@ -99,6 +99,7 @@
           "items": { "type": "string", "pattern": "^(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\\.)*[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$" }
         },
         "settings": {
+          "description": "Typed extension settings (shell#374). Each declaration drives the generated Control Center settings UI and the PluginKit Settings facade: exact type plus declared constraints are validated on read and write, invalid stored values fall back to `default` (migration), and reset removes the stored value. The type set is closed — boolean, integer, number, string, enum. There is no path type: settings are plain Shell-owned values, never filesystem paths the shell opens. Cross-field rules JSON Schema cannot express (minimum <= maximum, minLength <= maxLength, default inside its range/length, enum default listed in options) are enforced by scripts/validate_plugin.py and mirrored by the runtime (services/Plugins.qml).",
           "type": "object",
           "propertyNames": { "pattern": "^[a-z][a-zA-Z0-9]{0,47}$" },
           "additionalProperties": {
@@ -106,15 +107,21 @@
             "additionalProperties": false,
             "required": ["type", "default"],
             "properties": {
-              "type": { "enum": ["boolean", "integer", "number", "string"] },
+              "type": { "enum": ["boolean", "integer", "number", "string", "enum"] },
               "default": { "type": ["boolean", "integer", "number", "string"] },
-              "description": { "type": "string", "maxLength": 160, "pattern": "\\S" }
+              "description": { "type": "string", "maxLength": 160, "pattern": "\\S" },
+              "minimum": { "type": "number" },
+              "maximum": { "type": "number" },
+              "minLength": { "type": "integer", "minimum": 0, "maximum": 4096 },
+              "maxLength": { "type": "integer", "minimum": 0, "maximum": 4096 },
+              "options": { "type": "array", "minItems": 1, "maxItems": 32, "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 64 } }
             },
             "oneOf": [
-              { "properties": { "type": { "const": "boolean" }, "default": { "type": "boolean" } } },
-              { "properties": { "type": { "const": "integer" }, "default": { "type": "integer" } } },
-              { "properties": { "type": { "const": "number" }, "default": { "type": "number" } } },
-              { "properties": { "type": { "const": "string" }, "default": { "type": "string" } } }
+              { "properties": { "type": { "const": "boolean" }, "default": { "type": "boolean" } }, "not": { "anyOf": [{ "required": ["minimum"] }, { "required": ["maximum"] }, { "required": ["minLength"] }, { "required": ["maxLength"] }, { "required": ["options"] }] } },
+              { "properties": { "type": { "const": "integer" }, "default": { "type": "integer" }, "minimum": { "type": "integer" }, "maximum": { "type": "integer" } }, "not": { "anyOf": [{ "required": ["minLength"] }, { "required": ["maxLength"] }, { "required": ["options"] }] } },
+              { "properties": { "type": { "const": "number" }, "default": { "type": "number" } }, "not": { "anyOf": [{ "required": ["minLength"] }, { "required": ["maxLength"] }, { "required": ["options"] }] } },
+              { "properties": { "type": { "const": "string" }, "default": { "type": "string", "maxLength": 4096 } }, "not": { "anyOf": [{ "required": ["minimum"] }, { "required": ["maximum"] }, { "required": ["options"] }] } },
+              { "properties": { "type": { "const": "enum" }, "default": { "type": "string" } }, "required": ["options"], "not": { "anyOf": [{ "required": ["minimum"] }, { "required": ["maximum"] }, { "required": ["minLength"] }, { "required": ["maxLength"] }] } }
             ]
           }
         }

@@ -43,6 +43,7 @@ Item {
     property string pluginTrustFilter: "all"
     property string pluginPlacementFilter: "all"
     property string expandedPluginId: ""
+    property string settingsPluginId: ""
 
     // Installed-plugin JSON (horneroctl plugin list --json, verified live)
     // has no category or description field: entries carry id, name,
@@ -81,6 +82,24 @@ Item {
             .arg(entry.trust || qsTr("unknown"))
             .arg(root.declaredCapabilities(entry.capabilities, entry.capabilities_verified))
             .arg(entry.description || qsTr("Not listed"));
+    }
+
+    // Typed settings declarations for the generated settings UI
+    // (shell#374): the host-normalized entry.settings when the
+    // plugin host has visited the entry, else the manifest
+    // declarations horneroctl reports under capabilities. Malformed
+    // declarations are dropped by Plugins.normalizeSettings, so a
+    // plugin with no valid settings gets no settings affordance.
+    function pluginSettings(entry): var {
+        const hosted = Plugins.normalizeSettings(entry ? entry.settings : null);
+        if (Object.keys(hosted).length > 0)
+            return hosted;
+        const declared = entry && entry.capabilities && typeof entry.capabilities === "object" ? entry.capabilities.settings : null;
+        return Plugins.normalizeSettings(declared);
+    }
+
+    function hasPluginSettings(entry): bool {
+        return Object.keys(root.pluginSettings(entry)).length > 0;
     }
 
     function filteredCatalogEntries(): var {
@@ -498,6 +517,13 @@ Item {
                                 wrapMode: Text.Wrap
                             }
 
+                            PluginSettingsSection {
+                                Layout.fillWidth: true
+                                visible: root.settingsPluginId === row.modelData.id && root.hasPluginSettings(row.modelData)
+                                pluginId: row.modelData.id
+                                settings: root.pluginSettings(row.modelData)
+                            }
+
                             Repeater {
                                 model: row.modelData.placement === "desktop" ? Quickshell.screens : []
 
@@ -517,6 +543,13 @@ Item {
                                     text: root.expandedPluginId === row.modelData.id ? qsTr("Hide details") : qsTr("Details")
                                     type: TextButton.Text
                                     onClicked: root.expandedPluginId = root.expandedPluginId === row.modelData.id ? "" : row.modelData.id
+                                }
+
+                                TextButton {
+                                    visible: root.hasPluginSettings(row.modelData)
+                                    text: root.settingsPluginId === row.modelData.id ? qsTr("Hide settings") : qsTr("Settings")
+                                    type: TextButton.Text
+                                    onClicked: root.settingsPluginId = root.settingsPluginId === row.modelData.id ? "" : row.modelData.id
                                 }
 
                                 TextButton {

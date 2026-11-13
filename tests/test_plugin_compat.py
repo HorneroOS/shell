@@ -35,7 +35,9 @@ def test_loader_errors_surface_error_string():
         assert "errorString" in (ROOT / rel).read_text(), rel
 
 def test_runtime_compat_gate():
-    # RC5: schemaVersion, semver, strict entrypoint, files[] listing.
+    # RC5: schemaVersion (1 or 2 since shell#373; needle stays the
+    # shared substring of the host's rejection message), semver,
+    # strict entrypoint, files[] listing.
     for needle in ("schemaVersion must be 1", "semantic versioning",
                    "files must list the entrypoint", 'includes("\\\\")'):
         assert needle in HOST, needle
@@ -66,4 +68,4 @@ def test_every_first_party_example_validates_and_uses_theme():
         main = (ex / "Main.qml").read_text()
         assert "Theme." in main, ex.name
         manifest = json.loads((ex / "manifest.json").read_text())
-        assert manifest["schemaVersion"] == 1 and manifest["entrypoint"] in manifest["files"]
+        assert manifest["schemaVersion"] in (1, 2) and manifest["entrypoint"] in manifest["files"]

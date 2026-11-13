@@ -3,8 +3,11 @@
 Runs the repo's own validator (scripts/validate_plugin.py) over:
   * every shipped example plugin (must ACCEPT), and
   * fixture plugins per design RC5 (must REJECT with a reason):
-    schemaVersion != 1, bad semver, absolute/traversal entrypoint,
+    unknown schemaVersion (only 1 and 2 exist; shell#373 added 2),
+    bad semver, absolute/traversal entrypoint,
     missing files[] entry, unknown placement.
+Manifest v2 behaviour itself is covered by
+tests/test_plugin_manifest_v2.py.
 Also pins the PluginKit surface examples import, and the RC1 regression
 contract statically (Plugins.qml mark* must not recreate delegates when
 nothing changed — runtime delegate counting needs a Wayland session and
@@ -60,7 +63,9 @@ def test_shipped_examples_accept():
 
 
 @pytest.mark.parametrize("overrides,why", [
-    ({"schemaVersion": 2}, "schemaVersion != 1 must be rejected (RC5)"),
+    ({"schemaVersion": 3}, "unknown schemaVersion must be rejected (RC5; only 1 and 2 exist)"),
+    ({"schemaVersion": 0}, "schemaVersion 0 must be rejected"),
+    ({"schemaVersion": "2"}, "string schemaVersion must be rejected"),
     ({"version": "1.0"}, "non-semver version must be rejected"),
     ({"entrypoint": "/etc/passwd.qml"}, "absolute entrypoint must be rejected"),
     ({"entrypoint": "../escape.qml"}, "traversal entrypoint must be rejected"),
@@ -87,6 +92,15 @@ def test_valid_fixture_per_placement_accepts(tmp_path):
                                        id=f"compat-{placement}", placement=placement))
         assert proc.returncode == 0, f"placement {placement} rejected: {proc.stdout}{proc.stderr}"
         # reset for next iteration (same tmp dir, different id dir is fine)
+
+
+def test_v1_and_v2_without_surfaces_both_accept(tmp_path):
+    # shell#373: schemaVersion 2 without `surfaces` is a valid
+    # single-surface manifest; v1 fixtures keep working unchanged.
+    for version in (1, 2):
+        proc = _run_validator(_fixture(tmp_path, id=f"compat-v{version}",
+                                       schemaVersion=version))
+        assert proc.returncode == 0, f"schemaVersion {version} rejected: {proc.stdout}{proc.stderr}"
 
 
 def test_pluginkit_surface_and_no_hardcoded_hex_in_examples():

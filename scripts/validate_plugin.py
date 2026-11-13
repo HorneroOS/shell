@@ -22,6 +22,7 @@ SEMVER = re.compile(
     r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$"
 )
 SAFE_COMMAND = re.compile(r"^[A-Za-z0-9_.+-]+$")
+SAFE_ACTION = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
 SAFE_HOST = re.compile(
     r"^(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)*"
     r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$"
@@ -520,8 +521,22 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
     translations_declaration = _validate_translations_declaration(manifest, set(safe_files))
 
     capabilities = _object(manifest["capabilities"], "capabilities")
-    if capabilities.keys() != {"processCommands", "networkHosts", "settings"}:
-        raise ValidationError("capabilities must contain exactly processCommands, networkHosts, and settings")
+    # `actions` is the optional horneroctl plugin-broker declaration
+    # (HorneroOS/hornero#408): snake_case action names the plugin may
+    # request through the typed broker. Shape only — catalogue
+    # membership and authorization are enforced by the broker at
+    # call time, so an unknown name here is inert metadata, while a
+    # malformed one fails validation everywhere.
+    if not {"processCommands", "networkHosts", "settings"} <= capabilities.keys() <= {
+        "processCommands", "networkHosts", "settings", "actions"
+    }:
+        raise ValidationError(
+            "capabilities must contain processCommands, networkHosts, and settings, plus optional actions"
+        )
+    if "actions" in capabilities:
+        declared_actions = _string_list(capabilities["actions"], "capabilities.actions", SAFE_ACTION)
+        if len(declared_actions) > 32:
+            raise ValidationError("capabilities.actions must declare at most 32 actions")
     commands = _string_list(capabilities["processCommands"], "capabilities.processCommands", SAFE_COMMAND)
     if any(Path(command).name != command or command.lower() in FORBIDDEN_COMMANDS for command in commands):
         raise ValidationError("capabilities.processCommands must be executable basenames and cannot name a shell or privilege tool")

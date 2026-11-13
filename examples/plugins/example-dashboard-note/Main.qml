@@ -7,19 +7,17 @@ Item {
         pluginId: "example-dashboard-note"
     }
 
-    implicitWidth: label.implicitWidth
+    implicitWidth: label.implicitWidth + Theme.spacingSmall * 2
     implicitHeight: label.implicitHeight
 
-    Text {
+    // Keyboard contract (#376): an actionable label is a UiButton,
+    // not a mouse-only MouseArea over Text.
+    UiButton {
         id: label
+        anchors.centerIn: parent
+        variant: "ghost"
         text: pluginSettings.value("showGreeting", true) ? "El futuro se construye acá." : "HorneroOS"
-        color: Theme.onSurface
-        font.family: Theme.fontFamily
-        font.pointSize: Theme.fontSize
-    }
-
-    MouseArea {
-        anchors.fill: parent
+        tooltipText: "Dashboard note: activate for details"
         onClicked: Notifications.toast("HorneroOS", "Desktop and dashboard extensions share the same public API.", "extension")
     }
 }

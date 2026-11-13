@@ -12,7 +12,7 @@ Item {
     property string hostOrientation: "horizontal"
     property bool hostCompact: false
 
-    implicitWidth: label.implicitWidth
+    implicitWidth: label.implicitWidth + Theme.spacingSmall * 2
     implicitHeight: label.implicitHeight
 
     Settings {
@@ -20,16 +20,16 @@ Item {
         pluginId: "example-clock"
     }
 
-    Text {
+    // Keyboard contract (#376): the clock is an action (it posts a
+    // toast), so it is a real UiButton — tab stop, Enter/Space
+    // activation, visible focus and an accessible name/description
+    // come from PluginKit instead of a mouse-only MouseArea.
+    UiButton {
         id: label
+        anchors.centerIn: parent
+        variant: "ghost"
         text: Qt.formatDateTime(new Date(), pluginSettings.value("twentyFourHour", true) ? (root.hostCompact ? "HH:mm" : "ddd, HH:mm") : (root.hostCompact ? "h:mm ap" : "ddd, h:mm ap"))
-        color: Theme.onSurface
-        font.family: Theme.fontFamily
-        font.pointSize: Theme.fontSize
-    }
-
-    MouseArea {
-        anchors.fill: parent
+        tooltipText: "Example Clock: activate for details"
         onClicked: Notifications.toast("Example Clock", "This example uses the public PluginKit API.", "schedule")
     }
 }

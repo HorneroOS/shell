@@ -42,7 +42,8 @@ ProgressBar {
     }
 
     SequentialAnimation on opacity {
-        running: root.indeterminate && root.animated
+        // Host reduced motion (shell issue 376) wins over `animated`.
+        running: root.indeterminate && root.animated && !Theme.reducedMotion
         loops: Animation.Infinite
 
         NumberAnimation {

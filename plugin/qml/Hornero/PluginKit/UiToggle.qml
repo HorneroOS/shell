@@ -14,6 +14,23 @@ Switch {
     Accessible.role: Accessible.CheckBox
     Accessible.description: root.tooltipText
 
+    // Keyboard contract (shell issue 376): one deterministic tab stop while
+    // enabled (declaration order is tab order), Space is native to
+    // Switch, Enter/Return are added here so both toggle.
+    activeFocusOnTab: enabled
+    Keys.onReturnPressed: event => {
+        if (enabled) {
+            root.click();
+            event.accepted = true;
+        }
+    }
+    Keys.onEnterPressed: event => {
+        if (enabled) {
+            root.click();
+            event.accepted = true;
+        }
+    }
+
     UiTooltip {
         target: root
         text: root.tooltipText

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "example-broken",
+  "name": "Example Broken (QA fixture)",
+  "version": "1.0.0",
+  "description": "Deliberately broken QA fixture: valid manifest, entrypoint fails to load at runtime so PluginHost fault isolation can be proven (qa#81, shell#380). Never enable outside QA.",
+  "author": "HorneroOS contributors",
+  "license": "MIT",
+  "entrypoint": "Main.qml",
+  "files": [
+    "Main.qml",
+    "README.md",
+    "LICENSE"
+  ],
+  "capabilities": {
+    "processCommands": [],
+    "networkHosts": [],
+    "settings": {}
+  },
+  "placement": "background"
+}

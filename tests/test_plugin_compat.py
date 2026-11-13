@@ -66,6 +66,9 @@ def test_every_first_party_example_validates_and_uses_theme():
     for ex in examples:
         mod.validate_plugin(ex)
         main = (ex / "Main.qml").read_text()
-        assert "Theme." in main, ex.name
+        # example-broken is a headless QA fixture that must fail to
+        # load (qa#81); it has no visual surface, so no Theme use.
+        if ex.name != "example-broken":
+            assert "Theme." in main, ex.name
         manifest = json.loads((ex / "manifest.json").read_text())
         assert manifest["schemaVersion"] in (1, 2) and manifest["entrypoint"] in manifest["files"]

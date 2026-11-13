@@ -81,6 +81,63 @@
         }
       }
     },
+    "marketplace": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "description": "Optional marketplace metadata (shell#379, any schemaVersion) the Extensions pane renders WITHOUT executing plugin code: static screenshot images shipped in the package, declared shell compatibility, a short version history, and a deprecation / replaced-by state. It grants no privilege and changes no lifecycle — install, update and rollback stay on the existing horneroctl verified provenance contracts (shell#251/#366). Cross-field rules (screenshot listed in `files`, minShellVersion <= maxShellVersion, replacedBy different from the plugin's own id) are enforced by scripts/validate_plugin.py and mirrored by the runtime host, not by this structural schema.",
+      "properties": {
+        "screenshots": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 6,
+          "description": "Static preview images shipped in `files` and shown as plain images — never QML, SVG or animated formats, so no plugin code runs to render a preview.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path"],
+            "properties": {
+              "path": { "type": "string", "maxLength": 240, "pattern": "^(?!/)(?!\\.{1,2}(?:/|$))(?!.*\\/\\.{1,2}(?:/|$))(?!.*//)[A-Za-z0-9._/-]+\\.(?:png|jpg|jpeg|webp)$" },
+              "alt": { "type": "string", "minLength": 1, "maxLength": 160, "pattern": "\\S", "description": "Accessible description of the screenshot." }
+            }
+          }
+        },
+        "compatibility": {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "description": "Declared Hornero Shell version range (semantic versions, both bounds inclusive). Review metadata shown to users; it does not gate loading.",
+          "properties": {
+            "minShellVersion": { "type": "string", "maxLength": 80, "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\\+[0-9A-Za-z.-]+)?$" },
+            "maxShellVersion": { "type": "string", "maxLength": 80, "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\\+[0-9A-Za-z.-]+)?$" }
+          }
+        },
+        "changelog": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "description": "Version history, newest first; one short notes string per released version.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["version", "notes"],
+            "properties": {
+              "version": { "type": "string", "maxLength": 80, "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\\+[0-9A-Za-z.-]+)?$" },
+              "notes": { "type": "string", "minLength": 1, "maxLength": 1000, "pattern": "\\S" }
+            }
+          }
+        },
+        "deprecation": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Presence alone means the plugin is deprecated. The Extensions pane warns, stops offering new installs of a deprecated catalogue entry, and points at `replacedBy` when given; already-installed copies keep their existing lifecycle (disable/update/rollback unchanged).",
+          "properties": {
+            "message": { "type": "string", "minLength": 1, "maxLength": 280, "pattern": "\\S" },
+            "replacedBy": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,47}$", "description": "Plugin id of the replacement (must differ from this plugin's id)." }
+          }
+        }
+      }
+    },
     "entrypoint": {
       "type": "string",
       "maxLength": 240,

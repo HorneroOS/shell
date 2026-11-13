@@ -309,6 +309,113 @@ Singleton {
         };
     }
 
+    // Marketplace metadata (shell#379): static discovery/detail data
+    // — screenshots, compatibility, changelog, deprecation — the
+    // Extensions pane renders WITHOUT executing plugin code.
+    // PluginHost records the manifest declaration here for every
+    // installed package (enabled or not, via a manifest-only read);
+    // entries may also arrive with it from horneroctl list/catalog
+    // JSON, normalized on read below. Recording it grants nothing:
+    // install/update/rollback stay on the existing verified
+    // provenance contracts (shell#251/#366).
+    function markMarketplace(id: string, marketplace: var): void {
+        const normalized = root.normalizeMarketplace(marketplace);
+        const current = root.entries.find(e => e.id === id);
+        if (current && JSON.stringify(current.marketplace || null) === JSON.stringify(normalized))
+            return;
+        root.entries = root.entries.map(e => e.id === id ? Object.assign({}, e, {
+            marketplace: normalized
+        }) : e);
+    }
+
+    // Keep only the validated shape, mirroring
+    // scripts/validate_plugin.py: screenshot paths are safe relative
+    // static-image files (.png/.jpg/.jpeg/.webp — never .qml/.svg,
+    // so a preview can never execute or be interpreted as code),
+    // compatibility bounds are semver strings, changelog entries are
+    // {version, notes} with unique semver versions, and deprecation
+    // keeps an optional message / replacedBy plugin id. Malformed
+    // parts are dropped; nothing valid left means null, which
+    // renders exactly like a pre-#379 manifest. Defence in depth:
+    // installed manifests were already validated strictly.
+    function normalizeMarketplace(marketplace: var): var {
+        if (!marketplace || typeof marketplace !== "object" || Array.isArray(marketplace))
+            return null;
+        const semver = /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/;
+        const normalized = ({});
+        if (Array.isArray(marketplace.screenshots)) {
+            const shots = [];
+            const seen = new Set();
+            for (const shot of marketplace.screenshots) {
+                if (shots.length >= 6)
+                    break;
+                if (!shot || typeof shot !== "object" || Array.isArray(shot)
+                        || typeof shot.path !== "string"
+                        || !/^(?!\/)(?!\.{1,2}(\/|$))(?!.*\/\.{1,2}(\/|$))(?!.*\/\/)[A-Za-z0-9._\/-]+\.(?:png|jpg|jpeg|webp)$/i.test(shot.path)
+                        || shot.path.length > 240 || seen.has(shot.path))
+                    continue;
+                seen.add(shot.path);
+                const entry = {
+                    path: shot.path
+                };
+                if (typeof shot.alt === "string" && /\S/.test(shot.alt) && shot.alt.length <= 160)
+                    entry.alt = shot.alt;
+                shots.push(entry);
+            }
+            if (shots.length > 0)
+                normalized.screenshots = shots;
+        }
+        const compatibility = marketplace.compatibility;
+        if (compatibility && typeof compatibility === "object" && !Array.isArray(compatibility)) {
+            const compat = ({});
+            for (const bound of ["minShellVersion", "maxShellVersion"]) {
+                if (typeof compatibility[bound] === "string" && semver.test(compatibility[bound]))
+                    compat[bound] = compatibility[bound];
+            }
+            if (Object.keys(compat).length > 0)
+                normalized.compatibility = compat;
+        }
+        if (Array.isArray(marketplace.changelog)) {
+            const entries = [];
+            const seenVersions = new Set();
+            for (const item of marketplace.changelog) {
+                if (entries.length >= 20)
+                    break;
+                if (!item || typeof item !== "object" || Array.isArray(item)
+                        || typeof item.version !== "string" || !semver.test(item.version)
+                        || seenVersions.has(item.version)
+                        || typeof item.notes !== "string" || !/\S/.test(item.notes)
+                        || item.notes.length > 1000)
+                    continue;
+                seenVersions.add(item.version);
+                entries.push({
+                    version: item.version,
+                    notes: item.notes
+                });
+            }
+            if (entries.length > 0)
+                normalized.changelog = entries;
+        }
+        const deprecation = marketplace.deprecation;
+        if (deprecation && typeof deprecation === "object" && !Array.isArray(deprecation)) {
+            const deprecated = ({});
+            if (typeof deprecation.message === "string" && /\S/.test(deprecation.message) && deprecation.message.length <= 280)
+                deprecated.message = deprecation.message;
+            if (typeof deprecation.replacedBy === "string" && /^[a-z0-9][a-z0-9-]{0,47}$/.test(deprecation.replacedBy))
+                deprecated.replacedBy = deprecation.replacedBy;
+            // Presence alone means deprecated, even with no detail.
+            normalized.deprecation = deprecated;
+        }
+        return Object.keys(normalized).length > 0 ? normalized : null;
+    }
+
+    function marketplaceFor(id: string): var {
+        const entry = root.entries.find(e => e.id === id);
+        if (!entry || !entry.marketplace || typeof entry.marketplace !== "object")
+            return null;
+        return entry.marketplace;
+    }
+
     function translationDeclaration(id: string): var {
         const entry = root.entries.find(e => e.id === id);
         if (!entry || !entry.translations || typeof entry.translations !== "object")
@@ -409,6 +516,10 @@ Singleton {
                 const trusted = ["official", "trusted", "signed"].includes(e.trust);
                 const enabled = requestedEnabled && trusted;
                 return Object.assign({}, e, {
+                    // Marketplace metadata may ride the list JSON
+                    // (shell#379); sanitize it here so the pane only
+                    // ever renders the validated static shape.
+                    marketplace: root.normalizeMarketplace(e.marketplace),
                     placement: typeof e.placement === "string" ? e.placement : "",
                     requestedEnabled: requestedEnabled,
                     enabled: enabled,

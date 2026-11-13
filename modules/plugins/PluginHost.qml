@@ -228,10 +228,116 @@ Scope {
                                 }
                             }
                         }
+                        // Marketplace metadata (shell#379): optional
+                        // in every schema version. Strict runtime
+                        // gate mirroring scripts/validate_plugin.py
+                        // for enabled packages — screenshots must be
+                        // static image files listed in files (never
+                        // QML/SVG, so a preview never executes code),
+                        // compatibility bounds are ordered semver,
+                        // changelog versions are unique semver, and
+                        // replacedBy never names the plugin itself.
+                        if (manifest.marketplace !== undefined) {
+                            const marketplace = manifest.marketplace;
+                            const semverRe = /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/;
+                            const semverKey = value => {
+                                const core = value.split("+")[0];
+                                const parts = core.split("-");
+                                const numbers = parts[0].split(".").map(n => parseInt(n, 10));
+                                return parts.length > 1 ? numbers.concat([0], parts.slice(1).join("-").split(".").map(p => isNaN(parseInt(p, 10)) ? p : parseInt(p, 10))) : numbers.concat([1]);
+                            };
+                            const semverGreater = (a, b) => {
+                                const ka = semverKey(a);
+                                const kb = semverKey(b);
+                                for (let i = 0; i < Math.max(ka.length, kb.length); i++) {
+                                    const va = ka[i] === undefined ? 0 : ka[i];
+                                    const vb = kb[i] === undefined ? 0 : kb[i];
+                                    if (va === vb)
+                                        continue;
+                                    if (typeof va === "number" && typeof vb === "number")
+                                        return va > vb;
+                                    return typeof va === "string" && typeof vb === "number" ? true : typeof va === "number" ? false : String(va) > String(vb);
+                                }
+                                return false;
+                            };
+                            if (!marketplace || typeof marketplace !== "object" || Array.isArray(marketplace)
+                                    || Object.keys(marketplace).length === 0) {
+                                Plugins.markFailed(slot.modelData.id, "manifest marketplace must be a non-empty object");
+                                return;
+                            }
+                            const extraMarketplace = Object.keys(marketplace).filter(key => key !== "screenshots" && key !== "compatibility" && key !== "changelog" && key !== "deprecation");
+                            if (extraMarketplace.length > 0) {
+                                Plugins.markFailed(slot.modelData.id, `manifest marketplace contains unknown fields: ${extraMarketplace.join(", ")}`);
+                                return;
+                            }
+                            if (marketplace.screenshots !== undefined) {
+                                const shots = marketplace.screenshots;
+                                if (!Array.isArray(shots) || shots.length === 0 || shots.length > 6
+                                        || new Set(shots.map(s => s && s.path)).size !== shots.length) {
+                                    Plugins.markFailed(slot.modelData.id, "manifest marketplace.screenshots must list 1 to 6 unique screenshots");
+                                    return;
+                                }
+                                for (const shot of shots) {
+                                    if (!shot || typeof shot !== "object" || Array.isArray(shot)
+                                            || Object.keys(shot).some(key => key !== "path" && key !== "alt")
+                                            || typeof shot.path !== "string"
+                                            || !/^(?!\/)(?!\.{1,2}(\/|$))(?!.*\/\.{1,2}(\/|$))(?!.*\/\/)[A-Za-z0-9._\/-]+\.(?:png|jpg|jpeg|webp)$/i.test(shot.path)) {
+                                        Plugins.markFailed(slot.modelData.id, "manifest marketplace.screenshots entries must name a static image path (.png/.jpg/.jpeg/.webp) and optional alt");
+                                        return;
+                                    }
+                                    if (!manifest.files.includes(shot.path)) {
+                                        Plugins.markFailed(slot.modelData.id, `manifest marketplace screenshot "${shot.path}" must be listed in files`);
+                                        return;
+                                    }
+                                    if (shot.alt !== undefined && (typeof shot.alt !== "string" || !/\S/.test(shot.alt) || shot.alt.length > 160)) {
+                                        Plugins.markFailed(slot.modelData.id, "manifest marketplace screenshot alt must be a non-empty string of at most 160 characters");
+                                        return;
+                                    }
+                                }
+                            }
+                            if (marketplace.compatibility !== undefined) {
+                                const compat = marketplace.compatibility;
+                                if (!compat || typeof compat !== "object" || Array.isArray(compat)
+                                        || Object.keys(compat).length === 0
+                                        || Object.keys(compat).some(key => key !== "minShellVersion" && key !== "maxShellVersion")
+                                        || Object.keys(compat).some(key => typeof compat[key] !== "string" || !semverRe.test(compat[key]))) {
+                                    Plugins.markFailed(slot.modelData.id, "manifest marketplace.compatibility must declare minShellVersion and/or maxShellVersion as semantic versions");
+                                    return;
+                                }
+                                if (compat.minShellVersion !== undefined && compat.maxShellVersion !== undefined
+                                        && semverGreater(compat.minShellVersion, compat.maxShellVersion)) {
+                                    Plugins.markFailed(slot.modelData.id, "manifest marketplace.compatibility.minShellVersion must not exceed maxShellVersion");
+                                    return;
+                                }
+                            }
+                            if (marketplace.changelog !== undefined) {
+                                const log = marketplace.changelog;
+                                if (!Array.isArray(log) || log.length === 0 || log.length > 20
+                                        || new Set(log.map(e => e && e.version)).size !== log.length
+                                        || log.some(e => !e || typeof e !== "object" || Array.isArray(e)
+                                            || Object.keys(e).some(key => key !== "version" && key !== "notes")
+                                            || typeof e.version !== "string" || !semverRe.test(e.version)
+                                            || typeof e.notes !== "string" || !/\S/.test(e.notes) || e.notes.length > 1000)) {
+                                    Plugins.markFailed(slot.modelData.id, "manifest marketplace.changelog must list 1 to 20 unique {version, notes} entries with semantic versions");
+                                    return;
+                                }
+                            }
+                            if (marketplace.deprecation !== undefined) {
+                                const deprecation = marketplace.deprecation;
+                                if (!deprecation || typeof deprecation !== "object" || Array.isArray(deprecation)
+                                        || Object.keys(deprecation).some(key => key !== "message" && key !== "replacedBy")
+                                        || (deprecation.message !== undefined && (typeof deprecation.message !== "string" || !/\S/.test(deprecation.message) || deprecation.message.length > 280))
+                                        || (deprecation.replacedBy !== undefined && (typeof deprecation.replacedBy !== "string" || !/^[a-z0-9][a-z0-9-]{0,47}$/.test(deprecation.replacedBy) || deprecation.replacedBy === slot.modelData.id))) {
+                                    Plugins.markFailed(slot.modelData.id, "manifest marketplace.deprecation must name only an optional message and a replacedBy plugin id different from this plugin");
+                                    return;
+                                }
+                            }
+                        }
                         slot.placement = placement;
                         const settings = manifest.capabilities && manifest.capabilities.settings;
                         Plugins.markPlacement(slot.modelData.id, placement, manifest.entrypoint, settings || ({}), effectiveSurfaces);
                         Plugins.markTranslations(slot.modelData.id, manifest.translations === undefined ? null : manifest.translations);
+                        Plugins.markMarketplace(slot.modelData.id, manifest.marketplace === undefined ? null : manifest.marketplace);
                         slot.entrypoint = manifest.entrypoint;
                         const background = effectiveSurfaces.background;
                         slot.backgroundEntrypoint = background && background.enabled !== false ? background.entrypoint : "";
@@ -262,6 +368,41 @@ Scope {
                         Plugins.markLoaded(slot.modelData.id);
                     else if (status === Loader.Error)
                         Plugins.markFailed(slot.modelData.id, pluginLoader.errorString || "entrypoint failed to load (see shell log)");
+                }
+            }
+        }
+    }
+
+    // Marketplace previews for installed-but-disabled packages
+    // (shell#379): the delegate above only visits enabled plugins,
+    // but a preview must never require enabling (executing) plugin
+    // code first. This reader loads ONLY manifest.json as text —
+    // there is deliberately no Loader here — and records the
+    // normalized marketplace declaration for the Extensions pane.
+    // A malformed declaration degrades to no preview; it never
+    // fails a disabled plugin that is not being loaded.
+    Repeater {
+        model: Plugins.entries.filter(e => e.installed && !e.enabled)
+
+        delegate: Item {
+            id: previewSlot
+
+            required property var modelData
+
+            FileView {
+                id: previewManifestView
+
+                path: `${Plugins.pluginsDir}/${previewSlot.modelData.id}/manifest.json`
+                printErrors: false
+
+                onLoaded: {
+                    try {
+                        const manifest = JSON.parse(previewManifestView.text());
+                        if (manifest.id === previewSlot.modelData.id)
+                            Plugins.markMarketplace(previewSlot.modelData.id, manifest.marketplace === undefined ? null : manifest.marketplace);
+                    } catch (e) {
+                        // Unreadable manifest: no preview, no failure.
+                    }
                 }
             }
         }

@@ -28,6 +28,38 @@ Item {
             .some(value => String(value || "").toLowerCase().includes(query)));
     }
 
+    // Marketplace metadata (shell#379): when a verified community
+    // entry carries the same optional shape, show its static detail
+    // (deprecation, compatibility, version history, screenshot
+    // captions) as text. Nothing is fetched and no plugin code is
+    // executed; the section stays read-only (shell#251).
+    function marketplaceText(entry): string {
+        const marketplace = Plugins.normalizeMarketplace(entry ? entry.marketplace : null);
+        if (!marketplace)
+            return "";
+        const lines = [];
+        if (marketplace.deprecation) {
+            lines.push(qsTr("Deprecated."));
+            if (marketplace.deprecation.message)
+                lines.push(String(marketplace.deprecation.message));
+            if (marketplace.deprecation.replacedBy)
+                lines.push(qsTr("Replaced by: %1").arg(marketplace.deprecation.replacedBy));
+        }
+        if (marketplace.compatibility) {
+            const compat = marketplace.compatibility;
+            lines.push(compat.minShellVersion && compat.maxShellVersion
+                ? qsTr("Shell compatibility: %1 to %2 (declared, not enforced)").arg(compat.minShellVersion).arg(compat.maxShellVersion)
+                : compat.minShellVersion
+                    ? qsTr("Shell compatibility: %1 or newer (declared, not enforced)").arg(compat.minShellVersion)
+                    : qsTr("Shell compatibility: up to %1 (declared, not enforced)").arg(compat.maxShellVersion));
+        }
+        if (Array.isArray(marketplace.screenshots) && marketplace.screenshots.length > 0)
+            lines.push(qsTr("Screenshots: %1").arg(marketplace.screenshots.map(shot => shot.alt || shot.path).join(" · ")));
+        if (Array.isArray(marketplace.changelog) && marketplace.changelog.length > 0)
+            lines.push(qsTr("Version history:\n%1").arg(marketplace.changelog.map(item => `${item.version}: ${item.notes}`).join("\n")));
+        return lines.join("\n");
+    }
+
     function refresh() {
         root.error = "";
         root.entries = [];
@@ -188,6 +220,15 @@ Item {
                     StyledText {
                         Layout.fillWidth: true
                         text: qsTr("Source: %1").arg(communityRow.modelData.repository)
+                        font.pointSize: Appearance.font.size.small
+                        color: Colours.palette.m3outline
+                        wrapMode: Text.Wrap
+                    }
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        visible: root.marketplaceText(communityRow.modelData).length > 0
+                        text: root.marketplaceText(communityRow.modelData)
                         font.pointSize: Appearance.font.size.small
                         color: Colours.palette.m3outline
                         wrapMode: Text.Wrap

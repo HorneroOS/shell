@@ -711,6 +711,65 @@ or enabling a v2 package also requires a `horneroctl` build that accepts
 schemaVersion 2; the shell-side contract here does not change the CLI's own
 validation.
 
+## Marketplace metadata: previews, compatibility, history, deprecation
+
+A package may declare optional `marketplace` metadata (shell#379, any
+schema version) that the Control Center Extensions pane renders without
+executing plugin code. No entrypoint is ever loaded to show a preview:
+the host reads `manifest.json` as text for every installed package —
+enabled or disabled — and catalogue/community entries may carry the
+same shape in the verified `horneroctl` JSON, normalized by the shell
+on read. Absent or malformed metadata renders exactly as before.
+
+```json
+"marketplace": {
+  "screenshots": [
+    { "path": "previews/clock.png", "alt": "Clock in the bar" }
+  ],
+  "compatibility": { "minShellVersion": "1.0.0", "maxShellVersion": "2.0.0" },
+  "changelog": [
+    { "version": "1.1.0", "notes": "What changed, newest first." }
+  ],
+  "deprecation": { "message": "Unmaintained.", "replacedBy": "other-plugin" }
+}
+```
+
+- `screenshots` (1–6) names static image files shipped in `files`
+  (`.png`, `.jpg`, `.jpeg`, `.webp`, each with an optional accessible
+  `alt`). QML, SVG and animated formats are rejected, so a preview is
+  always a plain image. The pane shows the images for installed
+  packages; a catalogue entry that is not installed yet has no local
+  payload, so its screenshots are listed by caption until installed.
+- `compatibility` declares an inclusive Hornero Shell version range
+  (`minShellVersion` and/or `maxShellVersion`, semantic versions,
+  minimum not exceeding maximum). It is review metadata shown to
+  users; it does not gate loading.
+- `changelog` (1–20 entries, newest first) is the version history:
+  one `{version, notes}` per release, versions unique semver.
+- `deprecation` presence alone means deprecated, with an optional
+  `message` and a `replacedBy` plugin id (never the plugin itself).
+  The pane warns on installed and catalogue rows, stops offering new
+  installs of a deprecated catalogue entry, and offers a "View
+  replacement" shortcut that surfaces the replacement in the
+  installed list or catalogue. Already-installed copies keep their
+  existing lifecycle untouched; nothing is auto-disabled or removed.
+- The detail view adds plain-language permission explanations for the
+  declared `capabilities` (programs it may start, hosts it may
+  contact, broker actions, its own settings) next to the raw
+  declarations, plus the existing Settings shortcut for plugins with
+  typed settings. Explanations do not make declarations enforced
+  permissions: enabled QML still runs as your user without a sandbox.
+- Marketplace metadata never drives a lifecycle write. Rollback
+  remains available only through the existing verified provenance
+  contract — the catalogue `rollback_available` flag and the
+  confirmed `horneroctl plugin catalog rollback` action (shell#251 /
+  #366) — and deprecation neither enables nor alters it.
+
+`examples/plugins/example-clock` shows the opt-in (one screenshot, a
+minimum shell version, one changelog entry). Schema, checker and the
+runtime host enforce the same closed shape; unknown fields are
+rejected everywhere.
+
 ## Official and community catalogues
 
 The Extensions pane keeps the first-party `HorneroOS/plugins` catalogue

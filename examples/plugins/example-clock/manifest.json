@@ -10,8 +10,14 @@
   "files": [
     "Main.qml",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "translations/es.json"
   ],
+  "translations": {
+    "sourceLocale": "en",
+    "locales": ["es"],
+    "directory": "translations"
+  },
   "capabilities": {
     "processCommands": [],
     "networkHosts": [],

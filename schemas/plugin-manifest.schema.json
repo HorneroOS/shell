@@ -58,6 +58,29 @@
       "description": "Optional author signature (minisign framing) over the files-only payload hash; verified by horneroctl (trust state 'signed'). Absence is fine: local hash-pinned trust applies instead."
     },
     "placement": { "type": "string", "enum": ["background", "bar", "dashboard", "desktop"], "default": "background", "description": "Where the primary (top-level) entrypoint runs: background (headless, default), bar (rendered in the bar end group) or dashboard (rendered as a card in the dashboard Extensions tab) or desktop (rendered as a widget on the desktop background layer). In schemaVersion 2, `surfaces` may add entry points on other surfaces; the primary surface stays the placement/entrypoint pair so the v1 meaning is unchanged." },
+    "translations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceLocale", "locales"],
+      "description": "Optional per-plugin translations (any schemaVersion). The package ships one flat JSON catalog per declared locale at `<directory>/<locale>.json` (source string -> translated string), each listed in `files`; PluginKit `Translations` loads the catalog matching the shell (system) locale — full tag first, then language — and falls back to the source strings. Catalogs are source-reviewable JSON, never compiled .qm binaries. Cross-field rules (each locale's catalog listed in `files`, catalog well-formedness, coverage of the strings passed to Translations.tr()) are enforced by scripts/validate_plugin.py and the runtime host, not by this structural schema.",
+      "properties": {
+        "sourceLocale": { "type": "string", "pattern": "^[a-z]{2,3}(_[A-Z]{2})?$", "description": "Locale tag of the source strings in the package's QML, e.g. \"en\" or \"es_AR\". No catalog is needed for it: the strings in code are that locale's text." },
+        "locales": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[a-z]{2,3}(_[A-Z]{2})?$" },
+          "description": "Locales the package ships a catalog for, as Qt locale tags (\"es\", \"es_AR\", \"pt_BR\")."
+        },
+        "directory": {
+          "type": "string",
+          "maxLength": 240,
+          "default": "translations",
+          "pattern": "^(?!/)(?!\\.{1,2}(?:/|$))(?!.*\\/\\.{1,2}(?:/|$))(?!.*//)(?!.*\\/$)[A-Za-z0-9._/-]+$",
+          "description": "Package-relative directory holding the catalogs. Defaults to \"translations\"."
+        }
+      }
+    },
     "entrypoint": {
       "type": "string",
       "maxLength": 240,

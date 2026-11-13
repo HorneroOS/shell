@@ -41,6 +41,14 @@ FORBIDDEN_MARKERS = (
     re.compile(r"(?:^|[\s='\"])/etc(?:/|\s|['\"]|$)"),
     re.compile(r"\b(?:HOME|XDG_CONFIG_HOME)\s*[/+]"),
 )
+LOCALE_TAG = re.compile(r"^[a-z]{2,3}(_[A-Z]{2})?$")
+# PluginKit Translations calls with a literal source string, e.g.
+# i18n.tr("Example Clock"). Only literal strings are extracted for
+# catalog-coverage checks; dynamic strings are the author's
+# responsibility (documented in docs/PLUGINS.md).
+TR_LITERAL = re.compile(r'\btr\(\s*"((?:[^"\\]|\\.)*)"')
+QSTR_CALL = re.compile(r"\bqsTr\s*\(")
+PLACEHOLDER = re.compile(r"%\d+")
 PLACEMENTS = ("background", "bar", "dashboard", "desktop")
 # Manifest v2 surfaces. The first four have runtime hosts today;
 # "launcher" (search/launcher action) and "settings" (Control Center
@@ -154,6 +162,121 @@ def _validate_surfaces(
             )
         if "enabled" in surface and not isinstance(surface["enabled"], bool):
             raise ValidationError(f"{where}.enabled must be a boolean (true or false)")
+
+
+def _unescape_qml_string(raw: str) -> str:
+    out: list[str] = []
+    index = 0
+    escapes = {"n": "\n", "t": "\t", "r": "\r", '"': '"', "'": "'", "\\": "\\"}
+    while index < len(raw):
+        char = raw[index]
+        if char == "\\" and index + 1 < len(raw) and raw[index + 1] in escapes:
+            out.append(escapes[raw[index + 1]])
+            index += 2
+        else:
+            out.append(char)
+            index += 1
+    return "".join(out)
+
+
+def _validate_translations_declaration(
+    manifest: dict, safe_files: set[str]
+) -> tuple[str, list[str]] | None:
+    """Validate the optional `translations` declaration shape.
+
+    Returns (directory, locales) for the catalog checks, or None when
+    the package declares no translations (the pre-#375 shape, which
+    stays valid). Catalogs are flat JSON files — source-reviewable,
+    never compiled .qm binaries.
+    """
+    if "translations" not in manifest:
+        return None
+    translations = _object(manifest["translations"], "translations")
+    extra = set(translations) - {"sourceLocale", "locales", "directory"}
+    if extra:
+        raise ValidationError(
+            f"translations contains unknown fields: {', '.join(sorted(extra))} "
+            "(a translations declaration names only sourceLocale, locales, "
+            "and optional directory)"
+        )
+    if not {"sourceLocale", "locales"} <= set(translations):
+        raise ValidationError("translations must contain sourceLocale and locales (directory is optional)")
+    source_locale = translations["sourceLocale"]
+    if not isinstance(source_locale, str) or not LOCALE_TAG.fullmatch(source_locale):
+        raise ValidationError('translations.sourceLocale must be a locale tag like "en" or "es_AR"')
+    locales = translations["locales"]
+    if (
+        not isinstance(locales, list)
+        or not locales
+        or any(not isinstance(locale, str) or not LOCALE_TAG.fullmatch(locale) for locale in locales)
+        or len(locales) != len(set(locales))
+    ):
+        raise ValidationError('translations.locales must be a non-empty list of unique locale tags like "es" or "es_AR"')
+    directory = translations.get("directory", "translations")
+    directory = _safe_relative(directory, "translations.directory")
+    if directory.endswith("/"):
+        raise ValidationError("translations.directory must not end with '/'")
+    for locale in locales:
+        catalog = f"{directory}/{locale}.json"
+        if catalog not in safe_files:
+            raise ValidationError(
+                f"translations declares locale {locale!r} but files does not list "
+                f"{catalog!r} (ship one JSON catalog per declared locale and list it in files)"
+            )
+    return directory, locales
+
+
+def _validate_translation_catalogs(
+    root: Path,
+    declaration: tuple[str, list[str]] | None,
+    qml_files: list[Path],
+) -> None:
+    if declaration is None:
+        return
+    directory, locales = declaration
+    used: set[str] = set()
+    for path in qml_files:
+        source = path.read_text(encoding="utf-8")
+        used.update(_unescape_qml_string(raw) for raw in TR_LITERAL.findall(source))
+
+    def unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
+        result: dict[str, object] = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValidationError(f"translation catalog contains duplicate key {key!r}")
+            result[key] = value
+        return result
+
+    for locale in locales:
+        relative = f"{directory}/{locale}.json"
+        catalog_path = root / relative
+        try:
+            catalog = json.loads(
+                catalog_path.read_text(encoding="utf-8"), object_pairs_hook=unique_object
+            )
+        except (OSError, json.JSONDecodeError) as error:
+            raise ValidationError(f"{relative} is not readable JSON: {error}") from error
+        if not isinstance(catalog, dict):
+            raise ValidationError(f"{relative} must be a JSON object mapping source strings to translations")
+        for source_text, translated in catalog.items():
+            if not source_text.strip() or len(source_text) > 4000:
+                raise ValidationError(f"{relative} contains an empty or overlong source string key")
+            if not isinstance(translated, str) or not translated.strip() or len(translated) > 4000:
+                raise ValidationError(
+                    f"{relative} entry for {source_text!r} must be a non-empty translated string "
+                    "(omit untranslated strings instead of shipping them empty)"
+                )
+            if set(PLACEHOLDER.findall(source_text)) != set(PLACEHOLDER.findall(translated)):
+                raise ValidationError(
+                    f"{relative} entry for {source_text!r} must keep the same %1/%2 placeholders "
+                    "as the source string"
+                )
+        untranslated = sorted(used - set(catalog))
+        if untranslated:
+            raise ValidationError(
+                f"{relative} is missing translations for strings passed to Translations.tr(): "
+                + ", ".join(repr(text) for text in untranslated)
+            )
 
 
 def effective_surfaces(manifest: dict) -> dict[str, dict]:
@@ -333,7 +456,7 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
     allowed = {
         "schemaVersion", "id", "name", "version", "description", "author",
         "license", "homepage", "entrypoint", "files", "capabilities", "placement",
-        "signing", "surfaces",
+        "signing", "surfaces", "translations",
     }
     unknown = manifest.keys() - allowed
     missing = {
@@ -392,6 +515,10 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
     # under v1 so an older host/validator can never silently ignore it.
     _validate_surfaces(manifest, schema_version, placement, entrypoint, set(safe_files))
 
+    # Plugin translations (shell#375): optional in every schema
+    # version; pre-#375 manifests without the field stay valid.
+    translations_declaration = _validate_translations_declaration(manifest, set(safe_files))
+
     capabilities = _object(manifest["capabilities"], "capabilities")
     if capabilities.keys() != {"processCommands", "networkHosts", "settings"}:
         raise ValidationError("capabilities must contain exactly processCommands, networkHosts, and settings")
@@ -421,7 +548,7 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
         mode = path.stat().st_mode
         if mode & (stat.S_ISUID | stat.S_ISGID | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH | stat.S_IWOTH):
             raise ValidationError(f"setuid, setgid, executable, or world-writable plugin files are not allowed: {relative}")
-        if path.suffix.lower() in {".so", ".dll", ".dylib", ".exe", ".pyc"}:
+        if path.suffix.lower() in {".so", ".dll", ".dylib", ".exe", ".pyc", ".qm"}:
             raise ValidationError(f"compiled or bytecode files are not allowed: {relative}")
         actual.add(relative)
         if path.suffix == ".qml":
@@ -435,6 +562,8 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
         if absent:
             detail.append(f"missing files: {', '.join(absent)}")
         raise ValidationError("manifest files must exactly match package contents (excluding manifest.json): " + "; ".join(detail))
+
+    _validate_translation_catalogs(root, translations_declaration, qml_files)
 
     for path in qml_files:
         source = path.read_text(encoding="utf-8")
@@ -454,6 +583,12 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
                 raise ValidationError(f"{path.relative_to(root)} invokes undeclared or disallowed command {executable!r}")
         if re.search(r"\b(?:XMLHttpRequest|WebSocket|NetworkRequest|TcpSocket)\b", source) and not hosts:
             raise ValidationError(f"{path.relative_to(root)} uses network APIs but declares no networkHosts")
+        if QSTR_CALL.search(source):
+            raise ValidationError(
+                f"{path.relative_to(root)} uses qsTr(), which is never translated for plugins "
+                "(the shell installs no QTranslator for extension catalogs); use PluginKit "
+                "Translations { pluginId: ... } and tr() instead — see docs/PLUGINS.md"
+            )
         for host in URL_LITERAL.findall(source):
             hostname = host.split(":", 1)[0].lower()
             if hostname not in {item.lower() for item in hosts}:

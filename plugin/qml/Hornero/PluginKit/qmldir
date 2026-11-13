@@ -3,6 +3,7 @@ singleton Theme 1.0 Theme.qml
 singleton Notifications 1.0 Notifications.qml
 singleton Desktop 1.0 Desktop.qml
 Settings 1.0 Settings.qml
+Translations 1.0 Translations.qml
 singleton System 1.0 System.qml
 singleton Network 1.0 Network.qml
 singleton Media 1.0 Media.qml

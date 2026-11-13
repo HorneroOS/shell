@@ -158,9 +158,55 @@ Scope {
                                 };
                             }
                         }
+                        // Plugin translations (shell#375): optional in
+                        // every schema version. Strict runtime gate
+                        // mirroring scripts/validate_plugin.py — a
+                        // malformed declaration fails the plugin with
+                        // an actionable message instead of silently
+                        // loading untranslated. Catalogs themselves are
+                        // read by PluginKit Translations; a catalog
+                        // that fails to load there degrades to source
+                        // strings and never fails the plugin.
+                        if (manifest.translations !== undefined) {
+                            const translations = manifest.translations;
+                            const localeTag = /^[a-z]{2,3}(_[A-Z]{2})?$/;
+                            if (!translations || typeof translations !== "object" || Array.isArray(translations)) {
+                                Plugins.markFailed(slot.modelData.id, "manifest translations must be an object");
+                                return;
+                            }
+                            const extraTranslations = Object.keys(translations).filter(key => key !== "sourceLocale" && key !== "locales" && key !== "directory");
+                            if (extraTranslations.length > 0) {
+                                Plugins.markFailed(slot.modelData.id, `manifest translations contains unknown fields: ${extraTranslations.join(", ")}`);
+                                return;
+                            }
+                            if (typeof translations.sourceLocale !== "string" || !localeTag.test(translations.sourceLocale)) {
+                                Plugins.markFailed(slot.modelData.id, "manifest translations.sourceLocale must be a locale tag like \"en\" or \"es_AR\"");
+                                return;
+                            }
+                            if (!Array.isArray(translations.locales) || translations.locales.length === 0
+                                    || translations.locales.some(l => typeof l !== "string" || !localeTag.test(l))
+                                    || new Set(translations.locales).size !== translations.locales.length) {
+                                Plugins.markFailed(slot.modelData.id, "manifest translations.locales must be a non-empty list of unique locale tags like \"es\" or \"es_AR\"");
+                                return;
+                            }
+                            const translationsDir = translations.directory === undefined ? "translations" : translations.directory;
+                            if (typeof translationsDir !== "string" || translationsDir.includes("..") || translationsDir.includes("\\")
+                                    || !/^(?!\/)(?!\.{1,2}(\/|$))(?!.*\/\.{1,2}(\/|$))(?!.*\/\/)[A-Za-z0-9._\/-]+$/.test(translationsDir)
+                                    || translationsDir.endsWith("/")) {
+                                Plugins.markFailed(slot.modelData.id, "manifest translations.directory is not a safe relative path");
+                                return;
+                            }
+                            for (const locale of translations.locales) {
+                                if (!manifest.files.includes(`${translationsDir}/${locale}.json`)) {
+                                    Plugins.markFailed(slot.modelData.id, `manifest translations declares locale "${locale}" but files does not list ${translationsDir}/${locale}.json`);
+                                    return;
+                                }
+                            }
+                        }
                         slot.placement = placement;
                         const settings = manifest.capabilities && manifest.capabilities.settings;
                         Plugins.markPlacement(slot.modelData.id, placement, manifest.entrypoint, settings || ({}), effectiveSurfaces);
+                        Plugins.markTranslations(slot.modelData.id, manifest.translations === undefined ? null : manifest.translations);
                         slot.entrypoint = manifest.entrypoint;
                         const background = effectiveSurfaces.background;
                         slot.backgroundEntrypoint = background && background.enabled !== false ? background.entrypoint : "";

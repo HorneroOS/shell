@@ -9,6 +9,7 @@ import "modules/areapicker"
 import "modules/companion"
 import "modules/plugins"
 import "modules/lock"
+import "modules/polkit"
 import "modules/welcome"
 import Quickshell
 
@@ -19,6 +20,7 @@ ShellRoot {
     Lock {
         id: lock
     }
+    PolkitHost {}
 
     Shortcuts {}
     CompanionHost {

@@ -27,6 +27,7 @@ ShellRoot {
         lock: lock.lock
     }
     PluginHost {}
+    PluginLauncherHost {}
     Startup {}
     BatteryMonitor {}
     IdleMonitors {

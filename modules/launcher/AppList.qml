@@ -110,6 +110,11 @@ StyledListView {
             const providerState = Providers.stateFor(text);
             if (providerState === "calc" || providerState === "win")
                 return providerState;
+            // Plugin-defined providers (surfaces.launcher): any
+            // other registered provider id routes to the generic
+            // plugin state below, served by Providers.query.
+            if (providerState !== "")
+                return "plugin";
 
             for (const action of ["calc", "win", "file", "ai", "scheme", "variant", "appearance", "theme"])
                 if (text.startsWith(`${prefix}${action} `))
@@ -168,6 +173,14 @@ StyledListView {
             PropertyChanges {
                 model.values: Windows.query(search.text.slice(`${Config.launcher.actionPrefix}win `.length))
                 root.delegate: windowItem
+            }
+        },
+        State {
+            name: "plugin"
+
+            PropertyChanges {
+                model.values: Providers.query(search.text)
+                root.delegate: pluginItem
             }
         },
         State {
@@ -342,6 +355,14 @@ StyledListView {
         id: calcItem
 
         CalcItem {
+            list: root
+        }
+    }
+
+    Component {
+        id: pluginItem
+
+        PluginItem {
             list: root
         }
     }

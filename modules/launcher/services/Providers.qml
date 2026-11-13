@@ -1,5 +1,6 @@
 pragma Singleton
 
+import "launcherplugin.js" as LauncherPlugin
 import qs.config
 import Quickshell
 import QtQuick
@@ -21,16 +22,22 @@ import QtQuick
 //
 // Registration point: registerProvider(spec) below. Built-in
 // providers (apps, calc, windows) register at startup.
-// Plugin-defined providers (surfaces.launcher) are NOT hosted
-// in this slice: a plugin launcher entrypoint is not loaded,
-// and no plugin code can call registerProvider yet. Hosting
-// them is the follow-up slice, under the same trust wording
-// as every other plugin surface (in-process QML running as
-// your user, unsandboxed — see docs/PLUGINS.md).
+// Plugin-defined providers (surfaces.launcher) are hosted by
+// modules/plugins/PluginLauncherHost.qml, which registers each
+// hosted plugin here AFTER the built-ins (see builtinsRegistered)
+// so built-in prefixes always win collisions. Plugin code never
+// calls registerProvider itself. Hosting carries the same trust
+// wording as every other plugin surface (in-process QML running
+// as your user, unsandboxed — see docs/PLUGINS.md).
 Singleton {
     id: root
 
     property var providers: []
+    // True once the built-in providers below have registered.
+    // The plugin launcher host waits for this before registering
+    // any plugin provider, so a plugin can never shadow a
+    // built-in route even if its Loader finishes first.
+    property bool builtinsRegistered: false
 
     // Registers a provider spec. Returns false (and keeps the
     // existing registry) for a malformed spec, a duplicate id
@@ -57,6 +64,35 @@ Singleton {
                 "activate": typeof spec.activate === "function" ? spec.activate : null
             }];
         return true;
+    }
+
+    // Removes a provider by id (plugin disable / safe mode /
+    // Loader teardown). Returns false when no such provider is
+    // registered. Built-ins are never unregistered by hosts.
+    function unregisterProvider(id: string): bool {
+        if (!providerById(id))
+            return false;
+        providers = providers.filter(p => p.id !== id);
+        return true;
+    }
+
+    // Launcher prefix for a plugin id: the id minus a leading
+    // "hornero-" (hornero-calculator -> calculator). Pure helper
+    // in launcherplugin.js so tests can execute it.
+    function launcherPrefixFor(pluginId: string): string {
+        return LauncherPlugin.launcherPrefixFor(pluginId);
+    }
+
+    // Whether a loaded launcher entrypoint item satisfies the
+    // established query/result contract (see launcherplugin.js).
+    function launcherContractOk(item: var): bool {
+        return LauncherPlugin.launcherContractOk(item);
+    }
+
+    // The single registry row for one plugin result, or null
+    // when the result is not ok (no row is shown then).
+    function launcherRow(pluginId: string, displayName: string, icon: string, raw: var): var {
+        return LauncherPlugin.launcherRow(pluginId, displayName, icon, raw);
     }
 
     function providerById(id: string): var {
@@ -172,5 +208,6 @@ Singleton {
                     list.visibilities.launcher = false;
             }
         });
+        root.builtinsRegistered = true;
     }
 }

@@ -13,7 +13,8 @@ import QtQuick
 // Manifest v2 (shell#373): one package may declare several entry
 // points in `surfaces` (background, bar, dashboard, desktop and
 // settings — hosted in Control Center › Extensions — plus the
-// reserved launcher declaration, which no host loads yet).
+// launcher surface, hosted by PluginLauncherHost into the
+// launcher provider registry).
 // Each entry keeps an effective `surfaces` map — name to
 // {entrypoint, enabled} — derived by PluginHost from the manifest;
 // v1 manifests derive exactly the single placement/entrypoint surface
@@ -516,6 +517,10 @@ Singleton {
 
     function settingsPlugins(): var {
         return root.pluginsForSurface("settings");
+    }
+
+    function launcherPlugins(): var {
+        return root.pluginsForSurface("launcher");
     }
 
     // Effective `settings` surface for one entry, or null: enabled,

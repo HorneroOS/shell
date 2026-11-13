@@ -53,8 +53,8 @@ PLACEHOLDER = re.compile(r"%\d+")
 PLACEMENTS = ("background", "bar", "dashboard", "desktop")
 # Manifest v2 surfaces. The first four have runtime hosts today;
 # "settings" (Control Center settings) is hosted in Control Center
-# › Extensions; "launcher" (search/launcher action) is a validated
-# declaration reserved for its host — no host loads it yet, and
+# › Extensions; "launcher" (search/launcher action) is hosted by
+# PluginLauncherHost into the launcher provider registry, and
 # declaring one grants no privilege.
 SURFACES = PLACEMENTS + ("launcher", "settings")
 # Dashboard card size classes (shell#378): preferred card width class a

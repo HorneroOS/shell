@@ -12,7 +12,21 @@ JsonObject {
     // DashboardLayout.normalizeLayout tolerates any malformed shape,
     // so a stale or hand-edited value degrades to manifest order.
     property var dashboardLayout: ({})
+    // Safe recovery mode (shell#380): when true, no user extension
+    // QML (and no plugin manifest) is loaded at all, so the Control
+    // Center Extensions pane stays reachable to disable a broken
+    // plugin. HORNERO_SAFE_MODE=1 at launch forces the same without
+    // touching this persisted value.
+    property bool safeMode: false
     signal saveRequested
+
+    function setSafeMode(enabled: bool): bool {
+        if (safeMode === enabled)
+            return false;
+        safeMode = enabled;
+        saveRequested();
+        return true;
+    }
 
     readonly property var allowedDesktopSlots: [
         "top-left", "top-center", "top-right",

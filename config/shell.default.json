@@ -717,6 +717,7 @@
   "plugins": {
     "settings": {},
     "desktopWidgetSlots": {},
-    "dashboardLayout": {}
+    "dashboardLayout": {},
+    "safeMode": false
   }
 }

@@ -900,6 +900,43 @@ def accessibility_warnings(root: Path) -> list[str]:
     return warnings
 
 
+TIMER_INTERVAL = re.compile(r"\binterval\s*:\s*(\d+)\b")
+POLLING_BUDGET_MS = 1000
+
+
+def performance_warnings(root: Path) -> list[str]:
+    """Excessive-polling diagnostics (#380), never hard failures.
+
+    Plugin QML runs in-process, so the host cannot observe or preempt
+    a plugin's internal Timers at runtime. The static half of the
+    performance budget therefore flags literal Timer intervals below
+    one second so authors and reviewers can switch to a PluginKit
+    subscription/facade signal or a longer interval. Bound or
+    computed intervals cannot be judged statically and are not
+    flagged — this is a review aid, not enforcement (and not a
+    sandbox). Runtime load timing/churn budgets live in
+    services/Plugins.qml.
+    """
+    warnings: list[str] = []
+    if not root.is_dir():
+        return warnings
+    for path in sorted(root.rglob("*.qml")):
+        if path.is_symlink() or not path.is_file():
+            continue
+        source = path.read_text(encoding="utf-8", errors="ignore")
+        source = re.sub(r"//[^\n]*", "", source)
+        for match in TIMER_INTERVAL.finditer(source):
+            interval = int(match.group(1))
+            if interval < POLLING_BUDGET_MS:
+                warnings.append(
+                    f"{path.relative_to(root)}: Timer interval {interval}ms is below the "
+                    f"{POLLING_BUDGET_MS}ms polling budget; prefer a PluginKit subscription "
+                    "or facade signal, or poll at 1s or slower (docs/PLUGINS.md, "
+                    "diagnostics and performance budget)"
+                )
+    return warnings
+
+
 def validate_plugin(root: Path) -> None:
     if not root.is_dir():
         raise ValidationError("plugin path must be a directory")
@@ -938,6 +975,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"plugin validation passed: {args.plugin_dir}")
     for warning in accessibility_warnings(args.plugin_dir.expanduser().resolve()):
         print(f"accessibility warning: {warning}")
+    for warning in performance_warnings(args.plugin_dir.expanduser().resolve()):
+        print(f"performance warning: {warning}")
     print("notice: validation is a static review aid; Quickshell plugins are not sandboxed")
     return 0
 

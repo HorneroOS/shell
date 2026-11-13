@@ -95,6 +95,7 @@ unless `animated: true` is set (reduced-motion by default).
 | `UiProgress` | Progress bar | `value` (0..1), `indeterminate`, `animated` (default `false`) |
 | `UiState` | State placeholder | `kind`: `loading` / `error` / `empty`, `message` |
 | `UiTooltip` | Host-owned tooltip | `target` (required `Item`), `text`, `delay` (default 500 ms), `timeout` (0 = until trigger ends), `preferredSide`: `auto` / `above` / `below` / `left` / `right` |
+| `UiPopover` | Host-owned anchored panel | `target` (required `Item`, the trigger/anchor), `accessibleName`, `preferredSide` (same values as `UiTooltip`), `contentPadding`, `initialFocusItem`; default content slot; `open()` / `close()` / `toggle()`, read-only-by-convention `actualSide` |
 
 Tooltips are host-owned: set `tooltipText` on `UiButton`, `UiToggle` or
 `UiSlider`, or attach a `UiTooltip { target: someItem; text: "…" }` to
@@ -107,6 +108,50 @@ changes. The text is also exposed as the trigger's accessible
 description. Never put interactive content in a tooltip, and never
 rely on one for essential information: anything a tooltip says must
 also be visible (or otherwise available) elsewhere.
+
+Popovers are host-owned too: a compact indicator (for example a bar
+`UiButton`) is the `target` of a `UiPopover`, and the rich panel goes
+in the popover's default content slot using the other `Ui*`
+primitives. Never create an independent top-level window for this.
+The host owns positioning (the same placement as `UiTooltip`:
+left/right rails and top/bottom bars via `preferredSide: "auto"`, an
+explicit side flips when it would clip, and the panel stays clamped
+inside its surface across moves, resizes and scale changes), monitor
+selection (the panel opens on the surface that already hosts the
+trigger), and dismissal (Escape or a press outside the panel;
+`open()`, `close()` and `toggle()` cover programmatic control, so
+wire the trigger with `onClicked: popover.toggle()`). On open, focus
+moves into the panel — to `initialFocusItem` when set, else the first
+focusable control, else the panel itself — so Tab navigation works
+with the native controls inside. Escape closes the popover first,
+before any surface-level Escape handling underneath it (see the
+Escape cascade), and returns focus to the trigger; a press outside
+closes it without moving focus. Set `accessibleName` on the popover
+(it is exposed with the dialog accessible role) and an
+`accessibleName` on the trigger control.
+
+```qml
+import QtQuick
+import Hornero.PluginKit
+
+Item {
+    UiButton {
+        id: indicator
+        text: "♪"
+        accessibleName: "Media details"
+        onClicked: popover.toggle()
+    }
+    UiPopover {
+        id: popover
+        target: indicator
+        accessibleName: "Media details"
+        Column {
+            UiMetric { label: "Track"; value: Media.title }
+            UiButton { text: "Play/Pause"; accessibleName: "Play or pause"; onClicked: Media.playPause() }
+        }
+    }
+}
+```
 
 Usage example:
 

@@ -15,6 +15,7 @@ UI_TYPES = [
     "UiProgress",
     "UiState",
     "UiTooltip",
+    "UiPopover",
 ]
 
 INTERACTIVE = ["UiButton", "UiToggle", "UiSlider"]

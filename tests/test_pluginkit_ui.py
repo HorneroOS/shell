@@ -14,6 +14,7 @@ UI_TYPES = [
     "UiChip",
     "UiProgress",
     "UiState",
+    "UiTooltip",
 ]
 
 INTERACTIVE = ["UiButton", "UiToggle", "UiSlider"]
@@ -62,7 +63,9 @@ def test_uibutton_contract():
     assert 'property string variant: "primary"' in src
     assert '"ghost"' in src
     assert "property string tooltipText" in src
-    assert "ToolTip.text: root.tooltipText" in src
+    # Host-owned UiTooltip (#370) replaces the raw Controls ToolTip.
+    assert "UiTooltip" in src
+    assert "text: root.tooltipText" in src
     # Primary variant background is Theme.primary, so its focus border
     # must use the contrasting onPrimary token (ghost keeps primary).
     assert 'root.variant === "ghost" ? Theme.primary : Theme.onPrimary' in src

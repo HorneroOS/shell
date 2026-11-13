@@ -7,10 +7,17 @@ Switch {
     // Two-way synced with `checked`; `toggled()` is inherited from
     // Switch/AbstractButton and must not be redeclared here.
     property bool value: false
+    property string tooltipText: ""
     property string accessibleName: root.text
 
     Accessible.name: root.accessibleName
     Accessible.role: Accessible.CheckBox
+    Accessible.description: root.tooltipText
+
+    UiTooltip {
+        target: root
+        text: root.tooltipText
+    }
 
     Component.onCompleted: {
         if (checked !== root.value)

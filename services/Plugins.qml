@@ -11,8 +11,9 @@ import QtQuick
 // discovers what is enabled and tracks load outcomes for the host.
 //
 // Manifest v2 (shell#373): one package may declare several entry
-// points in `surfaces` (background, bar, dashboard, desktop, plus the
-// reserved launcher/settings declarations, which no host loads yet).
+// points in `surfaces` (background, bar, dashboard, desktop and
+// settings — hosted in Control Center › Extensions — plus the
+// reserved launcher declaration, which no host loads yet).
 // Each entry keeps an effective `surfaces` map — name to
 // {entrypoint, enabled} — derived by PluginHost from the manifest;
 // v1 manifests derive exactly the single placement/entrypoint surface
@@ -511,6 +512,28 @@ Singleton {
 
     function backgroundPlugins(): var {
         return root.pluginsForSurface("background");
+    }
+
+    function settingsPlugins(): var {
+        return root.pluginsForSurface("settings");
+    }
+
+    // Effective `settings` surface for one entry, or null: enabled,
+    // installed, surface enabled, a non-empty entrypoint, and never
+    // in safe mode. The Control Center host gates on this, so a
+    // disabled (or safe-mode) plugin's custom settings UI is never
+    // loaded and an already-loaded one unloads.
+    function settingsSurfaceFor(entry: var): var {
+        if (!entry || root.safeMode || !entry.enabled || !entry.installed)
+            return null;
+        const declared = root.surfaceFor(entry, "settings");
+        if (!declared || declared.enabled === false || typeof declared.entrypoint !== "string" || declared.entrypoint === "")
+            return null;
+        return declared;
+    }
+
+    function hasSettingsSurface(entry: var): bool {
+        return root.settingsSurfaceFor(entry) !== null;
     }
 
     function markLoaded(id: string): void {

@@ -582,9 +582,24 @@ Settings affordance. Generated fields read and write the same
 Shell-owned storage as the PluginKit `Settings` facade, validated
 the same way, and each field offers Reset once a value is stored,
 plus a confirmed Reset-all. Declare settings and stop there unless
-a setting genuinely needs custom UI; a custom settings surface
-(`surfaces.settings`, Manifest v2) remains a validated declaration
-whose host is separate work, and the generated UI does not need it.
+a setting genuinely needs custom UI.
+
+**Custom settings surface.** A manifest v2 package may additionally
+declare `surfaces.settings` (Manifest v2, below) with its own
+entrypoint. When the plugin is enabled and installed, Control
+Center › Extensions loads that entrypoint in the plugin's Custom settings tab **alongside** the generated UI — it does not replace it, so
+typed settings keep their validated controls and storage. The
+custom surface is loaded only while that section is expanded, each
+in its own asynchronous `Loader`: a failure marks the plugin failed
+through the `Plugins` service (state plus bounded, redacted
+diagnostics) and shows an inline error, never crashing Control
+Center or another plugin, and disabling the plugin (or safe mode)
+unloads it. Plugins without the surface see no change at all. The
+generated UI does not need the surface; declare it only for UI the
+typed controls cannot express. Honest trust note: the custom
+surface is in-process QML running as your user, unsandboxed —
+exactly the same trust as the plugin's other surfaces, not a
+permission boundary.
 
 **Migration.** Stored values are never rewritten by an update; they
 are re-validated against the *current* declaration on every read. A
@@ -643,7 +658,7 @@ changes.
 | `desktop` | Widget in a named slot on each display's background layer. | Yes |
 | `background` | Headless entry point (timers, toasts); only declare it where a headless component is justified. | Yes |
 | `launcher` | Launcher/search action entry point. | No — validated declaration only; the launcher provider host is separate work (shell#222/#250 architecture) and this entrypoint is not loaded yet. |
-| `settings` | Custom Control Center settings entry point. | No — validated declaration only; not loaded yet. The generated settings UI (above) renders `capabilities.settings` without it; declare this surface only for a future custom-UI host. |
+| `settings` | Custom Control Center settings entry point. | Yes — Control Center › Extensions loads it in the plugin's Custom settings tab alongside the generated settings UI (above), which renders `capabilities.settings` without it. In-process QML, same trust as other surfaces. |
 
 Each surface declares `entrypoint` (a safe package-relative `.qml` path that
 must also appear in `files`) and may declare `enabled` (boolean, default
@@ -705,8 +720,10 @@ boundary above: surfaces and `capabilities` alike are declarations —
 review metadata, not enforcement, and not a permission grant. A surface
 entrypoint gets exactly the same host Loader, PluginKit API, and
 user-privilege execution as the primary entrypoint; there is no arbitrary
-private-shell mutation path, and `launcher`/`settings` declarations in
-particular cause no code to run at all until their hosts exist. Installing
+private-shell mutation path, and a `launcher` declaration in
+particular causes no code to run at all until its host exists (a
+`settings` declaration now runs only in its Control Center host,
+above, and only for an enabled, installed plugin). Installing
 or enabling a v2 package also requires a `horneroctl` build that accepts
 schemaVersion 2; the shell-side contract here does not change the CLI's own
 validation.

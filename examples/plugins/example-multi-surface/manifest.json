@@ -3,13 +3,14 @@
   "id": "example-multi-surface",
   "name": "Example Multi-Surface",
   "version": "1.0.0",
-  "description": "A manifest v2 example: one package with a bar indicator (primary placement) plus a dashboard card from the surfaces map.",
+  "description": "A manifest v2 example: one package with a bar indicator (primary placement) plus a dashboard card and a custom Control Center settings surface from the surfaces map.",
   "author": "HorneroOS contributors",
   "license": "MIT",
   "entrypoint": "Main.qml",
   "files": [
     "Main.qml",
     "Dashboard.qml",
+    "Settings.qml",
     "README.md",
     "LICENSE"
   ],
@@ -27,6 +28,9 @@
   "surfaces": {
     "dashboard": {
       "entrypoint": "Dashboard.qml"
+    },
+    "settings": {
+      "entrypoint": "Settings.qml"
     }
   }
 }

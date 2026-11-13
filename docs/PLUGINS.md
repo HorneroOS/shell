@@ -14,7 +14,11 @@ Background plugins (the default) run headless. `placement: "bar"` renders in
 the bar's end group; `placement: "dashboard"` renders in the dashboard
 Extensions tab; `placement: "desktop"` renders on each display's background
 layer. Each plugin gets a separate Loader so one failure does not take down
-the shell or neighbouring extensions. Desktop widgets use nine named slots
+the shell or neighbouring extensions. Manifest v2 (`"schemaVersion": 2`)
+can declare additional entry points in the `surfaces` map so one package
+renders on several of those places at once — see
+[Manifest v2: multiple surfaces](#manifest-v2-multiple-surfaces) below.
+Schema version 1 manifests keep working unchanged. Desktop widgets use nine named slots
 per display. Their locations persist in the user's shell config, reflow when
 resolution changes, and remain saved while a display is disconnected. A new
 or unrecognized display and malformed slot data fall back to `bottom-right`.
@@ -294,6 +298,89 @@ review only; they are not an operating-system permission grant. Settings are
 typed metadata with explicit defaults. The host owns persistence and exposes
 settings through PluginKit; extensions cannot write the canonical shell
 config through that API.
+
+## Manifest v2: multiple surfaces
+
+`"schemaVersion": 2` keeps every version 1 field with the same meaning and
+adds one optional field, `surfaces`: a map from surface name to that
+surface's own entry point. The top-level `entrypoint`/`placement` pair stays
+the package's **primary surface**, so a schemaVersion 1 manifest (or a v2
+manifest without `surfaces`) loads identically to before: exactly one
+effective surface, the placement, loading the top-level entrypoint,
+enabled. Those are the documented defaults; nothing about v1 packages
+changes.
+
+```json
+{
+  "schemaVersion": 2,
+  "id": "example-multi-surface",
+  "name": "Example Multi-Surface",
+  "version": "1.0.0",
+  "description": "Bar indicator plus dashboard card from one package.",
+  "author": "Example Author",
+  "license": "MIT",
+  "entrypoint": "Main.qml",
+  "placement": "bar",
+  "files": ["Main.qml", "Dashboard.qml", "Service.qml", "README.md", "LICENSE"],
+  "surfaces": {
+    "dashboard": { "entrypoint": "Dashboard.qml" },
+    "background": { "entrypoint": "Service.qml", "enabled": false }
+  },
+  "capabilities": {
+    "processCommands": [],
+    "networkHosts": [],
+    "settings": {}
+  }
+}
+```
+
+`examples/plugins/example-multi-surface` is this shape with real files.
+
+| Surface | Meaning | Hosted today |
+| --- | --- | --- |
+| `bar` | Bar indicator in the bar end group. A bar popover/panel is shown from this surface with PluginKit `UiPopover`; it is not a separate surface. | Yes |
+| `dashboard` | Card (with any detail content inside the card) in the dashboard Extensions tab. | Yes |
+| `desktop` | Widget in a named slot on each display's background layer. | Yes |
+| `background` | Headless entry point (timers, toasts); only declare it where a headless component is justified. | Yes |
+| `launcher` | Launcher/search action entry point. | No — validated declaration only; the launcher provider host is separate work (shell#222/#250 architecture) and this entrypoint is not loaded yet. |
+| `settings` | Control Center settings entry point. | No — validated declaration only; not loaded yet. Declared settings metadata still lives in `capabilities.settings` and is exposed through PluginKit `Settings` as before. |
+
+Each surface declares `entrypoint` (a safe package-relative `.qml` path that
+must also appear in `files`) and may declare `enabled` (boolean, default
+`true`). A surface with `"enabled": false` is not loaded by its host; the
+package's other surfaces are unaffected, so each surface can be enabled
+independently. Per-user surface toggles are not part of this contract yet;
+`enabled` is the manifest default the hosts honour.
+
+Redeclaring the primary surface inside `surfaces` is allowed only with the
+same entrypoint (for example to set `enabled`); a different file for the
+primary placement is a conflicting manifest and is rejected rather than
+silently overriding the top-level entrypoint. Load state (`loaded` /
+`failed`) is still tracked per plugin, not per surface.
+
+Validation is strict but additive, and the schema
+([`schemas/plugin-manifest.schema.json`](../schemas/plugin-manifest.schema.json)),
+the static checker (`scripts/validate_plugin.py`), and the runtime host
+agree: unknown `schemaVersion` values are rejected (only `1` and `2` exist),
+`surfaces` under schemaVersion 1 is rejected (so an older host can never
+silently ignore it), and unknown top-level fields, unknown surface names,
+unknown keys inside a surface, non-boolean `enabled`, empty `surfaces`, and
+unsafe or unlisted surface entrypoints all fail with an actionable message.
+Unknown extra fields are rejected, not ignored — the same policy v1 always
+had. One cross-field rule cannot be expressed in JSON Schema (a redeclared
+primary surface must reuse the top-level entrypoint); the schema documents
+it, and the checker and runtime host enforce it.
+
+Declaring a surface grants no privilege and changes nothing about the trust
+boundary above: surfaces and `capabilities` alike are declarations —
+review metadata, not enforcement, and not a permission grant. A surface
+entrypoint gets exactly the same host Loader, PluginKit API, and
+user-privilege execution as the primary entrypoint; there is no arbitrary
+private-shell mutation path, and `launcher`/`settings` declarations in
+particular cause no code to run at all until their hosts exist. Installing
+or enabling a v2 package also requires a `horneroctl` build that accepts
+schemaVersion 2; the shell-side contract here does not change the CLI's own
+validation.
 
 ## Official and community catalogues
 

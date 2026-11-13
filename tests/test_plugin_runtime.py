@@ -90,8 +90,9 @@ def test_all_rendering_placements_inherit_themed_foreground_and_clip():
 def test_bar_placement_contract():
     assert '"placement"' in SCHEMA and '"bar"' in SCHEMA
     assert 'placement !== "background" && placement !== "bar"' in HOST
-    # Bar plugins are not double-loaded by the headless host.
-    assert 'slot.placement !== "bar"' in HOST
+    # Visible surfaces are not double-loaded by the headless host: it
+    # loads only the effective background surface (shell#373).
+    assert 'active: slot.backgroundEntrypoint !== ""' in HOST
     assert "function barPlugins()" in SERVICE
     assert "Plugins.barPlugins()" in WIDGETS
     assert "PluginBarWidgets" in BAR and 'group.name === "end"' in BAR
@@ -109,8 +110,9 @@ def test_dashboard_placement_contract():
     assert '"dashboard"' in SCHEMA
     assert '"dashboard"' in VALIDATOR
     assert 'placement !== "dashboard"' in HOST
-    # Dashboard plugins are not double-loaded by the headless host.
-    assert 'slot.placement !== "dashboard"' in HOST
+    # Dashboard plugins are not double-loaded by the headless host
+    # (it loads only the effective background surface, shell#373).
+    assert 'active: slot.backgroundEntrypoint !== ""' in HOST
     assert "function dashboardPlugins()" in SERVICE
     assert "Plugins.dashboardPlugins()" in CARDS
     # Per-plugin Loader isolation and honest failure marking, same
@@ -134,8 +136,9 @@ def test_desktop_placement_contract():
     assert '"desktop"' in SCHEMA
     assert '"desktop"' in VALIDATOR
     assert 'placement !== "desktop"' in HOST
-    # Desktop plugins are not double-loaded by the headless host.
-    assert 'slot.placement !== "desktop"' in HOST
+    # Desktop plugins are not double-loaded by the headless host
+    # (it loads only the effective background surface, shell#373).
+    assert 'active: slot.backgroundEntrypoint !== ""' in HOST
     assert "function desktopPlugins()" in SERVICE
     assert "Plugins.desktopPlugins()" in WIDGETS_DESKTOP
     assert "Loader.Error" in WIDGETS_DESKTOP and "Plugins.markFailed" in WIDGETS_DESKTOP

@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://horneroos.com/schemas/shell-plugin-manifest-v1.json",
+  "$id": "https://horneroos.com/schemas/shell-plugin-manifest.json",
   "title": "Hornero Shell Plugin Manifest",
-  "description": "Metadata contract for community-authored Hornero Shell extensions. This schema does not define a sandbox or runtime loader.",
+  "description": "Metadata contract for community-authored Hornero Shell extensions (schema versions 1 and 2). Version 2 adds the optional multi-surface `surfaces` map; every version 1 field keeps its meaning. This schema does not define a sandbox or runtime loader, and declared capabilities/surfaces are review metadata, not permission grants or enforcement.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -18,7 +18,21 @@
     "capabilities"
   ],
   "properties": {
-    "schemaVersion": { "const": 1 },
+    "schemaVersion": { "enum": [1, 2], "description": "Manifest contract version. 1 = single placement (top-level entrypoint + placement). 2 = same, plus the optional `surfaces` map for extra independently-enabled entry points. Unknown versions are rejected." },
+    "surfaces": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "description": "schemaVersion 2 only. Extra entry points, one per surface, each independently enabled (default true). The top-level entrypoint/placement remain the primary surface; redeclaring that surface here is allowed only with the same entrypoint (to set `enabled`) — that cross-field rule is enforced by scripts/validate_plugin.py and the runtime host, not by this structural schema. Hosted today: background, bar, dashboard, desktop. `launcher` and `settings` are validated declarations reserved for their hosts (launcher/search provider, Control Center settings); no host loads them yet and declaring one grants no privilege. A bar surface shows a popover/panel with PluginKit UiPopover; it is not a separate surface.",
+      "properties": {
+        "background": { "$ref": "#/$defs/surface" },
+        "bar": { "$ref": "#/$defs/surface" },
+        "dashboard": { "$ref": "#/$defs/surface" },
+        "desktop": { "$ref": "#/$defs/surface" },
+        "launcher": { "$ref": "#/$defs/surface" },
+        "settings": { "$ref": "#/$defs/surface" }
+      }
+    },
     "id": {
       "type": "string",
       "pattern": "^[a-z0-9][a-z0-9-]{0,47}$"
@@ -43,7 +57,7 @@
       },
       "description": "Optional author signature (minisign framing) over the files-only payload hash; verified by horneroctl (trust state 'signed'). Absence is fine: local hash-pinned trust applies instead."
     },
-    "placement": { "type": "string", "enum": ["background", "bar", "dashboard", "desktop"], "default": "background", "description": "Where the entrypoint runs: background (headless, default), bar (rendered in the bar end group) or dashboard (rendered as a card in the dashboard Extensions tab) or desktop (rendered as a widget on the desktop background layer)." },
+    "placement": { "type": "string", "enum": ["background", "bar", "dashboard", "desktop"], "default": "background", "description": "Where the primary (top-level) entrypoint runs: background (headless, default), bar (rendered in the bar end group) or dashboard (rendered as a card in the dashboard Extensions tab) or desktop (rendered as a widget on the desktop background layer). In schemaVersion 2, `surfaces` may add entry points on other surfaces; the primary surface stays the placement/entrypoint pair so the v1 meaning is unchanged." },
     "entrypoint": {
       "type": "string",
       "maxLength": 240,
@@ -104,6 +118,27 @@
             ]
           }
         }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "schemaVersion": { "const": 1 } }, "required": ["schemaVersion"] },
+      "then": { "not": { "required": ["surfaces"] } }
+    }
+  ],
+  "$defs": {
+    "surface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entrypoint"],
+      "properties": {
+        "entrypoint": {
+          "type": "string",
+          "maxLength": 240,
+          "pattern": "^(?!/)(?!\\.{1,2}(?:/|$))(?!.*\\/\\.{1,2}(?:/|$))(?!.*//)[A-Za-z0-9._/-]+\\.qml$"
+        },
+        "enabled": { "type": "boolean", "default": true, "description": "Whether this surface is enabled by default. A disabled surface is not loaded by its host; other surfaces of the same package are unaffected." }
       }
     }
   }

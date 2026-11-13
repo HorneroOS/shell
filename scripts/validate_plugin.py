@@ -40,6 +40,13 @@ FORBIDDEN_MARKERS = (
     re.compile(r"(?:^|[\s='\"])/etc(?:/|\s|['\"]|$)"),
     re.compile(r"\b(?:HOME|XDG_CONFIG_HOME)\s*[/+]"),
 )
+PLACEMENTS = ("background", "bar", "dashboard", "desktop")
+# Manifest v2 surfaces. The first four have runtime hosts today;
+# "launcher" (search/launcher action) and "settings" (Control Center
+# settings) are validated declarations reserved for their hosts — no
+# host loads them yet, and declaring one grants no privilege.
+SURFACES = PLACEMENTS + ("launcher", "settings")
+SCHEMA_VERSIONS = (1, 2)
 ALLOWED_IMPORTS = (
     "QtQuick",
     "QtQuick.Controls",
@@ -94,11 +101,85 @@ def _string_list(value: object, where: str, item_pattern: re.Pattern[str]) -> li
     return value
 
 
+def _validate_surfaces(
+    manifest: dict,
+    schema_version: int,
+    placement: str,
+    entrypoint: str,
+    safe_files: set[str],
+) -> None:
+    if "surfaces" not in manifest:
+        return
+    if schema_version != 2:
+        raise ValidationError(
+            "surfaces requires schemaVersion 2 (set \"schemaVersion\": 2 to declare "
+            "multiple surfaces; schemaVersion 1 supports only the single "
+            "placement/entrypoint surface)"
+        )
+    surfaces = _object(manifest["surfaces"], "surfaces")
+    if not surfaces:
+        raise ValidationError(
+            "surfaces must declare at least one surface (remove the empty "
+            "\"surfaces\": {} or add a surface entrypoint)"
+        )
+    for name, raw_surface in surfaces.items():
+        where = f"surfaces.{name}"
+        if name not in SURFACES:
+            raise ValidationError(
+                f"unknown surface {name!r} in surfaces (known surfaces: "
+                f"{', '.join(SURFACES)}; a bar popover/panel is shown from the "
+                "bar surface with PluginKit UiPopover, not a separate surface)"
+            )
+        surface = _object(raw_surface, where)
+        extra = set(surface) - {"entrypoint", "enabled"}
+        if extra:
+            raise ValidationError(
+                f"{where} contains unknown fields: {', '.join(sorted(extra))} "
+                "(a surface declares only entrypoint and optional enabled)"
+            )
+        if "entrypoint" not in surface:
+            raise ValidationError(f"{where}.entrypoint is required (the .qml file this surface loads)")
+        surface_entrypoint = _safe_relative(surface["entrypoint"], f"{where}.entrypoint", qml=True)
+        if surface_entrypoint not in safe_files:
+            raise ValidationError(
+                f"{where}.entrypoint must be listed in files (add {surface_entrypoint!r} to files)"
+            )
+        if name == placement and surface_entrypoint != entrypoint:
+            raise ValidationError(
+                f"{where}.entrypoint conflicts with the top-level entrypoint: "
+                f"placement {placement!r} is the primary surface and already loads "
+                f"{entrypoint!r}; redeclare it in surfaces only with the same "
+                "entrypoint (e.g. to set enabled) or change the top-level placement"
+            )
+        if "enabled" in surface and not isinstance(surface["enabled"], bool):
+            raise ValidationError(f"{where}.enabled must be a boolean (true or false)")
+
+
+def effective_surfaces(manifest: dict) -> dict[str, dict]:
+    """Effective per-surface entry points for an already-valid manifest.
+
+    v1 (or v2 without `surfaces`) yields exactly the one primary
+    placement surface, enabled, loading the top-level entrypoint —
+    identical to the pre-v2 runtime. Declaring a surface grants no
+    privilege; it only names a .qml entrypoint a host may load.
+    """
+    placement = manifest.get("placement", "background")
+    effective: dict[str, dict] = {
+        placement: {"entrypoint": manifest["entrypoint"], "enabled": True}
+    }
+    for name, surface in (manifest.get("surfaces") or {}).items():
+        effective[name] = {
+            "entrypoint": surface["entrypoint"],
+            "enabled": surface.get("enabled", True),
+        }
+    return effective
+
+
 def _validate_manifest(manifest: dict, root: Path) -> None:
     allowed = {
         "schemaVersion", "id", "name", "version", "description", "author",
         "license", "homepage", "entrypoint", "files", "capabilities", "placement",
-        "signing",
+        "signing", "surfaces",
     }
     unknown = manifest.keys() - allowed
     missing = {
@@ -106,11 +187,18 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
         "license", "entrypoint", "files", "capabilities",
     } - manifest.keys()
     if unknown:
-        raise ValidationError(f"unknown manifest fields: {', '.join(sorted(unknown))}")
+        raise ValidationError(
+            f"unknown manifest fields: {', '.join(sorted(unknown))} "
+            "(unknown fields are rejected, not ignored; see docs/PLUGINS.md)"
+        )
     if missing:
         raise ValidationError(f"missing manifest fields: {', '.join(sorted(missing))}")
-    if type(manifest["schemaVersion"]) is not int or manifest["schemaVersion"] != 1:
-        raise ValidationError("schemaVersion must be 1")
+    if type(manifest["schemaVersion"]) is not int or manifest["schemaVersion"] not in SCHEMA_VERSIONS:
+        raise ValidationError(
+            f"schemaVersion must be 1 or 2 (got {manifest['schemaVersion']!r}); "
+            "unknown manifest versions are rejected"
+        )
+    schema_version = manifest["schemaVersion"]
     plugin_id = _string(manifest["id"], "id", 48)
     if not ID.fullmatch(plugin_id):
         raise ValidationError("id must use lowercase letters, digits, and internal hyphens")
@@ -129,7 +217,7 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
             raise ValidationError("homepage must be an HTTPS URL")
 
     placement = manifest.get("placement", "background")
-    if placement not in ("background", "bar", "dashboard", "desktop"):
+    if placement not in PLACEMENTS:
         raise ValidationError("placement must be background, bar, dashboard or desktop")
 
     entrypoint = _safe_relative(manifest["entrypoint"], "entrypoint", qml=True)
@@ -143,6 +231,12 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
         raise ValidationError("entrypoint must be listed in files")
     if not {"README.md", "LICENSE"} <= set(safe_files):
         raise ValidationError("files must include README.md and LICENSE")
+
+    # Manifest v2 surfaces (shell#373): additive multi-surface entry
+    # points. v1 manifests derive exactly one effective surface from
+    # placement+entrypoint and load identically; `surfaces` is rejected
+    # under v1 so an older host/validator can never silently ignore it.
+    _validate_surfaces(manifest, schema_version, placement, entrypoint, set(safe_files))
 
     capabilities = _object(manifest["capabilities"], "capabilities")
     if capabilities.keys() != {"processCommands", "networkHosts", "settings"}:

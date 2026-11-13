@@ -51,6 +51,43 @@ JsonObject {
         return true;
     }
 
+    // Reset (shell#374): drop stored values so reads fall back to
+    // the manifest defaults. Returns true only when storage changed
+    // (and a save was requested); resetting an absent key is a no-op.
+    function resetSetting(pluginId: string, key: string): bool {
+        if (!validPluginId(pluginId) || !/^[a-z][a-zA-Z0-9]{0,47}$/.test(key))
+            return false;
+
+        const source = settings && typeof settings === "object" && !Array.isArray(settings) ? settings : ({});
+        const stored = source[pluginId];
+        if (!stored || typeof stored !== "object" || Array.isArray(stored)
+                || !Object.prototype.hasOwnProperty.call(stored, key))
+            return false;
+
+        const next = JSON.parse(JSON.stringify(source));
+        delete next[pluginId][key];
+        if (Object.keys(next[pluginId]).length === 0)
+            delete next[pluginId];
+        settings = next;
+        saveRequested();
+        return true;
+    }
+
+    function resetSettings(pluginId: string): bool {
+        if (!validPluginId(pluginId))
+            return false;
+
+        const source = settings && typeof settings === "object" && !Array.isArray(settings) ? settings : ({});
+        if (!Object.prototype.hasOwnProperty.call(source, pluginId))
+            return false;
+
+        const next = JSON.parse(JSON.stringify(source));
+        delete next[pluginId];
+        settings = next;
+        saveRequested();
+        return true;
+    }
+
     function validPluginId(pluginId: string): bool {
         return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(pluginId);
     }

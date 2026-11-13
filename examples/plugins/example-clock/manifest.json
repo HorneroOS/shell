@@ -18,7 +18,8 @@
     "settings": {
       "twentyFourHour": {
         "type": "boolean",
-        "default": true
+        "default": true,
+        "description": "Show the time in 24-hour format instead of 12-hour AM/PM."
       }
     }
   },

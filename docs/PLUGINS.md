@@ -32,7 +32,9 @@ to import Shell internals:
 - `Settings { pluginId: "example-clock" }` reads and writes keys declared by
   the selected manifest ID. Defaults and types come from
   `capabilities.settings`; user values are stored under that ID in
-  `$XDG_CONFIG_HOME/hornero/shell.json`. The ID is a namespace selector, not
+  `$XDG_CONFIG_HOME/hornero/shell.json`. `resetValue(key)` and
+  `resetAll()` remove stored values so the declared defaults apply again.
+  The ID is a namespace selector, not
   proof of the caller's identity or an access boundary between extensions.
 - `Theme` exposes semantic colors and light-mode state. Token names form the
   compatibility contract; internal palette implementation may change.
@@ -299,6 +301,71 @@ typed metadata with explicit defaults. The host owns persistence and exposes
 settings through PluginKit; extensions cannot write the canonical shell
 config through that API.
 
+## Extension settings: typed schema and generated UI
+
+Settings are declared in `capabilities.settings`, keyed by a camelCase
+setting ID (`^[a-z][a-zA-Z0-9]{0,47}$`). Each declaration is
+`type` + `default`, with an optional `description` (shown in Control
+Center under the field, as the control's accessible description, and
+as its tooltip where the control supports one) and the constraints
+for its type:
+
+| Type | `default` | Constraints | Generated control |
+| --- | --- | --- | --- |
+| `boolean` | `true` / `false` | — | Switch |
+| `integer` | integer | `minimum`, `maximum` (integers) | Spin box, plus a slider when both bounds are declared |
+| `number` | finite number | `minimum`, `maximum` | Spin box, plus a slider when both bounds are declared |
+| `string` | string (max 4096 chars) | `minLength`, `maxLength` (0–4096) | Text field |
+| `enum` | one of `options` | `options` (required: 1–32 unique non-empty strings, max 64 chars each) | One toggle button per option |
+
+```json
+"settings": {
+  "twentyFourHour": { "type": "boolean", "default": true, "description": "Use 24-hour time." },
+  "refreshMinutes": { "type": "integer", "default": 15, "minimum": 1, "maximum": 120 },
+  "opacity": { "type": "number", "default": 0.9, "minimum": 0.1, "maximum": 1 },
+  "label": { "type": "string", "default": "Weather", "maxLength": 40 },
+  "units": { "type": "enum", "default": "metric", "options": ["metric", "imperial"] }
+}
+```
+
+The type set is closed. Constraint fields on the wrong type, unknown
+fields, `minimum > maximum`, `minLength > maxLength`, a default
+outside its own range/length, and an enum default missing from
+`options` are all rejected by the schema/validator (cross-field
+rules live in `scripts/validate_plugin.py` and are mirrored by the
+runtime in `services/Plugins.qml`, which drops malformed
+declarations before the facade or UI can see them). There is
+deliberately **no path type**: settings are plain Shell-owned values
+in `shell.json`, never filesystem paths the shell opens, so no
+setting can escape the user's config dirs through this contract. A
+`string` setting is just a string; what plugin code does with it is
+covered by the trust boundary above, not by this schema.
+
+Control Center › Extensions generates one field per declared setting
+(sorted by key) from these declarations — plugins get a consistent,
+validated, keyboard-accessible settings UI with no settings code of
+their own, and a plugin that declares no (valid) settings shows no
+Settings affordance. Generated fields read and write the same
+Shell-owned storage as the PluginKit `Settings` facade, validated
+the same way, and each field offers Reset once a value is stored,
+plus a confirmed Reset-all. Declare settings and stop there unless
+a setting genuinely needs custom UI; a custom settings surface
+(`surfaces.settings`, Manifest v2) remains a validated declaration
+whose host is separate work, and the generated UI does not need it.
+
+**Migration.** Stored values are never rewritten by an update; they
+are re-validated against the *current* declaration on every read. A
+stored value that still satisfies its declaration keeps working
+unchanged across manifest updates. Anything else — the type changed,
+an enum option was removed, a range or length was tightened, the
+stored shape is malformed — reads as the declared `default` (never
+coerced, never a crash), and the next write or reset replaces it.
+Renaming a setting key is therefore a new setting with its own
+default; the old key's stored value is ignored. Reset
+(`Settings.resetValue` / `resetAll`, or the generated UI) deletes
+the stored value outright, so the default applies until the user
+changes it again.
+
 ## Manifest v2: multiple surfaces
 
 `"schemaVersion": 2` keeps every version 1 field with the same meaning and
@@ -343,7 +410,7 @@ changes.
 | `desktop` | Widget in a named slot on each display's background layer. | Yes |
 | `background` | Headless entry point (timers, toasts); only declare it where a headless component is justified. | Yes |
 | `launcher` | Launcher/search action entry point. | No — validated declaration only; the launcher provider host is separate work (shell#222/#250 architecture) and this entrypoint is not loaded yet. |
-| `settings` | Control Center settings entry point. | No — validated declaration only; not loaded yet. Declared settings metadata still lives in `capabilities.settings` and is exposed through PluginKit `Settings` as before. |
+| `settings` | Custom Control Center settings entry point. | No — validated declaration only; not loaded yet. The generated settings UI (above) renders `capabilities.settings` without it; declare this surface only for a future custom-UI host. |
 
 Each surface declares `entrypoint` (a safe package-relative `.qml` path that
 must also appear in `files`) and may declare `enabled` (boolean, default

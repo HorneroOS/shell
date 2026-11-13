@@ -19,7 +19,11 @@ JsonObject {
         const candidateValues = storedPlugins ? storedPlugins[pluginId] : null;
         const values = candidateValues && typeof candidateValues === "object" && !Array.isArray(candidateValues) ? candidateValues : null;
         const stored = values && Object.prototype.hasOwnProperty.call(values, key) ? values[key] : undefined;
-        return validValue(stored, declaration.type) ? stored : declaration.default;
+        // Migration (shell#374): a stored value that no longer
+        // satisfies the current declaration (changed type, removed
+        // enum option, tightened constraints) reads as the declared
+        // default instead of being coerced or crashing the plugin.
+        return Plugins.migratedSettingValue(declaration, stored);
     }
 
     function setValue(key: string, value: var): bool {
@@ -27,10 +31,28 @@ JsonObject {
             return false;
 
         const declaration = Plugins.settingDeclaration(pluginId, key);
-        if (!declaration || !validValue(value, declaration.type))
+        if (!declaration || !validForDeclaration(value, declaration))
             return false;
 
         return Config.plugins.setSetting(pluginId, key, value);
+    }
+
+    // Reset (shell#374): removes the stored value so reads return
+    // the declared default again. Storage stays Shell-owned through
+    // Config.plugins, exactly like setValue.
+    function resetValue(key: string): bool {
+        if (!validKey(key) || !Plugins.settingDeclaration(pluginId, key))
+            return false;
+
+        return Config.plugins.resetSetting(pluginId, key);
+    }
+
+    function resetAll(): bool {
+        return Config.plugins.resetSettings(pluginId);
+    }
+
+    function validForDeclaration(value: var, declaration: var): bool {
+        return validValue(value, declaration.type) && Plugins.settingConstraintsSatisfied(value, declaration);
     }
 
     function validKey(key: string): bool {
@@ -45,6 +67,8 @@ JsonObject {
         if (type === "number")
             return typeof value === "number" && Number.isFinite(value);
         if (type === "string")
+            return typeof value === "string" && value.length <= 4096;
+        if (type === "enum")
             return typeof value === "string" && value.length <= 4096;
         return false;
     }

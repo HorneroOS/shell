@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 import stat
 import sys
@@ -175,6 +176,159 @@ def effective_surfaces(manifest: dict) -> dict[str, dict]:
     return effective
 
 
+# Extension settings (shell#374): typed declarations in
+# capabilities.settings drive the generated Control Center UI. The
+# type set is closed: boolean, integer, number, string and enum (a
+# string restricted to declared `options`). There is deliberately no
+# path type: settings are plain Shell-owned values, never filesystem
+# paths the shell would open, so no setting can escape the user's
+# config dirs through this contract.
+SETTING_TYPES = ("boolean", "integer", "number", "string", "enum")
+SETTING_STRING_MAX = 4096
+SETTING_ENUM_MAX_OPTIONS = 32
+SETTING_FIELDS = {
+    "type", "default", "description",
+    "minimum", "maximum", "minLength", "maxLength", "options",
+}
+SETTING_CONSTRAINTS = {
+    "boolean": frozenset(),
+    "integer": frozenset({"minimum", "maximum"}),
+    "number": frozenset({"minimum", "maximum"}),
+    "string": frozenset({"minLength", "maxLength"}),
+    "enum": frozenset({"options"}),
+}
+
+
+def _is_finite_number(value: object) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+
+
+def _is_plain_int(value: object) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool)
+
+
+def setting_value_valid(declaration: dict, value: object) -> bool:
+    """Whether `value` satisfies an already-valid setting declaration.
+
+    Mirrors Plugins.settingValueValid in services/Plugins.qml (used by
+    the PluginKit Settings facade and the generated settings UI):
+    exact type match plus every declared constraint.
+    """
+    kind = declaration.get("type")
+    if kind == "boolean":
+        return isinstance(value, bool)
+    if kind == "integer":
+        if not _is_plain_int(value):
+            return False
+    elif kind == "number":
+        if not _is_finite_number(value):
+            return False
+    elif kind == "string":
+        if not isinstance(value, str) or len(value) > SETTING_STRING_MAX:
+            return False
+        if "minLength" in declaration and len(value) < declaration["minLength"]:
+            return False
+        if "maxLength" in declaration and len(value) > declaration["maxLength"]:
+            return False
+        return True
+    elif kind == "enum":
+        return isinstance(value, str) and value in declaration.get("options", [])
+    else:
+        return False
+    # integer / number range constraints
+    if "minimum" in declaration and value < declaration["minimum"]:
+        return False
+    if "maximum" in declaration and value > declaration["maximum"]:
+        return False
+    return True
+
+
+def migrated_setting_value(declaration: dict, stored: object) -> object:
+    """Effective value for a stored setting under the current declaration.
+
+    Migration rule (shell#374): a stored value written under an older
+    manifest keeps working unchanged while it still satisfies the
+    current declaration; anything else — changed type, removed enum
+    option, tightened range/length, malformed shape — falls back to
+    the declared default instead of crashing or being coerced.
+    """
+    return stored if setting_value_valid(declaration, stored) else declaration["default"]
+
+
+def _validate_setting(key: str, setting: dict) -> None:
+    where = f"capabilities.settings.{key}"
+    unknown = set(setting) - SETTING_FIELDS
+    if unknown:
+        raise ValidationError(
+            f"{where} contains unknown fields: {', '.join(sorted(unknown))} "
+            "(a setting declares type, default, optional description and "
+            "the constraints for its type)"
+        )
+    if not {"type", "default"} <= set(setting):
+        raise ValidationError(f"setting {key} must contain type and default, with optional description")
+    kind = setting["type"]
+    if kind not in SETTING_TYPES:
+        raise ValidationError(
+            f"setting {key} type must be one of: {', '.join(SETTING_TYPES)} "
+            f"(got {kind!r}; there is no path-typed setting — settings are "
+            "plain Shell-owned values, never filesystem paths)"
+        )
+    misplaced = (set(setting) - {"type", "default", "description"}) - SETTING_CONSTRAINTS[kind]
+    if misplaced:
+        raise ValidationError(
+            f"setting {key} of type {kind} cannot declare "
+            f"{', '.join(sorted(misplaced))} (allowed constraints for "
+            f"{kind}: {', '.join(sorted(SETTING_CONSTRAINTS[kind])) or 'none'})"
+        )
+    if "description" in setting:
+        _string(setting["description"], f"setting {key} description", 160)
+
+    if kind == "integer":
+        for bound in ("minimum", "maximum"):
+            if bound in setting and not _is_plain_int(setting[bound]):
+                raise ValidationError(f"setting {key} {bound} must be an integer")
+    if kind == "number":
+        for bound in ("minimum", "maximum"):
+            if bound in setting and not _is_finite_number(setting[bound]):
+                raise ValidationError(f"setting {key} {bound} must be a finite number")
+    if kind in ("integer", "number"):
+        if (
+            "minimum" in setting and "maximum" in setting
+            and setting["minimum"] > setting["maximum"]
+        ):
+            raise ValidationError(f"setting {key} minimum must not exceed maximum")
+    if kind == "string":
+        for bound in ("minLength", "maxLength"):
+            if bound in setting and (
+                not _is_plain_int(setting[bound])
+                or not 0 <= setting[bound] <= SETTING_STRING_MAX
+            ):
+                raise ValidationError(
+                    f"setting {key} {bound} must be an integer between 0 and {SETTING_STRING_MAX}"
+                )
+        if (
+            "minLength" in setting and "maxLength" in setting
+            and setting["minLength"] > setting["maxLength"]
+        ):
+            raise ValidationError(f"setting {key} minLength must not exceed maxLength")
+    if kind == "enum":
+        options = setting.get("options")
+        if not isinstance(options, list) or not options or len(options) > SETTING_ENUM_MAX_OPTIONS:
+            raise ValidationError(
+                f"setting {key} of type enum must declare options: a list of "
+                f"1 to {SETTING_ENUM_MAX_OPTIONS} allowed values"
+            )
+        if any(not isinstance(option, str) or not option or len(option) > 64 for option in options):
+            raise ValidationError(f"setting {key} options must be non-empty strings of at most 64 characters")
+        if len(options) != len(set(options)):
+            raise ValidationError(f"setting {key} options must not contain duplicates")
+
+    if not setting_value_valid(setting, setting["default"]):
+        raise ValidationError(
+            f"setting {key} default does not match its declared type or constraints"
+        )
+
+
 def _validate_manifest(manifest: dict, root: Path) -> None:
     allowed = {
         "schemaVersion", "id", "name", "version", "description", "author",
@@ -250,20 +404,7 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
     for key, raw_setting in settings.items():
         if not re.fullmatch(r"[a-z][a-zA-Z0-9]{0,47}", key):
             raise ValidationError(f"invalid setting id: {key}")
-        setting = _object(raw_setting, f"capabilities.settings.{key}")
-        if set(setting) - {"type", "default", "description"} or not {"type", "default"} <= set(setting):
-            raise ValidationError(f"setting {key} must contain type and default, with optional description")
-        kind, default = setting["type"], setting["default"]
-        valid = {
-            "boolean": lambda x: isinstance(x, bool),
-            "integer": lambda x: isinstance(x, int) and not isinstance(x, bool),
-            "number": lambda x: isinstance(x, (int, float)) and not isinstance(x, bool),
-            "string": lambda x: isinstance(x, str),
-        }
-        if kind not in valid or not valid[kind](default):
-            raise ValidationError(f"setting {key} default does not match its declared type")
-        if "description" in setting:
-            _string(setting["description"], f"setting {key} description", 160)
+        _validate_setting(key, _object(raw_setting, f"capabilities.settings.{key}"))
 
     actual: set[str] = set()
     qml_files: list[Path] = []

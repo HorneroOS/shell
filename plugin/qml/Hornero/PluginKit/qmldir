@@ -11,6 +11,8 @@ singleton Weather 1.0 Weather.qml
 singleton Time 1.0 Time.qml
 singleton Power 1.0 Power.qml
 singleton Audio 1.0 Audio.qml
+singleton Providers 1.0 Providers.qml
+Subscription 1.0 Subscription.qml
 UiText 1.0 UiText.qml
 UiCard 1.0 UiCard.qml
 UiButton 1.0 UiButton.qml

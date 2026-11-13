@@ -26,7 +26,9 @@ Users select a widget's vertical and horizontal slot in Control Center.
 
 The package installs the stable `Hornero.PluginKit` QML module. It exposes
 `Settings`, `Translations`, `Theme`, `Notifications`, `Desktop`, `System`, `Network`,
-`Media`, `Weather`, `Time`, `Power`, and `Audio` without requiring plugins
+`Media`, `Weather`, `Time`, `Power`, `Audio`, and the shared-provider
+`Providers` / `Subscription` lease (see
+[Shared data providers](#shared-data-providers)) without requiring plugins
 to import Shell internals:
 
 - `Settings { pluginId: "example-clock" }` reads and writes keys declared by
@@ -83,6 +85,81 @@ They are QML running in-process: they
 are **not sandboxed**. Declared `capabilities` are review-only disclosures,
 not runtime enforcement. No AI quota is exposed by PluginKit; any AI quota
 is unknown and must not be assumed or displayed as a known value.
+
+## Shared data providers
+
+The seven data facades are presentation over shared, single-instance
+providers (shell#377): each domain is backed by exactly one shell-owned
+singleton, so N extensions reading the same domain never duplicate its
+timers, file reads, or child processes. Declare interest with a
+`Subscription` lease so polling domains stay live while your surface is
+loaded:
+
+```qml
+import QtQuick
+import Hornero.PluginKit
+
+Item {
+    Subscription { domain: "system" }
+    UiMetric { label: "CPU"; value: Math.round(System.cpuPerc * 100) + "%" }
+}
+```
+
+| Domain | Facade | Mode | Refresh |
+| --- | --- | --- | --- |
+| `system` | `System` | polling | one shared timer at `dashboard.resourceUpdateInterval` (default 1000 ms) while at least one lease or shell surface references it |
+| `network` | `Network` | polling | the same shared interval, from its own single timer |
+| `weather` | `Weather` | cached | one shared fetch per configured location; result cached, refreshed hourly |
+| `media` | `Media` | event | pushed by MPRIS; never polled |
+| `time` | `Time` | event | pushed by the system clock (second precision) |
+| `power` | `Power` | event | pushed by UPower; never polled |
+| `audio` | `Audio` | event | pushed by PipeWire; never polled |
+
+Semantics every extension can rely on:
+
+- **One source per domain.** `system` and `network` are the only polling
+  domains, and each owns exactly one timer gated on a reference count.
+  A `Subscription` forwards one reference to that gate; it never
+  creates a timer, process, or file poll of its own. Ten subscribers
+  cost the same wakeups as one.
+- **Caching.** Facade properties always read the shared singleton's
+  latest values. With no lease held by anyone, polling domains stop
+  updating and reads return the last-known values (zeros before the
+  first sample) — reading a facade without subscribing still works,
+  exactly as it did before subscriptions existed. Weather keeps its
+  last parsed result (and caches resolved city names) between fetches.
+- **Backoff.** There is no per-plugin rate to tune and no exponential
+  backoff to configure: polling runs at the one shared interval while
+  referenced and stops entirely at zero references, which is the idle
+  state backoff would approximate. A failed sample keeps the previous
+  values and is retried on the next shared tick; a failed weather
+  fetch records `Weather.lastError` and is retried on the next hourly
+  refresh (or when the configured location changes).
+- **Release.** Disabling an extension releases its subscriptions: the
+  host destroys the plugin's items on unload/disable, and
+  `Subscription` unsubscribes from `Component.onDestruction`. Setting
+  `enabled: false` or changing `domain` releases the previous lease
+  immediately. An `unsubscribe` with no matching lease is refused, so
+  one extension can never drive a shared gate negative for the others.
+
+The imperative form lives on the `Providers` singleton for code that
+cannot declare an object: `Providers.subscribe(domain)`,
+`Providers.unsubscribe(domain)`, `Providers.subscriberCount(domain)`,
+`Providers.active(domain)`, `Providers.mode(domain)`, and
+`Providers.refreshIntervalMs(domain)` (0 for event domains, -1 for an
+unknown domain; unknown domains are rejected by `subscribe`).
+Prefer `Subscription` — it cannot leak a lease.
+
+Idle-cost accounting (static analysis of this tree, not a host
+measurement): before shared providers, an extension that wanted live
+CPU/network figures had to run its own timer and subprocess per
+extension instance. Now the only timers that can drive those domains
+are the two refCount-gated service timers above, independent of
+extension count, and both are stopped when nothing references them.
+`tests/test_plugin_shared_providers.py` pins that count. A host-side
+idle CPU/wakeup measurement (e.g. `powertop` with several
+telemetry extensions enabled, before/after) still belongs in the
+change's PR description, labelled as a host measurement.
 
 ## UI primitives
 

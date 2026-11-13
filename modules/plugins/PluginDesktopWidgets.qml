@@ -88,7 +88,17 @@ Item {
                                 Loader {
                                     id: pluginLoader
 
-                                    Layout.maximumWidth: 300
+                                    // Responsive host context (#372):
+                                    // same injection contract as the bar
+                                    // host. Desktop cards are horizontal
+                                    // and edge-less; width is capped at
+                                    // the reported value, height is
+                                    // uncapped (0). screenName identifies
+                                    // which display this instance is on.
+                                    readonly property int hostAvailableWidth: 300
+                                    readonly property int hostAvailableHeight: 0
+
+                                    Layout.maximumWidth: hostAvailableWidth
                                     clip: true
                                     palette.windowText: Colours.palette.m3onSurface
                                     source: card.modelData.entrypoint ? `file://${Plugins.pluginsDir}/${card.modelData.id}/${card.modelData.entrypoint}` : ""
@@ -99,6 +109,56 @@ Item {
                                             Plugins.markLoaded(card.modelData.id);
                                         else if (status === Loader.Error)
                                             Plugins.markFailed(card.modelData.id, pluginLoader.errorString || "desktop entrypoint failed to load (see shell log)");
+                                    }
+
+                                    Binding {
+                                        target: pluginLoader.item
+                                        property: "hostOrientation"
+                                        value: "horizontal"
+                                        when: pluginLoader.item !== null && "hostOrientation" in pluginLoader.item
+                                        restoreMode: Binding.RestoreNone
+                                    }
+                                    Binding {
+                                        target: pluginLoader.item
+                                        property: "hostEdge"
+                                        value: "none"
+                                        when: pluginLoader.item !== null && "hostEdge" in pluginLoader.item
+                                        restoreMode: Binding.RestoreNone
+                                    }
+                                    Binding {
+                                        target: pluginLoader.item
+                                        property: "hostSurface"
+                                        value: "desktop"
+                                        when: pluginLoader.item !== null && "hostSurface" in pluginLoader.item
+                                        restoreMode: Binding.RestoreNone
+                                    }
+                                    Binding {
+                                        target: pluginLoader.item
+                                        property: "hostAvailableWidth"
+                                        value: pluginLoader.hostAvailableWidth
+                                        when: pluginLoader.item !== null && "hostAvailableWidth" in pluginLoader.item
+                                        restoreMode: Binding.RestoreNone
+                                    }
+                                    Binding {
+                                        target: pluginLoader.item
+                                        property: "hostAvailableHeight"
+                                        value: pluginLoader.hostAvailableHeight
+                                        when: pluginLoader.item !== null && "hostAvailableHeight" in pluginLoader.item
+                                        restoreMode: Binding.RestoreNone
+                                    }
+                                    Binding {
+                                        target: pluginLoader.item
+                                        property: "hostCompact"
+                                        value: false
+                                        when: pluginLoader.item !== null && "hostCompact" in pluginLoader.item
+                                        restoreMode: Binding.RestoreNone
+                                    }
+                                    Binding {
+                                        target: pluginLoader.item
+                                        property: "hostScreenName"
+                                        value: root.screenName
+                                        when: pluginLoader.item !== null && "hostScreenName" in pluginLoader.item
+                                        restoreMode: Binding.RestoreNone
                                     }
                                 }
 

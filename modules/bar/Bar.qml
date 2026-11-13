@@ -670,6 +670,13 @@ Item {
             PluginBarWidgets {
                 vertical: root.vertical
                 surfaceActive: group.name === "end"
+                // Responsive host context (#372): the real edge,
+                // content thickness, compact breakpoint and screen of
+                // this bar instance (one Bar per screen/edge).
+                edge: root.edge
+                thickness: root.spec.thickness
+                compact: root.compact
+                screenName: root.screen.name
             }
         }
     }

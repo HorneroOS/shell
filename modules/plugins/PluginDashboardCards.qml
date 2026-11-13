@@ -57,7 +57,16 @@ Item {
                     Loader {
                         id: pluginLoader
 
-                        Layout.maximumWidth: 380
+                        // Responsive host context (#372): same
+                        // injection contract as the bar host. The
+                        // dashboard is a horizontal, edge-less surface;
+                        // width is capped at the card content width
+                        // reported to the plugin, height is uncapped
+                        // (0) because the tab scrolls.
+                        readonly property int hostAvailableWidth: 380
+                        readonly property int hostAvailableHeight: 0
+
+                        Layout.maximumWidth: hostAvailableWidth
                         clip: true
                         // Same contract as the bar host: plugin default
                         // text inherits the card's themed foreground.
@@ -70,6 +79,56 @@ Item {
                                 Plugins.markLoaded(card.modelData.id);
                             else if (status === Loader.Error)
                                 Plugins.markFailed(card.modelData.id, pluginLoader.errorString || "dashboard entrypoint failed to load (see shell log)");
+                        }
+
+                        Binding {
+                            target: pluginLoader.item
+                            property: "hostOrientation"
+                            value: "horizontal"
+                            when: pluginLoader.item !== null && "hostOrientation" in pluginLoader.item
+                            restoreMode: Binding.RestoreNone
+                        }
+                        Binding {
+                            target: pluginLoader.item
+                            property: "hostEdge"
+                            value: "none"
+                            when: pluginLoader.item !== null && "hostEdge" in pluginLoader.item
+                            restoreMode: Binding.RestoreNone
+                        }
+                        Binding {
+                            target: pluginLoader.item
+                            property: "hostSurface"
+                            value: "dashboard"
+                            when: pluginLoader.item !== null && "hostSurface" in pluginLoader.item
+                            restoreMode: Binding.RestoreNone
+                        }
+                        Binding {
+                            target: pluginLoader.item
+                            property: "hostAvailableWidth"
+                            value: pluginLoader.hostAvailableWidth
+                            when: pluginLoader.item !== null && "hostAvailableWidth" in pluginLoader.item
+                            restoreMode: Binding.RestoreNone
+                        }
+                        Binding {
+                            target: pluginLoader.item
+                            property: "hostAvailableHeight"
+                            value: pluginLoader.hostAvailableHeight
+                            when: pluginLoader.item !== null && "hostAvailableHeight" in pluginLoader.item
+                            restoreMode: Binding.RestoreNone
+                        }
+                        Binding {
+                            target: pluginLoader.item
+                            property: "hostCompact"
+                            value: false
+                            when: pluginLoader.item !== null && "hostCompact" in pluginLoader.item
+                            restoreMode: Binding.RestoreNone
+                        }
+                        Binding {
+                            target: pluginLoader.item
+                            property: "hostScreenName"
+                            value: ""
+                            when: pluginLoader.item !== null && "hostScreenName" in pluginLoader.item
+                            restoreMode: Binding.RestoreNone
                         }
                     }
 

@@ -113,6 +113,7 @@ def test_shipped_multi_surface_example_passes():
     assert VALIDATOR.effective_surfaces(manifest) == {
         "bar": {"entrypoint": "Main.qml", "enabled": True},
         "dashboard": {"entrypoint": "Dashboard.qml", "enabled": True},
+        "settings": {"entrypoint": "Settings.qml", "enabled": True},
     }
 
 

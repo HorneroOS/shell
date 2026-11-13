@@ -26,10 +26,11 @@ import QtQuick
 // manifest, records the effective surfaces map in the Plugins
 // service, and itself loads only the effective `background` surface
 // (the headless one); the bar/dashboard/desktop hosts load theirs
-// from the service's per-surface lists. `launcher` and `settings`
-// are validated declarations with no host yet — nothing loads them
-// here. A v1 manifest derives the single placement surface and
-// loads exactly as before.
+// from the service's per-surface lists. `settings` is hosted by
+// Control Center › Extensions (PluginSettingsHost.qml), not
+// here; `launcher` is a validated declaration with no host yet —
+// nothing loads it here. A v1 manifest derives the single
+// placement surface and loads exactly as before.
 // Plugin QML runs with full user privileges — see services/Plugins.qml
 // for the trust label.
 Scope {

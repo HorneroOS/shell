@@ -52,9 +52,10 @@ QSTR_CALL = re.compile(r"\bqsTr\s*\(")
 PLACEHOLDER = re.compile(r"%\d+")
 PLACEMENTS = ("background", "bar", "dashboard", "desktop")
 # Manifest v2 surfaces. The first four have runtime hosts today;
-# "launcher" (search/launcher action) and "settings" (Control Center
-# settings) are validated declarations reserved for their hosts — no
-# host loads them yet, and declaring one grants no privilege.
+# "settings" (Control Center settings) is hosted in Control Center
+# › Extensions; "launcher" (search/launcher action) is a validated
+# declaration reserved for its host — no host loads it yet, and
+# declaring one grants no privilege.
 SURFACES = PLACEMENTS + ("launcher", "settings")
 # Dashboard card size classes (shell#378): preferred card width class a
 # dashboard surface may hint; the user's persisted layout wins.

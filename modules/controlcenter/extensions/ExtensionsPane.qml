@@ -44,6 +44,7 @@ Item {
     property string pluginPlacementFilter: "all"
     property string expandedPluginId: ""
     property string settingsPluginId: ""
+    property string customSettingsPluginId: ""
 
     // Installed-plugin JSON (horneroctl plugin list --json, verified live)
     // has no category or description field: entries carry id, name,
@@ -121,6 +122,27 @@ Item {
 
     function hasPluginSettings(entry): bool {
         return Object.keys(root.pluginSettings(entry)).length > 0;
+    }
+
+    // Custom settings surface (shell#373/#374): the effective
+    // surfaces.settings declaration for an enabled, installed
+    // plugin, or null. Plugins without it (including every v1
+    // plugin) get no custom-settings affordance at all.
+    function settingsSurface(entry): var {
+        return Plugins.settingsSurfaceFor(entry);
+    }
+
+    function hasSettingsSurface(entry): bool {
+        return root.settingsSurface(entry) !== null;
+    }
+
+    function settingsSurfaceEntrypoint(entry): string {
+        const surface = root.settingsSurface(entry);
+        return surface ? String(surface.entrypoint) : "";
+    }
+
+    function hasAnyPluginSettings(entry): bool {
+        return root.hasPluginSettings(entry) || root.hasSettingsSurface(entry);
     }
 
     function filteredCatalogEntries(): var {
@@ -763,6 +785,19 @@ Item {
                                 settings: root.pluginSettings(row.modelData)
                             }
 
+                            // Custom settings surface, in its own
+                            // detail tab alongside (never replacing)
+                            // the generated Settings tab above: loaded
+                            // only while that tab is open, for an
+                            // enabled installed plugin declaring an
+                            // enabled settings surface.
+                            PluginSettingsHost {
+                                Layout.fillWidth: true
+                                visible: root.customSettingsPluginId === row.modelData.id && root.hasSettingsSurface(row.modelData)
+                                pluginId: row.modelData.id
+                                entrypoint: root.settingsSurfaceEntrypoint(row.modelData)
+                            }
+
                             Repeater {
                                 model: row.modelData.placement === "desktop" ? Quickshell.screens : []
 
@@ -789,6 +824,13 @@ Item {
                                     text: root.settingsPluginId === row.modelData.id ? qsTr("Hide settings") : qsTr("Settings")
                                     type: TextButton.Text
                                     onClicked: root.settingsPluginId = root.settingsPluginId === row.modelData.id ? "" : row.modelData.id
+                                }
+
+                                TextButton {
+                                    visible: root.hasSettingsSurface(row.modelData)
+                                    text: root.customSettingsPluginId === row.modelData.id ? qsTr("Hide custom settings") : qsTr("Custom settings")
+                                    type: TextButton.Text
+                                    onClicked: root.customSettingsPluginId = root.customSettingsPluginId === row.modelData.id ? "" : row.modelData.id
                                 }
 
                                 TextButton {

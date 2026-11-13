@@ -23,7 +23,7 @@
       "type": "object",
       "minProperties": 1,
       "additionalProperties": false,
-      "description": "schemaVersion 2 only. Extra entry points, one per surface, each independently enabled (default true). The top-level entrypoint/placement remain the primary surface; redeclaring that surface here is allowed only with the same entrypoint (to set `enabled`) — that cross-field rule is enforced by scripts/validate_plugin.py and the runtime host, not by this structural schema. Hosted today: background, bar, dashboard, desktop. `launcher` and `settings` are validated declarations reserved for their hosts (launcher/search provider, Control Center settings); no host loads them yet and declaring one grants no privilege. A bar surface shows a popover/panel with PluginKit UiPopover; it is not a separate surface.",
+      "description": "schemaVersion 2 only. Extra entry points, one per surface, each independently enabled (default true). The top-level entrypoint/placement remain the primary surface; redeclaring that surface here is allowed only with the same entrypoint (to set `enabled`) — that cross-field rule is enforced by scripts/validate_plugin.py and the runtime host, not by this structural schema. Hosted today: background, bar, dashboard, desktop, settings (Control Center › Extensions). `launcher` is a validated declaration reserved for its host (launcher/search provider); no host loads it yet and declaring one grants no privilege. A bar surface shows a popover/panel with PluginKit UiPopover; it is not a separate surface.",
       "properties": {
         "background": { "$ref": "#/$defs/surface" },
         "bar": { "$ref": "#/$defs/surface" },

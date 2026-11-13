@@ -96,6 +96,7 @@ unless `animated: true` is set (reduced-motion by default).
 | `UiState` | State placeholder | `kind`: `loading` / `error` / `empty`, `message` |
 | `UiTooltip` | Host-owned tooltip | `target` (required `Item`), `text`, `delay` (default 500 ms), `timeout` (0 = until trigger ends), `preferredSide`: `auto` / `above` / `below` / `left` / `right` |
 | `UiPopover` | Host-owned anchored panel | `target` (required `Item`, the trigger/anchor), `accessibleName`, `preferredSide` (same values as `UiTooltip`), `contentPadding`, `initialFocusItem`; default content slot; `open()` / `close()` / `toggle()`, read-only-by-convention `actualSide` |
+| `UiStack` | Adaptive row/column layout | `orientation` (`horizontal` / `vertical`), `compact`, `spacing`; children stack vertically when `orientation` is `vertical` or `compact` is set |
 
 Tooltips are host-owned: set `tooltipText` on `UiButton`, `UiToggle` or
 `UiSlider`, or attach a `UiTooltip { target: someItem; text: "…" }` to
@@ -172,6 +173,69 @@ UiCard {
     UiState { kind: "empty"; message: "No data yet" }
 }
 ```
+
+## Host context
+
+The same plugin must render correctly in a horizontal top/bottom
+bar, a vertical left/right rail, a dashboard card and a desktop card
+without hardcoding sizes. The host that renders a placement knows
+which surface that is, so it injects this context into the
+entrypoint root. Injection is opt-in and additive: declare any of
+these properties on the entrypoint's root item and the host keeps
+them bound to the real surface values (live across edge, thickness
+and layout changes); declare none and nothing changes — every
+previously shipped plugin keeps working unchanged. Always give the
+properties defaults that match your current layout, so the plugin
+also renders sensibly before/without injection.
+
+| Property | Type | Meaning |
+| --- | --- | --- |
+| `hostOrientation` | `string` | `horizontal` or `vertical` main axis of the surface |
+| `hostEdge` | `string` | Bar edge: `top` / `bottom` / `left` / `right`; `none` on edge-less surfaces (dashboard, desktop) |
+| `hostSurface` | `string` | `bar` / `dashboard` / `desktop` |
+| `hostAvailableWidth` | `int` | Logical pixels the host allows on the width axis — exactly the cap it enforces, so honouring it means no clipping (0 = uncapped) |
+| `hostAvailableHeight` | `int` | Same for height (0 = uncapped, e.g. scrolling dashboard cards) |
+| `hostCompact` | `bool` | Narrow surface: any vertical rail, or a horizontal bar under the shell's compact width breakpoint. Drop secondary labels and stack rows when set |
+| `hostScreenName` | `string` | Display hosting this instance (a bar/desktop plugin is instantiated once per screen); empty when not screen-bound |
+
+Sizes are logical pixels, already corrected for output scale by Qt,
+so one layout serves every scale. On the bar, the cross-axis
+available size is the bar's configured content thickness and the
+main-axis cap is 240; dashboard cards report 380 wide and desktop
+cards 300 wide, both with uncapped height.
+
+Never force a horizontal multi-button row into a vertical rail:
+bind a `UiStack` to the context and it stacks for you.
+
+```qml
+import QtQuick
+import Hornero.PluginKit
+
+Item {
+    // Opt in to host context; defaults = roomy horizontal surface.
+    property string hostOrientation: "horizontal"
+    property bool hostCompact: false
+    property int hostAvailableWidth: 0
+
+    implicitWidth: stack.implicitWidth
+    implicitHeight: stack.implicitHeight
+
+    UiStack {
+        id: stack
+        orientation: parent.hostOrientation
+        compact: parent.hostCompact
+        UiButton { text: "Play"; accessibleName: "Play"; onClicked: Media.playPause() }
+        UiButton { text: "Next"; accessibleName: "Next track"; onClicked: Media.next() }
+    }
+}
+```
+
+`examples/plugins/example-clock` shows the minimal opt-in (it drops
+the weekday when `hostCompact`). Evidence note: this contract is
+covered by unit/host tests (`tests/test_plugin_host_context.py`)
+over all four edges and surfaces; no live compositor run on
+multi-monitor hardware backs it yet, so treat on-screen behaviour at
+unusual scales as contract-tested, not compositor-verified.
 
 The manifest schema is
 [`schemas/plugin-manifest.schema.json`](../schemas/plugin-manifest.schema.json)

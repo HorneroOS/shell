@@ -76,10 +76,15 @@ def test_all_rendering_placements_inherit_themed_foreground_and_clip():
         assert "palette.windowText: Colours.palette.m3onSurface" in block
         assert "clip: true" in block
     # Vertical bars cap plugin width so single-line bar plugins cannot
-    # overflow the pill; horizontal bars get a sane maximum too.
+    # overflow the pill; horizontal bars get a sane maximum too. Since
+    # #372 the caps are the host's reported available space (cross-axis
+    # from the bar's real thickness, 64 fallback; main-axis 240), not
+    # literals duplicated at the Loader.
     bar = _loader_block(WIDGETS)
-    assert "Layout.maximumWidth: root.vertical ? 64 : 240" in bar
-    assert "Layout.maximumHeight: root.vertical ? 240 : 64" in bar
+    assert "Layout.maximumWidth: root.availableWidth" in bar
+    assert "Layout.maximumHeight: root.availableHeight" in bar
+    assert "thickness > 0 ? thickness : 64" in WIDGETS
+    assert "availableMain: 240" in WIDGETS
 
 
 def test_bar_placement_contract():

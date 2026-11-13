@@ -42,10 +42,48 @@ activates the current row and the Escape cascade
 | Apps | *(default)* | Existing app search and frecency ordering. |
 | Calculator | `>calc <expr>` | Safe arithmetic with the shell's own parser (below). Enter/click copies the result and closes the launcher, the historic convention for this row. |
 | Windows | `>win <query>` | Lists open windows (title, app class, workspace) from `Hypr.toplevels` — the same toplevel source the bar uses — filtered case-insensitively on title/class in compositor order. Activation focuses through the shell's existing path, `Hypr.dispatch("focuswindow address:0x…")`; no new IPC. Hyprland-only today; Niri rows arrive with its window read model. |
+| Files | `>file <query>` | Bounded, on-demand file search (below). Section `Files`; rows show the file name and its parent path, for files and directories alike. Activation opens the path with `xdg-open`, the shell's existing open-path convention. |
 
-File search (`>file`) and inline AI (`>ai`) predate the registry
-and keep their existing states in this slice; they migrate onto
-the registry incrementally, with no behaviour change intended.
+Inline AI (`>ai`) predates the registry and keeps its existing
+state; it migrates onto the registry incrementally, with no
+behaviour change intended.
+
+## File search and privacy
+
+The file provider (`modules/launcher/services/Files.qml`, pure
+logic in `filesearch.js`) is deliberately bounded:
+
+- **Roots.** Only the XDG user dirs (Documents, Downloads,
+  Desktop, Pictures, Music, Videos — `XDG_*_DIR` env override,
+  else `~/Name`, the `Paths.qml` convention) plus the home
+  directory's top level. Nothing else on the filesystem is
+  ever a search root.
+- **Depth and result caps.** At most 4 levels below a user dir
+  (1 below home) and at most 50 results, ranked exact-name,
+  then name-prefix, then name-substring, then parent-path
+  matches, shallower paths first.
+- **Exclusions.** Hidden dot-directories and dot-files are
+  pruned before descent, as are sensitive names wherever they
+  appear: `.ssh`, `.gnupg`, `.aws`, `.azure`, `.gcp`, `.kube`,
+  `.docker`, `credentials`, `secrets`, `private`, SSH key files
+  (`id_rsa*`, `id_ed25519*`, …) and key/cert stores (`*.pem`,
+  `*.key`, `*.p12`, `*.pfx`, `*.kdbx`). A credential area under
+  `.config` is unreachable both as hidden and as sensitive.
+- **Symlinks.** The search never follows symlinks (`find`
+  without `-L`); a symlink itself is never returned, and ranked
+  results whose resolved target would escape the allowed roots
+  are dropped, so a link inside a user dir cannot surface files
+  outside it.
+- **No daemon, no crawling.** There is no index and no
+  background scan: a search runs only for the current query,
+  after a 250 ms debounce, as a direct `find` argv (no shell, so
+  the query cannot be interpreted by one). Typing a new query
+  cancels the running search, and results from a superseded
+  query never publish.
+- **Degradation.** A missing, unreadable or empty root simply
+  contributes no rows. The provider never raises an error into
+  the launcher, and queries shorter than 2 characters search
+  nothing.
 
 ## Calculator
 

@@ -23,54 +23,6 @@ StyledListView {
         onValuesChanged: root.currentIndex = 0
     }
 
-    // File provider (shell#250 slice 2): bounded, on-demand find over
-    // the XDG user dirs — no indexing daemon, capped results, and the
-    // query is passed as a single -iname pattern with quotes stripped.
-    property list<string> fileResults: []
-    property string fileStatus: ""
-
-    function runFileSearch(): void {
-        const q = search.text.slice(`${Config.launcher.actionPrefix}file `.length).trim().replace(/['"\\]/g, "");
-        if (q.length < 2) {
-            fileResults = [];
-            fileStatus = q.length === 0 ? "" : qsTr("Type at least 2 characters");
-            return;
-        }
-        fileStatus = qsTr("Searching…");
-        const home = Quickshell.env("HOME");
-        const dirs = ["Documents", "Downloads", "Desktop", "Pictures", "Music", "Videos"].map(d => `${home}/${d}`).join(" ");
-        fileProc.command = ["sh", "-c", `find ${dirs} -maxdepth 4 -type f -iname '*${q}*' 2>/dev/null | head -50`];
-        fileProc.running = true;
-    }
-
-    Process {
-        id: fileProc
-
-        property string out: ""
-
-        stdout: SplitParser {
-            onRead: data => {
-                fileProc.out += data + "\n";
-            }
-        }
-        onExited: (exitCode, exitStatus) => {
-            // Only touch fileResults: the file state's PropertyChanges
-            // binding publishes it to the model. Assigning model.values
-            // here too broke that binding and the list fell back to
-            // empty a frame later (observed live: count 1 -> 0).
-            root.fileResults = fileProc.out.split("\n").map(s => s.trim()).filter(s => s.length > 0);
-            root.fileStatus = root.fileResults.length === 0 ? qsTr("No files found") : "";
-            fileProc.out = "";
-        }
-    }
-
-    Timer {
-        id: fileDebounce
-
-        interval: 250
-        onTriggered: root.runFileSearch()
-    }
-
     spacing: Appearance.spacing.small
     orientation: Qt.Vertical
     // The ai state's single delegate grows with the streamed answer;
@@ -108,7 +60,7 @@ StyledListView {
             // action keeps its historic state below. No prefix
             // match anywhere still means the default apps flow.
             const providerState = Providers.stateFor(text);
-            if (providerState === "calc" || providerState === "win")
+            if (providerState === "calc" || providerState === "win" || providerState === "file")
                 return providerState;
             // Plugin-defined providers (surfaces.launcher): any
             // other registered provider id routes to the generic
@@ -126,16 +78,9 @@ StyledListView {
         return "apps";
     }
 
-    Connections {
-        target: root.search
-
-        function onTextChanged(): void {
-            if (root.state === "file")
-                fileDebounce.restart();
-        }
-    }
-
     onStateChanged: {
+        if (state !== "file")
+            Files.cancel();
         if (state === "scheme" || state === "variant")
             Schemes.reload();
         if (state === "appearance")
@@ -187,7 +132,7 @@ StyledListView {
             name: "file"
 
             PropertyChanges {
-                model.values: root.fileResults
+                model.values: Providers.query(search.text)
                 root.delegate: fileItem
             }
         },

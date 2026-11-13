@@ -1,23 +1,27 @@
+import "../services"
 import qs.components
 import qs.services
 import qs.config
-import Quickshell
 import QtQuick
 import QtQuick.Layouts
 
-// Launcher file provider row (shell#250 slice 2): one bounded find
-// result. Click opens the file with the system handler.
+// Launcher file provider row (shell#250 slice 2, on the provider
+// registry): one bounded, ranked file result shaped
+// { providerId, section, icon, title, subtitle, payload }, where
+// title is the file name and subtitle its parent path. Activation
+// goes through the registry (Providers.activate), which opens the
+// path with xdg-open, the shell's existing open-path convention.
 Item {
     id: root
 
     required property var list
-    required property string modelData
+    required property var modelData
 
-    readonly property string fileName: root.modelData.split("/").pop() ?? root.modelData
+    readonly property string fileName: root.modelData?.title ?? root.modelData?.payload?.name ?? ""
+    readonly property string parentPath: root.modelData?.subtitle ?? root.modelData?.payload?.parent ?? ""
 
     function onClicked(): void {
-        Quickshell.execDetached(["xdg-open", root.modelData]);
-        root.list.visibilities.launcher = false;
+        Providers.activate(root.modelData, root.list);
     }
 
     implicitHeight: Config.launcher.sizes.itemHeight
@@ -44,7 +48,7 @@ Item {
         spacing: Appearance.spacing.normal
 
         MaterialIcon {
-            text: "description"
+            text: root.modelData?.icon ?? "description"
             font.pointSize: Appearance.font.size.extraLarge
             Layout.alignment: Qt.AlignVCenter
         }
@@ -63,7 +67,7 @@ Item {
 
             StyledText {
                 Layout.fillWidth: true
-                text: root.modelData
+                text: root.parentPath
                 font.pointSize: Appearance.font.size.small
                 color: Colours.palette.m3onSurfaceVariant
                 elide: Text.ElideMiddle

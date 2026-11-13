@@ -2,6 +2,7 @@ pragma Singleton
 
 import "launcherplugin.js" as LauncherPlugin
 import qs.config
+import qs.services
 import Quickshell
 import QtQuick
 
@@ -21,7 +22,7 @@ import QtQuick
 // not replace the AppList state machine or drawer lifecycle.
 //
 // Registration point: registerProvider(spec) below. Built-in
-// providers (apps, calc, windows, files) register at startup.
+// providers (apps, calc, windows, files, ai) register at startup.
 // Plugin-defined providers (surfaces.launcher) are hosted by
 // modules/plugins/PluginLauncherHost.qml, which registers each
 // hosted plugin here AFTER the built-ins (see builtinsRegistered)
@@ -234,6 +235,34 @@ Singleton {
                 Files.activate(result);
                 if (list)
                     list.visibilities.launcher = false;
+            }
+        });
+        registerProvider({
+            "id": "ai",
+            "prefix": "ai",
+            "icon": "raven",
+            "section": "ai",
+            // Inline ask (shell#250 slice 3): one row for the
+            // question; the AiItem delegate renders the streamed
+            // answer from the InlineAsk singleton, so this query
+            // only snapshots the current question. Activation
+            // toggles ask/stop and never closes the launcher --
+            // the answer arrives in place.
+            "query": text => [{
+                        "providerId": "ai",
+                        "section": "ai",
+                        "icon": "raven",
+                        "title": text,
+                        "subtitle": InlineAsk.busy ? qsTr("Javi is thinking…") : "",
+                        "payload": {
+                            "question": text
+                        }
+                    }],
+            "activate": (result, list) => {
+                if (InlineAsk.busy)
+                    InlineAsk.stop();
+                else
+                    InlineAsk.ask((result.payload?.question ?? result.title ?? "").toString());
             }
         });
         root.builtinsRegistered = true;

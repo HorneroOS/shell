@@ -16,7 +16,11 @@ Item {
     readonly property string question: list.search.text.slice(`${Config.launcher.actionPrefix}ai `.length).trim()
 
     function onClicked(): void {
-        if (InlineAsk.busy)
+        // A failed ask is never a dead end: activating the row
+        // falls back to the previous summon-Javi behaviour.
+        if (InlineAsk.failed)
+            InlineAsk.openInJavi(root.list);
+        else if (InlineAsk.busy)
             InlineAsk.stop();
         else
             InlineAsk.ask(root.question);
@@ -28,7 +32,7 @@ Item {
     anchors.right: parent?.right
 
     Accessible.role: Accessible.Button
-    Accessible.name: InlineAsk.busy ? qsTr("Stop Javi") : (root.question !== "" ? qsTr("Ask Javi: %1").arg(root.question) : qsTr("Ask Javi"))
+    Accessible.name: InlineAsk.failed ? qsTr("Open this question in the Javi chat") : (InlineAsk.busy ? qsTr("Stop Javi") : (root.question !== "" ? qsTr("Ask Javi: %1").arg(root.question) : qsTr("Ask Javi")))
 
     StateLayer {
         radius: Appearance.rounding.normal
@@ -63,6 +67,8 @@ Item {
                 text: {
                     if (InlineAsk.busy)
                         return qsTr("Javi is thinking… (click to stop)");
+                    if (InlineAsk.failed)
+                        return qsTr("Open this question in the Javi chat instead");
                     if (root.question !== "")
                         return qsTr("Ask Javi: %1").arg(root.question);
                     return qsTr("Type a question after %1ai").arg(Config.launcher.actionPrefix);

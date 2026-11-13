@@ -23,11 +23,17 @@ while it is known.
 
 The launcher can also ask inline (shell#250 slice 3): `>ai <question>`
 streams the answer inside the launcher via
-`services/InlineAsk.qml` (a shell-lifetime singleton, so the answer survives the launcher drawer closing), using the same
-`horneroctl assistant ask --json --stream` path. It is deliberately
+`services/InlineAsk.qml` (a shell-lifetime singleton; only the last
+question/answer is kept in memory, nothing is persisted), using the same
+`horneroctl assistant ask --json --stream` path, registered as the
+`ai` provider on the launcher's provider registry. It is deliberately
 one-shot: no history, no attachments, and approvals/clarifications
-are never answered there — the final payload message points the user
-at the chat panel.
+are never answered there — a failed or pending run turns the row
+into a fallback that summons this chat panel with the same question
+(the pre-inline `>ai` behaviour). Closing the launcher or leaving
+the `>ai` route cancels an in-flight inline run. See
+`docs/LAUNCHER.md`, "Inline AI", for modes, privacy and the
+documented `--mode` gap.
 
 The native chat panel (`ChatPanel.qml`,
 `qs ipc call companion chat`) is a scrollable bubble conversation

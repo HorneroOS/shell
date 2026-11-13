@@ -75,6 +75,46 @@ are **not sandboxed**. Declared `capabilities` are review-only disclosures,
 not runtime enforcement. No AI quota is exposed by PluginKit; any AI quota
 is unknown and must not be assumed or displayed as a known value.
 
+## UI primitives
+
+PluginKit also exposes native extension design-system primitives
+(`Hornero.PluginKit` 1.0). They use only `Theme` tokens — no hardcoded
+colors — and interactive controls declare accessible names and a
+visible focus indication. Indeterminate progress does not animate
+unless `animated: true` is set (reduced-motion by default).
+
+| Type | Purpose | Key properties |
+| --- | --- | --- |
+| `UiText` | Typography | `role`: `title` / `body` / `caption`, `text` |
+| `UiCard` | Surface container | `padding`; default content slot |
+| `UiButton` | Action button | `text`, `variant`: `primary` / `ghost`, `tooltipText`, `accessibleName` |
+| `UiToggle` | Boolean switch | `value` (two-way synced with `checked`), `text`, `accessibleName`; inherits `toggled()` from `Switch`/`AbstractButton` (no argument — read `checked`/`value` in `onToggled`) |
+| `UiSlider` | Range input | `from`, `to`, `value`, `accessibleName` (defaults to `Slider`) |
+| `UiMetric` | Labelled metric | `label`, `value`, optional `unit` |
+| `UiChip` | Small label chip | `text`, `tone`: `neutral` / `primary` / `error` |
+| `UiProgress` | Progress bar | `value` (0..1), `indeterminate`, `animated` (default `false`) |
+| `UiState` | State placeholder | `kind`: `loading` / `error` / `empty`, `message` |
+
+Usage example:
+
+```qml
+import QtQuick
+import Hornero.PluginKit
+
+UiCard {
+    UiMetric { label: "CPU"; value: "42"; unit: "%" }
+    UiProgress { value: 0.42 }
+    UiButton {
+        text: "Refresh"
+        tooltipText: "Reload data"
+        accessibleName: "Refresh"
+        onClicked: Notifications.toast("Example", "Refreshed", "")
+    }
+    UiToggle { text: "Enabled"; accessibleName: "Enabled"; onToggled: () => print(checked) }
+    UiState { kind: "empty"; message: "No data yet" }
+}
+```
+
 The manifest schema is
 [`schemas/plugin-manifest.schema.json`](../schemas/plugin-manifest.schema.json)
 and the local checker is `scripts/validate_plugin.py`.

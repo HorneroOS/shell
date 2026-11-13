@@ -80,11 +80,15 @@ def test_file_provider_bounded_and_opens_via_xdg():
     m = re.search(r'name:\s*"Files".*?command:\s*\[(.*?)\]',
                   DEFAULTS, re.DOTALL)
     assert m and '"autocomplete", "file"' in m.group(1)
-    assert '"file"' in APPLIST and "runFileSearch" in APPLIST
-    # Bounded by design: depth cap, result cap, XDG dirs only.
-    assert "-maxdepth 4" in APPLIST and "head -50" in APPLIST
+    assert '"file"' in APPLIST
+    # Slice 2 registry migration: the bounded logic moved from
+    # AppList into the Files provider service (contract preserved,
+    # see tests/test_launcher_files.py for executable bounds).
+    files = (ROOT / "modules" / "launcher" / "services" / "Files.qml").read_text()
+    assert "buildFindArgs" in files and "rankResults" in files
+    assert '"xdg-open"' in files
     item = (ROOT / "modules" / "launcher" / "items" / "FileItem.qml").read_text()
-    assert '"xdg-open"' in item
+    assert "Providers.activate" in item
 
 
 def test_transition_never_snapshots_model_values():

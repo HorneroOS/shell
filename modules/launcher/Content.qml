@@ -95,6 +95,8 @@ Item {
                     } else if (text.startsWith(Config.launcher.actionPrefix)) {
                         if (text.startsWith(`${Config.launcher.actionPrefix}calc `))
                             currentItem.onClicked();
+                        else if (text.startsWith(`${Config.launcher.actionPrefix}file `))
+                            currentItem.onClicked();
                         else if (text.startsWith(`${Config.launcher.actionPrefix}ai `)) {
                             // Inline ask (shell#250 slice 3): activate
                             // the AiItem, which streams the answer in

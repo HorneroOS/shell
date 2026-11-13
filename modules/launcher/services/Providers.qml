@@ -21,7 +21,7 @@ import QtQuick
 // not replace the AppList state machine or drawer lifecycle.
 //
 // Registration point: registerProvider(spec) below. Built-in
-// providers (apps, calc, windows) register at startup.
+// providers (apps, calc, windows, files) register at startup.
 // Plugin-defined providers (surfaces.launcher) are hosted by
 // modules/plugins/PluginLauncherHost.qml, which registers each
 // hosted plugin here AFTER the built-ins (see builtinsRegistered)
@@ -204,6 +204,34 @@ Singleton {
                     })),
             "activate": (result, list) => {
                 Windows.activate(result.payload);
+                if (list)
+                    list.visibilities.launcher = false;
+            }
+        });
+        registerProvider({
+            "id": "file",
+            "prefix": "file",
+            "icon": "folder_open",
+            "section": "Files",
+            // Async provider: requestSearch is debounced and
+            // idempotent per query text; this returns the current
+            // ranked snapshot and re-evaluates when Files.results
+            // changes. Activation opens via xdg-open, the shell's
+            // existing open-path convention (FileItem before the
+            // registry did exactly this).
+            "query": text => {
+                Files.requestSearch(text);
+                return Files.results.map(e => ({
+                            "providerId": "file",
+                            "section": "Files",
+                            "icon": e.isDir ? "folder_open" : "description",
+                            "title": e.name,
+                            "subtitle": e.parent,
+                            "payload": e
+                        }));
+            },
+            "activate": (result, list) => {
+                Files.activate(result);
                 if (list)
                     list.visibilities.launcher = false;
             }

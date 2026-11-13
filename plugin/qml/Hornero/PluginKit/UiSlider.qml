@@ -5,6 +5,7 @@ Slider {
     id: root
 
     property string accessibleName: "Slider"
+    property string tooltipText: ""
 
     from: 0
     to: 1
@@ -12,6 +13,12 @@ Slider {
 
     Accessible.name: root.accessibleName
     Accessible.role: Accessible.Slider
+    Accessible.description: root.tooltipText
+
+    UiTooltip {
+        target: root
+        text: root.tooltipText
+    }
 
     opacity: root.enabled ? 1 : 0.5
 

@@ -10,10 +10,12 @@ Button {
 
     Accessible.name: root.accessibleName
     Accessible.role: Accessible.Button
+    Accessible.description: root.tooltipText
 
-    ToolTip.text: root.tooltipText
-    ToolTip.visible: root.hovered && root.tooltipText.length > 0
-    ToolTip.delay: 500
+    UiTooltip {
+        target: root
+        text: root.tooltipText
+    }
 
     contentItem: Text {
         text: root.text

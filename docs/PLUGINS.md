@@ -88,12 +88,25 @@ unless `animated: true` is set (reduced-motion by default).
 | `UiText` | Typography | `role`: `title` / `body` / `caption`, `text` |
 | `UiCard` | Surface container | `padding`; default content slot |
 | `UiButton` | Action button | `text`, `variant`: `primary` / `ghost`, `tooltipText`, `accessibleName` |
-| `UiToggle` | Boolean switch | `value` (two-way synced with `checked`), `text`, `accessibleName`; inherits `toggled()` from `Switch`/`AbstractButton` (no argument — read `checked`/`value` in `onToggled`) |
-| `UiSlider` | Range input | `from`, `to`, `value`, `accessibleName` (defaults to `Slider`) |
+| `UiToggle` | Boolean switch | `value` (two-way synced with `checked`), `text`, `tooltipText`, `accessibleName`; inherits `toggled()` from `Switch`/`AbstractButton` (no argument — read `checked`/`value` in `onToggled`) |
+| `UiSlider` | Range input | `from`, `to`, `value`, `tooltipText`, `accessibleName` (defaults to `Slider`) |
 | `UiMetric` | Labelled metric | `label`, `value`, optional `unit` |
 | `UiChip` | Small label chip | `text`, `tone`: `neutral` / `primary` / `error` |
 | `UiProgress` | Progress bar | `value` (0..1), `indeterminate`, `animated` (default `false`) |
 | `UiState` | State placeholder | `kind`: `loading` / `error` / `empty`, `message` |
+| `UiTooltip` | Host-owned tooltip | `target` (required `Item`), `text`, `delay` (default 500 ms), `timeout` (0 = until trigger ends), `preferredSide`: `auto` / `above` / `below` / `left` / `right` |
+
+Tooltips are host-owned: set `tooltipText` on `UiButton`, `UiToggle` or
+`UiSlider`, or attach a `UiTooltip { target: someItem; text: "…" }` to
+any item. They show on hover **and** keyboard focus after the same
+delay, Escape dismisses them until the trigger is left and re-entered,
+and placement covers all four bar edges plus dashboard, popovers and
+desktop surfaces — the side flips when it would clip and the tooltip
+stays clamped inside its surface across moves, resizes and scale
+changes. The text is also exposed as the trigger's accessible
+description. Never put interactive content in a tooltip, and never
+rely on one for essential information: anything a tooltip says must
+also be visible (or otherwise available) elsewhere.
 
 Usage example:
 

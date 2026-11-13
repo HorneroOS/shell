@@ -492,11 +492,210 @@ def _validate_setting(key: str, setting: dict) -> None:
         )
 
 
+# Marketplace metadata (shell#379): static discovery/detail data the
+# Extensions pane renders WITHOUT executing plugin code — screenshots
+# are plain image files shipped in the package (never QML, SVG or
+# animated formats the shell would have to interpret), plus declared
+# shell compatibility, a short version history, and a deprecation /
+# replaced-by state. Optional in every schema version; declaring it
+# grants no privilege and changes no lifecycle: install, update and
+# rollback still go through the existing horneroctl verified
+# provenance contracts only (shell#251/#366).
+MARKETPLACE_SCREENSHOT_SUFFIXES = (".png", ".jpg", ".jpeg", ".webp")
+MARKETPLACE_MAX_SCREENSHOTS = 6
+MARKETPLACE_MAX_CHANGELOG = 20
+
+
+def _semver_key(version: str) -> tuple:
+    core, _, prerelease = version.split("+", 1)[0].partition("-")
+    numbers = tuple(int(part) for part in core.split("."))
+    # A release outranks any prerelease of the same core; prerelease
+    # identifiers compare dot-by-dot (numeric identifiers numerically).
+    if not prerelease:
+        return (numbers, (1,))
+    parts = tuple(
+        (0, int(part), "") if part.isdigit() else (1, 0, part)
+        for part in prerelease.split(".")
+    )
+    return (numbers, (0,) + parts)
+
+
+def _validate_marketplace(manifest: dict, safe_files: set[str], plugin_id: str) -> None:
+    if "marketplace" not in manifest:
+        return
+    marketplace = _object(manifest["marketplace"], "marketplace")
+    extra = set(marketplace) - {"screenshots", "compatibility", "changelog", "deprecation"}
+    if extra:
+        raise ValidationError(
+            f"marketplace contains unknown fields: {', '.join(sorted(extra))} "
+            "(marketplace names only screenshots, compatibility, changelog "
+            "and deprecation)"
+        )
+    if not marketplace:
+        raise ValidationError(
+            "marketplace must declare at least one of screenshots, "
+            "compatibility, changelog or deprecation (remove the empty "
+            "\"marketplace\": {} instead)"
+        )
+    if "screenshots" in marketplace:
+        screenshots = marketplace["screenshots"]
+        if (
+            not isinstance(screenshots, list)
+            or not screenshots
+            or len(screenshots) > MARKETPLACE_MAX_SCREENSHOTS
+        ):
+            raise ValidationError(
+                f"marketplace.screenshots must list 1 to {MARKETPLACE_MAX_SCREENSHOTS} screenshots"
+            )
+        seen_paths: set[str] = set()
+        for index, raw in enumerate(screenshots):
+            where = f"marketplace.screenshots[{index}]"
+            shot = _object(raw, where)
+            shot_extra = set(shot) - {"path", "alt"}
+            if shot_extra:
+                raise ValidationError(
+                    f"{where} contains unknown fields: {', '.join(sorted(shot_extra))} "
+                    "(a screenshot names only path and optional alt)"
+                )
+            if "path" not in shot:
+                raise ValidationError(f"{where}.path is required (a static image file shipped in files)")
+            path = _safe_relative(shot["path"], f"{where}.path")
+            if not path.lower().endswith(MARKETPLACE_SCREENSHOT_SUFFIXES):
+                raise ValidationError(
+                    f"{where}.path must be a static image ({', '.join(MARKETPLACE_SCREENSHOT_SUFFIXES)}); "
+                    "previews are rendered as plain images without executing "
+                    "plugin code, so QML/SVG/animated previews are not allowed"
+                )
+            if path not in safe_files:
+                raise ValidationError(
+                    f"{where}.path must be listed in files (add {path!r} to files)"
+                )
+            if path in seen_paths:
+                raise ValidationError("marketplace.screenshots must not repeat a path")
+            seen_paths.add(path)
+            if "alt" in shot:
+                _string(shot["alt"], f"{where}.alt", 160)
+    if "compatibility" in marketplace:
+        compatibility = _object(marketplace["compatibility"], "marketplace.compatibility")
+        compat_extra = set(compatibility) - {"minShellVersion", "maxShellVersion"}
+        if compat_extra:
+            raise ValidationError(
+                f"marketplace.compatibility contains unknown fields: "
+                f"{', '.join(sorted(compat_extra))} (compatibility names only "
+                "minShellVersion and maxShellVersion)"
+            )
+        if not compatibility:
+            raise ValidationError(
+                "marketplace.compatibility must declare minShellVersion "
+                "and/or maxShellVersion"
+            )
+        for bound in ("minShellVersion", "maxShellVersion"):
+            if bound in compatibility:
+                value = _string(compatibility[bound], f"marketplace.compatibility.{bound}", 80)
+                if not SEMVER.fullmatch(value):
+                    raise ValidationError(
+                        f"marketplace.compatibility.{bound} must be semantic versioning"
+                    )
+        if (
+            "minShellVersion" in compatibility
+            and "maxShellVersion" in compatibility
+            and _semver_key(compatibility["minShellVersion"])
+            > _semver_key(compatibility["maxShellVersion"])
+        ):
+            raise ValidationError(
+                "marketplace.compatibility.minShellVersion must not exceed maxShellVersion"
+            )
+    if "changelog" in marketplace:
+        changelog = marketplace["changelog"]
+        if (
+            not isinstance(changelog, list)
+            or not changelog
+            or len(changelog) > MARKETPLACE_MAX_CHANGELOG
+        ):
+            raise ValidationError(
+                f"marketplace.changelog must list 1 to {MARKETPLACE_MAX_CHANGELOG} entries "
+                "(newest first)"
+            )
+        seen_versions: set[str] = set()
+        for index, raw in enumerate(changelog):
+            where = f"marketplace.changelog[{index}]"
+            entry = _object(raw, where)
+            entry_extra = set(entry) - {"version", "notes"}
+            if entry_extra:
+                raise ValidationError(
+                    f"{where} contains unknown fields: {', '.join(sorted(entry_extra))} "
+                    "(a changelog entry names only version and notes)"
+                )
+            if not {"version", "notes"} <= set(entry):
+                raise ValidationError(f"{where} must contain version and notes")
+            version = _string(entry["version"], f"{where}.version", 80)
+            if not SEMVER.fullmatch(version):
+                raise ValidationError(f"{where}.version must be semantic versioning")
+            if version in seen_versions:
+                raise ValidationError("marketplace.changelog must not repeat a version")
+            seen_versions.add(version)
+            _string(entry["notes"], f"{where}.notes", 1000)
+    if "deprecation" in marketplace:
+        deprecation = _object(marketplace["deprecation"], "marketplace.deprecation")
+        dep_extra = set(deprecation) - {"message", "replacedBy"}
+        if dep_extra:
+            raise ValidationError(
+                f"marketplace.deprecation contains unknown fields: "
+                f"{', '.join(sorted(dep_extra))} (deprecation names only "
+                "optional message and replacedBy; its presence alone "
+                "already means deprecated)"
+            )
+        if "message" in deprecation:
+            _string(deprecation["message"], "marketplace.deprecation.message", 280)
+        if "replacedBy" in deprecation:
+            replaced_by = deprecation["replacedBy"]
+            if not isinstance(replaced_by, str) or not ID.fullmatch(replaced_by):
+                raise ValidationError(
+                    "marketplace.deprecation.replacedBy must be a plugin id "
+                    "(lowercase letters, digits, and internal hyphens)"
+                )
+            if replaced_by == plugin_id:
+                raise ValidationError(
+                    "marketplace.deprecation.replacedBy must not name the "
+                    "plugin itself"
+                )
+
+
+def effective_marketplace(manifest: dict) -> dict | None:
+    """Normalized marketplace metadata for an already-valid manifest.
+
+    Returns None when the package declares none (the pre-#379 shape,
+    which stays valid and renders exactly as before). The returned
+    shape mirrors Plugins.normalizeMarketplace in
+    services/Plugins.qml: screenshots keep path plus optional alt,
+    deprecation presence means deprecated.
+    """
+    marketplace = manifest.get("marketplace")
+    if not isinstance(marketplace, dict) or not marketplace:
+        return None
+    effective: dict[str, object] = {}
+    if "screenshots" in marketplace:
+        effective["screenshots"] = [
+            {key: shot[key] for key in ("path", "alt") if key in shot}
+            for shot in marketplace["screenshots"]
+        ]
+    if "compatibility" in marketplace:
+        effective["compatibility"] = dict(marketplace["compatibility"])
+    if "changelog" in marketplace:
+        effective["changelog"] = [
+            {"version": entry["version"], "notes": entry["notes"]}
+            for entry in marketplace["changelog"]
+        ]
+    if "deprecation" in marketplace:
+        effective["deprecation"] = dict(marketplace["deprecation"])
+    return effective or None
+
+
 def _validate_manifest(manifest: dict, root: Path) -> None:
     allowed = {
         "schemaVersion", "id", "name", "version", "description", "author",
         "license", "homepage", "entrypoint", "files", "capabilities", "placement",
-        "signing", "surfaces", "translations",
+        "signing", "surfaces", "translations", "marketplace",
     }
     unknown = manifest.keys() - allowed
     missing = {
@@ -558,6 +757,10 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
     # Plugin translations (shell#375): optional in every schema
     # version; pre-#375 manifests without the field stay valid.
     translations_declaration = _validate_translations_declaration(manifest, set(safe_files))
+
+    # Marketplace metadata (shell#379): optional in every schema
+    # version; pre-#379 manifests without the field stay valid.
+    _validate_marketplace(manifest, set(safe_files), plugin_id)
 
     capabilities = _object(manifest["capabilities"], "capabilities")
     # `actions` is the optional horneroctl plugin-broker declaration

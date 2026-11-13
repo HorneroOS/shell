@@ -11,8 +11,26 @@
     "Main.qml",
     "README.md",
     "LICENSE",
-    "translations/es.json"
+    "translations/es.json",
+    "previews/clock.png"
   ],
+  "marketplace": {
+    "screenshots": [
+      {
+        "path": "previews/clock.png",
+        "alt": "Example Clock showing the current time in the bar"
+      }
+    ],
+    "compatibility": {
+      "minShellVersion": "1.0.0"
+    },
+    "changelog": [
+      {
+        "version": "1.0.0",
+        "notes": "Initial example release."
+      }
+    ]
+  },
   "translations": {
     "sourceLocale": "en",
     "locales": ["es"],

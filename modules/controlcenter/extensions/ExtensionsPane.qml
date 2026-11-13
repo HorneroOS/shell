@@ -106,7 +106,7 @@ Item {
         const query = root.catalogSearch.trim().toLowerCase();
         if (!query)
             return root.catalogEntries;
-        return root.catalogEntries.filter(entry => [entry.name, entry.description, entry.author, entry.category, entry.placement]
+        return root.catalogEntries.filter(entry => [entry.name, entry.id, entry.description, entry.author, entry.category, entry.placement]
             .some(value => String(value || "").toLowerCase().includes(query)));
     }
 
@@ -124,6 +124,128 @@ Item {
             .arg(commands.length ? commands.join(", ") : qsTr("None declared"))
             .arg(hosts.length ? hosts.join(", ") : qsTr("None declared"))
             .arg(settingsSummary || qsTr("None declared"));
+    }
+
+    // Marketplace metadata (shell#379): installed entries carry the
+    // host-normalized entry.marketplace (Plugins.markMarketplace,
+    // recorded from manifest.json without loading any entrypoint);
+    // catalogue entries may carry the same shape in the horneroctl
+    // catalogue JSON, normalized here on read. Absent or malformed
+    // metadata yields null and the row renders exactly as before.
+    function pluginMarketplace(entry): var {
+        return Plugins.normalizeMarketplace(entry ? entry.marketplace : null);
+    }
+
+    function isDeprecated(entry): bool {
+        const marketplace = root.pluginMarketplace(entry);
+        return !!(marketplace && marketplace.deprecation);
+    }
+
+    function replacedById(entry): string {
+        const marketplace = root.pluginMarketplace(entry);
+        return marketplace && marketplace.deprecation && marketplace.deprecation.replacedBy ? String(marketplace.deprecation.replacedBy) : "";
+    }
+
+    function deprecationText(entry): string {
+        const marketplace = root.pluginMarketplace(entry);
+        if (!marketplace || !marketplace.deprecation)
+            return "";
+        const lines = [qsTr("Deprecated.")];
+        if (marketplace.deprecation.message)
+            lines.push(String(marketplace.deprecation.message));
+        if (marketplace.deprecation.replacedBy)
+            lines.push(qsTr("Replaced by: %1").arg(marketplace.deprecation.replacedBy));
+        return lines.join("\n");
+    }
+
+    function compatibilityText(entry): string {
+        const marketplace = root.pluginMarketplace(entry);
+        if (!marketplace || !marketplace.compatibility)
+            return "";
+        const compat = marketplace.compatibility;
+        if (compat.minShellVersion && compat.maxShellVersion)
+            return qsTr("Shell compatibility: %1 to %2 (declared, not enforced)").arg(compat.minShellVersion).arg(compat.maxShellVersion);
+        if (compat.minShellVersion)
+            return qsTr("Shell compatibility: %1 or newer (declared, not enforced)").arg(compat.minShellVersion);
+        return qsTr("Shell compatibility: up to %1 (declared, not enforced)").arg(compat.maxShellVersion);
+    }
+
+    function changelogText(entry): string {
+        const marketplace = root.pluginMarketplace(entry);
+        if (!marketplace || !Array.isArray(marketplace.changelog) || marketplace.changelog.length === 0)
+            return "";
+        return qsTr("Version history:\n%1").arg(marketplace.changelog.map(item => `${item.version}: ${item.notes}`).join("\n"));
+    }
+
+    // Static previews (shell#379): screenshot image files shipped in
+    // an installed package, shown as plain Images. No plugin
+    // entrypoint is ever loaded to render a preview; a catalogue
+    // entry that is not installed has no local files yet, so its
+    // declared screenshots are listed by caption only.
+    function screenshotSources(entry): var {
+        const marketplace = root.pluginMarketplace(entry);
+        if (!marketplace || !Array.isArray(marketplace.screenshots) || !entry || !entry.id)
+            return [];
+        const installed = root.installedEntry(entry.id);
+        if (!installed)
+            return [];
+        return marketplace.screenshots.map(shot => ({
+            source: `file://${Plugins.pluginsDir}/${entry.id}/${shot.path}`,
+            alt: shot.alt || qsTr("Screenshot of %1").arg(entry.name || entry.id)
+        }));
+    }
+
+    function screenshotCaptions(entry): string {
+        const marketplace = root.pluginMarketplace(entry);
+        if (!marketplace || !Array.isArray(marketplace.screenshots) || marketplace.screenshots.length === 0)
+            return "";
+        return qsTr("Screenshots: %1").arg(marketplace.screenshots.map(shot => shot.alt || shot.path).join(" · "));
+    }
+
+    // Plain-language reading of the declared capabilities
+    // (shell#379). These explain what the declarations mean; they
+    // do not turn declarations into enforced permissions — the
+    // not-sandboxed warning above still applies in full.
+    function permissionExplanations(entry): string {
+        const declared = entry && entry.capabilities && typeof entry.capabilities === "object" ? entry.capabilities : {};
+        const commands = Array.isArray(declared.processCommands) ? declared.processCommands : [];
+        const hosts = Array.isArray(declared.networkHosts) ? declared.networkHosts : [];
+        const actions = Array.isArray(declared.actions) ? declared.actions : [];
+        const settings = declared.settings && typeof declared.settings === "object" ? Object.keys(declared.settings) : [];
+        const hostedSettings = Object.keys(root.pluginSettings(entry));
+        const lines = [qsTr("What these declarations mean:")];
+        lines.push(commands.length
+            ? qsTr("· Programs: declares it may start %1 as your user.").arg(commands.join(", "))
+            : qsTr("· Programs: declares it starts no programs."));
+        lines.push(hosts.length
+            ? qsTr("· Network: declares it may contact %1.").arg(hosts.join(", "))
+            : qsTr("· Network: declares it contacts no hosts."));
+        if (actions.length)
+            lines.push(qsTr("· System actions: declares it may request %1 through the horneroctl broker, which re-checks each request.").arg(actions.join(", ")));
+        const settingKeys = hostedSettings.length ? hostedSettings : settings;
+        lines.push(settingKeys.length
+            ? qsTr("· Settings: stores only its own settings (%1) — use the Settings button below.").arg(settingKeys.sort().join(", "))
+            : qsTr("· Settings: declares no settings of its own."));
+        lines.push(qsTr("Declarations are review metadata, not enforced permissions: enabled QML still runs as your user without a sandbox."));
+        return lines.join("\n");
+    }
+
+    function installedEntry(pluginId): var {
+        return Plugins.entries.find(entry => entry.id === pluginId) || null;
+    }
+
+    // Replaced-by shortcut (shell#379): surface the replacement in
+    // whichever list already has it — expanding its installed-row
+    // details, or filtering the catalogue to it. No lifecycle
+    // action is taken; installing/enabling the replacement stays
+    // the existing confirmed flow.
+    function openReplacement(pluginId): void {
+        if (root.installedEntry(pluginId)) {
+            root.pluginSearch = pluginId;
+            root.expandedPluginId = pluginId;
+        } else {
+            root.catalogSearch = pluginId;
+        }
     }
 
     function refreshCatalog() {
@@ -482,6 +604,22 @@ Item {
 
                             StyledText {
                                 Layout.fillWidth: true
+                                visible: root.isDeprecated(row.modelData)
+                                text: root.deprecationText(row.modelData)
+                                font.pointSize: Appearance.font.size.small
+                                color: Colours.palette.m3error
+                                wrapMode: Text.Wrap
+                            }
+
+                            TextButton {
+                                visible: root.replacedById(row.modelData).length > 0
+                                text: qsTr("View replacement: %1").arg(root.replacedById(row.modelData))
+                                type: TextButton.Text
+                                onClicked: root.openReplacement(root.replacedById(row.modelData))
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
                                 visible: root.pendingTrust === row.modelData.id
                                 text: qsTr("You are trusting the exact code currently installed for this plugin. If its files change, you will be asked again. Trusting does not enable it.")
                                 font.pointSize: Appearance.font.size.small
@@ -515,6 +653,68 @@ Item {
                                 font.pointSize: Appearance.font.size.small
                                 color: Colours.palette.m3onSurfaceVariant
                                 wrapMode: Text.Wrap
+                            }
+
+                            // Marketplace detail (shell#379), shown
+                            // with Details: static screenshot Images
+                            // (no plugin entrypoint is loaded),
+                            // compatibility, version history and the
+                            // plain-language permission explanations.
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                visible: root.expandedPluginId === row.modelData.id
+                                spacing: Appearance.spacing.small
+
+                                Repeater {
+                                    model: root.screenshotSources(row.modelData)
+
+                                    delegate: Image {
+                                        required property var modelData
+
+                                        Layout.fillWidth: true
+                                        Layout.preferredHeight: 180
+                                        source: modelData.source
+                                        fillMode: Image.PreserveAspectFit
+                                        asynchronous: true
+                                        Accessible.role: Accessible.Graphic
+                                        Accessible.name: modelData.alt
+                                    }
+                                }
+
+                                StyledText {
+                                    Layout.fillWidth: true
+                                    visible: root.screenshotSources(row.modelData).length === 0 && root.screenshotCaptions(row.modelData).length > 0
+                                    text: root.screenshotCaptions(row.modelData)
+                                    font.pointSize: Appearance.font.size.small
+                                    color: Colours.palette.m3onSurfaceVariant
+                                    wrapMode: Text.Wrap
+                                }
+
+                                StyledText {
+                                    Layout.fillWidth: true
+                                    visible: root.compatibilityText(row.modelData).length > 0
+                                    text: root.compatibilityText(row.modelData)
+                                    font.pointSize: Appearance.font.size.small
+                                    color: Colours.palette.m3onSurfaceVariant
+                                    wrapMode: Text.Wrap
+                                }
+
+                                StyledText {
+                                    Layout.fillWidth: true
+                                    visible: root.changelogText(row.modelData).length > 0
+                                    text: root.changelogText(row.modelData)
+                                    font.pointSize: Appearance.font.size.small
+                                    color: Colours.palette.m3onSurfaceVariant
+                                    wrapMode: Text.Wrap
+                                }
+
+                                StyledText {
+                                    Layout.fillWidth: true
+                                    text: root.permissionExplanations(row.modelData)
+                                    font.pointSize: Appearance.font.size.small
+                                    color: Colours.palette.m3onSurfaceVariant
+                                    wrapMode: Text.Wrap
+                                }
                             }
 
                             PluginSettingsSection {
@@ -727,6 +927,93 @@ Item {
                                 wrapMode: Text.Wrap
                             }
 
+                            // Marketplace detail (shell#379):
+                            // deprecation blocks new installs below,
+                            // screenshots are plain Images from the
+                            // installed package when present (never a
+                            // loaded entrypoint), and rollback stays
+                            // gated by rollback_available only.
+                            StyledText {
+                                Layout.fillWidth: true
+                                visible: root.isDeprecated(catRow.modelData)
+                                text: `${root.deprecationText(catRow.modelData)}\n${qsTr("New installs of a deprecated extension are disabled.")}`
+                                font.pointSize: Appearance.font.size.small
+                                color: Colours.palette.m3error
+                                wrapMode: Text.Wrap
+                            }
+
+                            Repeater {
+                                model: root.screenshotSources(catRow.modelData)
+
+                                delegate: Image {
+                                    required property var modelData
+
+                                    Layout.fillWidth: true
+                                    Layout.preferredHeight: 180
+                                    source: modelData.source
+                                    fillMode: Image.PreserveAspectFit
+                                    asynchronous: true
+                                    Accessible.role: Accessible.Graphic
+                                    Accessible.name: modelData.alt
+                                }
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                visible: root.screenshotSources(catRow.modelData).length === 0 && root.screenshotCaptions(catRow.modelData).length > 0
+                                text: root.screenshotCaptions(catRow.modelData)
+                                font.pointSize: Appearance.font.size.small
+                                color: Colours.palette.m3outline
+                                wrapMode: Text.Wrap
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                visible: root.compatibilityText(catRow.modelData).length > 0
+                                text: root.compatibilityText(catRow.modelData)
+                                font.pointSize: Appearance.font.size.small
+                                color: Colours.palette.m3outline
+                                wrapMode: Text.Wrap
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                visible: root.changelogText(catRow.modelData).length > 0
+                                text: root.changelogText(catRow.modelData)
+                                font.pointSize: Appearance.font.size.small
+                                color: Colours.palette.m3outline
+                                wrapMode: Text.Wrap
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: root.permissionExplanations(catRow.modelData)
+                                font.pointSize: Appearance.font.size.small
+                                color: Colours.palette.m3outline
+                                wrapMode: Text.Wrap
+                            }
+
+                            RowLayout {
+                                spacing: Appearance.spacing.small
+
+                                TextButton {
+                                    visible: root.replacedById(catRow.modelData).length > 0
+                                    text: qsTr("View replacement: %1").arg(root.replacedById(catRow.modelData))
+                                    type: TextButton.Text
+                                    onClicked: root.openReplacement(root.replacedById(catRow.modelData))
+                                }
+
+                                TextButton {
+                                    visible: catRow.modelData.state === "installed" && root.installedEntry(catRow.modelData.id) && root.hasPluginSettings(root.installedEntry(catRow.modelData.id))
+                                    text: qsTr("Settings")
+                                    type: TextButton.Text
+                                    onClicked: {
+                                        root.pluginSearch = catRow.modelData.id;
+                                        root.settingsPluginId = catRow.modelData.id;
+                                    }
+                                }
+                            }
+
                             StyledText {
                                 Layout.fillWidth: true
                                 text: qsTr("Source: %1\nPayload SHA-256: %2\nPlugin snapshot: %3")
@@ -750,7 +1037,7 @@ Item {
                                 spacing: Appearance.spacing.small
 
                                 TextButton {
-                                    visible: catRow.modelData.state !== "installed" && root.pendingInstall !== catRow.modelData.id
+                                    visible: catRow.modelData.state !== "installed" && !root.isDeprecated(catRow.modelData) && root.pendingInstall !== catRow.modelData.id
                                     enabled: !catalogInstallProc.running && root.catalogRevision.length > 0
                                     text: qsTr("Install…")
                                     type: TextButton.Tonal
@@ -758,7 +1045,7 @@ Item {
                                 }
 
                                 TextButton {
-                                    visible: root.pendingInstall === catRow.modelData.id
+                                    visible: root.pendingInstall === catRow.modelData.id && !root.isDeprecated(catRow.modelData)
                                     enabled: !catalogInstallProc.running && root.catalogRevision.length > 0
                                     text: qsTr("Confirm install")
                                     type: TextButton.Filled

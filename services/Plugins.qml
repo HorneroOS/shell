@@ -57,11 +57,22 @@ Singleton {
             for (const name in surfaces) {
                 const surface = surfaces[name];
                 if (surface && typeof surface === "object" && !Array.isArray(surface)
-                        && typeof surface.entrypoint === "string" && surface.entrypoint !== "")
+                        && typeof surface.entrypoint === "string" && surface.entrypoint !== "") {
                     normalized[name] = {
                         entrypoint: surface.entrypoint,
                         enabled: surface.enabled !== false
                     };
+                    // Dashboard card hints (shell#378): keep only
+                    // validated values; anything else degrades to the
+                    // standard/uncategorized defaults at the host.
+                    if (name === "dashboard") {
+                        if (["compact", "standard", "wide"].includes(surface.size))
+                            normalized[name].size = surface.size;
+                        if (typeof surface.category === "string" && /\S/.test(surface.category) && surface.category.length <= 40
+                                && surface.category.trim().toLowerCase() !== "pinned")
+                            normalized[name].category = surface.category;
+                    }
+                }
             }
         }
         if (Object.keys(normalized).length === 0 && placement !== "" && entrypoint !== "")
@@ -256,7 +267,12 @@ Singleton {
                 continue;
             result.push(Object.assign({}, entry, {
                 entrypoint: declared.entrypoint,
-                surface: surface
+                surface: surface,
+                // Dashboard card hints (shell#378): host copies carry
+                // the declared size class/category so the dashboard
+                // layout never re-reads the surfaces map per card.
+                cardSize: typeof declared.size === "string" ? declared.size : "standard",
+                category: typeof declared.category === "string" ? declared.category : ""
             }));
         }
         return result;

@@ -535,7 +535,8 @@ Singleton {
     function serializePlugins(): var {
         return {
             settings: plugins.settings,
-            desktopWidgetSlots: plugins.desktopWidgetSlots
+            desktopWidgetSlots: plugins.desktopWidgetSlots,
+            dashboardLayout: plugins.dashboardLayout
         };
     }
 

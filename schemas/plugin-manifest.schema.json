@@ -175,7 +175,9 @@
           "maxLength": 240,
           "pattern": "^(?!/)(?!\\.{1,2}(?:/|$))(?!.*\\/\\.{1,2}(?:/|$))(?!.*//)[A-Za-z0-9._/-]+\\.qml$"
         },
-        "enabled": { "type": "boolean", "default": true, "description": "Whether this surface is enabled by default. A disabled surface is not loaded by its host; other surfaces of the same package are unaffected." }
+        "enabled": { "type": "boolean", "default": true, "description": "Whether this surface is enabled by default. A disabled surface is not loaded by its host; other surfaces of the same package are unaffected." },
+        "size": { "type": "string", "enum": ["compact", "standard", "wide"], "default": "standard", "description": "Dashboard surface only (shell#378): preferred card size class in the composable dashboard layout. A hint the user's persisted layout overrides; declaring it on another surface is rejected by scripts/validate_plugin.py and the runtime host, not by this structural schema." },
+        "category": { "type": "string", "minLength": 1, "maxLength": 40, "pattern": "\\S", "description": "Dashboard surface only (shell#378): grouping label under which the dashboard shows this card (uncategorized cards group under Other; \"Pinned\" is reserved for user-pinned cards). Same enforcement split as `size`." }
       }
     }
   }

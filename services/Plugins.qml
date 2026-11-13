@@ -1,5 +1,6 @@
 pragma Singleton
 
+import qs.config
 import qs.utils
 import Quickshell
 import Quickshell.Io
@@ -28,13 +29,73 @@ import QtQuick
 Singleton {
     id: root
 
-    // Entries: {id, name, version, enabled, installed, state, detail}
-    // state: pending | loaded | failed | disabled
+    // Entries: {id, name, version, enabled, installed, state, detail,
+    // loadStartedAtMs, loadMs, attempts, diagnostics}
+    // state: pending | loaded | failed | disabled | safe-mode
     property var entries: []
     property bool discovered: false
     property string discoveryError: ""
     property string buffer: ""
     readonly property bool loading: listProcess.running
+
+    // Diagnostics & safe recovery (shell#380). Safe mode is effective
+    // when forced at launch (HORNERO_SAFE_MODE=1/true, read before any
+    // plugin manifest exists in memory) or persisted in config. While
+    // it is on, hosts receive no entries: no manifest is parsed and no
+    // plugin QML is instantiated, so a malformed or crash-looping
+    // plugin cannot block the (core, non-plugin) recovery UI in
+    // Control Center › Extensions, where it can still be disabled via
+    // horneroctl. Safe mode never writes lifecycle state itself.
+    readonly property bool safeModeEnv: ["1", "true"].includes((Quickshell.env("HORNERO_SAFE_MODE") ?? "").toLowerCase())
+    readonly property bool safeMode: root.safeModeEnv || Config.plugins.safeMode === true
+    readonly property double startedAtMs: Date.now()
+    // Performance budgets: advisory diagnostics only — exceeding one
+    // is flagged in status/UI, never enforced by killing plugin QML
+    // (in-process QML cannot be preempted; see trust label above).
+    readonly property int slowLoadBudgetMs: 2000
+    readonly property int churnAttemptBudget: 5
+    readonly property int churnWindowMs: 60000
+    // Bounded, secret-redacted event log: {atMs, id, event, detail}.
+    property var diagnosticsLog: []
+
+    // Loader error strings can embed URLs or argv a plugin built from
+    // its own settings; redact credential-looking assignments before
+    // anything is logged, stored, or shown.
+    function sanitizeDetail(detail: var): string {
+        return (detail ?? "").toString()
+            .replace(/(token|password|passwd|secret|api[_-]?key|authorization)(\s*[=:]\s*)\S+/gi, "$1$2<redacted>")
+            .replace(/Bearer\s+\S+/gi, "Bearer <redacted>")
+            .slice(0, 200);
+    }
+
+    function logDiagnostic(id: string, event: string, detail: string): void {
+        const next = root.diagnosticsLog.concat([{
+            atMs: Date.now(),
+            id: id,
+            event: event,
+            detail: root.sanitizeDetail(detail)
+        }]);
+        root.diagnosticsLog = next.slice(-50);
+    }
+
+    function diagnosticsFor(id: string): var {
+        return root.diagnosticsLog.filter(entry => entry.id === id);
+    }
+
+    // Excessive reload/poll churn visible to the host: load attempts
+    // inside the churn window. Plugin-internal Timers are not
+    // observable in-process; scripts/validate_plugin.py flags
+    // sub-second literal Timer intervals statically instead.
+    function attemptDiagnostics(entry: var, loadMs: int): var {
+        const codes = [];
+        if (loadMs > root.slowLoadBudgetMs)
+            codes.push("slow-load");
+        const now = Date.now();
+        const recent = (entry.attemptTimesMs || []).filter(at => now - at < root.churnWindowMs);
+        if (recent.length >= root.churnAttemptBudget)
+            codes.push("load-churn");
+        return codes;
+    }
 
     readonly property string pluginsDir: `${Paths.data}/plugins`
 
@@ -246,6 +307,8 @@ Singleton {
     }
 
     function hasSurface(id: string, surface: string): bool {
+        if (root.safeMode)
+            return false;
         const entry = root.entries.find(e => e.id === id);
         const declared = root.surfaceFor(entry, surface);
         return !!entry && !!declared && declared.enabled !== false && entry.enabled && entry.installed;
@@ -258,6 +321,8 @@ Singleton {
     // manifests. A surface with enabled === false is skipped without
     // affecting the package's other surfaces.
     function pluginsForSurface(surface: string): var {
+        if (root.safeMode)
+            return [];
         const result = [];
         for (const entry of root.entries) {
             if (!entry.enabled || !entry.installed)
@@ -450,21 +515,54 @@ Singleton {
 
     function markLoaded(id: string): void {
         root.setState(id, "loaded", "");
+        root.logDiagnostic(id, "loaded", "");
     }
 
     function markFailed(id: string, detail: string): void {
-        root.setState(id, "failed", (detail ?? "").toString().slice(0, 200));
-        console.warn(`[plugins] ${id} failed to load: ${detail}`);
+        const clean = root.sanitizeDetail(detail);
+        root.setState(id, "failed", clean);
+        root.logDiagnostic(id, "failed", clean);
+        console.warn(`[plugins] ${id} failed to load: ${clean}`);
+    }
+
+    // Per-extension reload (shell#380): reset one entry to pending
+    // with a fresh load clock; reassigning entries makes every host
+    // re-instantiate its Loader for that id. Unknown/disabled ids are
+    // a no-op, and safe mode reloads nothing (hosts stay empty).
+    function reloadPlugin(id: string): bool {
+        const current = root.entries.find(e => e.id === id);
+        if (!current || !current.enabled || !current.installed || root.safeMode)
+            return false;
+        const now = Date.now();
+        root.entries = root.entries.map(e => e.id === id ? Object.assign({}, e, {
+            state: "pending",
+            detail: "",
+            loadMs: -1,
+            loadStartedAtMs: now,
+            attempts: (e.attempts || 0) + 1,
+            attemptTimesMs: (e.attemptTimesMs || []).concat([now]).slice(-20)
+        }) : e);
+        root.logDiagnostic(id, "reload", "");
+        return true;
     }
 
     function setState(id: string, state: string, detail: string): void {
         const current = root.entries.find(e => e.id === id);
         if (current && current.state === state && (current.detail || "") === detail)
             return;
-        const next = root.entries.map(e => e.id === id ? Object.assign({}, e, {
-            state: state,
-            detail: detail
-        }) : e);
+        const now = Date.now();
+        const next = root.entries.map(e => {
+            if (e.id !== id)
+                return e;
+            const loadMs = Math.max(0, Math.round(now - (e.loadStartedAtMs || root.startedAtMs)));
+            return Object.assign({}, e, {
+                state: state,
+                detail: detail,
+                loadMs: loadMs,
+                lastStateAtMs: now,
+                diagnostics: root.attemptDiagnostics(e, loadMs)
+            });
+        });
         root.entries = next;
     }
 
@@ -474,6 +572,14 @@ Singleton {
             loading: root.loading,
             discoveryError: root.discoveryError,
             pluginsDir: root.pluginsDir,
+            safeMode: root.safeMode,
+            safeModeEnv: root.safeModeEnv,
+            budgets: {
+                slowLoadMs: root.slowLoadBudgetMs,
+                churnAttempts: root.churnAttemptBudget,
+                churnWindowMs: root.churnWindowMs
+            },
+            diagnosticsLog: root.diagnosticsLog,
             count: root.entries.length,
             loaded: root.entries.filter(e => e.state === "loaded").length,
             failed: root.entries.filter(e => e.state === "failed").length,
@@ -511,10 +617,17 @@ Singleton {
                 root.discovered = true;
                 return;
             }
+            const discoveredAtMs = Date.now();
+            const previousById = ({});
+            for (const prior of root.entries)
+                previousById[prior.id] = prior;
             root.entries = parsed.map(e => {
                 const requestedEnabled = !!e.enabled && !!e.installed;
                 const trusted = ["official", "trusted", "signed"].includes(e.trust);
                 const enabled = requestedEnabled && trusted;
+                const prior = previousById[e.id] || {};
+                const priorAttempts = typeof prior.attempts === "number" ? prior.attempts : 0;
+                const priorTimes = Array.isArray(prior.attemptTimesMs) ? prior.attemptTimesMs : [];
                 return Object.assign({}, e, {
                     // Marketplace metadata may ride the list JSON
                     // (shell#379); sanitize it here so the pane only
@@ -523,10 +636,17 @@ Singleton {
                     placement: typeof e.placement === "string" ? e.placement : "",
                     requestedEnabled: requestedEnabled,
                     enabled: enabled,
-                    state: requestedEnabled && !trusted ? "blocked" : enabled ? "pending" : "disabled",
-                    detail: requestedEnabled && !trusted
+                    state: enabled && root.safeMode ? "safe-mode" : requestedEnabled && !trusted ? "blocked" : enabled ? "pending" : "disabled",
+                    detail: enabled && root.safeMode
+                        ? qsTr("Safe mode is on: this plugin was not loaded. Disable it here, or turn safe mode off to load plugins again.")
+                        : requestedEnabled && !trusted
                         ? qsTr("This plugin is marked enabled, but its payload is not trusted. Review and trust it, then enable it again.")
-                        : ""
+                        : "",
+                    loadStartedAtMs: discoveredAtMs,
+                    loadMs: -1,
+                    attempts: enabled ? priorAttempts + 1 : priorAttempts,
+                    attemptTimesMs: enabled ? priorTimes.concat([discoveredAtMs]).slice(-20) : priorTimes,
+                    diagnostics: []
                 });
             });
             root.discovered = true;

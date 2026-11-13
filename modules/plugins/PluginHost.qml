@@ -45,7 +45,9 @@ Scope {
         visible: false
 
     Repeater {
-        model: Plugins.entries.filter(e => e.enabled && e.installed)
+        // Safe mode (shell#380): no delegate, so no manifest is even
+        // read — a malformed plugin cannot block recovery access.
+        model: Plugins.safeMode ? [] : Plugins.entries.filter(e => e.enabled && e.installed)
 
         delegate: Item {
             id: slot
@@ -418,6 +420,10 @@ Scope {
 
         function reload(): void {
             Plugins.reload();
+        }
+
+        function reloadPlugin(id: string): string {
+            return Plugins.reloadPlugin(id) ? "reloading" : "not reloadable (unknown, disabled, or safe mode)";
         }
     }
 }

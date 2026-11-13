@@ -797,6 +797,48 @@ rejects obvious shell/privilege escalation patterns and undeclared literal
 `Process` commands. These textual checks can be evaded by dynamic code and
 must never be treated as a sandbox.
 
+## Diagnostics, performance budget and safe mode
+
+Each extension carries a load state (`pending`, `loaded`, `failed`,
+`blocked`, `disabled`, `safe-mode`) in `services/Plugins.qml`, shown in
+Control Center › Extensions and in `qs ipc call plugins status`. A
+per-extension **Reload** action (also `qs ipc call plugins
+reloadPlugin <id>`) re-instantiates one plugin without restarting the
+shell; **Disable** stays the `horneroctl`-owned lifecycle action. Load
+failures and reloads are kept in a bounded (50-event) diagnostics log;
+error details are redacted for credential-looking values
+(`token=…`, `password: …`, `Bearer …`, `api_key=…`) and truncated
+before they are logged, stored, or shown, so diagnostics never need
+to carry secrets.
+
+Performance budgets are advisory diagnostics, never enforcement —
+in-process QML cannot be preempted or sandboxed, so exceeding a
+budget is flagged, not punished:
+
+- **Slow load**: host-measured time from discovery/reload to the
+  entrypoint reporting loaded/failed over 2000 ms flags `slow-load`.
+- **Load churn**: 5 or more load attempts within 60 s flags
+  `load-churn` (the host-visible half of excessive polling).
+- **Polling**: plugin-internal `Timer`s are not observable at
+  runtime, so `scripts/validate_plugin.py` statically warns
+  (`performance warning:`, never a failure) on literal Timer
+  intervals below 1000 ms. Prefer a PluginKit subscription/facade
+  signal over sub-second polling.
+
+**Safe mode** is the recovery path when a plugin makes the shell
+unusable. Start the shell with `HORNERO_SAFE_MODE=1` (or persist
+`"plugins": {"safeMode": true}` in the shell config, toggled from the
+Extensions pane). While safe mode is on, hosts receive no entries at
+all: no plugin manifest is parsed and no plugin QML is instantiated,
+so a malformed manifest or crash-looping entrypoint cannot block
+access to the Extensions pane — which is core shell UI, not a
+plugin — where the broken extension can be disabled. Safe mode
+itself never enables, disables, or removes anything. Be honest about
+the limit: this isolates *load* failures (malformed manifest/JSON,
+QML compile or instantiation errors, which each host already confines
+to that plugin's own Loader); it does not sandbox a running plugin,
+which still executes with the logged-in user's permissions.
+
 ## Validate a package
 
 ```sh

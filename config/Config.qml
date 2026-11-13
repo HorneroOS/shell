@@ -536,7 +536,8 @@ Singleton {
         return {
             settings: plugins.settings,
             desktopWidgetSlots: plugins.desktopWidgetSlots,
-            dashboardLayout: plugins.dashboardLayout
+            dashboardLayout: plugins.dashboardLayout,
+            safeMode: plugins.safeMode
         };
     }
 

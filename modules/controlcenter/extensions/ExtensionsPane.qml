@@ -75,13 +75,34 @@ Item {
     }
 
     function pluginDetail(entry): string {
-        return qsTr("ID: %1\nVersion: %2\nPlacement: %3\nTrust: %4\n%5\nDescription: %6\nQML plugins are not sandboxed: an enabled plugin runs as your user.")
+        return qsTr("ID: %1\nVersion: %2\nPlacement: %3\nTrust: %4\n%5\nDescription: %6\n%7\nQML plugins are not sandboxed: an enabled plugin runs as your user.")
             .arg(entry.id || qsTr("Not listed"))
             .arg(entry.version || qsTr("Not listed"))
             .arg(entry.placement || qsTr("Not listed"))
             .arg(entry.trust || qsTr("unknown"))
             .arg(root.declaredCapabilities(entry.capabilities, entry.capabilities_verified))
-            .arg(entry.description || qsTr("Not listed"));
+            .arg(entry.description || qsTr("Not listed"))
+            .arg(root.pluginDiagnostics(entry));
+    }
+
+    // Diagnostics (shell#380): host-observed load timing against the
+    // advisory budgets, plus the redacted per-plugin event log.
+    // Details were sanitized by the Plugins service before storage.
+    function pluginDiagnostics(entry): string {
+        const codes = Array.isArray(entry.diagnostics) ? entry.diagnostics : [];
+        const warnings = codes.map(code => code === "slow-load"
+            ? qsTr("slow load (budget %1 ms)").arg(Plugins.slowLoadBudgetMs)
+            : code === "load-churn"
+            ? qsTr("repeated reloads (%1 in %2 s)").arg(Plugins.churnAttemptBudget).arg(Math.round(Plugins.churnWindowMs / 1000))
+            : code);
+        const events = Plugins.diagnosticsFor(entry.id).slice(-3)
+            .map(event => `${new Date(event.atMs).toLocaleTimeString()} ${event.event}${event.detail ? `: ${event.detail}` : ""}`);
+        return qsTr("Diagnostics: state %1, load time %2, attempts %3\nWarnings: %4\nRecent events: %5")
+            .arg(entry.state || qsTr("unknown"))
+            .arg(typeof entry.loadMs === "number" && entry.loadMs >= 0 ? qsTr("%1 ms").arg(entry.loadMs) : qsTr("not measured"))
+            .arg(entry.attempts || 0)
+            .arg(warnings.length ? warnings.join(", ") : qsTr("none"))
+            .arg(events.length ? events.join(" · ") : qsTr("none"));
     }
 
     // Typed settings declarations for the generated settings UI
@@ -411,6 +432,24 @@ Item {
 
                 StyledText {
                     Layout.fillWidth: true
+                    visible: Plugins.safeMode
+                    text: Plugins.safeModeEnv
+                        ? qsTr("Safe mode is on (HORNERO_SAFE_MODE): no extension was loaded, not even its manifest. Disable the broken extension below, then restart the shell without HORNERO_SAFE_MODE.")
+                        : qsTr("Safe mode is on: no extension was loaded, not even its manifest. Disable the broken extension below, then turn safe mode off.")
+                    font.pointSize: Appearance.font.size.small
+                    color: Colours.palette.m3error
+                    wrapMode: Text.Wrap
+                }
+
+                TextButton {
+                    visible: !Plugins.safeModeEnv
+                    text: Config.plugins.safeMode ? qsTr("Turn safe mode off") : qsTr("Turn safe mode on (recovery)")
+                    type: TextButton.Tonal
+                    onClicked: Config.plugins.setSafeMode(!Config.plugins.safeMode)
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
                     visible: root.actionError.length > 0
                     text: root.actionError
                     font.pointSize: Appearance.font.size.small
@@ -575,7 +614,7 @@ Item {
                                         id: rowStateLabel
 
                                         anchors.centerIn: parent
-                                        text: !row.modelData.enabled && !row.modelData.requestedEnabled ? qsTr("Disabled") : row.modelData.state === "loaded" ? qsTr("Loaded") : row.modelData.state === "failed" ? qsTr("Failed") : row.modelData.state === "blocked" ? qsTr("Blocked") : qsTr("Pending")
+                                        text: Plugins.safeMode && row.modelData.enabled ? qsTr("Safe mode") : !row.modelData.enabled && !row.modelData.requestedEnabled ? qsTr("Disabled") : row.modelData.state === "loaded" ? qsTr("Loaded") : row.modelData.state === "failed" ? qsTr("Failed") : row.modelData.state === "blocked" ? qsTr("Blocked") : qsTr("Pending")
                                         font.pointSize: Appearance.font.size.smaller
                                         font.weight: 600
                                         color: !row.modelData.enabled && !row.modelData.requestedEnabled ? Colours.palette.m3onSurfaceVariant : row.modelData.state === "loaded" ? Colours.palette.m3onPrimaryContainer : row.modelData.state === "failed" || row.modelData.state === "blocked" ? Colours.palette.m3onErrorContainer : Colours.palette.m3onSurfaceVariant
@@ -804,6 +843,13 @@ Item {
                                     text: qsTr("Cancel")
                                     type: TextButton.Text
                                     onClicked: root.pendingEnable = ""
+                                }
+
+                                TextButton {
+                                    visible: row.modelData.enabled && !Plugins.safeMode
+                                    text: qsTr("Reload")
+                                    type: TextButton.Tonal
+                                    onClicked: Plugins.reloadPlugin(row.modelData.id)
                                 }
 
                                 TextButton {

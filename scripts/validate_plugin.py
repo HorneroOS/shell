@@ -56,6 +56,9 @@ PLACEMENTS = ("background", "bar", "dashboard", "desktop")
 # settings) are validated declarations reserved for their hosts — no
 # host loads them yet, and declaring one grants no privilege.
 SURFACES = PLACEMENTS + ("launcher", "settings")
+# Dashboard card size classes (shell#378): preferred card width class a
+# dashboard surface may hint; the user's persisted layout wins.
+DASHBOARD_CARD_SIZES = ("compact", "standard", "wide")
 SCHEMA_VERSIONS = (1, 2)
 ALLOWED_IMPORTS = (
     "QtQuick",
@@ -141,12 +144,41 @@ def _validate_surfaces(
                 "bar surface with PluginKit UiPopover, not a separate surface)"
             )
         surface = _object(raw_surface, where)
-        extra = set(surface) - {"entrypoint", "enabled"}
+        extra = set(surface) - {"entrypoint", "enabled", "size", "category"}
         if extra:
             raise ValidationError(
                 f"{where} contains unknown fields: {', '.join(sorted(extra))} "
-                "(a surface declares only entrypoint and optional enabled)"
+                "(a surface declares only entrypoint, optional enabled, and — "
+                "dashboard only — optional size/category card hints)"
             )
+        # Dashboard card hints (shell#378): the composable dashboard
+        # layout reads a preferred card size class and grouping
+        # category from the dashboard surface. They are hints: the
+        # user's persisted layout overrides both, and declaring them
+        # on any other surface is a mistake worth an actionable error
+        # (no other host has cards to size or group).
+        if ("size" in surface or "category" in surface) and name != "dashboard":
+            raise ValidationError(
+                f"{where}.size/category are dashboard card hints and are only "
+                "allowed on the dashboard surface"
+            )
+        if "size" in surface and surface["size"] not in DASHBOARD_CARD_SIZES:
+            raise ValidationError(
+                f"{where}.size must be one of {', '.join(DASHBOARD_CARD_SIZES)} "
+                "(preferred dashboard card size class; users can override it)"
+            )
+        if "category" in surface:
+            category = surface["category"]
+            if (
+                not isinstance(category, str)
+                or not category.strip()
+                or len(category) > 40
+                or category.strip().lower() == "pinned"
+            ):
+                raise ValidationError(
+                    f"{where}.category must be a non-empty grouping label of at "
+                    'most 40 characters (and not the reserved "Pinned" section)'
+                )
         if "entrypoint" not in surface:
             raise ValidationError(f"{where}.entrypoint is required (the .qml file this surface loads)")
         surface_entrypoint = _safe_relative(surface["entrypoint"], f"{where}.entrypoint", qml=True)
@@ -297,6 +329,13 @@ def effective_surfaces(manifest: dict) -> dict[str, dict]:
             "entrypoint": surface["entrypoint"],
             "enabled": surface.get("enabled", True),
         }
+        # Dashboard card hints ride along only where declared, so
+        # pre-#378 manifests derive byte-identical effective surfaces.
+        if name == "dashboard":
+            if "size" in surface:
+                effective[name]["size"] = surface["size"]
+            if "category" in surface:
+                effective[name]["category"] = surface["category"]
     return effective
 
 

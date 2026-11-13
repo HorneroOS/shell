@@ -652,6 +652,35 @@ package's other surfaces are unaffected, so each surface can be enabled
 independently. Per-user surface toggles are not part of this contract yet;
 `enabled` is the manifest default the hosts honour.
 
+The `dashboard` surface may additionally declare two card hints
+(shell#378): `size` — a preferred card size class, one of `compact`,
+`standard` (the historic 380px card width) or `wide` — and `category`, a
+short grouping label. Both are dashboard-only (declaring either on another
+surface is rejected), both are hints, and `"Pinned"` is reserved. A v1
+`placement: "dashboard"` plugin declares neither and renders as a standard
+uncategorized card, exactly as before.
+
+### Dashboard layout (shell#378)
+
+The Extensions tab is a composable, vertically scrolling layout, not a
+fixed grid. Cards group into sections — user-Pinned first, then categories
+alphabetically, then uncategorized cards under "Other" — and the column
+count follows the available width. `wide` cards span two columns (one on a
+single-column dashboard); `compact` cards get a narrower width and report
+`hostCompact: true` through the responsive host context. The arrangement
+is computed once per model change (`modules/plugins/DashboardLayout.qml`),
+and plugin Loaders stay asynchronous, so 33+ cards stay cheap.
+
+The user's arrangement persists in shell config as
+`plugins.dashboardLayout` (`{order: [pluginId], pinned: [pluginId],
+sizes: {pluginId: class}}` in `$XDG_CONFIG_HOME/hornero/shell.json`),
+written only through `Config.plugins` setters, and always wins over the
+manifest hints. Malformed or stale entries degrade to manifest order.
+Cards are keyboard-configurable: focus a card (Tab or plain arrows to
+move between cards), then Ctrl+arrows reorder it, `P` pins/unpins it, and
+`S` cycles its size class; PageUp/PageDown scroll. Plugin code gets no
+setter for the user layout.
+
 Redeclaring the primary surface inside `surfaces` is allowed only with the
 same entrypoint (for example to set `enabled`); a different file for the
 primary placement is a conflicting manifest and is rejected rather than

@@ -716,6 +716,7 @@
   },
   "plugins": {
     "settings": {},
-    "desktopWidgetSlots": {}
+    "desktopWidgetSlots": {},
+    "dashboardLayout": {}
   }
 }

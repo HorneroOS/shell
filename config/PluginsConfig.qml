@@ -6,6 +6,12 @@ JsonObject {
     // packages and extension code never write the canonical shell config.
     property var settings: ({})
     property var desktopWidgetSlots: ({})
+    // Persisted dashboard extension layout (shell#378):
+    // {order: [pluginId], pinned: [pluginId], sizes: {pluginId:
+    // "compact"|"standard"|"wide"}}. User-owned like settings above;
+    // DashboardLayout.normalizeLayout tolerates any malformed shape,
+    // so a stale or hand-edited value degrades to manifest order.
+    property var dashboardLayout: ({})
     signal saveRequested
 
     readonly property var allowedDesktopSlots: [
@@ -85,6 +91,51 @@ JsonObject {
         delete next[pluginId];
         settings = next;
         saveRequested();
+        return true;
+    }
+
+    readonly property var allowedDashboardSizes: ["compact", "standard", "wide"]
+
+    function dashboardLayoutSource(): var {
+        return dashboardLayout && typeof dashboardLayout === "object" && !Array.isArray(dashboardLayout) ? dashboardLayout : ({});
+    }
+
+    function setDashboardLayout(next: var): void {
+        dashboardLayout = next;
+        saveRequested();
+    }
+
+    function setDashboardPinned(pluginId: string, pinned: bool): bool {
+        if (!validPluginId(pluginId))
+            return false;
+        const next = JSON.parse(JSON.stringify(dashboardLayoutSource()));
+        const current = Array.isArray(next.pinned) ? next.pinned.filter(id => id !== pluginId) : [];
+        if (pinned)
+            current.push(pluginId);
+        next.pinned = current;
+        setDashboardLayout(next);
+        return true;
+    }
+
+    function setDashboardCardSize(pluginId: string, size: string): bool {
+        if (!validPluginId(pluginId) || !allowedDashboardSizes.includes(size))
+            return false;
+        const next = JSON.parse(JSON.stringify(dashboardLayoutSource()));
+        if (!next.sizes || typeof next.sizes !== "object" || Array.isArray(next.sizes))
+            next.sizes = {};
+        next.sizes[pluginId] = size;
+        setDashboardLayout(next);
+        return true;
+    }
+
+    // `order` is the full new visible order (DashboardLayout.
+    // movedOrder computes it); only well-formed ids are stored.
+    function setDashboardOrder(order: var): bool {
+        if (!Array.isArray(order) || order.some(id => !validPluginId(id)))
+            return false;
+        const next = JSON.parse(JSON.stringify(dashboardLayoutSource()));
+        next.order = order;
+        setDashboardLayout(next);
         return true;
     }
 

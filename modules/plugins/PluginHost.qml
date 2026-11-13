@@ -131,9 +131,28 @@ Scope {
                                     Plugins.markFailed(slot.modelData.id, `manifest surfaces.${name} must be an object`);
                                     return;
                                 }
-                                const extra = Object.keys(surface).filter(key => key !== "entrypoint" && key !== "enabled");
+                                const extra = Object.keys(surface).filter(key => key !== "entrypoint" && key !== "enabled" && key !== "size" && key !== "category");
                                 if (extra.length > 0) {
                                     Plugins.markFailed(slot.modelData.id, `manifest surfaces.${name} contains unknown fields: ${extra.join(", ")}`);
+                                    return;
+                                }
+                                // Dashboard card hints (shell#378),
+                                // mirroring validate_plugin.py: size is
+                                // a closed class set, category a short
+                                // grouping label, both dashboard-only.
+                                if ((surface.size !== undefined || surface.category !== undefined) && name !== "dashboard") {
+                                    Plugins.markFailed(slot.modelData.id, `manifest surfaces.${name}.size/category are dashboard card hints and are only allowed on the dashboard surface`);
+                                    return;
+                                }
+                                if (surface.size !== undefined && !["compact", "standard", "wide"].includes(surface.size)) {
+                                    Plugins.markFailed(slot.modelData.id, `manifest surfaces.${name}.size must be one of compact, standard, wide`);
+                                    return;
+                                }
+                                if (surface.category !== undefined
+                                        && (typeof surface.category !== "string" || !/\S/.test(surface.category)
+                                            || surface.category.length > 40
+                                            || surface.category.trim().toLowerCase() === "pinned")) {
+                                    Plugins.markFailed(slot.modelData.id, `manifest surfaces.${name}.category must be a non-empty grouping label of at most 40 characters (and not the reserved "Pinned" section)`);
                                     return;
                                 }
                                 if (!safeEntrypoint(surface.entrypoint)) {
@@ -156,6 +175,12 @@ Scope {
                                     entrypoint: surface.entrypoint,
                                     enabled: surface.enabled !== false
                                 };
+                                if (name === "dashboard") {
+                                    if (surface.size !== undefined)
+                                        effectiveSurfaces[name].size = surface.size;
+                                    if (surface.category !== undefined)
+                                        effectiveSurfaces[name].category = surface.category;
+                                }
                             }
                         }
                         // Plugin translations (shell#375): optional in

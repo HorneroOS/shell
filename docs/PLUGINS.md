@@ -25,7 +25,7 @@ or unrecognized display and malformed slot data fall back to `bottom-right`.
 Users select a widget's vertical and horizontal slot in Control Center.
 
 The package installs the stable `Hornero.PluginKit` QML module. It exposes
-`Settings`, `Theme`, `Notifications`, `Desktop`, `System`, `Network`,
+`Settings`, `Translations`, `Theme`, `Notifications`, `Desktop`, `System`, `Network`,
 `Media`, `Weather`, `Time`, `Power`, and `Audio` without requiring plugins
 to import Shell internals:
 
@@ -36,6 +36,9 @@ to import Shell internals:
   `resetAll()` remove stored values so the declared defaults apply again.
   The ID is a namespace selector, not
   proof of the caller's identity or an access boundary between extensions.
+- `Translations { pluginId: "example-clock" }` resolves the package's
+  own JSON catalogs for the shell (system) locale and falls back to
+  the source strings. See [Translations](#translations).
 - `Theme` exposes semantic colors and light-mode state. Token names form the
   compatibility contract; internal palette implementation may change.
 - `Notifications.toast(summary, body, icon)` shows a bounded in-shell toast.
@@ -306,6 +309,91 @@ unusual scales as contract-tested, not compositor-verified.
 The manifest schema is
 [`schemas/plugin-manifest.schema.json`](../schemas/plugin-manifest.schema.json)
 and the local checker is `scripts/validate_plugin.py`.
+
+## Translations
+
+A package can ship its own translations without any C++ or build
+step. Declare them in the manifest (optional in every
+`schemaVersion`; packages without the field behave exactly as
+before):
+
+```json
+"translations": {
+  "sourceLocale": "en",
+  "locales": ["es"],
+  "directory": "translations"
+}
+```
+
+- `sourceLocale` is the language of the strings written in your QML
+  (Qt locale tag: `en`, `es_AR`, `pt_BR`, …). It needs no catalog —
+  the strings in code are that locale's text.
+- `locales` lists the locales you ship a catalog for. Each catalog
+  is a flat JSON object at `<directory>/<locale>.json` mapping each
+  source string to its translation, and must be listed in `files`:
+
+  ```json
+  { "Example Clock": "Reloj de ejemplo", "Today is %1": "Hoy es %1" }
+  ```
+
+- `directory` is optional and defaults to `"translations"`.
+
+Read strings through PluginKit `Translations`, which mirrors the
+`Settings` shape:
+
+```qml
+import Hornero.PluginKit
+
+Translations { id: i18n; pluginId: "example-clock" }
+
+Text { text: i18n.tr("Example Clock") }
+Text { text: i18n.tr("Today is %1").arg(i18n.formatDateTime(new Date(), "dddd, d MMMM")) }
+```
+
+Locale selection follows the shell locale: the system locale the
+shell itself runs with (`Qt.locale()`, derived from `LANG`/`LC_*`;
+the shell has no separate language override yet, and this component
+will follow one through its `localeName` property if that changes).
+Resolution tries the full tag first, then its language — an
+`es_AR` system loads `es_AR.json` when shipped, else `es.json` —
+and otherwise falls back to the source strings exactly as written.
+A missing or malformed catalog degrades to source strings; it never
+fails the plugin. `i18n.ready` and `i18n.resolvedLocale` report the
+resolution state, and `i18n.formatDateTime(...)` /
+`i18n.formatNumber(...)` format with the resolved locale so weekday
+names, date order, decimal separators, and grouping match the
+language on screen.
+
+Rules the validator and the runtime host enforce:
+
+- Catalogs are plain JSON so reviewers can read them like the rest
+  of the package. Compiled Qt Linguist `.qm` files are rejected as
+  compiled payload, and the shell installs no `QTranslator` for
+  plugins — which is why `qsTr()` in plugin QML is also rejected:
+  in the shell's own QML `qsTr()` marks strings for a catalog the
+  shell does not ship yet (they render as source text), and in a
+  plugin it would likewise never translate. Use `tr()` above.
+- Every literal string passed to `tr("...")` must have a non-empty
+  entry in every declared locale's catalog, keeping the same
+  `%1`/`%2` placeholders as the source string. Omit a string from a
+  catalog only by not declaring that locale yet — a declared locale
+  must be complete for literal strings. (Strings built dynamically
+  cannot be extracted statically; covering them is on the author,
+  and `tr()` falls back to the source text when a key is absent.)
+- Long entries are fine (keys and values up to 4000 characters);
+  empty translations are not. Design layouts for text expansion:
+  Spanish strings commonly run ~20–30% longer than English, so
+  prefer the PluginKit UI primitives' wrapping/eliding behaviour
+  over fixed widths.
+
+`examples/plugins/example-clock` demonstrates the whole path:
+English source strings, a Spanish catalog with natural Argentine
+Spanish, locale-aware weekday formatting, and a `%1` placeholder.
+Translating the first-party catalogue in `HorneroOS/plugins` to the
+ES/EN baseline is tracked there (plugins#21 audit: 32 shipped
+plugins had no translation calls at all); this contract is the
+platform they migrate onto, plugin by plugin, rather than a claim
+that the catalogue is already translated.
 
 ## Trust boundary
 

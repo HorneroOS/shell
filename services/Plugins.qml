@@ -262,6 +262,44 @@ Singleton {
         return result;
     }
 
+    // Plugin translations (shell#375): PluginHost records the
+    // manifest `translations` declaration here exactly as validated;
+    // PluginKit Translations reads it back by plugin id. Recording a
+    // declaration grants nothing — catalogs are package files the
+    // entrypoint could read anyway; this only gives PluginKit one
+    // canonical place to learn which locales the package ships.
+    function markTranslations(id: string, translations: var): void {
+        const normalized = root.normalizeTranslations(translations);
+        const current = root.entries.find(e => e.id === id);
+        if (current && JSON.stringify(current.translations || null) === JSON.stringify(normalized))
+            return;
+        root.entries = root.entries.map(e => e.id === id ? Object.assign({}, e, {
+            translations: normalized
+        }) : e);
+    }
+
+    // Keep only the validated shape: a sourceLocale string, a list of
+    // locale tag strings, and an optional directory. Malformed shapes
+    // were already rejected by PluginHost's runtime manifest gate, so
+    // this is defence in depth, never a second parser with new rules.
+    function normalizeTranslations(translations: var): var {
+        if (!translations || typeof translations !== "object" || Array.isArray(translations))
+            return null;
+        const locales = Array.isArray(translations.locales) ? translations.locales.filter(l => typeof l === "string" && l !== "") : [];
+        return {
+            sourceLocale: typeof translations.sourceLocale === "string" && translations.sourceLocale !== "" ? translations.sourceLocale : "en",
+            locales: locales,
+            directory: typeof translations.directory === "string" && translations.directory !== "" ? translations.directory : "translations"
+        };
+    }
+
+    function translationDeclaration(id: string): var {
+        const entry = root.entries.find(e => e.id === id);
+        if (!entry || !entry.translations || typeof entry.translations !== "object")
+            return null;
+        return entry.translations;
+    }
+
     function settingDeclaration(id: string, key: string): var {
         const entry = root.entries.find(e => e.id === id);
         if (!entry || !entry.settings || typeof entry.settings !== "object")

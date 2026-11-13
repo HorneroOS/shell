@@ -52,6 +52,55 @@ def test_schema_declares_the_same_required_manifest_contract():
     assert schema["additionalProperties"] is False
 
 
+def test_capabilities_actions_declaration_is_optional_and_typed(tmp_path):
+    # horneroctl plugin-broker declarations (HorneroOS/hornero#408):
+    # optional snake_case action names; the broker enforces catalogue
+    # membership at call time, schema+validator enforce the shape.
+    plugin = make_plugin(tmp_path)
+    manifest = json.loads((plugin / "manifest.json").read_text())
+    manifest["capabilities"]["actions"] = ["system_info", "notify"]
+    (plugin / "manifest.json").write_text(json.dumps(manifest))
+    schema = json.loads((ROOT / "schemas/plugin-manifest.schema.json").read_text())
+
+    assert not list(Draft202012Validator(schema).iter_errors(manifest))
+    VALIDATOR.validate_plugin(plugin)
+
+
+@pytest.mark.parametrize(
+    "actions",
+    [
+        ["SystemInfo"],                 # not snake_case
+        ["system-info"],                # dashes are not action ids
+        ["system_info", "system_info"],  # duplicates
+        [f"action_{i}" for i in range(33)],  # over the 32 cap
+        "system_info",                  # not a list
+        [42],                           # not strings
+    ],
+)
+def test_capabilities_actions_reject_malformed_declarations(tmp_path, actions):
+    plugin = make_plugin(tmp_path)
+    manifest = json.loads((plugin / "manifest.json").read_text())
+    manifest["capabilities"]["actions"] = actions
+    (plugin / "manifest.json").write_text(json.dumps(manifest))
+    schema = json.loads((ROOT / "schemas/plugin-manifest.schema.json").read_text())
+
+    assert list(Draft202012Validator(schema).iter_errors(manifest))
+    with pytest.raises(VALIDATOR.ValidationError):
+        VALIDATOR.validate_plugin(plugin)
+
+
+def test_capabilities_unknown_key_still_rejected(tmp_path):
+    plugin = make_plugin(tmp_path)
+    manifest = json.loads((plugin / "manifest.json").read_text())
+    manifest["capabilities"]["shellCommands"] = []
+    (plugin / "manifest.json").write_text(json.dumps(manifest))
+    schema = json.loads((ROOT / "schemas/plugin-manifest.schema.json").read_text())
+
+    assert list(Draft202012Validator(schema).iter_errors(manifest))
+    with pytest.raises(VALIDATOR.ValidationError):
+        VALIDATOR.validate_plugin(plugin)
+
+
 @pytest.mark.parametrize(
     ("field", "value"),
     [

@@ -526,6 +526,14 @@ typed metadata with explicit defaults. The host owns persistence and exposes
 settings through PluginKit; extensions cannot write the canonical shell
 config through that API.
 
+The optional `capabilities.actions` list declares `horneroctl plugin action`
+broker action names (snake_case, e.g. `system_info`, `notify`) the extension
+may request through the typed capability broker (HorneroOS/hornero#408).
+Like the other capability fields it is a declaration, not a grant: the broker
+enforces payload trust, this declaration, typed arguments and ABAC at call
+time, and refuses undeclared actions. Catalogue membership is checked by the
+broker, so new broker actions need no manifest migration.
+
 ## Extension settings: typed schema and generated UI
 
 Settings are declared in `capabilities.settings`, keyed by a camelCase

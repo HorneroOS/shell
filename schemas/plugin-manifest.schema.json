@@ -147,6 +147,13 @@
               { "properties": { "type": { "const": "enum" }, "default": { "type": "string" } }, "required": ["options"], "not": { "anyOf": [{ "required": ["minimum"] }, { "required": ["maximum"] }, { "required": ["minLength"] }, { "required": ["maxLength"] }] } }
             ]
           }
+        },
+        "actions": {
+          "description": "Optional horneroctl plugin-broker action names (HorneroOS/hornero#408) the extension declares it may request through the typed capability broker (snake_case ids such as system_info or notify). Declarations are review metadata: the broker enforces trust, declaration, typed argv and ABAC at call time, and an undeclared action is refused there. Catalogue membership is enforced by the broker, not by this schema, so the catalogue can grow without a manifest migration.",
+          "type": "array",
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[a-z][a-z0-9_]{0,63}$" }
         }
       }
     }

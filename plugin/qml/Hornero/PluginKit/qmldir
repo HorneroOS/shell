@@ -10,3 +10,12 @@ singleton Weather 1.0 Weather.qml
 singleton Time 1.0 Time.qml
 singleton Power 1.0 Power.qml
 singleton Audio 1.0 Audio.qml
+UiText 1.0 UiText.qml
+UiCard 1.0 UiCard.qml
+UiButton 1.0 UiButton.qml
+UiToggle 1.0 UiToggle.qml
+UiSlider 1.0 UiSlider.qml
+UiMetric 1.0 UiMetric.qml
+UiChip 1.0 UiChip.qml
+UiProgress 1.0 UiProgress.qml
+UiState 1.0 UiState.qml

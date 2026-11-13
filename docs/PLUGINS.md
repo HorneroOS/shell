@@ -657,7 +657,7 @@ changes.
 | `dashboard` | Card (with any detail content inside the card) in the dashboard Extensions tab. | Yes |
 | `desktop` | Widget in a named slot on each display's background layer. | Yes |
 | `background` | Headless entry point (timers, toasts); only declare it where a headless component is justified. | Yes |
-| `launcher` | Launcher/search action entry point. | No — validated declaration only; the launcher provider registry exists (shell#250 slice 1, [LAUNCHER.md](LAUNCHER.md)) but this entrypoint is not loaded yet, so plugin-defined providers are the follow-up slice (shell#222/#250), under the same trust wording as every other surface: in-process QML running as your user, unsandboxed. |
+| `launcher` | Launcher/search action entry point. | Yes — `PluginLauncherHost` loads it hidden and registers it into the launcher provider registry ([LAUNCHER.md](LAUNCHER.md)). Contract (query/result): root `Item` with settable string `query` and readonly var `result` = `{ok: bool, text: string}`; prefix is the plugin id minus a leading `hornero-`; copy-on-activate copies `result.text` (wl-copy, the calc convention — no plugin activation hook). In-process QML running as your user, unsandboxed, same trust as every other surface. |
 | `settings` | Custom Control Center settings entry point. | Yes — Control Center › Extensions loads it in the plugin's Custom settings tab alongside the generated settings UI (above), which renders `capabilities.settings` without it. In-process QML, same trust as other surfaces. |
 
 Each surface declares `entrypoint` (a safe package-relative `.qml` path that
@@ -720,10 +720,11 @@ boundary above: surfaces and `capabilities` alike are declarations —
 review metadata, not enforcement, and not a permission grant. A surface
 entrypoint gets exactly the same host Loader, PluginKit API, and
 user-privilege execution as the primary entrypoint; there is no arbitrary
-private-shell mutation path, and a `launcher` declaration in
-particular causes no code to run at all until its host exists (a
-`settings` declaration now runs only in its Control Center host,
-above, and only for an enabled, installed plugin). Installing
+private-shell mutation path, and a `launcher` declaration runs
+only in `PluginLauncherHost` (hidden Loader, provider registry —
+see [LAUNCHER.md](LAUNCHER.md)), a `settings` declaration only
+in its Control Center host, above, and only for enabled,
+installed plugins. Installing
 or enabling a v2 package also requires a `horneroctl` build that accepts
 schemaVersion 2; the shell-side contract here does not change the CLI's own
 validation.

@@ -28,8 +28,8 @@ import QtQuick
 // (the headless one); the bar/dashboard/desktop hosts load theirs
 // from the service's per-surface lists. `settings` is hosted by
 // Control Center › Extensions (PluginSettingsHost.qml), not
-// here; `launcher` is a validated declaration with no host yet —
-// nothing loads it here. A v1 manifest derives the single
+// here; `launcher` is hosted by PluginLauncherHost.qml into the
+// launcher provider registry — nothing loads it here. A v1 manifest derives the single
 // placement surface and loads exactly as before.
 // Plugin QML runs with full user privileges — see services/Plugins.qml
 // for the trust label.

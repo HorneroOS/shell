@@ -67,13 +67,16 @@ def test_applist_routes_via_registry_without_replacing_state_machine():
     assert 'return "apps";' in APPLIST
 
 
-def test_plugin_providers_not_hosted_in_this_slice():
-    assert "NOT hosted" in PROVIDERS and "surfaces.launcher" in PROVIDERS
+def test_plugin_providers_hosted_by_launcher_host():
+    # Superseded by the follow-up slice: PluginLauncherHost hosts
+    # surfaces.launcher into this registry (see
+    # test_plugin_launcher_providers.py for the full contract).
+    assert "PluginLauncherHost" in PROVIDERS and "surfaces.launcher" in PROVIDERS
     docs = (ROOT / "docs" / "LAUNCHER.md").read_text()
-    assert "follow-up slice" in docs
+    assert "Plugin-defined providers" in docs
     assert "unsandboxed" in docs, "plugin trust wording missing"
     host = (ROOT / "modules" / "plugins" / "PluginHost.qml").read_text()
-    assert "no host yet" in host, "PluginHost must stay unload-only for launcher"
+    assert "PluginLauncherHost" in host, "PluginHost must point at the launcher host"
 
 
 # --- Calculator provider ------------------------------------------------

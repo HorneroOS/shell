@@ -101,9 +101,9 @@ def test_honest_trust_note_in_ui_and_docs():
     assert "Custom settings surface" in DOCS
     assert "alongside" in DOCS.lower()
     assert "In-process QML, same trust as other surfaces" in DOCS
-    # Settings row no longer claims no host; launcher still does.
+    # Settings and launcher rows both claim their hosts now.
     assert "| `settings` | Custom Control Center settings entry point. | Yes" in DOCS
-    assert "this entrypoint is not loaded yet" in DOCS  # launcher only
+    assert "| `launcher` | Launcher/search action entry point. | Yes" in DOCS
 
 
 def test_host_context_injected_for_settings_surface():

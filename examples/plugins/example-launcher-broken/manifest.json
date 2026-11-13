@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "id": "example-launcher-broken",
+  "name": "Example Launcher Broken (QA fixture)",
+  "version": "1.0.0",
+  "description": "Deliberately broken QA fixture: valid manifest, launcher entrypoint fails to load at runtime so PluginLauncherHost fault isolation can be proven. Never enable outside QA.",
+  "author": "HorneroOS contributors",
+  "license": "MIT",
+  "entrypoint": "Main.qml",
+  "files": [
+    "Main.qml",
+    "Launcher.qml",
+    "README.md",
+    "LICENSE"
+  ],
+  "capabilities": {
+    "processCommands": [],
+    "networkHosts": [],
+    "settings": {}
+  },
+  "placement": "background",
+  "surfaces": {
+    "launcher": {
+      "entrypoint": "Launcher.qml"
+    }
+  }
+}

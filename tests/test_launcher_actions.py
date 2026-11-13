@@ -62,13 +62,18 @@ def test_windows_provider_shipped_and_focuses_via_hypr():
     m = re.search(r'name:\s*"Windows".*?command:\s*\[(.*?)\]',
                   DEFAULTS, re.DOTALL)
     assert m and '"autocomplete", "win"' in m.group(1)
-    # `>win <query>` state filters compositor toplevels by title/class…
+    # `>win <query>` state is routed by the provider registry
+    # (shell#250 slice 1); filtering moved from AppList into the
+    # Windows provider, which still reads compositor toplevels…
     assert '"win"' in APPLIST
-    assert "Hypr.toplevels.values.filter" in APPLIST
-    # …and the delegate focuses through the Hypr service only.
+    assert "Windows.query" in APPLIST
+    windows = (ROOT / "modules" / "launcher" / "services" / "Windows.qml").read_text()
+    assert "Hypr.toplevels" in windows
+    # …and activation focuses through the Hypr service only.
+    assert "focuswindow address:0x" in windows
     item = (ROOT / "modules" / "launcher" / "items" / "WindowItem.qml").read_text()
-    assert "focuswindow address:0x" in item
-    assert "horneroctl" not in item
+    assert "Windows.activate" in item
+    assert "horneroctl" not in item and "horneroctl" not in windows
 
 
 def test_file_provider_bounded_and_opens_via_xdg():

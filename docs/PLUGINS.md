@@ -657,7 +657,7 @@ changes.
 | `dashboard` | Card (with any detail content inside the card) in the dashboard Extensions tab. | Yes |
 | `desktop` | Widget in a named slot on each display's background layer. | Yes |
 | `background` | Headless entry point (timers, toasts); only declare it where a headless component is justified. | Yes |
-| `launcher` | Launcher/search action entry point. | No — validated declaration only; the launcher provider host is separate work (shell#222/#250 architecture) and this entrypoint is not loaded yet. |
+| `launcher` | Launcher/search action entry point. | No — validated declaration only; the launcher provider registry exists (shell#250 slice 1, [LAUNCHER.md](LAUNCHER.md)) but this entrypoint is not loaded yet, so plugin-defined providers are the follow-up slice (shell#222/#250), under the same trust wording as every other surface: in-process QML running as your user, unsandboxed. |
 | `settings` | Custom Control Center settings entry point. | Yes — Control Center › Extensions loads it in the plugin's Custom settings tab alongside the generated settings UI (above), which renders `capabilities.settings` without it. In-process QML, same trust as other surfaces. |
 
 Each surface declares `entrypoint` (a safe package-relative `.qml` path that

@@ -1,19 +1,26 @@
+import "../services"
 import qs.components
 import qs.services
 import qs.config
-import Hornero
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
 
+// Calculator provider row (shell#250 slice 1): the expression
+// is evaluated by the shell's own safe parser (services/Calc);
+// Enter/click copies the result and closes the launcher, the
+// historic launcher convention for this row.
 Item {
     id: root
 
     required property var list
     readonly property string math: list.search.text.slice(`${Config.launcher.actionPrefix}calc `.length)
+    readonly property var result: Calc.evaluate(math)
 
     function onClicked(): void {
-        Quickshell.execDetached(["wl-copy", Qalculator.eval(math, false)]);
+        if (!root.result.ok)
+            return;
+        Quickshell.execDetached(["wl-copy", root.result.text]);
         root.list.visibilities.launcher = false;
     }
 
@@ -51,14 +58,14 @@ Item {
             id: result
 
             color: {
-                if (text.includes("error: ") || text.includes("warning: "))
+                if (root.math.length > 0 && !root.result.ok)
                     return Colours.palette.m3error;
                 if (!root.math)
                     return Colours.palette.m3onSurfaceVariant;
                 return Colours.palette.m3onSurface;
             }
 
-            text: root.math.length > 0 ? Qalculator.eval(root.math) : qsTr("Type an expression to calculate")
+            text: root.math.length === 0 ? qsTr("Type an expression to calculate") : (root.result.ok ? qsTr("%1 = %2").arg(root.math).arg(root.result.text) : qsTr("Error"))
             elide: Text.ElideLeft
 
             Layout.fillWidth: true

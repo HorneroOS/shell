@@ -103,6 +103,14 @@ StyledListView {
         const text = search.text;
         const prefix = Config.launcher.actionPrefix;
         if (text.startsWith(prefix)) {
+            // Provider-routed states (shell#250 slice 1): the
+            // registry claims calc/win; every other prefixed
+            // action keeps its historic state below. No prefix
+            // match anywhere still means the default apps flow.
+            const providerState = Providers.stateFor(text);
+            if (providerState === "calc" || providerState === "win")
+                return providerState;
+
             for (const action of ["calc", "win", "file", "ai", "scheme", "variant", "appearance", "theme"])
                 if (text.startsWith(`${prefix}${action} `))
                     return action === "theme" ? "appearance" : action;
@@ -158,10 +166,7 @@ StyledListView {
             name: "win"
 
             PropertyChanges {
-                model.values: {
-                    const q = search.text.slice(`${Config.launcher.actionPrefix}win `.length).toLowerCase();
-                    return Hypr.toplevels.values.filter(w => !q || (w.title ?? "").toLowerCase().includes(q) || (w.lastIpcObject.class ?? "").toLowerCase().includes(q));
-                }
+                model.values: Windows.query(search.text.slice(`${Config.launcher.actionPrefix}win `.length))
                 root.delegate: windowItem
             }
         },

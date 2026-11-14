@@ -48,6 +48,25 @@ def test_idle_routes_through_guard():
     assert "locked = true" not in src and "locked=true" not in src
 
 
+def test_no_unauthenticated_unlock_path():
+    """Unlocking requires PAM success inside Pam.qml (shell#257).
+
+    Quickshell IPC and CustomShortcuts are reachable by any same-user
+    process / keybind, so Lock.qml must not expose an `unlock` IPC
+    function or shortcut that emits the unlock signal directly. The
+    only unlock() emitters may be the PAM contexts in Pam.qml.
+    """
+    src = LOCK_QML.read_text()
+    assert "function unlock()" not in src
+    assert 'name: "unlock"' not in src
+    # The lock IPC target stays, but read-only plus lock request only.
+    assert "function isLocked()" in src
+    assert "function lock()" in src
+    pam = (ROOT / "modules" / "lock" / "Pam.qml").read_text()
+    assert pam.count("root.lock.unlock()") == 2  # passwd + fprint success
+    assert "PamResult.Success" in pam
+
+
 def test_policy_documented():
     """The ownership policy doc exists and names the upstream owner."""
     doc = " ".join(DOC.read_text().split())

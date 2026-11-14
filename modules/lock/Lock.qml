@@ -20,7 +20,18 @@ Scope {
     //     must never wedge the lock shut).
     property bool lockRequestPending: false
 
+    // Lock ownership (shell#257): exactly one process may acquire the
+    // session lock. The main shell sets this false when the standalone
+    // lock process (lock.qml + hornero-lock.service) is enabled via
+    // HORNERO_EXTERNAL_LOCK=1, making its requestLock() a no-op; the
+    // lock process leaves it true. Default true = current behaviour.
+    property bool lockOwner: true
+
     function requestLock(): void {
+        if (!lockOwner) {
+            console.warn("lock: not the lock owner, ignoring request (external lock process owns it)");
+            return;
+        }
         if (lock.locked || lockRequestPending) {
             console.warn("lock: redundant request ignored (already locked or in flight)");
             return;

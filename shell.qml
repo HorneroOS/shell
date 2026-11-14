@@ -14,11 +14,19 @@ import "modules/welcome"
 import Quickshell
 
 ShellRoot {
+    // External lock process (shell#257, opt-in): with
+    // HORNERO_EXTERNAL_LOCK=1 the standalone lock.qml instance owns
+    // session-lock acquisition and this shell's requestLock() no-ops.
+    // Unset (default) keeps the in-shell lock exactly as before.
+    readonly property bool externalLock: ["1", "true"].includes((Quickshell.env("HORNERO_EXTERNAL_LOCK") ?? "").toLowerCase())
+
     Background {}
     Drawers {}
     AreaPicker {}
     Lock {
         id: lock
+
+        lockOwner: !externalLock
     }
     PolkitHost {}
 

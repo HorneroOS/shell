@@ -1,0 +1,17 @@
+[Unit]
+Description=Hornero standalone session-lock process (shell#257, opt-in)
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+# Lock-only quickshell instance (lock.qml in the hornero config root):
+# owns WlSessionLock + PAM so a main-shell crash/restart cannot strand
+# the session without a lock surface. Falls back to the packaged
+# config when the user has no config copy/checkout.
+ExecStart=/bin/sh -c 'if [ -f "$${XDG_CONFIG_HOME:-$$HOME/.config}/quickshell/hornero/lock.qml" ]; then exec qs --path "$${XDG_CONFIG_HOME:-$$HOME/.config}/quickshell/hornero/lock.qml"; else exec qs --path /etc/xdg/quickshell/hornero/lock.qml; fi'
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=graphical-session.target

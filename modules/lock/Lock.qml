@@ -71,21 +71,15 @@ Scope {
         onPressed: requestLock()
     }
 
-    CustomShortcut {
-        name: "unlock"
-        description: "Unlock the current session"
-        onPressed: lock.unlock()
-    }
-
+    // No shortcut or IPC unlock path: unlocking requires PAM success
+    // inside Pam.qml (passwd/fprint onCompleted -> lock.unlock()).
+    // Quickshell IPC is reachable by any same-user process, so an
+    // `unlock` IPC/shortcut would be unauthenticated unlock (shell#257).
     IpcHandler {
         target: "lock"
 
         function lock(): void {
             requestLock();
-        }
-
-        function unlock(): void {
-            lock.unlock();
         }
 
         function isLocked(): bool {

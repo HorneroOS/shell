@@ -33,6 +33,13 @@ No other file may write `locked = true`. The regression test
 (`tests/test_lock_ownership.py`) enforces the single acquisition
 point structurally.
 
+Unlocking requires PAM success inside `Pam.qml` (password or
+fingerprint `onCompleted`). There is deliberately no IPC or shortcut
+unlock path: Quickshell IPC is reachable by any same-user process,
+so an `unlock` IPC function would be unauthenticated unlock
+(shell#257). The lock IPC target exposes only `lock` (request) and
+`isLocked` (read-only state).
+
 ## Why prevention, not handling
 
 `WlSessionLock` exposes `locked` and read-only `secure`, but no signal

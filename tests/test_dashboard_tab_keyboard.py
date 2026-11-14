@@ -60,17 +60,37 @@ def test_tab_delegates_to_drawer_trap():
 
 def test_arrow_home_end_traverse_focus_only():
     tab = _tab_component()
-    for key in ("onLeftPressed", "onRightPressed", "onHomePressed", "onEndPressed"):
+    for key in ("onLeftPressed", "onRightPressed"):
         assert f"Keys.{key}" in tab, key
     assert "(tab.TabBar.index - 1 + bar.count) % bar.count" in tab  # Left wraps
     assert "(tab.TabBar.index + 1) % bar.count" in tab  # Right wraps
+    # Home/End have no dedicated Keys signals in Qt Quick; they must
+    # dispatch through Keys.onPressed on Qt.Key_Home / Qt.Key_End.
+    assert "Keys.onPressed" in tab
+    assert "event.key === Qt.Key_Home" in tab
+    assert "event.key === Qt.Key_End" in tab
     assert "bar.itemAt(0)" in tab  # Home
     assert "bar.itemAt(bar.count - 1)" in tab  # End
-    # Arrows move focus only; switching needs an activation key.
-    for key in ("onLeftPressed", "onRightPressed", "onHomePressed", "onEndPressed"):
+    # Arrows/Home/End move focus only; switching needs an activation key.
+    for key in ("onLeftPressed", "onRightPressed"):
         line = next(l for l in tab.splitlines() if f"Keys.{key}" in l)
         assert "currentTab" not in line, f"{key} must not switch tabs"
         assert "forceActiveFocus" in line
+    assert "currentTab" not in tab[tab.index("Keys.onPressed"):tab.index("Keys.onReturnPressed")]
+
+
+def test_only_real_qt_keys_signals_are_used():
+    # Regression (#402 live failure): Keys.onHomePressed/onEndPressed
+    # do not exist, so QML rejected the whole Tabs type at load.
+    import re
+
+    tab = _tab_component()
+    used = set(re.findall(r"Keys\.(on\w+)", tab))
+    valid = {
+        "onPressed", "onTabPressed", "onBacktabPressed", "onLeftPressed",
+        "onRightPressed", "onReturnPressed", "onEnterPressed", "onSpacePressed",
+    }
+    assert used <= valid, f"non-existent Keys signals: {used - valid}"
 
 
 def test_return_enter_space_activate_focused_tab():

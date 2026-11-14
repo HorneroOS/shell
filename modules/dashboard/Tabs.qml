@@ -117,7 +117,41 @@ Item {
         required property string iconName
         readonly property bool current: TabBar.tabBar.currentItem === this
 
+        // Keyboard model (docs/FOCUS.md, #401): roving tab stop —
+        // only the selected tab is in the Tab chain, so FocusMode.enter
+        // (Drawers.syncFocusRoot, which seeds focus only when the drawer
+        // content does not already own it) lands on the current tab and
+        // Tab then moves on into the pane. Left/Right wrap across the
+        // row, Home/End jump to the ends; arrows move focus only,
+        // Return/Enter/Space activate (manual activation, like Menu).
+        // No initial-focus handoff here: stealing focus on open would
+        // break content that already owns it and is forbidden in the
+        // drawer open path (test_escape_cascade). Escape is untouched
+        // and still reaches the central Drawers cascade.
+        activeFocusOnTab: tab.current
+
+        onActiveFocusChanged: {
+            if (activeFocus)
+                FocusMode.reportFocus(tab.pressed);
+        }
+
+        Keys.onTabPressed: event => FocusMode.handleTab(tab, event, false)
+        Keys.onBacktabPressed: event => FocusMode.handleTab(tab, event, true)
+
+        Keys.onLeftPressed: bar.itemAt((tab.TabBar.index - 1 + bar.count) % bar.count)?.forceActiveFocus(Qt.TabFocusReason)
+        Keys.onRightPressed: bar.itemAt((tab.TabBar.index + 1) % bar.count)?.forceActiveFocus(Qt.TabFocusReason)
+        Keys.onHomePressed: bar.itemAt(0)?.forceActiveFocus(Qt.TabFocusReason)
+        Keys.onEndPressed: bar.itemAt(bar.count - 1)?.forceActiveFocus(Qt.TabFocusReason)
+
+        Keys.onReturnPressed: root.state.currentTab = tab.TabBar.index
+        Keys.onEnterPressed: root.state.currentTab = tab.TabBar.index
+        Keys.onSpacePressed: root.state.currentTab = tab.TabBar.index
+
         background: null
+
+        FocusRing {
+            radius: Appearance.rounding.small + 2
+        }
 
         contentItem: CustomMouseArea {
             id: mouse
@@ -128,6 +162,11 @@ Item {
             cursorShape: Qt.PointingHandCursor
 
             onPressed: event => {
+                // Mouse arrival must clear keyboard focus mode: this
+                // TabButton never becomes pressed for pointer input
+                // (mouse is delegated here), so reportFocus would
+                // otherwise leave a stale keyboard ring after a click.
+                FocusMode.reportPointer();
                 root.state.currentTab = tab.TabBar.index;
 
                 const stateY = stateWrapper.y;

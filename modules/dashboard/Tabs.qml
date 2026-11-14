@@ -140,8 +140,14 @@ Item {
 
         Keys.onLeftPressed: bar.itemAt((tab.TabBar.index - 1 + bar.count) % bar.count)?.forceActiveFocus(Qt.TabFocusReason)
         Keys.onRightPressed: bar.itemAt((tab.TabBar.index + 1) % bar.count)?.forceActiveFocus(Qt.TabFocusReason)
-        Keys.onHomePressed: bar.itemAt(0)?.forceActiveFocus(Qt.TabFocusReason)
-        Keys.onEndPressed: bar.itemAt(bar.count - 1)?.forceActiveFocus(Qt.TabFocusReason)
+        // Qt Quick Keys has no onHomePressed/onEndPressed signals;
+        // Home/End arrive through the generic onPressed handler.
+        Keys.onPressed: event => {
+            if (event.key === Qt.Key_Home)
+                bar.itemAt(0)?.forceActiveFocus(Qt.TabFocusReason);
+            else if (event.key === Qt.Key_End)
+                bar.itemAt(bar.count - 1)?.forceActiveFocus(Qt.TabFocusReason);
+        }
 
         Keys.onReturnPressed: root.state.currentTab = tab.TabBar.index
         Keys.onEnterPressed: root.state.currentTab = tab.TabBar.index

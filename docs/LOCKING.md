@@ -40,6 +40,29 @@ so an `unlock` IPC function would be unauthenticated unlock
 (shell#257). The lock IPC target exposes only `lock` (request) and
 `isLocked` (read-only state).
 
+## Standalone lock process (opt-in, experimental)
+
+`lock.qml` is a lock-only quickshell entrypoint (Lock + lock-only
+idle/logind monitors, nothing else) supervised by the shipped
+`hornero-lock.service` user unit (`Restart=on-failure`). It exists so
+a main-shell crash or restart can no longer take the lock surface
+down with it (shell#257, reproduced live on a development host).
+
+The package ships the unit but it is **never enabled by the package**.
+Enabling is an explicit opt-in pair — both halves or neither:
+
+1. `systemctl --user enable --now hornero-lock.service`
+2. Run the main shell with `HORNERO_EXTERNAL_LOCK=1`, which sets
+   `Lock.lockOwner=false` there so its `requestLock()` no-ops.
+
+Exactly one process owns acquisition at any time (the
+single-locker rule above applies across processes too). Unlocking
+stays PAM-only inside whichever process owns the lock; there is no
+IPC unlock path. If the lock process dies while locked, the
+supervisor restarts it but a restarted instance cannot reclaim an
+already-held compositor lock — recovery is the TTY procedure below,
+never an automated unlock.
+
 ## Why prevention, not handling
 
 `WlSessionLock` exposes `locked` and read-only `secure`, but no signal

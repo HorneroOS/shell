@@ -82,7 +82,7 @@ if("shell" IN_LIST ENABLE_MODULES)
     foreach(dir assets components config modules services utils)
         install(DIRECTORY ${dir} DESTINATION "${INSTALL_QSCONFDIR}")
     endforeach()
-    install(FILES shell.qml LICENSE.GPL-3.0 NOTICE DESTINATION "${INSTALL_QSCONFDIR}")
+    install(FILES shell.qml lock.qml LICENSE.GPL-3.0 NOTICE DESTINATION "${INSTALL_QSCONFDIR}")
     # Bare `qs` resolves the config named "default" (Quickshell scans
     # <xdg>/quickshell/<name>/shell.qml). Point the system default at the
     # packaged Hornero config so a plain `qs` works on a stock install;
@@ -139,5 +139,9 @@ if("shell" IN_LIST ENABLE_MODULES)
         DESTINATION "bin"
         RENAME hornero-bt-agent)
     install(FILES assets/hornero-bt-agent.service
+        DESTINATION "lib/systemd/user")
+    # Standalone lock process (shell#257): shipped but never enabled by
+    # the package; enabling is an explicit opt-in (docs/LOCKING.md).
+    install(FILES assets/hornero-lock.service
         DESTINATION "lib/systemd/user")
 endif()

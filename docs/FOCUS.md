@@ -45,6 +45,17 @@ action) stay unfocusable. Never add tab stops to decoration.
   ring + focus-reason report — no reimplemented key tables.
 - `Menu.qml` owns arrow navigation + typeahead-free selection for
   its items (one menu implementation, not per-call-site `Keys`).
+- Dashboard header tabs (`modules/dashboard/Tabs.qml`, #401) are a
+  roving tab stop: only the selected `TabButton` has
+  `activeFocusOnTab`, it carries the shared `FocusRing` and reports
+  focus reason like `Interactive`. `Left`/`Right` wrap across the
+  row, `Home`/`End` jump to the ends (focus only), and
+  `Return`/`Enter`/`Space` activate the focused tab. On drawer open
+  there is deliberately no focus handoff in the dashboard itself:
+  `Drawers.syncFocusRoot` seeds the first stop (the selected tab)
+  only when focus is not already inside the drawer, so pane content
+  that owns focus keeps it. Escape is not handled by the tabs and
+  still reaches the central S3 cascade unchanged.
 
 ## Focus visuals
 

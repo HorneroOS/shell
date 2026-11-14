@@ -34,7 +34,10 @@ def test_shortcuts_page_registered_in_nav_order():
 
 def test_dashboard_keys_tab_removed():
     tabs = (DASH / "Tabs.qml").read_text()
-    assert "Keys" not in tabs, "dashboard Keys tab must move to Welcome"
+    # No tab LABELLED Keys (it moved to Welcome). A bare "Keys" substring
+    # would also match Keys.on* keyboard handlers, which the tab row
+    # legitimately uses for keyboard navigation (shell#401).
+    assert 'qsTr("Keys")' not in tabs, "dashboard Keys tab must move to Welcome"
     content = (DASH / "Content.qml").read_text()
     assert "Keybindings" not in content, "dashboard Keybindings pane remains"
     assert not (DASH / "Keybindings.qml").exists(), \

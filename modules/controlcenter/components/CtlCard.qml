@@ -40,6 +40,23 @@ StyledRect {
         }
     }
 
+    // Split the result into rows. `key : value` (horneroctl's status and
+    // doctor layout) gives a labelled row; anything else keeps its line.
+    function resultRows(): var {
+        const rows = [];
+        for (const raw of root.resultText.split("\n")) {
+            const line = raw.trim();
+            if (line === "")
+                continue;
+            const match = line.match(/^([A-Za-z0-9_.-]+)\s*:\s*(.*)$/);
+            if (match)
+                rows.push({ key: match[1], value: match[2] });
+            else
+                rows.push({ key: "", value: line });
+        }
+        return rows;
+    }
+
     function runProbe(): void {
         if (probeProc.running)
             return;
@@ -171,14 +188,46 @@ StyledRect {
             wrapMode: Text.Wrap
         }
 
-        StyledText {
+        // Key/value results (`key : value` lines from horneroctl) read as
+        // a two-column table: quiet label, mono value that wraps inside
+        // its column. Any other line falls back to a full-width row.
+        ColumnLayout {
             visible: !probeProc.running && !actionProc.running && root.errorText === "" && root.resultText !== ""
             Layout.fillWidth: true
-            text: root.resultText
-            font.family: Appearance.font.family.mono
-            font.pointSize: Appearance.font.size.small
-            color: Colours.palette.m3onSurface
-            wrapMode: Text.Wrap
+            spacing: Appearance.spacing.small
+
+            Repeater {
+                model: root.resultRows()
+
+                delegate: RowLayout {
+                    id: resultRow
+
+                    required property var modelData
+
+                    Layout.fillWidth: true
+                    spacing: Appearance.spacing.normal
+
+                    StyledText {
+                        visible: resultRow.modelData.key !== ""
+                        Layout.preferredWidth: 120
+                        Layout.maximumWidth: 120
+                        Layout.alignment: Qt.AlignTop
+                        text: resultRow.modelData.key
+                        font.pointSize: Appearance.font.size.small
+                        color: Colours.palette.m3onSurfaceVariant
+                        wrapMode: Text.WrapAnywhere
+                    }
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: resultRow.modelData.value
+                        font.family: Appearance.font.family.mono
+                        font.pointSize: Appearance.font.size.small
+                        color: Colours.palette.m3onSurface
+                        wrapMode: Text.WrapAnywhere
+                    }
+                }
+            }
         }
 
         StyledText {

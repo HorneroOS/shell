@@ -70,4 +70,19 @@ QtObject {
     function motionDuration(ms: int): int {
         return reducedMotion ? 0 : Math.round(ms * animationScale);
     }
+
+    // Native state and motion contract (shell components/controls
+    // StateLayer, FocusRing and Interactive). Durations already carry the
+    // host's scale; reduced motion zeroes them. Plugins never hard-code
+    // these numbers, so an extension moves exactly like a native control.
+    readonly property int durationSmall: reducedMotion ? 0 : Appearance.anim.durations.small
+    readonly property int durationNormal: reducedMotion ? 0 : Appearance.anim.durations.normal
+    readonly property var curveStandard: Appearance.anim.curves.standard
+    readonly property var curveStandardDecel: Appearance.anim.curves.standardDecel
+    // Keyboard-only focus: rings show iff the control has focus AND the
+    // last input was a keyboard (docs/FOCUS.md). Pointer users never see them.
+    readonly property bool keyboardFocus: FocusMode.keyboard
+    // Opacity of the state layer drawn over a control (native StateLayer).
+    readonly property real stateHoverOpacity: 0.08
+    readonly property real statePressedOpacity: 0.12
 }

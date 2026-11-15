@@ -273,6 +273,13 @@ ThemeBase {
     readonly property bool highContrast: false
     readonly property bool reducedMotion: stubReducedMotion
     readonly property real animationScale: stubAnimScale
+    readonly property int durationSmall: 200
+    readonly property int durationNormal: 400
+    readonly property var curveStandard: [0.2, 0, 0, 1, 1, 1]
+    readonly property var curveStandardDecel: [0, 0, 0, 1, 1, 1]
+    readonly property bool keyboardFocus: true
+    readonly property real stateHoverOpacity: 0.08
+    readonly property real statePressedOpacity: 0.12
     function motionDuration(ms: int): int {
         return reducedMotion ? 0 : Math.round(ms * animationScale);
     }
@@ -294,6 +301,7 @@ UiState 1.0 UiState.qml
 UiTooltip 1.0 UiTooltip.qml
 UiPopover 1.0 UiPopover.qml
 UiStack 1.0 UiStack.qml
+UiStateLayer 1.0 UiStateLayer.qml
 """
 
 
@@ -318,7 +326,7 @@ def test_keyboard_only_operation_offscreen(tmp_path):
 
     kit = tmp_path / "Hornero" / "PluginKit"
     kit.mkdir(parents=True)
-    for name in UI_TYPES + ["UiStack"]:
+    for name in UI_TYPES + ["UiStack", "UiStateLayer"]:
         shutil.copy(KIT / f"{name}.qml", kit / f"{name}.qml")
     (kit / "ThemeBase.qml").write_text(_STUB_THEME_BASE, encoding="utf-8")
     (kit / "Theme.qml").write_text(_STUB_THEME, encoding="utf-8")
@@ -370,3 +378,26 @@ def test_ui_button_fits_narrow_bar_rails():
     assert "Text.Fit" in src
     assert "Math.min(root.railWidth" in src
     assert "implicitLeftPadding" in src
+
+
+def test_state_layer_and_motion_contract_matches_native():
+    """Extension controls use the shell's state contract (#419): hover 8%,
+    pressed 12%, ripple with standardDecel, keyboard-only focus ring and
+    reduced-motion gating. Numbers live in Theme, never in controls.
+    """
+    theme = (KIT / "Theme.qml").read_text(encoding="utf-8")
+    assert "stateHoverOpacity: 0.08" in theme
+    assert "statePressedOpacity: 0.12" in theme
+    assert "curveStandardDecel" in theme and "curveStandard" in theme
+    assert "keyboardFocus: FocusMode.keyboard" in theme
+    assert "reducedMotion ? 0" in theme
+
+    layer = (KIT / "UiStateLayer.qml").read_text(encoding="utf-8")
+    assert "Theme.stateHoverOpacity" in layer and "Theme.statePressedOpacity" in layer
+    assert "Theme.curveStandardDecel" in layer
+    assert "Theme.reducedMotion" in layer
+
+    button = (KIT / "UiButton.qml").read_text(encoding="utf-8")
+    assert "UiStateLayer" in button and "HoverHandler" in button
+    assert "Theme.keyboardFocus" in button
+    assert "Theme.focusRing" in button

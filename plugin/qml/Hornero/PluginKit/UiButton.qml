@@ -79,13 +79,62 @@ Button {
         opacity: root.enabled ? 1 : 0.5
     }
 
-    background: Rectangle {
-        color: root.variant === "ghost" ? "transparent" : Theme.primary
-        // A capsule (full rounding) clips the ends of a label on a
-        // narrow rail; a small radius keeps the whole label inside.
-        radius: root.railCompact ? Theme.roundingSmall : Theme.rounding
-        border.width: root.activeFocus ? 2 : root.variant === "ghost" ? 1 : 0
-        border.color: root.activeFocus ? Theme.focusRing : Theme.outline
-        opacity: root.enabled ? 1 : 0.5
+    // Native interaction: hover and press show the shell state layer
+    // (8% / 12%, ripple from the contact point); the focus ring appears
+    // only for keyboard focus and floats 2 px outside the shape.
+    HoverHandler {
+        id: hover
+
+        enabled: root.enabled
+    }
+
+    TapHandler {
+        id: tap
+
+        enabled: root.enabled
+        onPressedChanged: {
+            if (pressed && stateLayer)
+                stateLayer.startRipple(point.position.x, point.position.y);
+        }
+    }
+
+    background: Item {
+        implicitWidth: 40
+        implicitHeight: 24
+
+        Rectangle {
+            id: surface
+
+            anchors.fill: parent
+            color: root.variant === "ghost" ? "transparent" : Theme.primary
+            // A capsule (full rounding) clips the ends of a label on a
+            // narrow rail; a small radius keeps the whole label inside.
+            radius: root.railCompact ? Theme.roundingSmall : Theme.rounding
+            border.width: root.variant === "ghost" ? 1 : 0
+            border.color: Theme.outline
+            opacity: root.enabled ? 1 : 0.5
+
+            UiStateLayer {
+                id: stateLayer
+
+                anchors.fill: parent
+                radius: surface.radius
+                hovered: hover.hovered
+                pressed: root.down
+                disabled: !root.enabled
+                color: root.variant === "ghost" ? Theme.primary : Theme.onPrimary
+            }
+        }
+
+        // Keyboard-only focus ring (shell FocusRing contract).
+        Rectangle {
+            anchors.fill: parent
+            anchors.margins: -2
+            radius: surface.radius + 2
+            color: "transparent"
+            border.width: 2
+            border.color: Theme.focusRing
+            visible: root.activeFocus && Theme.keyboardFocus && root.enabled
+        }
     }
 }

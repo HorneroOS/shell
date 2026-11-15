@@ -1,6 +1,7 @@
 pragma Singleton
 
 import qs.config
+import qs.services
 import QtQuick
 
 QtObject {

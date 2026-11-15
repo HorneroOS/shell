@@ -334,3 +334,25 @@ def test_keyboard_only_operation_offscreen(tmp_path):
     assert "PluginKitKeyboard" in out, out
     assert "0 failed" in out, out
     assert result.returncode == 0, out
+
+
+# Singletons defined outside the PluginKit module, mapped to the shell
+# module that owns them. A PluginKit file referencing one of these must
+# import its owning module, or the identifier is undefined at runtime and
+# every colour/value silently resolves to undefined (black cards, invisible
+# text). Regression for shell#408: Theme.qml used Colours with only
+# `import qs.config`, so Colours (services/Colours.qml) was not defined.
+SHELL_SINGLETONS = {
+    "Colours": "qs.services",
+    "Appearance": "qs.config",
+    "Config": "qs.config",
+}
+
+
+def test_pluginkit_files_import_the_module_defining_each_shell_singleton():
+    for path in sorted(KIT.glob("*.qml")):
+        src = path.read_text(encoding="utf-8")
+        imports = set(IMPORT_RE.findall(src))
+        for name, module in SHELL_SINGLETONS.items():
+            if re.search(rf"\b{name}\.", src):
+                assert module in imports, (path.name, name, module)

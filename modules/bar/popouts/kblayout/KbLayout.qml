@@ -118,7 +118,7 @@ ColumnLayout {
                 anchors.rightMargin: Appearance.padding.small
                 text: label
                 elide: Text.ElideRight
-                opacity: isDisabled ? 0.4 : 1.0
+                opacity: 1.0
             }
 
             ToolTip.visible: isDisabled && layer.containsMouse
@@ -133,8 +133,7 @@ ColumnLayout {
         Layout.topMargin: Appearance.spacing.small
 
         height: 1
-        color: Colours.palette.m3onSurfaceVariant
-        opacity: 0.35
+        color: Colours.palette.m3outline
     }
 
     RowLayout {

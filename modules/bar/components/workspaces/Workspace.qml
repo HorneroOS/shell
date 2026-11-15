@@ -90,7 +90,7 @@ Item {
             color: {
                 if (root.labels)
                     return root.isActive ? Colours.palette.m3primary : root.isOccupied ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant;
-                return Config.bar.workspaces.occupiedBg || root.isOccupied || root.isActive ? Colours.palette.m3onSurface : Colours.layer(Colours.palette.m3outlineVariant, 2);
+                return Config.bar.workspaces.occupiedBg || root.isOccupied || root.isActive ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant;
             }
             verticalAlignment: Qt.AlignVCenter
             horizontalAlignment: Qt.AlignHCenter

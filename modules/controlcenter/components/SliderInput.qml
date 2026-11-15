@@ -129,7 +129,7 @@ ColumnLayout {
         StyledText {
             visible: root.suffix !== ""
             text: root.suffix
-            color: Colours.palette.m3outline
+            color: Colours.palette.m3onSurfaceVariant
             font.pointSize: Appearance.font.size.normal
         }
     }

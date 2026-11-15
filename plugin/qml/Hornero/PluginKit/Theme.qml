@@ -37,6 +37,9 @@ QtObject {
     readonly property color onError: Colours.palette.m3onError
     readonly property color outline: Colours.palette.m3outline
     readonly property color outlineVariant: Colours.palette.m3outlineVariant
+    // Essential component borders must reach 3:1 (WCAG 1.4.11);
+    // outlineVariant does not, outline does in every builtin palette.
+    readonly property color componentBorder: Colours.palette.m3outline
     readonly property color success: Colours.palette.m3success
     readonly property string fontFamily: Appearance.font.family.sans
     readonly property string monoFontFamily: Appearance.font.family.mono

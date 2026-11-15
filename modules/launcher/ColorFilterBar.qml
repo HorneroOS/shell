@@ -100,7 +100,7 @@ StyledRect {
                 implicitWidth: 24
                 implicitHeight: 24
                 border.width: Wallpapers.colorFilter === modelData.id ? 3 : 1
-                border.color: Wallpapers.colorFilter === modelData.id ? Colours.palette.m3onSurface : Qt.alpha(Colours.palette.m3outline, 0.5)
+                border.color: Wallpapers.colorFilter === modelData.id ? Colours.palette.m3onSurface : Colours.palette.m3outline
 
                 Accessible.role: Accessible.Button
                 Accessible.name: swatch.modelData.name

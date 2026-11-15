@@ -248,7 +248,7 @@ Popup {
         color: Theme.surfaceContainer
         radius: Theme.rounding
         border.width: 1
-        border.color: Theme.outlineVariant
+        border.color: Theme.componentBorder
         antialiasing: true
 
         // Fallback focus stop when the panel has no focusable content,

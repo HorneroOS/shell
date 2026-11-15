@@ -144,7 +144,7 @@ Popup {
         color: Colours.tPalette.m3surfaceContainerHigh
         radius: Appearance.rounding.large
         border.width: 1
-        border.color: Qt.alpha(Colours.palette.m3outlineVariant, 0.55)
+        border.color: Colours.palette.m3onSurfaceVariant
     }
 
     Overlay.modal: Rectangle {
@@ -175,7 +175,7 @@ Popup {
 
             StyledText {
                 text: "ESC"
-                color: Colours.palette.m3outline
+                color: Colours.palette.m3onSurfaceVariant
                 font.pointSize: Appearance.font.size.smaller
             }
         }
@@ -225,7 +225,7 @@ Popup {
         Rectangle {
             Layout.fillWidth: true
             height: 1
-            color: Qt.alpha(Colours.palette.m3outlineVariant, 0.45)
+            color: Colours.palette.m3onSurfaceVariant
         }
 
         Item {
@@ -313,7 +313,7 @@ Popup {
             Layout.alignment: Qt.AlignHCenter
             Layout.bottomMargin: Appearance.padding.normal
             text: qsTr("↑ ↓ move     Enter open     Esc close")
-            color: Colours.palette.m3outline
+            color: Colours.palette.m3onSurfaceVariant
             font.pointSize: Appearance.font.size.smaller
         }
     }

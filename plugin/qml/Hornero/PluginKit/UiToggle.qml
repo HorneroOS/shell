@@ -57,7 +57,7 @@ Switch {
         radius: height / 2
         color: root.checked ? Theme.primary : Theme.surfaceContainerHighest
         border.width: root.activeFocus ? 2 : 1
-        border.color: root.activeFocus ? (root.checked ? Theme.onPrimary : Theme.primary) : Theme.outline
+        border.color: root.activeFocus ? Theme.focusRing : Theme.outline
         opacity: root.enabled ? 1 : 0.5
 
         Rectangle {

@@ -37,7 +37,7 @@ Item {
         color: inputHover.containsMouse || inputField.activeFocus ? Colours.layer(Colours.palette.m3surfaceContainer, 3) : Colours.layer(Colours.palette.m3surfaceContainer, 2)
         radius: Appearance.rounding.small
         border.width: 1
-        border.color: inputField.activeFocus ? Colours.palette.m3primary : Qt.alpha(Colours.palette.m3outline, 0.3)
+        border.color: inputField.activeFocus ? Colours.palette.m3primary : Colours.palette.m3outline
         opacity: root.enabled ? 1 : 0.5
 
         Behavior on color {

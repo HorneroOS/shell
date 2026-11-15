@@ -235,7 +235,7 @@ Popup {
         color: Theme.surfaceContainerHighest
         radius: Theme.roundingSmall
         border.width: 1
-        border.color: Theme.outlineVariant
+        border.color: Theme.componentBorder
         antialiasing: true
 
         Accessible.role: Accessible.ToolTip

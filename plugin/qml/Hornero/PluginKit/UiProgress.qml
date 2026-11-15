@@ -20,6 +20,8 @@ ProgressBar {
         implicitHeight: 6
         radius: height / 2
         color: Theme.surfaceContainerHighest
+        border.width: 1
+        border.color: Theme.componentBorder
     }
 
     contentItem: Item {
@@ -37,7 +39,6 @@ ProgressBar {
             height: parent.height
             radius: height / 2
             color: Theme.primary
-            opacity: 0.6
         }
     }
 

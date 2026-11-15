@@ -433,3 +433,16 @@ def test_toggle_thumb_matches_native_switch_motion():
     assert "opacity: root.down ? 0.1 : hover.hovered ? 0.08 : 0" in src
     assert "Theme.durationNormal" in src and "Theme.curveStandard" in src
     assert "Theme.keyboardFocus" in src
+
+
+def test_slider_handle_matches_native_handle_motion():
+    """Native handle reacts to hover with a state layer and swells while
+    dragged (FilledSlider), animating over the half-normal duration. The
+    focus ring is keyboard-only (#419 follow-up).
+    """
+    src = (KIT / "UiSlider.qml").read_text(encoding="utf-8")
+    assert "HoverHandler" in src
+    assert "UiStateLayer" in src
+    assert "root.pressed ? 1.2 : 1" in src
+    assert "Theme.durationNormal / 2" in src and "Theme.curveStandardDecel" in src
+    assert "Theme.keyboardFocus" in src

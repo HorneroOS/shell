@@ -356,3 +356,17 @@ def test_pluginkit_files_import_the_module_defining_each_shell_singleton():
         for name, module in SHELL_SINGLETONS.items():
             if re.search(rf"\b{name}\.", src):
                 assert module in imports, (path.name, name, module)
+
+
+def test_ui_button_fits_narrow_bar_rails():
+    """Bar indicators on a thin vertical rail (64 px) clipped at the host
+    Loader edge: UiButton must detect the host rail from its ancestors,
+    shrink its label to fit (never clip characters) and keep its
+    implicit width within the rail. Regression for the bar pills (#410).
+    """
+    src = (KIT / "UiButton.qml").read_text(encoding="utf-8")
+    assert "hostCompact" in src
+    assert "hostAvailableWidth" in src
+    assert "Text.Fit" in src
+    assert "Math.min(root.railWidth" in src
+    assert "implicitLeftPadding" in src

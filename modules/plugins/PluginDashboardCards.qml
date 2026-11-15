@@ -143,7 +143,11 @@ Item {
                     // Cap by the real width of the viewport too: a section
                     // whose cards would not fit must wrap into fewer
                     // columns, never overflow past the tab edge.
-                    readonly property int gridColumns: Math.max(1, Math.min(root.columns, section.modelData.plugins.length, layoutHelper.columnsForWidth(sections.width, Appearance.spacing.normal)))
+                    // Columns that fit the viewport at a standard card's real
+                    // outer width (not the 260 px minimum), so a row never
+                    // sums to more than the tab width.
+                    readonly property real standardCardWidth: layoutHelper.contentWidth("standard") + Appearance.padding.large * 2
+                    readonly property int gridColumns: Math.max(1, Math.min(root.columns, section.modelData.plugins.length, Math.floor((sections.width + Appearance.spacing.normal) / (standardCardWidth + Appearance.spacing.normal))))
 
                     width: Math.min(sections.width, Math.max(header.implicitWidth, grid.implicitWidth))
                     spacing: Appearance.spacing.small

@@ -140,7 +140,10 @@ Item {
 
                     required property var modelData
 
-                    readonly property int gridColumns: Math.max(1, Math.min(root.columns, section.modelData.plugins.length))
+                    // Cap by the real width of the viewport too: a section
+                    // whose cards would not fit must wrap into fewer
+                    // columns, never overflow past the tab edge.
+                    readonly property int gridColumns: Math.max(1, Math.min(root.columns, section.modelData.plugins.length, layoutHelper.columnsForWidth(sections.width, Appearance.spacing.normal)))
 
                     width: Math.min(sections.width, Math.max(header.implicitWidth, grid.implicitWidth))
                     spacing: Appearance.spacing.small

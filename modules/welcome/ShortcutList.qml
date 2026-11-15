@@ -357,7 +357,7 @@ ColumnLayout {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 1
                         Layout.alignment: Qt.AlignVCenter
-                        color: Colours.palette.m3outlineVariant
+                        color: Colours.palette.m3outline
                     }
                 }
 
@@ -421,7 +421,7 @@ ColumnLayout {
         color: Colours.palette.m3surfaceContainerHighest
         radius: Appearance.rounding.small
         border.width: 1
-        border.color: Colours.palette.m3outlineVariant
+        border.color: Colours.palette.m3outline
 
         StyledText {
             id: capLabel
@@ -449,7 +449,7 @@ ColumnLayout {
         color: chip.selected ? Colours.palette.m3primaryContainer : Colours.palette.m3surfaceContainerHigh
         radius: Appearance.rounding.full
         border.width: 1
-        border.color: chip.selected ? "transparent" : Colours.palette.m3outlineVariant
+        border.color: chip.selected ? "transparent" : Colours.palette.m3outline
 
         StyledText {
             id: chipLabel

@@ -696,7 +696,6 @@ Item {
                     color: Colours.palette.m3onSurfaceVariant
                     font.pointSize: Appearance.font.size.normal
                     visible: storageGaugeCard.diskCount > 1
-                    opacity: 0.7
                     ToolTip.visible: hintHover.hovered
                     ToolTip.text: qsTr("Scroll to switch disks")
                     ToolTip.delay: 500
@@ -932,7 +931,6 @@ Item {
                     font.pointSize: Appearance.font.size.small
                     color: Colours.palette.m3onSurfaceVariant
                     visible: NetworkUsage.downloadHistory.length < 2
-                    opacity: 0.6
                 }
             }
 

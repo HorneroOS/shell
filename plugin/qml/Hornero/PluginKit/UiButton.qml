@@ -48,7 +48,7 @@ Button {
         color: root.variant === "ghost" ? "transparent" : Theme.primary
         radius: Theme.rounding
         border.width: root.activeFocus ? 2 : root.variant === "ghost" ? 1 : 0
-        border.color: root.activeFocus ? (root.variant === "ghost" ? Theme.primary : Theme.onPrimary) : Theme.outline
+        border.color: root.activeFocus ? Theme.focusRing : Theme.outline
         opacity: root.enabled ? 1 : 0.5
     }
 }

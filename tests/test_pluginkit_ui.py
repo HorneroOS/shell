@@ -89,8 +89,9 @@ def test_uitoggle_contract():
     assert "onValueChanged" in src
     assert "root.value = checked" in src
     assert "checked = root.value" in src
-    # Checked track is Theme.primary, so its focus border must contrast.
-    assert "root.checked ? Theme.onPrimary : Theme.primary" in src
+    # Focus border uses Theme.focusRing: it contrasts against the host
+    # surface outside the control in both states (onPrimary does not).
+    assert "root.activeFocus ? Theme.focusRing" in src
 
 
 def test_uislider_contract():

@@ -113,7 +113,7 @@ def test_uipopover_accessible_role_and_name():
 def test_uipopover_uses_theme_tokens_only():
     for token in (
         "Theme.surfaceContainer",
-        "Theme.outlineVariant",
+        "Theme.componentBorder",
         "Theme.rounding",
         "Theme.spacing",
         "Theme.spacingSmall",

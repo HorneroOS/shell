@@ -10,6 +10,8 @@ Rectangle {
     implicitHeight: label.implicitHeight + Theme.spacingSmall * 2
     radius: height / 2
     color: root.tone === "primary" ? Theme.primaryContainer : root.tone === "error" ? Theme.errorContainer : Theme.surfaceContainerHighest
+    border.width: 1
+    border.color: Theme.componentBorder
 
     Text {
         id: label

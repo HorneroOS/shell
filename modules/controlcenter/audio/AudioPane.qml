@@ -320,9 +320,8 @@ Item {
 
                                 StyledText {
                                     text: "%"
-                                    color: Colours.palette.m3outline
+                                    color: Colours.palette.m3onSurfaceVariant
                                     font.pointSize: Appearance.font.size.normal
-                                    opacity: Audio.muted ? 0.5 : 1
                                 }
 
                                 StyledRect {
@@ -436,9 +435,8 @@ Item {
 
                                 StyledText {
                                     text: "%"
-                                    color: Colours.palette.m3outline
+                                    color: Colours.palette.m3onSurfaceVariant
                                     font.pointSize: Appearance.font.size.normal
-                                    opacity: Audio.sourceMuted ? 0.5 : 1
                                 }
 
                                 StyledRect {

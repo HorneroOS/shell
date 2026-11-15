@@ -65,6 +65,8 @@ Slider {
         height: implicitHeight
         radius: height / 2
         color: Theme.surfaceContainerHighest
+        border.width: 1
+        border.color: Theme.componentBorder
 
         Rectangle {
             width: root.visualPosition * parent.width
@@ -82,6 +84,6 @@ Slider {
         radius: width / 2
         color: Theme.primary
         border.width: root.activeFocus ? 2 : 0
-        border.color: Theme.onPrimary
+        border.color: Theme.focusRing
     }
 }

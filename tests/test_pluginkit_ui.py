@@ -91,7 +91,8 @@ def test_uitoggle_contract():
     assert "checked = root.value" in src
     # Focus border uses Theme.focusRing: it contrasts against the host
     # surface outside the control in both states (onPrimary does not).
-    assert "root.activeFocus ? Theme.focusRing" in src
+    assert "border.color: Theme.focusRing" in src
+    assert "visible: root.activeFocus && Theme.keyboardFocus" in src
 
 
 def test_uislider_contract():
@@ -419,3 +420,16 @@ def test_popover_and_tooltip_fades_use_native_motion_tokens():
     assert "Theme.durationExpressiveFastSpatial" in tooltip
     assert "Theme.curveExpressiveFastSpatial" in tooltip
     assert "motionDuration(120)" not in tooltip
+
+
+def test_toggle_thumb_matches_native_switch_motion():
+    """Native switch thumb stretches while pressed (x1.3), has 8% hover and
+    10% press layers, and animates over the normal duration. Keyboard-only
+    focus ring (#419).
+    """
+    src = (KIT / "UiToggle.qml").read_text(encoding="utf-8")
+    assert "HoverHandler" in src
+    assert "pressedWidth" in src and "root.down" in src
+    assert "opacity: root.down ? 0.1 : hover.hovered ? 0.08 : 0" in src
+    assert "Theme.durationNormal" in src and "Theme.curveStandard" in src
+    assert "Theme.keyboardFocus" in src

@@ -192,11 +192,13 @@ def test_theme_exposes_host_accessibility_inheritance():
 def test_host_reduced_motion_gates_kit_animation():
     progress = (KIT / "UiProgress.qml").read_text(encoding="utf-8")
     assert "root.indeterminate && root.animated && !Theme.reducedMotion" in progress
-    for name in ("UiTooltip", "UiPopover"):
+    # Fades take their duration from Theme motion tokens, which are zero
+    # under reduced motion (Theme.durationNormal / durationExpressiveFastSpatial).
+    gated = {"UiTooltip": "Theme.durationExpressiveFastSpatial", "UiPopover": "Theme.durationNormal"}
+    for name, token in gated.items():
         src = (KIT / f"{name}.qml").read_text(encoding="utf-8")
-        assert "duration: Theme.motionDuration(120)" in src, name
-        assert "duration: 120" not in src.replace(
-            "duration: Theme.motionDuration(120)", ""), name
+        assert token in src, name
+        assert "duration: 120" not in src, name
 
 
 def test_reference_examples_are_keyboard_operable():
@@ -279,6 +281,8 @@ ThemeBase {
     readonly property var curveStandardDecel: [0, 0, 0, 1, 1, 1]
     readonly property bool keyboardFocus: true
     readonly property real stateHoverOpacity: 0.08
+    readonly property int durationExpressiveFastSpatial: 350
+    readonly property var curveExpressiveFastSpatial: [0.42, 1.67, 0.21, 0.9, 1, 1]
     readonly property real statePressedOpacity: 0.12
     function motionDuration(ms: int): int {
         return reducedMotion ? 0 : Math.round(ms * animationScale);
@@ -401,3 +405,17 @@ def test_state_layer_and_motion_contract_matches_native():
     assert "UiStateLayer" in button and "HoverHandler" in button
     assert "Theme.keyboardFocus" in button
     assert "Theme.focusRing" in button
+
+
+def test_popover_and_tooltip_fades_use_native_motion_tokens():
+    """Native popouts fade over the normal duration (standard curve) and
+    native tooltips over expressiveFastSpatial. PluginKit must use the same
+    tokens, not hard-coded 120 ms fades scaled twice (#421).
+    """
+    popover = (KIT / "UiPopover.qml").read_text(encoding="utf-8")
+    tooltip = (KIT / "UiTooltip.qml").read_text(encoding="utf-8")
+    assert "Theme.durationNormal" in popover and "Theme.curveStandard" in popover
+    assert "motionDuration(120)" not in popover
+    assert "Theme.durationExpressiveFastSpatial" in tooltip
+    assert "Theme.curveExpressiveFastSpatial" in tooltip
+    assert "motionDuration(120)" not in tooltip

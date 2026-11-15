@@ -79,6 +79,8 @@ QtObject {
     readonly property int durationNormal: reducedMotion ? 0 : Appearance.anim.durations.normal
     readonly property var curveStandard: Appearance.anim.curves.standard
     readonly property var curveStandardDecel: Appearance.anim.curves.standardDecel
+    readonly property int durationExpressiveFastSpatial: reducedMotion ? 0 : Appearance.anim.durations.expressiveFastSpatial
+    readonly property var curveExpressiveFastSpatial: Appearance.anim.curves.expressiveFastSpatial
     // Keyboard-only focus: rings show iff the control has focus AND the
     // last input was a keyboard (docs/FOCUS.md). Pointer users never see them.
     readonly property bool keyboardFocus: FocusMode.keyboard

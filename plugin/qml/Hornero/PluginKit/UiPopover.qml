@@ -221,12 +221,16 @@ Popup {
         }
     }
 
+    // Native popout timing (modules/bar/popouts/Wrapper.qml): content fades
+    // over the shared normal duration with the standard curve, both ways.
     enter: Transition {
         NumberAnimation {
             property: "opacity"
             from: 0
             to: 1
-            duration: Theme.motionDuration(120)
+            duration: Theme.durationNormal
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: Theme.curveStandard
         }
     }
 
@@ -235,7 +239,9 @@ Popup {
             property: "opacity"
             from: 1
             to: 0
-            duration: Theme.motionDuration(120)
+            duration: Theme.durationNormal
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: Theme.curveStandard
         }
     }
 

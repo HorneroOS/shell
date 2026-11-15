@@ -213,7 +213,9 @@ Popup {
             property: "opacity"
             from: 0
             to: 1
-            duration: Theme.motionDuration(120)
+            duration: Theme.durationExpressiveFastSpatial
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: Theme.curveExpressiveFastSpatial
         }
     }
 
@@ -222,7 +224,9 @@ Popup {
             property: "opacity"
             from: 1
             to: 0
-            duration: Theme.motionDuration(120)
+            duration: Theme.durationExpressiveFastSpatial
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: Theme.curveExpressiveFastSpatial
         }
     }
 

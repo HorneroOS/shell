@@ -76,14 +76,53 @@ Slider {
         }
     }
 
+    // Native handle (components/controls/FilledSlider.qml): it reacts to
+    // hover with a state layer and swells while dragged, animating over the
+    // half-normal duration. The focus ring is keyboard-only.
+    HoverHandler {
+        id: hover
+
+        enabled: root.enabled
+    }
+
     handle: Rectangle {
+        id: knob
+
         x: root.leftPadding + root.visualPosition * (root.availableWidth - width)
         y: root.topPadding + root.availableHeight / 2 - height / 2
         implicitWidth: 18
         implicitHeight: 18
         radius: width / 2
         color: Theme.primary
-        border.width: root.activeFocus ? 2 : 0
-        border.color: Theme.focusRing
+        scale: root.pressed ? 1.2 : 1
+        transformOrigin: Item.Center
+
+        Behavior on scale {
+            NumberAnimation {
+                duration: Theme.durationNormal / 2
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Theme.curveStandardDecel
+            }
+        }
+
+        UiStateLayer {
+            anchors.fill: parent
+            radius: knob.radius
+            hovered: hover.hovered
+            pressed: root.pressed
+            disabled: !root.enabled
+            color: Theme.onPrimary
+        }
+
+        // Keyboard-only focus ring (shell FocusRing contract).
+        Rectangle {
+            anchors.fill: parent
+            anchors.margins: -2
+            radius: width / 2 + 2
+            color: "transparent"
+            border.width: 2
+            border.color: Theme.focusRing
+            visible: root.activeFocus && Theme.keyboardFocus && root.enabled
+        }
     }
 }

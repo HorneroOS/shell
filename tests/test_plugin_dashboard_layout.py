@@ -129,7 +129,7 @@ def test_cards_host_is_composable_not_fixed_grid():
     # Columns are per section, capped by the viewport column count, so
     # sections flow side by side instead of each filling the full row.
     assert "columns: section.gridColumns" in CARDS
-    assert "Math.min(root.columns, section.modelData.plugins.length)" in CARDS
+    assert "Math.min(root.columns, section.modelData.plugins.length, layoutHelper.columnsForWidth(sections.width" in CARDS
     assert "Flow {" in CARDS
     assert "columnsForWidth" in LAYOUT and "sectionsFor" in LAYOUT
     assert "sectionsFor(Plugins.dashboardPlugins(), Config.plugins.dashboardLayout)" in CARDS

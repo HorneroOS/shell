@@ -126,7 +126,11 @@ def test_persisted_user_layout_contract():
 def test_cards_host_is_composable_not_fixed_grid():
     assert "columns: 2" not in CARDS, "the fixed 2-column grid must stay gone"
     assert "Flickable" in CARDS and "Flickable.VerticalFlick" in CARDS
-    assert "columns: root.columns" in CARDS
+    # Columns are per section, capped by the viewport column count, so
+    # sections flow side by side instead of each filling the full row.
+    assert "columns: section.gridColumns" in CARDS
+    assert "Math.min(root.columns, section.modelData.plugins.length)" in CARDS
+    assert "Flow {" in CARDS
     assert "columnsForWidth" in LAYOUT and "sectionsFor" in LAYOUT
     assert "sectionsFor(Plugins.dashboardPlugins(), Config.plugins.dashboardLayout)" in CARDS
     assert "Layout.columnSpan" in CARDS and "contentWidth(" in CARDS

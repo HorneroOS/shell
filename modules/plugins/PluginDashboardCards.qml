@@ -123,7 +123,10 @@ Item {
         flickableDirection: Flickable.VerticalFlick
         boundsBehavior: Flickable.StopAtBounds
 
-        ColumnLayout {
+        // Sections flow side by side: each section is only as wide as its
+        // own cards (up to the viewport), so a section with one or two
+        // extensions no longer leaves the rest of the row empty.
+        Flow {
             id: sections
 
             width: scroll.width
@@ -137,10 +140,14 @@ Item {
 
                     required property var modelData
 
-                    Layout.fillWidth: true
+                    readonly property int gridColumns: Math.max(1, Math.min(root.columns, section.modelData.plugins.length))
+
+                    width: Math.min(sections.width, Math.max(header.implicitWidth, grid.implicitWidth))
                     spacing: Appearance.spacing.small
 
                     StyledText {
+                        id: header
+
                         text: section.modelData.pinned ? qsTr("Pinned") : section.modelData.category !== "" ? section.modelData.category : qsTr("Other")
                         font.pointSize: Appearance.font.size.normal
                         font.weight: 600
@@ -150,8 +157,10 @@ Item {
                     }
 
                     GridLayout {
+                        id: grid
+
                         Layout.fillWidth: true
-                        columns: root.columns
+                        columns: section.gridColumns
                         columnSpacing: Appearance.spacing.normal
                         rowSpacing: Appearance.spacing.normal
 
@@ -165,7 +174,7 @@ Item {
                                 readonly property int cardContentWidth: Math.min(layoutHelper.contentWidth(card.modelData.sizeClass), Math.max(160, root.availableWidth - Appearance.padding.large * 2))
 
                                 Layout.alignment: Qt.AlignTop
-                                Layout.columnSpan: layoutHelper.columnSpan(card.modelData.sizeClass, root.columns)
+                                Layout.columnSpan: Math.min(layoutHelper.columnSpan(card.modelData.sizeClass, root.columns), section.gridColumns)
                                 Layout.maximumWidth: cardContentWidth + Appearance.padding.large * 2
                                 implicitWidth: content.implicitWidth + Appearance.padding.large * 2
                                 implicitHeight: content.implicitHeight + Appearance.padding.large * 2

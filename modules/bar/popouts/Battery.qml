@@ -12,28 +12,16 @@ Column {
     spacing: Appearance.spacing.normal
     width: Config.bar.sizes.batteryWidth
 
-    StyledText {
-        text: UPower.displayDevice.isLaptopBattery ? qsTr("Remaining: %1%").arg(Math.round(UPower.displayDevice.percentage * 100)) : qsTr("No battery detected")
+    // Charge and time left as a gauge (see BatteryGauge.qml).
+    BatteryGauge {
+        visible: UPower.displayDevice.isLaptopBattery
+        width: parent.width
     }
 
     StyledText {
-        function formatSeconds(s: int, fallback: string): string {
-            const day = Math.floor(s / 86400);
-            const hr = Math.floor(s / 3600) % 24;
-            const min = Math.floor(s / 60) % 60;
-
-            let comps = [];
-            if (day > 0)
-                comps.push(`${day} days`);
-            if (hr > 0)
-                comps.push(`${hr} hours`);
-            if (min > 0)
-                comps.push(`${min} mins`);
-
-            return comps.join(", ") || fallback;
-        }
-
-        text: UPower.displayDevice.isLaptopBattery ? qsTr("Time %1: %2").arg(UPower.onBattery ? "remaining" : "until charged").arg(UPower.onBattery ? formatSeconds(UPower.displayDevice.timeToEmpty, "Calculating...") : formatSeconds(UPower.displayDevice.timeToFull, "Fully charged!")) : qsTr("Power profile: %1").arg(PowerProfile.toString(PowerProfiles.profile))
+        visible: !UPower.displayDevice.isLaptopBattery
+        text: qsTr("No battery detected · Power profile: %1").arg(PowerProfile.toString(PowerProfiles.profile))
+        color: Colours.palette.m3onSurfaceVariant
     }
 
     Loader {

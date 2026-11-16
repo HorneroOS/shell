@@ -128,6 +128,8 @@ Singleton {
                     // Dashboard card hints (shell#378): keep only
                     // validated values; anything else degrades to the
                     // standard/uncategorized defaults at the host.
+                    if (name === "bar" && ["status", "actions", "clock", "end"].includes(surface.section))
+                        normalized[name].section = surface.section;
                     if (name === "dashboard") {
                         if (["compact", "standard", "wide"].includes(surface.size))
                             normalized[name].size = surface.size;
@@ -339,7 +341,9 @@ Singleton {
                 // the declared size class/category so the dashboard
                 // layout never re-reads the surfaces map per card.
                 cardSize: typeof declared.size === "string" ? declared.size : "standard",
-                category: typeof declared.category === "string" ? declared.category : ""
+                category: typeof declared.category === "string" ? declared.category : "",
+                // Bar section hint (shell#439): native island to join.
+                barSection: typeof declared.section === "string" ? declared.section : "end"
             }));
         }
         return result;

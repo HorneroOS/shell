@@ -25,13 +25,26 @@ Button {
     // In a bar an indicator reads like the native bar items: plain
     // onSurface label, no outline, a fully rounded hover layer.
     readonly property bool inBar: hostContext !== null && hostContext.hostSurface === "bar"
+    // Native island style (shell issue 439): a bar section host advertises its
+    // icon colour and sizes on the Loader; an indicator inside the status,
+    // actions or clock island then matches its native neighbours exactly.
+    readonly property var hostStyle: {
+        let p = root.parent;
+        while (p) {
+            if ("hostIconSize" in p)
+                return p;
+            p = p.parent;
+        }
+        return null;
+    }
+    readonly property bool islandStyled: hostStyle !== null && hostStyle.hostIconSize > 0
     // Rail styling is a bar concern only: a compact dashboard card also
     // reports hostCompact, and must keep full-size buttons.
     readonly property bool railCompact: inBar && hostContext.hostCompact === true && hostContext.hostAvailableWidth > 0
     readonly property int railWidth: railCompact ? hostContext.hostAvailableWidth : 0
     // Variants: "primary" (filled), "tonal" (quiet fill), "ghost" (text
     // button, no outline), "outlined" (explicit outline).
-    readonly property color labelColor: root.variant === "primary" ? Theme.onPrimary : root.variant === "tonal" ? Theme.onSurface : root.inBar ? Theme.onSurface : Theme.primary
+    readonly property color labelColor: root.variant === "primary" ? Theme.onPrimary : root.variant === "tonal" ? Theme.onSurface : root.islandStyled ? root.hostStyle.hostIconColor : root.inBar ? Theme.onSurface : Theme.primary
 
     Accessible.name: root.accessibleName
     Accessible.role: Accessible.Button
@@ -98,6 +111,7 @@ Button {
                 color: root.labelColor
                 // Icon-only bar buttons use the native bar icon size.
                 role: root.inBar && root.text.length === 0 ? "large" : "body"
+                size: root.islandStyled ? root.hostStyle.hostIconSize : 0
             }
 
             Text {
@@ -108,7 +122,7 @@ Button {
                 text: root.text
                 color: root.labelColor
                 font.family: Theme.fontFamily
-                font.pointSize: root.railCompact ? Theme.fontSizeSmall : Theme.fontSizeBody
+                font.pointSize: root.islandStyled && root.hostStyle.hostTextSize > 0 ? root.hostStyle.hostTextSize : root.railCompact ? Theme.fontSizeSmall : Theme.fontSizeBody
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 wrapMode: Text.NoWrap

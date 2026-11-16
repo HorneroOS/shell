@@ -232,7 +232,8 @@ def test_schema_stays_strict_about_unknown_fields():
     assert surface_def["additionalProperties"] is False
     # shell#378 adds the dashboard-only size/category card hints; the
     # set stays exact — anything else is still an unknown field.
-    assert set(surface_def["properties"]) == {"entrypoint", "enabled", "size", "category"}
+    # shell#439 adds the bar-only section hint (native island to join).
+    assert set(surface_def["properties"]) == {"entrypoint", "enabled", "size", "category", "section"}
     assert set(SCHEMA["properties"]["surfaces"]["properties"]) == {
         "background", "bar", "dashboard", "desktop", "launcher", "settings"
     }

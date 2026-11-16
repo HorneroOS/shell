@@ -41,6 +41,17 @@ Repeater {
     // Display hosting this bar instance (multi-monitor: the same
     // plugin is instantiated once per bar/screen).
     property string screenName: ""
+    // Native bar island this instance renders into (shell#439):
+    // "status", "actions", "clock" or "end" (after the end group).
+    // Each island embeds one instance with its own icon style, so an
+    // extension indicator looks like its native neighbours.
+    property string section: "end"
+    property color iconColour: "transparent"
+    property int iconSize: 0
+    property int textSize: 0
+    // Sections whose island is absent from this bar layout: their
+    // indicators fall back to this (end) instance instead of vanishing.
+    property var fallbackSections: []
 
     // Explicit layout constraints for this surface. Cross-axis space
     // comes from the bar's real thickness so no control is clipped by
@@ -54,7 +65,7 @@ Repeater {
     readonly property string hostEdge: edge !== "" ? edge : "none"
     readonly property bool hostCompact: vertical || compact
 
-    model: surfaceActive ? Plugins.barPlugins() : []
+    model: surfaceActive ? Plugins.barPlugins().filter(p => (p.barSection || "end") === root.section || root.fallbackSections.includes(p.barSection || "end")) : []
 
     delegate: Loader {
         id: pluginLoader
@@ -67,6 +78,12 @@ Repeater {
         readonly property string hostSurface: "bar"
         readonly property int hostAvailableWidth: root.availableWidth
         readonly property bool hostCompact: root.hostCompact
+        // Island style advertised to PluginKit (0 / transparent = generic
+        // bar style for the end section).
+        readonly property string hostSection: root.section
+        readonly property color hostIconColor: root.iconColour
+        readonly property int hostIconSize: root.iconSize
+        readonly property int hostTextSize: root.textSize
 
         Layout.alignment: root.vertical ? Qt.AlignHCenter : Qt.AlignVCenter
         Layout.maximumWidth: root.availableWidth

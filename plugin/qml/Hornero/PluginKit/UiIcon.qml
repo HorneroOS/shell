@@ -11,11 +11,13 @@ Text {
     property string icon: ""
     property real fill: 0
     property string role: "body"
+    // Explicit point size (e.g. a host island style); 0 = by role.
+    property int size: 0
 
     text: root.icon
     color: Theme.onSurface
     font.family: Theme.iconFontFamily
-    font.pointSize: root.role === "large" ? Theme.iconSizeLarge : root.role === "small" ? Theme.fontSizeBody : Theme.iconSize
+    font.pointSize: root.size > 0 ? root.size : root.role === "large" ? Theme.iconSizeLarge : root.role === "small" ? Theme.fontSizeBody : Theme.iconSize
     font.variableAxes: ({
             FILL: root.fill.toFixed(1),
             GRAD: Theme.light ? 0 : -25,

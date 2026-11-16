@@ -1,6 +1,7 @@
 import qs.components
 import qs.services
 import qs.config
+import qs.modules.plugins
 import QtQuick
 import QtQuick.Layouts
 
@@ -45,6 +46,18 @@ Item {
                 iconSize: Appearance.font.size.normal
                 onActivated: ShellActions.run(modelData)
             }
+        }
+
+        // Extension indicators that join this island (shell#439): same
+        // icon colour and size as the native items around them.
+        PluginBarWidgets {
+            vertical: root.vertical
+            section: "actions"
+            iconColour: Colours.palette.m3onSurfaceVariant
+            iconSize: Appearance.font.size.normal
+            textSize: Appearance.font.size.smaller
+            thickness: Config.bar.sizes.innerWidth
+            screenName: ""
         }
     }
 }

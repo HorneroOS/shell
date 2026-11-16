@@ -134,7 +134,7 @@ Scope {
                                     Plugins.markFailed(slot.modelData.id, `manifest surfaces.${name} must be an object`);
                                     return;
                                 }
-                                const extra = Object.keys(surface).filter(key => key !== "entrypoint" && key !== "enabled" && key !== "size" && key !== "category");
+                                const extra = Object.keys(surface).filter(key => key !== "entrypoint" && key !== "enabled" && key !== "size" && key !== "category" && key !== "section");
                                 if (extra.length > 0) {
                                     Plugins.markFailed(slot.modelData.id, `manifest surfaces.${name} contains unknown fields: ${extra.join(", ")}`);
                                     return;
@@ -158,6 +158,16 @@ Scope {
                                     Plugins.markFailed(slot.modelData.id, `manifest surfaces.${name}.category must be a non-empty grouping label of at most 40 characters (and not the reserved "Pinned" section)`);
                                     return;
                                 }
+                                // Bar section hint (shell#439): the native island
+                                // a bar indicator joins; bar-only, closed set.
+                                if (surface.section !== undefined && name !== "bar") {
+                                    Plugins.markFailed(slot.modelData.id, `manifest surfaces.${name}.section is a bar hint and is only allowed on the bar surface`);
+                                    return;
+                                }
+                                if (surface.section !== undefined && !["status", "actions", "clock", "end"].includes(surface.section)) {
+                                    Plugins.markFailed(slot.modelData.id, `manifest surfaces.${name}.section must be one of status, actions, clock, end`);
+                                    return;
+                                }
                                 if (!safeEntrypoint(surface.entrypoint)) {
                                     Plugins.markFailed(slot.modelData.id, `manifest surfaces.${name}.entrypoint is not a safe relative path`);
                                     return;
@@ -178,6 +188,8 @@ Scope {
                                     entrypoint: surface.entrypoint,
                                     enabled: surface.enabled !== false
                                 };
+                                if (name === "bar" && surface.section !== undefined)
+                                    effectiveSurfaces[name].section = surface.section;
                                 if (name === "dashboard") {
                                     if (surface.size !== undefined)
                                         effectiveSurfaces[name].size = surface.size;

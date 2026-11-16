@@ -40,7 +40,7 @@ Singleton {
     readonly property int quick: _ms(90)
     readonly property int brief: _ms(160)
     readonly property int medium: _ms(240)
-    readonly property int long: _ms(360)
+    readonly property int extended: _ms(360)
     readonly property int scan: _ms(480)
     readonly property int settle: morph ? _ms(320) : 0
     readonly property int settleFast: morph ? _ms(220) : 0

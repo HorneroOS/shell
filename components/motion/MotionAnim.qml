@@ -19,7 +19,7 @@ NumberAnimation {
             "standard": "medium",
             "enter": "brief",
             "exit": "quick",
-            "sweep": "long",
+            "sweep": "extended",
             "settle": "settle",
             "settleFast": "settleFast"
         })

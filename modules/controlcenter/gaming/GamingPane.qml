@@ -234,25 +234,6 @@ Item {
     SplitPaneLayout {
         anchors.fill: parent
 
-        leftContent: Component {
-            ColumnLayout {
-                spacing: Appearance.spacing.normal
-
-                SettingsHeader {
-                    icon: "sports_esports"
-                    title: qsTr("Gaming")
-                }
-
-                StyledText {
-                    Layout.fillWidth: true
-                    text: qsTr("Gaming is Preview: profiles record what you want and nothing is installed by recording them. Detection is not hardware qualification, and no game compatibility or performance is promised.")
-                    wrapMode: Text.WordWrap
-                    color: Colours.palette.m3onSurfaceVariant
-                    font.pointSize: Appearance.font.size.small
-                }
-            }
-        }
-
         rightContent: Component {
             StyledFlickable {
                 flickableDirection: Flickable.VerticalFlick
@@ -269,6 +250,13 @@ Item {
                     anchors.right: parent.right
                     anchors.top: parent.top
                     spacing: Appearance.spacing.normal
+
+                    PaneHeader {
+                        title: qsTr("Gaming")
+                        icon: "sports_esports"
+                        description: qsTr("Gaming profiles, launchers and Gaming Focus")
+                        intro: qsTr("Gaming is in Preview. Choose the gaming setups you want: Hornero remembers your choice and installs nothing until you confirm it. Hardware detection is a hint, not a guarantee that a game will run well.")
+                    }
 
                     SectionContainer {
                         StyledText {

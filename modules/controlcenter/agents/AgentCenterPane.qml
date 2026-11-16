@@ -327,25 +327,6 @@ Item {
     SplitPaneLayout {
         anchors.fill: parent
 
-        leftContent: Component {
-            ColumnLayout {
-                spacing: Appearance.spacing.normal
-
-                SettingsHeader {
-                    icon: "smart_toy"
-                    title: qsTr("Agent Center")
-                }
-
-                StyledText {
-                    Layout.fillWidth: true
-                    text: qsTr("Coding agents discovered on this machine, and Javi, the Hornero assistant. State comes only from horneroctl; nothing is fetched or launched here.")
-                    wrapMode: Text.WordWrap
-                    color: Colours.palette.m3onSurfaceVariant
-                    font.pointSize: Appearance.font.size.small
-                }
-            }
-        }
-
         rightContent: Component {
             StyledFlickable {
                 flickableDirection: Flickable.VerticalFlick
@@ -362,6 +343,13 @@ Item {
                     anchors.right: parent.right
                     anchors.top: parent.top
                     spacing: Appearance.spacing.normal
+
+                    PaneHeader {
+                        title: qsTr("Agent Center")
+                        icon: "smart_toy"
+                        description: qsTr("Coding assistants on this computer and Javi")
+                        intro: qsTr("Coding assistants found on this computer, plus Javi, Hornero's own assistant. Choose which one Hornero uses by default. Nothing is fetched or started from this page.")
+                    }
 
                     SectionContainer {
                         StyledText {

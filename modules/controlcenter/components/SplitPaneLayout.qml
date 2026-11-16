@@ -23,15 +23,20 @@ RowLayout {
     property alias leftLoader: leftLoader
     property alias rightLoader: rightLoader
 
+    // No left content: a single-column pane (shell#454). The left column is
+    // dropped entirely instead of showing an empty or decorative panel.
+    readonly property bool singleColumn: root.leftContent === null
+
     Item {
         id: leftPane
 
-        Layout.preferredWidth: Math.floor(parent.width * root.leftWidthRatio)
+        visible: !root.singleColumn
+        Layout.preferredWidth: root.singleColumn ? 0 : Math.floor(parent.width * root.leftWidthRatio)
         // Keep the established minimum on wide windows, but let the list
         // pane follow its share of the available width on compact displays.
         // A fixed 420 px minimum otherwise steals space from device details
         // and settings on laptop-sized windows.
-        Layout.minimumWidth: Math.min(root.leftMinimumWidth, parent.width * root.leftWidthRatio)
+        Layout.minimumWidth: root.singleColumn ? 0 : Math.min(root.leftMinimumWidth, parent.width * root.leftWidthRatio)
         Layout.fillHeight: true
 
         ClippingRectangle {

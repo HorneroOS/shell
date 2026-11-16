@@ -256,7 +256,7 @@ QtObject {
             readonly property string icon: "device-gamepad-2"
             readonly property string component: "gaming/GamingPane.qml"
             readonly property string category: "apps"
-            readonly property string description: qsTr("Gaming readiness, profiles, and Gaming Focus")
+            readonly property string description: qsTr("Gaming readiness, profiles, and gaming mode")
             readonly property list<string> keywords: ["gaming", "games", "steam", "proton", "gamescope", "gamemode", "controllers"]
         },
         QtObject {

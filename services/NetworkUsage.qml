@@ -145,8 +145,8 @@ Singleton {
     }
 
     Timer {
-        interval: Config.dashboard.resourceUpdateInterval
-        running: root.refCount > 0
+        interval: Experience.telemetryIntervalMs
+        running: root.refCount > 0 && !Experience.telemetryPaused
         repeat: true
         triggeredOnStart: true
 

@@ -42,9 +42,9 @@ def test_gaming_performance_mode_is_two_step_and_reversible():
 
 
 def test_gaming_pane_separates_focus_session_and_feral():
-    assert "Gaming Focus" in PANE
+    assert "Gaming mode" in PANE
     assert "Feral GameMode" in PANE
-    assert "GameMode.enabled" in PANE
+    assert 'Experience.toggle("gaming")' in PANE
     assert "Gaming session" in PANE
     assert "chosen at the greeter" in PANE
     assert "Gaming is Preview" in PANE

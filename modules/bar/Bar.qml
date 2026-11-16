@@ -764,7 +764,7 @@ Item {
 
                             sourceComponent: Resources {
                                 vertical: root.vertical
-                                density: root.spec.density
+                                density: Experience.barDensity(root.spec.density)
                                 options: resourcesLoader.options
                             }
                         }
@@ -782,7 +782,7 @@ Item {
                         delegate: WrappedLoader {
                             sourceComponent: WeatherChip {
                                 vertical: root.vertical
-                                density: root.spec.density
+                                density: Experience.barDensity(root.spec.density)
                             }
                         }
                     }
@@ -813,7 +813,7 @@ Item {
                         delegate: WrappedLoader {
                             sourceComponent: Battery {
                                 vertical: root.vertical
-                                density: root.spec.density
+                                density: Experience.barDensity(root.spec.density)
                             }
                         }
                     }

@@ -430,7 +430,7 @@ def test_icon_buttons_have_accessible_names():
             "Pause recording", "Stop recording"],
         "modules/utilities/cards/Toggles.qml": [
             "Toggle Wi-Fi", "Toggle Bluetooth", "Toggle microphone",
-            "Toggle game mode", "Toggle do not disturb", "Toggle VPN"],
+            "Toggle gaming mode", "Toggle do not disturb", "Toggle VPN"],
         "modules/utilities/cards/RecordingList.qml": [
             "Expand recordings", "Play recording",
             "Open recordings folder", "Delete recording"],

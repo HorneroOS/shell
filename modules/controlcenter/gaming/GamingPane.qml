@@ -21,8 +21,9 @@ import QtQuick.Layouts
 // not hardware qualification and no performance is promised.
 //
 // Kept separate, never conflated:
-// - Hornero Gaming Focus (services/GameMode.qml): Hyprland visual
-//   effects only, restored on disable/reload, unavailable on Niri.
+// - The gaming experience mode (services/Experience.qml): shell
+//   behaviour plus the Hyprland effects hook (services/GameMode.qml),
+//   restored on leave/reload; the hook is unavailable on Niri.
 // - Feral GameMode: per-process daemon, reported as the `gamemode`
 //   doctor check. Not toggled here.
 // - The experimental Gamescope session (greeter-selectable) is
@@ -254,7 +255,7 @@ Item {
                     PaneHeader {
                         title: qsTr("Gaming")
                         icon: "device-gamepad-2"
-                        description: qsTr("Gaming profiles, launchers and Gaming Focus")
+                        description: qsTr("Gaming profiles, launchers and gaming mode")
                         intro: qsTr("Gaming is in Preview. Choose the gaming setups you want: Hornero remembers your choice and installs nothing until you confirm it. Hardware detection is a hint, not a guarantee that a game will run well.")
                     }
 
@@ -366,23 +367,26 @@ Item {
                     SectionContainer {
                         StyledText {
                             Layout.fillWidth: true
-                            text: qsTr("Gaming Focus")
+                            text: qsTr("Gaming mode")
                             font.pointSize: Appearance.font.size.large
                             font.weight: 600
                         }
 
                         StyledText {
                             Layout.fillWidth: true
-                            text: qsTr("Hornero Gaming Focus only trims Hyprland visual effects while you play and restores them afterwards. It is separate from Feral GameMode (per-process performance) and from power profiles. Unavailable on compositors without Hyprland tuning.")
+                            text: qsTr("The gaming experience mode quiets the shell (no motion or glow, notifications queued, telemetry paused under fullscreen) and trims Hyprland visual effects while you play, restoring them afterwards. It is separate from Feral GameMode (per-process performance) and from power profiles. Hyprland effects stay untouched on compositors without Hyprland tuning.")
                             wrapMode: Text.WordWrap
                             color: Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.small
                         }
 
                         SwitchRow {
-                            label: qsTr("Gaming Focus (Hyprland effects)")
-                            checked: GameMode.enabled
-                            onToggled: checked => GameMode.enabled = checked
+                            label: qsTr("Gaming mode")
+                            checked: Experience.gaming
+                            onToggled: checked => {
+                                if (checked !== Experience.gaming)
+                                    Experience.toggle("gaming");
+                            }
                         }
                     }
 

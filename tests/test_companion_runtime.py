@@ -152,7 +152,7 @@ def test_host_single_companion_overlay():
 
 
 def test_host_suppression_inputs():
-    assert "GameMode.enabled" in HOST
+    assert "Experience.gaming" in HOST
     assert "hasFullscreen" in HOST
     assert "lock.locked" in HOST or "lock !== null" in HOST
     assert "areaPickerOpen" in STORE

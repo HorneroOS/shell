@@ -80,6 +80,13 @@ Searcher {
             } else if (command[0] === "theme" && command.length > 1) {
                 list.visibilities.launcher = false;
                 ThemePipeline.applyTheme(command[1], "");
+            } else if (command[0] === "mode" && command.length > 1) {
+                // Experience modes (services/Experience.qml).
+                list.visibilities.launcher = false;
+                if (command[1] === "revert")
+                    Experience.revert();
+                else
+                    Experience.set(command[1], "user");
             } else if (command[0] === "layoutpicker") {
                 list.visibilities.launcher = false;
                 Visibilities.getForActive().layoutPicker = true;

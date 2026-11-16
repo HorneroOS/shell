@@ -60,7 +60,8 @@ Loader {
 
             Loader {
                 id: clockLoader
-                active: Config.background.desktopClock.enabled
+                // Focus and Gaming hide the desktop layer (Experience).
+                active: Config.background.desktopClock.enabled && Experience.desktopWidgetsVisible
 
                 anchors.margins: Appearance.padding.large * 2
                 anchors.leftMargin: anchors.margins + (Config.bar.positionFor(win.screen.name) === "left" ? win.barOffset : 0)
@@ -160,6 +161,14 @@ Loader {
 
             PluginDesktopWidgets {
                 screenName: win.screen.name
+                opacity: Experience.desktopWidgetsVisible ? 1 : 0
+                visible: opacity > 0 && Plugins.desktopPlugins().length > 0
+
+                Behavior on opacity {
+                    Anim {
+                        duration: Appearance.anim.durations.medium
+                    }
+                }
                 anchors.fill: parent
                 anchors.margins: Appearance.padding.large * 2
                 anchors.leftMargin: anchors.margins + (Config.bar.positionFor(win.screen.name) === "left" ? win.barOffset : 0)

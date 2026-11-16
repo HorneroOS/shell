@@ -15,9 +15,93 @@ other HorneroOS components script against; renames must update
 | `notifs` | `services/Notifs.qml` | `clear()`, `isDndEnabled()`, `toggleDnd()` (+ per-file extras) |
 | `idleInhibitor` | `services/IdleInhibitor.qml` | `isEnabled()`, `toggle()`, `enable()` (+ `disable()` per file) |
 | `hypr` | `services/Hypr.qml` | `refreshDevices()`, `cycleSpecialWorkspace(direction)`, `listSpecialWorkspaces()` |
-| `gameMode` | `services/GameMode.qml` | `isEnabled()`, `toggle()`, `enable()`, `disable()` |
+| `experience` | `services/Experience.qml` | `get()`, `set(mode)`, `toggle(mode)`, `revert()`, `reset()`, `list()`, `profile(mode)`, `status()`, `customise(mode, field, json)`, `resetCustomisations(mode)`, `setAuto(enabled)` — see [Experience modes](#experience-modes) |
 | `signal` | `services/Signal.qml` | `reload()` (re-read the live scheme), `mode()` (`dark`/`light`), `theme()` (applied theme id) |
 | `brightness` | `services/Brightness.qml` | `get()`, `getFor(query)`, `set(value)` (+ `setFor` per file) |
+
+## Experience modes
+
+Experience modes (RFC 0001 §5a) are `focus`, `everyday` (default),
+`signal`, `gaming` and `studio`. The former `gameMode` target is gone: the
+Hyprland effects hook it toggled is now part of the `gaming` mode
+(`services/GameMode.qml` follows `experience`), so scripts call
+`qs ipc call experience set gaming` / `set everyday` instead.
+
+| Call | Returns |
+|---|---|
+| `experience get` | active mode id, e.g. `everyday` |
+| `experience set <mode>` | `ok: <mode>` or `error: unknown mode: <mode>`; recorded with `source: "cli"` |
+| `experience toggle <mode>` | enters `<mode>`, or returns to the previous mode when it is already active |
+| `experience revert` | `ok: <mode>` — one-action return to the mode before the last switch (also undoes an automatic switch) |
+| `experience reset` | `ok: everyday + cockpit + hornero-signal-night` — factory mode, layout (`horneroctl shell preset apply cockpit --yes`) and theme; per-mode customisations are kept |
+| `experience list` | JSON array `[{id, label, description, glyph, active, customised: [field…]}]` |
+| `experience profile <mode>` | JSON resolved profile `{id, label, glyph, description, fields: {…}, customised: […], locked: […]}` |
+| `experience status` | JSON `{schemaVersion, mode, previous, source, auto, autoEnabled, changedAt, statePath, fields, customised, effective: {…}, unavailable: [field…]}` |
+| `experience customise <mode> <field> <json>` | `ok` or `error: …`; `<json>` is a JSON literal (`true`, `2`, `"minimal-top"`), `null` clears the override |
+| `experience resetCustomisations <mode>` | `ok` — that mode returns to its factory profile |
+| `experience setAuto <true\|false>` | toggles automatic fullscreen-game switching (off by default); turning it off reverts an automatic switch |
+
+### Profile fields
+
+Every profile has the same fields (factory values in
+`services/experience.js`, per-mode overrides in `shell.json`
+`experience.modes.<mode>.<field>`):
+
+| Field | Values | Effect |
+|---|---|---|
+| `motion` | `full` `standard` `reduced` `off` | `Appearance.anim.level`; `appearance.reducedMotion` or the system preference still force `off` |
+| `density` | `icons` `values` `labels` | instrumentation density; bars map `icons` to their `glyphs` density |
+| `glow`, `scanlines` | bool | luminous accents / scope scanlines; always off in day themes and high contrast; glow also off below `standard` motion |
+| `telemetry.rateHz` | 0.2–4 | shared SystemUsage/NetworkUsage poll rate |
+| `telemetry.pauseWhenHidden` | bool | pause those providers while a fullscreen window covers the focused output |
+| `desktopWidgets` | `none` `user` `instruments` | hide the desktop layer, keep the user's widgets, or add the Signal instrument deck |
+| `notifications.hold` | bool | non-critical notifications are filed without a popup; leaving the mode toasts the held count |
+| `notifications.suppressFullscreen` | bool | same, only while a fullscreen window is focused |
+| `layout.preset`, `layout.apply` | preset id, bool | preferred layout; applied on entry only when `layout.apply` is true (presets rewrite bars) |
+| `idle.inhibitFullscreen` | bool | inhibit idle while a fullscreen window is focused |
+| `power.suggest` | `""` `performance` `power-saver` | shown as a suggestion; never applied automatically |
+| `hooks.hyprlandTuning` | bool | Hyprland animations/blur/gaps/shadows off while active (Hyprland only) |
+| `hooks.studioAudio` | bool | on entry runs `horneroctl --json studio mode audio low-latency --yes` and restores the previous audio mode on leave |
+
+Locked fields ignore overrides: `focus` keeps `glow`/`scanlines` off;
+`gaming` keeps `glow`/`scanlines` off and `motion` at `off`.
+
+### State file (contract for `horneroctl mode`)
+
+The active mode is state, not a preference:
+`${XDG_STATE_HOME:-~/.local/state}/hornero/experience.json`
+
+```json
+{
+  "schemaVersion": 1,
+  "mode": "everyday",
+  "previous": "everyday",
+  "source": "user",
+  "auto": false,
+  "changedAt": "2026-11-16T20:00:00.000Z",
+  "studioAudioRestore": ""
+}
+```
+
+- The shell writes it atomically (temp file + rename) on every switch and
+  watches it, so an external atomic write takes effect live.
+- A writer outside the shell may write the minimal form
+  `{"schemaVersion": 1, "mode": "<mode>", "source": "cli"}`; the shell keeps
+  its own `previous` bookkeeping when it next writes. Unknown or malformed
+  content is ignored (fail closed) and the current mode stays active.
+- `source` is one of `user`, `auto`, `cli`, `reset`, `migration`; `auto: true`
+  marks an automatic switch.
+- `studioAudioRestore` is the `horneroctl studio mode audio` id the shell
+  restores when leaving a mode with `hooks.studioAudio`; empty means the
+  shell changed nothing.
+- While the shell runs, prefer `qs ipc call experience …` (it validates and
+  answers); write the file only when the shell is not running.
+
+A planned `horneroctl mode get|set|list|reset` group maps 1:1 onto
+`experience get|set|list|reset`, falling back to the state file when the
+shell is not running (`reset` without the shell writes
+`{"schemaVersion":1,"mode":"everyday","source":"reset"}` and applies the
+cockpit preset and Signal Night theme itself).
 
 ## Shell chrome
 

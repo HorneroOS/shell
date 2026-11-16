@@ -41,6 +41,10 @@ Singleton {
 
     property real lastCpuIdle
     property real lastCpuTotal
+    // Per-core load 0..1 in /proc/stat order (cpu0, cpu1, ...).
+    property var cpuCores: []
+    property var _lastCoreIdle: []
+    property var _lastCoreTotal: []
 
     property int refCount
 
@@ -78,9 +82,11 @@ Singleton {
         };
     }
 
+    // Rate and pause follow the experience mode (Signal Visual Language
+    // §6.5): 1 Hz everyday, 2 Hz signal, paused under fullscreen in gaming.
     Timer {
-        running: root.refCount > 0
-        interval: Config.dashboard.resourceUpdateInterval
+        running: root.refCount > 0 && !Experience.telemetryPaused
+        interval: Experience.telemetryIntervalMs
         repeat: true
         triggeredOnStart: true
         onTriggered: {
@@ -122,6 +128,25 @@ Singleton {
                 root.lastCpuTotal = total;
                 root.lastCpuIdle = idle;
             }
+            const cores = [];
+            const idles = [];
+            const totals = [];
+            const coreRe = /^cpu(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)/gm;
+            let m;
+            while ((m = coreRe.exec(text())) !== null) {
+                const i = idles.length;
+                const v = m.slice(2).map(n => parseInt(n, 10));
+                const t = v.reduce((a, b) => a + b, 0);
+                const id = v[3] + v[4];
+                const dt = t - (root._lastCoreTotal[i] ?? 0);
+                const di = id - (root._lastCoreIdle[i] ?? 0);
+                cores.push(dt > 0 && root._lastCoreTotal.length > i ? Math.max(0, Math.min(1, 1 - di / dt)) : 0);
+                idles.push(id);
+                totals.push(t);
+            }
+            root._lastCoreIdle = idles;
+            root._lastCoreTotal = totals;
+            root.cpuCores = cores;
         }
     }
 

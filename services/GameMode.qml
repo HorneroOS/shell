@@ -1,20 +1,23 @@
 pragma Singleton
 
 import qs.services
-import qs.config
-import Hornero
 import Quickshell
-import Quickshell.Io
 import QtQuick
 
+// Hyprland tuning hook of the gaming experience mode (services/Experience.qml).
+// It is no longer a separate toggle: `enabled` follows the active mode's
+// `hooks.hyprlandTuning` field, and switching modes (Experience.toggle,
+// `qs ipc call experience set gaming`) is the only way to turn it on.
+// Separate from Feral GameMode (per-process) and from power profiles.
 Singleton {
     id: root
 
-    property alias enabled: props.enabled
+    readonly property bool enabled: Experience.hyprlandTuning
+    // Value restored by a hot reload from the retired standalone toggle;
+    // read once by Experience's first-run migration.
+    readonly property bool legacyEnabled: legacy.enabled
 
     function setDynamicConfs(): void {
-        if (!Compositor.supports("hyprlandTuning"))
-            return;
         Hypr.extras.applyOptions({
             "animations:enabled": 0,
             "decoration:shadow:enabled": 0,
@@ -28,26 +31,21 @@ Singleton {
     }
 
     onEnabledChanged: {
-        if (!Compositor.supports("hyprlandTuning")) {
-            if (props.enabled)
-                props.enabled = false;
-            return;
-        }
-        if (enabled) {
+        if (enabled)
             setDynamicConfs();
-            if (Config.utilities.toasts.gameModeChanged)
-                Toaster.toast(qsTr("Game mode enabled"), qsTr("Disabled Hyprland animations, blur, gaps and shadows"), "device-gamepad");
-        } else {
+        else
             Hypr.extras.message("reload");
-            if (Config.utilities.toasts.gameModeChanged)
-                Toaster.toast(qsTr("Game mode disabled"), qsTr("Hyprland settings restored"), "device-gamepad");
-        }
+    }
+
+    Component.onCompleted: {
+        if (enabled)
+            setDynamicConfs();
     }
 
     PersistentProperties {
-        id: props
+        id: legacy
 
-        property bool enabled: Compositor.supports("hyprlandTuning") && Hypr.options["animations:enabled"] === 0
+        property bool enabled: false
 
         reloadableId: "gameMode"
     }
@@ -56,28 +54,8 @@ Singleton {
         target: Hypr
 
         function onConfigReloaded(): void {
-            if (props.enabled)
+            if (root.enabled)
                 root.setDynamicConfs();
-        }
-    }
-
-    IpcHandler {
-        target: "gameMode"
-
-        function isEnabled(): bool {
-            return props.enabled;
-        }
-
-        function toggle(): void {
-            props.enabled = !props.enabled;
-        }
-
-        function enable(): void {
-            props.enabled = true;
-        }
-
-        function disable(): void {
-            props.enabled = false;
         }
     }
 }

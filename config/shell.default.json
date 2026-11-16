@@ -495,6 +495,72 @@
         ],
         "enabled": true,
         "dangerous": false
+      },
+      {
+        "name": "Focus mode",
+        "icon": "circle-dot",
+        "description": "Experience: maximum space, quiet motion, notifications held",
+        "command": [
+          "mode",
+          "focus"
+        ],
+        "enabled": true,
+        "dangerous": false
+      },
+      {
+        "name": "Everyday mode",
+        "icon": "layout-dashboard",
+        "description": "Experience: the balanced default",
+        "command": [
+          "mode",
+          "everyday"
+        ],
+        "enabled": true,
+        "dangerous": false
+      },
+      {
+        "name": "Signal mode",
+        "icon": "wave-sine",
+        "description": "Experience: immersive instruments, labelled telemetry and glow",
+        "command": [
+          "mode",
+          "signal"
+        ],
+        "enabled": true,
+        "dangerous": false
+      },
+      {
+        "name": "Gaming mode",
+        "icon": "device-gamepad-2",
+        "description": "Experience: no motion, queued notifications, paused telemetry",
+        "command": [
+          "mode",
+          "gaming"
+        ],
+        "enabled": true,
+        "dangerous": false
+      },
+      {
+        "name": "Studio mode",
+        "icon": "wave-square",
+        "description": "Experience: audio first, stable canvas",
+        "command": [
+          "mode",
+          "studio"
+        ],
+        "enabled": true,
+        "dangerous": false
+      },
+      {
+        "name": "Revert mode",
+        "icon": "history",
+        "description": "Experience: go back to the previous mode",
+        "command": [
+          "mode",
+          "revert"
+        ],
+        "enabled": true,
+        "dangerous": false
       }
     ]
   },
@@ -582,7 +648,6 @@
     "toasts": {
       "configLoaded": true,
       "chargingChanged": true,
-      "gameModeChanged": true,
       "dndChanged": true,
       "audioOutputChanged": true,
       "audioInputChanged": true,
@@ -634,5 +699,13 @@
     "desktopWidgetSlots": {},
     "dashboardLayout": {},
     "safeMode": false
+  },
+  "experience": {
+    "modes": {},
+    "toasts": true,
+    "auto": {
+      "fullscreenGaming": false,
+      "gamePatterns": []
+    }
   }
 }

@@ -30,10 +30,9 @@ Item {
         ToggleChip {
             icon: "device-gamepad-2"
             label: qsTr("Game")
-            description: GameMode.enabled ? qsTr("Turn off game mode") : qsTr("Turn on game mode")
-            active: GameMode.enabled
-            visible: Compositor.supports("hyprlandTuning")
-            onToggled: GameMode.toggle()
+            description: Experience.gaming ? qsTr("Leave gaming mode") : qsTr("Switch to gaming mode")
+            active: Experience.gaming
+            onToggled: Experience.toggle("gaming")
         }
 
         // Screen recorder toggle

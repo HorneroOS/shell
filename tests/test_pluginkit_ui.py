@@ -265,6 +265,12 @@ ThemeBase {
     readonly property int fontSizeSmall: 11
     readonly property int fontSize: 13
     readonly property int fontSizeLarge: 18
+    readonly property int fontSizeBody: 12
+    readonly property int fontSizeTitle: 15
+    readonly property int fontSizeDisplay: 28
+    readonly property string iconFontFamily: "Sans"
+    readonly property int iconSize: 15
+    readonly property int iconSizeLarge: 18
     readonly property int spacingSmall: 7
     readonly property int spacing: 12
     readonly property int spacingLarge: 20
@@ -296,6 +302,7 @@ _STUB_QMLDIR = """module Hornero.PluginKit
 singleton Theme 1.0 Theme.qml
 internal ThemeBase ThemeBase.qml
 UiText 1.0 UiText.qml
+UiIcon 1.0 UiIcon.qml
 UiCard 1.0 UiCard.qml
 UiButton 1.0 UiButton.qml
 UiToggle 1.0 UiToggle.qml
@@ -332,7 +339,7 @@ def test_keyboard_only_operation_offscreen(tmp_path):
 
     kit = tmp_path / "Hornero" / "PluginKit"
     kit.mkdir(parents=True)
-    for name in UI_TYPES + ["UiStack", "UiStateLayer"]:
+    for name in UI_TYPES + ["UiStack", "UiStateLayer", "UiIcon"]:
         shutil.copy(KIT / f"{name}.qml", kit / f"{name}.qml")
     (kit / "ThemeBase.qml").write_text(_STUB_THEME_BASE, encoding="utf-8")
     (kit / "Theme.qml").write_text(_STUB_THEME, encoding="utf-8")
@@ -578,3 +585,24 @@ def test_buttons_cards_and_text_read_like_native_controls():
     assert "readonly property int hostAvailableWidth: root.availableWidth" in bar_host
     dash_host = (ROOT / "modules/plugins/PluginDashboardCards.qml").read_text(encoding="utf-8")
     assert 'readonly property string hostSurface: "dashboard"' in dash_host
+
+
+def test_native_type_scale_and_icons():
+    """Native text is sized in points (StyledText); PluginKit used the same
+    numbers as pixels, so extension text rendered ~25% smaller than native.
+    Extensions also get the native Material Symbols icon and a native card
+    header (icon + title).
+    """
+    for name in ("UiText", "UiButton", "UiChip", "UiTooltip", "UiToggle"):
+        src = (KIT / f"{name}.qml").read_text(encoding="utf-8")
+        assert "font.pixelSize" not in src, name
+        assert "font.pointSize" in src, name
+    theme = (KIT / "Theme.qml").read_text(encoding="utf-8")
+    assert "iconFontFamily: Appearance.font.family.material" in theme
+    assert "fontSizeBody: Appearance.font.size.smaller" in theme
+    icon = (KIT / "UiIcon.qml").read_text(encoding="utf-8")
+    assert "Theme.iconFontFamily" in icon and "FILL:" in icon and "GRAD:" in icon
+    assert "UiIcon 1.0 UiIcon.qml" in (KIT / "qmldir").read_text(encoding="utf-8")
+    card = (KIT / "UiCard.qml").read_text(encoding="utf-8")
+    assert "property string title" in card and "property string icon" in card
+    assert "UiIcon" in card and "Accessible.Heading" in card

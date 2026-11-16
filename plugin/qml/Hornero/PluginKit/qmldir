@@ -15,6 +15,7 @@ singleton Audio 1.0 Audio.qml
 singleton Providers 1.0 Providers.qml
 Subscription 1.0 Subscription.qml
 UiText 1.0 UiText.qml
+UiIcon 1.0 UiIcon.qml
 UiCard 1.0 UiCard.qml
 UiButton 1.0 UiButton.qml
 UiToggle 1.0 UiToggle.qml

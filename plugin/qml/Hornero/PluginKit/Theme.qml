@@ -48,6 +48,15 @@ ThemeBase {
     readonly property int fontSizeSmall: Appearance.font.size.small
     readonly property int fontSize: Appearance.font.size.normal
     readonly property int fontSizeLarge: Appearance.font.size.large
+    // Native type scale (StyledText uses points, not pixels): body is the
+    // shell default text size, titles match native card headers.
+    readonly property int fontSizeBody: Appearance.font.size.smaller
+    readonly property int fontSizeTitle: Appearance.font.size.larger
+    readonly property int fontSizeDisplay: Appearance.font.size.extraLarge
+    // Native icons (components/MaterialIcon.qml): Material Symbols Rounded.
+    readonly property string iconFontFamily: Appearance.font.family.material
+    readonly property int iconSize: Appearance.font.size.larger
+    readonly property int iconSizeLarge: Appearance.font.size.large
     readonly property int spacingSmall: Appearance.spacing.small
     readonly property int spacing: Appearance.spacing.normal
     readonly property int spacingLarge: Appearance.spacing.large

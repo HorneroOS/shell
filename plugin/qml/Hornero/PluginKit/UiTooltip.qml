@@ -253,7 +253,7 @@ Popup {
             text: root.text
             color: Theme.onSurface
             font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeSmall
+            font.pointSize: Theme.fontSizeSmall
         }
     }
 }

@@ -20,6 +20,6 @@ Rectangle {
         text: root.text
         color: root.tone === "primary" ? Theme.onPrimaryContainer : root.tone === "error" ? Theme.onErrorContainer : Theme.onSurfaceVariant
         font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSizeSmall
+        font.pointSize: Theme.fontSizeSmall
     }
 }

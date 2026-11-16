@@ -74,14 +74,14 @@ Button {
         text: root.text
         color: root.labelColor
         font.family: Theme.fontFamily
-        font.pixelSize: root.railCompact ? Theme.fontSizeSmall : Theme.fontSize
+        font.pointSize: root.railCompact ? Theme.fontSizeSmall : Theme.fontSizeBody
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         wrapMode: Text.NoWrap
         // Rail labels shrink to fit the rail rather than losing
         // characters; elision is only the last resort below the minimum.
         fontSizeMode: root.railCompact ? Text.Fit : Text.FixedSize
-        minimumPixelSize: 8
+        minimumPointSize: 6
         elide: root.railCompact ? Text.ElideRight : Text.ElideNone
         maximumLineCount: root.railCompact ? 2 : 0
         opacity: root.enabled ? 1 : 0.5

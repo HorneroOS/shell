@@ -1,7 +1,6 @@
 {
-  "_name": "Cozy Minimal",
+  "_name": "Minimal Float",
   "_description": "Soft floating top ribbon — workspaces, centred time, a few tools",
-  "_icon": "🌸",
   "_iconMaterial": "armchair",
   "_lineage": "Waybar cozy-minimal profile",
   "bar": {
@@ -60,7 +59,7 @@
           ]
         },
         "reserve": true,
-        "thickness": 40,
+        "thickness": 36,
         "density": "values",
         "backdrop": "solid"
       }

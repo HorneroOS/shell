@@ -11,7 +11,7 @@
       {
         "edge": "top",
         "style": "inset",
-        "margin": 8,
+        "margin": 6,
         "groups": {
           "start": [
             {
@@ -59,10 +59,6 @@
           ],
           "end": [
             {
-              "id": "battery",
-              "enabled": true
-            },
-            {
               "id": "statusIcons",
               "enabled": true
             },
@@ -81,14 +77,14 @@
           ]
         },
         "reserve": true,
-        "thickness": 40,
+        "thickness": 36,
         "density": "values",
         "backdrop": "solid"
       },
       {
         "edge": "bottom",
         "style": "attached",
-        "thickness": 32,
+        "thickness": 30,
         "groups": {
           "start": [
             {
@@ -109,6 +105,10 @@
             },
             {
               "id": "resources",
+              "enabled": true
+            },
+            {
+              "id": "battery",
               "enabled": true
             }
           ]

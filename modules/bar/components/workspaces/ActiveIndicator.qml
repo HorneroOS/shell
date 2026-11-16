@@ -52,7 +52,8 @@ StyledRect {
     y: vertical ? offset + mask.y : 0
     implicitWidth: vertical ? Config.bar.sizes.innerWidth - Appearance.padding.small * 2 : size
     implicitHeight: vertical ? size : Config.bar.sizes.innerWidth - Appearance.padding.small * 2
-    radius: Appearance.rounding.full
+    // Signal Bezel §5: fixed rectangular cells, never pills.
+    radius: Appearance.rounding.small
     color: Signal.palette.signal
 
     Colouriser {

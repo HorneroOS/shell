@@ -29,7 +29,9 @@ KNOWN_ACTIONS = set(
 
 
 def test_preset_count():
-    assert len(PRESETS) == 16, f"expected 16 presets, found {len(PRESETS)}"
+    # signal-visual-language §14: floating-island and productivity were
+    # removed (successors cozy-minimal / minimal-top); 14 survive.
+    assert len(PRESETS) == 14, f"expected 14 presets, found {len(PRESETS)}"
 
 
 def check_entry(path, entry, where, allow_spacer):

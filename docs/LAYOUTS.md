@@ -70,10 +70,17 @@ settings, and screenshot. Unknown actions are skipped with a warning.
 
 ## Shipped presets
 
-The installed catalogue contains 15 presets. It includes Hornero Left/Right,
-Cockpit and Cockpit Clear, Horizon, Islands, Cozy Minimal, Dock Bottom, and
-focused minimal, classic, gaming, floating, and productivity arrangements.
-Every preset is an explicit multi-bar specification and is validated by
+The installed catalogue contains 14 presets (Signal Bezel audit,
+signal-visual-language §14). It includes Hornero Left/Right (inspired by
+Caelestia's layout, preserved with attribution), Cockpit (36 px inset top
+rail, 30 px attached bottom strip) and Cockpit Clear (same anatomy, no bar
+backdrop at all — adaptive per-region ink only), Horizon, Islands, Minimal
+Float (formerly Cozy Minimal), Dock Bottom, Classic Top/Bottom, Minimal
+Top/Left, Studio, and Gaming. Floating Island and Productivity were removed:
+their compositions duplicated Minimal Float and Minimal Top, and presets are
+applied by copying their bars into the user config, so existing desktops
+keep working unchanged — only the picker catalogue shrinks. Every preset is
+an explicit multi-bar specification and is validated by
 `tests/test_shell_layout.py`.
 
 `horneroctl shell preset list --full` reports display metadata and topology for

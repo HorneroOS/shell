@@ -41,7 +41,8 @@ StyledClippingRect {
     implicitHeight: vertical ? layout.implicitHeight + Appearance.padding.small * 2 : Config.bar.sizes.innerWidth
 
     color: labels ? "transparent" : Signal.tPalette.panel
-    radius: Appearance.rounding.full
+    // Signal Bezel §5: rectangular strip housing fixed cells, never a pill.
+    radius: Appearance.rounding.small
 
     Item {
         anchors.fill: parent

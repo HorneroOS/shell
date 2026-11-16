@@ -5,6 +5,7 @@ import qs.components.controls
 import qs.services
 import qs.config
 import qs.utils
+import qs.modules.instruments as Instruments
 import QtQuick
 import QtQuick.Layouts
 
@@ -20,111 +21,173 @@ Item {
     required property bool sourceMuted
     required property real brightness
 
-    implicitWidth: layout.implicitWidth + Appearance.padding.large * 2
-    implicitHeight: layout.implicitHeight + Appearance.padding.large * 2
+    implicitWidth: layout.implicitWidth + 24
+    implicitHeight: layout.implicitHeight + 24
 
-    ColumnLayout {
+    // Channel strips side by side: glyph, vertical segmented meter,
+    // tabular value. Values above 100 % (boosted volume) turn `signal`.
+    Row {
         id: layout
 
         anchors.centerIn: parent
-        spacing: Appearance.spacing.normal
+        spacing: 0
 
         // Speaker volume
-        CustomMouseArea {
-            implicitWidth: Config.osd.sizes.sliderWidth
-            implicitHeight: Config.osd.sizes.sliderHeight
+        Channel {
+            shown: true
+            label: qsTr("OUT")
+            glyph: Icons.getVolumeIcon(root.volume, root.muted)
+            muted: root.muted
 
-            function onWheel(event: WheelEvent) {
-                if (event.angleDelta.y > 0)
-                    Audio.incrementVolume();
-                else if (event.angleDelta.y < 0)
-                    Audio.decrementVolume();
-            }
+            onWheelStep: up => up ? Audio.incrementVolume() : Audio.decrementVolume()
 
-            FilledSlider {
+            Instruments.SegmentSlider {
                 anchors.fill: parent
-
-                icon: Icons.getVolumeIcon(value, root.muted)
                 accessibleName: qsTr("Volume")
                 value: root.volume
                 to: Config.services.maxVolume
-                onMoved: Audio.setVolume(value)
+                threshold: 1 / Config.services.maxVolume
+                onMoved: v => Audio.setVolume(v)
             }
+
+            valueText: Math.round(root.volume * 100)
         }
 
         // Microphone volume
-        WrappedLoader {
-            shouldBeActive: Config.osd.enableMicrophone && (!Config.osd.enableBrightness || !root.visibilities.session)
+        Channel {
+            shown: Config.osd.enableMicrophone && (!Config.osd.enableBrightness || !root.visibilities.session)
+            label: qsTr("MIC")
+            glyph: Icons.getMicVolumeIcon(root.sourceVolume, root.sourceMuted)
+            muted: root.sourceMuted
 
-            sourceComponent: CustomMouseArea {
-                implicitWidth: Config.osd.sizes.sliderWidth
-                implicitHeight: Config.osd.sizes.sliderHeight
+            onWheelStep: up => up ? Audio.incrementSourceVolume() : Audio.decrementSourceVolume()
 
-                function onWheel(event: WheelEvent) {
-                    if (event.angleDelta.y > 0)
-                        Audio.incrementSourceVolume();
-                    else if (event.angleDelta.y < 0)
-                        Audio.decrementSourceVolume();
-                }
-
-                FilledSlider {
-                    anchors.fill: parent
-
-                    icon: Icons.getMicVolumeIcon(value, root.sourceMuted)
-                    accessibleName: qsTr("Microphone volume")
-                    value: root.sourceVolume
-                    to: Config.services.maxVolume
-                    onMoved: Audio.setSourceVolume(value)
-                }
+            Instruments.SegmentSlider {
+                anchors.fill: parent
+                accessibleName: qsTr("Microphone volume")
+                value: root.sourceVolume
+                to: Config.services.maxVolume
+                threshold: 1 / Config.services.maxVolume
+                onMoved: v => Audio.setSourceVolume(v)
             }
+
+            valueText: Math.round(root.sourceVolume * 100)
         }
 
         // Brightness
-        WrappedLoader {
-            shouldBeActive: Config.osd.enableBrightness
+        Channel {
+            shown: Config.osd.enableBrightness && root.monitor !== null
+            label: qsTr("BRI")
+            glyph: root.brightness < 0.34 ? "brightness-down" : root.brightness < 0.67 ? "brightness-half" : "brightness-up"
 
-            sourceComponent: CustomMouseArea {
-                implicitWidth: Config.osd.sizes.sliderWidth
-                implicitHeight: Config.osd.sizes.sliderHeight
-
-                function onWheel(event: WheelEvent) {
-                    const monitor = root.monitor;
-                    if (!monitor)
-                        return;
-                    if (event.angleDelta.y > 0)
-                        monitor.setBrightness(monitor.brightness + Config.services.brightnessIncrement);
-                    else if (event.angleDelta.y < 0)
-                        monitor.setBrightness(monitor.brightness - Config.services.brightnessIncrement);
-                }
-
-                FilledSlider {
-                    anchors.fill: parent
-
-                    icon: value < 0.34 ? "brightness-down" : value < 0.67 ? "brightness-half" : "brightness-up"
-                    accessibleName: qsTr("Brightness")
-                    value: root.brightness
-                    onMoved: root.monitor?.setBrightness(value)
-                }
+            onWheelStep: up => {
+                const monitor = root.monitor;
+                if (!monitor)
+                    return;
+                monitor.setBrightness(monitor.brightness + (up ? 1 : -1) * Config.services.brightnessIncrement);
             }
+
+            Instruments.SegmentSlider {
+                anchors.fill: parent
+                accessibleName: qsTr("Brightness")
+                value: root.brightness
+                onMoved: v => root.monitor?.setBrightness(v)
+            }
+
+            valueText: root.monitor ? Math.round(root.brightness * 100) : "—"
         }
     }
 
-    component WrappedLoader: Loader {
-        required property bool shouldBeActive
+    component Channel: Item {
+        id: channel
 
-        Layout.preferredHeight: shouldBeActive ? Config.osd.sizes.sliderHeight : 0
-        opacity: shouldBeActive ? 1 : 0
-        active: opacity > 0
-        visible: active
+        required property bool shown
+        property string label
+        property string glyph
+        property bool muted: false
+        property string valueText
+        default property alias meter: meterSlot.data
+        signal wheelStep(bool up)
 
-        Behavior on Layout.preferredHeight {
+        visible: shown || opacity > 0
+        opacity: shown ? 1 : 0
+        implicitWidth: shown ? 52 : 0
+        implicitHeight: col.implicitHeight
+        clip: true
+
+        Behavior on implicitWidth {
             Anim {
+                duration: Appearance.anim.durations.short
                 easing.bezierCurve: Appearance.anim.curves.standard
             }
         }
 
         Behavior on opacity {
-            Anim {}
+            Anim {
+                duration: Appearance.anim.durations.fade
+            }
+        }
+
+        // Hairline between adjacent strips.
+        Rectangle {
+            visible: channel.x > 0
+            anchors.left: parent.left
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            anchors.topMargin: 8
+            anchors.bottomMargin: 8
+            width: 1
+            color: Signal.palette.rule
+        }
+
+        CustomMouseArea {
+            anchors.fill: parent
+
+            function onWheel(event: WheelEvent) {
+                if (event.angleDelta.y !== 0)
+                    channel.wheelStep(event.angleDelta.y > 0);
+            }
+        }
+
+        Column {
+            id: col
+
+            anchors.horizontalCenter: parent.horizontalCenter
+            spacing: 8
+
+            Instruments.Eyebrow {
+                anchors.horizontalCenter: parent.horizontalCenter
+                label: channel.label
+            }
+
+            Item {
+                id: meterSlot
+
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: 12
+                height: Config.osd.sizes.sliderHeight - 30
+            }
+
+            Glyph {
+                anchors.horizontalCenter: parent.horizontalCenter
+                name: channel.glyph
+                color: channel.muted ? Signal.palette.alert : Signal.palette.inkMuted
+                size: Appearance.font.size.larger
+            }
+
+            Instruments.Well {
+                anchors.horizontalCenter: parent.horizontalCenter
+                implicitWidth: 36
+                implicitHeight: 18
+
+                StyledText {
+                    anchors.centerIn: parent
+                    mono: true
+                    text: channel.valueText
+                    color: channel.muted ? Signal.palette.inkMuted : Signal.palette.ink
+                    font.pointSize: Appearance.font.size.small
+                }
+            }
         }
     }
 }

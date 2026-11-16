@@ -319,7 +319,7 @@
   "launcher": {
     "enabled": true,
     "showOnHover": false,
-    "maxShown": 7,
+    "maxShown": 8,
     "maxWallpapers": 9,
     "specialPrefix": "@",
     "actionPrefix": ">",
@@ -334,8 +334,8 @@
       "wallpapers": false
     },
     "sizes": {
-      "itemWidth": 600,
-      "itemHeight": 57,
+      "itemWidth": 640,
+      "itemHeight": 44,
       "wallpaperWidth": 280,
       "wallpaperHeight": 200
     },

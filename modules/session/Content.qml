@@ -4,6 +4,7 @@ import qs.components
 import qs.services
 import qs.config
 import qs.utils
+import qs.modules.instruments as Instruments
 import Quickshell
 import QtQuick
 
@@ -15,12 +16,49 @@ Column {
 
     required property PersistentProperties visibilities
 
-    padding: Appearance.padding.large
-    spacing: Appearance.spacing.normal
+    padding: 12
+    spacing: 2
+    width: 280
+
+    // Header: channel eyebrow + the honest context (uptime).
+    Item {
+        width: root.width - root.padding * 2
+        height: 28
+
+        Instruments.Eyebrow {
+            anchors.left: parent.left
+            anchors.leftMargin: 4
+            anchors.verticalCenter: parent.verticalCenter
+            label: root.title
+            color: Signal.palette.ink
+        }
+
+        Instruments.Eyebrow {
+            anchors.right: parent.right
+            anchors.rightMargin: 4
+            anchors.verticalCenter: parent.verticalCenter
+            visible: SysInfo.uptime !== ""
+            label: root.uptimeLabel
+        }
+    }
+
+    Rectangle {
+        width: root.width - root.padding * 2
+        height: 1
+        color: Signal.palette.rule
+    }
+
+    Item {
+        width: 1
+        height: 6
+    }
 
     // Two-step confirm for every action: first press arms, second press
     // runs. Focus loss or Escape resets.
     property string armedAction: ""
+    readonly property string title: qsTr("Session")
+    // "2 hours, 17 minutes" -> "2h 17m": the header stays one short line.
+    readonly property string uptimeLabel: qsTr("up %1").arg(SysInfo.uptime.replace(/ days?/, "d").replace(/ hours?/, "h").replace(/ minutes?/, "m").replace(/,/g, ""))
 
     function runOrArm(action: string, command: var): void {
         if (root.armedAction !== action) {
@@ -65,18 +103,6 @@ Column {
         KeyNavigation.down: hibernate
     }
 
-    AnimatedImage {
-        width: Config.session.sizes.button
-        height: Config.session.sizes.button
-        sourceSize.width: width
-        sourceSize.height: height
-
-        playing: visible
-        asynchronous: true
-        speed: Appearance.anim.sessionGifSpeed
-        source: Paths.absolutePath(Config.paths.sessionGif)
-    }
-
     SessionButton {
         id: hibernate
 
@@ -110,7 +136,7 @@ Column {
 
         readonly property bool armed: root.armedAction === entry.action
 
-        spacing: 4
+        spacing: 0
         focus: true
 
         Keys.onEnterPressed: root.runOrArm(entry.action, entry.command)
@@ -151,19 +177,25 @@ Column {
                 root.armedAction = "";
         }
 
+        // Instrument row: glyph cell, label, mono key cue. Focus shows the
+        // on-air bar + `raised` fill; armed turns the row `alertWell` and
+        // asks for the second press in words, not only colour.
         StyledRect {
             id: button
 
-            anchors.horizontalCenter: parent.horizontalCenter
-            implicitWidth: Config.session.sizes.button
-            implicitHeight: Config.session.sizes.button
+            width: root.width - root.padding * 2
+            implicitHeight: 44
 
-            radius: Appearance.rounding.large
-            color: entry.armed ? Signal.palette.alertWell : entry.activeFocus ? Signal.palette.cueWell : Signal.tPalette.panel
+            radius: Appearance.rounding.small
+            color: entry.armed ? Signal.palette.alertWell : entry.activeFocus ? Signal.palette.raised : "transparent"
+
+            Accessible.role: Accessible.Button
+            Accessible.name: entry.armed ? qsTr("Confirm %1").arg(entry.label) : entry.label
+            Accessible.onPressAction: root.runOrArm(entry.action, entry.command)
 
             StateLayer {
                 radius: parent.radius
-                color: entry.armed ? Signal.palette.onAlertWell : entry.activeFocus ? Signal.palette.onCueWell : Signal.palette.ink
+                color: entry.armed ? Signal.palette.onAlertWell : Signal.palette.ink
 
                 function onClicked(): void {
                     entry.forceActiveFocus();
@@ -171,21 +203,51 @@ Column {
                 }
             }
 
+            Rectangle {
+                visible: entry.activeFocus || entry.armed
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                anchors.topMargin: 6
+                anchors.bottomMargin: 6
+                width: 2
+                color: entry.armed ? Signal.palette.alert : Signal.palette.signal
+            }
+
             Glyph {
-                anchors.centerIn: parent
+                id: glyph
+
+                anchors.left: parent.left
+                anchors.leftMargin: 16
+                anchors.verticalCenter: parent.verticalCenter
 
                 name: entry.icon
-                color: entry.armed ? Signal.palette.onAlertWell : entry.activeFocus ? Signal.palette.onCueWell : Signal.palette.ink
-                font.pointSize: Appearance.font.size.extraLarge
-                font.weight: 500
+                color: entry.armed ? Signal.palette.onAlertWell : entry.activeFocus ? Signal.palette.ink : Signal.palette.inkMuted
+                size: Appearance.font.size.large
             }
-        }
 
-        StyledText {
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: entry.armed ? qsTr("Confirm?") : entry.label
-            color: entry.armed ? Signal.palette.alert : Signal.palette.inkMuted
-            font.pointSize: Appearance.font.size.smaller
+            StyledText {
+                anchors.left: glyph.right
+                anchors.leftMargin: 12
+                anchors.verticalCenter: parent.verticalCenter
+                text: entry.armed ? qsTr("Confirm %1").arg(entry.label.toLowerCase()) : entry.label
+                color: entry.armed ? Signal.palette.onAlertWell : Signal.palette.ink
+                font.pointSize: Appearance.font.size.normal
+                font.weight: entry.activeFocus || entry.armed ? Font.Medium : Font.Normal
+            }
+
+            StyledText {
+                anchors.right: parent.right
+                anchors.rightMargin: 12
+                anchors.verticalCenter: parent.verticalCenter
+                visible: entry.activeFocus || entry.armed
+                mono: true
+                text: entry.armed ? qsTr("⏎ again") : "⏎"
+                color: entry.armed ? Signal.palette.onAlertWell : Signal.palette.inkMuted
+                font.pointSize: Appearance.font.size.small
+                font.capitalization: Font.AllUppercase
+                Accessible.ignored: true
+            }
         }
     }
 }

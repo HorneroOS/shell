@@ -23,7 +23,7 @@ StyledListView {
         onValuesChanged: root.currentIndex = 0
     }
 
-    spacing: Appearance.spacing.small
+    spacing: 0
     orientation: Qt.Vertical
     // The ai state's single delegate grows with the streamed answer;
     // every other state uses fixed-height rows.
@@ -35,9 +35,8 @@ StyledListView {
 
     highlightFollowsCurrentItem: false
     highlight: StyledRect {
-        radius: Appearance.rounding.normal
-        color: Signal.palette.ink
-        opacity: 0.08
+        radius: Appearance.rounding.small
+        color: Signal.palette.raised
 
         y: root.currentItem?.y ?? 0
         implicitWidth: root.width
@@ -45,8 +44,8 @@ StyledListView {
 
         Behavior on y {
             Anim {
-                duration: Appearance.anim.durations.settle
-                easing.bezierCurve: Appearance.anim.curves.settle
+                duration: Appearance.anim.durations.settleFast
+                easing.bezierCurve: Appearance.anim.curves.settleFast
             }
         }
     }
@@ -165,15 +164,7 @@ StyledListView {
                     property: "opacity"
                     from: 1
                     to: 0
-                    duration: Appearance.anim.durations.short
-                    easing.bezierCurve: Appearance.anim.curves.exit
-                }
-                Anim {
-                    target: root
-                    property: "scale"
-                    from: 1
-                    to: 0.9
-                    duration: Appearance.anim.durations.short
+                    duration: Appearance.anim.durations.quick
                     easing.bezierCurve: Appearance.anim.curves.exit
                 }
             }
@@ -195,14 +186,6 @@ StyledListView {
                     duration: Appearance.anim.durations.short
                     easing.bezierCurve: Appearance.anim.curves.enter
                 }
-                Anim {
-                    target: root
-                    property: "scale"
-                    from: 0.9
-                    to: 1
-                    duration: Appearance.anim.durations.short
-                    easing.bezierCurve: Appearance.anim.curves.enter
-                }
             }
             PropertyAction {
                 targets: [root.add, root.remove]
@@ -220,7 +203,7 @@ StyledListView {
         enabled: !root.state
 
         Anim {
-            properties: "opacity,scale"
+            property: "opacity"
             from: 0
             to: 1
         }
@@ -230,7 +213,7 @@ StyledListView {
         enabled: !root.state
 
         Anim {
-            properties: "opacity,scale"
+            property: "opacity"
             from: 1
             to: 0
         }
@@ -241,7 +224,7 @@ StyledListView {
             property: "y"
         }
         Anim {
-            properties: "opacity,scale"
+            property: "opacity"
             to: 1
         }
     }
@@ -252,7 +235,7 @@ StyledListView {
             duration: Appearance.anim.durations.short
         }
         Anim {
-            properties: "opacity,scale"
+            property: "opacity"
             to: 1
         }
     }
@@ -262,7 +245,7 @@ StyledListView {
             property: "y"
         }
         Anim {
-            properties: "opacity,scale"
+            property: "opacity"
             to: 1
         }
     }

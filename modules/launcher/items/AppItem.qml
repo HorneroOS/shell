@@ -4,87 +4,22 @@ import qs.services
 import qs.config
 import qs.utils
 import Quickshell
-import Quickshell.Widgets
 import QtQuick
 
-Item {
+LauncherRow {
     id: root
 
     required property DesktopEntry modelData
     required property PersistentProperties visibilities
+    readonly property bool favourite: modelData ? Strings.testRegexList(Config.launcher.favouriteApps, modelData.id) : false
 
-    implicitHeight: Config.launcher.sizes.itemHeight
+    iconSource: Quickshell.iconPath(root.modelData?.icon, "image-missing")
+    title: root.modelData?.name ?? ""
+    detail: (root.modelData?.comment || root.modelData?.genericName) ?? ""
+    kind: root.favourite ? qsTr("FAV") : ""
 
-    anchors.left: parent?.left
-    anchors.right: parent?.right
-
-    Accessible.role: Accessible.Button
-    Accessible.name: root.modelData?.name ?? ""
-
-    StateLayer {
-        radius: Appearance.rounding.normal
-
-        function onClicked(): void {
-            Apps.launch(root.modelData);
-            root.visibilities.launcher = false;
-        }
-    }
-
-    Item {
-        anchors.fill: parent
-        anchors.leftMargin: Appearance.padding.larger
-        anchors.rightMargin: Appearance.padding.larger
-        anchors.margins: Appearance.padding.smaller
-
-        IconImage {
-            id: icon
-
-            source: Quickshell.iconPath(root.modelData?.icon, "image-missing")
-            implicitSize: parent.height * 0.8
-
-            anchors.verticalCenter: parent.verticalCenter
-        }
-
-        Item {
-            anchors.left: icon.right
-            anchors.leftMargin: Appearance.spacing.normal
-            anchors.verticalCenter: icon.verticalCenter
-
-            implicitWidth: parent.width - icon.width - favouriteIcon.width
-            implicitHeight: name.implicitHeight + comment.implicitHeight
-
-            StyledText {
-                id: name
-
-                text: root.modelData?.name ?? ""
-                font.pointSize: Appearance.font.size.normal
-            }
-
-            StyledText {
-                id: comment
-
-                text: (root.modelData?.comment || root.modelData?.genericName || root.modelData?.name) ?? ""
-                font.pointSize: Appearance.font.size.small
-                color: Signal.palette.ruleStrong
-
-                elide: Text.ElideRight
-                width: root.width - icon.width - favouriteIcon.width - Appearance.rounding.normal * 2
-
-                anchors.top: name.bottom
-            }
-        }
-
-        Loader {
-            id: favouriteIcon
-
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.right: parent.right
-            active: modelData && Strings.testRegexList(Config.launcher.favouriteApps, modelData.id)
-
-            sourceComponent: Glyph {
-                name: "heart"
-                color: Signal.palette.signal
-            }
-        }
+    onActivated: {
+        Apps.launch(root.modelData);
+        root.visibilities.launcher = false;
     }
 }

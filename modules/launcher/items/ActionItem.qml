@@ -4,70 +4,15 @@ import qs.services
 import qs.config
 import QtQuick
 
-Item {
+LauncherRow {
     id: root
 
     required property var modelData
     required property var list
 
-    implicitHeight: Config.launcher.sizes.itemHeight
+    glyph: root.modelData?.icon ?? ""
+    title: root.modelData?.name ?? ""
+    detail: root.modelData?.desc ?? ""
 
-    anchors.left: parent?.left
-    anchors.right: parent?.right
-
-    Accessible.role: Accessible.Button
-    Accessible.name: root.modelData?.name ?? ""
-
-    StateLayer {
-        radius: Appearance.rounding.normal
-
-        function onClicked(): void {
-            root.modelData?.onClicked(root.list);
-        }
-    }
-
-    Item {
-        anchors.fill: parent
-        anchors.leftMargin: Appearance.padding.larger
-        anchors.rightMargin: Appearance.padding.larger
-        anchors.margins: Appearance.padding.smaller
-
-        Glyph {
-            id: icon
-
-            name: root.modelData?.icon ?? ""
-            font.pointSize: Appearance.font.size.extraLarge
-
-            anchors.verticalCenter: parent.verticalCenter
-        }
-
-        Item {
-            anchors.left: icon.right
-            anchors.leftMargin: Appearance.spacing.normal
-            anchors.verticalCenter: icon.verticalCenter
-
-            implicitWidth: parent.width - icon.width
-            implicitHeight: name.implicitHeight + desc.implicitHeight
-
-            StyledText {
-                id: name
-
-                text: root.modelData?.name ?? ""
-                font.pointSize: Appearance.font.size.normal
-            }
-
-            StyledText {
-                id: desc
-
-                text: root.modelData?.desc ?? ""
-                font.pointSize: Appearance.font.size.small
-                color: Signal.palette.ruleStrong
-
-                elide: Text.ElideRight
-                width: root.width - icon.width - Appearance.rounding.normal * 2
-
-                anchors.top: name.bottom
-            }
-        }
-    }
+    onActivated: root.modelData?.onClicked(root.list)
 }

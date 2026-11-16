@@ -2,128 +2,114 @@ import qs.components
 import qs.components.effects
 import qs.services
 import qs.config
+import qs.modules.instruments as Instruments
 import Hornero
 import QtQuick
 import QtQuick.Layouts
 
+// Toast as a status line (Signal Bezel §7.1): a `panel` module with a
+// 2 px status edge and a mono status word, so the kind never relies on
+// colour alone. Success `phosphor`, warning `signal`, error `alert`,
+// information `cue`.
 StyledRect {
     id: root
 
     required property Toast modelData
+    readonly property color tone: {
+        if (root.modelData.type === Toast.Success)
+            return Signal.palette.phosphor;
+        if (root.modelData.type === Toast.Warning)
+            return Signal.palette.signal;
+        if (root.modelData.type === Toast.Error)
+            return Signal.palette.alert;
+        return Signal.palette.cue;
+    }
+    readonly property string word: {
+        if (root.modelData.type === Toast.Success)
+            return qsTr("Done");
+        if (root.modelData.type === Toast.Warning)
+            return qsTr("Warning");
+        if (root.modelData.type === Toast.Error)
+            return qsTr("Error");
+        return qsTr("Note");
+    }
 
     anchors.left: parent.left
     anchors.right: parent.right
-    implicitHeight: layout.implicitHeight + Appearance.padding.smaller * 2
+    implicitHeight: layout.implicitHeight + 20
 
-    radius: Appearance.rounding.normal
-    color: {
-        if (root.modelData.type === Toast.Success)
-            return Signal.palette.phosphorWell;
-        if (root.modelData.type === Toast.Warning)
-            return Signal.palette.cue;
-        if (root.modelData.type === Toast.Error)
-            return Signal.palette.alertWell;
-        return Signal.palette.base;
-    }
-
+    radius: Appearance.rounding.small
+    color: Signal.palette.panel
     border.width: 1
-    border.color: {
-        let colour = Signal.palette.rule;
-        if (root.modelData.type === Toast.Success)
-            colour = Signal.palette.phosphor;
-        if (root.modelData.type === Toast.Warning)
-            colour = Signal.palette.cueWell;
-        if (root.modelData.type === Toast.Error)
-            colour = Signal.palette.alert;
-        return Qt.alpha(colour, 0.3);
-    }
+    border.color: root.modelData.type === Toast.Error ? root.tone : Signal.palette.rule
+
+    Accessible.role: Accessible.AlertMessage
+    Accessible.name: `${root.word}: ${root.modelData.title}`
+    Accessible.description: root.modelData.message
 
     Elevation {
         anchors.fill: parent
         radius: parent.radius
         opacity: parent.opacity
         z: -1
-        level: 3
+        level: 2
+    }
+
+    Rectangle {
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        width: 2
+        color: root.tone
     }
 
     RowLayout {
         id: layout
 
-        anchors.fill: parent
-        anchors.margins: Appearance.padding.smaller
-        anchors.leftMargin: Appearance.padding.normal
-        anchors.rightMargin: Appearance.padding.normal
-        spacing: Appearance.spacing.normal
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.leftMargin: 14
+        anchors.rightMargin: 12
+        spacing: 12
 
-        StyledRect {
-            radius: Appearance.rounding.normal
-            color: {
-                if (root.modelData.type === Toast.Success)
-                    return Signal.palette.phosphor;
-                if (root.modelData.type === Toast.Warning)
-                    return Signal.palette.cueWell;
-                if (root.modelData.type === Toast.Error)
-                    return Signal.palette.alert;
-                return Signal.palette.raised;
-            }
-
-            implicitWidth: implicitHeight
-            implicitHeight: icon.implicitHeight + Appearance.padding.smaller * 2
-
-            Glyph {
-                id: icon
-
-                anchors.centerIn: parent
-                name: root.modelData.icon
-                color: {
-                    if (root.modelData.type === Toast.Success)
-                        return Signal.palette.onPhosphor;
-                    if (root.modelData.type === Toast.Warning)
-                        return Signal.palette.onCueWell;
-                    if (root.modelData.type === Toast.Error)
-                        return Signal.palette.onAlert;
-                    return Signal.palette.inkMuted;
-                }
-                font.pointSize: Math.round(Appearance.font.size.large * 1.2)
-            }
+        Glyph {
+            Layout.alignment: Qt.AlignTop
+            Layout.topMargin: 2
+            name: root.modelData.icon
+            color: root.tone
+            size: Appearance.font.size.large
         }
 
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: 0
+            spacing: 2
 
-            StyledText {
-                id: title
-
+            RowLayout {
                 Layout.fillWidth: true
-                text: root.modelData.title
-                color: {
-                    if (root.modelData.type === Toast.Success)
-                        return Signal.palette.onPhosphorWell;
-                    if (root.modelData.type === Toast.Warning)
-                        return Signal.palette.onCue;
-                    if (root.modelData.type === Toast.Error)
-                        return Signal.palette.onAlertWell;
-                    return Signal.palette.ink;
+                spacing: 8
+
+                StyledText {
+                    Layout.fillWidth: true
+                    text: root.modelData.title
+                    font.pointSize: Appearance.font.size.normal
+                    font.weight: Font.Medium
+                    elide: Text.ElideRight
                 }
-                font.pointSize: Appearance.font.size.normal
-                elide: Text.ElideRight
+
+                Instruments.Eyebrow {
+                    label: root.word
+                    color: root.tone
+                }
             }
 
             StyledText {
                 Layout.fillWidth: true
+                visible: text !== ""
                 textFormat: Text.StyledText
                 text: root.modelData.message
-                color: {
-                    if (root.modelData.type === Toast.Success)
-                        return Signal.palette.onPhosphorWell;
-                    if (root.modelData.type === Toast.Warning)
-                        return Signal.palette.onCue;
-                    if (root.modelData.type === Toast.Error)
-                        return Signal.palette.onAlertWell;
-                    return Signal.palette.ink;
-                }
-                opacity: 0.8
+                color: Signal.palette.inkMuted
+                font.pointSize: Appearance.font.size.smaller
                 elide: Text.ElideRight
             }
         }

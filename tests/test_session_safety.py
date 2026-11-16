@@ -24,7 +24,8 @@ def test_session_buttons_have_labels():
 def test_session_actions_require_arm():
     text = _text()
     assert "armedAction" in text
-    assert "Confirm?" in text
+    # The armed row names the action it will run ("Confirm shut down").
+    assert 'qsTr("Confirm %1")' in text
     # No raw execution path on keypress/click: everything goes via runOrArm.
     assert text.count("runOrArm") >= 4
     assert "execDetached" in text

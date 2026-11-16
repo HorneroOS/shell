@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import "services"
 import qs.components
 import qs.components.controls
+import qs.modules.instruments as Instruments
 import qs.services
 import qs.config
 import Quickshell
@@ -15,11 +16,59 @@ Item {
     required property var panels
     required property real maxHeight
 
-    readonly property int padding: Appearance.padding.large
-    readonly property int rounding: Appearance.rounding.large
+    readonly property int padding: Appearance.padding.larger
+    readonly property int rounding: Appearance.rounding.small
+    readonly property string modeLabel: {
+        const st = list.currentList?.state ?? "";
+        if (list.showWallpapers)
+            return qsTr("Wallpaper");
+        return ({
+                "apps": qsTr("Launch"),
+                "actions": qsTr("Command"),
+                "calc": qsTr("Calculate"),
+                "win": qsTr("Windows"),
+                "file": qsTr("Files"),
+                "ai": qsTr("Ask"),
+                "appearance": qsTr("Theme"),
+                "plugin": qsTr("Extension")
+            })[st] ?? qsTr("Launch");
+    }
 
     implicitWidth: listWrapper.width + padding * 2
-    implicitHeight: searchWrapper.height + listWrapper.height + padding * 2
+    implicitHeight: header.height + listWrapper.height + searchWrapper.height + padding * 2 + 1
+
+    // Header: channel eyebrow left, result count + key cues right.
+    Item {
+        id: header
+
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.leftMargin: root.padding + 4
+        anchors.rightMargin: root.padding + 4
+        height: 32
+
+        Instruments.Eyebrow {
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+            label: root.modeLabel
+            color: Signal.palette.ink
+        }
+
+        Instruments.Eyebrow {
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            label: (list.currentList?.count ?? 0) === 1 ? qsTr("1 match") : qsTr("%1 matches").arg(list.currentList?.count ?? 0)
+        }
+    }
+
+    Rectangle {
+        anchors.top: header.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: 1
+        color: Signal.palette.rule
+    }
 
     Item {
         id: listWrapper
@@ -37,18 +86,19 @@ Item {
             content: root
             visibilities: root.visibilities
             panels: root.panels
-            maxHeight: root.maxHeight - searchWrapper.implicitHeight - root.padding * 3
+            maxHeight: root.maxHeight - searchWrapper.implicitHeight - header.height - root.padding * 3
             search: search
             padding: root.padding
             rounding: root.rounding
         }
     }
 
-    StyledRect {
+    // Command prompt: a sunken input well with a `signal` prompt mark.
+    // The query is typed in Plex Mono, like a command line.
+    Instruments.Well {
         id: searchWrapper
 
-        color: Signal.layer(Signal.palette.panel, 2)
-        radius: Appearance.rounding.full
+        border.color: search.activeFocus ? Signal.palette.ruleStrong : Signal.palette.rule
 
         anchors.left: parent.left
         anchors.right: parent.right
@@ -57,15 +107,19 @@ Item {
 
         implicitHeight: Math.max(searchIcon.implicitHeight, search.implicitHeight, clearIcon.implicitHeight)
 
-        Glyph {
+        StyledText {
             id: searchIcon
 
             anchors.verticalCenter: parent.verticalCenter
             anchors.left: parent.left
-            anchors.leftMargin: root.padding
+            anchors.leftMargin: 12
 
-            name: "search"
-            color: Signal.palette.inkMuted
+            mono: true
+            text: "›"
+            color: Signal.palette.signal
+            font.pointSize: Appearance.font.size.large
+            font.weight: Font.DemiBold
+            Accessible.ignored: true
         }
 
         StyledTextField {
@@ -75,14 +129,16 @@ Item {
             trapTab: !Config.launcher.vimKeybinds
 
             anchors.left: searchIcon.right
-            anchors.right: clearIcon.left
+            anchors.right: keyLegend.left
             anchors.leftMargin: Appearance.spacing.small
             anchors.rightMargin: Appearance.spacing.small
 
             topPadding: Appearance.padding.larger
             bottomPadding: Appearance.padding.larger
+            font.family: Appearance.font.family.mono
+            font.pointSize: Appearance.font.size.larger
 
-            placeholderText: qsTr("Type \"%1\" for commands").arg(Config.launcher.actionPrefix)
+            placeholderText: qsTr("search apps, or %1 for commands").arg(Config.launcher.actionPrefix)
 
             onAccepted: {
                 const currentItem = list.currentList?.currentItem;
@@ -159,12 +215,24 @@ Item {
             }
         }
 
+        // Key legend: muted, hidden while typing to keep the line clean.
+        Instruments.Eyebrow {
+            id: keyLegend
+
+            anchors.right: clearIcon.left
+            anchors.rightMargin: 8
+            anchors.verticalCenter: parent.verticalCenter
+            visible: search.text === ""
+            width: visible ? implicitWidth : 0
+            label: qsTr("↑↓  ⏎  esc")
+        }
+
         Glyph {
             id: clearIcon
 
             anchors.verticalCenter: parent.verticalCenter
             anchors.right: parent.right
-            anchors.rightMargin: root.padding
+            anchors.rightMargin: 12
 
             width: search.text ? implicitWidth : implicitWidth / 2
             opacity: {

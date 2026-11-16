@@ -14,10 +14,10 @@ ShapePath {
     readonly property real roundingY: flatten ? wrapper.height / 2 : rounding
 
     strokeWidth: -1
-    // Paint nothing while the panel is closed: the concave corner arcs
-    // live outside the wrapper and would otherwise linger as stray wings
-    // on screens without the frame (frameEnabled false, clear bars).
-    fillColor: wrapper.width > 0 && wrapper.height > 0 ? Signal.surface(Signal.palette.base, "notifications") : "transparent"
+    // Signal: popup notifications are standalone bordered modules over the
+    // desktop (Notification.qml), not cards inside an attached tray. The
+    // path stays so the sidebar keeps its geometry, but paints nothing.
+    fillColor: "transparent"
 
     PathLine {
         relativeX: -(root.wrapper.width + root.rounding)

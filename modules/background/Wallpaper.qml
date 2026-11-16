@@ -167,7 +167,7 @@ Item {
                         if (!Config.background.video.enabled)
                             return false;
 
-                        if (Config.background.video.pauseOnGameMode && GameMode.enabled)
+                        if (Config.background.video.pauseOnGameMode && Experience.gaming)
                             return true;
 
                         if (Config.background.video.batteryLimitEnabled && Config.background.video.batteryLimit > 0 && UPower.displayDevice && UPower.displayDevice.isPresent && UPower.displayDevice.isLaptopBattery) {

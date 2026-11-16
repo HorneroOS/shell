@@ -152,8 +152,15 @@ Singleton {
                 return;
             }
 
+            // Experience notification policy (Focus/Gaming hold, fullscreen
+            // suppression): held notifications are filed without a popup
+            // and counted so leaving the mode can report them.
+            const critical = notif.urgency === NotificationUrgency.Critical;
+            const held = !critical && !props.dnd && Experience.holdPopups;
+            if (held)
+                Experience.noteHeld();
             const comp = notifComp.createObject(root, {
-                popup: (notif.urgency === NotificationUrgency.Critical || !props.dnd) && ![...Visibilities.screens.values()].some(v => v.sidebar),
+                popup: (critical || (!props.dnd && !held)) && ![...Visibilities.screens.values()].some(v => v.sidebar),
                 notification: notif
             });
             root.list = [comp, ...root.list];

@@ -28,13 +28,25 @@ Singleton {
     component Motion: QtObject {
         id: motion
 
-        // appearance.reducedMotion or the system preference.
-        readonly property bool reduced: Config.appearance.reducedMotion || SystemMotion.reduced
+        // Motion level of the active experience mode (Signal Visual
+        // Language §11.3: full | standard | reduced | off), set by
+        // services/Experience.qml. appearance.reducedMotion or the system
+        // preference force `off` regardless of the mode.
+        property string level: "standard"
+        readonly property string effectiveLevel: (Config.appearance.reducedMotion || SystemMotion.reduced) ? "off" : (["full", "standard", "reduced", "off"].includes(level) ? level : "standard")
+        // True when every duration is zero (only capped fades remain).
+        readonly property bool reduced: effectiveLevel === "off"
+        // Spatial motion (morph, stagger, settle overshoot) only at the
+        // full and standard levels; at `reduced` components keep a short
+        // 4 px move + fade and pick `standard` over the settle curves.
+        readonly property bool spatial: effectiveLevel === "full" || effectiveLevel === "standard"
         readonly property real mediaGifSpeedAdjustment: Config.appearance.anim.mediaGifSpeedAdjustment
         readonly property real sessionGifSpeed: Config.appearance.anim.sessionGifSpeed
         readonly property Curves curves: Curves {}
         readonly property real _scale: Config.appearance.anim.durations.scale
-        readonly property real _k: reduced ? 0 : _scale
+        // `full` and `standard` share timings (§11.3); `reduced` halves
+        // them; `off` zeroes them.
+        readonly property real _k: reduced ? 0 : effectiveLevel === "reduced" ? _scale * 0.5 : _scale
         // Durations in ms. Reduced motion zeroes every duration; opacity
         // cross-fades use `fade`, which stays at most 90 ms. A plain map
         // because `short` is not a legal property name on every Qt parser.

@@ -277,10 +277,10 @@ Item {
                         }
 
                         SwitchRow {
-                            label: qsTr("Game mode changed")
-                            checked: Config.utilities.toasts.gameModeChanged
+                            label: qsTr("Experience mode changed")
+                            checked: Config.experience.toasts
                             onToggled: checked => {
-                                Config.utilities.toasts.gameModeChanged = checked;
+                                Config.experience.toasts = checked;
                                 Config.save();
                             }
                         }

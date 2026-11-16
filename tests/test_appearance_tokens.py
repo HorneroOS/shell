@@ -162,9 +162,12 @@ def test_motion_tokens():
     for name, ms in (("quick", 90), ("short", 160), ("medium", 240), ("long", 360),
                      ("scan", 480), ("settleFast", 220), ("settle", 320)):
         assert f'"{name}": Math.round({ms} * motion._k)' in text, name
-    assert "readonly property real _k: reduced ? 0 : _scale" in text
+    # Experience motion level (§11.3): full/standard share timings,
+    # reduced halves them, off (or reduced motion) zeroes them.
+    assert 'readonly property real _k: reduced ? 0 : effectiveLevel === "reduced" ? _scale * 0.5 : _scale' in text
     assert '"fade": motion.reduced ? 90 : Math.round(90 * motion._scale)' in text
-    assert "readonly property bool reduced: Config.appearance.reducedMotion || SystemMotion.reduced" in text
+    assert '(Config.appearance.reducedMotion || SystemMotion.reduced) ? "off"' in text
+    assert 'readonly property bool reduced: effectiveLevel === "off"' in text
     # Curves/durations are tokens, never persisted knobs.
     config = APPEARANCE_CONFIG.read_text()
     assert "list<real>" not in config and "property real scale: 1" in config

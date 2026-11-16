@@ -276,7 +276,8 @@ def _motion_tokens():
 
     def names(component):
         body = text.split(f"component {component}: QtObject {{", 1)[1].split("\n    }", 1)[0]
-        return re.findall(r"readonly property [\w.<>]+ (\w+):", body)
+        # `anim.level` is writable: services/Experience.qml sets it.
+        return re.findall(r"(?:readonly )?property [\w.<>]+ (\w+):", body)
 
     tokens = {f"anim.{n}" for n in names("Motion") if not n.startswith("_")}
     tokens |= {f"anim.curves.{n}" for n in names("Curves")}

@@ -60,7 +60,7 @@ Scope {
     Binding {
         target: CompanionStore
         property: "suppressGameMode"
-        value: GameMode.enabled
+        value: Experience.gaming
     }
 
     // Slow idle poll: sleep after a long idle. 30 s granularity keeps

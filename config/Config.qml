@@ -27,6 +27,7 @@ Singleton {
     property alias services: adapter.services
     property alias paths: adapter.paths
     property alias plugins: adapter.plugins
+    property alias experience: adapter.experience
 
     property bool editSessionActive: false
     property bool hasPendingChanges: false
@@ -194,6 +195,25 @@ Singleton {
         return changed;
     }
 
+    // One-shot: the retired Gaming Focus toast switch
+    // (utilities.toasts.gameModeChanged) becomes experience.toasts. The
+    // adapter ignores the old key, so it is read from the raw file and
+    // dropped on the next save.
+    function migrateLegacyExperience(raw: string): bool {
+        let data;
+        try {
+            data = JSON.parse(raw);
+        } catch (e) {
+            return false;
+        }
+        const legacy = data?.utilities?.toasts?.gameModeChanged;
+        if (typeof legacy !== "boolean")
+            return false;
+        if (data?.experience?.toasts === undefined)
+            adapter.experience.toasts = legacy;
+        return true;
+    }
+
     // Pristine compiled defaults for the migration above.
     SessionConfig {
         id: sessionDefaults
@@ -227,7 +247,8 @@ Singleton {
             sidebar: serializeSidebar(),
             services: serializeServices(),
             paths: serializePaths(),
-            plugins: serializePlugins()
+            plugins: serializePlugins(),
+            experience: serializeExperience()
         };
     }
 
@@ -580,7 +601,6 @@ Singleton {
             toasts: {
                 configLoaded: utilities.toasts.configLoaded,
                 chargingChanged: utilities.toasts.chargingChanged,
-                gameModeChanged: utilities.toasts.gameModeChanged,
                 dndChanged: utilities.toasts.dndChanged,
                 audioOutputChanged: utilities.toasts.audioOutputChanged,
                 audioInputChanged: utilities.toasts.audioInputChanged,
@@ -642,6 +662,17 @@ Singleton {
         };
     }
 
+    function serializeExperience(): var {
+        return {
+            modes: experience.modes,
+            toasts: experience.toasts,
+            auto: {
+                fullscreenGaming: experience.auto.fullscreenGaming,
+                gamePatterns: experience.auto.gamePatterns
+            }
+        };
+    }
+
     // Runtime shell settings live at $XDG_CONFIG_HOME/hornero/shell.json.
     // A missing user file means compiled defaults apply (see onLoadFailed).
     FileView {
@@ -660,7 +691,9 @@ Singleton {
             }
         }
         onLoaded: {
-            if (root.migrateLegacyAppearance())
+            const migratedAppearance = root.migrateLegacyAppearance();
+            const migratedExperience = root.migrateLegacyExperience(text());
+            if (migratedAppearance || migratedExperience)
                 root.save();
             root.loaded = true;
             try {
@@ -704,6 +737,7 @@ Singleton {
             property ServiceConfig services: ServiceConfig {}
             property UserPaths paths: UserPaths {}
             property PluginsConfig plugins: PluginsConfig {}
+            property ExperienceConfig experience: ExperienceConfig {}
         }
     }
 

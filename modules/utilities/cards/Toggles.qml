@@ -78,10 +78,9 @@ StyledRect {
 
             Toggle {
                 icon: "device-gamepad"
-                accessibleName: qsTr("Toggle game mode")
-                checked: GameMode.enabled
-                visible: Compositor.supports("hyprlandTuning")
-                onClicked: GameMode.enabled = !GameMode.enabled
+                accessibleName: qsTr("Toggle gaming mode")
+                checked: Experience.gaming
+                onClicked: Experience.toggle("gaming")
             }
 
             Toggle {

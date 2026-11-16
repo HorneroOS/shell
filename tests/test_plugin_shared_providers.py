@@ -69,7 +69,9 @@ def test_single_shared_polling_timer_per_polling_domain():
         assert src.startswith("pragma Singleton"), service
         assert len(re.findall(r"\bTimer\s*\{", src)) == 1, service
         assert "running: root.refCount > 0" in src, service
-        assert "Config.dashboard.resourceUpdateInterval" in src, service
+        # Rate follows the experience mode, falling back to
+        # Config.dashboard.resourceUpdateInterval (services/Experience.qml).
+        assert "interval: Experience.telemetryIntervalMs" in src, service
 
 
 def test_providers_forwards_leases_to_the_shared_refcount_gates():

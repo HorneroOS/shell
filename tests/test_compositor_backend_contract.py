@@ -217,10 +217,15 @@ def test_niri_screenshot_uses_native_picker_and_does_not_claim_custom_overlay():
 
 
 def test_game_mode_is_not_offered_as_hyprland_tuning_under_niri():
+    # The gaming experience mode exists on every compositor; only its
+    # Hyprland effects hook is gated on the capability.
     game_mode = (ROOT / "services/GameMode.qml").read_text(encoding="utf-8")
-    assert 'if (!Compositor.supports("hyprlandTuning"))' in game_mode
+    experience = (ROOT / "services/Experience.qml").read_text(encoding="utf-8")
+    assert "readonly property bool enabled: Experience.hyprlandTuning" in game_mode
+    assert 'hyprlandTuningAvailable: Compositor.supports("hyprlandTuning")' in experience
+    assert 'fields["hooks.hyprlandTuning"] && hyprlandTuningAvailable' in experience
     for rel in ("modules/utilities/cards/Toggles.qml", "modules/dashboard/dash/QuickToggles.qml"):
-        assert 'visible: Compositor.supports("hyprlandTuning")' in (ROOT / rel).read_text(encoding="utf-8")
+        assert 'Experience.toggle("gaming")' in (ROOT / rel).read_text(encoding="utf-8")
 
 
 def test_quickshell_hyprland_global_shortcuts_only_register_in_hyprland():

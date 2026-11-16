@@ -16,7 +16,7 @@ Item {
 
     property real scale: Config.background.desktopClock.scale
     readonly property bool bgEnabled: Config.background.desktopClock.background.enabled
-    readonly property bool blurEnabled: bgEnabled && Config.background.desktopClock.background.blur && !GameMode.enabled
+    readonly property bool blurEnabled: bgEnabled && Config.background.desktopClock.background.blur && !Experience.gaming
     readonly property bool invertColors: Config.background.desktopClock.invertColors
     readonly property bool useLightSet: Signal.light ? !invertColors : invertColors
     readonly property color safePrimary: useLightSet ? Signal.palette.signalWell : Signal.palette.signal

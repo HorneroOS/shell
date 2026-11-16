@@ -241,15 +241,6 @@
           ],
           "end": [
             {
-              "id": "tray",
-              "enabled": true,
-              "options": {}
-            },
-            {
-              "id": "extensions",
-              "enabled": true
-            },
-            {
               "id": "clock",
               "enabled": true,
               "options": {}
@@ -258,6 +249,15 @@
               "id": "statusIcons",
               "enabled": true,
               "options": {}
+            },
+            {
+              "id": "tray",
+              "enabled": true,
+              "options": {}
+            },
+            {
+              "id": "extensions",
+              "enabled": true
             },
             {
               "id": "power",

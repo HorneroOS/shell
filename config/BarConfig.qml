@@ -14,7 +14,7 @@ JsonObject {
         groups: {
             start: [{id: "logo", enabled: true}, {id: "workspaces", enabled: true}],
             center: [{id: "activeWindow", enabled: true}],
-            end: [{id: "tray", enabled: true}, {id: "extensions", enabled: true}, {id: "clock", enabled: true}, {id: "statusIcons", enabled: true}, {id: "power", enabled: true}]
+            end: [{id: "clock", enabled: true}, {id: "statusIcons", enabled: true}, {id: "tray", enabled: true}, {id: "extensions", enabled: true}, {id: "power", enabled: true}]
         }
     }]
 

@@ -107,30 +107,30 @@ bluetooth|Bluetooth
 vpn|VPN
 appearance|Appearance
 nightlight|Night Light
+accessibility|Accessibility
 taskbar|Bars
 layout|Layout
-launcher|Launcher
 dashboard|Dashboard
-companion|Javi
-accessibility|Accessibility
+launcher|Launcher
+windows|Windows
+lockscreen|Lock screen
 audio|Audio
 notifications|Notifications
 osd|On-screen display
 displays|Displays
 input|Input
 keybinds|Keybinds
-windows|Windows
-lockscreen|Lock screen
-session|Session
-system|System
-extensions|Extensions
-studio|Studio
-agents|Agent Center
-gaming|Gaming
-updates|Updates
-capture|Capture
-terminal|Terminal
 power|Power
+capture|Capture
+companion|Javi
+agents|Agent Center
+studio|Studio
+gaming|Gaming
+terminal|Terminal
+extensions|Extensions
+system|System
+updates|Updates
+session|Session
 PANE_LIST
 vm_ssh "$(vm_hypr_env)
 QS_BIN=\$(command -v qs || command -v quickshell)

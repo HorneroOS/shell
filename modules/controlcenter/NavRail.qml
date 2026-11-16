@@ -175,19 +175,34 @@ Item {
                     readonly property Item navItem: paneNavItem
 
                     Layout.fillWidth: true
-                    spacing: Appearance.spacing.small
+                    spacing: 0
 
                     StyledText {
                         Layout.leftMargin: Appearance.padding.normal
-                        Layout.topMargin: root.session.navExpanded ? (firstInCategory && index > 0 ? Appearance.spacing.large : Appearance.spacing.small) : 0
-                        Layout.preferredHeight: root.session.navExpanded ? implicitHeight : 0
+                        Layout.topMargin: root.session.navExpanded && firstInCategory ? (index > 0 ? Appearance.spacing.large : Appearance.spacing.small) : 0
+                        Layout.bottomMargin: root.session.navExpanded && firstInCategory ? Appearance.spacing.small : 0
+                        // Only a group's first item carries its title; the
+                        // rest take no height (an empty title still cost a
+                        // full text line per item, shell#456).
+                        Layout.preferredHeight: root.session.navExpanded && firstInCategory ? implicitHeight : 0
                         Layout.fillWidth: true
-                        visible: root.session.navExpanded
+                        visible: root.session.navExpanded && firstInCategory
                         opacity: root.session.navExpanded ? 1 : 0
                         text: firstInCategory ? PaneRegistry.categoryTitle(pane.category) : ""
                         color: Colours.palette.m3outline
                         font.pointSize: Appearance.font.size.small
                         font.capitalization: Font.Capitalize
+                    }
+
+                    // Compact rail: a visible divider between groups (shell#456),
+                    // where the expanded rail shows the group title.
+                    Rectangle {
+                        visible: !root.session.navExpanded && firstInCategory && index > 0
+                        Layout.alignment: Qt.AlignHCenter
+                        Layout.preferredWidth: 28
+                        Layout.preferredHeight: visible ? 1 : 0
+                        Layout.topMargin: visible ? Appearance.spacing.small : 0
+                        color: Colours.palette.m3outlineVariant
                     }
 
                     NavItem {

@@ -817,7 +817,7 @@ def test_agent_center_pane_is_registered():
     entry = entries["agents"]
     assert entry["label"] == "agents"
     assert entry["component"] == "agents/AgentCenterPane.qml"
-    assert entry["category"] == "system"
+    assert entry["category"] == "apps"  # shell#456: Apps & assistants group
     assert (CC / entry["component"]).is_file()
     keywords = entry["keywords"].group(1)
     for kw in ("agent", "agents", "javi", "assistant", "coding"):
@@ -885,3 +885,21 @@ def test_purpose_panes_open_with_a_shared_header_not_a_decorative_column():
         src = (root / rel).read_text()
         assert "leftContent" not in src and "SettingsHeader" not in src, rel
         assert "PaneHeader {" in src and "intro: qsTr(" in src, rel
+def test_navigation_is_grouped_balanced_and_expanded_by_default():
+    """The rail had 4 groups with 15 panes under System, duplicate icons and
+    no visible grouping in compact mode (shell#456)."""
+    cc = Path(__file__).resolve().parents[1] / "modules/controlcenter"
+    reg = (cc / "PaneRegistry.qml").read_text()
+    cat_block = reg.split("readonly property list<QtObject> categories: [", 1)[1].split("]", 1)[0]
+    cats = re.findall(r'readonly property string id: "([^"]+)"', cat_block)
+    assert cats == ["connections", "look", "desktop", "sound-alerts", "devices", "apps", "system"]
+    panes = reg.split("readonly property list<QtObject> panes: [", 1)[1].split("searchTargets", 1)[0]
+    per = re.findall(r'readonly property string category: "([^"]+)"', panes)
+    assert max(per.count(c) for c in cats) <= 6
+    # grouped contiguously, in category order
+    seen = [c for i, c in enumerate(per) if i == 0 or per[i - 1] != c]
+    assert seen == cats
+    icons = re.findall(r'readonly property string icon: "([^"]+)"', panes)
+    assert len(icons) == len(set(icons)), "every pane has its own icon"
+    assert "property bool navExpanded: true" in (cc / "Session.qml").read_text()
+    assert "visible: !root.session.navExpanded && firstInCategory && index > 0" in (cc / "NavRail.qml").read_text()

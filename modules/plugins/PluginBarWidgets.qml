@@ -122,7 +122,22 @@ Repeater {
         // Plugins cannot import Shell theming; give their default text the
         // bar's themed foreground through palette inheritance instead of
         // Qt's default black (invisible on the dark bar).
+        // Raw Qt Controls an extension uses in its bar popover (TextField,
+        // ComboBox, ...) take the shell palette instead of the Basic style's
+        // white field, as on the dashboard host.
         palette.windowText: Colours.palette.m3onSurface
+        palette.window: Colours.palette.m3surfaceContainer
+        palette.base: Colours.palette.m3surfaceContainerHigh
+        palette.alternateBase: Colours.palette.m3surfaceContainerHighest
+        palette.text: Colours.palette.m3onSurface
+        palette.placeholderText: Colours.palette.m3onSurfaceVariant
+        palette.button: Colours.palette.m3surfaceContainerHigh
+        palette.buttonText: Colours.palette.m3onSurface
+        palette.highlight: Colours.palette.m3primary
+        palette.highlightedText: Colours.palette.m3onPrimary
+        palette.mid: Colours.palette.m3outline
+        palette.dark: Colours.palette.m3outline
+        palette.light: Colours.palette.m3surfaceContainerHighest
         source: modelData.entrypoint ? `file://${Plugins.pluginsDir}/${modelData.id}/${modelData.entrypoint}` : ""
         asynchronous: true
 

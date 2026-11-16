@@ -18,6 +18,9 @@ Column {
 
     UiText {
         anchors.horizontalCenter: parent.horizontalCenter
+        // Wrap inside the container (a popover or card column) instead of
+        // running past its edges as one centred line.
+        width: root.parent && root.parent.width > 0 ? Math.min(implicitWidth, root.parent.width) : implicitWidth
         text: root.message
         role: root.kind === "error" ? "body" : "caption"
         color: root.kind === "error" ? Theme.error : Theme.onSurfaceVariant

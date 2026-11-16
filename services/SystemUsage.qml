@@ -139,92 +139,73 @@ Singleton {
     Process {
         id: storage
 
-        // Get physical disks with aggregated usage from their partitions
-        // lsblk outputs: NAME SIZE TYPE FSUSED FSSIZE in bytes
-        command: ["lsblk", "-b", "-o", "NAME,SIZE,TYPE,FSUSED,FSSIZE", "-P"]
+        // Physical disks with the usage of every filesystem mounted from
+        // them. PKNAME walks partitions, LUKS (crypt), LVM and RAID nodes up
+        // to their disk (shell#464): matching partition names only missed
+        // encrypted roots, and unmounted disks counted 0 used against their
+        // whole size, so the total read ~0%.
+        command: ["lsblk", "-b", "-o", "NAME,PKNAME,SIZE,TYPE,FSUSED,FSSIZE", "-P"]
         stdout: StdioCollector {
-            onStreamFinished: {
-                const diskMap = {};  // Map disk name -> { name, totalSize, used, fsTotal }
-                const lines = text.trim().split("\n");
-
-                for (const line of lines) {
-                    if (line.trim() === "")
-                        continue;
-
-                    // Parse KEY="VALUE" format
-                    const nameMatch = line.match(/NAME="([^"]+)"/);
-                    const sizeMatch = line.match(/SIZE="([^"]+)"/);
-                    const typeMatch = line.match(/TYPE="([^"]+)"/);
-                    const fsusedMatch = line.match(/FSUSED="([^"]*)"/);
-                    const fssizeMatch = line.match(/FSSIZE="([^"]*)"/);
-
-                    if (!nameMatch || !typeMatch)
-                        continue;
-
-                    const name = nameMatch[1];
-                    const type = typeMatch[1];
-                    const size = parseInt(sizeMatch?.[1] || "0", 10);
-                    const fsused = parseInt(fsusedMatch?.[1] || "0", 10);
-                    const fssize = parseInt(fssizeMatch?.[1] || "0", 10);
-
-                    if (type === "disk") {
-                        // Skip zram (swap) devices
-                        if (name.startsWith("zram"))
-                            continue;
-
-                        // Initialize disk entry
-                        if (!diskMap[name]) {
-                            diskMap[name] = {
-                                name: name,
-                                totalSize: size,
-                                used: 0,
-                                fsTotal: 0
-                            };
-                        }
-                    } else if (type === "part") {
-                        // Find parent disk (remove trailing numbers/p+numbers)
-                        let parentDisk = name.replace(/p?\d+$/, "");
-                        // For nvme devices like nvme0n1p1, parent is nvme0n1
-                        if (name.match(/nvme\d+n\d+p\d+/))
-                            parentDisk = name.replace(/p\d+$/, "");
-
-                        // Aggregate partition usage to parent disk
-                        if (diskMap[parentDisk]) {
-                            diskMap[parentDisk].used += fsused;
-                            diskMap[parentDisk].fsTotal += fssize;
-                        }
-                    }
-                }
-
-                // Convert map to sorted array
-                const diskList = [];
-                let totalUsed = 0;
-                let totalSize = 0;
-
-                for (const diskName of Object.keys(diskMap).sort()) {
-                    const disk = diskMap[diskName];
-                    // Use filesystem total if available, otherwise use disk size
-                    const total = disk.fsTotal > 0 ? disk.fsTotal : disk.totalSize;
-                    const used = disk.used;
-                    const perc = total > 0 ? used / total : 0;
-
-                    // Convert bytes to KiB for consistency with formatKib
-                    diskList.push({
-                        mount: disk.name  // Using 'mount' property for compatibility
-                        ,
-                        used: used / 1024,
-                        total: total / 1024,
-                        free: (total - used) / 1024,
-                        perc: perc
-                    });
-
-                    totalUsed += used;
-                    totalSize += total;
-                }
-
-                root.disks = diskList;
-            }
+            onStreamFinished: root.disks = root.parseDisks(text)
         }
+    }
+
+    // Parses `lsblk -b -P -o NAME,PKNAME,SIZE,TYPE,FSUSED,FSSIZE` into
+    // [{ mount, used, total, free, perc }] (KiB), one entry per physical disk
+    // that has at least one mounted filesystem.
+    function parseDisks(text: string): var {
+        const nodes = {};
+        const order = [];
+        for (const line of text.split("\n")) {
+            const field = key => {
+                const m = line.match(new RegExp("(?:^|\\s)" + key + "=\"([^\"]*)\""));
+                return m ? m[1] : "";
+            };
+            const name = field("NAME");
+            if (name === "")
+                continue;
+            nodes[name] = {
+                parent: field("PKNAME"),
+                type: field("TYPE"),
+                used: parseInt(field("FSUSED") || "0", 10) || 0,
+                size: parseInt(field("FSSIZE") || "0", 10) || 0
+            };
+            order.push(name);
+        }
+
+        const diskOf = name => {
+            let cur = name;
+            for (let hops = 0; hops < 16 && nodes[cur]; hops++) {
+                if (nodes[cur].type === "disk")
+                    return cur;
+                cur = nodes[cur].parent;
+            }
+            return "";
+        };
+
+        const usage = {};
+        for (const name of order) {
+            const node = nodes[name];
+            if (node.size <= 0)
+                continue;
+            const disk = diskOf(name);
+            if (disk === "" || disk.startsWith("zram"))
+                continue;
+            usage[disk] = usage[disk] || { used: 0, total: 0 };
+            usage[disk].used += node.used;
+            usage[disk].total += node.size;
+        }
+
+        return Object.keys(usage).sort().map(disk => {
+            const u = usage[disk];
+            return {
+                mount: disk,
+                used: u.used / 1024,
+                total: u.total / 1024,
+                free: (u.total - u.used) / 1024,
+                perc: u.total > 0 ? u.used / u.total : 0
+            };
+        });
     }
 
     // GPU name detection (one-time)

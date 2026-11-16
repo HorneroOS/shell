@@ -95,7 +95,8 @@ Motion levels (visual language §11.3):
 
 `appearance.reducedMotion` or the desktop's reduced-motion preference
 (`org.gnome.desktop.interface enable-animations`) forces `off`. The
-experience-mode service sets `Choreography.modeLevel`; the user duration
+experience-mode service (`services/Experience.qml`) sets
+`Appearance.anim.level`, which `Choreography` reads; the user duration
 scale (`appearance.anim.durations.scale`) multiplies every duration.
 
 ### Cost

@@ -346,6 +346,35 @@ Item {
 }
 ```
 
+### Anchored popovers and tooltips
+
+Extension popovers and tooltips follow the shell's anchored-surface
+contract (RFC 0001 §4; [INTERACTION.md](INTERACTION.md#anchored-surfaces)).
+An extension never positions a surface in absolute screen coordinates;
+it names a `target` and the host does the rest:
+
+- **Bar indicators.** A `UiPopover` whose trigger lives in a bar is
+  hosted by the bar's own popout surface. It opens on hover after the
+  120 ms intent delay, grows from the trigger notch, morphs when the
+  pointer moves to a neighbouring trigger, honours the 240 ms close
+  grace, staggers its rows and closes with the same 90 ms fade as
+  native popouts. Content is reparented visually only; the extension
+  keeps ownership.
+- **Elsewhere** (dashboard, desktop widgets), `UiPopover` and
+  `UiTooltip` place themselves with `Placement.js`, a verbatim copy of
+  the shell solver shipped inside `Hornero.PluginKit`: with
+  `preferredSide: "auto"` a trigger inside a bar opens away from that
+  bar (down from top bars, up from bottom bars, inward from rails), any
+  other trigger prefers the free vertical half; an explicit side flips
+  once when it would clip, the panel stays inside the screen minus an
+  8 px gutter, and it follows its trigger across moves, resizes and
+  scale changes.
+- **Stable API.** `target`, `text`, `delay`, `timeout`,
+  `preferredSide`, `accessibleName`, `contentPadding`,
+  `initialFocusItem`, `open()`, `close()`, `toggle()`, `dismiss()`,
+  `actualSide` and `placementFor(...)` keep their names and meanings;
+  only the placement arithmetic moved to the shared solver.
+
 ## Instrumentation
 
 Rainmeter/Conky-class desktops are built on PluginKit — there is no
@@ -369,6 +398,8 @@ instrument components follow the visual language's real-data rule:
 - Meters threshold at 85 % to `signal`; `alert` only above a critical
   value the sensor itself reports. Vertical VU meters use `phosphor`.
 - Plots shift on each sample with no tween; numerals update instantly.
+
+Usage example:
 
 ```qml
 import QtQuick

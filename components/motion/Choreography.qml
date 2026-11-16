@@ -15,16 +15,13 @@ import QtQuick
 //   reduced   Focus, low power  no morph, no stagger; 4 px travel + fade
 //   off       Gaming, reduced   instant; opacity fades capped at 90 ms
 //
-// `modeLevel` is written by the experience-mode service (or a user
-// override); appearance.reducedMotion and the system preference force
-// `off` regardless, as the RFC requires.
+// The level itself lives in Appearance.anim (set by services/Experience
+// from the active experience mode); appearance.reducedMotion and the
+// system preference force `off` there, as the RFC requires.
 Singleton {
     id: root
 
-    property string modeLevel: "standard"
-
-    readonly property bool forcedOff: Appearance.anim.reduced
-    readonly property string level: forcedOff ? "off" : (["full", "standard", "reduced", "off"].includes(modeLevel) ? modeLevel : "standard")
+    readonly property string level: Appearance.anim.effectiveLevel
 
     // Feature switches.
     readonly property bool morph: level === "full" || level === "standard"

@@ -20,7 +20,7 @@ trap cleanup EXIT
 for d in assets components config services utils modules; do
     ln -sfn "$repo/$d" "$scratch/$d"
 done
-sed "s/^ShellRoot {/ShellRoot {\n    Component.onCompleted: Choreography.modeLevel = \"${level}\"/" \
+sed "s/^ShellRoot {/ShellRoot {\n    Component.onCompleted: Appearance.anim.level = \"${level}\"/" \
     "$repo/tests/perf/anchored-surface-harness.qml" >"$scratch/shell.qml"
 
 QSG_RENDER_TIMING=1 QT_MESSAGE_PATTERN='%{category} %{message}' \

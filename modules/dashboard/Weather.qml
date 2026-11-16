@@ -1,3 +1,4 @@
+import "weather"
 import qs.components
 import qs.services
 import qs.config
@@ -189,16 +190,6 @@ Item {
                     color: Colours.palette.m3onSurfaceVariant
                 }
 
-                StyledText {
-                    textFormat: Text.MarkdownText
-                    text: qsTr("Weather: [Open-Meteo](https://open-meteo.com/) · Geocoding: [© OpenStreetMap contributors](https://www.openstreetmap.org/copyright)")
-                    font.pointSize: Appearance.font.size.smaller
-                    color: Colours.palette.m3onSurfaceVariant
-                    // Themed link color: the Qt default link blue clashes
-                    // with the dashboard surface in both colour schemes.
-                    linkColor: Colours.palette.m3primary
-                    onLinkActivated: link => Quickshell.execDetached(["app2unit", "-O", "--", link])
-                }
             }
 
             Item {
@@ -295,94 +286,23 @@ Item {
             Layout.topMargin: Appearance.spacing.normal
             Layout.leftMargin: Appearance.padding.normal
             visible: Weather.hourlyForecast && Weather.hourlyForecast.length > 0
-            text: qsTr("Next 24 hours")
+            text: qsTr("Hourly forecast")
             font.pointSize: Appearance.font.size.normal
             font.weight: 600
             color: Colours.palette.m3onSurface
         }
 
-        Item {
+        HourlyChart {
             Layout.fillWidth: true
-            implicitHeight: hourlyRow.implicitHeight
-            visible: Weather.hourlyForecast && Weather.hourlyForecast.length > 0
-            clip: true
-
-            Flickable {
-                anchors.fill: parent
-                flickableDirection: Flickable.HorizontalFlick
-                contentWidth: hourlyRow.implicitWidth
-                contentHeight: hourlyRow.implicitHeight
-
-                Row {
-                    id: hourlyRow
-                    spacing: Appearance.spacing.smaller
-
-                    Repeater {
-                        model: Weather.hourlyForecast ? Weather.hourlyForecast.slice(0, 24) : []
-
-                        StyledRect {
-                            id: hourItem
-                            required property var modelData
-                            required property int index
-
-                            implicitWidth: 56
-                            implicitHeight: hourCol.implicitHeight + Appearance.padding.normal * 2
-                            radius: Appearance.rounding.normal
-                            color: hourItem.index === 0
-                                ? Colours.layer(Colours.palette.m3primaryContainer, 1)
-                                : Colours.tPalette.m3surfaceContainer
-
-                            ColumnLayout {
-                                id: hourCol
-                                anchors.centerIn: parent
-                                spacing: Appearance.spacing.small / 2
-
-                                StyledText {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    text: {
-                                        const h = hourItem.modelData.hour ?? 0;
-                                        return Config.services.useTwelveHourClock
-                                            ? (h === 0 ? "12am" : h < 12 ? h + "am" : h === 12 ? "12pm" : (h - 12) + "pm")
-                                            : String(h).padStart(2, "0") + ":00"
-                                    }
-                                    font.pointSize: Appearance.font.size.smaller
-                                    color: hourItem.index === 0
-                                        ? Colours.palette.m3onPrimaryContainer
-                                        : Colours.palette.m3onSurfaceVariant
-                                }
-
-                                MaterialIcon {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    text: hourItem.modelData.icon ?? "cloud"
-                                    font.pointSize: Appearance.font.size.larger
-                                    color: hourItem.index === 0
-                                        ? Colours.palette.m3onPrimaryContainer
-                                        : Colours.palette.m3secondary
-                                }
-
-                                StyledText {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    text: Config.services.useFahrenheit
-                                        ? (hourItem.modelData.tempF ?? "--") + "°"
-                                        : (hourItem.modelData.tempC ?? "--") + "°"
-                                    font.pointSize: Appearance.font.size.smaller
-                                    font.weight: 600
-                                    color: hourItem.index === 0
-                                        ? Colours.palette.m3onPrimaryContainer
-                                        : Colours.palette.m3onSurface
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            visible: Weather.hourlyForecast && Weather.hourlyForecast.length > 1
+            entries: Weather.hourlyForecast ? Weather.hourlyForecast.slice(0, 24) : []
         }
 
         StyledText {
             Layout.topMargin: Appearance.spacing.normal
             Layout.leftMargin: Appearance.padding.normal
-            visible: forecastRepeater.count > 0 && !(Weather.hourlyForecast && Weather.hourlyForecast.length > 0)
-            text: qsTr("7-Day Forecast")
+            visible: forecastRepeater.count > 0
+            text: qsTr("7-day forecast")
             font.pointSize: Appearance.font.size.normal
             font.weight: 600
             color: Colours.palette.m3onSurface
@@ -391,7 +311,7 @@ Item {
         RowLayout {
             Layout.fillWidth: true
             spacing: Appearance.spacing.smaller
-            visible: !(Weather.hourlyForecast && Weather.hourlyForecast.length > 0)
+            visible: forecastRepeater.count > 0
 
             Repeater {
                 id: forecastRepeater
@@ -448,6 +368,21 @@ Item {
                     }
                 }
             }
+        }
+
+        // Data attribution (required by the Open-Meteo and OpenStreetMap
+        // licences) as a quiet footer. StyledText, not MarkdownText: Qt
+        // ignores linkColor for Markdown, which rendered default-blue links.
+        StyledText {
+            Layout.fillWidth: true
+            Layout.topMargin: Appearance.spacing.small
+            Layout.leftMargin: Appearance.padding.normal
+            textFormat: Text.StyledText
+            text: qsTr("Weather: <a href=\"https://open-meteo.com/\">Open-Meteo</a> · Geocoding: <a href=\"https://www.openstreetmap.org/copyright\">© OpenStreetMap contributors</a>")
+            font.pointSize: Appearance.font.size.small
+            color: Colours.palette.m3onSurfaceVariant
+            linkColor: Colours.palette.m3onSurfaceVariant
+            onLinkActivated: link => Quickshell.execDetached(["app2unit", "-O", "--", link])
         }
     }
 

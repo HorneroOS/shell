@@ -31,7 +31,7 @@ def test_native_panel_shows_extension_content():
 def test_bar_opens_extension_popouts_like_native_ones():
     bar = read("modules/bar/Bar.qml")
     for needle in ("function pluginLoaderAt", "function openPluginPopout", "function onPopoutRequested",
-                   'id === "extensions" || id === "clock" || id === "quickActions"', '"hostRegisterPopout" in icon',
+                   'pluginHit !== null || id === "extensions"', "const item = ch.item ?? ch", '"hostRegisterPopout" in icon',
                    "hostPopoutOpen = true"):
         assert needle in bar, needle
 

@@ -696,21 +696,24 @@ Item {
             // Community plugins with placement "bar" render at the end
             // of the end group, each in its own Loader (fault-isolated
             // through the Plugins service). Empty when none are enabled.
-            PluginBarWidgets {
+            // Layouts without an "extensions" entry get the same tray-like
+            // island here (shell#441), never a bare stack of indicators,
+            // so bar.extensions.* applies in every layout.
+            ExtensionsIsland {
+                Layout.alignment: root.vertical ? Qt.AlignHCenter : Qt.AlignVCenter
+
+                screen: root.screen
                 vertical: root.vertical
-                // Layouts with an "extensions" entry render indicators in
-                // that island (shell#441); older layouts keep this block.
                 surfaceActive: group.name === "end" && !root.presentSections.includes("end")
                 // Islands missing from this layout (shell#439): their
                 // extension indicators render here rather than nowhere.
                 fallbackSections: ["status", "actions", "clock"].filter(s => !root.presentSections.includes(s))
-                // Responsive host context (#372): the real edge,
-                // content thickness, compact breakpoint and screen of
-                // this bar instance (one Bar per screen/edge).
-                edge: root.edge
-                thickness: root.spec.thickness
-                compact: root.compact
-                screenName: root.screen.name
+                // Responsive host context (#372), forwarded to the
+                // island's plugin hosts.
+                hostEdge: root.edge
+                hostThickness: root.spec.thickness
+                hostCompact: root.compact
+                hostScreenName: root.screen.name
             }
         }
     }

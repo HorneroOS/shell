@@ -13,6 +13,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 BAR_WIDGETS = (ROOT / "modules/plugins/PluginBarWidgets.qml").read_text()
+ISLAND = (ROOT / "modules/bar/components/ExtensionsIsland.qml").read_text()
 CARDS = (ROOT / "modules/plugins/PluginDashboardCards.qml").read_text()
 DESKTOP = (ROOT / "modules/plugins/PluginDesktopWidgets.qml").read_text()
 BAR = (ROOT / "modules/bar/Bar.qml").read_text()
@@ -47,7 +48,7 @@ def test_every_visible_host_injects_full_context_guarded():
 def test_bar_context_covers_all_four_edges_and_real_geometry():
     # All four edges: the bar passes its spec edge through untouched;
     # orientation derives from it via the existing vertical flag.
-    assert "edge: root.edge" in BAR
+    assert "edge: root.edge" in ISLAND or "hostEdge: root.edge" in BAR
     assert 'edge === "left" || edge === "right"' in BAR
     for edge in ("top", "bottom", "left", "right"):
         assert f'"{edge}"' in BAR_WIDGETS or f'"{edge}"' in BAR
@@ -55,9 +56,9 @@ def test_bar_context_covers_all_four_edges_and_real_geometry():
     # Available space is real surface geometry, not plugin guesswork:
     # cross-axis from spec.thickness, compact from the bar width
     # breakpoint, screen from this bar instance (multi-monitor).
-    assert "thickness: root.spec.thickness" in BAR
-    assert "compact: root.compact" in BAR
-    assert "screenName: root.screen.name" in BAR
+    assert "thickness: root.spec.thickness" in ISLAND or "hostThickness: root.spec.thickness" in BAR
+    assert "compact: root.compact" in ISLAND or "hostCompact: root.compact" in BAR
+    assert "screenName: root.screen.name" in ISLAND or "hostScreenName: root.screen.name" in BAR
     assert "hostCompact: vertical || compact" in BAR_WIDGETS
 
 

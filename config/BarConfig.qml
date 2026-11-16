@@ -177,10 +177,15 @@ JsonObject {
         property list<string> hiddenIcons: []
     }
 
-    // Extensions island (shell#441): chip and compact behave like the tray.
+    // Extensions island (shell#441): the same settings as the tray island —
+    // background, recolour, compact, iconSubs, hiddenIcons — with the same
+    // defaults, so both islands read and behave identically.
     component Extensions: JsonObject {
-        property bool background: true
+        property bool background: false
+        property bool recolour: false
         property bool compact: false
+        property list<var> iconSubs: []
+        property list<string> hiddenIcons: []
     }
 
     component Status: JsonObject {

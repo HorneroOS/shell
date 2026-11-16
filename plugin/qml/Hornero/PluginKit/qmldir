@@ -21,6 +21,7 @@ UiButton 1.0 UiButton.qml
 UiToggle 1.0 UiToggle.qml
 UiSlider 1.0 UiSlider.qml
 UiMetric 1.0 UiMetric.qml
+UiDetailRow 1.0 UiDetailRow.qml
 UiChip 1.0 UiChip.qml
 UiProgress 1.0 UiProgress.qml
 UiState 1.0 UiState.qml

@@ -304,8 +304,11 @@
       "hiddenIcons": []
     },
     "extensions": {
-      "background": true,
-      "compact": false
+      "background": false,
+      "recolour": false,
+      "compact": false,
+      "iconSubs": [],
+      "hiddenIcons": []
     },
     "status": {
       "showAudio": false,

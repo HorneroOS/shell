@@ -48,3 +48,11 @@ def test_indicators_in_tray_like_islands_have_no_hover_background():
     button = read("plugin/qml/Hornero/PluginKit/UiButton.qml")
     assert 'root.hostStyle.hostSection === "status" || root.hostStyle.hostSection === "end"' in button
     assert "hovered: hover.hovered && !root.quietHover" in button
+
+
+def test_popover_content_fits_the_native_popout():
+    state = read("plugin/qml/Hornero/PluginKit/UiState.qml")
+    assert "Math.min(implicitWidth, root.parent.width)" in state
+    bar = read("modules/plugins/PluginBarWidgets.qml")
+    assert "palette.base: Colours.palette.m3surfaceContainerHigh" in bar
+    assert "palette.placeholderText: Colours.palette.m3onSurfaceVariant" in bar

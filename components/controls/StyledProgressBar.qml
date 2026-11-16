@@ -20,7 +20,7 @@ ProgressBar {
         anchors.verticalCenter: parent.verticalCenter
         width: parent.width
         height: root.implicitHeight
-        radius: root.implicitHeight / 2
+        radius: 0
         color: root.bgColour
     }
 
@@ -30,7 +30,7 @@ ProgressBar {
             anchors.verticalCenter: parent.verticalCenter
             width: root.position * parent.width
             height: root.implicitHeight
-            radius: root.implicitHeight / 2
+            radius: 0
             color: root.fgColour
         }
     }

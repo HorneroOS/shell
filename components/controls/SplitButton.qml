@@ -41,7 +41,7 @@ Row {
         Accessible.role: Accessible.Button
         Accessible.name: root.accessibleName || label.text
 
-        radius: implicitHeight / 2 * Math.min(1, Appearance.rounding.scale)
+        radius: Appearance.rounding.small
         topRightRadius: Appearance.rounding.small / 2
         bottomRightRadius: Appearance.rounding.small / 2
         color: root.disabled ? root.disabledColour : root.colour
@@ -103,9 +103,9 @@ Row {
         Accessible.role: Accessible.Button
         Accessible.name: qsTr("More options")
 
-        property real rad: root.expanded ? implicitHeight / 2 * Math.min(1, Appearance.rounding.scale) : Appearance.rounding.small / 2
+        property real rad: Appearance.rounding.small / 2
 
-        radius: implicitHeight / 2 * Math.min(1, Appearance.rounding.scale)
+        radius: Appearance.rounding.small
         topLeftRadius: rad
         bottomLeftRadius: rad
         color: root.disabled ? root.disabledColour : root.colour

@@ -34,7 +34,7 @@ Slider {
             implicitWidth: root.handle.x - root.implicitHeight / 6
 
             color: Signal.palette.signal
-            radius: Appearance.rounding.full
+            radius: Appearance.rounding.small
             topRightRadius: root.implicitHeight / 15
             bottomRightRadius: root.implicitHeight / 15
         }
@@ -49,7 +49,7 @@ Slider {
             implicitWidth: parent.width - root.handle.x - root.handle.implicitWidth - root.implicitHeight / 6
 
             color: Signal.palette.lifted
-            radius: Appearance.rounding.full
+            radius: Appearance.rounding.small
             topLeftRadius: root.implicitHeight / 15
             bottomLeftRadius: root.implicitHeight / 15
         }
@@ -62,7 +62,7 @@ Slider {
         implicitHeight: root.implicitHeight
 
         color: Signal.palette.signal
-        radius: Appearance.rounding.full
+        radius: Appearance.rounding.small
 
         MouseArea {
             anchors.fill: parent
@@ -71,6 +71,6 @@ Slider {
         }
     }
     FocusRing {
-        radius: Appearance.rounding.full
+        radius: Appearance.rounding.small
     }
 }

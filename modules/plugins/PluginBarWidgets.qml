@@ -75,6 +75,28 @@ Repeater {
 
         required property var modelData
 
+        // Native popout bridge (shell#449): the extension's UiPopover hands
+        // its content to the bar's shared popout panel (modules/bar/popouts)
+        // instead of opening its own window, so it opens on hover, grows from
+        // the bar edge and animates exactly like native popouts. The bar
+        // hit-tests by `name`; Content.qml shows `hostPopoutContent`.
+        readonly property string name: "plugin:" + modelData.id
+        property Item hostPopoutContent: null
+        property bool hostPopoutOpen: false
+
+        function hostRegisterPopout(item: Item): void {
+            pluginLoader.hostPopoutContent = item;
+        }
+        function hostTogglePopout(): void {
+            Plugins.requestPopout(pluginLoader, !pluginLoader.hostPopoutOpen);
+        }
+        function hostOpenPopout(): void {
+            Plugins.requestPopout(pluginLoader, true);
+        }
+        function hostClosePopout(): void {
+            Plugins.requestPopout(pluginLoader, false);
+        }
+
         // Host context advertised on the Loader itself, so PluginKit
         // primitives find it by ancestry even when the entrypoint does not
         // opt in to the host* properties (it still wins when it does).

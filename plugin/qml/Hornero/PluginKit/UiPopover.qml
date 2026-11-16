@@ -40,6 +40,38 @@ Popup {
 
     property bool _returnFocusToTarget: false
 
+    // Native bar popouts (shell issue 449): when the trigger lives in a bar
+    // host that offers the native popout panel, the popover never opens its
+    // own window. Its content is handed to the shell's shared popout panel,
+    // so it opens on hover, grows from the bar edge, moves between triggers
+    // and closes exactly like native popouts. Elsewhere (dashboard, desktop)
+    // it stays a regular anchored popover.
+    property var hostPopout: null
+    readonly property bool hosted: root.hostPopout !== null
+    // True while the native popout shows this content (bar hosts only).
+    readonly property bool hostOpen: root.hosted && root.hostPopout.hostPopoutOpen === true
+
+    function _findHostPopout(): var {
+        let p = root.target;
+        while (p) {
+            if ("hostRegisterPopout" in p)
+                return p;
+            p = p.parent;
+        }
+        return null;
+    }
+
+    function _attachHost(): void {
+        const host = root._findHostPopout();
+        if (!host || host === root.hostPopout)
+            return;
+        root.hostPopout = host;
+        host.hostRegisterPopout(container);
+    }
+
+    Component.onCompleted: Qt.callLater(root._attachHost)
+    onTargetChanged: Qt.callLater(root._attachHost)
+
     // Popovers live in surface (window-root) coordinates so a clipped
     // bar island never crops them; the surface picks the monitor.
     parent: {
@@ -60,6 +92,10 @@ Popup {
     background: Item {}
 
     function toggle() {
+        if (root.hosted) {
+            root.hostPopout.hostTogglePopout();
+            return;
+        }
         if (opened)
             close();
         else
@@ -70,6 +106,10 @@ Popup {
     // and programmatic close() deliberately leave focus where the
     // user's press or the caller put it.
     function dismiss() {
+        if (root.hosted) {
+            root.hostPopout.hostClosePopout();
+            return;
+        }
         root._returnFocusToTarget = true;
         close();
     }
@@ -277,8 +317,10 @@ Popup {
         Item {
             id: container
 
-            anchors.fill: parent
-            anchors.margins: root.contentPadding
+            // Hosted content is laid out by the native popout panel, which
+            // already applies the native padding.
+            anchors.fill: root.hosted ? undefined : parent
+            anchors.margins: root.hosted ? 0 : root.contentPadding
             implicitWidth: childrenRect.width
             implicitHeight: childrenRect.height
         }

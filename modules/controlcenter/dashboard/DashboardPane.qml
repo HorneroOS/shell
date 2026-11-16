@@ -106,10 +106,8 @@ Item {
                 RowLayout {
                     spacing: Appearance.spacing.smaller
 
-                    StyledText {
-                        text: qsTr("Dashboard")
-                        font.pointSize: Appearance.font.size.large
-                        font.weight: 500
+                    PaneHeader {
+                        paneId: "dashboard"
                     }
                 }
 

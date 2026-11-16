@@ -914,3 +914,22 @@ def test_agent_center_lists_agents_as_rows_with_plain_status_chips():
         assert chip in pane, chip
     assert "Installed: %1 · Auth: %2 · Config present: %3" not in pane
     assert 'text: qsTr("Default agent")' not in pane
+
+
+def test_every_single_column_pane_opens_with_the_registry_header():
+    """Pane headers came in four styles (giant centred icon, plain title,
+    left column, none) and disagreed with the rail ("Taskbar" vs "Bars")
+    (shell#460). Single-column panes open with PaneHeader driven by
+    PaneRegistry; the list/detail panes keep their own list headers."""
+    reg = (CC / "PaneRegistry.qml").read_text()
+    panes = reg.split("readonly property list<QtObject> panes: [", 1)[1].split("searchTargets", 1)[0]
+    comps = dict(re.findall(r'readonly property string id: "([^"]+)".*?readonly property string component: "([^"]+)"', panes, re.S))
+    split = {"network", "bluetooth", "vpn", "appearance", "launcher", "audio"}
+    for pid, comp in comps.items():
+        if pid in split:
+            continue
+        src = (CC / comp).read_text()
+        assert "PaneHeader {" in src, pid
+        assert "SettingsHeader {" not in src, pid
+    header = (CC / "components/PaneHeader.qml").read_text()
+    assert "PaneRegistry.getById(root.paneId)" in header

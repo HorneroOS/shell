@@ -65,9 +65,9 @@ QtObject {
     // stream domains (pushed, never polled), -1 when unknown.
     function refreshIntervalMs(domain: string): int {
         if (domain === "system")
-            return Config.dashboard.resourceUpdateInterval;
+            return Services.Experience.telemetryIntervalMs;
         if (domain === "network")
-            return Config.dashboard.resourceUpdateInterval;
+            return Services.Experience.telemetryIntervalMs;
         if (domain === "weather")
             return 3600000;
         if (isDomain(domain))
@@ -83,9 +83,9 @@ QtObject {
     // Whether the shared provider is producing fresh data right now.
     function active(domain: string): bool {
         if (domain === "system")
-            return Services.SystemUsage.refCount > 0;
+            return Services.SystemUsage.refCount > 0 && !Services.Experience.telemetryPaused;
         if (domain === "network")
-            return Services.NetworkUsage.refCount > 0;
+            return Services.NetworkUsage.refCount > 0 && !Services.Experience.telemetryPaused;
         if (domain === "spectrum")
             return root._spectrumLeases > 0;
         if (domain === "weather")

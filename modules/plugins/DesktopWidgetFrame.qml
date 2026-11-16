@@ -44,7 +44,10 @@ Item {
     readonly property bool editing: Plugins.desktopEditing
     readonly property bool resizable: root.hint.resizable !== false
     readonly property bool signalMode: Kit.Theme.experience === "signal"
-    readonly property bool suspended: Kit.Theme.experience === "gaming"
+    // Experience profile (RFC §5a): `none` (focus, gaming) hides desktop
+    // widgets and unloads them, so they cost nothing; gaming under a
+    // fullscreen window also suspends them.
+    readonly property bool suspended: Experience.desktopWidgets === "none" || !Experience.desktopWidgetsVisible
 
     readonly property int padding: Appearance.padding.larger
     readonly property int headerHeight: 28

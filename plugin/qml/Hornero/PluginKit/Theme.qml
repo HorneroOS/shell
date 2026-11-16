@@ -50,22 +50,25 @@ QtObject {
     // Motion level (signal-visual-language §11.3): full | standard |
     // reduced | off. Reduced motion (host setting or system preference)
     // always forces "off".
-    readonly property string motionLevel: Appearance.anim.reduced ? "off" : root.experience === "signal" ? "full" : root.experience === "focus" ? "reduced" : root.experience === "gaming" ? "off" : "standard"
+    readonly property string motionLevel: Appearance.anim.effectiveLevel
     readonly property bool reducedMotion: root.motionLevel === "off" || root.motionLevel === "reduced"
 
     // Luminous accent (RFC amendment 2, visual language §9). Only live
     // telemetry traces may glow, only in the `signal` experience, never
     // in day themes, high contrast, focus or gaming, never animated.
     // UiScope/UiSparkline apply it; extensions do not draw glow by hand.
-    readonly property bool glowEnabled: root.experience === "signal" && !root.light && !root.highContrast && root.motionLevel !== "off"
+    readonly property bool glowEnabled: ExperienceBridge.glow
     readonly property real glowBlur: 4
     readonly property real glowAlpha: 0.4
     // Static CRT scanlines inside scope wells (§10): Signal mode only.
-    readonly property bool scanlines: root.glowEnabled
+    readonly property bool scanlines: ExperienceBridge.scanlines
+    // Instrument density (`icons` / `values` / `labels`): how much
+    // labelling the experience wants; Signal raises it to `labels`.
+    readonly property string density: ExperienceBridge.density
 
     // Shared telemetry cadence (§6.5): 1 Hz everyday, 2 Hz in signal
     // mode, paused while gaming unless an instrument is visible.
-    readonly property int telemetryIntervalMs: root.experience === "signal" ? 500 : 1000
+    readonly property int telemetryIntervalMs: ExperienceBridge.telemetryIntervalMs
 
     // Elevation: one restrained shadow (RFC §3.5).
     readonly property real shadowAlpha: 0.35

@@ -121,6 +121,8 @@ QtObject {
         readonly property int large: 16
     }
     readonly property QtObject anim: QtObject {
+        property string level: "standard"
+        readonly property string effectiveLevel: app.stubReduced ? "off" : level
         readonly property bool reduced: app.stubReduced
         readonly property real _k: reduced ? 0 : app.stubScale
         readonly property QtObject curves: QtObject {
@@ -197,8 +199,13 @@ def build(base: Path, *, experience: str = "everyday") -> Path:
     bridge = kit / "ExperienceBridge.qml"
     # The bridge reads the shell's mode service; the harness pins a mode.
     bridge.write_text(
-        "pragma Singleton\nimport QtQuick\nQtObject { property string mode: "
-        f"{json.dumps(experience)} }}\n", encoding="utf-8")
+        "pragma Singleton\nimport QtQuick\nimport qs.services\nimport qs.config\nQtObject {\n"
+        f"    property string mode: {json.dumps(experience)}\n"
+        "    readonly property string density: mode === \"signal\" ? \"labels\" : \"values\"\n"
+        "    readonly property bool glow: mode === \"signal\" && !Signal.light && Appearance.anim.effectiveLevel !== \"off\"\n"
+        "    readonly property bool scanlines: mode === \"signal\" && !Signal.light\n"
+        "    readonly property int telemetryIntervalMs: mode === \"signal\" ? 500 : 1000\n"
+        "    readonly property bool telemetryPaused: false\n}\n", encoding="utf-8")
     qmldir = [line for line in (KIT / "qmldir").read_text(encoding="utf-8").splitlines()
               if not line.split()[-1:] or line.split()[-1] in UI_FILES or line.startswith("module")]
     (kit / "qmldir").write_text("\n".join(qmldir) + "\n", encoding="utf-8")

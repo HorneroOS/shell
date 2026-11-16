@@ -11,6 +11,8 @@ import QtQuick
 QtObject {
     readonly property string cpuName: Services.SystemUsage.cpuName
     readonly property real cpuPerc: Services.SystemUsage.cpuPerc
+    // Per-logical-CPU load (0–1) from the same /proc/stat sample.
+    readonly property var cores: Services.SystemUsage.cpuCores
     readonly property real cpuTemp: Services.SystemUsage.cpuTemp
     readonly property bool cpuTempAvailable: Services.SystemUsage.cpuTempAvailable
 

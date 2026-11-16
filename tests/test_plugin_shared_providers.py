@@ -121,9 +121,9 @@ def test_subscription_releases_on_destroy_and_on_disable():
 def test_refresh_semantics_are_exposed_from_the_shared_config():
     src = _read(KIT / "Providers.qml")
     assert "function refreshIntervalMs" in src
-    # Polling domains report the one shared configured interval,
-    # never a per-plugin rate.
-    assert "Config.dashboard.resourceUpdateInterval" in src
+    # Polling domains report the one shared, experience-driven
+    # interval (services/Experience.qml), never a per-plugin rate.
+    assert "Services.Experience.telemetryIntervalMs" in src
     # Weather reports its hourly TTL.
     assert "3600000" in src
     weather = _read(SERVICES / "Weather.qml")

@@ -86,15 +86,19 @@ def test_theme_exposes_signal_tokens():
                   "function duration(name: string): int"):
         assert token in src, token
     # Experience-driven motion level, glow gate and telemetry cadence.
+    # Mode, motion, glow, density and cadence come from the shell's
+    # Experience service (one owner), never re-derived in PluginKit.
     assert "readonly property string experience: ExperienceBridge.mode" in src
-    assert "Appearance.anim.reduced ? \"off\"" in src
-    glow = re.search(r"readonly property bool glowEnabled: (.+)", src).group(1)
-    for clause in ('root.experience === "signal"', "!root.light", "!root.highContrast",
-                   'root.motionLevel !== "off"'):
-        assert clause in glow, clause
+    assert "readonly property string motionLevel: Appearance.anim.effectiveLevel" in src
+    assert "readonly property bool glowEnabled: ExperienceBridge.glow" in src
+    assert "readonly property bool scanlines: ExperienceBridge.scanlines" in src
+    assert "readonly property int telemetryIntervalMs: ExperienceBridge.telemetryIntervalMs" in src
     assert "readonly property real glowBlur: 4" in src
     assert "readonly property real glowAlpha: 0.4" in src
-    assert 'root.experience === "signal" ? 500 : 1000' in src
+    bridge = _src("ExperienceBridge")
+    for token in ("Experience.mode", "Experience.glow", "Experience.scanlines",
+                  "Experience.telemetryIntervalMs", "Experience.density"):
+        assert token in bridge, token
     # No Material aliases and no on*-beside-base trap: roles live on palette.
     assert not re.search(r"property\s+color\s+", src)
 

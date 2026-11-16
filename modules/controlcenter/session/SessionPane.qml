@@ -53,10 +53,8 @@ Item {
                 anchors.top: parent.top
                 spacing: Appearance.spacing.normal
 
-                StyledText {
-                    text: qsTr("Session")
-                    font.pointSize: Appearance.font.size.large
-                    font.weight: 500
+                PaneHeader {
+                    paneId: "session"
                 }
 
                 StyledText {

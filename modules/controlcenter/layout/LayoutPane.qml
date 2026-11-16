@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import ".."
+import "../components"
 import qs.components
 import qs.components.containers
 import qs.components.controls
@@ -51,10 +52,8 @@ Item {
                 anchors.top: parent.top
                 spacing: Appearance.spacing.normal
 
-                StyledText {
-                    text: qsTr("Shell layout")
-                    font.pointSize: Appearance.font.size.large
-                    font.weight: 500
+                PaneHeader {
+                    paneId: "layout"
                 }
 
                 StyledText {

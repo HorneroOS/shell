@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import qs.components
 import qs.services
 import qs.config
+import qs.modules.controlcenter
 import QtQuick
 import QtQuick.Layouts
 
@@ -13,9 +14,13 @@ import QtQuick.Layouts
 ColumnLayout {
     id: root
 
-    required property string title
-    property string icon: ""
-    property string description: ""
+    // With paneId, title, icon and description come from PaneRegistry, so the
+    // rail, search and page header always agree (shell#460).
+    property string paneId: ""
+    readonly property var registryPane: root.paneId.length > 0 ? PaneRegistry.getById(root.paneId) : null
+    property string title: root.registryPane?.title ?? ""
+    property string icon: root.registryPane?.icon ?? ""
+    property string description: root.registryPane?.description ?? ""
     property string intro: ""
 
     Layout.fillWidth: true

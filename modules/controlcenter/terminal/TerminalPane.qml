@@ -275,11 +275,10 @@ Item {
                 anchors.top: parent.top
                 spacing: Appearance.spacing.normal
 
-                SettingsHeader {
+                PaneHeader {
                     id: header
 
-                    icon: "terminal"
-                    title: qsTr("Terminal")
+                    paneId: "terminal"
                 }
 
                 SectionContainer {

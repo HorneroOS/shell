@@ -56,10 +56,9 @@ Item {
                 anchors.top: parent.top
                 spacing: Appearance.spacing.normal
 
-                StyledText {
-                    text: qsTr("Javi · el Hornero")
-                    font.pointSize: Appearance.font.size.large
-                    font.weight: 500
+                PaneHeader {
+                    paneId: "companion"
+                    title: qsTr("Javi · el Hornero")
                 }
 
                 StyledText {

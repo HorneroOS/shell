@@ -222,9 +222,10 @@ Item {
                 anchors.top: parent.top
                 spacing: Appearance.spacing.normal
 
-                SettingsHeader {
-                    icon: "system_update"
+                PaneHeader {
+                    paneId: "updates"
                     title: qsTr("Updates & backups")
+                    description: qsTr("Review available system updates and restore earlier config snapshots")
                 }
 
                 // ── Status card ──────────────────────────────────────────

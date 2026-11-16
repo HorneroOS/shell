@@ -54,10 +54,8 @@ Item {
                 RowLayout {
                     spacing: Appearance.spacing.normal
 
-                    StyledText {
-                        text: qsTr("Notifications")
-                        font.pointSize: Appearance.font.size.large
-                        font.weight: 500
+                    PaneHeader {
+                        paneId: "notifications"
                     }
 
                     StyledRect {

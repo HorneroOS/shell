@@ -184,9 +184,8 @@ Item {
                 anchors.top: parent.top
                 spacing: Appearance.spacing.normal
 
-                SettingsHeader {
-                    icon: "power_settings_new"
-                    title: qsTr("Power & session")
+                PaneHeader {
+                    paneId: "power"
                 }
 
                 // ── Backend state ────────────────────────────────────

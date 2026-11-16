@@ -193,10 +193,8 @@ Item {
                 anchors.top: parent.top
                 spacing: Appearance.spacing.normal
 
-                StyledText {
-                    text: qsTr("Night Light")
-                    font.pointSize: Appearance.font.size.large
-                    font.weight: 500
+                PaneHeader {
+                    paneId: "nightlight"
                 }
 
                 StyledText {

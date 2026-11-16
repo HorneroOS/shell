@@ -21,6 +21,17 @@ StyledRect {
     // Clear bars draw no chips, as for the tray.
     property bool clear: false
     property var fallbackSections: []
+    // False when the owning layout renders no island here (Bar.qml uses
+    // this island as the end-group fallback in layouts without an
+    // "extensions" entry, gated to the end group).
+    property bool surfaceActive: true
+    // Responsive host context forwarded to the plugin hosts (#372), set
+    // by Bar.qml's fallback instance; the layout-entry instance leaves
+    // the defaults, which reproduce the historic island context.
+    property string hostEdge: ""
+    property bool hostCompact: false
+    property int hostThickness: 0
+    property string hostScreenName: ""
 
     readonly property bool chip: Config.bar.extensions.background && !clear
     readonly property bool compact: Config.bar.extensions.compact
@@ -33,7 +44,7 @@ StyledRect {
     readonly property real contentMain: root.vertical ? grid.implicitHeight : grid.implicitWidth
     readonly property real chevronMain: root.compact ? (root.vertical ? chevron.implicitHeight : chevron.implicitWidth) : 0
 
-    visible: root.count > 0
+    visible: root.surfaceActive && root.count > 0
     clip: true
     implicitWidth: root.vertical ? Config.bar.sizes.innerWidth : (root.expanded ? grid.implicitWidth : 0) + root.chevronMain + root.padding * 2
     implicitHeight: root.vertical ? (root.expanded ? grid.implicitHeight : 0) + root.chevronMain + root.padding * 2 : Config.bar.sizes.innerWidth
@@ -73,12 +84,18 @@ StyledRect {
 
             vertical: root.vertical
             section: "end"
+            surfaceActive: root.surfaceActive
             fallbackSections: root.fallbackSections
-            iconColour: Colours.palette.m3secondary
+            hiddenIds: Config.bar.extensions.hiddenIcons
+            // Recolour mirrors the tray: icons take the secondary tint;
+            // without it the island leaves plugin icon colours alone.
+            iconColour: Config.bar.extensions.recolour ? Colours.palette.m3secondary : "transparent"
             iconSize: Appearance.font.size.larger
             textSize: Appearance.font.size.smaller
-            thickness: Config.bar.sizes.innerWidth
-            screenName: root.screen.name
+            edge: root.hostEdge
+            compact: root.hostCompact
+            thickness: root.hostThickness > 0 ? root.hostThickness : Config.bar.sizes.innerWidth
+            screenName: root.hostScreenName !== "" ? root.hostScreenName : root.screen.name
         }
     }
 

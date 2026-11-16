@@ -44,3 +44,38 @@ def test_presets_with_a_tray_also_get_the_island():
         if '"tray"' in text:
             assert '"extensions"' in text, path.name
             json.loads(text)
+
+
+def test_extensions_config_mirrors_tray_keys_and_defaults():
+    cfg = read("config/BarConfig.qml")
+    tray = cfg.split("component Tray: JsonObject {")[1].split("}")[0]
+    ext = cfg.split("component Extensions: JsonObject {")[1].split("}")[0]
+    for key in ("background", "recolour", "compact", "iconSubs", "hiddenIcons"):
+        assert key in tray and key in ext, key
+    assert "property bool background: false" in ext
+    persisted = read("config/Config.qml")
+    for key in ("background", "recolour", "compact", "iconSubs", "hiddenIcons"):
+        assert f"bar.extensions.{key}" in persisted, key
+    import json as _json
+    factory = _json.loads(read("config/shell.default.json"))
+    assert factory["bar"]["extensions"] == factory["bar"]["tray"]
+
+
+def test_control_center_extensions_settings_match_tray():
+    pane = read("modules/controlcenter/taskbar/TaskbarPane.qml")
+    for name in ("extensionsBackground", "extensionsCompact", "extensionsRecolour"):
+        assert f"property bool {name}" in pane, name
+        assert f"Config.bar.extensions.{name.removeprefix('extensions').lower()} = root.{name}" in pane, name
+    assert pane.count('label: qsTr("Recolour")') == 2  # tray and extensions
+
+
+def test_fallback_layouts_render_the_island_not_a_bare_stack():
+    bar = read("modules/bar/Bar.qml")
+    end_block = bar.split("render the same island here")[0].rsplit("ExtensionsIsland {", 1)
+    assert len(end_block) == 2 and 'group.name === "end"' in end_block[1][:400]
+    island = read("modules/bar/components/ExtensionsIsland.qml")
+    assert "surfaceActive" in island
+    assert "Config.bar.extensions.hiddenIcons" in island
+    assert "Config.bar.extensions.recolour" in island
+    widgets = read("modules/plugins/PluginBarWidgets.qml")
+    assert "hiddenIds" in widgets

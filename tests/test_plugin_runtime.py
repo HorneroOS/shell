@@ -95,7 +95,7 @@ def test_bar_placement_contract():
     assert 'active: slot.backgroundEntrypoint !== ""' in HOST
     assert "function barPlugins()" in SERVICE
     assert "Plugins.barPlugins()" in WIDGETS
-    assert "PluginBarWidgets" in BAR and 'group.name === "end"' in BAR
+    assert "ExtensionsIsland" in BAR and 'group.name === "end"' in BAR  # island hosts PluginBarWidgets
     assert "Loader.Error" in WIDGETS and "Plugins.markFailed" in WIDGETS
 
 

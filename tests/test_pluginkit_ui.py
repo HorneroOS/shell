@@ -11,6 +11,7 @@ UI_TYPES = [
     "UiToggle",
     "UiSlider",
     "UiMetric",
+    "UiDetailRow",
     "UiChip",
     "UiProgress",
     "UiState",
@@ -75,7 +76,7 @@ def test_uibutton_contract():
 
 def test_uitext_roles():
     src = (KIT / "UiText.qml").read_text(encoding="utf-8")
-    for role in ("title", "body", "caption"):
+    for role in ("title", "subtitle", "body", "caption"):
         assert f'"{role}"' in src
     assert "property string role" in src
 
@@ -610,3 +611,10 @@ def test_native_type_scale_and_icons():
     # AbstractButton owns a FINAL `icon` group, hence iconName.
     assert "property string iconName" in button and "UiIcon" in button
     assert "property string icon:" not in button
+
+
+def test_uidetailrow_is_the_native_popout_row():
+    src = (KIT / "UiDetailRow.qml").read_text(encoding="utf-8")
+    assert 'property string label: ""' in src
+    assert 'property string value: ""' in src
+    assert "Text.AlignRight" in src

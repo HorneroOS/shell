@@ -34,8 +34,9 @@ Item {
     property bool trayBackground: Config.bar.tray.background ?? false
     property bool trayCompact: Config.bar.tray.compact ?? false
     property bool trayRecolour: Config.bar.tray.recolour ?? false
-    property bool extensionsBackground: Config.bar.extensions.background ?? true
+    property bool extensionsBackground: Config.bar.extensions.background ?? false
     property bool extensionsCompact: Config.bar.extensions.compact ?? false
+    property bool extensionsRecolour: Config.bar.extensions.recolour ?? false
     property int workspacesShown: Config.bar.workspaces.shown ?? 5
     property bool workspacesActiveIndicator: Config.bar.workspaces.activeIndicator ?? true
     property bool workspacesOccupiedBg: Config.bar.workspaces.occupiedBg ?? false
@@ -68,6 +69,7 @@ Item {
         Config.bar.tray.recolour = root.trayRecolour;
         Config.bar.extensions.background = root.extensionsBackground;
         Config.bar.extensions.compact = root.extensionsCompact;
+        Config.bar.extensions.recolour = root.extensionsRecolour;
         Config.bar.workspaces.shown = root.workspacesShown;
         Config.bar.workspaces.activeIndicator = root.workspacesActiveIndicator;
         Config.bar.workspaces.occupiedBg = root.workspacesOccupiedBg;
@@ -643,6 +645,14 @@ Item {
                                         propertyName: "extensionsCompact",
                                         onToggled: function (checked) {
                                             root.extensionsCompact = checked;
+                                            root.saveConfig();
+                                        }
+                                    },
+                                    {
+                                        label: qsTr("Recolour"),
+                                        propertyName: "extensionsRecolour",
+                                        onToggled: function (checked) {
+                                            root.extensionsRecolour = checked;
                                             root.saveConfig();
                                         }
                                     }

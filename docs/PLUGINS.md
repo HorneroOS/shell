@@ -327,11 +327,15 @@ islands, styled like their native neighbours.
 
 - **Extensions island** — the bar entry `extensions` (in the default
   layout and the presets, next to `tray`) is an island with the same
-  chip, transitions and compact behaviour as the system tray. Control
-  Center → Taskbar → *Extensions Settings* toggles its background and
-  compact mode (`bar.extensions.background`, `bar.extensions.compact`).
-  Layouts without the entry keep the historic placement after the end
-  group.
+  chip, transitions and compact behaviour as the system tray. It carries
+  exactly the tray's settings, with the same defaults: background,
+  compact and recolour toggles in Control Center → Taskbar →
+  *Extensions Settings*, plus the same config-file keys
+  (`bar.extensions.*` mirrors `bar.tray.*` in `BarConfig` and in the
+  persisted config; `hiddenIcons` lists plugin ids the island does
+  not render). Layouts without the entry
+  render the same island at the end of the end group — never a bare
+  stack of indicators — so the settings apply in every layout.
 - **Native sections** — a bar surface may declare
   `"section": "status" | "actions" | "clock" | "end"` (default `end`,
   i.e. the Extensions island). `status` joins the status icons island,

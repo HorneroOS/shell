@@ -277,7 +277,10 @@ Singleton {
             },
             extensions: {
                 background: bar.extensions.background,
-                compact: bar.extensions.compact
+                recolour: bar.extensions.recolour,
+                compact: bar.extensions.compact,
+                iconSubs: bar.extensions.iconSubs,
+                hiddenIcons: bar.extensions.hiddenIcons
             },
             status: {
                 showAudio: bar.status.showAudio,

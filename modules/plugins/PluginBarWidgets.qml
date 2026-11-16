@@ -52,6 +52,9 @@ Repeater {
     // Sections whose island is absent from this bar layout: their
     // indicators fall back to this (end) instance instead of vanishing.
     property var fallbackSections: []
+    // Plugin ids hidden on this island (bar.extensions.hiddenIcons,
+    // mirroring bar.tray.hiddenIcons); other islands leave it empty.
+    property var hiddenIds: []
 
     // Explicit layout constraints for this surface. Cross-axis space
     // comes from the bar's real thickness so no control is clipped by
@@ -65,7 +68,7 @@ Repeater {
     readonly property string hostEdge: edge !== "" ? edge : "none"
     readonly property bool hostCompact: vertical || compact
 
-    model: surfaceActive ? Plugins.barPlugins().filter(p => (p.barSection || "end") === root.section || root.fallbackSections.includes(p.barSection || "end")) : []
+    model: surfaceActive ? Plugins.barPlugins().filter(p => !root.hiddenIds.includes(p.id) && ((p.barSection || "end") === root.section || root.fallbackSections.includes(p.barSection || "end"))) : []
 
     delegate: Loader {
         id: pluginLoader

@@ -67,6 +67,19 @@ Item {
         });
     }
 
+    function placementIcon(placement): string {
+        return placement === "bar" ? "toolbar" : placement === "dashboard" ? "dashboard" : placement === "desktop" ? "wallpaper" : placement === "launcher" ? "search" : "extension";
+    }
+
+    function placementLabel(placement): string {
+        return placement === "bar" ? qsTr("Bar") : placement === "dashboard" ? qsTr("Dashboard") : placement === "desktop" ? qsTr("Desktop") : placement === "launcher" ? qsTr("Launcher") : String(placement || "");
+    }
+
+    function trustLabel(trust): string {
+        const t = String(trust || "unknown");
+        return t === "official" ? qsTr("Official") : t === "trusted" ? qsTr("Trusted") : t === "signed" ? qsTr("Signed") : t === "untrusted" ? qsTr("Not trusted") : t === "stale-trust" ? qsTr("Trust outdated") : t === "modified" ? qsTr("Modified since trusted") : t === "unverified" ? qsTr("Unverified") : qsTr("Trust unknown");
+    }
+
     function pluginTrustValues(): var {
         return [...new Set(Plugins.entries.map(entry => String(entry.trust || "unknown")))].sort();
     }
@@ -434,20 +447,32 @@ Item {
 
                 PaneHeader {
                     paneId: "extensions"
+                    intro: qsTr("Every enabled QML plugin runs as your user without a sandbox. Command and network declarations come from each plugin's manifest and are not enforced permissions. Review a plugin's source before enabling it.")
                 }
 
-                StyledText {
+                RowLayout {
                     Layout.fillWidth: true
-                    text: qsTr("Every enabled QML plugin runs as your user without a sandbox. Command and network declarations come from each plugin's manifest and are not enforced permissions. Review a plugin's source before enabling it.")
-                    font.pointSize: Appearance.font.size.small
-                    color: Colours.palette.m3outline
-                    wrapMode: Text.Wrap
-                }
+                    spacing: Appearance.spacing.small
 
-                TextButton {
-                    text: qsTr("Reload plugin list")
-                    type: TextButton.Tonal
-                    onClicked: Plugins.reload()
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: Plugins.entries.length === 1 ? qsTr("1 extension installed") : qsTr("%1 extensions installed").arg(Plugins.entries.length)
+                        font.pointSize: Appearance.font.size.normal
+                        font.weight: 600
+                    }
+
+                    TextButton {
+                        text: qsTr("Reload plugin list")
+                        type: TextButton.Text
+                        onClicked: Plugins.reload()
+                    }
+
+                    TextButton {
+                        visible: !Plugins.safeModeEnv
+                        text: Config.plugins.safeMode ? qsTr("Turn safe mode off") : qsTr("Turn safe mode on (recovery)")
+                        type: TextButton.Text
+                        onClicked: Config.plugins.setSafeMode(!Config.plugins.safeMode)
+                    }
                 }
 
                 StyledText {
@@ -459,13 +484,6 @@ Item {
                     font.pointSize: Appearance.font.size.small
                     color: Colours.palette.m3error
                     wrapMode: Text.Wrap
-                }
-
-                TextButton {
-                    visible: !Plugins.safeModeEnv
-                    text: Config.plugins.safeMode ? qsTr("Turn safe mode off") : qsTr("Turn safe mode on (recovery)")
-                    type: TextButton.Tonal
-                    onClicked: Config.plugins.setSafeMode(!Config.plugins.safeMode)
                 }
 
                 StyledText {
@@ -512,63 +530,36 @@ Item {
                     onTextChanged: root.pluginSearch = text
                 }
 
-                RowLayout {
+                // Compact filter chips (shell#470): one line, trust then
+                // placement; a selected chip shows a check, selecting it
+                // again clears the filter.
+                Flow {
                     Layout.fillWidth: true
                     spacing: Appearance.spacing.small
-                    visible: Plugins.entries.length > 0
-
-                    StyledText {
-                        text: qsTr("Trust:")
-                        font.pointSize: Appearance.font.size.small
-                        color: Colours.palette.m3outline
-                    }
-
-                    ToggleButton {
-                        toggled: root.pluginTrustFilter === "all"
-                        label: qsTr("All")
-                        onClicked: root.pluginTrustFilter = "all"
-                    }
+                    visible: Plugins.entries.length > 0 && (root.pluginTrustValues().length > 1 || root.pluginPlacementValues().filter(value => value.length > 0).length > 1)
 
                     Repeater {
-                        model: root.pluginTrustValues()
+                        model: root.pluginTrustValues().length > 1 ? root.pluginTrustValues() : []
 
-                        delegate: ToggleButton {
+                        delegate: FilterChip {
                             required property var modelData
 
-                            toggled: root.pluginTrustFilter === modelData
-                            label: modelData
-                            onClicked: root.pluginTrustFilter = toggled ? "all" : modelData
+                            label: root.trustLabel(modelData)
+                            selected: root.pluginTrustFilter === modelData
+                            onActivated: root.pluginTrustFilter = selected ? "all" : modelData
                         }
                     }
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: Appearance.spacing.small
-                    visible: Plugins.entries.length > 0 && root.pluginPlacementValues().some(value => value.length > 0)
-
-                    StyledText {
-                        text: qsTr("Placement:")
-                        font.pointSize: Appearance.font.size.small
-                        color: Colours.palette.m3outline
-                    }
-
-                    ToggleButton {
-                        toggled: root.pluginPlacementFilter === "all"
-                        label: qsTr("All")
-                        onClicked: root.pluginPlacementFilter = "all"
-                    }
 
                     Repeater {
-                        model: root.pluginPlacementValues()
+                        model: root.pluginPlacementValues().filter(value => value.length > 0).length > 1 ? root.pluginPlacementValues().filter(value => value.length > 0) : []
 
-                        delegate: ToggleButton {
+                        delegate: FilterChip {
                             required property var modelData
 
-                            visible: modelData.length > 0
-                            toggled: root.pluginPlacementFilter === modelData
-                            label: modelData
-                            onClicked: root.pluginPlacementFilter = toggled ? "all" : modelData
+                            label: root.placementLabel(modelData)
+                            icon: root.placementIcon(modelData)
+                            selected: root.pluginPlacementFilter === modelData
+                            onActivated: root.pluginPlacementFilter = selected ? "all" : modelData
                         }
                     }
                 }
@@ -602,63 +593,99 @@ Item {
                             anchors.margins: Appearance.padding.large
                             spacing: Appearance.spacing.small
 
+                            // Card header (shell#470): icon tile, name with a quiet
+                            // version, the manifest description and chips for
+                            // placement, trust and state. Hashes and the raw
+                            // revision moved into Details.
                             RowLayout {
                                 Layout.fillWidth: true
-                                spacing: Appearance.spacing.small
+                                spacing: Appearance.spacing.normal
+
+                                StyledRect {
+                                    Layout.alignment: Qt.AlignTop
+                                    implicitWidth: 44
+                                    implicitHeight: 44
+                                    radius: Appearance.rounding.normal
+                                    color: row.modelData.enabled ? Colours.palette.m3primaryContainer : Colours.tPalette.m3surfaceContainerHighest
+
+                                    MaterialIcon {
+                                        anchors.centerIn: parent
+                                        text: root.placementIcon(row.modelData.placement)
+                                        font.pointSize: Appearance.font.size.large
+                                        color: row.modelData.enabled ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurfaceVariant
+                                    }
+                                }
 
                                 ColumnLayout {
                                     Layout.fillWidth: true
                                     spacing: 2
 
-                                    StyledText {
-                                        text: `${row.modelData.name} ${row.modelData.version}`
-                                        font.weight: 500
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: Appearance.spacing.small
+
+                                        StyledText {
+                                            text: row.modelData.name
+                                            font.pointSize: Appearance.font.size.normal
+                                            font.weight: 600
+                                        }
+
+                                        StyledText {
+                                            Layout.fillWidth: true
+                                            text: row.modelData.version ? `v${row.modelData.version}` : ""
+                                            font.pointSize: Appearance.font.size.small
+                                            color: Colours.palette.m3outline
+                                        }
                                     }
 
                                     StyledText {
                                         Layout.fillWidth: true
-                                        text: row.modelData.placement ? qsTr("Placement: %1").arg(row.modelData.placement) : qsTr("No placement")
+                                        visible: !!row.modelData.description
+                                        text: row.modelData.description ?? ""
                                         font.pointSize: Appearance.font.size.small
                                         color: Colours.palette.m3onSurfaceVariant
                                         wrapMode: Text.Wrap
+                                        maximumLineCount: root.expandedPluginId === row.modelData.id ? 20 : 2
+                                        elide: Text.ElideRight
                                     }
-                                }
 
-                                StyledRect {
-                                    Layout.preferredHeight: rowStateLabel.implicitHeight + 6
-                                    Layout.preferredWidth: rowStateLabel.implicitWidth + 14
-                                    radius: Appearance.rounding.full
-                                    color: !row.modelData.enabled && !row.modelData.requestedEnabled ? Colours.palette.m3surfaceContainerHigh : row.modelData.state === "loaded" ? Colours.palette.m3primaryContainer : row.modelData.state === "failed" || row.modelData.state === "blocked" ? Colours.palette.m3errorContainer : Colours.palette.m3surfaceContainerHigh
+                                    Flow {
+                                        Layout.fillWidth: true
+                                        Layout.topMargin: Appearance.spacing.small / 2
+                                        spacing: Appearance.spacing.small
 
-                                    StyledText {
-                                        id: rowStateLabel
+                                        ExtensionChip {
+                                            label: Plugins.safeMode && row.modelData.enabled ? qsTr("Safe mode") : !row.modelData.enabled && !row.modelData.requestedEnabled ? qsTr("Disabled") : row.modelData.state === "loaded" ? qsTr("Loaded") : row.modelData.state === "failed" ? qsTr("Failed") : row.modelData.state === "blocked" ? qsTr("Blocked") : qsTr("Pending")
+                                            tone: !row.modelData.enabled && !row.modelData.requestedEnabled ? "neutral" : row.modelData.state === "loaded" ? "good" : row.modelData.state === "failed" || row.modelData.state === "blocked" ? "bad" : "neutral"
+                                        }
 
-                                        anchors.centerIn: parent
-                                        text: Plugins.safeMode && row.modelData.enabled ? qsTr("Safe mode") : !row.modelData.enabled && !row.modelData.requestedEnabled ? qsTr("Disabled") : row.modelData.state === "loaded" ? qsTr("Loaded") : row.modelData.state === "failed" ? qsTr("Failed") : row.modelData.state === "blocked" ? qsTr("Blocked") : qsTr("Pending")
-                                        font.pointSize: Appearance.font.size.smaller
-                                        font.weight: 600
-                                        color: !row.modelData.enabled && !row.modelData.requestedEnabled ? Colours.palette.m3onSurfaceVariant : row.modelData.state === "loaded" ? Colours.palette.m3onPrimaryContainer : row.modelData.state === "failed" || row.modelData.state === "blocked" ? Colours.palette.m3onErrorContainer : Colours.palette.m3onSurfaceVariant
+                                        ExtensionChip {
+                                            visible: !!row.modelData.placement
+                                            label: root.placementLabel(row.modelData.placement)
+                                            icon: root.placementIcon(row.modelData.placement)
+                                        }
+
+                                        ExtensionChip {
+                                            label: root.trustLabel(row.modelData.trust)
+                                            Accessible.role: Accessible.StaticText
+                                            Accessible.name: qsTr("Trust: %1").arg(row.modelData.trust ?? qsTr("unknown"))
+                                            icon: (["untrusted", "stale-trust", "modified", "unverified"].includes(row.modelData.trust)) ? "warning" : "verified"
+                                            tone: (["untrusted", "stale-trust", "modified", "unverified"].includes(row.modelData.trust)) ? "bad" : "neutral"
+                                        }
                                     }
                                 }
                             }
 
                             StyledText {
                                 Layout.fillWidth: true
-                                text: qsTr("Trust: %1").arg(row.modelData.trust ?? qsTr("unknown"))
-                                font.pointSize: Appearance.font.size.small
-                                color: (["untrusted", "stale-trust", "modified", "unverified"].includes(row.modelData.trust)) ? Colours.palette.m3error : Colours.palette.m3outline
-                                wrapMode: Text.Wrap
-                            }
-
-                            StyledText {
-                                Layout.fillWidth: true
-                                visible: row.modelData.source === "https://github.com/HorneroOS/plugins.git"
+                                visible: root.expandedPluginId === row.modelData.id && row.modelData.source === "https://github.com/HorneroOS/plugins.git"
                                 text: qsTr("Catalogue revision: %1\nExpected payload SHA-256: %2")
                                     .arg(row.modelData.revision || qsTr("Not recorded"))
                                     .arg(row.modelData.catalog_sha256 || qsTr("Not recorded"))
                                 font.pointSize: Appearance.font.size.smaller
+                                font.family: Appearance.font.family.mono
                                 color: Colours.palette.m3outline
-                                wrapMode: Text.Wrap
+                                wrapMode: Text.WrapAnywhere
                             }
 
                             StyledText {
@@ -809,6 +836,8 @@ Item {
                             }
 
                             RowLayout {
+                                Layout.fillWidth: true
+                                Layout.topMargin: Appearance.spacing.small
                                 spacing: Appearance.spacing.small
 
                                 TextButton {
@@ -829,6 +858,10 @@ Item {
                                     text: root.customSettingsPluginId === row.modelData.id ? qsTr("Hide custom settings") : qsTr("Custom settings")
                                     type: TextButton.Text
                                     onClicked: root.customSettingsPluginId = root.customSettingsPluginId === row.modelData.id ? "" : row.modelData.id
+                                }
+
+                                Item {
+                                    Layout.fillWidth: true
                                 }
 
                                 TextButton {
@@ -1202,6 +1235,94 @@ Item {
                 CommunityRegistrySection {
                     Layout.fillWidth: true
                 }
+            }
+        }
+    }
+
+    component ExtensionChip: StyledRect {
+        id: chip
+
+        property string label
+        property string icon: ""
+        property string tone: "neutral"
+        readonly property color fg: chip.tone === "good" ? Colours.palette.m3success : chip.tone === "bad" ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
+
+        implicitWidth: chipRow.implicitWidth + Appearance.padding.normal * 2
+        implicitHeight: chipRow.implicitHeight + Appearance.padding.small
+        radius: Appearance.rounding.full
+        color: chip.tone === "neutral" ? Colours.tPalette.m3surfaceContainerHighest : Qt.alpha(chip.fg, 0.14)
+
+        Row {
+            id: chipRow
+
+            anchors.centerIn: parent
+            spacing: Appearance.spacing.small / 2
+
+            MaterialIcon {
+                visible: chip.icon.length > 0
+                anchors.verticalCenter: parent.verticalCenter
+                text: chip.icon
+                color: chip.fg
+                font.pointSize: Appearance.font.size.small
+            }
+
+            StyledText {
+                anchors.verticalCenter: parent.verticalCenter
+                text: chip.label
+                color: chip.fg
+                font.pointSize: Appearance.font.size.small
+                font.weight: 500
+            }
+        }
+    }
+
+    component FilterChip: StyledRect {
+        id: fchip
+
+        property string label
+        property string icon: ""
+        property bool selected
+        signal activated
+
+        implicitWidth: fchipRow.implicitWidth + Appearance.padding.normal * 2
+        implicitHeight: fchipRow.implicitHeight + Appearance.padding.small * 2
+        radius: Appearance.rounding.small
+        color: fchip.selected ? Colours.palette.m3secondaryContainer : "transparent"
+        border.width: fchip.selected ? 0 : 1
+        border.color: Colours.palette.m3outlineVariant
+
+        Accessible.role: Accessible.CheckBox
+        Accessible.name: fchip.label
+        Accessible.checked: fchip.selected
+
+        Interactive {
+            radius: fchip.radius
+            color: fchip.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+            function onClicked(): void {
+                fchip.activated();
+            }
+        }
+
+        Row {
+            id: fchipRow
+
+            anchors.centerIn: parent
+            spacing: Appearance.spacing.small / 2
+
+            MaterialIcon {
+                visible: fchip.selected || fchip.icon.length > 0
+                anchors.verticalCenter: parent.verticalCenter
+                text: fchip.selected ? "check" : fchip.icon
+                color: fchip.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
+                font.pointSize: Appearance.font.size.small
+            }
+
+            StyledText {
+                anchors.verticalCenter: parent.verticalCenter
+                text: fchip.label
+                color: fchip.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
+                font.pointSize: Appearance.font.size.small
+                font.weight: 500
             }
         }
     }

@@ -606,3 +606,7 @@ def test_native_type_scale_and_icons():
     card = (KIT / "UiCard.qml").read_text(encoding="utf-8")
     assert "property string title" in card and "property string icon" in card
     assert "UiIcon" in card and "Accessible.Heading" in card
+    button = (KIT / "UiButton.qml").read_text(encoding="utf-8")
+    # AbstractButton owns a FINAL `icon` group, hence iconName.
+    assert "property string iconName" in button and "UiIcon" in button
+    assert "property string icon:" not in button

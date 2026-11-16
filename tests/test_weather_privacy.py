@@ -100,8 +100,11 @@ def test_nominatim_request_identifies_horneroos_and_attributes_openstreetmap():
     assert "onLinkActivated: link => Quickshell.execDetached" in settings
 
     dashboard = (ROOT / "modules" / "dashboard" / "Weather.qml").read_text()
-    assert "[Open-Meteo](https://open-meteo.com/)" in dashboard
-    assert "[© OpenStreetMap contributors](https://www.openstreetmap.org/copyright)" in dashboard
+    # Links as StyledText anchors (Qt ignores linkColor for MarkdownText):
+    # the attribution must name both sources and link to them.
+    assert "https://open-meteo.com/" in dashboard and ">Open-Meteo<" in dashboard
+    assert "https://www.openstreetmap.org/copyright" in dashboard
+    assert "© OpenStreetMap contributors" in dashboard
 
 
 def test_reverse_geocoding_caches_success_and_failure_for_the_session():

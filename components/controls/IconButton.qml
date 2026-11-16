@@ -13,7 +13,7 @@ StyledRect {
         Text
     }
 
-    property alias icon: label.text
+    property alias icon: label.name
     // Icon glyphs are not human-readable; callers that know the action
     // set this so the button is named for assistive tech.
     property string accessibleName: ""
@@ -32,20 +32,20 @@ StyledRect {
     property alias radiusAnim: radiusAnim
 
     property bool internalChecked
-    property color activeColour: type === IconButton.Filled ? Colours.palette.m3primary : Colours.palette.m3secondary
+    property color activeColour: type === IconButton.Filled ? Signal.palette.signal : Signal.palette.cue
     property color inactiveColour: {
         if (!toggle && type === IconButton.Filled)
-            return Colours.palette.m3primary;
-        return type === IconButton.Filled ? Colours.tPalette.m3surfaceContainer : Colours.palette.m3secondaryContainer;
+            return Signal.palette.signal;
+        return type === IconButton.Filled ? Signal.tPalette.panel : Signal.palette.cueWell;
     }
-    property color activeOnColour: type === IconButton.Filled ? Colours.palette.m3onPrimary : type === IconButton.Tonal ? Colours.palette.m3onSecondary : Colours.palette.m3primary
+    property color activeOnColour: type === IconButton.Filled ? Signal.palette.onSignal : type === IconButton.Tonal ? Signal.palette.onCue : Signal.palette.signal
     property color inactiveOnColour: {
         if (!toggle && type === IconButton.Filled)
-            return Colours.palette.m3onPrimary;
-        return type === IconButton.Tonal ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant;
+            return Signal.palette.onSignal;
+        return type === IconButton.Tonal ? Signal.palette.onCueWell : Signal.palette.inkMuted;
     }
-    property color disabledColour: Qt.alpha(Colours.palette.m3onSurface, 0.1)
-    property color disabledOnColour: Qt.alpha(Colours.palette.m3onSurface, 0.38)
+    property color disabledColour: Qt.alpha(Signal.palette.ink, 0.1)
+    property color disabledOnColour: Qt.alpha(Signal.palette.ink, 0.38)
 
     signal clicked
 
@@ -70,16 +70,11 @@ StyledRect {
         }
     }
 
-    MaterialIcon {
+    Glyph {
         id: label
 
         anchors.centerIn: parent
         color: root.disabled ? root.disabledOnColour : root.internalChecked ? root.activeOnColour : root.inactiveOnColour
-        fill: !root.toggle || root.internalChecked ? 1 : 0
-
-        Behavior on fill {
-            Anim {}
-        }
     }
 
     Behavior on radius {

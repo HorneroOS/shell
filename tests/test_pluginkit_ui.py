@@ -186,10 +186,10 @@ def test_slider_keyboard_steps_scale_with_range():
 
 def test_theme_exposes_host_accessibility_inheritance():
     src = (KIT / "Theme.qml").read_text(encoding="utf-8")
-    assert "readonly property color focusRing: Colours.focusRing" in src
+    assert "readonly property color focusRing: Signal.palette.focus" in src
     assert "readonly property bool highContrast: Config.appearance.highContrast" in src
     assert "readonly property real animationScale: Appearance.anim.durations.scale" in src
-    assert "readonly property bool reducedMotion: animationScale <= 0" in src
+    assert "readonly property bool reducedMotion: Appearance.anim.reduced || animationScale <= 0" in src
     assert "function motionDuration(ms: int): int" in src
 
 
@@ -346,6 +346,7 @@ def test_keyboard_only_operation_offscreen(tmp_path):
     (kit / "ThemeBase.qml").write_text(_STUB_THEME_BASE, encoding="utf-8")
     (kit / "Theme.qml").write_text(_STUB_THEME, encoding="utf-8")
     (kit / "qmldir").write_text(_STUB_QMLDIR, encoding="utf-8")
+    _write_glyphs_stub(tmp_path)
     fixture = ROOT / "tests" / "qa" / "tst_pluginkit_keyboard.qml"
 
     env = dict(os.environ, QT_QPA_PLATFORM="offscreen",
@@ -359,14 +360,32 @@ def test_keyboard_only_operation_offscreen(tmp_path):
     assert result.returncode == 0, out
 
 
+_STUB_GLYPHS = """pragma Singleton
+import QtQuick
+QtObject {
+    readonly property string family: "Sans"
+    function glyph(name) { return name ? "*" : ""; }
+    function has(name) { return true; }
+}
+"""
+
+
+def _write_glyphs_stub(base: Path) -> None:
+    utils = base / "qs" / "utils"
+    utils.mkdir(parents=True, exist_ok=True)
+    (utils / "qmldir").write_text("module qs.utils\nsingleton Glyphs 1.0 Glyphs.qml\n", encoding="utf-8")
+    (utils / "Glyphs.qml").write_text(_STUB_GLYPHS, encoding="utf-8")
+
+
 # Singletons defined outside the PluginKit module, mapped to the shell
 # module that owns them. A PluginKit file referencing one of these must
 # import its owning module, or the identifier is undefined at runtime and
 # every colour/value silently resolves to undefined (black cards, invisible
-# text). Regression for shell#408: Theme.qml used Colours with only
-# `import qs.config`, so Colours (services/Colours.qml) was not defined.
+# text). Regression for shell#408: Theme.qml used the palette singleton
+# with only `import qs.config`, so it was not defined.
 SHELL_SINGLETONS = {
-    "Colours": "qs.services",
+    "Signal": "qs.services",
+    "Glyphs": "qs.utils",
     "Appearance": "qs.config",
     "Config": "qs.config",
 }
@@ -476,16 +495,16 @@ import QtQuick
 QtObject {
     readonly property bool light: false
     readonly property color focusRing: "#ffd166"
-    readonly property var palette: ({ m3primary: "#a5baf5", m3onPrimary: "#2a4073", m3surface: "#080e1b",
-        m3surfaceContainer: "#11192c", m3onSurface: "#dee5ff", m3onSurfaceVariant: "#a0aacb", m3error: "#ff8a80",
-        m3background: "#080e1b", m3onBackground: "#dee5ff", m3surfaceDim: "#080e1b", m3surfaceBright: "#33404d",
-        m3surfaceContainerLowest: "#05080b", m3surfaceContainerLow: "#0c1323", m3surfaceContainerHigh: "#1b2833",
-        m3surfaceContainerHighest: "#1b253f", m3surfaceVariant: "#1b2833", m3primaryContainer: "#a5baf5",
-        m3onPrimaryContainer: "#203769", m3secondary: "#8ed8ff", m3onSecondary: "#07131a",
-        m3secondaryContainer: "#8ed8ff", m3onSecondaryContainer: "#07131a", m3tertiary: "#c8a6ff",
-        m3onTertiary: "#130c1f", m3tertiaryContainer: "#c8a6ff", m3onTertiaryContainer: "#130c1f",
-        m3errorContainer: "#8a1a1e", m3onErrorContainer: "#1a0808", m3onError: "#1a0808", m3outline: "#6b7593",
-        m3outlineVariant: "#b8c8d8", m3success: "#a8e6a1" })
+    readonly property var palette: ({ signal: "#a5baf5", onSignal: "#2a4073", base: "#080e1b",
+        panel: "#11192c", ink: "#dee5ff", inkMuted: "#a0aacb", alert: "#ff8a80",
+        ground: "#080e1b", ink: "#dee5ff", ground: "#080e1b", lifted: "#33404d",
+        ground: "#05080b", sunken: "#0c1323", raised: "#1b2833",
+        lifted: "#1b253f", raised: "#1b2833", signalWell: "#a5baf5",
+        onSignalWell: "#203769", cue: "#8ed8ff", onCue: "#07131a",
+        cueWell: "#8ed8ff", onCueWell: "#07131a", phosphor: "#c8a6ff",
+        onPhosphor: "#130c1f", phosphorWell: "#c8a6ff", onPhosphorWell: "#130c1f",
+        alertWell: "#8a1a1e", onAlertWell: "#1a0808", onAlert: "#1a0808", ruleStrong: "#6b7593",
+        rule: "#b8c8d8", phosphor: "#a8e6a1" })
 }
 """
 
@@ -495,8 +514,8 @@ QtObject {
     readonly property var font: ({ family: { sans: "Sans", mono: "Monospace" }, size: { small: 11, normal: 13, large: 18 } })
     readonly property var spacing: ({ small: 7, normal: 12, large: 20 })
     readonly property var rounding: ({ small: 6, normal: 10, large: 16 })
-    readonly property var anim: ({ durations: { scale: 1, small: 200, normal: 400, expressiveFastSpatial: 350 },
-        curves: { standard: [0.2, 0, 0, 1, 1, 1], standardDecel: [0, 0, 0, 1, 1, 1], expressiveFastSpatial: [0.42, 1.67, 0.21, 0.9, 1, 1] } })
+    readonly property var anim: ({ reduced: false, durations: { scale: 1, short: 160, medium: 240, settleFast: 220 },
+        curves: { standard: [0.2, 0, 0, 1, 1, 1], enter: [0.05, 0.7, 0.1, 1, 1, 1], settleFast: [0.34, 1.3, 0.5, 1, 1, 1] } })
 }
 """
 
@@ -540,8 +559,9 @@ def test_real_theme_on_colours_resolve_offscreen(tmp_path):
     kit = tmp_path / "Hornero" / "PluginKit"
     for d in (services, config, kit):
         d.mkdir(parents=True)
-    (services / "qmldir").write_text("module qs.services\nsingleton Colours 1.0 Colours.qml\nsingleton FocusMode 1.0 FocusMode.qml\n", encoding="utf-8")
-    (services / "Colours.qml").write_text(_PROBE_COLOURS, encoding="utf-8")
+    (services / "qmldir").write_text("module qs.services\nsingleton Signal 1.0 Signal.qml\nsingleton FocusMode 1.0 FocusMode.qml\n", encoding="utf-8")
+    (services / "Signal.qml").write_text(_PROBE_COLOURS, encoding="utf-8")
+    _write_glyphs_stub(tmp_path)
     (services / "FocusMode.qml").write_text("pragma Singleton\nimport QtQuick\nQtObject { property bool keyboard: false }\n", encoding="utf-8")
     (config / "qmldir").write_text("module qs.config\nsingleton Appearance 1.0 Appearance.qml\nsingleton Config 1.0 Config.qml\n", encoding="utf-8")
     (config / "Appearance.qml").write_text(_PROBE_APPEARANCE, encoding="utf-8")
@@ -592,7 +612,7 @@ def test_buttons_cards_and_text_read_like_native_controls():
 def test_native_type_scale_and_icons():
     """Native text is sized in points (StyledText); PluginKit used the same
     numbers as pixels, so extension text rendered ~25% smaller than native.
-    Extensions also get the native Material Symbols icon and a native card
+    Extensions also get the native Hornero Glyph icon and a native card
     header (icon + title).
     """
     for name in ("UiText", "UiButton", "UiChip", "UiTooltip", "UiToggle"):
@@ -600,10 +620,11 @@ def test_native_type_scale_and_icons():
         assert "font.pixelSize" not in src, name
         assert "font.pointSize" in src, name
     theme = (KIT / "Theme.qml").read_text(encoding="utf-8")
-    assert "iconFontFamily: Appearance.font.family.material" in theme
+    assert "iconFontFamily: Glyphs.family" in theme
     assert "fontSizeBody: Appearance.font.size.smaller" in theme
     icon = (KIT / "UiIcon.qml").read_text(encoding="utf-8")
-    assert "Theme.iconFontFamily" in icon and "FILL:" in icon and "GRAD:" in icon
+    assert "Theme.iconFontFamily" in icon and "Glyphs.glyph(root.icon)" in icon
+    assert "FILL:" not in icon and "GRAD:" not in icon
     assert "UiIcon 1.0 UiIcon.qml" in (KIT / "qmldir").read_text(encoding="utf-8")
     card = (KIT / "UiCard.qml").read_text(encoding="utf-8")
     assert "property string title" in card and "property string icon" in card

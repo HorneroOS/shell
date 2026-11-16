@@ -2,7 +2,7 @@
   "_name": "Hornero Left",
   "_description": "Left sidebar — full featured, reference shell style",
   "_icon": "🏠",
-  "_iconMaterial": "dock_to_left",
+  "_iconMaterial": "layout-sidebar",
   "bar": {
     "persistent": true,
     "showOnHover": true,

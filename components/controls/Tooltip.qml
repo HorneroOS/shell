@@ -142,8 +142,8 @@ Popup {
             property: "opacity"
             from: 0
             to: 1
-            duration: Appearance.anim.durations.expressiveFastSpatial
-            easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+            duration: Appearance.anim.durations.settleFast
+            easing.bezierCurve: Appearance.anim.curves.settleFast
         }
     }
 
@@ -152,8 +152,8 @@ Popup {
             property: "opacity"
             from: 1
             to: 0
-            duration: Appearance.anim.durations.expressiveFastSpatial
-            easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+            duration: Appearance.anim.durations.settleFast
+            easing.bezierCurve: Appearance.anim.curves.settleFast
         }
     }
 
@@ -181,7 +181,7 @@ Popup {
         implicitWidth: tooltipText.implicitWidth + Appearance.padding.normal * 2
         implicitHeight: tooltipText.implicitHeight + Appearance.padding.smaller * 2
 
-        color: Colours.palette.m3surfaceContainerHighest
+        color: Signal.palette.lifted
         radius: Appearance.rounding.small
         antialiasing: true
 
@@ -199,7 +199,7 @@ Popup {
             anchors.centerIn: parent
 
             text: root.text
-            color: Colours.palette.m3onSurface
+            color: Signal.palette.ink
             font.pointSize: Appearance.font.size.small
         }
     }

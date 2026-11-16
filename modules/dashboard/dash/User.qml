@@ -23,14 +23,12 @@ Row {
         implicitHeight: info.implicitHeight
 
         radius: Appearance.rounding.large
-        color: Colours.layer(Colours.palette.m3surfaceContainerHigh, 2)
+        color: Signal.layer(Signal.palette.raised, 2)
 
-        MaterialIcon {
+        Glyph {
             anchors.centerIn: parent
 
-            text: "person"
-            fill: 1
-            grade: 200
+            name: "user"
             font.pointSize: Math.floor(info.implicitHeight / 2) || 1
         }
 
@@ -48,12 +46,12 @@ Row {
             StyledRect {
                 anchors.fill: parent
 
-                color: Qt.alpha(Colours.palette.m3scrim, 0.5)
+                color: Qt.alpha(Signal.palette.scrim, 0.5)
                 opacity: parent.containsMouse ? 1 : 0
 
                 Behavior on opacity {
                     Anim {
-                        duration: Appearance.anim.durations.expressiveFastSpatial
+                        duration: Appearance.anim.durations.settleFast
                     }
                 }
             }
@@ -65,12 +63,12 @@ Row {
                 implicitHeight: selectIcon.implicitHeight + Appearance.padding.small * 2
 
                 radius: Appearance.rounding.normal
-                color: Colours.palette.m3primary
+                color: Signal.palette.signal
                 scale: parent.containsMouse ? 1 : 0.5
                 opacity: parent.containsMouse ? 1 : 0
 
                 StateLayer {
-                    color: Colours.palette.m3onPrimary
+                    color: Signal.palette.onSignal
 
                     Accessible.role: Accessible.Button
                     Accessible.name: qsTr("Change profile picture")
@@ -81,27 +79,27 @@ Row {
                     }
                 }
 
-                MaterialIcon {
+                Glyph {
                     id: selectIcon
 
                     anchors.centerIn: parent
                     anchors.horizontalCenterOffset: -font.pointSize * 0.02
 
-                    text: "frame_person"
-                    color: Colours.palette.m3onPrimary
+                    name: "user-square"
+                    color: Signal.palette.onSignal
                     font.pointSize: Appearance.font.size.extraLarge
                 }
 
                 Behavior on scale {
                     Anim {
-                        duration: Appearance.anim.durations.expressiveFastSpatial
-                        easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+                        duration: Appearance.anim.durations.settleFast
+                        easing.bezierCurve: Appearance.anim.curves.settleFast
                     }
                 }
 
                 Behavior on opacity {
                     Anim {
-                        duration: Appearance.anim.durations.expressiveFastSpatial
+                        duration: Appearance.anim.durations.settleFast
                     }
                 }
             }
@@ -128,7 +126,7 @@ Row {
 
                 source: SysInfo.osLogo
                 implicitSize: Math.floor(Appearance.font.size.normal * 1.34)
-                colour: Colours.palette.m3primary
+                colour: Signal.palette.signal
             }
 
             StyledText {
@@ -146,17 +144,17 @@ Row {
         }
 
         InfoLine {
-            icon: "select_window_2"
+            icon: "app-window"
             text: SysInfo.wm
-            colour: Colours.palette.m3secondary
+            colour: Signal.palette.cue
         }
 
         InfoLine {
             id: uptime
 
-            icon: "timer"
+            icon: "clock-hour-4"
             text: qsTr("up %1").arg(SysInfo.uptime)
-            colour: Colours.palette.m3tertiary
+            colour: Signal.palette.phosphor
         }
     }
 
@@ -170,14 +168,13 @@ Row {
         implicitWidth: icon.implicitWidth + text.width + text.anchors.leftMargin
         implicitHeight: Math.max(icon.implicitHeight, text.implicitHeight)
 
-        MaterialIcon {
+        Glyph {
             id: icon
 
             anchors.left: parent.left
             anchors.leftMargin: (Config.dashboard.sizes.infoIconSize - implicitWidth) / 2
 
-            fill: 1
-            text: line.icon
+            name: line.icon
             color: line.colour
             font.pointSize: Appearance.font.size.normal
         }

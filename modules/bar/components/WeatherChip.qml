@@ -26,10 +26,10 @@ Item {
         rowSpacing: 0
         columnSpacing: Appearance.spacing.smaller / 2
 
-        MaterialIcon {
+        Glyph {
             Layout.alignment: Qt.AlignCenter
-            text: Weather.icon
-            color: Colours.palette.m3secondary
+            name: Weather.icon
+            color: Signal.palette.cue
             font.pointSize: Appearance.font.size.normal
         }
 
@@ -37,7 +37,7 @@ Item {
             Layout.alignment: Qt.AlignCenter
             visible: root.density === "values" || root.vertical
             text: Weather.temp
-            color: Colours.palette.m3onSurface
+            color: Signal.palette.ink
             font.pointSize: Appearance.font.size.smaller
         }
     }

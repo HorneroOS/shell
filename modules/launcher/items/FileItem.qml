@@ -47,8 +47,8 @@ Item {
         anchors.margins: Appearance.padding.larger
         spacing: Appearance.spacing.normal
 
-        MaterialIcon {
-            text: root.modelData?.icon ?? "description"
+        Glyph {
+            name: root.modelData?.icon ?? "file-text"
             font.pointSize: Appearance.font.size.extraLarge
             Layout.alignment: Qt.AlignVCenter
         }
@@ -69,7 +69,7 @@ Item {
                 Layout.fillWidth: true
                 text: root.parentPath
                 font.pointSize: Appearance.font.size.small
-                color: Colours.palette.m3onSurfaceVariant
+                color: Signal.palette.inkMuted
                 elide: Text.ElideMiddle
             }
         }

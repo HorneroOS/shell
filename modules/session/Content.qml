@@ -159,11 +159,11 @@ Column {
             implicitHeight: Config.session.sizes.button
 
             radius: Appearance.rounding.large
-            color: entry.armed ? Colours.palette.m3errorContainer : entry.activeFocus ? Colours.palette.m3secondaryContainer : Colours.tPalette.m3surfaceContainer
+            color: entry.armed ? Signal.palette.alertWell : entry.activeFocus ? Signal.palette.cueWell : Signal.tPalette.panel
 
             StateLayer {
                 radius: parent.radius
-                color: entry.armed ? Colours.palette.m3onErrorContainer : entry.activeFocus ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                color: entry.armed ? Signal.palette.onAlertWell : entry.activeFocus ? Signal.palette.onCueWell : Signal.palette.ink
 
                 function onClicked(): void {
                     entry.forceActiveFocus();
@@ -171,11 +171,11 @@ Column {
                 }
             }
 
-            MaterialIcon {
+            Glyph {
                 anchors.centerIn: parent
 
-                text: entry.icon
-                color: entry.armed ? Colours.palette.m3onErrorContainer : entry.activeFocus ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                name: entry.icon
+                color: entry.armed ? Signal.palette.onAlertWell : entry.activeFocus ? Signal.palette.onCueWell : Signal.palette.ink
                 font.pointSize: Appearance.font.size.extraLarge
                 font.weight: 500
             }
@@ -184,7 +184,7 @@ Column {
         StyledText {
             anchors.horizontalCenter: parent.horizontalCenter
             text: entry.armed ? qsTr("Confirm?") : entry.label
-            color: entry.armed ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
+            color: entry.armed ? Signal.palette.alert : Signal.palette.inkMuted
             font.pointSize: Appearance.font.size.smaller
         }
     }

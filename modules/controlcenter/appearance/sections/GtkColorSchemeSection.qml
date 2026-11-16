@@ -23,7 +23,7 @@ CollapsibleSection {
     readonly property var schemeOptions: [
         {
             id: "follow",
-            icon: "sync",
+            icon: "refresh",
             name: qsTr("Follow theme mode")
         },
         {
@@ -33,12 +33,12 @@ CollapsibleSection {
         },
         {
             id: "prefer-light",
-            icon: "light_mode",
+            icon: "sun",
             name: qsTr("Prefer light")
         },
         {
             id: "prefer-dark",
-            icon: "dark_mode",
+            icon: "moon",
             name: qsTr("Prefer dark")
         }
     ]
@@ -69,10 +69,10 @@ CollapsibleSection {
 
                 readonly property bool isCurrent: modelData.id === previewController.pendingGtkColorScheme
 
-                color: Qt.alpha(Colours.tPalette.m3surfaceContainer, isCurrent ? Colours.tPalette.m3surfaceContainer.a : 0)
+                color: Qt.alpha(Signal.tPalette.panel, isCurrent ? Signal.tPalette.panel.a : 0)
                 radius: Appearance.rounding.normal
                 border.width: isCurrent ? 1 : 0
-                border.color: Colours.palette.m3primary
+                border.color: Signal.palette.signal
 
                 Accessible.role: Accessible.Button
                 Accessible.name: isCurrent ? qsTr("%1, current").arg(modelData.name) : modelData.name
@@ -102,10 +102,9 @@ CollapsibleSection {
 
                     spacing: Appearance.spacing.normal
 
-                    MaterialIcon {
-                        text: modelData.icon
+                    Glyph {
+                        name: modelData.icon
                         font.pointSize: Appearance.font.size.large
-                        fill: isCurrent ? 1 : 0
                     }
 
                     StyledText {
@@ -114,10 +113,10 @@ CollapsibleSection {
                         font.weight: isCurrent ? 500 : 400
                     }
 
-                    MaterialIcon {
+                    Glyph {
                         visible: isCurrent
-                        text: "check"
-                        color: Colours.palette.m3primary
+                        name: "check"
+                        color: Signal.palette.signal
                         font.pointSize: Appearance.font.size.large
                     }
                 }
@@ -129,7 +128,7 @@ CollapsibleSection {
         StyledText {
             visible: root.schemeDivergesFromTheme
             text: qsTr("Differs from theme default (%1)").arg(root.themeDefaultScheme)
-            color: Colours.palette.m3outline
+            color: Signal.palette.ruleStrong
             font.pointSize: Appearance.font.size.small
         }
     }

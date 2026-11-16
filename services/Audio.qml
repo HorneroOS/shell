@@ -119,7 +119,7 @@ Singleton {
         const newSinkName = sink.description || sink.name || qsTr("Unknown Device");
 
         if (previousSinkName && previousSinkName !== newSinkName && Config.utilities.toasts.audioOutputChanged)
-            Toaster.toast(qsTr("Audio output changed"), qsTr("Now using: %1").arg(newSinkName), "volume_up");
+            Toaster.toast(qsTr("Audio output changed"), qsTr("Now using: %1").arg(newSinkName), "volume");
 
         previousSinkName = newSinkName;
     }
@@ -131,7 +131,7 @@ Singleton {
         const newSourceName = source.description || source.name || qsTr("Unknown Device");
 
         if (previousSourceName && previousSourceName !== newSourceName && Config.utilities.toasts.audioInputChanged)
-            Toaster.toast(qsTr("Audio input changed"), qsTr("Now using: %1").arg(newSourceName), "mic");
+            Toaster.toast(qsTr("Audio input changed"), qsTr("Now using: %1").arg(newSourceName), "microphone");
 
         previousSourceName = newSourceName;
     }

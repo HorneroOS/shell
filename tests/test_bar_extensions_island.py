@@ -16,8 +16,8 @@ def read(rel):
 def test_island_mirrors_the_tray_island():
     island = read("modules/bar/components/ExtensionsIsland.qml")
     for needle in ("Config.bar.extensions.background", "Config.bar.extensions.compact",
-                   "radius: Appearance.rounding.full", "Colours.tPalette.m3surfaceContainer",
-                   "expressiveDefaultSpatial", 'section: "end"', "fallbackSections",
+                   "radius: Appearance.rounding.full", "Signal.tPalette.panel",
+                   "settle", 'section: "end"', "fallbackSections",
                    # structural copy of Tray.qml: Column/Row with scale-in add and
                    # animated move, bar-driven expansion, the tray chevron
                    "add: Transition", "move: Transition", "property bool expanded",

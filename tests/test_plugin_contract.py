@@ -332,8 +332,8 @@ def test_sample_plugin_importing_pluginkit_passes_validator(tmp_path):
 
 def test_plugin_theme_reports_effective_palette_mode():
     theme = (ROOT / "plugin/qml/Hornero/PluginKit/Theme.qml").read_text()
-    assert "property bool light: Colours.light" in theme
-    assert "Colours.currentLight" not in theme
+    assert "property bool light: Signal.light" in theme
+    assert "Signal.themeMode" not in theme, "extensions see the effective mode, incl. high contrast"
 
 
 def test_internal_shell_import_is_rejected(tmp_path):

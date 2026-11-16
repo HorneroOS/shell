@@ -64,7 +64,7 @@ ColumnLayout {
         Layout.fillWidth: true
         text: qsTr("Reorder or hide what each bar shows. Changes apply to the current layout right away; choosing another layout in Layout replaces them with that layout's order.")
         wrapMode: Text.WordWrap
-        color: Colours.palette.m3onSurfaceVariant
+        color: Signal.palette.inkMuted
         font.pointSize: Appearance.font.size.small
     }
 
@@ -122,7 +122,7 @@ ColumnLayout {
         Layout.fillWidth: true
         visible: root.bar === null
         text: qsTr("This layout has no bars.")
-        color: Colours.palette.m3onSurfaceVariant
+        color: Signal.palette.inkMuted
     }
 
     GridLayout {
@@ -145,7 +145,7 @@ ColumnLayout {
                 Layout.alignment: Qt.AlignTop
                 implicitHeight: groupColumn.implicitHeight + Appearance.padding.large * 2
                 radius: Appearance.rounding.normal
-                color: Colours.tPalette.m3surfaceContainerHigh
+                color: Signal.tPalette.raised
 
                 ColumnLayout {
                     id: groupColumn
@@ -158,7 +158,7 @@ ColumnLayout {
 
                     StyledText {
                         text: qsTr(BarOrder.groupTitle(root.bar?.edge ?? "top", groupCard.modelData))
-                        color: Colours.palette.m3primary
+                        color: Signal.palette.signal
                         font.pointSize: Appearance.font.size.small
                         font.weight: 600
                     }
@@ -166,7 +166,7 @@ ColumnLayout {
                     StyledText {
                         visible: groupCard.entries.length === 0
                         text: qsTr("Empty")
-                        color: Colours.palette.m3outline
+                        color: Signal.palette.ruleStrong
                         font.pointSize: Appearance.font.size.small
                     }
 
@@ -184,7 +184,7 @@ ColumnLayout {
                             Layout.fillWidth: true
                             implicitHeight: entryLayout.implicitHeight + Appearance.padding.small * 2
                             radius: Appearance.rounding.small
-                            color: Colours.tPalette.m3surfaceContainerHighest
+                            color: Signal.tPalette.lifted
 
                             RowLayout {
                                 id: entryLayout
@@ -194,21 +194,21 @@ ColumnLayout {
                                 anchors.rightMargin: Appearance.padding.small
                                 spacing: Appearance.spacing.small
 
-                                MaterialIcon {
-                                    text: entryRow.info.icon
-                                    color: entryRow.shown ? Colours.palette.m3onSurface : Colours.palette.m3outline
+                                Glyph {
+                                    name: entryRow.info.icon
+                                    color: entryRow.shown ? Signal.palette.ink : Signal.palette.ruleStrong
                                 }
 
                                 StyledText {
                                     Layout.fillWidth: true
                                     text: qsTr(entryRow.info.label)
                                     elide: Text.ElideRight
-                                    color: entryRow.shown ? Colours.palette.m3onSurface : Colours.palette.m3outline
+                                    color: entryRow.shown ? Signal.palette.ink : Signal.palette.ruleStrong
                                     font.strikeout: !entryRow.shown
                                 }
 
                                 IconButton {
-                                    icon: "arrow_upward"
+                                    icon: "arrow-up"
                                     type: IconButton.Text
                                     accessibleName: qsTr("Move %1 earlier").arg(qsTr(entryRow.info.label))
                                     disabled: !BarOrder.canMove(root.bars, root.barIndex, groupCard.modelData, entryRow.index, -1)
@@ -216,7 +216,7 @@ ColumnLayout {
                                 }
 
                                 IconButton {
-                                    icon: "arrow_downward"
+                                    icon: "arrow-down"
                                     type: IconButton.Text
                                     accessibleName: qsTr("Move %1 later").arg(qsTr(entryRow.info.label))
                                     disabled: !BarOrder.canMove(root.bars, root.barIndex, groupCard.modelData, entryRow.index, 1)
@@ -242,7 +242,7 @@ ColumnLayout {
         Layout.topMargin: Appearance.spacing.small
         visible: root.bar !== null && addRepeater.count > 0
         text: qsTr("Add a section")
-        color: Colours.palette.m3onSurfaceVariant
+        color: Signal.palette.inkMuted
         font.pointSize: Appearance.font.size.small
     }
 

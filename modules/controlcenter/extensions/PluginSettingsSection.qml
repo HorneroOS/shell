@@ -148,7 +148,7 @@ ColumnLayout {
                         visible: field.description.length > 0
                         text: field.description
                         font.pointSize: Appearance.font.size.small
-                        color: Colours.palette.m3onSurfaceVariant
+                        color: Signal.palette.inkMuted
                         wrapMode: Text.Wrap
                     }
                 }
@@ -220,7 +220,7 @@ ColumnLayout {
 
                     background: StyledRect {
                         radius: Appearance.rounding.small
-                        color: Colours.tPalette.m3surfaceContainerHigh
+                        color: Signal.tPalette.raised
                     }
 
                     onEditingFinished: {
@@ -317,7 +317,7 @@ ColumnLayout {
                 visible: field.fieldError.length > 0
                 text: field.fieldError
                 font.pointSize: Appearance.font.size.small
-                color: Colours.palette.m3error
+                color: Signal.palette.alert
                 wrapMode: Text.Wrap
             }
         }

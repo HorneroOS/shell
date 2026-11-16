@@ -113,14 +113,14 @@ Singleton {
         const displayName = root.currentConfig ? (root.currentConfig.displayName || "VPN") : "VPN";
         if (connected) {
             root.userInitiatedDisconnect = false;
-            Toaster.toast(qsTr("VPN connected"), qsTr("Connected to %1").arg(displayName), "vpn_key");
+            Toaster.toast(qsTr("VPN connected"), qsTr("Connected to %1").arg(displayName), "key");
         } else {
-            Toaster.toast(qsTr("VPN disconnected"), qsTr("Disconnected from %1").arg(displayName), "vpn_key_off");
+            Toaster.toast(qsTr("VPN disconnected"), qsTr("Disconnected from %1").arg(displayName), "key-off");
             // An unexpected drop is a critical condition: file a
             // durable, DND-aware notification (shell#224). A
             // disconnect the user requested stays a toast.
             if (!root.userInitiatedDisconnect)
-                Notifs.promoteCritical(qsTr("VPN disconnected"), qsTr("Disconnected from %1").arg(displayName), "vpn_key_off");
+                Notifs.promoteCritical(qsTr("VPN disconnected"), qsTr("Disconnected from %1").arg(displayName), "key-off");
             root.userInitiatedDisconnect = false;
         }
     }

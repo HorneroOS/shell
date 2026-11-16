@@ -27,7 +27,7 @@ DeviceList {
         StyledText {
             visible: Nmcli.scanning
             text: qsTr("Scanning...")
-            color: Colours.palette.m3primary
+            color: Signal.palette.signal
             font.pointSize: Appearance.font.size.small
         }
     }
@@ -57,7 +57,7 @@ DeviceList {
             ToggleButton {
                 toggled: Nmcli.wifiEnabled
                 icon: "wifi"
-                accent: "Tertiary"
+                accent: "phosphor"
                 iconSize: Appearance.font.size.normal
                 horizontalPadding: Appearance.padding.normal
                 verticalPadding: Appearance.padding.smaller
@@ -69,8 +69,8 @@ DeviceList {
 
             ToggleButton {
                 toggled: Nmcli.scanning
-                icon: "wifi_find"
-                accent: "Secondary"
+                icon: "wifi"
+                accent: "cue"
                 iconSize: Appearance.font.size.normal
                 horizontalPadding: Appearance.padding.normal
                 verticalPadding: Appearance.padding.smaller
@@ -83,7 +83,7 @@ DeviceList {
             ToggleButton {
                 toggled: !root.session.network.active
                 icon: "settings"
-                accent: "Primary"
+                accent: "signal"
                 iconSize: Appearance.font.size.normal
                 horizontalPadding: Appearance.padding.normal
                 verticalPadding: Appearance.padding.smaller
@@ -105,7 +105,7 @@ DeviceList {
 
             width: ListView.view ? ListView.view.width : undefined
 
-            color: Qt.alpha(Colours.tPalette.m3surfaceContainer, root.activeItem === modelData ? Colours.tPalette.m3surfaceContainer.a : 0)
+            color: Qt.alpha(Signal.tPalette.panel, root.activeItem === modelData ? Signal.tPalette.panel.a : 0)
             radius: Appearance.rounding.normal
 
             Accessible.role: Accessible.Button
@@ -135,16 +135,15 @@ DeviceList {
                     implicitHeight: icon.implicitHeight + Appearance.padding.normal * 2
 
                     radius: Appearance.rounding.normal
-                    color: modelData.active ? Colours.palette.m3primaryContainer : Colours.tPalette.m3surfaceContainerHigh
+                    color: modelData.active ? Signal.palette.signalWell : Signal.tPalette.raised
 
-                    MaterialIcon {
+                    Glyph {
                         id: icon
 
                         anchors.centerIn: parent
-                        text: Icons.getNetworkIcon(modelData.strength, modelData.isSecure)
+                        name: Icons.getNetworkIcon(modelData.strength, modelData.isSecure)
                         font.pointSize: Appearance.font.size.large
-                        fill: modelData.active ? 1 : 0
-                        color: modelData.active ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+                        color: modelData.active ? Signal.palette.onSignalWell : Signal.palette.ink
                     }
                 }
 
@@ -177,7 +176,7 @@ DeviceList {
                                     return qsTr("Secured");
                                 return qsTr("Open");
                             }
-                            color: modelData.active ? Colours.palette.m3primary : Colours.palette.m3outline
+                            color: modelData.active ? Signal.palette.signal : Signal.palette.ruleStrong
                             font.pointSize: Appearance.font.size.small
                             font.weight: modelData.active ? 500 : 400
                             elide: Text.ElideRight
@@ -190,7 +189,7 @@ DeviceList {
                     implicitHeight: connectIcon.implicitHeight + Appearance.padding.smaller * 2
 
                     radius: Appearance.rounding.full
-                    color: Qt.alpha(Colours.palette.m3primaryContainer, modelData.active ? 1 : 0)
+                    color: Qt.alpha(Signal.palette.signalWell, modelData.active ? 1 : 0)
 
                     Accessible.role: Accessible.Button
                     Accessible.name: modelData.active ? qsTr("Disconnect") : qsTr("Connect")
@@ -205,12 +204,12 @@ DeviceList {
                         }
                     }
 
-                    MaterialIcon {
+                    Glyph {
                         id: connectIcon
 
                         anchors.centerIn: parent
-                        text: modelData.active ? "link_off" : "link"
-                        color: modelData.active ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+                        name: modelData.active ? "link-off" : "link"
+                        color: modelData.active ? Signal.palette.onSignalWell : Signal.palette.ink
                     }
                 }
             }

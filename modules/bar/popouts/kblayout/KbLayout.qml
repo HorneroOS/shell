@@ -133,7 +133,7 @@ ColumnLayout {
         Layout.topMargin: Appearance.spacing.small
 
         height: 1
-        color: Colours.palette.m3outline
+        color: Signal.palette.ruleStrong
     }
 
     RowLayout {
@@ -148,9 +148,9 @@ ColumnLayout {
         opacity: 1
         scale: 1
 
-        MaterialIcon {
-            text: "keyboard"
-            color: Colours.palette.m3primary
+        Glyph {
+            name: "keyboard"
+            color: Signal.palette.signal
         }
 
         StyledText {
@@ -158,7 +158,7 @@ ColumnLayout {
             text: kb.activeLabel
             elide: Text.ElideRight
             font.weight: 500
-            color: Colours.palette.m3primary
+            color: Signal.palette.signal
         }
 
         Connections {

@@ -65,7 +65,7 @@ Item {
 
                 text: (root.modelData?.comment || root.modelData?.genericName || root.modelData?.name) ?? ""
                 font.pointSize: Appearance.font.size.small
-                color: Colours.palette.m3outline
+                color: Signal.palette.ruleStrong
 
                 elide: Text.ElideRight
                 width: root.width - icon.width - favouriteIcon.width - Appearance.rounding.normal * 2
@@ -81,10 +81,9 @@ Item {
             anchors.right: parent.right
             active: modelData && Strings.testRegexList(Config.launcher.favouriteApps, modelData.id)
 
-            sourceComponent: MaterialIcon {
-                text: "favorite"
-                fill: 1
-                color: Colours.palette.m3primary
+            sourceComponent: Glyph {
+                name: "heart"
+                color: Signal.palette.signal
             }
         }
     }

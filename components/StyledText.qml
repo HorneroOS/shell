@@ -11,11 +11,11 @@ Text {
     property string animateProp: "scale"
     property real animateFrom: 0
     property real animateTo: 1
-    property int animateDuration: Appearance.anim.durations.normal
+    property int animateDuration: Appearance.anim.durations.medium
 
     renderType: Text.NativeRendering
     textFormat: Text.PlainText
-    color: Colours.palette.m3onSurface
+    color: Signal.palette.ink
     // Typeface switch kept here (not at call sites) so the welcome
     // static scans keep their font-family discipline: keycap legends
     // and other data read mono via `mono: true`.
@@ -33,12 +33,12 @@ Text {
         SequentialAnimation {
             Anim {
                 to: root.animateFrom
-                easing.bezierCurve: Appearance.anim.curves.standardAccel
+                easing.bezierCurve: Appearance.anim.curves.exit
             }
             PropertyAction {}
             Anim {
                 to: root.animateTo
-                easing.bezierCurve: Appearance.anim.curves.standardDecel
+                easing.bezierCurve: Appearance.anim.curves.enter
             }
         }
     }

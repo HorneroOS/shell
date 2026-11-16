@@ -19,7 +19,7 @@ CollapsibleSection {
 
     CtlCard {
         title: qsTr("Appearance status")
-        description: qsTr("Wallpaper, mode, flavour and GTK/icon themes")
+        description: qsTr("Theme, wallpaper and GTK/icon themes")
         probeArgv: ["horneroctl", "--json", "appearance", "status"]
         autoRun: true
     }

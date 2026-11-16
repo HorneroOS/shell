@@ -25,7 +25,7 @@ FloatingWindow {
     property bool _closing: false
 
     title: qsTr("Authentication required")
-    color: Colours.tPalette.m3surface
+    color: Signal.tPalette.base
 
     implicitWidth: 480
     implicitHeight: 360
@@ -106,9 +106,9 @@ FloatingWindow {
             Layout.fillWidth: true
             spacing: Appearance.spacing.normal
 
-            MaterialIcon {
-                text: "lock"
-                color: Colours.palette.m3primary
+            Glyph {
+                name: "lock"
+                color: Signal.palette.signal
             }
 
             StyledText {
@@ -128,7 +128,7 @@ FloatingWindow {
         StyledText {
             Layout.fillWidth: true
             text: win.flow ? win.flow.actionId : ""
-            color: Colours.palette.m3onSurfaceVariant
+            color: Signal.palette.inkMuted
             font.pointSize: Appearance.font.size.smaller
             wrapMode: Text.Wrap
         }
@@ -137,7 +137,7 @@ FloatingWindow {
             Layout.fillWidth: true
             visible: text !== ""
             text: win.flow ? win.flow.supplementaryMessage : ""
-            color: win.flow && win.flow.supplementaryIsError ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
+            color: win.flow && win.flow.supplementaryIsError ? Signal.palette.alert : Signal.palette.inkMuted
             wrapMode: Text.Wrap
         }
 

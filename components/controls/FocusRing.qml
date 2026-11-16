@@ -11,6 +11,6 @@ StyledRect {
 
     color: "transparent"
     border.width: 2
-    border.color: Colours.focusRing
+    border.color: Signal.palette.focus
     visible: parent.visible && parent.activeFocus && FocusMode.keyboard && parent.enabled
 }

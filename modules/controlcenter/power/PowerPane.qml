@@ -115,7 +115,7 @@ Item {
 
         Layout.fillWidth: true
         radius: Appearance.rounding.normal
-        color: tile.armed ? Colours.layer(Colours.palette.m3errorContainer, 2) : Colours.layer(Colours.palette.m3surfaceContainerHigh, 2)
+        color: tile.armed ? Signal.layer(Signal.palette.alertWell, 2) : Signal.layer(Signal.palette.raised, 2)
         implicitHeight: row.implicitHeight + Appearance.padding.normal * 2
 
         readonly property bool armed: root.armedAction === tile.action
@@ -127,13 +127,13 @@ Item {
             anchors.margins: Appearance.padding.normal
             spacing: Appearance.spacing.normal
 
-            MaterialIcon {
+            Glyph {
                 Layout.minimumWidth: Appearance.font.size.extraLarge * 1.5
                 Layout.preferredWidth: Appearance.font.size.extraLarge * 1.5
                 Layout.maximumWidth: Appearance.font.size.extraLarge * 1.5
                 Layout.alignment: Qt.AlignVCenter
-                text: tile.icon
-                color: tile.armed ? Colours.palette.m3onErrorContainer : Colours.palette.m3onSurfaceVariant
+                name: tile.icon
+                color: tile.armed ? Signal.palette.onAlertWell : Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.extraLarge
                 horizontalAlignment: Text.AlignHCenter
             }
@@ -192,7 +192,7 @@ Item {
                 StyledText {
                     visible: root.compositor.length > 0 || root.lockBackend.length > 0
                     text: [root.compositor.length > 0 ? qsTr("Compositor: %1").arg(root.compositor) : "", root.lockBackend.length > 0 ? qsTr("Lock via %1").arg(root.lockBackend) : ""].filter(s => s.length > 0).join(" · ")
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                     font.pointSize: Appearance.font.size.smaller
                     Layout.fillWidth: true
                 }
@@ -200,7 +200,7 @@ Item {
                 StyledText {
                     visible: root.statusError.length > 0
                     text: root.statusError
-                    color: Colours.palette.m3error
+                    color: Signal.palette.alert
                     font.pointSize: Appearance.font.size.smaller
                     wrapMode: Text.Wrap
                     Layout.fillWidth: true
@@ -222,21 +222,21 @@ Item {
 
                 PowerTile {
                     Layout.fillWidth: true
-                    icon: "bedtime"
+                    icon: "moon-stars"
                     label: qsTr("Suspend")
                     action: "suspend"
                 }
 
                 PowerTile {
                     Layout.fillWidth: true
-                    icon: "restart_alt"
+                    icon: "reload"
                     label: qsTr("Reboot")
                     action: "reboot"
                 }
 
                 PowerTile {
                     Layout.fillWidth: true
-                    icon: "power_settings_new"
+                    icon: "power"
                     label: qsTr("Shut down")
                     action: "shutdown"
                 }
@@ -247,7 +247,7 @@ Item {
                     text: root.lastResult
                     font.pointSize: Appearance.font.size.smaller
                     font.family: Appearance.font.family.mono
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                     wrapMode: Text.Wrap
                     Layout.fillWidth: true
                 }

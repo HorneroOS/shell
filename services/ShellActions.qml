@@ -15,7 +15,7 @@ Singleton {
                 label: qsTr("Launcher")
             },
             layoutPicker: {
-                icon: "dashboard_customize",
+                icon: "layout-dashboard",
                 label: qsTr("Layouts")
             },
             settings: {
@@ -23,15 +23,15 @@ Singleton {
                 label: qsTr("Settings")
             },
             screenshot: {
-                icon: "screenshot_region",
+                icon: "crop",
                 label: qsTr("Screenshot")
             },
             dashboard: {
-                icon: "space_dashboard",
+                icon: "layout-dashboard",
                 label: qsTr("Dashboard")
             },
             session: {
-                icon: "power_settings_new",
+                icon: "power",
                 label: qsTr("Session")
             }
         })

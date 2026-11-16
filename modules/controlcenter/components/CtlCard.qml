@@ -30,7 +30,7 @@ StyledRect {
 
     Layout.fillWidth: true
     radius: Appearance.rounding.normal
-    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+    color: Signal.layer(Signal.palette.panel, 1)
     implicitHeight: col.implicitHeight + Appearance.padding.large * 2
 
     function envelope(text: string): var {
@@ -152,7 +152,7 @@ StyledRect {
                     Layout.fillWidth: true
                     text: root.description
                     font.pointSize: Appearance.font.size.small
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                     wrapMode: Text.Wrap
                 }
             }
@@ -177,7 +177,7 @@ StyledRect {
             visible: probeProc.running || actionProc.running
             text: qsTr("Working…")
             font.pointSize: Appearance.font.size.small
-            color: Colours.palette.m3onSurfaceVariant
+            color: Signal.palette.inkMuted
         }
 
         StyledText {
@@ -185,7 +185,7 @@ StyledRect {
             Layout.fillWidth: true
             text: root.errorText
             font.pointSize: Appearance.font.size.small
-            color: Colours.palette.m3error
+            color: Signal.palette.alert
             wrapMode: Text.Wrap
         }
 
@@ -215,7 +215,7 @@ StyledRect {
                         Layout.alignment: Qt.AlignTop
                         text: resultRow.modelData.key
                         font.pointSize: Appearance.font.size.small
-                        color: Colours.palette.m3onSurfaceVariant
+                        color: Signal.palette.inkMuted
                         wrapMode: Text.WrapAnywhere
                     }
 
@@ -224,7 +224,7 @@ StyledRect {
                         text: resultRow.modelData.value
                         font.family: Appearance.font.family.mono
                         font.pointSize: Appearance.font.size.small
-                        color: Colours.palette.m3onSurface
+                        color: Signal.palette.ink
                         wrapMode: Text.WrapAnywhere
                     }
                 }
@@ -236,7 +236,7 @@ StyledRect {
             Layout.fillWidth: true
             text: qsTr("Not run yet.")
             font.pointSize: Appearance.font.size.small
-            color: Colours.palette.m3outline
+            color: Signal.palette.ruleStrong
         }
     }
 }

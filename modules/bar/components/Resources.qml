@@ -26,21 +26,21 @@ Item {
         },
         {
             id: "memory",
-            icon: "memory_alt",
+            icon: "cpu-2",
             label: qsTr("Memory"),
             value: SystemUsage.memPerc * 100,
             text: `${Math.round(SystemUsage.memPerc * 100)}%`
         },
         {
             id: "disk",
-            icon: "hard_drive",
+            icon: "server",
             label: qsTr("Disk"),
             value: SystemUsage.storagePerc * 100,
             text: `${Math.round(SystemUsage.storagePerc * 100)}%`
         },
         {
             id: "temp",
-            icon: "device_thermostat",
+            icon: "temperature",
             label: qsTr("Temperature"),
             value: SystemUsage.cpuTemp,
             text: `${Math.round(SystemUsage.cpuTemp)}°`
@@ -77,17 +77,16 @@ Item {
                 Accessible.role: Accessible.StaticText
                 Accessible.name: `${modelData.label} ${modelData.text}`
 
-                MaterialIcon {
-                    text: metric.modelData.icon
-                    color: metric.critical ? Colours.palette.m3error : metric.warning ? Colours.palette.m3tertiary : Colours.palette.m3onSurfaceVariant
-                    fill: metric.critical || metric.warning ? 1 : 0
+                Glyph {
+                    name: metric.modelData.icon
+                    color: metric.critical ? Signal.palette.alert : metric.warning ? Signal.palette.phosphor : Signal.palette.inkMuted
                     font.pointSize: Appearance.font.size.normal
                 }
 
                 StyledText {
                     visible: root.density === "values" && !root.vertical
                     text: metric.modelData.text
-                    color: metric.critical ? Colours.palette.m3error : Colours.palette.m3onSurface
+                    color: metric.critical ? Signal.palette.alert : Signal.palette.ink
                     font.pointSize: Appearance.font.size.smaller
                     font.family: Appearance.font.family.mono
                 }

@@ -30,9 +30,9 @@ ColumnLayout {
         RowLayout {
             spacing: Appearance.spacing.smaller
 
-            MaterialIcon {
+            Glyph {
                 Layout.alignment: Qt.AlignVCenter
-                text: "list"
+                name: "list"
                 font.pointSize: Appearance.font.size.large
             }
 
@@ -44,7 +44,7 @@ ColumnLayout {
             }
 
             IconButton {
-                icon: root.props.recordingListExpanded ? "unfold_less" : "unfold_more"
+                icon: root.props.recordingListExpanded ? "fold" : "selector"
                 accessibleName: root.props.recordingListExpanded ? qsTr("Collapse recordings") : qsTr("Expand recordings")
                 type: IconButton.Text
                 label.animate: true
@@ -96,12 +96,12 @@ ColumnLayout {
                     date.setMonth(date.getMonth() - 1); // Woe (months start from 0)
                     return qsTr("Recording at %1").arg(Qt.formatDateTime(date, Qt.locale()));
                 }
-                color: Colours.palette.m3onSurfaceVariant
+                color: Signal.palette.inkMuted
                 elide: Text.ElideRight
             }
 
             IconButton {
-                icon: "play_arrow"
+                icon: "player-play"
                 accessibleName: qsTr("Play recording")
                 type: IconButton.Text
                 onClicked: {
@@ -123,11 +123,11 @@ ColumnLayout {
             }
 
             IconButton {
-                icon: "delete_forever"
+                icon: "trash-x"
                 accessibleName: qsTr("Delete recording")
                 type: IconButton.Text
-                label.color: Colours.palette.m3error
-                stateLayer.color: Colours.palette.m3error
+                label.color: Signal.palette.alert
+                stateLayer.color: Signal.palette.alert
                 onClicked: root.props.recordingConfirmDelete = recording.modelData.path
             }
         }
@@ -175,10 +175,10 @@ ColumnLayout {
             sourceComponent: ColumnLayout {
                 spacing: Appearance.spacing.small
 
-                MaterialIcon {
+                Glyph {
                     Layout.alignment: Qt.AlignHCenter
-                    text: "scan_delete"
-                    color: Colours.palette.m3outline
+                    name: "trash"
+                    color: Signal.palette.ruleStrong
                     font.pointSize: Appearance.font.size.extraLarge
 
                     opacity: root.props.recordingListExpanded ? 1 : 0
@@ -201,10 +201,10 @@ ColumnLayout {
                 RowLayout {
                     spacing: Appearance.spacing.smaller
 
-                    MaterialIcon {
+                    Glyph {
                         Layout.alignment: Qt.AlignHCenter
-                        text: "scan_delete"
-                        color: Colours.palette.m3outline
+                        name: "trash"
+                        color: Signal.palette.ruleStrong
 
                         opacity: !root.props.recordingListExpanded ? 1 : 0
                         scale: !root.props.recordingListExpanded ? 1 : 0
@@ -225,7 +225,7 @@ ColumnLayout {
 
                     StyledText {
                         text: qsTr("No recordings found")
-                        color: Colours.palette.m3outline
+                        color: Signal.palette.ruleStrong
                     }
                 }
             }
@@ -237,8 +237,8 @@ ColumnLayout {
 
         Behavior on implicitHeight {
             Anim {
-                duration: Appearance.anim.durations.expressiveDefaultSpatial
-                easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                duration: Appearance.anim.durations.settle
+                easing.bezierCurve: Appearance.anim.curves.settle
             }
         }
     }

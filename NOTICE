@@ -29,7 +29,23 @@ stripped from any imported file.
 - Per the GPL-3.0 terms of the original work, all HorneroOS modifications to
   the shell runtime (`shell.qml`, `modules/`, `services/`, `config/`,
   `utils/`, `components/`, `assets/`, `plugin/`, `extras/`, `presets/`)
-  are likewise licensed under GPL-3.0-only.
+  are likewise licensed under GPL-3.0-only, except the third-party assets
+  listed below, which keep their own licences.
+
+## Third-party design assets
+
+- **Tabler Icons** (<https://tabler.io/icons>, `@tabler/icons-webfont`
+  3.50.0), Copyright (c) 2020-2026 Paweł Kuna, MIT License. A curated
+  outline subset ships as `assets/fonts/hornero-glyphs.ttf` ("Hornero
+  Glyphs"), built reproducibly by `scripts/build-glyphs.py`; the upstream
+  licence is kept verbatim in `assets/fonts/LICENSE.tabler-icons`. The
+  subset font remains under the MIT License.
+- **IBM Plex** (Sans, Mono, Sans Condensed), Copyright IBM Corp., SIL Open
+  Font License 1.1. Not vendored: the shell depends on the distribution
+  package `ttf-ibm-plex`.
+- Earlier releases used Google's Material Symbols font and Material 3
+  colour roles; both were removed by the Hornero Signal redesign
+  (RFC 0001).
 
 ## License layout
 

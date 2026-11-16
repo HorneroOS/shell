@@ -33,7 +33,7 @@ QtObject {
             readonly property string id: "bluetooth"
             readonly property string label: "bluetooth"
             readonly property string title: qsTr("Bluetooth")
-            readonly property string icon: "settings_bluetooth"
+            readonly property string icon: "bluetooth"
             readonly property string component: "bluetooth/BtPane.qml"
             readonly property string category: "connections"
             readonly property string description: qsTr("Pair and manage nearby devices")
@@ -43,7 +43,7 @@ QtObject {
             readonly property string id: "vpn"
             readonly property string label: "vpn"
             readonly property string title: "VPN"
-            readonly property string icon: "vpn_key"
+            readonly property string icon: "key"
             readonly property string component: "vpn/VpnPane.qml"
             readonly property string category: "connections"
             readonly property string description: qsTr("Manage private network connections")
@@ -63,7 +63,7 @@ QtObject {
             readonly property string id: "nightlight"
             readonly property string label: "nightlight"
             readonly property string title: qsTr("Night Light")
-            readonly property string icon: "nightlight"
+            readonly property string icon: "moon"
             readonly property string component: "nightlight/NightLightPane.qml"
             readonly property string category: "look"
             readonly property string description: qsTr("Warm the display for the night")
@@ -73,7 +73,7 @@ QtObject {
             readonly property string id: "accessibility"
             readonly property string label: "accessibility"
             readonly property string title: qsTr("Accessibility")
-            readonly property string icon: "accessibility"
+            readonly property string icon: "accessible"
             readonly property string component: "accessibility/AccessibilityPane.qml"
             readonly property string category: "look"
             readonly property string description: qsTr("Text size, motion and transparency for comfortable use")
@@ -83,7 +83,7 @@ QtObject {
             readonly property string id: "taskbar"
             readonly property string label: "taskbar"
             readonly property string title: qsTr("Bars")
-            readonly property string icon: "dock_to_left"
+            readonly property string icon: "layout-sidebar"
             readonly property string component: "taskbar/TaskbarPane.qml"
             readonly property string category: "desktop"
             readonly property string description: qsTr("Configure desktop bars and panels")
@@ -93,7 +93,7 @@ QtObject {
             readonly property string id: "layout"
             readonly property string label: "layout"
             readonly property string title: qsTr("Layout")
-            readonly property string icon: "dashboard_customize"
+            readonly property string icon: "layout-dashboard"
             readonly property string component: "layout/LayoutPane.qml"
             readonly property string category: "desktop"
             readonly property string description: qsTr("Arrange bars and desktop surfaces")
@@ -123,7 +123,7 @@ QtObject {
             readonly property string id: "windows"
             readonly property string label: "windows"
             readonly property string title: qsTr("Windows")
-            readonly property string icon: "web_asset"
+            readonly property string icon: "app-window"
             readonly property string component: "windows/WindowsPane.qml"
             readonly property string category: "desktop"
             readonly property string description: qsTr("Window gaps, borders, focus and rules")
@@ -143,7 +143,7 @@ QtObject {
             readonly property string id: "audio"
             readonly property string label: "audio"
             readonly property string title: qsTr("Audio")
-            readonly property string icon: "volume_up"
+            readonly property string icon: "volume"
             readonly property string component: "audio/AudioPane.qml"
             readonly property string category: "sound-alerts"
             readonly property string description: qsTr("Choose devices and adjust sound")
@@ -153,7 +153,7 @@ QtObject {
             readonly property string id: "notifications"
             readonly property string label: "notifications"
             readonly property string title: qsTr("Notifications")
-            readonly property string icon: "notifications"
+            readonly property string icon: "bell"
             readonly property string component: "notifications/NotificationsPane.qml"
             readonly property string category: "sound-alerts"
             readonly property string description: qsTr("Choose when and how notifications appear")
@@ -163,7 +163,7 @@ QtObject {
             readonly property string id: "osd"
             readonly property string label: "osd"
             readonly property string title: qsTr("On-screen display")
-            readonly property string icon: "tune"
+            readonly property string icon: "adjustments-horizontal"
             readonly property string component: "osd/OsdPane.qml"
             readonly property string category: "sound-alerts"
             readonly property string description: qsTr("Configure on-screen volume and brightness feedback")
@@ -173,7 +173,7 @@ QtObject {
             readonly property string id: "displays"
             readonly property string label: "displays"
             readonly property string title: qsTr("Displays")
-            readonly property string icon: "monitor"
+            readonly property string icon: "device-desktop"
             readonly property string component: "displays/DisplaysPane.qml"
             readonly property string category: "devices"
             readonly property string description: qsTr("Connected displays and arrangement")
@@ -193,7 +193,7 @@ QtObject {
             readonly property string id: "keybinds"
             readonly property string label: "keybinds"
             readonly property string title: qsTr("Keybinds")
-            readonly property string icon: "keyboard_command_key"
+            readonly property string icon: "command"
             readonly property string component: "keybinds/KeybindsPane.qml"
             readonly property string category: "devices"
             readonly property string description: qsTr("View and search session keybindings")
@@ -203,7 +203,7 @@ QtObject {
             readonly property string id: "power"
             readonly property string label: "power"
             readonly property string title: qsTr("Power")
-            readonly property string icon: "power_settings_new"
+            readonly property string icon: "power"
             readonly property string component: "power/PowerPane.qml"
             readonly property string category: "devices"
             readonly property string description: qsTr("Battery and power behavior")
@@ -213,7 +213,7 @@ QtObject {
             readonly property string id: "capture"
             readonly property string label: "capture"
             readonly property string title: qsTr("Capture")
-            readonly property string icon: "photo_camera"
+            readonly property string icon: "camera"
             readonly property string component: "capture/CapturePane.qml"
             readonly property string category: "devices"
             readonly property string description: qsTr("Screenshots, screen recording, and capture backends")
@@ -223,7 +223,7 @@ QtObject {
             readonly property string id: "companion"
             readonly property string label: "companion"
             readonly property string title: qsTr("Javi")
-            readonly property string icon: "raven"
+            readonly property string icon: "feather"
             readonly property string component: "companion/CompanionPane.qml"
             readonly property string category: "apps"
             readonly property string description: qsTr("Configure the Hornero desktop companion")
@@ -233,7 +233,7 @@ QtObject {
             readonly property string id: "agents"
             readonly property string label: "agents"
             readonly property string title: qsTr("Agent Center")
-            readonly property string icon: "smart_toy"
+            readonly property string icon: "robot"
             readonly property string component: "agents/AgentCenterPane.qml"
             readonly property string category: "apps"
             readonly property string description: qsTr("Coding agents on this machine and Javi assistant state")
@@ -243,7 +243,7 @@ QtObject {
             readonly property string id: "studio"
             readonly property string label: "studio"
             readonly property string title: qsTr("Studio")
-            readonly property string icon: "movie_creation"
+            readonly property string icon: "movie"
             readonly property string component: "studio/StudioPane.qml"
             readonly property string category: "apps"
             readonly property string description: qsTr("Creative workloads and applications")
@@ -253,7 +253,7 @@ QtObject {
             readonly property string id: "gaming"
             readonly property string label: "gaming"
             readonly property string title: qsTr("Gaming")
-            readonly property string icon: "sports_esports"
+            readonly property string icon: "device-gamepad-2"
             readonly property string component: "gaming/GamingPane.qml"
             readonly property string category: "apps"
             readonly property string description: qsTr("Gaming readiness, profiles, and Gaming Focus")
@@ -273,7 +273,7 @@ QtObject {
             readonly property string id: "extensions"
             readonly property string label: "extensions"
             readonly property string title: qsTr("Extensions")
-            readonly property string icon: "extension"
+            readonly property string icon: "puzzle"
             readonly property string component: "extensions/ExtensionsPane.qml"
             readonly property string category: "apps"
             readonly property string description: qsTr("Community plugins and their load state")
@@ -283,7 +283,7 @@ QtObject {
             readonly property string id: "system"
             readonly property string label: "system"
             readonly property string title: qsTr("System")
-            readonly property string icon: "info"
+            readonly property string icon: "info-circle"
             readonly property string component: "system/SystemPane.qml"
             readonly property string category: "system"
             readonly property string description: qsTr("System information and diagnostics")
@@ -293,7 +293,7 @@ QtObject {
             readonly property string id: "updates"
             readonly property string label: "updates"
             readonly property string title: qsTr("Updates")
-            readonly property string icon: "system_update"
+            readonly property string icon: "device-mobile-down"
             readonly property string component: "updates/UpdatesPane.qml"
             readonly property string category: "system"
             readonly property string description: qsTr("Review available system updates")
@@ -316,23 +316,21 @@ QtObject {
     // QML or exposes implementation-only control names.
     readonly property list<QtObject> searchTargets: [
         QtObject { readonly property string id: "themes"; readonly property string title: qsTr("Themes"); readonly property string pane: "appearance"; readonly property string section: "themes"; readonly property string icon: "palette"; readonly property string keywords: "theme look style hornero pampa catppuccin" },
-        QtObject { readonly property string id: "dark-mode"; readonly property string title: qsTr("Light and dark mode"); readonly property string pane: "appearance"; readonly property string section: "themeMode"; readonly property string icon: "dark_mode"; readonly property string keywords: "dark light mode brightness" },
-        QtObject { readonly property string id: "colors"; readonly property string title: qsTr("Wallpaper colors"); readonly property string pane: "appearance"; readonly property string section: "colorScheme"; readonly property string icon: "colorize"; readonly property string keywords: "dynamic accent palette color scheme wallpaper" },
-        QtObject { readonly property string id: "generation"; readonly property string title: qsTr("Color generation"); readonly property string pane: "appearance"; readonly property string section: "colorVariant"; readonly property string icon: "auto_awesome"; readonly property string keywords: "material algorithm vibrant expressive fidelity" },
-        QtObject { readonly property string id: "gtk"; readonly property string title: qsTr("GTK apps"); readonly property string pane: "appearance"; readonly property string section: "gtkTheme"; readonly property string icon: "web_asset"; readonly property string keywords: "gtk theme applications manual override" },
-        QtObject { readonly property string id: "icons"; readonly property string title: qsTr("Icon theme"); readonly property string pane: "appearance"; readonly property string section: "iconTheme"; readonly property string icon: "insert_emoticon"; readonly property string keywords: "icons papirus numix" },
-        QtObject { readonly property string id: "fonts"; readonly property string title: qsTr("Fonts"); readonly property string pane: "appearance"; readonly property string section: "fonts"; readonly property string icon: "text_fields"; readonly property string keywords: "font typography typeface" },
-        QtObject { readonly property string id: "motion"; readonly property string title: qsTr("Motion and animation"); readonly property string pane: "appearance"; readonly property string section: "animations"; readonly property string icon: "motion_photos_on"; readonly property string keywords: "reduce motion disable animations accessibility" },
-        QtObject { readonly property string id: "scale"; readonly property string title: qsTr("Interface size"); readonly property string pane: "appearance"; readonly property string section: "scales"; readonly property string icon: "zoom_in"; readonly property string keywords: "scale sizing density text size" },
+        QtObject { readonly property string id: "dark-mode"; readonly property string title: qsTr("Signal Day and Night themes"); readonly property string pane: "appearance"; readonly property string section: "themes"; readonly property string icon: "moon"; readonly property string keywords: "dark light mode brightness" },
+        QtObject { readonly property string id: "gtk"; readonly property string title: qsTr("GTK apps"); readonly property string pane: "appearance"; readonly property string section: "gtkTheme"; readonly property string icon: "app-window"; readonly property string keywords: "gtk theme applications manual override" },
+        QtObject { readonly property string id: "icons"; readonly property string title: qsTr("Icon theme"); readonly property string pane: "appearance"; readonly property string section: "iconTheme"; readonly property string icon: "mood-smile"; readonly property string keywords: "icons papirus numix" },
+        QtObject { readonly property string id: "fonts"; readonly property string title: qsTr("Fonts"); readonly property string pane: "appearance"; readonly property string section: "fonts"; readonly property string icon: "typography"; readonly property string keywords: "font typography typeface" },
+        QtObject { readonly property string id: "motion"; readonly property string title: qsTr("Motion and animation"); readonly property string pane: "appearance"; readonly property string section: "animations"; readonly property string icon: "player-record"; readonly property string keywords: "reduce motion disable animations accessibility" },
+        QtObject { readonly property string id: "scale"; readonly property string title: qsTr("Interface size"); readonly property string pane: "appearance"; readonly property string section: "scales"; readonly property string icon: "zoom-in"; readonly property string keywords: "scale sizing density text size" },
         QtObject { readonly property string id: "transparency"; readonly property string title: qsTr("Transparency"); readonly property string pane: "appearance"; readonly property string section: "transparency"; readonly property string icon: "opacity"; readonly property string keywords: "blur opacity glass launcher notifications" },
         QtObject { readonly property string id: "wallpaper"; readonly property string title: qsTr("Wallpaper and background"); readonly property string pane: "appearance"; readonly property string section: "background"; readonly property string icon: "wallpaper"; readonly property string keywords: "desktop image background clock" },
         QtObject { readonly property string id: "notification-history"; readonly property string title: qsTr("Notification history"); readonly property string pane: "notifications"; readonly property string section: ""; readonly property string icon: "history"; readonly property string keywords: "alerts previous notifications" },
-        QtObject { readonly property string id: "appearance-health"; readonly property string title: qsTr("Appearance health & sync"); readonly property string pane: "appearance"; readonly property string section: "health"; readonly property string icon: "health_and_safety"; readonly property string keywords: "doctor sync palette consistency gtk" },
-        QtObject { readonly property string id: "brightness"; readonly property string title: qsTr("Brightness"); readonly property string pane: "displays"; readonly property string section: ""; readonly property string icon: "brightness_6"; readonly property string keywords: "brightness backlight display dim" },
-        QtObject { readonly property string id: "compositor-layout"; readonly property string title: qsTr("Compositor layout & animations"); readonly property string pane: "displays"; readonly property string section: ""; readonly property string icon: "animation"; readonly property string keywords: "hyprland layout scrolling dwindle master animation profile" },
-        QtObject { readonly property string id: "input-restore"; readonly property string title: qsTr("Restore input defaults"); readonly property string pane: "input"; readonly property string section: ""; readonly property string icon: "restart_alt"; readonly property string keywords: "restore defaults keyboard pointer cursor reset" },
+        QtObject { readonly property string id: "appearance-health"; readonly property string title: qsTr("Appearance health & sync"); readonly property string pane: "appearance"; readonly property string section: "health"; readonly property string icon: "heart-plus"; readonly property string keywords: "doctor sync palette consistency gtk" },
+        QtObject { readonly property string id: "brightness"; readonly property string title: qsTr("Brightness"); readonly property string pane: "displays"; readonly property string section: ""; readonly property string icon: "brightness-half"; readonly property string keywords: "brightness backlight display dim" },
+        QtObject { readonly property string id: "compositor-layout"; readonly property string title: qsTr("Compositor layout & animations"); readonly property string pane: "displays"; readonly property string section: ""; readonly property string icon: "keyframes"; readonly property string keywords: "hyprland layout scrolling dwindle master animation profile" },
+        QtObject { readonly property string id: "input-restore"; readonly property string title: qsTr("Restore input defaults"); readonly property string pane: "input"; readonly property string section: ""; readonly property string icon: "reload"; readonly property string keywords: "restore defaults keyboard pointer cursor reset" },
         QtObject { readonly property string id: "diagnostics"; readonly property string title: qsTr("Diagnostics"); readonly property string pane: "system"; readonly property string section: ""; readonly property string icon: "stethoscope"; readonly property string keywords: "doctor diagnostics logs config validate health" },
-        QtObject { readonly property string id: "dependencies-recovery"; readonly property string title: qsTr("Dependencies & recovery"); readonly property string pane: "updates"; readonly property string section: ""; readonly property string icon: "build_circle"; readonly property string keywords: "dependencies snapshots restore backup schedule deps" }
+        QtObject { readonly property string id: "dependencies-recovery"; readonly property string title: qsTr("Dependencies & recovery"); readonly property string pane: "updates"; readonly property string section: ""; readonly property string icon: "tools"; readonly property string keywords: "dependencies snapshots restore backup schedule deps" }
     ]
 
     readonly property int count: panes.length

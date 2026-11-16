@@ -50,14 +50,14 @@ ColumnLayout {
                 Layout.fillWidth: true
             }
 
-            MaterialIcon {
-                text: "expand_more"
+            Glyph {
+                name: "chevron-down"
                 rotation: root.expanded ? 180 : 0
-                color: Colours.palette.m3onSurfaceVariant
+                color: Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.normal
                 Behavior on rotation {
                     Anim {
-                        duration: Appearance.anim.durations.small
+                        duration: Appearance.anim.durations.short
                         easing.bezierCurve: Appearance.anim.curves.standard
                     }
                 }
@@ -66,7 +66,7 @@ ColumnLayout {
 
         Interactive {
             anchors.fill: parent
-            color: Colours.palette.m3onSurface
+            color: Signal.palette.ink
             radius: Appearance.rounding.normal
             showHoverBackground: false
             function onClicked(): void {
@@ -94,7 +94,7 @@ ColumnLayout {
             id: backgroundRect
             anchors.fill: parent
             radius: Appearance.rounding.normal
-            color: Colours.transparency.enabled ? Colours.layer(Colours.palette.m3surfaceContainer, root.nested ? 3 : 2) : (root.nested ? Colours.palette.m3surfaceContainerHigh : Colours.palette.m3surfaceContainer)
+            color: Signal.transparency.enabled ? Signal.layer(Signal.palette.panel, root.nested ? 3 : 2) : (root.nested ? Signal.palette.raised : Signal.palette.panel)
             opacity: root.showBackground && root.expanded ? 1.0 : 0.0
             visible: root.showBackground
 
@@ -129,7 +129,7 @@ ColumnLayout {
                 Layout.bottomMargin: root.description !== "" ? Appearance.spacing.small : 0
                 visible: root.description !== ""
                 text: root.description
-                color: Colours.palette.m3onSurfaceVariant
+                color: Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.small
                 wrapMode: Text.Wrap
             }

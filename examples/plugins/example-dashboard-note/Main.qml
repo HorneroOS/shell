@@ -18,6 +18,6 @@ Item {
         variant: "ghost"
         text: pluginSettings.value("showGreeting", true) ? "El futuro se construye acá." : "HorneroOS"
         tooltipText: "Dashboard note: activate for details"
-        onClicked: Notifications.toast("HorneroOS", "Desktop and dashboard extensions share the same public API.", "extension")
+        onClicked: Notifications.toast("HorneroOS", "Desktop and dashboard extensions share the same public API.", "puzzle")
     }
 }

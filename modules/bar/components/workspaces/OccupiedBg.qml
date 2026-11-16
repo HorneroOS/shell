@@ -75,7 +75,7 @@ Item {
             implicitWidth: vertical ? Config.bar.sizes.innerWidth - Appearance.padding.small * 2 + 2 : (start && end ? end.x + end.size - start.x + 2 : 0)
             implicitHeight: vertical ? (start && end ? end.y + end.size - start.y + 2 : 0) : Config.bar.sizes.innerWidth - Appearance.padding.small * 2 + 2
 
-            color: Colours.layer(Colours.palette.m3surfaceContainerHigh, 2)
+            color: Signal.layer(Signal.palette.raised, 2)
             radius: Appearance.rounding.full
 
             scale: 0
@@ -83,7 +83,7 @@ Item {
 
             Behavior on scale {
                 Anim {
-                    easing.bezierCurve: Appearance.anim.curves.standardDecel
+                    easing.bezierCurve: Appearance.anim.curves.enter
                 }
             }
 

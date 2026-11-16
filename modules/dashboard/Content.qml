@@ -144,15 +144,15 @@ Item {
 
     Behavior on implicitWidth {
         Anim {
-            duration: Appearance.anim.durations.large
-            easing.bezierCurve: Appearance.anim.curves.emphasized
+            duration: Appearance.anim.durations.long
+            easing.bezierCurve: Appearance.anim.curves.standard
         }
     }
 
     Behavior on implicitHeight {
         Anim {
-            duration: Appearance.anim.durations.large
-            easing.bezierCurve: Appearance.anim.curves.emphasized
+            duration: Appearance.anim.durations.long
+            easing.bezierCurve: Appearance.anim.curves.standard
         }
     }
 

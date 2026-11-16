@@ -46,7 +46,7 @@ ColumnLayout {
         Layout.topMargin: visible ? Appearance.spacing.small : 0
         Layout.rightMargin: Appearance.padding.small
         text: qsTr("%1 networks available").arg(Nmcli.networks.length)
-        color: Colours.palette.m3onSurfaceVariant
+        color: Signal.palette.inkMuted
         font.pointSize: Appearance.font.size.small
     }
 
@@ -89,14 +89,14 @@ ColumnLayout {
                 Anim {}
             }
 
-            MaterialIcon {
-                text: Icons.getNetworkIcon(networkItem.modelData.strength)
-                color: networkItem.modelData.active ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+            Glyph {
+                name: Icons.getNetworkIcon(networkItem.modelData.strength)
+                color: networkItem.modelData.active ? Signal.palette.signal : Signal.palette.inkMuted
             }
 
-            MaterialIcon {
+            Glyph {
                 visible: networkItem.modelData.isSecure
-                text: "lock"
+                name: "lock"
                 font.pointSize: Appearance.font.size.small
             }
 
@@ -107,7 +107,7 @@ ColumnLayout {
                 text: networkItem.modelData.ssid
                 elide: Text.ElideRight
                 font.weight: networkItem.modelData.active ? 500 : 400
-                color: networkItem.modelData.active ? Colours.palette.m3primary : Colours.palette.m3onSurface
+                color: networkItem.modelData.active ? Signal.palette.signal : Signal.palette.ink
             }
 
             StyledRect {
@@ -115,7 +115,7 @@ ColumnLayout {
                 implicitHeight: wirelessConnectIcon.implicitHeight + Appearance.padding.small
 
                 radius: Appearance.rounding.full
-                color: Qt.alpha(Colours.palette.m3primary, networkItem.modelData.active ? 1 : 0)
+                color: Qt.alpha(Signal.palette.signal, networkItem.modelData.active ? 1 : 0)
 
                 CircularIndicator {
                     anchors.fill: parent
@@ -123,7 +123,7 @@ ColumnLayout {
                 }
 
                 StateLayer {
-                    color: networkItem.modelData.active ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
+                    color: networkItem.modelData.active ? Signal.palette.onSignal : Signal.palette.ink
                     disabled: networkItem.loading || !Nmcli.wifiEnabled
 
                     function onClicked(): void {
@@ -144,13 +144,13 @@ ColumnLayout {
                     }
                 }
 
-                MaterialIcon {
+                Glyph {
                     id: wirelessConnectIcon
 
                     anchors.centerIn: parent
                     animate: true
-                    text: networkItem.modelData.active ? "link_off" : "link"
-                    color: networkItem.modelData.active ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
+                    name: networkItem.modelData.active ? "link-off" : "link"
+                    color: networkItem.modelData.active ? Signal.palette.onSignal : Signal.palette.ink
 
                     opacity: networkItem.loading ? 0 : 1
 
@@ -170,10 +170,10 @@ ColumnLayout {
         implicitHeight: rescanBtn.implicitHeight + Appearance.padding.small * 2
 
         radius: Appearance.rounding.full
-        color: Colours.palette.m3primaryContainer
+        color: Signal.palette.signalWell
 
         StateLayer {
-            color: Colours.palette.m3onPrimaryContainer
+            color: Signal.palette.onSignalWell
             disabled: Nmcli.scanning || !Nmcli.wifiEnabled
 
             function onClicked(): void {
@@ -188,19 +188,19 @@ ColumnLayout {
             spacing: Appearance.spacing.small
             opacity: Nmcli.scanning ? 0 : 1
 
-            MaterialIcon {
+            Glyph {
                 id: scanIcon
 
                 Layout.topMargin: Math.round(fontInfo.pointSize * 0.0575)
                 animate: true
-                text: "wifi_find"
-                color: Colours.palette.m3onPrimaryContainer
+                name: "wifi"
+                color: Signal.palette.onSignalWell
             }
 
             StyledText {
                 Layout.topMargin: -Math.round(scanIcon.fontInfo.pointSize * 0.0575)
                 text: qsTr("Rescan networks")
-                color: Colours.palette.m3onPrimaryContainer
+                color: Signal.palette.onSignalWell
             }
 
             Behavior on opacity {
@@ -233,7 +233,7 @@ ColumnLayout {
         Layout.topMargin: visible ? Appearance.spacing.small : 0
         Layout.rightMargin: Appearance.padding.small
         text: qsTr("%1 devices available").arg(Nmcli.ethernetDevices.length)
-        color: Colours.palette.m3onSurfaceVariant
+        color: Signal.palette.inkMuted
         font.pointSize: Appearance.font.size.small
     }
 
@@ -275,9 +275,9 @@ ColumnLayout {
                 Anim {}
             }
 
-            MaterialIcon {
-                text: "cable"
-                color: ethernetItem.modelData.connected ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+            Glyph {
+                name: "plug-connected"
+                color: ethernetItem.modelData.connected ? Signal.palette.signal : Signal.palette.inkMuted
             }
 
             StyledText {
@@ -287,7 +287,7 @@ ColumnLayout {
                 text: ethernetItem.modelData.interface || qsTr("Unknown")
                 elide: Text.ElideRight
                 font.weight: ethernetItem.modelData.connected ? 500 : 400
-                color: ethernetItem.modelData.connected ? Colours.palette.m3primary : Colours.palette.m3onSurface
+                color: ethernetItem.modelData.connected ? Signal.palette.signal : Signal.palette.ink
             }
 
             StyledRect {
@@ -295,7 +295,7 @@ ColumnLayout {
                 implicitHeight: connectIcon.implicitHeight + Appearance.padding.small
 
                 radius: Appearance.rounding.full
-                color: Qt.alpha(Colours.palette.m3primary, ethernetItem.modelData.connected ? 1 : 0)
+                color: Qt.alpha(Signal.palette.signal, ethernetItem.modelData.connected ? 1 : 0)
 
                 CircularIndicator {
                     anchors.fill: parent
@@ -303,7 +303,7 @@ ColumnLayout {
                 }
 
                 StateLayer {
-                    color: ethernetItem.modelData.connected ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
+                    color: ethernetItem.modelData.connected ? Signal.palette.onSignal : Signal.palette.ink
                     disabled: ethernetItem.loading
 
                     function onClicked(): void {
@@ -315,13 +315,13 @@ ColumnLayout {
                     }
                 }
 
-                MaterialIcon {
+                Glyph {
                     id: connectIcon
 
                     anchors.centerIn: parent
                     animate: true
-                    text: ethernetItem.modelData.connected ? "link_off" : "link"
-                    color: ethernetItem.modelData.connected ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
+                    name: ethernetItem.modelData.connected ? "link-off" : "link"
+                    color: ethernetItem.modelData.connected ? Signal.palette.onSignal : Signal.palette.ink
 
                     opacity: ethernetItem.loading ? 0 : 1
 

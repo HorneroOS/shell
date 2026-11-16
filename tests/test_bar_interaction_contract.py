@@ -32,8 +32,8 @@ def test_standalone_popouts_use_a_lifted_surface_and_connected_ones_keep_the_bar
     background = (ROOT / "modules/drawers/Backgrounds.qml").read_text()
     shape = (ROOT / "modules/bar/popouts/Background.qml").read_text()
     assert 'visible: wrapper.visible && !wrapper.usesConnectedBackground' in background
-    assert 'Colours.surface(Colours.palette.m3surfaceContainer, "bar")' in background
-    assert 'Colours.palette.m3surface, "bar") : "transparent"' in shape
+    assert 'Signal.surface(Signal.palette.panel, "bar")' in background
+    assert 'Signal.palette.base, "bar") : "transparent"' in shape
 
 
 def test_icon_bar_buttons_have_visual_and_accessible_names():

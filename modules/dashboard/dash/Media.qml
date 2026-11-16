@@ -20,7 +20,7 @@ Item {
 
     Behavior on playerProgress {
         Anim {
-            duration: Appearance.anim.durations.large
+            duration: Appearance.anim.durations.long
         }
     }
 
@@ -41,7 +41,7 @@ Item {
 
         ShapePath {
             fillColor: "transparent"
-            strokeColor: Colours.layer(Colours.palette.m3surfaceContainerHigh, 2)
+            strokeColor: Signal.layer(Signal.palette.raised, 2)
             strokeWidth: Config.dashboard.sizes.mediaProgressThickness
             capStyle: Appearance.rounding.scale === 0 ? ShapePath.SquareCap : ShapePath.RoundCap
 
@@ -61,7 +61,7 @@ Item {
 
         ShapePath {
             fillColor: "transparent"
-            strokeColor: Colours.palette.m3primary
+            strokeColor: Signal.palette.signal
             strokeWidth: Config.dashboard.sizes.mediaProgressThickness
             capStyle: Appearance.rounding.scale === 0 ? ShapePath.SquareCap : ShapePath.RoundCap
 
@@ -89,15 +89,14 @@ Item {
         anchors.margins: Appearance.padding.large + Config.dashboard.sizes.mediaProgressThickness + Appearance.spacing.small
 
         implicitHeight: width
-        color: Colours.tPalette.m3surfaceContainerHigh
+        color: Signal.tPalette.raised
         radius: Infinity
 
-        MaterialIcon {
+        Glyph {
             anchors.centerIn: parent
 
-            grade: 200
-            text: "art_track"
-            color: Colours.palette.m3onSurfaceVariant
+            name: "playlist"
+            color: Signal.palette.inkMuted
             font.pointSize: (parent.width * 0.4) || 1
         }
 
@@ -124,7 +123,7 @@ Item {
         animate: true
         horizontalAlignment: Text.AlignHCenter
         text: (Players.active?.trackTitle ?? qsTr("No media")) || qsTr("Unknown title")
-        color: Colours.palette.m3primary
+        color: Signal.palette.signal
         font.pointSize: Appearance.font.size.normal
 
         width: parent.implicitWidth - Appearance.padding.large * 2
@@ -142,7 +141,7 @@ Item {
         horizontalAlignment: Text.AlignHCenter
         visible: !!Players.active
         text: Players.active?.trackAlbum || qsTr("Unknown album")
-        color: Colours.palette.m3outline
+        color: Signal.palette.ruleStrong
         font.pointSize: Appearance.font.size.small
 
         width: parent.implicitWidth - Appearance.padding.large * 2
@@ -162,7 +161,7 @@ Item {
         horizontalAlignment: Text.AlignHCenter
         text: (Players.active?.trackArtist ?? qsTr("Play some music for stuff to show up here!")) || qsTr("Unknown artist")
         wrapMode: Players.active ? Text.NoWrap : Text.WordWrap
-        color: Colours.palette.m3secondary
+        color: Signal.palette.cue
 
         width: parent.implicitWidth - Appearance.padding.large * 2
         elide: Text.ElideRight
@@ -178,7 +177,7 @@ Item {
         spacing: Appearance.spacing.small
 
         Control {
-            icon: "skip_previous"
+            icon: "player-skip-back"
             canUse: Players.active?.canGoPrevious ?? false
 
             function onClicked(): void {
@@ -187,7 +186,7 @@ Item {
         }
 
         Control {
-            icon: Players.active?.isPlaying ? "pause" : "play_arrow"
+            icon: Players.active?.isPlaying ? "player-pause" : "player-play"
             canUse: Players.active?.canTogglePlaying ?? false
 
             function onClicked(): void {
@@ -196,7 +195,7 @@ Item {
         }
 
         Control {
-            icon: "skip_next"
+            icon: "player-skip-forward"
             canUse: Players.active?.canGoNext ?? false
 
             function onClicked(): void {
@@ -243,15 +242,15 @@ Item {
             }
         }
 
-        MaterialIcon {
+        Glyph {
             id: icon
 
             anchors.centerIn: parent
             anchors.verticalCenterOffset: font.pointSize * 0.05
 
             animate: true
-            text: control.icon
-            color: control.canUse ? Colours.palette.m3onSurface : Colours.palette.m3outline
+            name: control.icon
+            color: control.canUse ? Signal.palette.ink : Signal.palette.ruleStrong
             font.pointSize: Appearance.font.size.large
         }
     }

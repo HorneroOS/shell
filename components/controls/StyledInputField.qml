@@ -34,10 +34,10 @@ Item {
         id: container
 
         anchors.fill: parent
-        color: inputHover.containsMouse || inputField.activeFocus ? Colours.layer(Colours.palette.m3surfaceContainer, 3) : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+        color: inputHover.containsMouse || inputField.activeFocus ? Signal.layer(Signal.palette.panel, 3) : Signal.layer(Signal.palette.panel, 2)
         radius: Appearance.rounding.small
         border.width: 1
-        border.color: inputField.activeFocus ? Colours.palette.m3primary : Colours.palette.m3outline
+        border.color: inputField.activeFocus ? Signal.palette.signal : Signal.palette.ruleStrong
         opacity: root.enabled ? 1 : 0.5
 
         Behavior on color {

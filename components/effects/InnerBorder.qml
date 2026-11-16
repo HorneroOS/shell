@@ -15,7 +15,7 @@ StyledRect {
     property alias bottomThickness: maskInner.anchors.bottomMargin
 
     anchors.fill: parent
-    color: Colours.tPalette.m3surfaceContainer
+    color: Signal.tPalette.panel
 
     layer.enabled: true
     layer.effect: MultiEffect {

@@ -28,7 +28,7 @@ ColumnLayout {
 
         sourceComponent: StyledText {
             text: qsTr("Weather")
-            color: Colours.palette.m3primary
+            color: Signal.palette.signal
             font.pointSize: Appearance.font.size.extraLarge
             font.weight: 500
         }
@@ -38,10 +38,10 @@ ColumnLayout {
         Layout.fillWidth: true
         spacing: Appearance.spacing.large
 
-        MaterialIcon {
+        Glyph {
             animate: true
-            text: Weather.icon
-            color: Colours.palette.m3secondary
+            name: Weather.icon
+            color: Signal.palette.cue
             font.pointSize: Appearance.font.size.extraLarge * 2.5
         }
 
@@ -53,7 +53,7 @@ ColumnLayout {
 
                 animate: true
                 text: Weather.description
-                color: Colours.palette.m3secondary
+                color: Signal.palette.cue
                 font.pointSize: Appearance.font.size.large
                 font.weight: 500
                 elide: Text.ElideRight
@@ -65,7 +65,7 @@ ColumnLayout {
                 animate: true
                 visible: !!Weather.cc
                 text: qsTr("Humidity: %1%").arg(Weather.humidity)
-                color: Colours.palette.m3onSurfaceVariant
+                color: Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.normal
                 elide: Text.ElideRight
             }
@@ -84,7 +84,7 @@ ColumnLayout {
 
                     animate: true
                     text: Weather.temp
-                    color: Colours.palette.m3primary
+                    color: Signal.palette.signal
                     horizontalAlignment: Text.AlignRight
                     font.pointSize: Appearance.font.size.extraLarge
                     font.weight: 500
@@ -96,7 +96,7 @@ ColumnLayout {
 
                     animate: true
                     text: qsTr("Feels like: %1").arg(Weather.feelsLike)
-                    color: Colours.palette.m3outline
+                    color: Signal.palette.ruleStrong
                     horizontalAlignment: Text.AlignRight
                     font.pointSize: Appearance.font.size.smaller
                     elide: Text.ElideLeft
@@ -144,14 +144,14 @@ ColumnLayout {
                             const hour = forecastHour.modelData?.hour ?? 0;
                             return hour > 12 ? `${(hour - 12).toString().padStart(2, "0")} PM` : `${hour.toString().padStart(2, "0")} AM`;
                         }
-                        color: Colours.palette.m3outline
+                        color: Signal.palette.ruleStrong
                         horizontalAlignment: Text.AlignHCenter
                         font.pointSize: Appearance.font.size.larger
                     }
 
-                    MaterialIcon {
+                    Glyph {
                         Layout.alignment: Qt.AlignHCenter
-                        text: forecastHour.modelData?.icon ?? "cloud_alert"
+                        name: forecastHour.modelData?.icon ?? "cloud-exclamation"
                         font.pointSize: Appearance.font.size.extraLarge * 1.5
                         font.weight: 500
                     }
@@ -159,7 +159,7 @@ ColumnLayout {
                     StyledText {
                         Layout.alignment: Qt.AlignHCenter
                         text: Config.services.useFahrenheit ? `${forecastHour.modelData?.tempF ?? 0}°F` : `${forecastHour.modelData?.tempC ?? 0}°C`
-                        color: Colours.palette.m3secondary
+                        color: Signal.palette.cue
                         font.pointSize: Appearance.font.size.larger
                     }
                 }

@@ -31,7 +31,7 @@ StyledRect {
         return Wallpapers.colorFilter;
     }
 
-    color: Qt.rgba(Colours.palette.m3surfaceContainerHigh.r, Colours.palette.m3surfaceContainerHigh.g, Colours.palette.m3surfaceContainerHigh.b, 0.9)
+    color: Qt.rgba(Signal.palette.raised.r, Signal.palette.raised.g, Signal.palette.raised.b, 0.9)
     radius: Appearance.rounding.large
 
     implicitWidth: layoutRow.implicitWidth + Appearance.padding.normal * 2
@@ -47,7 +47,7 @@ StyledRect {
             id: labelBadge
 
             anchors.verticalCenter: parent.verticalCenter
-            color: Wallpapers.colorFilter !== "" ? Colours.palette.m3secondaryContainer : "transparent"
+            color: Wallpapers.colorFilter !== "" ? Signal.palette.cueWell : "transparent"
             radius: Appearance.rounding.normal
             implicitWidth: badgeContent.implicitWidth + (Wallpapers.colorFilter !== "" ? Appearance.padding.normal : Appearance.padding.small)
             implicitHeight: 26
@@ -58,15 +58,15 @@ StyledRect {
 
                 StyledText {
                     text: root.activeColorName
-                    color: Wallpapers.colorFilter !== "" ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
+                    color: Wallpapers.colorFilter !== "" ? Signal.palette.onCueWell : Signal.palette.inkMuted
                     font.pointSize: Appearance.font.size.small
                 }
 
-                MaterialIcon {
+                Glyph {
                     visible: Wallpapers.colorFilter !== ""
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "close"
-                    color: Colours.palette.m3onSecondaryContainer
+                    name: "x"
+                    color: Signal.palette.onCueWell
                     font.pointSize: Appearance.font.size.small
 
                     StateLayer {
@@ -100,7 +100,7 @@ StyledRect {
                 implicitWidth: 24
                 implicitHeight: 24
                 border.width: Wallpapers.colorFilter === modelData.id ? 3 : 1
-                border.color: Wallpapers.colorFilter === modelData.id ? Colours.palette.m3onSurface : Colours.palette.m3outline
+                border.color: Wallpapers.colorFilter === modelData.id ? Signal.palette.ink : Signal.palette.ruleStrong
 
                 Accessible.role: Accessible.Button
                 Accessible.name: swatch.modelData.name

@@ -26,7 +26,7 @@ StyledRect {
     Layout.fillWidth: true
     implicitHeight: row.implicitHeight + Appearance.padding.large * 2
     radius: Appearance.rounding.normal
-    color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
+    color: Signal.layer(Signal.palette.panel, 2)
 
     clip: false
     z: splitButton.menu.implicitHeight > 0 ? expandedZ : 1
@@ -41,7 +41,7 @@ StyledRect {
         StyledText {
             Layout.fillWidth: true
             text: root.label
-            color: root.enabled ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
+            color: root.enabled ? Signal.palette.ink : Signal.palette.inkMuted
         }
 
         SplitButton {

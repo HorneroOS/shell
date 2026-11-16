@@ -40,7 +40,7 @@ Loader {
             StyledRect {
                 anchors.fill: parent
                 topLeftRadius: Config.border.rounding
-                color: Colours.palette.m3scrim
+                color: Signal.palette.scrim
             }
 
             Shape {
@@ -60,11 +60,11 @@ Loader {
 
                         GradientStop {
                             position: 0
-                            color: Qt.alpha(Colours.palette.m3scrim, 0)
+                            color: Qt.alpha(Signal.palette.scrim, 0)
                         }
                         GradientStop {
                             position: 1
-                            color: Colours.palette.m3scrim
+                            color: Signal.palette.scrim
                         }
                     }
 
@@ -97,11 +97,11 @@ Loader {
 
                         GradientStop {
                             position: 0
-                            color: Qt.alpha(Colours.palette.m3scrim, 0)
+                            color: Qt.alpha(Signal.palette.scrim, 0)
                         }
                         GradientStop {
                             position: 1
-                            color: Colours.palette.m3scrim
+                            color: Signal.palette.scrim
                         }
                     }
 
@@ -130,7 +130,7 @@ Loader {
         StyledRect {
             anchors.centerIn: parent
             radius: Appearance.rounding.large
-            color: Colours.palette.m3surfaceContainerHigh
+            color: Signal.palette.raised
 
             scale: 0
             Component.onCompleted: scale = Qt.binding(() => root.props.recordingConfirmDelete ? 1 : 0)
@@ -165,7 +165,7 @@ Loader {
                 StyledText {
                     Layout.fillWidth: true
                     text: qsTr("Recording '%1' will be permanently deleted.").arg(deleteConfirmation.path)
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                     font.pointSize: Appearance.font.size.small
                     wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                 }
@@ -194,8 +194,8 @@ Loader {
 
             Behavior on scale {
                 Anim {
-                    duration: Appearance.anim.durations.expressiveDefaultSpatial
-                    easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                    duration: Appearance.anim.durations.settle
+                    easing.bezierCurve: Appearance.anim.curves.settle
                 }
             }
         }

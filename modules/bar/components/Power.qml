@@ -26,14 +26,14 @@ Item {
         }
     }
 
-    MaterialIcon {
+    Glyph {
         id: icon
 
         anchors.centerIn: parent
         anchors.horizontalCenterOffset: -1
 
-        text: "power_settings_new"
-        color: Colours.palette.m3error
+        name: "power"
+        color: Signal.palette.alert
         font.bold: true
         font.pointSize: Appearance.font.size.normal
     }

@@ -125,10 +125,11 @@ Searcher {
         readonly property string collection: modelData.collection || ""
         readonly property int collectionOrder: Number(modelData.collectionOrder ?? 999)
         readonly property var tags: modelData.tags ?? []
-        readonly property bool darkMode: modelData.darkMode !== undefined ? !!modelData.darkMode : true
-        readonly property string schemeType: modelData.schemeType || "tonal-spot"
-        readonly property string gtkTheme: modelData.gtkTheme || "Orchis-Light-Compact"
-        readonly property string iconTheme: modelData.iconTheme || "Numix-Circle"
+        readonly property bool darkMode: modelData.mode !== "light"
+        readonly property var palette: modelData.palette ?? ({})
+        readonly property var swatch: modelData.swatch ?? ({})
+        readonly property string gtkTheme: modelData.gtkTheme || ""
+        readonly property string iconTheme: modelData.iconTheme || ""
         readonly property string gtkColorScheme: {
             const raw = (modelData.gtkColorScheme ?? "").toString().toLowerCase().replace(/_/g, "-");
             switch (raw) {

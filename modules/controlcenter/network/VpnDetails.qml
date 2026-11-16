@@ -29,7 +29,7 @@ DeviceDetails {
 
     headerComponent: Component {
         ConnectionHeader {
-            icon: "vpn_key"
+            icon: "key"
             title: root.vpnProvider?.displayName ?? qsTr("Unknown")
         }
     }
@@ -93,8 +93,8 @@ DeviceDetails {
                             Layout.minimumHeight: Appearance.font.size.normal + Appearance.padding.normal * 2
                             visible: root.providerEnabled
                             enabled: !VPN.connecting
-                            inactiveColour: Colours.palette.m3primaryContainer
-                            inactiveOnColour: Colours.palette.m3onPrimaryContainer
+                            inactiveColour: Signal.palette.signalWell
+                            inactiveOnColour: Signal.palette.onSignalWell
                             text: VPN.connected ? qsTr("Disconnect") : qsTr("Connect")
 
                             onClicked: {
@@ -105,8 +105,8 @@ DeviceDetails {
                         TextButton {
                             Layout.fillWidth: true
                             text: qsTr("Edit Provider")
-                            inactiveColour: Colours.palette.m3secondaryContainer
-                            inactiveOnColour: Colours.palette.m3onSecondaryContainer
+                            inactiveColour: Signal.palette.cueWell
+                            inactiveOnColour: Signal.palette.onCueWell
 
                             onClicked: {
                                 editVpnDialog.editIndex = root.vpnProvider.index;
@@ -120,8 +120,8 @@ DeviceDetails {
                         TextButton {
                             Layout.fillWidth: true
                             text: qsTr("Delete Provider")
-                            inactiveColour: Colours.palette.m3errorContainer
-                            inactiveOnColour: Colours.palette.m3onErrorContainer
+                            inactiveColour: Signal.palette.alertWell
+                            inactiveOnColour: Signal.palette.onAlertWell
 
                             onClicked: {
                                 const providers = [];
@@ -217,15 +217,15 @@ DeviceDetails {
                 property: "opacity"
                 from: 0
                 to: 1
-                duration: Appearance.anim.durations.expressiveFastSpatial
-                easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+                duration: Appearance.anim.durations.settleFast
+                easing.bezierCurve: Appearance.anim.curves.settleFast
             }
             Anim {
                 property: "scale"
                 from: 0.7
                 to: 1
-                duration: Appearance.anim.durations.expressiveFastSpatial
-                easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+                duration: Appearance.anim.durations.settleFast
+                easing.bezierCurve: Appearance.anim.curves.settleFast
             }
         }
 
@@ -234,15 +234,15 @@ DeviceDetails {
                 property: "opacity"
                 from: 1
                 to: 0
-                duration: Appearance.anim.durations.expressiveFastSpatial
-                easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+                duration: Appearance.anim.durations.settleFast
+                easing.bezierCurve: Appearance.anim.curves.settleFast
             }
             Anim {
                 property: "scale"
                 from: 1
                 to: 0.7
-                duration: Appearance.anim.durations.expressiveFastSpatial
-                easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+                duration: Appearance.anim.durations.settleFast
+                easing.bezierCurve: Appearance.anim.curves.settleFast
             }
         }
 
@@ -255,7 +255,7 @@ DeviceDetails {
         }
 
         background: StyledRect {
-            color: Colours.palette.m3surfaceContainerHigh
+            color: Signal.palette.raised
             radius: Appearance.rounding.large
 
             Elevation {
@@ -282,16 +282,16 @@ DeviceDetails {
                 StyledText {
                     text: qsTr("Display Name")
                     font.pointSize: Appearance.font.size.small
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                 }
 
                 StyledRect {
                     Layout.fillWidth: true
                     implicitHeight: 40
-                    color: displayNameField.activeFocus ? Colours.layer(Colours.palette.m3surfaceContainer, 3) : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+                    color: displayNameField.activeFocus ? Signal.layer(Signal.palette.panel, 3) : Signal.layer(Signal.palette.panel, 2)
                     radius: Appearance.rounding.small
                     border.width: 1
-                    border.color: displayNameField.activeFocus ? Colours.palette.m3primary : Qt.alpha(Colours.palette.m3outline, 0.3)
+                    border.color: displayNameField.activeFocus ? Signal.palette.signal : Qt.alpha(Signal.palette.ruleStrong, 0.3)
 
                     Behavior on color {
                         CAnim {}
@@ -318,16 +318,16 @@ DeviceDetails {
                 StyledText {
                     text: qsTr("Interface (e.g., wg0, torguard)")
                     font.pointSize: Appearance.font.size.small
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                 }
 
                 StyledRect {
                     Layout.fillWidth: true
                     implicitHeight: 40
-                    color: interfaceNameField.activeFocus ? Colours.layer(Colours.palette.m3surfaceContainer, 3) : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+                    color: interfaceNameField.activeFocus ? Signal.layer(Signal.palette.panel, 3) : Signal.layer(Signal.palette.panel, 2)
                     radius: Appearance.rounding.small
                     border.width: 1
-                    border.color: interfaceNameField.activeFocus ? Colours.palette.m3primary : Qt.alpha(Colours.palette.m3outline, 0.3)
+                    border.color: interfaceNameField.activeFocus ? Signal.palette.signal : Qt.alpha(Signal.palette.ruleStrong, 0.3)
 
                     Behavior on color {
                         CAnim {}
@@ -355,8 +355,8 @@ DeviceDetails {
                 TextButton {
                     Layout.fillWidth: true
                     text: qsTr("Cancel")
-                    inactiveColour: Colours.tPalette.m3surfaceContainerHigh
-                    inactiveOnColour: Colours.palette.m3onSurface
+                    inactiveColour: Signal.tPalette.raised
+                    inactiveOnColour: Signal.palette.ink
                     onClicked: editVpnDialog.closeWithAnimation()
                 }
 
@@ -364,8 +364,8 @@ DeviceDetails {
                     Layout.fillWidth: true
                     text: qsTr("Save")
                     enabled: editVpnDialog.interfaceName.length > 0
-                    inactiveColour: Colours.palette.m3primaryContainer
-                    inactiveOnColour: Colours.palette.m3onPrimaryContainer
+                    inactiveColour: Signal.palette.signalWell
+                    inactiveOnColour: Signal.palette.onSignalWell
 
                     onClicked: {
                         const providers = [];

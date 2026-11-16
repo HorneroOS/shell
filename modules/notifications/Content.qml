@@ -110,8 +110,8 @@ Item {
                         target: notif
                         property: "x"
                         to: (notif.x >= 0 ? Config.notifs.sizes.width : -Config.notifs.sizes.width) * 2
-                        duration: Appearance.anim.durations.normal
-                        easing.bezierCurve: Appearance.anim.curves.emphasized
+                        duration: Appearance.anim.durations.medium
+                        easing.bezierCurve: Appearance.anim.curves.standard
                     }
                     PropertyAction {
                         target: wrapper
@@ -198,8 +198,8 @@ Item {
     }
 
     component Anim: NumberAnimation {
-        duration: Appearance.anim.durations.expressiveDefaultSpatial
+        duration: Appearance.anim.durations.settle
         easing.type: Easing.BezierSpline
-        easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+        easing.bezierCurve: Appearance.anim.curves.settle
     }
 }

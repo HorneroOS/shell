@@ -74,7 +74,7 @@ def test_interactive_owns_the_contract():
 
 def test_focus_ring_is_shared():
     src = (CONTROLS / "FocusRing.qml").read_text()
-    assert "Colours.focusRing" in src
+    assert "Signal.palette.focus" in src
     assert "FocusMode.keyboard" in src
     assert "anchors.margins: -2" in src  # off-shape, no layout shift
 
@@ -86,8 +86,8 @@ def test_focus_mode_singleton():
 
 
 def test_focus_token_exists():
-    src = (ROOT / "services" / "Colours.qml").read_text()
-    assert "readonly property color focusRing" in src
+    src = (ROOT / "services" / "Signal.qml").read_text()
+    assert '"focus"' in src and "property color focus:" in src
 
 
 def test_migrated_controls_use_interactive():
@@ -212,7 +212,7 @@ def test_contract_documented():
     doc = (ROOT / "docs" / "FOCUS.md").read_text()
     assert "Interactive.qml" in doc
     assert "FocusMode" in doc
-    assert "focusRing" in doc
+    assert "Signal.palette.focus" in doc
 
 
 def test_debug_focus_state_observable():
@@ -346,8 +346,6 @@ def test_launcher_rows_have_accessible_names():
         "AppItem.qml",
         "CalcItem.qml",
         "FileItem.qml",
-        "SchemeItem.qml",
-        "VariantItem.qml",
         "WallpaperItem.qml",
         "WindowItem.qml",
     ):

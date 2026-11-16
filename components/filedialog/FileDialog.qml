@@ -50,7 +50,7 @@ LazyLoader {
 
         implicitWidth: 1000
         implicitHeight: 600
-        color: Colours.tPalette.m3surface
+        color: Signal.tPalette.base
         title: loader.title
 
         onVisibleChanged: {

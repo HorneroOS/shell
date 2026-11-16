@@ -28,28 +28,28 @@ ColumnLayout {
         }
 
         StyledRect {
-            color: Colours.palette.m3primary
+            color: Signal.palette.signal
             radius: Appearance.rounding.small
 
             implicitWidth: moveToWsIcon.implicitWidth + Appearance.padding.small * 2
             implicitHeight: moveToWsIcon.implicitHeight + Appearance.padding.small
 
             StateLayer {
-                color: Colours.palette.m3onPrimary
+                color: Signal.palette.onSignal
 
                 function onClicked(): void {
                     root.moveToWsExpanded = !root.moveToWsExpanded;
                 }
             }
 
-            MaterialIcon {
+            Glyph {
                 id: moveToWsIcon
 
                 anchors.centerIn: parent
 
                 animate: true
-                text: root.moveToWsExpanded ? "expand_more" : "keyboard_arrow_right"
-                color: Colours.palette.m3onPrimary
+                name: root.moveToWsExpanded ? "chevron-down" : "chevron-right"
+                color: Signal.palette.onSignal
                 font.pointSize: Appearance.font.size.large
             }
         }
@@ -81,8 +81,8 @@ ColumnLayout {
                     readonly property int wsId: Math.floor((Hypr.activeWsId - 1) / 10) * 10 + index + 1
                     readonly property bool isCurrent: root.client?.workspace.id === wsId
 
-                    color: isCurrent ? Colours.tPalette.m3surfaceContainerHighest : Colours.palette.m3tertiaryContainer
-                    onColor: isCurrent ? Colours.palette.m3onSurface : Colours.palette.m3onTertiaryContainer
+                    color: isCurrent ? Signal.tPalette.lifted : Signal.palette.phosphorWell
+                    onColor: isCurrent ? Signal.palette.ink : Signal.palette.onPhosphorWell
                     text: wsId
                     disabled: isCurrent
 
@@ -107,8 +107,8 @@ ColumnLayout {
         spacing: root.client?.lastIpcObject.floating ? Appearance.spacing.normal : Appearance.spacing.small
 
         Button {
-            color: Colours.palette.m3secondaryContainer
-            onColor: Colours.palette.m3onSecondaryContainer
+            color: Signal.palette.cueWell
+            onColor: Signal.palette.onCueWell
             text: root.client?.lastIpcObject.floating ? qsTr("Tile") : qsTr("Float")
 
             function onClicked(): void {
@@ -123,8 +123,8 @@ ColumnLayout {
             Layout.rightMargin: active ? 0 : -parent.spacing
 
             sourceComponent: Button {
-                color: Colours.palette.m3secondaryContainer
-                onColor: Colours.palette.m3onSecondaryContainer
+                color: Signal.palette.cueWell
+                onColor: Signal.palette.onCueWell
                 text: root.client?.lastIpcObject.pinned ? qsTr("Unpin") : qsTr("Pin")
 
                 function onClicked(): void {
@@ -134,8 +134,8 @@ ColumnLayout {
         }
 
         Button {
-            color: Colours.palette.m3errorContainer
-            onColor: Colours.palette.m3onErrorContainer
+            color: Signal.palette.alertWell
+            onColor: Signal.palette.onAlertWell
             text: qsTr("Kill")
 
             function onClicked(): void {
@@ -145,7 +145,7 @@ ColumnLayout {
     }
 
     component Button: StyledRect {
-        property color onColor: Colours.palette.m3onSurface
+        property color onColor: Signal.palette.ink
         property alias disabled: stateLayer.disabled
         property alias text: label.text
 

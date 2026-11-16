@@ -48,8 +48,8 @@ Item {
 
         spacing: Appearance.spacing.normal
 
-        MaterialIcon {
-            text: "function"
+        Glyph {
+            name: "function"
             font.pointSize: Appearance.font.size.extraLarge
             Layout.alignment: Qt.AlignVCenter
         }
@@ -59,10 +59,10 @@ Item {
 
             color: {
                 if (root.math.length > 0 && !root.result.ok)
-                    return Colours.palette.m3error;
+                    return Signal.palette.alert;
                 if (!root.math)
-                    return Colours.palette.m3onSurfaceVariant;
-                return Colours.palette.m3onSurface;
+                    return Signal.palette.inkMuted;
+                return Signal.palette.ink;
             }
 
             text: root.math.length === 0 ? qsTr("Type an expression to calculate") : (root.result.ok ? qsTr("%1 = %2").arg(root.math).arg(root.result.text) : qsTr("Error"))
@@ -73,7 +73,7 @@ Item {
         }
 
         StyledRect {
-            color: Colours.palette.m3tertiary
+            color: Signal.palette.phosphor
             radius: Appearance.rounding.normal
             clip: true
 
@@ -85,7 +85,7 @@ Item {
             StateLayer {
                 id: stateLayer
 
-                color: Colours.palette.m3onTertiary
+                color: Signal.palette.onPhosphor
 
                 function onClicked(): void {
                     Quickshell.execDetached(["app2unit", "--", ...Config.general.apps.terminal, "fish", "-C", `exec qalc -i '${root.math}'`]);
@@ -101,7 +101,7 @@ Item {
                 anchors.rightMargin: Appearance.spacing.small
 
                 text: qsTr("Open in calculator")
-                color: Colours.palette.m3onTertiary
+                color: Signal.palette.onPhosphor
                 font.pointSize: Appearance.font.size.normal
 
                 opacity: stateLayer.containsMouse ? 1 : 0
@@ -111,21 +111,21 @@ Item {
                 }
             }
 
-            MaterialIcon {
+            Glyph {
                 id: icon
 
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.right: parent.right
                 anchors.rightMargin: Appearance.padding.normal
 
-                text: "open_in_new"
-                color: Colours.palette.m3onTertiary
+                name: "external-link"
+                color: Signal.palette.onPhosphor
                 font.pointSize: Appearance.font.size.large
             }
 
             Behavior on implicitWidth {
                 Anim {
-                    easing.bezierCurve: Appearance.anim.curves.emphasized
+                    easing.bezierCurve: Appearance.anim.curves.standard
                 }
             }
         }

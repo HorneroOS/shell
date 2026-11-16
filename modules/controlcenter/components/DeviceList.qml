@@ -69,7 +69,7 @@ ColumnLayout {
         visible: root.description !== ""
         Layout.fillWidth: true
         text: root.description
-        color: Colours.palette.m3outline
+        color: Signal.palette.ruleStrong
     }
 
     StyledListView {

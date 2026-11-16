@@ -14,7 +14,7 @@ StyledRect {
     implicitWidth: Sizes.sidebarWidth
     implicitHeight: inner.implicitHeight + Appearance.padding.normal * 2
 
-    color: Colours.tPalette.m3surfaceContainer
+    color: Signal.tPalette.panel
 
     ColumnLayout {
         id: inner
@@ -30,7 +30,7 @@ StyledRect {
             Layout.topMargin: Appearance.padding.small / 2
             Layout.bottomMargin: Appearance.spacing.normal
             text: qsTr("Files")
-            color: Colours.palette.m3onSurface
+            color: Signal.palette.ink
             font.pointSize: Appearance.font.size.larger
             font.bold: true
         }
@@ -48,10 +48,10 @@ StyledRect {
                 implicitHeight: placeInner.implicitHeight + Appearance.padding.normal * 2
 
                 radius: Appearance.rounding.full
-                color: Qt.alpha(Colours.palette.m3secondaryContainer, selected ? 1 : 0)
+                color: Qt.alpha(Signal.palette.cueWell, selected ? 1 : 0)
 
                 StateLayer {
-                    color: place.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                    color: place.selected ? Signal.palette.onCueWell : Signal.palette.ink
 
                     function onClicked(): void {
                         if (place.modelData === "Home")
@@ -71,38 +71,33 @@ StyledRect {
 
                     spacing: Appearance.spacing.normal
 
-                    MaterialIcon {
-                        text: {
+                    Glyph {
+                        name: {
                             const p = place.modelData;
                             if (p === "Home")
                                 return "home";
                             if (p === "Downloads")
-                                return "file_download";
+                                return "file-download";
                             if (p === "Desktop")
-                                return "desktop_windows";
+                                return "device-desktop";
                             if (p === "Documents")
-                                return "description";
+                                return "file-text";
                             if (p === "Music")
-                                return "music_note";
+                                return "music";
                             if (p === "Pictures")
-                                return "image";
+                                return "photo";
                             if (p === "Videos")
-                                return "video_library";
+                                return "movie";
                             return "folder";
                         }
-                        color: place.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                        color: place.selected ? Signal.palette.onCueWell : Signal.palette.ink
                         font.pointSize: Appearance.font.size.large
-                        fill: place.selected ? 1 : 0
-
-                        Behavior on fill {
-                            Anim {}
-                        }
                     }
 
                     StyledText {
                         Layout.fillWidth: true
                         text: place.modelData
-                        color: place.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                        color: place.selected ? Signal.palette.onCueWell : Signal.palette.ink
                         font.pointSize: Appearance.font.size.normal
                         elide: Text.ElideRight
                     }

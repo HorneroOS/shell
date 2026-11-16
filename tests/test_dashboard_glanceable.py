@@ -15,5 +15,5 @@ def test_resource_bars_show_and_announce_their_value():
 
 def test_inactive_quick_toggles_have_a_visible_container():
     src = (DASH / "QuickToggles.qml").read_text(encoding="utf-8")
-    assert ": Colours.palette.m3surfaceContainerHighest" in src
+    assert ": Signal.palette.lifted" in src
     assert "Accessible.name: chip.description" in src

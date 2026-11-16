@@ -58,7 +58,7 @@ StyledRect {
     visible: root.surfaceActive && root.count > 0 && (root.vertical ? height > 0 : width > 0)
     implicitWidth: root.vertical ? Config.bar.sizes.innerWidth : root.nonAnimWidth
     implicitHeight: root.vertical ? root.nonAnimHeight : Config.bar.sizes.innerWidth
-    color: Qt.alpha(Colours.tPalette.m3surfaceContainer, (root.chip && root.count > 0) ? Colours.tPalette.m3surfaceContainer.a : 0)
+    color: Qt.alpha(Signal.tPalette.panel, (root.chip && root.count > 0) ? Signal.tPalette.panel.a : 0)
     radius: Appearance.rounding.full
 
     Accessible.role: Accessible.Grouping
@@ -95,7 +95,7 @@ StyledRect {
                     properties: "scale"
                     from: 0
                     to: 1
-                    easing.bezierCurve: Appearance.anim.curves.standardDecel
+                    easing.bezierCurve: Appearance.anim.curves.enter
                 }
             }
 
@@ -103,7 +103,7 @@ StyledRect {
                 Anim {
                     properties: "scale"
                     to: 1
-                    easing.bezierCurve: Appearance.anim.curves.standardDecel
+                    easing.bezierCurve: Appearance.anim.curves.enter
                 }
                 Anim {
                     properties: "x,y"
@@ -121,14 +121,13 @@ StyledRect {
                 hiddenIds: Config.bar.extensions.hiddenIcons
                 // Recolour mirrors the tray: icons take the secondary tint;
                 // without it the island leaves plugin icon colours alone.
-                iconColour: Config.bar.extensions.recolour ? Colours.palette.m3secondary : "transparent"
+                iconColour: Config.bar.extensions.recolour ? Signal.palette.cue : "transparent"
                 iconSize: Appearance.font.size.larger
                 textSize: Appearance.font.size.smaller
                 edge: root.hostEdge
                 compact: root.hostCompact
                 thickness: root.hostThickness > 0 ? root.hostThickness : Config.bar.sizes.innerWidth
                 screenName: root.hostScreenName !== "" ? root.hostScreenName : root.screen.name
-    
             }
         }
     }
@@ -146,7 +145,7 @@ StyledRect {
                     properties: "scale"
                     from: 0
                     to: 1
-                    easing.bezierCurve: Appearance.anim.curves.standardDecel
+                    easing.bezierCurve: Appearance.anim.curves.enter
                 }
             }
 
@@ -154,7 +153,7 @@ StyledRect {
                 Anim {
                     properties: "scale"
                     to: 1
-                    easing.bezierCurve: Appearance.anim.curves.standardDecel
+                    easing.bezierCurve: Appearance.anim.curves.enter
                 }
                 Anim {
                     properties: "x,y"
@@ -172,14 +171,13 @@ StyledRect {
                 hiddenIds: Config.bar.extensions.hiddenIcons
                 // Recolour mirrors the tray: icons take the secondary tint;
                 // without it the island leaves plugin icon colours alone.
-                iconColour: Config.bar.extensions.recolour ? Colours.palette.m3secondary : "transparent"
+                iconColour: Config.bar.extensions.recolour ? Signal.palette.cue : "transparent"
                 iconSize: Appearance.font.size.larger
                 textSize: Appearance.font.size.smaller
                 edge: root.hostEdge
                 compact: root.hostCompact
                 thickness: root.hostThickness > 0 ? root.hostThickness : Config.bar.sizes.innerWidth
                 screenName: root.hostScreenName !== "" ? root.hostScreenName : root.screen.name
-    
             }
         }
     }
@@ -198,7 +196,7 @@ StyledRect {
             implicitWidth: root.vertical ? expandIconInner.implicitWidth : expandIconInner.implicitWidth - Appearance.padding.small * 2
             implicitHeight: root.vertical ? expandIconInner.implicitHeight - Appearance.padding.small * 2 : expandIconInner.implicitHeight
 
-            MaterialIcon {
+            Glyph {
                 id: expandIconInner
 
                 anchors.horizontalCenter: root.vertical ? parent.horizontalCenter : undefined
@@ -207,7 +205,7 @@ StyledRect {
                 anchors.verticalCenter: root.vertical ? undefined : parent.verticalCenter
                 anchors.right: root.vertical ? undefined : parent.right
                 anchors.rightMargin: root.vertical ? 0 : (root.chip ? Appearance.padding.small : -Appearance.padding.small)
-                text: root.vertical ? "expand_less" : "chevron_right"
+                name: root.vertical ? "chevron-up" : "chevron-right"
                 font.pointSize: Appearance.font.size.large
                 rotation: root.expanded ? 180 : 0
 
@@ -228,15 +226,15 @@ StyledRect {
 
     Behavior on implicitHeight {
         Anim {
-            duration: Appearance.anim.durations.expressiveDefaultSpatial
-            easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+            duration: Appearance.anim.durations.settle
+            easing.bezierCurve: Appearance.anim.curves.settle
         }
     }
 
     Behavior on implicitWidth {
         Anim {
-            duration: Appearance.anim.durations.expressiveDefaultSpatial
-            easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+            duration: Appearance.anim.durations.settle
+            easing.bezierCurve: Appearance.anim.curves.settle
         }
     }
 }

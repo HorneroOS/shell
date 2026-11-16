@@ -41,6 +41,6 @@ Item {
         variant: "ghost"
         text: i18n.formatDateTime(new Date(), pluginSettings.value("twentyFourHour", true) ? (root.hostCompact ? "HH:mm" : "ddd, HH:mm") : (root.hostCompact ? "h:mm ap" : "ddd, h:mm ap"))
         tooltipText: i18n.tr("Example Clock: activate for details")
-        onClicked: Notifications.toast(i18n.tr("Example Clock"), i18n.tr("This example uses the public PluginKit API.") + " " + i18n.tr("Today is %1").arg(i18n.formatDateTime(new Date(), "dddd, d MMMM")), "schedule")
+        onClicked: Notifications.toast(i18n.tr("Example Clock"), i18n.tr("This example uses the public PluginKit API.") + " " + i18n.tr("Today is %1").arg(i18n.formatDateTime(new Date(), "dddd, d MMMM")), "clock")
     }
 }

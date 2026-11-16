@@ -46,8 +46,8 @@ Item {
             target: root
             property: "implicitHeight"
             to: root.contentHeight
-            duration: Appearance.anim.durations.expressiveDefaultSpatial
-            easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+            duration: Appearance.anim.durations.settle
+            easing.bezierCurve: Appearance.anim.curves.settle
         }
         ScriptAction {
             script: root.implicitHeight = Qt.binding(() => content.implicitHeight)
@@ -64,7 +64,7 @@ Item {
             target: root
             property: "implicitHeight"
             to: 0
-            easing.bezierCurve: Appearance.anim.curves.emphasized
+            easing.bezierCurve: Appearance.anim.curves.standard
         }
     }
 
@@ -92,7 +92,7 @@ Item {
     Timer {
         id: timer
 
-        interval: Appearance.anim.durations.extraLarge
+        interval: Appearance.anim.durations.scan
         onRunningChanged: {
             if (running && !root.shouldBeActive) {
                 content.visible = false;

@@ -40,7 +40,7 @@ Item {
 
     Behavior on playerProgress {
         Anim {
-            duration: Appearance.anim.durations.large
+            duration: Appearance.anim.durations.long
         }
     }
 
@@ -67,7 +67,7 @@ Item {
         readonly property real centerY: height / 2
         readonly property real innerX: cover.implicitWidth / 2 + Appearance.spacing.small
         readonly property real innerY: cover.implicitHeight / 2 + Appearance.spacing.small
-        property color colour: Colours.palette.m3primary
+        property color colour: Signal.palette.signal
 
         anchors.fill: cover
         anchors.margins: -Config.dashboard.sizes.mediaVisualiserSize
@@ -97,7 +97,7 @@ Item {
 
             capStyle: Appearance.rounding.scale === 0 ? ShapePath.SquareCap : ShapePath.RoundCap
             strokeWidth: 360 / Config.services.visualiserBars - Appearance.spacing.small / 4
-            strokeColor: Colours.palette.m3primary
+            strokeColor: Signal.palette.signal
 
             startX: visualiser.centerX + (visualiser.innerX + strokeWidth / 2) * cos
             startY: visualiser.centerY + (visualiser.innerY + strokeWidth / 2) * sin
@@ -123,15 +123,14 @@ Item {
         implicitWidth: Config.dashboard.sizes.mediaCoverArtSize
         implicitHeight: Config.dashboard.sizes.mediaCoverArtSize
 
-        color: Colours.tPalette.m3surfaceContainerHigh
+        color: Signal.tPalette.raised
         radius: Infinity
 
-        MaterialIcon {
+        Glyph {
             anchors.centerIn: parent
 
-            grade: 200
-            text: "art_track"
-            color: Colours.palette.m3onSurfaceVariant
+            name: "playlist"
+            color: Signal.palette.inkMuted
             font.pointSize: (parent.width * 0.4) || 1
         }
 
@@ -166,7 +165,7 @@ Item {
             animate: true
             horizontalAlignment: Text.AlignHCenter
             text: (Players.active?.trackTitle ?? qsTr("No media")) || qsTr("Unknown title")
-            color: Players.active ? Colours.palette.m3primary : Colours.palette.m3onSurface
+            color: Players.active ? Signal.palette.signal : Signal.palette.ink
             font.pointSize: Appearance.font.size.normal
             elide: Text.ElideRight
         }
@@ -181,7 +180,7 @@ Item {
             horizontalAlignment: Text.AlignHCenter
             visible: !!Players.active
             text: Players.active?.trackAlbum || qsTr("Unknown album")
-            color: Colours.palette.m3outline
+            color: Signal.palette.ruleStrong
             font.pointSize: Appearance.font.size.small
             elide: Text.ElideRight
         }
@@ -195,7 +194,7 @@ Item {
             animate: true
             horizontalAlignment: Text.AlignHCenter
             text: (Players.active?.trackArtist ?? qsTr("Play some music for stuff to show up here!")) || qsTr("Unknown artist")
-            color: Players.active ? Colours.palette.m3secondary : Colours.palette.m3outline
+            color: Players.active ? Signal.palette.cue : Signal.palette.ruleStrong
             elide: Text.ElideRight
             wrapMode: Players.active ? Text.NoWrap : Text.WordWrap
         }
@@ -211,7 +210,7 @@ Item {
 
             PlayerControl {
                 type: IconButton.Text
-                icon: "skip_previous"
+                icon: "player-skip-back"
                 accessibleName: qsTr("Previous track")
                 font.pointSize: Math.round(Appearance.font.size.large * 1.5)
                 disabled: !Players.active?.canGoPrevious
@@ -219,7 +218,7 @@ Item {
             }
 
             PlayerControl {
-                icon: Players.active?.isPlaying ? "pause" : "play_arrow"
+                icon: Players.active?.isPlaying ? "player-pause" : "player-play"
                 accessibleName: Players.active?.isPlaying ? qsTr("Pause") : qsTr("Play")
                 label.animate: true
                 toggle: true
@@ -232,7 +231,7 @@ Item {
 
             PlayerControl {
                 type: IconButton.Text
-                icon: "skip_next"
+                icon: "player-skip-forward"
                 accessibleName: qsTr("Next track")
                 font.pointSize: Math.round(Appearance.font.size.large * 1.5)
                 disabled: !Players.active?.canGoNext
@@ -294,7 +293,7 @@ Item {
                 anchors.left: parent.left
 
                 text: root.lengthStr(Players.active?.position ?? -1)
-                color: Colours.palette.m3onSurfaceVariant
+                color: Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.small
             }
 
@@ -304,7 +303,7 @@ Item {
                 anchors.right: parent.right
 
                 text: root.lengthStr(Players.active?.length ?? -1)
-                color: Colours.palette.m3onSurfaceVariant
+                color: Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.small
             }
         }
@@ -315,9 +314,9 @@ Item {
 
             PlayerControl {
                 type: IconButton.Text
-                icon: "move_up"
+                icon: "arrow-bar-up"
                 accessibleName: qsTr("Raise player")
-                inactiveOnColour: Colours.palette.m3secondary
+                inactiveOnColour: Signal.palette.cue
                 padding: Appearance.padding.small
                 font.pointSize: Appearance.font.size.large
                 disabled: !Players.active?.canRaise
@@ -335,7 +334,7 @@ Item {
                 menu.onItemSelected: item => Players.manualActive = (item as PlayerItem).modelData
 
                 menuItems: playerList.instances
-                fallbackIcon: "music_off"
+                fallbackIcon: "music-off"
                 fallbackText: qsTr("No players")
 
                 label.Layout.maximumWidth: slider.implicitWidth * 0.28
@@ -355,9 +354,9 @@ Item {
 
             PlayerControl {
                 type: IconButton.Text
-                icon: "delete"
+                icon: "trash"
                 accessibleName: qsTr("Quit player")
-                inactiveOnColour: Colours.palette.m3error
+                inactiveOnColour: Signal.palette.alert
                 padding: Appearance.padding.small
                 font.pointSize: Appearance.font.size.large
                 disabled: !Players.active?.canQuit
@@ -395,19 +394,19 @@ Item {
 
         icon: modelData === Players.active ? "check" : ""
         text: Players.getIdentity(modelData)
-        activeIcon: "animated_images"
+        activeIcon: "gif"
     }
 
     component PlayerControl: IconButton {
         Layout.preferredWidth: implicitWidth + (stateLayer.pressed ? Appearance.padding.large : internalChecked ? Appearance.padding.smaller : 0)
         radius: stateLayer.pressed ? Appearance.rounding.small / 2 : internalChecked ? Appearance.rounding.small : implicitHeight / 2
-        radiusAnim.duration: Appearance.anim.durations.expressiveFastSpatial
-        radiusAnim.easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+        radiusAnim.duration: Appearance.anim.durations.settleFast
+        radiusAnim.easing.bezierCurve: Appearance.anim.curves.settleFast
 
         Behavior on Layout.preferredWidth {
             Anim {
-                duration: Appearance.anim.durations.expressiveFastSpatial
-                easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+                duration: Appearance.anim.durations.settleFast
+                easing.bezierCurve: Appearance.anim.curves.settleFast
             }
         }
     }

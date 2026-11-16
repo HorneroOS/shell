@@ -10,7 +10,7 @@ StyledRect {
     anchors.right: parent.right
     anchors.margins: Appearance.padding.normal
 
-    color: Colours.palette.m3tertiary
+    color: Signal.palette.phosphor
     radius: Appearance.rounding.small
 
     implicitWidth: count.implicitWidth + Appearance.padding.normal * 2
@@ -33,19 +33,19 @@ StyledRect {
         anchors.centerIn: parent
         animate: parent.opacity > 0
         text: qsTr("+%1").arg(parent.extra)
-        color: Colours.palette.m3onTertiary
+        color: Signal.palette.onPhosphor
     }
 
     Behavior on opacity {
         Anim {
-            duration: Appearance.anim.durations.expressiveFastSpatial
+            duration: Appearance.anim.durations.settleFast
         }
     }
 
     Behavior on scale {
         Anim {
-            duration: Appearance.anim.durations.expressiveFastSpatial
-            easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+            duration: Appearance.anim.durations.settleFast
+            easing.bezierCurve: Appearance.anim.curves.settleFast
         }
     }
 }

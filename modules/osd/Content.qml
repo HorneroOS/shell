@@ -100,7 +100,7 @@ Item {
                 FilledSlider {
                     anchors.fill: parent
 
-                    icon: `brightness_${(Math.round(value * 6) + 1)}`
+                    icon: value < 0.34 ? "brightness-down" : value < 0.67 ? "brightness-half" : "brightness-up"
                     accessibleName: qsTr("Brightness")
                     value: root.brightness
                     onMoved: root.monitor?.setBrightness(value)
@@ -119,7 +119,7 @@ Item {
 
         Behavior on Layout.preferredHeight {
             Anim {
-                easing.bezierCurve: Appearance.anim.curves.emphasized
+                easing.bezierCurve: Appearance.anim.curves.standard
             }
         }
 

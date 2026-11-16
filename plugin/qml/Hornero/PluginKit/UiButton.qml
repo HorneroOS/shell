@@ -91,11 +91,10 @@ Button {
     // the host Loader (which clips at the rail edge).
     implicitWidth: root.railCompact ? Math.min(root.railWidth, contentItem.implicitWidth + root.leftPadding + root.rightPadding) : contentItem.implicitWidth + root.leftPadding + root.rightPadding
 
-    // Optional Material Symbols icon (native bar items are icon buttons).
+    // Optional Hornero Glyph name (native bar items are icon buttons).
     // Icon only: leave text empty; give the button an accessibleName.
     // (Named iconName: AbstractButton already has a FINAL `icon` group.)
     property string iconName: ""
-    property real iconFill: 0
 
     contentItem: Item {
         implicitWidth: layout.implicitWidth
@@ -115,7 +114,6 @@ Button {
             UiIcon {
                 visible: root.iconName.length > 0
                 icon: root.iconName
-                fill: root.iconFill
                 color: root.labelColor
                 // Icon-only bar buttons use the native bar icon size.
                 role: root.inBar && root.text.length === 0 ? "large" : "body"

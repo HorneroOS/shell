@@ -33,7 +33,7 @@ Item {
             Anim {
                 target: root
                 property: "implicitWidth"
-                easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                easing.bezierCurve: Appearance.anim.curves.settle
             }
         },
         Transition {
@@ -43,7 +43,7 @@ Item {
             Anim {
                 target: root
                 property: "implicitWidth"
-                easing.bezierCurve: root.panels.osd.width > 0 ? Appearance.anim.curves.expressiveDefaultSpatial : Appearance.anim.curves.emphasized
+                easing.bezierCurve: root.panels.osd.width > 0 ? Appearance.anim.curves.settle : Appearance.anim.curves.standard
             }
         }
     ]

@@ -37,23 +37,23 @@ Item {
 
         radius: Appearance.rounding.normal
         color: root.isActive
-            ? Colours.tPalette.m3primaryContainer
+            ? Signal.tPalette.signalWell
             : root.isSelected
-                ? Colours.tPalette.m3secondaryContainer
-                : Colours.tPalette.m3surfaceContainerHigh
+                ? Signal.tPalette.cueWell
+                : Signal.tPalette.raised
 
         Behavior on color {
             ColorAnimation {
-                duration: Appearance.anim.durations.small
+                duration: Appearance.anim.durations.short
             }
         }
 
         StateLayer {
             color: root.isActive
-                ? Colours.palette.m3onPrimaryContainer
+                ? Signal.palette.onSignalWell
                 : root.isSelected
-                    ? Colours.palette.m3onSecondaryContainer
-                    : Colours.palette.m3onSurface
+                    ? Signal.palette.onCueWell
+                    : Signal.palette.ink
 
             function onClicked(): void {
                 root.clicked();
@@ -76,10 +76,10 @@ Item {
                     font.pointSize: Appearance.font.size.normal
                     font.weight: 700
                     color: root.isActive
-                        ? Colours.palette.m3onPrimaryContainer
+                        ? Signal.palette.onSignalWell
                         : root.isSelected
-                            ? Colours.palette.m3onSecondaryContainer
-                            : Colours.palette.m3primary
+                            ? Signal.palette.onCueWell
+                            : Signal.palette.signal
                 }
 
                 StyledText {
@@ -88,10 +88,10 @@ Item {
                     visible: !Compositor.isNiri && text !== ""
                     font.pointSize: Appearance.font.size.small
                     color: root.isActive
-                        ? Colours.palette.m3onPrimaryContainer
+                        ? Signal.palette.onSignalWell
                         : root.isSelected
-                            ? Colours.palette.m3onSecondaryContainer
-                            : Colours.palette.m3onSurfaceVariant
+                            ? Signal.palette.onCueWell
+                            : Signal.palette.inkMuted
                     elide: Text.ElideRight
                 }
 
@@ -100,8 +100,8 @@ Item {
                     text: root.windowCount > 0 ? String(root.windowCount) : ""
                     font.pointSize: Appearance.font.size.smaller
                     color: root.isActive
-                        ? Colours.palette.m3onPrimaryContainer
-                        : Colours.palette.m3onSurfaceVariant
+                        ? Signal.palette.onSignalWell
+                        : Signal.palette.inkMuted
                     visible: root.windowCount > 0
                 }
             }
@@ -114,15 +114,15 @@ Item {
                 Repeater {
                     model: Math.min(root.wsToplevels.length, Config.dashboard.workspaces.maxAppIcons)
 
-                    MaterialIcon {
+                    Glyph {
                         required property int index
 
-                        text: Icons.getAppCategoryIcon(Compositor.isNiri ? root.wsToplevels[index]?.app_id ?? "" : root.wsToplevels[index]?.lastIpcObject?.class ?? "", "terminal")
+                        name: Icons.getAppCategoryIcon(Compositor.isNiri ? root.wsToplevels[index]?.app_id ?? "" : root.wsToplevels[index]?.lastIpcObject?.class ?? "", "terminal")
                         color: root.isActive
-                            ? Colours.palette.m3onPrimaryContainer
+                            ? Signal.palette.onSignalWell
                             : root.isSelected
-                                ? Colours.palette.m3onSecondaryContainer
-                                : Colours.palette.m3onSurfaceVariant
+                                ? Signal.palette.onCueWell
+                                : Signal.palette.inkMuted
                         font.pointSize: Appearance.font.size.normal
                         opacity: 0.85
                     }
@@ -133,8 +133,8 @@ Item {
                     text: qsTr("+%1").arg(root.wsToplevels.length - Config.dashboard.workspaces.maxAppIcons)
                     font.pointSize: Appearance.font.size.smaller
                     color: root.isActive
-                        ? Colours.palette.m3onPrimaryContainer
-                        : Colours.palette.m3onSurfaceVariant
+                        ? Signal.palette.onSignalWell
+                        : Signal.palette.inkMuted
                     anchors.verticalCenter: parent.verticalCenter
                 }
             }

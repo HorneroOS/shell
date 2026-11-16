@@ -62,10 +62,11 @@ action) stay unfocusable. Never add tab stops to decoration.
 - Shape: 2 px solid ring, 2 px outside the control outline, radius
   following the control. Never a border-width flip on the control
   itself (that shifts layout, as the old ActionCard ring did).
-- Color: `Colours.focusRing` (`m3primary`, theme-derived, so Dark /
-  Light / Pampa follow automatically). Distinct by construction:
-  hover is an 8% wash, pressed adds ripple, selected fills —
-  the ring is the only primary outline floating off-shape.
+- Color: `Signal.palette.focus` (the Hornero Signal `focus` role, celeste
+  `cue` by default, theme-derived, so Night / Day / High Contrast follow
+  automatically). Distinct by construction: hover is an 8% wash, pressed
+  adds ripple, selected fills — the ring is the only focus-coloured
+  outline floating off-shape.
 - Contrast is verified by pixel inspection per theme (S4 evidence),
   not by token name.
 

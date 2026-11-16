@@ -270,9 +270,25 @@ def _token_ref_is_valid(parts, leaves):
     return True
 
 
+def _motion_tokens():
+    """Derived motion tokens declared in config/Appearance.qml."""
+    text = (CONFIG_DIR / "Appearance.qml").read_text()
+
+    def names(component):
+        body = text.split(f"component {component}: QtObject {{", 1)[1].split("\n    }", 1)[0]
+        return re.findall(r"readonly property [\w.<>]+ (\w+):", body)
+
+    tokens = {f"anim.{n}" for n in names("Motion") if not n.startswith("_")}
+    tokens |= {f"anim.curves.{n}" for n in names("Curves")}
+    durations = text.split("readonly property var durations: ({", 1)[1].split("})", 1)[0]
+    tokens |= {f"anim.durations.{n}" for n in re.findall(r'"(\w+)":', durations)}
+    return tokens
+
+
 def test_every_appearance_token_reference_exists():
-    leaves = set(_schema_for_file(CONFIG_DIR / "AppearanceConfig.qml"))
+    leaves = set(_schema_for_file(CONFIG_DIR / "AppearanceConfig.qml")) | _motion_tokens()
     assert "spacing.normal" in leaves and "font.size.small" in leaves
+    assert "anim.durations.settle" in leaves and "anim.curves.sweep" in leaves
     bad = []
     seen = 0
     for path in _qml_files():
@@ -285,6 +301,7 @@ def test_every_appearance_token_reference_exists():
     assert seen > 500, "token scan found suspiciously few references"
     assert not bad, (
         "QML references Appearance tokens not declared in "
-        "config/AppearanceConfig.qml (they evaluate to undefined/NaN):\n"
+        "config/AppearanceConfig.qml or config/Appearance.qml (they evaluate "
+        "to undefined/NaN):\n"
         + "\n".join(bad)
     )

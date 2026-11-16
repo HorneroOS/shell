@@ -47,7 +47,7 @@ StyledRect {
     implicitWidth: vertical ? Config.bar.sizes.innerWidth : nonAnimWidth
     implicitHeight: vertical ? nonAnimHeight : Config.bar.sizes.innerWidth
 
-    color: Qt.alpha(Colours.tPalette.m3surfaceContainer, (root.chip && items.count > 0) ? Colours.tPalette.m3surfaceContainer.a : 0)
+    color: Qt.alpha(Signal.tPalette.panel, (root.chip && items.count > 0) ? Signal.tPalette.panel.a : 0)
     radius: Appearance.rounding.full
 
     Loader {
@@ -82,7 +82,7 @@ StyledRect {
                     properties: "scale"
                     from: 0
                     to: 1
-                    easing.bezierCurve: Appearance.anim.curves.standardDecel
+                    easing.bezierCurve: Appearance.anim.curves.enter
                 }
             }
 
@@ -90,7 +90,7 @@ StyledRect {
                 Anim {
                     properties: "scale"
                     to: 1
-                    easing.bezierCurve: Appearance.anim.curves.standardDecel
+                    easing.bezierCurve: Appearance.anim.curves.enter
                 }
                 Anim {
                     properties: "x,y"
@@ -120,7 +120,7 @@ StyledRect {
                     properties: "scale"
                     from: 0
                     to: 1
-                    easing.bezierCurve: Appearance.anim.curves.standardDecel
+                    easing.bezierCurve: Appearance.anim.curves.enter
                 }
             }
 
@@ -128,7 +128,7 @@ StyledRect {
                 Anim {
                     properties: "scale"
                     to: 1
-                    easing.bezierCurve: Appearance.anim.curves.standardDecel
+                    easing.bezierCurve: Appearance.anim.curves.enter
                 }
                 Anim {
                     properties: "x,y"
@@ -159,7 +159,7 @@ StyledRect {
             implicitWidth: root.vertical ? expandIconInner.implicitWidth : expandIconInner.implicitWidth - Appearance.padding.small * 2
             implicitHeight: root.vertical ? expandIconInner.implicitHeight - Appearance.padding.small * 2 : expandIconInner.implicitHeight
 
-            MaterialIcon {
+            Glyph {
                 id: expandIconInner
 
                 anchors.horizontalCenter: root.vertical ? parent.horizontalCenter : undefined
@@ -168,7 +168,7 @@ StyledRect {
                 anchors.verticalCenter: root.vertical ? undefined : parent.verticalCenter
                 anchors.right: root.vertical ? undefined : parent.right
                 anchors.rightMargin: root.vertical ? 0 : (root.chip ? Appearance.padding.small : -Appearance.padding.small)
-                text: root.vertical ? "expand_less" : "chevron_right"
+                name: root.vertical ? "chevron-up" : "chevron-right"
                 font.pointSize: Appearance.font.size.large
                 rotation: root.expanded ? 180 : 0
 
@@ -189,15 +189,15 @@ StyledRect {
 
     Behavior on implicitHeight {
         Anim {
-            duration: Appearance.anim.durations.expressiveDefaultSpatial
-            easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+            duration: Appearance.anim.durations.settle
+            easing.bezierCurve: Appearance.anim.curves.settle
         }
     }
 
     Behavior on implicitWidth {
         Anim {
-            duration: Appearance.anim.durations.expressiveDefaultSpatial
-            easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+            duration: Appearance.anim.durations.settle
+            easing.bezierCurve: Appearance.anim.curves.settle
         }
     }
 }

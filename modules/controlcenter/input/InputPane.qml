@@ -225,14 +225,14 @@ Item {
                     Layout.fillWidth: true
                     text: qsTr("Keyboard layout, layout list and pointer/keyboard tuning; keybindings live in the Keybinds pane.")
                     font.pointSize: Appearance.font.size.small
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                     wrapMode: Text.Wrap
                 }
 
                 StyledRect {
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
-                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: kbCol.implicitHeight + Appearance.padding.large * 2
 
                     ColumnLayout {
@@ -253,7 +253,7 @@ Item {
                             text: root.layoutText
                             font.family: Appearance.font.family.mono
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3onSurface
+                            color: Signal.palette.ink
                             wrapMode: Text.Wrap
                         }
 
@@ -291,7 +291,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Layout list (comma-separated XKB names, e.g. us,latam)")
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
 
@@ -328,7 +328,7 @@ Item {
                             visible: root.layoutCount > 0
                             text: qsTr("%1 XKB layouts available on this system (horneroctl hardware keyboard layout --list)").arg(root.layoutCount)
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3outline
+                            color: Signal.palette.ruleStrong
                             wrapMode: Text.Wrap
                         }
 
@@ -337,7 +337,7 @@ Item {
                             visible: root.actionText !== ""
                             text: root.actionText
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
                     }
@@ -346,7 +346,7 @@ Item {
                 StyledRect {
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
-                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: pointerCol.implicitHeight + Appearance.padding.large * 2
 
                     ColumnLayout {
@@ -367,7 +367,7 @@ Item {
                             visible: root.compositor !== "hyprland"
                             text: qsTr("Pointer tuning needs the Hyprland backend (horneroctl hypr input); on this compositor it is unavailable and nothing is faked.")
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
 
@@ -455,7 +455,7 @@ Item {
                                 visible: root.actionText !== ""
                                 text: root.actionText
                                 font.pointSize: Appearance.font.size.small
-                                color: Colours.palette.m3onSurfaceVariant
+                                color: Signal.palette.inkMuted
                                 wrapMode: Text.Wrap
                             }
                         }
@@ -465,7 +465,7 @@ Item {
                 StyledRect {
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
-                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: restoreCol.implicitHeight + Appearance.padding.large * 2
 
                     ColumnLayout {
@@ -485,7 +485,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Re-apply the persisted keyboard layout, pointer/keyboard tuning and cursor size. Each restore asks for a second click to confirm.")
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
 

@@ -61,7 +61,7 @@ Item {
                     StyledRect {
                         visible: Notifs.notClosed.length > 0
                         radius: Appearance.rounding.full
-                        color: Colours.palette.m3primary
+                        color: Signal.palette.signal
                         implicitWidth: Math.max(implicitHeight, badgeText.implicitWidth + Appearance.padding.smaller * 2)
                         implicitHeight: badgeText.implicitHeight + Appearance.padding.smaller
 
@@ -70,7 +70,7 @@ Item {
 
                             anchors.centerIn: parent
                             text: Notifs.notClosed.length
-                            color: Colours.palette.m3onPrimary
+                            color: Signal.palette.onSignal
                             font.pointSize: Appearance.font.size.smaller
                             font.weight: 600
                         }
@@ -81,7 +81,7 @@ Item {
                 StyledRect {
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
-                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: dndCol.implicitHeight + Appearance.padding.large * 2
 
                     ColumnLayout {
@@ -105,7 +105,7 @@ Item {
                 StyledRect {
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
-                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: behaviorCol.implicitHeight + Appearance.padding.large * 2
 
                     ColumnLayout {
@@ -166,7 +166,7 @@ Item {
                 StyledRect {
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
-                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: lockCol.implicitHeight + Appearance.padding.large * 2
 
                     ColumnLayout {
@@ -197,7 +197,7 @@ Item {
                 StyledRect {
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
-                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: toastsCol.implicitHeight + Appearance.padding.large * 2
 
                     ColumnLayout {
@@ -318,7 +318,7 @@ Item {
                 StyledRect {
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
-                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: historyCol.implicitHeight + Appearance.padding.large * 2
 
                     ColumnLayout {
@@ -352,7 +352,7 @@ Item {
                         StyledText {
                             visible: Notifs.notClosed.length === 0
                             text: qsTr("No pending notifications")
-                            color: Colours.palette.m3outline
+                            color: Signal.palette.ruleStrong
                             font.pointSize: Appearance.font.size.small
                         }
 
@@ -366,7 +366,7 @@ Item {
 
                                 Layout.fillWidth: true
                                 radius: Appearance.rounding.small
-                                color: Colours.layer(Colours.palette.m3surfaceContainerHigh, 1)
+                                color: Signal.layer(Signal.palette.raised, 1)
                                 implicitHeight: notifRow.implicitHeight + Appearance.padding.normal * 2
 
                                 RowLayout {
@@ -392,7 +392,7 @@ Item {
                                             visible: text !== ""
                                             Layout.fillWidth: true
                                             text: notifCard.modelData.body || ""
-                                            color: Colours.palette.m3onSurfaceVariant
+                                            color: Signal.palette.inkMuted
                                             font.pointSize: Appearance.font.size.smaller
                                             elide: Text.ElideRight
                                             maximumLineCount: 2

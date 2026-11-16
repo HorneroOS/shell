@@ -37,12 +37,12 @@ CollapsibleSection {
         StyledRect {
             id: customLookNotice
 
-            readonly property bool savedThemeMissing: !!Colours.themeId && !Themes.themeById(Colours.themeId)
-            visible: ThemeCatalogue.loaded && Colours.themeStateReady && (!Colours.themeId || savedThemeMissing)
+            readonly property bool savedThemeMissing: !!Signal.themeId && !Themes.themeById(Signal.themeId)
+            visible: ThemeCatalogue.loaded && Signal.themeStateReady && (!Signal.themeId || savedThemeMissing)
             Layout.fillWidth: true
             implicitHeight: customLookRow.implicitHeight + Appearance.padding.normal * 2
             radius: Appearance.rounding.normal
-            color: Qt.alpha(Colours.tPalette.m3secondaryContainer, 0.38)
+            color: Qt.alpha(Signal.tPalette.cueWell, 0.38)
 
             RowLayout {
                 id: customLookRow
@@ -50,11 +50,10 @@ CollapsibleSection {
                 anchors.margins: Appearance.padding.normal
                 spacing: Appearance.spacing.normal
 
-                MaterialIcon {
-                    text: Colours.scheme === "dynamic" ? "wallpaper" : "palette"
-                    color: Colours.palette.m3primary
+                Glyph {
+                    name: "palette"
+                    color: Signal.palette.signal
                     font.pointSize: Appearance.font.size.large
-                    fill: 1
                 }
 
                 ColumnLayout {
@@ -64,7 +63,7 @@ CollapsibleSection {
                     StyledText {
                         text: customLookNotice.savedThemeMissing
                             ? qsTr("Saved theme is unavailable")
-                            : Colours.scheme === "dynamic" ? qsTr("Following your wallpaper") : qsTr("Custom appearance")
+                            : qsTr("Custom appearance")
                         font.pointSize: Appearance.font.size.normal
                         font.weight: 500
                     }
@@ -73,11 +72,9 @@ CollapsibleSection {
                         Layout.fillWidth: true
                         text: customLookNotice.savedThemeMissing
                             ? qsTr("The saved theme pack is no longer installed. Your current look is kept; choose an available theme below to restore a curated look.")
-                            : Colours.scheme === "dynamic"
-                                ? qsTr("Colors are generated from your current background. Choose a theme below to switch to a curated look.")
-                                : qsTr("Your current colors and app styling are a custom combination. Choose a theme below to switch to a curated look.")
+                            : qsTr("Your current colors and app styling are a custom combination. Choose a theme below to switch to a curated look.")
                         font.pointSize: Appearance.font.size.small
-                        color: Colours.palette.m3onSurfaceVariant
+                        color: Signal.palette.inkMuted
                         wrapMode: Text.WordWrap
                     }
                 }
@@ -97,7 +94,7 @@ CollapsibleSection {
                 spacing: 0
 
                 readonly property bool isStaged: modelData.id === previewController.pendingThemeId
-                readonly property bool isCurrent: Colours.themeStateReady && !!Colours.themeId && modelData.id === Colours.themeId
+                readonly property bool isCurrent: Signal.themeStateReady && !!Signal.themeId && modelData.id === Signal.themeId
                 readonly property bool isExpanded: modelData.id === sectionRoot.selectedThemeId
                 readonly property string collectionId: modelData.collection === "hornero-originals" ? "hornero-originals" : "other"
                 readonly property bool showCollectionHeading: index === 0 || collectionId !== (Themes.list[index - 1]?.collection === "hornero-originals" ? "hornero-originals" : "other")
@@ -105,8 +102,8 @@ CollapsibleSection {
                 readonly property bool missingIconTheme: ThemeCatalogue.iconThemesLoaded && !ThemeCatalogue.iconThemesFailed && !!modelData.iconTheme && ThemeCatalogue.iconThemes.indexOf(modelData.iconTheme) < 0
                 readonly property bool gtkAvailabilityUnknown: ThemeCatalogue.gtkThemesFailed
                 readonly property bool iconAvailabilityUnknown: ThemeCatalogue.iconThemesFailed
-                readonly property bool missingWallpaper: !Colours.isBuiltInTheme(modelData.id) && !modelData.colorOnly && !Themes.hasAvailableWallpaper(modelData) && !Wallpapers.actualCurrent
-                readonly property bool missingCurrentWallpaper: modelData.colorOnly && !Themes.hasAvailableWallpaper(modelData) && !Wallpapers.actualCurrent
+                readonly property bool missingWallpaper: !Signal.isBuiltInTheme(modelData.id) && !modelData.colorOnly && !Themes.hasAvailableWallpaper(modelData) && !Wallpapers.actualCurrent
+                readonly property bool missingCurrentWallpaper: !Signal.isBuiltInTheme(modelData.id) && modelData.colorOnly && !Themes.hasAvailableWallpaper(modelData) && !Wallpapers.actualCurrent
                 readonly property bool appearanceChoicesLoading: ThemeCatalogue.appearanceChoicesLoading
                 readonly property bool appearanceChoicesUnknown: gtkAvailabilityUnknown || iconAvailabilityUnknown
                 readonly property bool hasUnavailableStyle: missingGtkTheme || missingIconTheme || appearanceChoicesUnknown
@@ -170,9 +167,9 @@ CollapsibleSection {
 
                         StyledText {
                             visible: themeItem.collectionId === "hornero-originals"
-                            text: qsTr("First-party looks, from warm clay and grassland to glacier, wetlands, mineral light and the city at night.")
+                            text: qsTr("First-party Hornero Signal looks: graphite night, drafting-paper day and high contrast.")
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             wrapMode: Text.WordWrap
                             Layout.fillWidth: true
                         }
@@ -182,10 +179,10 @@ CollapsibleSection {
                 StyledRect {
                     Layout.fillWidth: true
 
-                    color: Qt.alpha(Colours.tPalette.m3surfaceContainer, themeItem.isStaged ? Colours.tPalette.m3surfaceContainer.a : 0)
+                    color: Qt.alpha(Signal.tPalette.panel, themeItem.isStaged ? Signal.tPalette.panel.a : 0)
                     radius: Appearance.rounding.normal
                     border.width: themeItem.isStaged ? 1 : 0
-                    border.color: Colours.palette.m3primary
+                    border.color: Signal.palette.signal
 
                     Interactive {
                         disabled: themeItem.cannotApply
@@ -231,7 +228,7 @@ CollapsibleSection {
                                     implicitWidth: 72
                                     implicitHeight: 40
                                     radius: Appearance.rounding.small
-                                    color: Colours.tPalette.m3surfaceContainer
+                                    color: Signal.tPalette.panel
                                     Accessible.name: themePreviewImage.status === Image.Ready
                                         ? qsTr("Theme preview") : themeItem.missingWallpaper || themeItem.missingCurrentWallpaper
                                             ? themeItem.readinessText : qsTr("Theme preview unavailable")
@@ -249,11 +246,11 @@ CollapsibleSection {
                                         spacing: 1
                                         visible: themePreviewImage.status !== Image.Ready
 
-                                        MaterialIcon {
+                                        Glyph {
                                             anchors.horizontalCenter: parent.horizontalCenter
-                                            text: themeItem.modelData.colorOnly ? "palette" : themeItem.hasReadinessNotice ? "wallpaper" : themePreviewImage.status === Image.Loading ? "wallpaper" : "image_not_supported"
+                                            name: themeItem.modelData.colorOnly ? "palette" : themeItem.hasReadinessNotice ? "wallpaper" : themePreviewImage.status === Image.Loading ? "wallpaper" : "photo-off"
                                             font.pointSize: Appearance.font.size.small
-                                            color: Colours.palette.m3outline
+                                            color: Signal.palette.ruleStrong
                                         }
                                     }
                                 }
@@ -273,7 +270,7 @@ CollapsibleSection {
                                     width: parent.width
                                     text: modelData.description ?? ""
                                     font.pointSize: Appearance.font.size.small
-                                    color: Colours.palette.m3outline
+                                    color: Signal.palette.ruleStrong
                                     elide: Text.ElideRight
                                     maximumLineCount: 2
                                     wrapMode: Text.WordWrap
@@ -284,18 +281,17 @@ CollapsibleSection {
                                     width: parent.width
                                     text: themeItem.readinessText
                                     font.pointSize: Appearance.font.size.smaller
-                                    color: Colours.palette.m3tertiary
+                                    color: Signal.palette.phosphor
                                     elide: Text.ElideRight
                                     maximumLineCount: 1
                                     Accessible.name: themeItem.readinessText
                                     Accessible.description: themeItem.readinessDetails
                                 }
-
                             }
 
                             StyledRect {
                                 radius: Appearance.rounding.full
-                                color: Qt.alpha(Colours.palette.m3secondaryContainer, 0.6)
+                                color: Qt.alpha(Signal.palette.cueWell, 0.6)
                                 implicitWidth: modeChip.implicitWidth + Appearance.padding.small * 2
                                 implicitHeight: modeChip.implicitHeight + Appearance.padding.smaller * 2
 
@@ -304,14 +300,14 @@ CollapsibleSection {
                                     anchors.centerIn: parent
                                     text: modelData.darkMode ? qsTr("Dark") : qsTr("Light")
                                     font.pointSize: Appearance.font.size.smaller
-                                    color: Colours.palette.m3onSecondaryContainer
+                                    color: Signal.palette.onCueWell
                                 }
                             }
 
                             StyledRect {
                                 visible: themeItem.isCurrent && !themeItem.isStaged
                                 radius: Appearance.rounding.full
-                                color: Qt.alpha(Colours.palette.m3primaryContainer, 0.75)
+                                color: Qt.alpha(Signal.palette.signalWell, 0.75)
                                 implicitWidth: currentChip.implicitWidth + Appearance.padding.small * 2
                                 implicitHeight: currentChip.implicitHeight + Appearance.padding.smaller * 2
 
@@ -320,14 +316,14 @@ CollapsibleSection {
                                     anchors.centerIn: parent
                                     text: qsTr("Current")
                                     font.pointSize: Appearance.font.size.smaller
-                                    color: Colours.palette.m3onPrimaryContainer
+                                    color: Signal.palette.onSignalWell
                                 }
                             }
 
                             StyledRect {
                                 visible: themeItem.isStaged
                                 radius: Appearance.rounding.full
-                                color: Qt.alpha(Colours.palette.m3primaryContainer, 0.85)
+                                color: Qt.alpha(Signal.palette.signalWell, 0.85)
                                 implicitWidth: stagedChip.implicitWidth + Appearance.padding.small * 2
                                 implicitHeight: stagedChip.implicitHeight + Appearance.padding.smaller * 2
 
@@ -336,11 +332,10 @@ CollapsibleSection {
                                     anchors.centerIn: parent
                                     text: previewController.themeDirty ? qsTr("Pending") : qsTr("Selected")
                                     font.pointSize: Appearance.font.size.smaller
-                                    color: Colours.palette.m3onPrimaryContainer
+                                    color: Signal.palette.onSignalWell
                                 }
                             }
                         }
-
                     }
 
                     implicitHeight: themeCard.implicitHeight + Appearance.padding.normal * 2
@@ -381,7 +376,7 @@ CollapsibleSection {
                                 StyledClippingRect {
                                     anchors.fill: parent
                                     radius: Appearance.rounding.small
-                                    color: Colours.tPalette.m3surfaceContainer
+                                    color: Signal.tPalette.panel
 
                                     CachingImage {
                                         id: wallpaperImage
@@ -396,18 +391,18 @@ CollapsibleSection {
                                         spacing: 1
                                         visible: !wallpaperThumb.available
 
-                                        MaterialIcon {
+                                        Glyph {
                                             anchors.horizontalCenter: parent.horizontalCenter
-                                            text: wallpaperThumb.loading ? "wallpaper" : "image_not_supported"
+                                            name: wallpaperThumb.loading ? "wallpaper" : "photo-off"
                                             font.pointSize: Appearance.font.size.small
-                                            color: Colours.palette.m3outline
+                                            color: Signal.palette.ruleStrong
                                         }
 
                                         StyledText {
                                             anchors.horizontalCenter: parent.horizontalCenter
                                             text: wallpaperThumb.loading ? qsTr("Loading") : qsTr("Unavailable")
                                             font.pointSize: Appearance.font.size.smaller
-                                            color: Colours.palette.m3onSurfaceVariant
+                                            color: Signal.palette.inkMuted
                                         }
                                     }
                                 }

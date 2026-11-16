@@ -126,7 +126,7 @@ console.log(JSON.stringify([
 
 
 def test_icon_from_manifest_entry_else_generic():
-    assert 'typeof modelData.icon === "string" && modelData.icon !== "" ? modelData.icon : "extension"' in HOST
+    assert 'typeof modelData.icon === "string" && modelData.icon !== "" ? modelData.icon : "puzzle"' in HOST
 
 
 # --- Query bridge / activation --------------------------------------------
@@ -145,20 +145,20 @@ def test_query_bridge_sets_query_reads_result_single_row():
 def test_result_mapping_executes():
     out = _run_js("""
 console.log(JSON.stringify([
-  launcherRow("hornero-calculator", "Hornero Calculator", "extension", {ok: true, text: "5"}),
+  launcherRow("hornero-calculator", "Hornero Calculator", "puzzle", {ok: true, text: "5"}),
   launcherRow("hornero-calculator", "Hornero Calculator", "", {ok: true, text: "5"}),
-  launcherRow("hornero-calculator", "", "extension", {ok: true, text: "5"}),
-  launcherRow("p", "P", "extension", {ok: false, text: "Error"}),
-  launcherRow("p", "P", "extension", {ok: true, text: ""}),
-  launcherRow("p", "P", "extension", {ok: true, text: 5}),
-  launcherRow("p", "P", "extension", null)
+  launcherRow("hornero-calculator", "", "puzzle", {ok: true, text: "5"}),
+  launcherRow("p", "P", "puzzle", {ok: false, text: "Error"}),
+  launcherRow("p", "P", "puzzle", {ok: true, text: ""}),
+  launcherRow("p", "P", "puzzle", {ok: true, text: 5}),
+  launcherRow("p", "P", "puzzle", null)
 ]));""")
     assert out[0] == {"providerId": "hornero-calculator",
                       "section": "hornero-calculator",
-                      "icon": "extension", "title": "5",
+                      "icon": "puzzle", "title": "5",
                       "subtitle": "Hornero Calculator",
                       "payload": {"ok": True, "text": "5"}}
-    assert out[1]["icon"] == "extension"  # generic fallback
+    assert out[1]["icon"] == "puzzle"  # generic fallback
     assert out[2]["subtitle"] == "hornero-calculator"
     # Not-ok (and malformed / empty) results produce no row.
     assert out[3:] == [None, None, None, None]

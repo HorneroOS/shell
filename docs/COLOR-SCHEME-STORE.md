@@ -1,47 +1,40 @@
-# Color-scheme / M3 store decision — track 3a
+# Colour scheme store — Hornero Signal
 
-Question: keep scheme and M3 palette state behind the `horneroctl appearance scheme` /
-`horneroctl appearance colors m3` verbs, or add a native palette store in
-the shell?
+Question: where does the shell get its colours, and who writes them?
 
-## Decision: keep the CLI, no native store
+## Decision: one live scheme file, complete role tables, no synthesis
 
-Scheme list/current/set-mode/set-variant/regenerate/sync-state ops run
-through `horneroctl appearance scheme` and full M3 palette generation through
-`horneroctl appearance colors m3` (same backend, owned by
-`HorneroOS/hornero`; see `docs/INTEGRATION.md`). The shell adds no palette
-persistence of its own.
+The shell reads a single schema-v2 file,
+`${XDG_STATE_HOME:-~/.local/state}/hornero/signal/scheme.json`, through a
+`FileView` watcher in `services/Signal.qml`. Every theme — built-in or from
+the catalogue — is a complete table of Signal roles (RFC 0001 §3.1). There is
+no palette generation in the shell or behind it.
+
+Writers:
+
+- `horneroctl appearance theme apply <id>` for catalogue themes (owned by
+  `HorneroOS/hornero`, themes owned by `HorneroOS/config`).
+- The shell for its three built-ins (`hornero-signal-night`,
+  `hornero-signal-day`, `hornero-signal-contrast`), atomically (temporary
+  file + `mv`), and on first run when the file is missing.
 
 ## Why
 
-1. **Generation dependency lives outside this repo.** Full M3 palettes need
-   `materialyoucolor`, which the shell cannot import (QML-only runtime).
-   A native store would still shell out for generation, gaining nothing.
-2. **Persistence already has an owner.** `horneroctl appearance scheme` owns scheme
-   persistence; the shell reads the cached result (`scheme.json` under
-   `Paths.cache/smart-colors/`) through a `FileView` watcher, so the UI
-   stays live without owning writes.
-3. **Latency-sensitive paths are already native.** Instant wallpaper tone
-   (translucency layering, preview swatches) comes from the `ImageAnalyser`
-   plugin via `services/WallpaperAnalysis.qml` and
-   `Colours.wallLuminance`/`wallDominantColour` — no CLI round-trip. Only
-   the full generated palette waits on the CLI job.
-4. **No format fork.** A shell-side store would duplicate the scheme file
-   format and its mode/flavour/variant semantics across two writers.
+1. **Design-owned colours.** Hornero Signal roles are art-directed and
+   contrast-tested (`tests/test_contrast_aa.py`); a wallpaper-derived palette
+   cannot guarantee AA on every surface.
+2. **One format for every consumer.** The same role names feed GTK, Qt,
+   terminals, Hyprland, hyprlock, the greeter and the website generators
+   (`HorneroOS/config` `profiles/themes/tokens.schema.json`).
+3. **No external dependency.** Removing wallpaper synthesis removes the
+   Python colour library and the CLI round-trip from the appearance path.
+4. **The shell stays coherent without the CLI.** Built-in tables are
+   compiled into `Signal.qml`, so a missing or invalid scheme file still
+   renders the configured built-in.
 
-## Explicit non-goals (unchanged)
+## Non-goals
 
-- **No sticky theme.** Theme packs remain apply-once recipes (wallpaper +
-  colors + GTK + icons applied once, no "current theme" state). This
-  decision changes nothing about apply-once semantics.
-- **No IPC contract change.** No new `IpcHandler` targets or functions;
-  `docs/IPC.md` and `tests/test_ipc_mapping.py` are untouched. The
-  `colours` (`reload`/`mode`/`flavour`) and `appearance`
-  (`applyTheme`/`reload`/`setWallpaper`) surfaces are unchanged.
-
-## Revisit when
-
-A HorneroOS-owned palette generator exists in-repo (or as a versioned
-library the shell can link), and scheme persistence moves to a HorneroOS
-service with a versioned contract. Until then, follow-ups stay limited to
-keeping the `horneroctl` call surface minimal.
+- Wallpapers never recolour the UI.
+- No variants, flavours or scheme types.
+- No compatibility layer for Material 3 role names or schema-1 files: an old
+  `smart-colors/scheme.json` is simply ignored.

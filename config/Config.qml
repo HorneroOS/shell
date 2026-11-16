@@ -55,7 +55,7 @@ Singleton {
             recentSaveCooldown.restart();
             hasPendingChanges = false;
         } catch (e) {
-            Toaster.toast(qsTr("Failed to serialize config"), e.message, "settings_alert", Toast.Error);
+            Toaster.toast(qsTr("Failed to serialize config"), e.message, "settings-exclamation", Toast.Error);
         }
     }
 
@@ -78,6 +78,8 @@ Singleton {
     }
 
     property bool recentlySaved: false
+    // True once shell.json was read (or found missing) and migrated.
+    property bool loaded: false
 
     ElapsedTimer {
         id: timer
@@ -99,6 +101,110 @@ Singleton {
         onTriggered: {
             recentlySaved = false;
         }
+    }
+
+    // One-shot data migration to Hornero Signal (RFC 0001). Rewrites
+    // persisted values that name removed Material-era choices; it is not
+    // an alias layer — once saved, the old values are gone.
+    readonly property var _legacyThemeIds: ({
+            "hornero-dark": "hornero-signal-night",
+            "hornero-light": "hornero-signal-day",
+            "hornero-199x": "hornero-signal-night",
+            "neon-city": "hornero-signal-night",
+            "vapor-dreams": "hornero-signal-night",
+            "soft-morning": "hornero-signal-day",
+            "warm-sunset": "hornero-signal-day"
+        })
+    readonly property var _legacyFontFamilies: ({
+            "Rubik": "IBM Plex Sans",
+            "CaskaydiaCove NF": "IBM Plex Mono"
+        })
+
+    function migrateLegacyAppearance(): bool {
+        let changed = false;
+        const theme = adapter.appearance.theme;
+        if (_legacyThemeIds.hasOwnProperty(theme)) {
+            adapter.appearance.theme = _legacyThemeIds[theme];
+            changed = true;
+        }
+        const family = adapter.appearance.font.family;
+        if (_legacyFontFamilies.hasOwnProperty(family.sans)) {
+            family.sans = _legacyFontFamilies[family.sans];
+            changed = true;
+        }
+        if (_legacyFontFamilies.hasOwnProperty(family.mono)) {
+            family.mono = _legacyFontFamilies[family.mono];
+            changed = true;
+        }
+        // Persisted Material-era icon names are not Hornero Glyphs:
+        // fall back to the shipped default for that slot.
+        const icons = adapter.session.icons;
+        for (const key of ["logout", "shutdown", "hibernate", "reboot"]) {
+            if (icons[key] && !Glyphs.has(icons[key])) {
+                icons[key] = sessionDefaults.icons[key];
+                changed = true;
+            }
+        }
+        const levels = adapter.general.battery.warnLevels ?? [];
+        const defaultLevels = generalDefaults.battery.warnLevels;
+        let levelsChanged = false;
+        const migratedLevels = levels.map((level, i) => {
+            if (!level || !level.icon || Glyphs.has(level.icon))
+                return level;
+            levelsChanged = true;
+            return Object.assign({}, level, {
+                icon: defaultLevels[Math.min(i, defaultLevels.length - 1)]?.icon ?? "battery"
+            });
+        });
+        if (levelsChanged) {
+            adapter.general.battery.warnLevels = migratedLevels;
+            changed = true;
+        }
+        const defaultActionIcons = {};
+        for (const action of launcherDefaults.actions)
+            defaultActionIcons[action.name] = action.icon;
+        const actions = adapter.launcher.actions ?? [];
+        const migrated = [];
+        let actionsChanged = false;
+        for (let action of actions) {
+            if (action && action.icon && !Glyphs.has(action.icon)) {
+                actionsChanged = true;
+                action = Object.assign({}, action, {
+                    icon: defaultActionIcons[action.name] ?? "terminal-2"
+                });
+            }
+            const command = action?.command ?? [];
+            if (command[0] === "autocomplete" && (command[1] === "scheme" || command[1] === "variant")) {
+                actionsChanged = true;
+                continue;
+            }
+            if (command[0] === "setMode") {
+                actionsChanged = true;
+                migrated.push(Object.assign({}, action, {
+                    command: ["theme", command[1] === "light" ? "hornero-signal-day" : "hornero-signal-night"]
+                }));
+                continue;
+            }
+            migrated.push(action);
+        }
+        if (actionsChanged) {
+            adapter.launcher.actions = migrated;
+            changed = true;
+        }
+        return changed;
+    }
+
+    // Pristine compiled defaults for the migration above.
+    SessionConfig {
+        id: sessionDefaults
+    }
+
+    GeneralConfig {
+        id: generalDefaults
+    }
+
+    LauncherConfig {
+        id: launcherDefaults
     }
 
     // Helper function to serialize the config object
@@ -129,6 +235,7 @@ Singleton {
         return {
             theme: appearance.theme,
             highContrast: appearance.highContrast,
+            reducedMotion: appearance.reducedMotion,
             rounding: {
                 scale: appearance.rounding.scale
             },
@@ -142,8 +249,7 @@ Singleton {
                 family: {
                     sans: appearance.font.family.sans,
                     mono: appearance.font.family.mono,
-                    material: appearance.font.family.material,
-                    clock: appearance.font.family.clock
+                    display: appearance.font.family.display
                 },
                 size: {
                     scale: appearance.font.size.scale
@@ -152,16 +258,6 @@ Singleton {
             anim: {
                 mediaGifSpeedAdjustment: appearance.anim.mediaGifSpeedAdjustment,
                 sessionGifSpeed: appearance.anim.sessionGifSpeed,
-                curves: {
-                    emphasized: appearance.anim.curves.emphasized,
-                    emphasizedAccel: appearance.anim.curves.emphasizedAccel,
-                    emphasizedDecel: appearance.anim.curves.emphasizedDecel,
-                    standard: appearance.anim.curves.standard,
-                    standardAccel: appearance.anim.curves.standardAccel,
-                    standardDecel: appearance.anim.curves.standardDecel,
-                    expressiveFastSpatial: appearance.anim.curves.expressiveFastSpatial,
-                    expressiveDefaultSpatial: appearance.anim.curves.expressiveDefaultSpatial
-                },
                 durations: {
                     scale: appearance.anim.durations.scale
                 }
@@ -385,8 +481,6 @@ Singleton {
             useFuzzy: {
                 apps: launcher.useFuzzy.apps,
                 actions: launcher.useFuzzy.actions,
-                schemes: launcher.useFuzzy.schemes,
-                variants: launcher.useFuzzy.variants,
                 wallpapers: launcher.useFuzzy.wallpapers
             },
             sizes: {
@@ -566,24 +660,28 @@ Singleton {
             }
         }
         onLoaded: {
+            if (root.migrateLegacyAppearance())
+                root.save();
+            root.loaded = true;
             try {
                 JSON.parse(text());
                 const elapsed = timer.elapsedMs();
                 // Only show toast for external changes (not our own saves) and when elapsed time is meaningful
                 if (adapter.utilities.toasts.configLoaded && !recentlySaved && elapsed > 0) {
-                    Toaster.toast(qsTr("Config loaded"), qsTr("Config loaded in %1ms").arg(elapsed), "rule_settings");
+                    Toaster.toast(qsTr("Config loaded"), qsTr("Config loaded in %1ms").arg(elapsed), "settings-check");
                 } else if (adapter.utilities.toasts.configLoaded && recentlySaved && elapsed > 0) {
-                    Toaster.toast(qsTr("Config saved"), qsTr("Config reloaded in %1ms").arg(elapsed), "rule_settings");
+                    Toaster.toast(qsTr("Config saved"), qsTr("Config reloaded in %1ms").arg(elapsed), "settings-check");
                 }
             } catch (e) {
-                Toaster.toast(qsTr("Failed to load config"), e.message, "settings_alert", Toast.Error);
+                Toaster.toast(qsTr("Failed to load config"), e.message, "settings-exclamation", Toast.Error);
             }
         }
         onLoadFailed: err => {
+            root.loaded = true;
             if (err !== FileViewError.FileNotFound)
-                Toaster.toast(qsTr("Failed to read config file"), FileViewError.toString(err), "settings_alert", Toast.Warning);
+                Toaster.toast(qsTr("Failed to read config file"), FileViewError.toString(err), "settings-exclamation", Toast.Warning);
         }
-        onSaveFailed: err => Toaster.toast(qsTr("Failed to save config"), FileViewError.toString(err), "settings_alert", Toast.Error)
+        onSaveFailed: err => Toaster.toast(qsTr("Failed to save config"), FileViewError.toString(err), "settings-exclamation", Toast.Error)
 
         JsonAdapter {
             id: adapter

@@ -23,7 +23,7 @@ ColumnLayout {
     spacing: Appearance.spacing.normal
 
     SettingsHeader {
-        icon: "vpn_key"
+        icon: "key"
         title: qsTr("VPN Settings")
     }
 
@@ -84,7 +84,7 @@ ColumnLayout {
                     required property int index
 
                     width: ListView.view ? ListView.view.width : undefined
-                    color: Colours.tPalette.m3surfaceContainerHigh
+                    color: Signal.tPalette.raised
                     radius: Appearance.rounding.normal
 
                     RowLayout {
@@ -94,10 +94,10 @@ ColumnLayout {
                         anchors.margins: Appearance.padding.normal
                         spacing: Appearance.spacing.normal
 
-                        MaterialIcon {
-                            text: modelData.isActive ? "vpn_key" : "vpn_key_off"
+                        Glyph {
+                            name: modelData.isActive ? "key" : "key-off"
                             font.pointSize: Appearance.font.size.large
-                            color: modelData.isActive ? Colours.palette.m3primary : Colours.palette.m3outline
+                            color: modelData.isActive ? Signal.palette.signal : Signal.palette.ruleStrong
                         }
 
                         ColumnLayout {
@@ -112,12 +112,12 @@ ColumnLayout {
                             StyledText {
                                 text: qsTr("%1 • %2").arg(modelData.name).arg(modelData.interface || qsTr("No interface"))
                                 font.pointSize: Appearance.font.size.small
-                                color: Colours.palette.m3outline
+                                color: Signal.palette.ruleStrong
                             }
                         }
 
                         IconButton {
-                            icon: modelData.isActive ? "arrow_downward" : "arrow_upward"
+                            icon: modelData.isActive ? "arrow-down" : "arrow-up"
                             accessibleName: modelData.isActive ? qsTr("Move VPN provider down") : qsTr("Move VPN provider up")
                             visible: !modelData.isActive || Config.utilities.vpn.provider.length > 1
                             onClicked: {
@@ -141,7 +141,7 @@ ColumnLayout {
                         }
 
                         IconButton {
-                            icon: "delete"
+                            icon: "trash"
                             accessibleName: qsTr("Remove VPN provider")
                             onClicked: {
                                 const providers = [...Config.utilities.vpn.provider];
@@ -161,8 +161,8 @@ ColumnLayout {
             Layout.fillWidth: true
             Layout.topMargin: Appearance.spacing.normal
             text: qsTr("+ Add Provider")
-            inactiveColour: Colours.palette.m3primaryContainer
-            inactiveOnColour: Colours.palette.m3onPrimaryContainer
+            inactiveColour: Signal.palette.signalWell
+            inactiveOnColour: Signal.palette.onSignalWell
 
             onClicked: {
                 addProviderDialog.open();
@@ -182,8 +182,8 @@ ColumnLayout {
         TextButton {
             Layout.fillWidth: true
             text: qsTr("+ Add NetBird")
-            inactiveColour: Colours.tPalette.m3surfaceContainerHigh
-            inactiveOnColour: Colours.palette.m3onSurface
+            inactiveColour: Signal.tPalette.raised
+            inactiveOnColour: Signal.palette.ink
 
             onClicked: {
                 const providers = [...Config.utilities.vpn.provider];
@@ -200,8 +200,8 @@ ColumnLayout {
         TextButton {
             Layout.fillWidth: true
             text: qsTr("+ Add Tailscale")
-            inactiveColour: Colours.tPalette.m3surfaceContainerHigh
-            inactiveOnColour: Colours.palette.m3onSurface
+            inactiveColour: Signal.tPalette.raised
+            inactiveOnColour: Signal.palette.ink
 
             onClicked: {
                 const providers = [...Config.utilities.vpn.provider];
@@ -218,8 +218,8 @@ ColumnLayout {
         TextButton {
             Layout.fillWidth: true
             text: qsTr("+ Add Cloudflare WARP")
-            inactiveColour: Colours.tPalette.m3surfaceContainerHigh
-            inactiveOnColour: Colours.palette.m3onSurface
+            inactiveColour: Signal.tPalette.raised
+            inactiveOnColour: Signal.palette.ink
 
             onClicked: {
                 const providers = [...Config.utilities.vpn.provider];

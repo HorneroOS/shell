@@ -19,103 +19,6 @@ CollapsibleSection {
     showBackground: true
 
     CollapsibleSection {
-        id: materialFontSection
-        title: qsTr("Material font family")
-        expanded: true
-        showBackground: true
-        nested: true
-
-        Loader {
-            id: materialFontLoader
-            Layout.fillWidth: true
-            Layout.preferredHeight: item ? Math.min(item.contentHeight, 300) : 0
-            active: materialFontSection.expanded
-
-            sourceComponent: StyledListView {
-                id: materialFontList
-                property alias contentHeight: materialFontList.contentHeight
-
-                clip: true
-                spacing: Appearance.spacing.small / 2
-                model: Qt.fontFamilies()
-
-                StyledScrollBar.vertical: StyledScrollBar {
-                    flickable: materialFontList
-                }
-
-                delegate: StyledRect {
-                    required property string modelData
-                    required property int index
-
-                    width: ListView.view.width
-
-                    readonly property bool isCurrent: modelData === rootPane.fontFamilyMaterial
-                    color: Qt.alpha(Colours.tPalette.m3surfaceContainer, isCurrent ? Colours.tPalette.m3surfaceContainer.a : 0)
-                    radius: Appearance.rounding.normal
-                    border.width: isCurrent ? 1 : 0
-                    border.color: Colours.palette.m3primary
-
-                    Accessible.role: Accessible.Button
-                    Accessible.name: isCurrent ? qsTr("%1, current").arg(modelData) : modelData
-
-                    Interactive {
-                        function onClicked(): void {
-                            rootPane.fontFamilyMaterial = modelData;
-                            rootPane.saveConfig();
-                        }
-                    }
-
-                    ColumnLayout {
-                        id: fontFamilyMaterialRow
-
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.margins: Appearance.padding.normal
-
-                        spacing: 1
-
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: Appearance.spacing.normal
-
-                            StyledText {
-                                text: modelData
-                                font.pointSize: Appearance.font.size.normal
-                            }
-
-                            Item {
-                                Layout.fillWidth: true
-                            }
-
-                            Loader {
-                                active: isCurrent
-
-                                sourceComponent: MaterialIcon {
-                                    text: "check"
-                                    color: Colours.palette.m3onSurfaceVariant
-                                    font.pointSize: Appearance.font.size.large
-                                }
-                            }
-                        }
-
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: "The quick brown fox · 0123 ABC"
-                            font.family: modelData
-                            font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3onSurfaceVariant
-                            elide: Text.ElideRight
-                        }
-                    }
-
-                    implicitHeight: fontFamilyMaterialRow.implicitHeight + Appearance.padding.normal * 2
-                }
-            }
-        }
-    }
-
-    CollapsibleSection {
         id: monoFontSection
         title: qsTr("Monospace font family")
         expanded: false
@@ -146,10 +49,10 @@ CollapsibleSection {
                     width: ListView.view.width
 
                     readonly property bool isCurrent: modelData === rootPane.fontFamilyMono
-                    color: Qt.alpha(Colours.tPalette.m3surfaceContainer, isCurrent ? Colours.tPalette.m3surfaceContainer.a : 0)
+                    color: Qt.alpha(Signal.tPalette.panel, isCurrent ? Signal.tPalette.panel.a : 0)
                     radius: Appearance.rounding.normal
                     border.width: isCurrent ? 1 : 0
-                    border.color: Colours.palette.m3primary
+                    border.color: Signal.palette.signal
 
                     Accessible.role: Accessible.Button
                     Accessible.name: isCurrent ? qsTr("%1, current").arg(modelData) : modelData
@@ -187,9 +90,9 @@ CollapsibleSection {
                             Loader {
                                 active: isCurrent
 
-                                sourceComponent: MaterialIcon {
-                                    text: "check"
-                                    color: Colours.palette.m3onSurfaceVariant
+                                sourceComponent: Glyph {
+                                    name: "check"
+                                    color: Signal.palette.inkMuted
                                     font.pointSize: Appearance.font.size.large
                                 }
                             }
@@ -200,7 +103,7 @@ CollapsibleSection {
                             text: "fn main() { println!(\"hello\"); } // 0x1A2B"
                             font.family: modelData
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             elide: Text.ElideRight
                         }
                     }
@@ -242,10 +145,13 @@ CollapsibleSection {
                     width: ListView.view.width
 
                     readonly property bool isCurrent: modelData === rootPane.fontFamilySans
-                    color: Qt.alpha(Colours.tPalette.m3surfaceContainer, isCurrent ? Colours.tPalette.m3surfaceContainer.a : 0)
+                    color: Qt.alpha(Signal.tPalette.panel, isCurrent ? Signal.tPalette.panel.a : 0)
                     radius: Appearance.rounding.normal
                     border.width: isCurrent ? 1 : 0
-                    border.color: Colours.palette.m3primary
+                    border.color: Signal.palette.signal
+
+                    Accessible.role: Accessible.Button
+                    Accessible.name: isCurrent ? qsTr("%1, current").arg(modelData) : modelData
 
                     Interactive {
                         function onClicked(): void {
@@ -280,9 +186,9 @@ CollapsibleSection {
                             Loader {
                                 active: isCurrent
 
-                                sourceComponent: MaterialIcon {
-                                    text: "check"
-                                    color: Colours.palette.m3onSurfaceVariant
+                                sourceComponent: Glyph {
+                                    name: "check"
+                                    color: Signal.palette.inkMuted
                                     font.pointSize: Appearance.font.size.large
                                 }
                             }
@@ -293,7 +199,7 @@ CollapsibleSection {
                             text: "The quick brown fox · 0123 ABC"
                             font.family: modelData
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             elide: Text.ElideRight
                         }
                     }
@@ -305,8 +211,8 @@ CollapsibleSection {
     }
 
     CollapsibleSection {
-        id: clockFontSection
-        title: qsTr("Clock font family")
+        id: displayFontSection
+        title: qsTr("Display font family")
         expanded: false
         showBackground: true
         nested: true
@@ -314,7 +220,7 @@ CollapsibleSection {
         Loader {
             Layout.fillWidth: true
             Layout.preferredHeight: item ? Math.min(item.contentHeight, 300) : 0
-            active: clockFontSection.expanded
+            active: displayFontSection.expanded
 
             sourceComponent: StyledListView {
                 id: clockFontList
@@ -334,21 +240,24 @@ CollapsibleSection {
 
                     width: ListView.view.width
 
-                    readonly property bool isCurrent: modelData === rootPane.fontFamilyClock
-                    color: Qt.alpha(Colours.tPalette.m3surfaceContainer, isCurrent ? Colours.tPalette.m3surfaceContainer.a : 0)
+                    readonly property bool isCurrent: modelData === rootPane.fontFamilyDisplay
+                    color: Qt.alpha(Signal.tPalette.panel, isCurrent ? Signal.tPalette.panel.a : 0)
                     radius: Appearance.rounding.normal
                     border.width: isCurrent ? 1 : 0
-                    border.color: Colours.palette.m3primary
+                    border.color: Signal.palette.signal
+
+                    Accessible.role: Accessible.Button
+                    Accessible.name: isCurrent ? qsTr("%1, current").arg(modelData) : modelData
 
                     Interactive {
                         function onClicked(): void {
-                            rootPane.fontFamilyClock = modelData;
+                            rootPane.fontFamilyDisplay = modelData;
                             rootPane.saveConfig();
                         }
                     }
 
                     ColumnLayout {
-                        id: fontFamilyClockRow
+                        id: fontFamilyDisplayRow
 
                         anchors.left: parent.left
                         anchors.right: parent.right
@@ -373,9 +282,9 @@ CollapsibleSection {
                             Loader {
                                 active: isCurrent
 
-                                sourceComponent: MaterialIcon {
-                                    text: "check"
-                                    color: Colours.palette.m3onSurfaceVariant
+                                sourceComponent: Glyph {
+                                    name: "check"
+                                    color: Signal.palette.inkMuted
                                     font.pointSize: Appearance.font.size.large
                                 }
                             }
@@ -386,12 +295,12 @@ CollapsibleSection {
                             text: "12:34 · Thursday 13 Aug"
                             font.family: modelData
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             elide: Text.ElideRight
                         }
                     }
 
-                    implicitHeight: fontFamilyClockRow.implicitHeight + Appearance.padding.normal * 2
+                    implicitHeight: fontFamilyDisplayRow.implicitHeight + Appearance.padding.normal * 2
                 }
             }
         }

@@ -187,15 +187,14 @@ def test_factory_values_match_code_defaults():
     bar_src = (ROOT / "config" / "BarConfig.qml").read_text()
     cases = [
         # appearance (AppearanceConfig.qml)
-        ("appearance.theme", "hornero-dark"),
+        ("appearance.theme", "hornero-signal-night"),
+        ("appearance.reducedMotion", False),
         ("appearance.rounding.scale", 1),
-        ("appearance.font.family.sans", "Rubik"),
-        ("appearance.font.family.mono", "CaskaydiaCove NF"),
-        ("appearance.font.family.material", "Material Symbols Rounded"),
+        ("appearance.font.family.sans", "IBM Plex Sans"),
+        ("appearance.font.family.mono", "IBM Plex Mono"),
+        ("appearance.font.family.display", "IBM Plex Sans Condensed"),
         ("appearance.anim.mediaGifSpeedAdjustment", 300),
         ("appearance.anim.sessionGifSpeed", 0.7),
-        ("appearance.anim.curves.emphasized.2", 2 / 15),
-        ("appearance.anim.curves.standard", [0.2, 0, 0, 1, 1, 1]),
         ("appearance.transparency.enabled", False),
         ("appearance.transparency.base", 0.85),
         # general (GeneralConfig.qml; qsTr() yields the plain source string)
@@ -260,11 +259,11 @@ def test_factory_values_match_code_defaults():
         ("launcher.specialPrefix", "@"),
         ("launcher.useFuzzy.wallpapers", False),
         ("launcher.sizes.itemHeight", 57),
-        ("launcher.actions.7.name", "Random"),
-        ("launcher.actions.12.command.2", ""),
-        ("launcher.actions.15.command.0", "horneroctl"),
-        ("launcher.actions.15.command.1", "config"),
-        ("launcher.actions.15.command.2", "gui"),
+        ("launcher.actions.5.name", "Random"),
+        ("launcher.actions.10.command.2", ""),
+        ("launcher.actions.13.command.0", "horneroctl"),
+        ("launcher.actions.13.command.1", "config"),
+        ("launcher.actions.13.command.2", "gui"),
         # notifs / osd
         ("notifs.defaultExpireTimeout", 5000),
         ("notifs.clearThreshold", 0.3),

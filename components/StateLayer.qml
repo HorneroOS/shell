@@ -7,7 +7,7 @@ MouseArea {
 
     property bool disabled
     property bool showHoverBackground: true
-    property color color: Colours.palette.m3onSurface
+    property color color: Signal.palette.ink
     property real radius: parent?.radius ?? 0
     property alias rect: hoverLayer
 
@@ -62,7 +62,7 @@ MouseArea {
             properties: "implicitWidth,implicitHeight"
             from: 0
             to: rippleAnim.radius * 2
-            easing.bezierCurve: Appearance.anim.curves.standardDecel
+            easing.bezierCurve: Appearance.anim.curves.enter
         }
         Anim {
             target: ripple

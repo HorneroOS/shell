@@ -9,6 +9,6 @@ QtObject {
         if (!summary || summary.trim().length === 0)
             return;
 
-        Toaster.toast(summary.trim().slice(0, 120), (body ?? "").toString().slice(0, 500), icon || "extension");
+        Toaster.toast(summary.trim().slice(0, 120), (body ?? "").toString().slice(0, 500), icon || "puzzle");
     }
 }

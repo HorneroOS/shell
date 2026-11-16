@@ -20,7 +20,7 @@ Item {
 
     StyledRect {
         anchors.fill: parent
-        color: Colours.tPalette.m3surfaceContainer
+        color: Signal.tPalette.panel
 
         layer.enabled: true
         layer.effect: MultiEffect {
@@ -53,17 +53,17 @@ Item {
         active: opacity > 0
 
         sourceComponent: ColumnLayout {
-            MaterialIcon {
+            Glyph {
                 Layout.alignment: Qt.AlignHCenter
-                text: "scan_delete"
-                color: Colours.palette.m3outline
+                name: "trash"
+                color: Signal.palette.ruleStrong
                 font.pointSize: Appearance.font.size.extraLarge * 2
                 font.weight: 500
             }
 
             StyledText {
                 text: qsTr("This folder is empty")
-                color: Colours.palette.m3outline
+                color: Signal.palette.ruleStrong
                 font.pointSize: Appearance.font.size.large
                 font.weight: 500
             }
@@ -123,7 +123,7 @@ Item {
             implicitHeight: nonAnimHeight
 
             radius: Appearance.rounding.normal
-            color: Qt.alpha(Colours.tPalette.m3surfaceContainerHighest, GridView.isCurrentItem ? Colours.tPalette.m3surfaceContainerHighest.a : 0)
+            color: Qt.alpha(Signal.tPalette.lifted, GridView.isCurrentItem ? Signal.tPalette.lifted.a : 0)
             z: GridView.isCurrentItem || implicitHeight !== nonAnimHeight ? 1 : 0
             clip: true
 
@@ -188,8 +188,8 @@ Item {
                 properties: "opacity,scale"
                 from: 0
                 to: 1
-                duration: Appearance.anim.durations.expressiveDefaultSpatial
-                easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                duration: Appearance.anim.durations.settle
+                easing.bezierCurve: Appearance.anim.curves.settle
             }
         }
 
@@ -208,12 +208,12 @@ Item {
             Anim {
                 properties: "opacity,scale"
                 to: 1
-                easing.bezierCurve: Appearance.anim.curves.standardDecel
+                easing.bezierCurve: Appearance.anim.curves.enter
             }
             Anim {
                 properties: "x,y"
-                duration: Appearance.anim.durations.expressiveDefaultSpatial
-                easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                duration: Appearance.anim.durations.settle
+                easing.bezierCurve: Appearance.anim.curves.settle
             }
         }
     }

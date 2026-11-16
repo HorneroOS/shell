@@ -20,9 +20,9 @@ SequentialAnimation {
             property: "opacity"
             from: root.opacityFrom
             to: root.opacityTo
-            duration: Appearance.anim.durations.normal / 2
+            duration: Appearance.anim.durations.medium / 2
             easing.type: Easing.BezierSpline
-            easing.bezierCurve: Appearance.anim.curves.standardAccel
+            easing.bezierCurve: Appearance.anim.curves.exit
         }
 
         NumberAnimation {
@@ -30,9 +30,9 @@ SequentialAnimation {
             property: "scale"
             from: root.scaleFrom
             to: root.scaleTo
-            duration: Appearance.anim.durations.normal / 2
+            duration: Appearance.anim.durations.medium / 2
             easing.type: Easing.BezierSpline
-            easing.bezierCurve: Appearance.anim.curves.standardAccel
+            easing.bezierCurve: Appearance.anim.curves.exit
         }
     }
 
@@ -53,9 +53,9 @@ SequentialAnimation {
             property: "opacity"
             from: root.opacityTo
             to: root.opacityFrom
-            duration: Appearance.anim.durations.normal / 2
+            duration: Appearance.anim.durations.medium / 2
             easing.type: Easing.BezierSpline
-            easing.bezierCurve: Appearance.anim.curves.standardDecel
+            easing.bezierCurve: Appearance.anim.curves.enter
         }
 
         NumberAnimation {
@@ -63,9 +63,9 @@ SequentialAnimation {
             property: "scale"
             from: root.scaleTo
             to: root.scaleFrom
-            duration: Appearance.anim.durations.normal / 2
+            duration: Appearance.anim.durations.medium / 2
             easing.type: Easing.BezierSpline
-            easing.bezierCurve: Appearance.anim.curves.standardDecel
+            easing.bezierCurve: Appearance.anim.curves.enter
         }
     }
 }

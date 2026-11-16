@@ -69,7 +69,7 @@ Item {
                 Layout.preferredHeight: previewCol.implicitHeight + Appearance.padding.large * 2
 
                 radius: Appearance.rounding.large
-                color: Colours.tPalette.m3surfaceContainer
+                color: Signal.tPalette.panel
 
                 ColumnLayout {
                     id: previewCol
@@ -84,9 +84,9 @@ Item {
                         Layout.fillWidth: true
                         spacing: Appearance.spacing.small
 
-                        MaterialIcon {
-                            text: "workspaces"
-                            color: Colours.palette.m3primary
+                        Glyph {
+                            name: "layout-grid"
+                            color: Signal.palette.signal
                             font.pointSize: Appearance.font.size.large
                         }
 
@@ -94,7 +94,7 @@ Item {
                             text: root.selectedWorkspace ? Compositor.workspaceLabel(root.selectedWorkspace, root.selectedWsId) : qsTr("Workspace %1").arg(root.selectedWsId ?? "—")
                             font.pointSize: Appearance.font.size.larger
                             font.weight: 600
-                            color: Colours.palette.m3onSurface
+                            color: Signal.palette.ink
                             Layout.fillWidth: true
                             elide: Text.ElideRight
                         }
@@ -105,7 +105,7 @@ Item {
                                 return n === 0 ? qsTr("Empty") : qsTr("%1 windows").arg(n);
                             }
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                         }
                     }
 
@@ -136,7 +136,7 @@ Item {
                 Layout.preferredHeight: previewCol.implicitHeight + Appearance.padding.large * 2
 
                 radius: Appearance.rounding.large
-                color: Colours.tPalette.m3surfaceContainer
+                color: Signal.tPalette.panel
 
                 WorkspaceDetail {
                     anchors.fill: parent
@@ -152,7 +152,7 @@ Item {
             Layout.preferredHeight: wsFlowCol.implicitHeight + Appearance.padding.large * 2
 
             radius: Appearance.rounding.large
-            color: Colours.tPalette.m3surfaceContainer
+            color: Signal.tPalette.panel
 
             ColumnLayout {
                 id: wsFlowCol
@@ -171,7 +171,7 @@ Item {
                         text: qsTr("Workspaces")
                         font.pointSize: Appearance.font.size.normal
                         font.weight: 600
-                        color: Colours.palette.m3onSurface
+                        color: Signal.palette.ink
                         Layout.fillWidth: true
                     }
 
@@ -218,7 +218,7 @@ Item {
                     StyledText {
                         visible: root.regularWorkspaces.length === 0
                         text: qsTr("No workspaces open")
-                        color: Colours.palette.m3onSurfaceVariant
+                        color: Signal.palette.inkMuted
                         font.pointSize: Appearance.font.size.normal
                     }
                 }

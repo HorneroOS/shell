@@ -29,23 +29,23 @@ StyledRect {
     property alias label: label
 
     property bool internalChecked
-    property color activeColour: type === TextButton.Filled ? Colours.palette.m3primary : Colours.palette.m3secondary
+    property color activeColour: type === TextButton.Filled ? Signal.palette.signal : Signal.palette.cue
     property color inactiveColour: {
         if (!toggle && type === TextButton.Filled)
-            return Colours.palette.m3primary;
-        return type === TextButton.Filled ? Colours.tPalette.m3surfaceContainer : Colours.palette.m3secondaryContainer;
+            return Signal.palette.signal;
+        return type === TextButton.Filled ? Signal.tPalette.panel : Signal.palette.cueWell;
     }
     property color activeOnColour: {
         if (type === TextButton.Text)
-            return Colours.palette.m3primary;
-        return type === TextButton.Filled ? Colours.palette.m3onPrimary : Colours.palette.m3onSecondary;
+            return Signal.palette.signal;
+        return type === TextButton.Filled ? Signal.palette.onSignal : Signal.palette.onCue;
     }
     property color inactiveOnColour: {
         if (!toggle && type === TextButton.Filled)
-            return Colours.palette.m3onPrimary;
+            return Signal.palette.onSignal;
         if (type === TextButton.Text)
-            return Colours.palette.m3primary;
-        return type === TextButton.Filled ? Colours.palette.m3onSurface : Colours.palette.m3onSecondaryContainer;
+            return Signal.palette.signal;
+        return type === TextButton.Filled ? Signal.palette.ink : Signal.palette.onCueWell;
     }
 
     signal clicked

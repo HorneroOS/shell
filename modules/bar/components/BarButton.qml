@@ -11,7 +11,7 @@ Item {
 
     property string icon
     property string iconSource
-    property color colour: Colours.palette.m3onSurface
+    property color colour: Signal.palette.ink
     property string label
     property real iconSize: Appearance.font.size.large
     property bool filled
@@ -36,14 +36,13 @@ Item {
         text: root.label
     }
 
-    MaterialIcon {
+    Glyph {
         id: glyph
 
         visible: root.iconSource === ""
         anchors.centerIn: parent
-        text: root.icon
+        name: root.icon
         color: root.colour
-        fill: root.filled ? 1 : 0
         font.pointSize: root.iconSize
     }
 

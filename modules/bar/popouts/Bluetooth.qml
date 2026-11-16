@@ -69,7 +69,7 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.rightMargin: Appearance.padding.small
         text: root.deviceStatus
-        color: Colours.palette.m3onSurfaceVariant
+        color: Signal.palette.inkMuted
         font.pointSize: Appearance.font.size.small
         wrapMode: Text.WordWrap
     }
@@ -105,8 +105,8 @@ ColumnLayout {
                 Anim {}
             }
 
-            MaterialIcon {
-                text: Icons.getBluetoothIcon(device.modelData.icon)
+            Glyph {
+                name: Icons.getBluetoothIcon(device.modelData.icon)
             }
 
             StyledText {
@@ -123,7 +123,7 @@ ColumnLayout {
                 implicitHeight: connectIcon.implicitHeight + Appearance.padding.small
 
                 radius: Appearance.rounding.full
-                color: Qt.alpha(Colours.palette.m3primary, device.modelData.state === BluetoothDeviceState.Connected ? 1 : 0)
+                color: Qt.alpha(Signal.palette.signal, device.modelData.state === BluetoothDeviceState.Connected ? 1 : 0)
 
                 CircularIndicator {
                     anchors.fill: parent
@@ -131,7 +131,7 @@ ColumnLayout {
                 }
 
                 StateLayer {
-                    color: device.modelData.state === BluetoothDeviceState.Connected ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
+                    color: device.modelData.state === BluetoothDeviceState.Connected ? Signal.palette.onSignal : Signal.palette.ink
                     disabled: device.loading
 
                     function onClicked(): void {
@@ -147,13 +147,13 @@ ColumnLayout {
                     }
                 }
 
-                MaterialIcon {
+                Glyph {
                     id: connectIcon
 
                     anchors.centerIn: parent
                     animate: true
-                    text: device.modelData.connected ? "link_off" : "link"
-                    color: device.modelData.state === BluetoothDeviceState.Connected ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
+                    name: device.modelData.connected ? "link-off" : "link"
+                    color: device.modelData.state === BluetoothDeviceState.Connected ? Signal.palette.onSignal : Signal.palette.ink
 
                     opacity: device.loading ? 0 : 1
 
@@ -177,9 +177,9 @@ ColumnLayout {
                         }
                     }
 
-                    MaterialIcon {
+                    Glyph {
                         anchors.centerIn: parent
-                        text: "delete"
+                        name: "trash"
                     }
                 }
             }
@@ -189,8 +189,8 @@ ColumnLayout {
     IconTextButton {
         Layout.fillWidth: true
         Layout.topMargin: Appearance.spacing.normal
-        inactiveColour: Colours.palette.m3primaryContainer
-        inactiveOnColour: Colours.palette.m3onPrimaryContainer
+        inactiveColour: Signal.palette.signalWell
+        inactiveOnColour: Signal.palette.onSignalWell
         verticalPadding: Appearance.padding.small
         text: qsTr("Open settings")
         icon: "settings"

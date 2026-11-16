@@ -323,7 +323,7 @@ Variants {
             StyledRect {
                 anchors.fill: parent
                 opacity: (visibilities.session && Config.session.enabled) || visibilities.layoutPicker ? 0.5 : 0
-                color: Colours.palette.m3scrim
+                color: Signal.palette.scrim
 
                 Behavior on opacity {
                     Anim {}
@@ -339,13 +339,13 @@ Variants {
                 layer.effect: MultiEffect {
                     shadowEnabled: true
                     blurMax: 15
-                    shadowColor: Qt.alpha(Colours.palette.m3shadow, 0.7)
+                    shadowColor: Qt.alpha(Signal.palette.shadow, 0.7)
                 }
 
                 Border {
                     bar: bar
                     visible: bar.frameVisible
-                    opacity: Colours.transparency.enabled ? Colours.transparency.base : 1
+                    opacity: Signal.transparency.enabled ? Signal.transparency.base : 1
                 }
 
                 Backgrounds {

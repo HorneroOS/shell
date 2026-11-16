@@ -11,9 +11,9 @@ JsonObject {
 
     component Icons: JsonObject {
         property string logout: "logout"
-        property string shutdown: "power_settings_new"
-        property string hibernate: "downloading"
-        property string reboot: "cached"
+        property string shutdown: "power"
+        property string hibernate: "zzz"
+        property string reboot: "refresh"
     }
 
     component Commands: JsonObject {

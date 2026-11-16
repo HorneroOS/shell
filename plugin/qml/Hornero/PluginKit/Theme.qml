@@ -2,6 +2,7 @@ pragma Singleton
 
 import qs.config
 import qs.services
+import qs.utils
 import QtQuick
 
 // Content colours (on*) live in ThemeBase: Qt parses a property named
@@ -9,40 +10,40 @@ import QtQuick
 // handler, so the colour silently resolves to black (shell#427).
 ThemeBase {
     // Expose the effective palette mode, including accessibility overrides.
-    readonly property bool light: Colours.light
-    readonly property color primary: Colours.palette.m3primary
+    readonly property bool light: Signal.light
+    readonly property color primary: Signal.palette.signal
 
-    readonly property color surface: Colours.palette.m3surface
-    readonly property color surfaceContainer: Colours.palette.m3surfaceContainer
+    readonly property color surface: Signal.palette.base
+    readonly property color surfaceContainer: Signal.palette.panel
 
-    readonly property color error: Colours.palette.m3error
-    readonly property color background: Colours.palette.m3background
+    readonly property color error: Signal.palette.alert
+    readonly property color background: Signal.palette.ground
 
-    readonly property color surfaceDim: Colours.palette.m3surfaceDim
-    readonly property color surfaceBright: Colours.palette.m3surfaceBright
-    readonly property color surfaceContainerLowest: Colours.palette.m3surfaceContainerLowest
-    readonly property color surfaceContainerLow: Colours.palette.m3surfaceContainerLow
-    readonly property color surfaceContainerHigh: Colours.palette.m3surfaceContainerHigh
-    readonly property color surfaceContainerHighest: Colours.palette.m3surfaceContainerHighest
-    readonly property color surfaceVariant: Colours.palette.m3surfaceVariant
-    readonly property color primaryContainer: Colours.palette.m3primaryContainer
+    readonly property color surfaceDim: Signal.palette.ground
+    readonly property color surfaceBright: Signal.palette.lifted
+    readonly property color surfaceContainerLowest: Signal.palette.ground
+    readonly property color surfaceContainerLow: Signal.palette.sunken
+    readonly property color surfaceContainerHigh: Signal.palette.raised
+    readonly property color surfaceContainerHighest: Signal.palette.lifted
+    readonly property color surfaceVariant: Signal.palette.raised
+    readonly property color primaryContainer: Signal.palette.signalWell
 
-    readonly property color secondary: Colours.palette.m3secondary
+    readonly property color secondary: Signal.palette.cue
 
-    readonly property color secondaryContainer: Colours.palette.m3secondaryContainer
+    readonly property color secondaryContainer: Signal.palette.cueWell
 
-    readonly property color tertiary: Colours.palette.m3tertiary
+    readonly property color tertiary: Signal.palette.phosphor
 
-    readonly property color tertiaryContainer: Colours.palette.m3tertiaryContainer
+    readonly property color tertiaryContainer: Signal.palette.phosphorWell
 
-    readonly property color errorContainer: Colours.palette.m3errorContainer
+    readonly property color errorContainer: Signal.palette.alertWell
 
-    readonly property color outline: Colours.palette.m3outline
-    readonly property color outlineVariant: Colours.palette.m3outlineVariant
+    readonly property color outline: Signal.palette.ruleStrong
+    readonly property color outlineVariant: Signal.palette.rule
     // Essential component borders must reach 3:1 (WCAG 1.4.11);
     // outlineVariant does not, outline does in every builtin palette.
-    readonly property color componentBorder: Colours.palette.m3outline
-    readonly property color success: Colours.palette.m3success
+    readonly property color componentBorder: Signal.palette.ruleStrong
+    readonly property color success: Signal.palette.phosphor
     readonly property string fontFamily: Appearance.font.family.sans
     readonly property string monoFontFamily: Appearance.font.family.mono
     readonly property int fontSizeSmall: Appearance.font.size.small
@@ -53,8 +54,8 @@ ThemeBase {
     readonly property int fontSizeBody: Appearance.font.size.smaller
     readonly property int fontSizeTitle: Appearance.font.size.larger
     readonly property int fontSizeDisplay: Appearance.font.size.extraLarge
-    // Native icons (components/MaterialIcon.qml): Material Symbols Rounded.
-    readonly property string iconFontFamily: Appearance.font.family.material
+    // Native icons (components/Glyph.qml): the bundled Hornero Glyphs font.
+    readonly property string iconFontFamily: Glyphs.family
     readonly property int iconSize: Appearance.font.size.larger
     readonly property int iconSizeLarge: Appearance.font.size.large
     readonly property int spacingSmall: Appearance.spacing.small
@@ -70,16 +71,16 @@ ThemeBase {
     // Accessibility inheritance (shell issue 376): plugins get the host's focus,
     // contrast and motion preferences through Theme instead of
     // inventing their own. The palette above already swaps to the
-    // high-contrast palette when the host enables it (Colours owns
+    // high-contrast palette when the host enables it (Signal owns
     // that), so `highContrast` is exposed only for layout/emphasis
-    // decisions. The host has no separate reduced-motion boolean:
-    // animation speed 0 in Accessibility settings is the host's
-    // reduced-motion signal, and `motionDuration()` applies both it
-    // and the host animation-speed scale to a nominal duration.
-    readonly property color focusRing: Colours.focusRing
+    // decisions. Reduced motion is the host's appearance.reducedMotion
+    // setting, the system preference, or animation speed 0;
+    // `motionDuration()` applies it and the host animation-speed scale
+    // to a nominal duration.
+    readonly property color focusRing: Signal.palette.focus
     readonly property bool highContrast: Config.appearance.highContrast
     readonly property real animationScale: Appearance.anim.durations.scale
-    readonly property bool reducedMotion: animationScale <= 0
+    readonly property bool reducedMotion: Appearance.anim.reduced || animationScale <= 0
 
     function motionDuration(ms: int): int {
         return reducedMotion ? 0 : Math.round(ms * animationScale);
@@ -89,12 +90,12 @@ ThemeBase {
     // StateLayer, FocusRing and Interactive). Durations already carry the
     // host's scale; reduced motion zeroes them. Plugins never hard-code
     // these numbers, so an extension moves exactly like a native control.
-    readonly property int durationSmall: reducedMotion ? 0 : Appearance.anim.durations.small
-    readonly property int durationNormal: reducedMotion ? 0 : Appearance.anim.durations.normal
+    readonly property int durationSmall: reducedMotion ? 0 : Appearance.anim.durations.short
+    readonly property int durationNormal: reducedMotion ? 0 : Appearance.anim.durations.medium
     readonly property var curveStandard: Appearance.anim.curves.standard
-    readonly property var curveStandardDecel: Appearance.anim.curves.standardDecel
-    readonly property int durationExpressiveFastSpatial: reducedMotion ? 0 : Appearance.anim.durations.expressiveFastSpatial
-    readonly property var curveExpressiveFastSpatial: Appearance.anim.curves.expressiveFastSpatial
+    readonly property var curveStandardDecel: Appearance.anim.curves.enter
+    readonly property int durationExpressiveFastSpatial: reducedMotion ? 0 : Appearance.anim.durations.settleFast
+    readonly property var curveExpressiveFastSpatial: Appearance.anim.curves.settleFast
     // Keyboard-only focus: rings show iff the control has focus AND the
     // last input was a keyboard (docs/FOCUS.md). Pointer users never see them.
     readonly property bool keyboardFocus: FocusMode.keyboard

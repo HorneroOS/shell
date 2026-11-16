@@ -47,7 +47,7 @@ Item {
     StyledRect {
         id: searchWrapper
 
-        color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
+        color: Signal.layer(Signal.palette.panel, 2)
         radius: Appearance.rounding.full
 
         anchors.left: parent.left
@@ -57,15 +57,15 @@ Item {
 
         implicitHeight: Math.max(searchIcon.implicitHeight, search.implicitHeight, clearIcon.implicitHeight)
 
-        MaterialIcon {
+        Glyph {
             id: searchIcon
 
             anchors.verticalCenter: parent.verticalCenter
             anchors.left: parent.left
             anchors.leftMargin: root.padding
 
-            text: "search"
-            color: Colours.palette.m3onSurfaceVariant
+            name: "search"
+            color: Signal.palette.inkMuted
         }
 
         StyledTextField {
@@ -88,8 +88,6 @@ Item {
                 const currentItem = list.currentList?.currentItem;
                 if (currentItem) {
                     if (list.showWallpapers) {
-                        if (Colours.scheme === "dynamic" && currentItem.modelData.path !== Wallpapers.actualCurrent)
-                            Wallpapers.previewColourLock = true;
                         Wallpapers.setWallpaper(currentItem.modelData.path);
                         root.visibilities.launcher = false;
                     } else if (text.startsWith(Config.launcher.actionPrefix)) {
@@ -161,7 +159,7 @@ Item {
             }
         }
 
-        MaterialIcon {
+        Glyph {
             id: clearIcon
 
             anchors.verticalCenter: parent.verticalCenter
@@ -179,8 +177,8 @@ Item {
                 return 1;
             }
 
-            text: "close"
-            color: Colours.palette.m3onSurfaceVariant
+            name: "x"
+            color: Signal.palette.inkMuted
 
             MouseArea {
                 id: mouse
@@ -197,13 +195,13 @@ Item {
 
             Behavior on width {
                 Anim {
-                    duration: Appearance.anim.durations.small
+                    duration: Appearance.anim.durations.short
                 }
             }
 
             Behavior on opacity {
                 Anim {
-                    duration: Appearance.anim.durations.small
+                    duration: Appearance.anim.durations.short
                 }
             }
         }

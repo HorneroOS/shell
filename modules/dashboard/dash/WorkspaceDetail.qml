@@ -35,9 +35,9 @@ Item {
             Layout.fillWidth: true
             spacing: Appearance.spacing.small
 
-            MaterialIcon {
-                text: "select_window"
-                color: Colours.palette.m3secondary
+            Glyph {
+                name: "app-window"
+                color: Signal.palette.cue
                 font.pointSize: Appearance.font.size.large
             }
 
@@ -45,7 +45,7 @@ Item {
                 text: qsTr("Windows")
                 font.pointSize: Appearance.font.size.normal
                 font.weight: 600
-                color: Colours.palette.m3onSurface
+                color: Signal.palette.ink
                 Layout.fillWidth: true
             }
 
@@ -54,7 +54,7 @@ Item {
                     ? qsTr("%1").arg(root.wsToplevels.length)
                     : ""
                 font.pointSize: Appearance.font.size.small
-                color: Colours.palette.m3onSurfaceVariant
+                color: Signal.palette.inkMuted
                 visible: root.wsToplevels.length > 0
             }
         }
@@ -70,17 +70,17 @@ Item {
                 visible: root.wsToplevels.length === 0
                 spacing: Appearance.spacing.small
 
-                MaterialIcon {
+                Glyph {
                     Layout.alignment: Qt.AlignHCenter
-                    text: "select_window_off"
-                    color: Colours.palette.m3onSurfaceVariant
+                    name: "app-window"
+                    color: Signal.palette.inkMuted
                     font.pointSize: Appearance.font.size.extraLarge
                 }
 
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
                     text: qsTr("No windows")
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                     font.pointSize: Appearance.font.size.small
                 }
             }

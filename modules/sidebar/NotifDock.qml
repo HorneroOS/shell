@@ -42,7 +42,7 @@ Item {
             opacity: root.notifCount > 0 ? 1 : 0
 
             text: root.notifCount
-            color: Colours.palette.m3outline
+            color: Signal.palette.ruleStrong
             font.pointSize: Appearance.font.size.normal
             font.family: Appearance.font.family.mono
             font.weight: 500
@@ -65,7 +65,7 @@ Item {
             anchors.leftMargin: Appearance.spacing.small
 
             text: root.notifCount > 0 ? qsTr("notification%1").arg(root.notifCount === 1 ? "" : "s") : qsTr("Notifications")
-            color: Colours.palette.m3outline
+            color: Signal.palette.ruleStrong
             font.pointSize: Appearance.font.size.normal
             font.family: Appearance.font.family.mono
             font.weight: 500
@@ -101,7 +101,7 @@ Item {
 
                     layer.enabled: true
                     layer.effect: Colouriser {
-                        colorizationColor: Colours.palette.m3outlineVariant
+                        colorizationColor: Signal.palette.rule
                         brightness: 1
                     }
                 }
@@ -109,7 +109,7 @@ Item {
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
                     text: qsTr("No Notifications")
-                    color: Colours.palette.m3outlineVariant
+                    color: Signal.palette.rule
                     font.pointSize: Appearance.font.size.large
                     font.family: Appearance.font.family.mono
                     font.weight: 500
@@ -118,7 +118,7 @@ Item {
 
             Behavior on opacity {
                 Anim {
-                    duration: Appearance.anim.durations.extraLarge
+                    duration: Appearance.anim.durations.scan
                 }
             }
         }
@@ -177,7 +177,7 @@ Item {
         sourceComponent: IconButton {
             id: clearBtn
 
-            icon: "clear_all"
+            icon: "clear-all"
             accessibleName: qsTr("Clear all notifications")
             radius: Appearance.rounding.normal
             padding: Appearance.padding.normal
@@ -194,14 +194,14 @@ Item {
 
         Behavior on scale {
             Anim {
-                duration: Appearance.anim.durations.expressiveFastSpatial
-                easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+                duration: Appearance.anim.durations.settleFast
+                easing.bezierCurve: Appearance.anim.curves.settleFast
             }
         }
 
         Behavior on opacity {
             Anim {
-                duration: Appearance.anim.durations.expressiveFastSpatial
+                duration: Appearance.anim.durations.settleFast
             }
         }
     }

@@ -66,7 +66,7 @@ Searcher {
         required property var modelData
         readonly property string name: modelData.name ?? qsTr("Unnamed")
         readonly property string desc: modelData.description ?? qsTr("No description")
-        readonly property string icon: modelData.icon ?? "help_outline"
+        readonly property string icon: modelData.icon ?? "help-circle"
         readonly property list<string> command: modelData.command ?? []
         readonly property bool enabled: modelData.enabled ?? true
         readonly property bool dangerous: modelData.dangerous ?? false
@@ -77,9 +77,9 @@ Searcher {
 
             if (command[0] === "autocomplete" && command.length > 1) {
                 list.search.text = `${Config.launcher.actionPrefix}${command[1]} `;
-            } else if (command[0] === "setMode" && command.length > 1) {
+            } else if (command[0] === "theme" && command.length > 1) {
                 list.visibilities.launcher = false;
-                Colours.setMode(command[1]);
+                ThemePipeline.applyTheme(command[1], "");
             } else if (command[0] === "layoutpicker") {
                 list.visibilities.launcher = false;
                 Visibilities.getForActive().layoutPicker = true;

@@ -16,7 +16,7 @@ other HorneroOS components script against; renames must update
 | `idleInhibitor` | `services/IdleInhibitor.qml` | `isEnabled()`, `toggle()`, `enable()` (+ `disable()` per file) |
 | `hypr` | `services/Hypr.qml` | `refreshDevices()`, `cycleSpecialWorkspace(direction)`, `listSpecialWorkspaces()` |
 | `gameMode` | `services/GameMode.qml` | `isEnabled()`, `toggle()`, `enable()`, `disable()` |
-| `colours` | `services/Colours.qml` | `reload()`, `mode()`, `flavour()` |
+| `signal` | `services/Signal.qml` | `reload()` (re-read the live scheme), `mode()` (`dark`/`light`), `theme()` (applied theme id) |
 | `brightness` | `services/Brightness.qml` | `get()`, `getFor(query)`, `set(value)` (+ `setFor` per file) |
 
 ## Shell chrome
@@ -91,12 +91,13 @@ The shell also *spawns* processes; the stable outbound contracts are:
 
 - Appearance (native first, see `docs/NATIVE-APPEARANCE.md`):
   `gsettings set/get org.gnome.desktop.interface …` (via
-  `services/GtkSettings.qml`) and the native `ImageAnalyser` plugin
-  (`dominantColour`/`luminance`, via `services/WallpaperAnalysis.qml` and
-  `Colours.wallLuminance`/`wallDominantColour`).
+  `services/GtkSettings.qml`) and the Hornero Signal live scheme file
+  `${XDG_STATE_HOME:-~/.local/state}/hornero/signal/scheme.json`
+  (schema v2, watched and, for built-ins, written by `services/Signal.qml`).
 - Appearance uses the shared native Hornero CLI contract:
-  `horneroctl appearance colors m3 -- …`,
-  `horneroctl appearance gtk …`, `horneroctl appearance scheme …`.
+  `horneroctl appearance theme apply <id> --yes`,
+  `horneroctl appearance gtk …`, `horneroctl appearance hyprland --yes`,
+  `horneroctl appearance hyprlock --yes`.
 - Optional integrations: `horneroctl capture record start/stop/pause --yes`,
   `horneroctl wallpaper current`, `horneroctl wallpaper set --yes`,
   `horneroctl shell preset apply --yes`,

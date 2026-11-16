@@ -49,8 +49,8 @@ Item {
             Anim {
                 target: root
                 property: "implicitHeight"
-                duration: Appearance.anim.durations.expressiveDefaultSpatial
-                easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                duration: Appearance.anim.durations.settle
+                easing.bezierCurve: Appearance.anim.curves.settle
             }
         },
         Transition {
@@ -60,7 +60,7 @@ Item {
             Anim {
                 target: root
                 property: "implicitHeight"
-                easing.bezierCurve: Appearance.anim.curves.emphasized
+                easing.bezierCurve: Appearance.anim.curves.standard
             }
         }
     ]
@@ -69,7 +69,7 @@ Item {
         id: timer
 
         running: true
-        interval: Appearance.anim.durations.extraLarge
+        interval: Appearance.anim.durations.scan
         onTriggered: {
             content.active = Qt.binding(() => root.shouldBeActive || root.visible);
             content.visible = true;

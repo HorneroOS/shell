@@ -201,14 +201,14 @@ Item {
                     Layout.fillWidth: true
                     text: root.statusText
                     font.pointSize: Appearance.font.size.small
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                     wrapMode: Text.Wrap
                 }
 
                 StyledRect {
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
-                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: nlCol.implicitHeight + Appearance.padding.large * 2
 
                     ColumnLayout {
@@ -228,7 +228,7 @@ Item {
                             Layout.fillWidth: true
                             text: root.backend !== "" ? qsTr("Active backend: %1 · Available: %2").arg(root.backend).arg(root.available !== "" ? root.available : qsTr("none")) : qsTr("Available backends: %1").arg(root.available !== "" ? root.available : qsTr("none detected"))
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
 
@@ -281,7 +281,7 @@ Item {
                                 Layout.fillWidth: true
                                 text: root.schedule !== "" ? qsTr("On at %1 · Off at %2 · Enforced by timers: %3").arg(root.schedule.split("-")[0]).arg(root.schedule.split("-")[1]).arg(root.scheduleEnforced ? qsTr("yes") : qsTr("no")) : qsTr("No schedule set. Times use your local clock; timers catch up after login if a boundary was missed.")
                                 font.pointSize: Appearance.font.size.small
-                                color: Colours.palette.m3onSurfaceVariant
+                                color: Signal.palette.inkMuted
                                 wrapMode: Text.Wrap
                             }
 
@@ -350,7 +350,7 @@ Item {
                             visible: root.actionText !== ""
                             text: root.actionText
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
 
@@ -358,7 +358,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Temperature applies immediately while Night Light is on and is stored for the next time otherwise. This pane never shows a control the backend cannot honour.")
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3outline
+                            color: Signal.palette.ruleStrong
                             wrapMode: Text.Wrap
                         }
                     }

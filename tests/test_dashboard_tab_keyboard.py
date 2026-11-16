@@ -45,7 +45,7 @@ def test_visible_focus_ring_uses_shared_convention():
     tab = _tab_component()
     assert "FocusRing {" in tab
     ring = (ROOT / "components" / "controls" / "FocusRing.qml").read_text()
-    assert "Colours.focusRing" in ring
+    assert "Signal.palette.focus" in ring
     assert "FocusMode.keyboard" in ring
     # Focus reason reported so the ring is keyboard-only, never stale
     # after a mouse click (Interactive.qml convention).

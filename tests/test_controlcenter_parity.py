@@ -23,7 +23,7 @@ def test_ctl_card_is_allowlisted_argv_only_with_states_and_confirm():
     assert "JSON.parse" in card
     # Loading, error, empty/not-run states are all rendered.
     assert 'qsTr("Working…")' in card
-    assert "Colours.palette.m3error" in card
+    assert "Signal.palette.alert" in card
     assert 'qsTr("Not run yet.")' in card
     assert 'qsTr("No data reported.")' in card
     # Mutations are two-step armed and refresh the probe afterwards.

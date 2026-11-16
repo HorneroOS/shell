@@ -17,7 +17,7 @@ StyledRect {
 
     required property ShellScreen screen
 
-    property color colour: Colours.palette.m3secondary
+    property color colour: Signal.palette.cue
     readonly property alias items: iconGrid
     // Orientation of the owning bar (set by Bar.qml); defaults to the
     // primary bar for standalone use.
@@ -28,7 +28,7 @@ StyledRect {
 
     signal popoutRequested(string name, Item anchor)
 
-    color: clear ? "transparent" : Colours.tPalette.m3surfaceContainer
+    color: clear ? "transparent" : Signal.tPalette.panel
     radius: Appearance.rounding.full
 
     clip: true
@@ -67,7 +67,7 @@ StyledRect {
                     implicitWidth: root.vertical ? capslockIcon.implicitWidth : (Compositor.capsLock ? capslockIcon.implicitWidth : 0)
                     implicitHeight: root.vertical ? (Compositor.capsLock ? capslockIcon.implicitHeight : 0) : capslockIcon.implicitHeight
 
-                    MaterialIcon {
+                    Glyph {
                         id: capslockIcon
 
                         anchors.centerIn: parent
@@ -75,7 +75,7 @@ StyledRect {
                         scale: Compositor.capsLock ? 1 : 0.5
                         opacity: Compositor.capsLock ? 1 : 0
 
-                        text: "keyboard_capslock_badge"
+                        name: "letter-case-upper"
                         color: root.colour
 
                         Behavior on opacity {
@@ -99,7 +99,7 @@ StyledRect {
                     implicitWidth: root.vertical ? numlockIcon.implicitWidth : (Compositor.numLock ? numlockIcon.implicitWidth : 0)
                     implicitHeight: root.vertical ? (Compositor.numLock ? numlockIcon.implicitHeight : 0) : numlockIcon.implicitHeight
 
-                    MaterialIcon {
+                    Glyph {
                         id: numlockIcon
 
                         anchors.centerIn: parent
@@ -107,7 +107,7 @@ StyledRect {
                         scale: Compositor.numLock ? 1 : 0.5
                         opacity: Compositor.numLock ? 1 : 0
 
-                        text: "looks_one"
+                        name: "square-number-1"
                         color: root.colour
 
                         Behavior on opacity {
@@ -142,15 +142,14 @@ StyledRect {
                 ? qsTr("Screen capture is active")
                 : qsTr("Screen capture session is paused")
 
-            MaterialIcon {
+            Glyph {
                 id: icon
 
                 anchors.centerIn: parent
-                text: "screen_record"
+                name: "video"
                 color: Compositor.hasActiveScreencast
-                    ? Colours.palette.m3error
-                    : Colours.palette.m3onSurfaceVariant
-                fill: 1
+                    ? Signal.palette.alert
+                    : Signal.palette.inkMuted
                 Accessible.ignored: true
             }
 
@@ -168,9 +167,9 @@ StyledRect {
             accessibleLabel: qsTr("Volume controls")
             active: Config.bar.status.showAudio
 
-            sourceComponent: MaterialIcon {
+            sourceComponent: Glyph {
                 animate: true
-                text: Icons.getVolumeIcon(Audio.volume, Audio.muted)
+                name: Icons.getVolumeIcon(Audio.volume, Audio.muted)
                 color: root.colour
             }
         }
@@ -181,9 +180,9 @@ StyledRect {
             accessibleLabel: qsTr("Microphone controls")
             active: Config.bar.status.showMicrophone
 
-            sourceComponent: MaterialIcon {
+            sourceComponent: Glyph {
                 animate: true
-                text: Icons.getMicVolumeIcon(Audio.sourceVolume, Audio.sourceMuted)
+                name: Icons.getMicVolumeIcon(Audio.sourceVolume, Audio.sourceMuted)
                 color: root.colour
             }
         }
@@ -208,9 +207,9 @@ StyledRect {
             accessibleLabel: qsTr("Network controls")
             active: Config.bar.status.showNetwork && (!Nmcli.activeEthernet || Config.bar.status.showWifi)
 
-            sourceComponent: MaterialIcon {
+            sourceComponent: Glyph {
                 animate: true
-                text: Nmcli.active ? Icons.getNetworkIcon(Nmcli.active.strength ?? 0) : "wifi_off"
+                name: Nmcli.active ? Icons.getNetworkIcon(Nmcli.active.strength ?? 0) : "wifi-off"
                 color: root.colour
             }
         }
@@ -221,9 +220,9 @@ StyledRect {
             accessibleLabel: qsTr("Ethernet controls")
             active: Config.bar.status.showNetwork && Nmcli.activeEthernet
 
-            sourceComponent: MaterialIcon {
+            sourceComponent: Glyph {
                 animate: true
-                text: "cable"
+                name: "plug-connected"
                 color: root.colour
             }
         }
@@ -245,13 +244,13 @@ StyledRect {
                 columnSpacing: Appearance.spacing.smaller / 2
 
                 // Bluetooth icon
-                MaterialIcon {
+                Glyph {
                     animate: true
-                    text: {
+                    name: {
                         if (!Bluetooth.defaultAdapter?.enabled)
-                            return "bluetooth_disabled";
+                            return "bluetooth-off";
                         if (Bluetooth.devices.values.some(d => d.connected))
-                            return "bluetooth_connected";
+                            return "bluetooth-connected";
                         return "bluetooth";
                     }
                     color: root.colour
@@ -263,15 +262,14 @@ StyledRect {
                         values: Bluetooth.devices.values.filter(d => d.state !== BluetoothDeviceState.Disconnected)
                     }
 
-                    MaterialIcon {
+                    Glyph {
                         id: device
 
                         required property BluetoothDevice modelData
 
                         animate: true
-                        text: Icons.getBluetoothIcon(modelData?.icon)
+                        name: Icons.getBluetoothIcon(modelData?.icon)
                         color: root.colour
-                        fill: 1
 
                         SequentialAnimation on opacity {
                             running: device.modelData?.state !== BluetoothDeviceState.Connected
@@ -281,14 +279,14 @@ StyledRect {
                             Anim {
                                 from: 1
                                 to: 0
-                                duration: Appearance.anim.durations.large
-                                easing.bezierCurve: Appearance.anim.curves.standardAccel
+                                duration: Appearance.anim.durations.long
+                                easing.bezierCurve: Appearance.anim.curves.exit
                             }
                             Anim {
                                 from: 0
                                 to: 1
-                                duration: Appearance.anim.durations.large
-                                easing.bezierCurve: Appearance.anim.curves.standardDecel
+                                duration: Appearance.anim.durations.long
+                                easing.bezierCurve: Appearance.anim.curves.enter
                             }
                         }
                     }
@@ -306,28 +304,26 @@ StyledRect {
             accessibleLabel: qsTr("Power controls")
             active: Config.bar.status.showBattery
 
-            sourceComponent: MaterialIcon {
+            sourceComponent: Glyph {
                 animate: true
-                text: {
+                name: {
                     if (!UPower.displayDevice.isLaptopBattery) {
                         if (PowerProfiles.profile === PowerProfile.PowerSaver)
-                            return "energy_savings_leaf";
+                            return "leaf";
                         if (PowerProfiles.profile === PowerProfile.Performance)
-                            return "rocket_launch";
-                        return "balance";
+                            return "rocket";
+                        return "scale";
                     }
 
                     const perc = UPower.displayDevice.percentage;
                     const charging = [UPowerDeviceState.Charging, UPowerDeviceState.FullyCharged, UPowerDeviceState.PendingCharge].includes(UPower.displayDevice.state);
                     if (perc === 1)
-                        return charging ? "battery_charging_full" : "battery_full";
-                    let level = Math.floor(perc * 7);
-                    if (charging && (level === 4 || level === 1))
-                        level--;
-                    return charging ? `battery_charging_${(level + 3) * 10}` : `battery_${level}_bar`;
+                        return charging ? "battery-charging" : "battery-4";
+                    if (charging)
+                        return "battery-charging";
+                    return perc > 0.75 ? "battery-4" : perc > 0.5 ? "battery-3" : perc > 0.25 ? "battery-2" : perc > 0.1 ? "battery-1" : "battery";
                 }
-                color: !UPower.onBattery || UPower.displayDevice.percentage > 0.2 ? root.colour : Colours.palette.m3error
-                fill: 1
+                color: !UPower.onBattery || UPower.displayDevice.percentage > 0.2 ? root.colour : Signal.palette.alert
             }
         }
 

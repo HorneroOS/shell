@@ -34,7 +34,7 @@ Item {
 
         Behavior on opacity {
             Anim {
-                duration: Appearance.anim.durations.extraLarge
+                duration: Appearance.anim.durations.scan
             }
         }
     }
@@ -75,7 +75,7 @@ Item {
             Layout.topMargin: Appearance.padding.large
             Layout.bottomMargin: Appearance.spacing.larger
             text: qsTr("Now playing")
-            color: Colours.palette.m3onSurfaceVariant
+            color: Signal.palette.inkMuted
             font.family: Appearance.font.family.mono
             font.weight: 500
         }
@@ -84,7 +84,7 @@ Item {
             Layout.fillWidth: true
             animate: true
             text: Players.active?.trackArtist ?? qsTr("No media")
-            color: Colours.palette.m3primary
+            color: Signal.palette.signal
             horizontalAlignment: Text.AlignHCenter
             font.pointSize: Appearance.font.size.large
             font.family: Appearance.font.family.mono
@@ -110,7 +110,7 @@ Item {
             spacing: Appearance.spacing.large
 
             PlayerControl {
-                icon: "skip_previous"
+                icon: "player-skip-back"
 
                 function onClicked(): void {
                     if (Players.active?.canGoPrevious)
@@ -120,8 +120,8 @@ Item {
 
             PlayerControl {
                 animate: true
-                icon: active ? "pause" : "play_arrow"
-                colour: "Primary"
+                icon: active ? "player-pause" : "player-play"
+                colour: "signal"
                 level: active ? 2 : 1
                 active: Players.active?.isPlaying ?? false
 
@@ -132,7 +132,7 @@ Item {
             }
 
             PlayerControl {
-                icon: "skip_next"
+                icon: "player-skip-forward"
 
                 function onClicked(): void {
                     if (Players.active?.canGoNext)
@@ -146,9 +146,11 @@ Item {
         id: control
 
         property alias animate: controlIcon.animate
-        property alias icon: controlIcon.text
+        property alias icon: controlIcon.name
         property bool active
-        property string colour: "Secondary"
+        // Signal accent role: "signal", "cue" or "phosphor".
+        property string colour: "cue"
+        readonly property string onColour: `on${colour.charAt(0).toUpperCase()}${colour.slice(1)}`
         property int level: 1
 
         function onClicked(): void {
@@ -158,7 +160,7 @@ Item {
         implicitWidth: controlIcon.implicitWidth + Appearance.padding.large * 2
         implicitHeight: controlIcon.implicitHeight + Appearance.padding.normal * 2
 
-        color: active ? Colours.palette[`m3${colour.toLowerCase()}`] : Colours.palette[`m3${colour.toLowerCase()}Container`]
+        color: active ? Signal.palette[colour] : Signal.palette[`${colour}Well`]
         radius: active || controlState.pressed ? Appearance.rounding.normal : Math.min(implicitWidth, implicitHeight) / 2 * Math.min(1, Appearance.rounding.scale)
 
         Elevation {
@@ -171,37 +173,32 @@ Item {
         StateLayer {
             id: controlState
 
-            color: control.active ? Colours.palette[`m3on${control.colour}`] : Colours.palette[`m3on${control.colour}Container`]
+            color: control.active ? Signal.palette[control.onColour] : Signal.palette[`${control.onColour}Well`]
 
             function onClicked(): void {
                 control.onClicked();
             }
         }
 
-        MaterialIcon {
+        Glyph {
             id: controlIcon
 
             anchors.centerIn: parent
-            color: control.active ? Colours.palette[`m3on${control.colour}`] : Colours.palette[`m3on${control.colour}Container`]
+            color: control.active ? Signal.palette[control.onColour] : Signal.palette[`${control.onColour}Well`]
             font.pointSize: Appearance.font.size.large
-            fill: control.active ? 1 : 0
-
-            Behavior on fill {
-                Anim {}
-            }
         }
 
         Behavior on Layout.preferredWidth {
             Anim {
-                duration: Appearance.anim.durations.expressiveFastSpatial
-                easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+                duration: Appearance.anim.durations.settleFast
+                easing.bezierCurve: Appearance.anim.curves.settleFast
             }
         }
 
         Behavior on radius {
             Anim {
-                duration: Appearance.anim.durations.expressiveFastSpatial
-                easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+                duration: Appearance.anim.durations.settleFast
+                easing.bezierCurve: Appearance.anim.curves.settleFast
             }
         }
     }

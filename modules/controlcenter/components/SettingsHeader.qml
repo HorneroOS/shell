@@ -21,9 +21,9 @@ Item {
         height: implicitHeight
         spacing: Appearance.spacing.normal
 
-        MaterialIcon {
+        Glyph {
             Layout.alignment: Qt.AlignHCenter
-            text: root.icon
+            name: root.icon
             font.pointSize: Appearance.font.size.extraLarge * 3
             font.bold: true
         }

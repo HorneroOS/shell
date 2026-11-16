@@ -36,7 +36,7 @@ Item {
             StyledText {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: qsTr("Choose a city in Settings → Dashboard. Weather is offline until then.")
-                color: Colours.palette.m3onSurfaceVariant
+                color: Signal.palette.inkMuted
             }
         }
     }
@@ -51,24 +51,24 @@ Item {
             anchors.centerIn: parent
             spacing: Appearance.spacing.normal
 
-            MaterialIcon {
+            Glyph {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: "cloud_off"
+                name: "cloud-off"
                 font.pointSize: Appearance.font.size.extraLarge * 2
-                color: Colours.palette.m3error
+                color: Signal.palette.alert
             }
 
             StyledText {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: Weather.lastError || qsTr("Weather unavailable")
-                color: Colours.palette.m3onSurface
+                color: Signal.palette.ink
                 font.pointSize: Appearance.font.size.normal
             }
 
             StyledText {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: qsTr("Check network or set a location in Control Center → Dashboard")
-                color: Colours.palette.m3outline
+                color: Signal.palette.ruleStrong
                 font.pointSize: Appearance.font.size.small
             }
         }
@@ -107,13 +107,13 @@ Item {
                         implicitWidth: 200
                         implicitHeight: Appearance.font.size.extraLarge + 4
                         radius: Appearance.rounding.small
-                        color: Colours.tPalette.m3surfaceContainerHigh
+                        color: Signal.tPalette.raised
                     }
                     StyledRect {
                         implicitWidth: 130
                         implicitHeight: Appearance.font.size.small + 4
                         radius: Appearance.rounding.small
-                        color: Colours.tPalette.m3surfaceContainerHigh
+                        color: Signal.tPalette.raised
                     }
                 }
                 Item { Layout.fillWidth: true }
@@ -127,7 +127,7 @@ Item {
                             implicitWidth: 70
                             implicitHeight: 40
                             radius: Appearance.rounding.small
-                            color: Colours.tPalette.m3surfaceContainerHigh
+                            color: Signal.tPalette.raised
                         }
                     }
                 }
@@ -138,7 +138,7 @@ Item {
                 Layout.fillWidth: true
                 implicitHeight: 90
                 radius: Appearance.rounding.normal
-                color: Colours.tPalette.m3surfaceContainerHigh
+                color: Signal.tPalette.raised
             }
 
             // Forecast cards skeleton
@@ -153,7 +153,7 @@ Item {
                         Layout.fillWidth: true
                         implicitHeight: 100
                         radius: Appearance.rounding.normal
-                        color: Colours.tPalette.m3surfaceContainerHigh
+                        color: Signal.tPalette.raised
                     }
                 }
             }
@@ -181,15 +181,14 @@ Item {
                     text: Weather.city || qsTr("Loading...")
                     font.pointSize: Appearance.font.size.extraLarge
                     font.weight: 600
-                    color: Colours.palette.m3onSurface
+                    color: Signal.palette.ink
                 }
 
                 StyledText {
                     text: new Date().toLocaleDateString(Qt.locale(), "dddd, MMMM d")
                     font.pointSize: Appearance.font.size.small
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                 }
-
             }
 
             Item {
@@ -200,17 +199,17 @@ Item {
                 spacing: Appearance.spacing.large
 
                 WeatherStat {
-                    icon: "wb_twilight"
+                    icon: "sunset"
                     label: "Sunrise"
                     value: Weather.sunrise
-                    colour: Colours.palette.m3tertiary
+                    colour: Signal.palette.phosphor
                 }
 
                 WeatherStat {
-                    icon: "bedtime"
+                    icon: "moon-stars"
                     label: "Sunset"
                     value: Weather.sunset
-                    colour: Colours.palette.m3tertiary
+                    colour: Signal.palette.phosphor
                 }
             }
         }
@@ -220,7 +219,7 @@ Item {
             implicitHeight: bigInfoRow.implicitHeight + Appearance.padding.small * 2
 
             radius: Appearance.rounding.large * 2
-            color: Colours.tPalette.m3surfaceContainer
+            color: Signal.tPalette.panel
 
             RowLayout {
                 id: bigInfoRow
@@ -228,11 +227,11 @@ Item {
                 anchors.centerIn: parent
                 spacing: Appearance.spacing.large
 
-                MaterialIcon {
+                Glyph {
                     Layout.alignment: Qt.AlignVCenter
-                    text: Weather.icon
+                    name: Weather.icon
                     font.pointSize: Appearance.font.size.extraLarge * 3
-                    color: Colours.palette.m3secondary
+                    color: Signal.palette.cue
                     animate: true
                 }
 
@@ -244,14 +243,14 @@ Item {
                         text: Weather.temp
                         font.pointSize: Appearance.font.size.extraLarge * 2
                         font.weight: 500
-                        color: Colours.palette.m3primary
+                        color: Signal.palette.signal
                     }
 
                     StyledText {
                         Layout.leftMargin: Appearance.padding.small
                         text: Weather.description
                         font.pointSize: Appearance.font.size.normal
-                        color: Colours.palette.m3onSurfaceVariant
+                        color: Signal.palette.inkMuted
                     }
                 }
             }
@@ -262,22 +261,22 @@ Item {
             spacing: Appearance.spacing.smaller
 
             DetailCard {
-                icon: "water_drop"
+                icon: "droplet"
                 label: "Humidity"
                 value: Weather.humidity + "%"
-                colour: Colours.palette.m3secondary
+                colour: Signal.palette.cue
             }
             DetailCard {
-                icon: "thermostat"
+                icon: "temperature"
                 label: "Feels Like"
                 value: Weather.feelsLike
-                colour: Colours.palette.m3primary
+                colour: Signal.palette.signal
             }
             DetailCard {
-                icon: "air"
+                icon: "wind"
                 label: "Wind"
                 value: Weather.windSpeed ? Weather.windSpeed + " km/h" : "--"
-                colour: Colours.palette.m3tertiary
+                colour: Signal.palette.phosphor
             }
         }
 
@@ -289,7 +288,7 @@ Item {
             text: qsTr("Hourly forecast")
             font.pointSize: Appearance.font.size.normal
             font.weight: 600
-            color: Colours.palette.m3onSurface
+            color: Signal.palette.ink
         }
 
         HourlyChart {
@@ -305,7 +304,7 @@ Item {
             text: qsTr("7-day forecast")
             font.pointSize: Appearance.font.size.normal
             font.weight: 600
-            color: Colours.palette.m3onSurface
+            color: Signal.palette.ink
         }
 
         RowLayout {
@@ -328,7 +327,7 @@ Item {
                     implicitHeight: forecastItemColumn.implicitHeight + Appearance.padding.normal * 2
 
                     radius: Appearance.rounding.normal
-                    color: Colours.tPalette.m3surfaceContainer
+                    color: Signal.tPalette.panel
 
                     ColumnLayout {
                         id: forecastItemColumn
@@ -341,7 +340,7 @@ Item {
                             text: forecastItem.index === 0 ? qsTr("Today") : new Date(forecastItem.modelData.date).toLocaleDateString(Qt.locale(), "ddd")
                             font.pointSize: Appearance.font.size.normal
                             font.weight: 600
-                            color: Colours.palette.m3primary
+                            color: Signal.palette.signal
                         }
 
                         StyledText {
@@ -349,21 +348,21 @@ Item {
                             Layout.alignment: Qt.AlignHCenter
                             text: new Date(forecastItem.modelData.date).toLocaleDateString(Qt.locale(), "MMM d")
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                         }
 
-                        MaterialIcon {
+                        Glyph {
                             Layout.alignment: Qt.AlignHCenter
-                            text: forecastItem.modelData.icon
+                            name: forecastItem.modelData.icon
                             font.pointSize: Appearance.font.size.extraLarge
-                            color: Colours.palette.m3secondary
+                            color: Signal.palette.cue
                         }
 
                         StyledText {
                             Layout.alignment: Qt.AlignHCenter
                             text: Config.services.useFahrenheit ? forecastItem.modelData.maxTempF + "°" + " / " + forecastItem.modelData.minTempF + "°" : forecastItem.modelData.maxTempC + "°" + " / " + forecastItem.modelData.minTempC + "°"
                             font.weight: 600
-                            color: Colours.palette.m3tertiary
+                            color: Signal.palette.phosphor
                         }
                     }
                 }
@@ -380,8 +379,8 @@ Item {
             textFormat: Text.StyledText
             text: qsTr("Weather: <a href=\"https://open-meteo.com/\">Open-Meteo</a> · Geocoding: <a href=\"https://www.openstreetmap.org/copyright\">© OpenStreetMap contributors</a>")
             font.pointSize: Appearance.font.size.small
-            color: Colours.palette.m3onSurfaceVariant
-            linkColor: Colours.palette.m3onSurfaceVariant
+            color: Signal.palette.inkMuted
+            linkColor: Signal.palette.inkMuted
             onLinkActivated: link => Quickshell.execDetached(["app2unit", "-O", "--", link])
         }
     }
@@ -397,14 +396,14 @@ Item {
         Layout.fillWidth: true
         Layout.preferredHeight: 60
         radius: Appearance.rounding.small
-        color: Colours.tPalette.m3surfaceContainer
+        color: Signal.tPalette.panel
 
         Row {
             anchors.centerIn: parent
             spacing: Appearance.spacing.normal
 
-            MaterialIcon {
-                text: detailRoot.icon
+            Glyph {
+                name: detailRoot.icon
                 color: detailRoot.colour
                 font.pointSize: Appearance.font.size.large
                 anchors.verticalCenter: parent.verticalCenter
@@ -417,7 +416,7 @@ Item {
                 StyledText {
                     text: detailRoot.label
                     font.pointSize: Appearance.font.size.smaller
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                     horizontalAlignment: Text.AlignLeft
                 }
                 StyledText {
@@ -439,8 +438,8 @@ Item {
 
         spacing: Appearance.spacing.small
 
-        MaterialIcon {
-            text: weatherStat.icon
+        Glyph {
+            name: weatherStat.icon
             font.pointSize: Appearance.font.size.extraLarge
             color: weatherStat.colour
         }
@@ -449,13 +448,13 @@ Item {
             StyledText {
                 text: weatherStat.label
                 font.pointSize: Appearance.font.size.smaller
-                color: Colours.palette.m3onSurfaceVariant
+                color: Signal.palette.inkMuted
             }
             StyledText {
                 text: weatherStat.value
                 font.pointSize: Appearance.font.size.small
                 font.weight: 600
-                color: Colours.palette.m3onSurface
+                color: Signal.palette.ink
             }
         }
     }

@@ -16,14 +16,14 @@ PageView {
     }
 
     ActionCard {
-        icon: "dock_to_right"
+        icon: "layout-sidebar-right"
         title: qsTr("Taskbar and dock")
         description: qsTr("What the bar shows, and where it lives.")
         onActivated: Actions.openControlCenter("taskbar")
     }
 
     ActionCard {
-        icon: "dashboard_customize"
+        icon: "layout-dashboard"
         title: qsTr("Bar layout")
         description: qsTr("Move and reshape the shell around your workflow.")
         onActivated: Actions.openLayoutPicker()

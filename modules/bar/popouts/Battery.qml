@@ -21,7 +21,7 @@ Column {
     StyledText {
         visible: !UPower.displayDevice.isLaptopBattery
         text: qsTr("No battery detected · Power profile: %1").arg(PowerProfile.toString(PowerProfiles.profile))
-        color: Colours.palette.m3onSurfaceVariant
+        color: Signal.palette.inkMuted
     }
 
     Loader {
@@ -35,7 +35,7 @@ Column {
             implicitWidth: child.implicitWidth + Appearance.padding.normal * 2
             implicitHeight: child.implicitHeight + Appearance.padding.smaller * 2
 
-            color: Colours.palette.m3error
+            color: Signal.palette.alert
             radius: Appearance.rounding.normal
 
             Column {
@@ -47,28 +47,28 @@ Column {
                     anchors.horizontalCenter: parent.horizontalCenter
                     spacing: Appearance.spacing.small
 
-                    MaterialIcon {
+                    Glyph {
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.verticalCenterOffset: -font.pointSize / 10
 
-                        text: "warning"
-                        color: Colours.palette.m3onError
+                        name: "alert-triangle"
+                        color: Signal.palette.onAlert
                     }
 
                     StyledText {
                         anchors.verticalCenter: parent.verticalCenter
                         text: qsTr("Performance Degraded")
-                        color: Colours.palette.m3onError
+                        color: Signal.palette.onAlert
                         font.family: Appearance.font.family.mono
                         font.weight: 500
                     }
 
-                    MaterialIcon {
+                    Glyph {
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.verticalCenterOffset: -font.pointSize / 10
 
-                        text: "warning"
-                        color: Colours.palette.m3onError
+                        name: "alert-triangle"
+                        color: Signal.palette.onAlert
                     }
                 }
 
@@ -76,7 +76,7 @@ Column {
                     anchors.horizontalCenter: parent.horizontalCenter
 
                     text: qsTr("Reason: %1").arg(PerformanceDegradationReason.toString(PowerProfiles.degradationReason))
-                    color: Colours.palette.m3onError
+                    color: Signal.palette.onAlert
                 }
             }
         }
@@ -99,13 +99,13 @@ Column {
         implicitWidth: saver.implicitHeight + balance.implicitHeight + perf.implicitHeight + Appearance.padding.normal * 2 + Appearance.spacing.large * 2
         implicitHeight: Math.max(saver.implicitHeight, balance.implicitHeight, perf.implicitHeight) + Appearance.padding.small * 2
 
-        color: Colours.tPalette.m3surfaceContainer
+        color: Signal.tPalette.panel
         radius: Appearance.rounding.full
 
         StyledRect {
             id: indicator
 
-            color: Colours.palette.m3primary
+            color: Signal.palette.signal
             radius: Appearance.rounding.full
             state: profiles.current
 
@@ -135,9 +135,9 @@ Column {
 
             transitions: Transition {
                 AnchorAnimation {
-                    duration: Appearance.anim.durations.normal
+                    duration: Appearance.anim.durations.medium
                     easing.type: Easing.BezierSpline
-                    easing.bezierCurve: Appearance.anim.curves.emphasized
+                    easing.bezierCurve: Appearance.anim.curves.standard
                 }
             }
         }
@@ -150,7 +150,7 @@ Column {
             anchors.leftMargin: Appearance.padding.small
 
             profile: PowerProfile.PowerSaver
-            icon: "energy_savings_leaf"
+            icon: "leaf"
         }
 
         Profile {
@@ -159,7 +159,7 @@ Column {
             anchors.centerIn: parent
 
             profile: PowerProfile.Balanced
-            icon: "balance"
+            icon: "scale"
         }
 
         Profile {
@@ -170,7 +170,7 @@ Column {
             anchors.rightMargin: Appearance.padding.small
 
             profile: PowerProfile.Performance
-            icon: "rocket_launch"
+            icon: "rocket"
         }
     }
 
@@ -193,26 +193,21 @@ Column {
 
         StateLayer {
             radius: Appearance.rounding.full
-            color: profiles.current === parent.icon ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
+            color: profiles.current === parent.icon ? Signal.palette.onSignal : Signal.palette.ink
 
             function onClicked(): void {
                 PowerProfiles.profile = parent.profile;
             }
         }
 
-        MaterialIcon {
+        Glyph {
             id: icon
 
             anchors.centerIn: parent
 
-            text: parent.icon
+            name: parent.icon
             font.pointSize: Appearance.font.size.large
-            color: profiles.current === text ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
-            fill: profiles.current === text ? 1 : 0
-
-            Behavior on fill {
-                Anim {}
-            }
+            color: profiles.current === text ? Signal.palette.onSignal : Signal.palette.ink
         }
     }
 }

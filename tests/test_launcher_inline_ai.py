@@ -156,7 +156,7 @@ def test_fallback_summons_javi_via_companion_ipc():
 def test_ai_registered_as_builtin_provider():
     assert '"id": "ai"' in PROVIDERS
     assert '"prefix": "ai"' in PROVIDERS
-    assert '"icon": "raven"' in PROVIDERS
+    assert '"icon": "feather"' in PROVIDERS
     assert "InlineAsk.ask" in PROVIDERS
     assert "InlineAsk.stop()" in PROVIDERS
     # Built-ins register before builtinsRegistered flips (plugins after).

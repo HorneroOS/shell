@@ -18,7 +18,7 @@ StyledRect {
     implicitHeight: layout.implicitHeight + Appearance.padding.large * 2
 
     radius: Appearance.rounding.normal
-    color: Colours.tPalette.m3surfaceContainer
+    color: Signal.tPalette.panel
 
     ColumnLayout {
         id: layout
@@ -55,7 +55,7 @@ StyledRect {
             }
 
             Toggle {
-                icon: "mic"
+                icon: "microphone"
                 accessibleName: qsTr("Toggle microphone")
                 checked: !Audio.sourceMuted
                 onClicked: {
@@ -68,7 +68,7 @@ StyledRect {
             Toggle {
                 icon: "settings"
                 accessibleName: qsTr("Open network settings")
-                inactiveOnColour: Colours.palette.m3onSurfaceVariant
+                inactiveOnColour: Signal.palette.inkMuted
                 toggle: false
                 onClicked: {
                     root.visibilities.utilities = false;
@@ -77,7 +77,7 @@ StyledRect {
             }
 
             Toggle {
-                icon: "gamepad"
+                icon: "device-gamepad"
                 accessibleName: qsTr("Toggle game mode")
                 checked: GameMode.enabled
                 visible: Compositor.supports("hyprlandTuning")
@@ -85,14 +85,14 @@ StyledRect {
             }
 
             Toggle {
-                icon: "notifications_off"
+                icon: "bell-off"
                 accessibleName: qsTr("Toggle do not disturb")
                 checked: Notifs.dnd
                 onClicked: Notifs.dnd = !Notifs.dnd
             }
 
             Toggle {
-                icon: "vpn_key"
+                icon: "key"
                 accessibleName: qsTr("Toggle VPN")
                 checked: VPN.connected
                 enabled: !VPN.connecting
@@ -106,15 +106,15 @@ StyledRect {
         Layout.fillWidth: true
         Layout.preferredWidth: implicitWidth + (stateLayer.pressed ? Appearance.padding.large : internalChecked ? Appearance.padding.smaller : 0)
         radius: stateLayer.pressed ? Appearance.rounding.small / 2 : internalChecked ? Appearance.rounding.small : Appearance.rounding.normal
-        inactiveColour: Colours.layer(Colours.palette.m3surfaceContainerHighest, 2)
+        inactiveColour: Signal.layer(Signal.palette.lifted, 2)
         toggle: true
-        radiusAnim.duration: Appearance.anim.durations.expressiveFastSpatial
-        radiusAnim.easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+        radiusAnim.duration: Appearance.anim.durations.settleFast
+        radiusAnim.easing.bezierCurve: Appearance.anim.curves.settleFast
 
         Behavior on Layout.preferredWidth {
             Anim {
-                duration: Appearance.anim.durations.expressiveFastSpatial
-                easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+                duration: Appearance.anim.durations.settleFast
+                easing.bezierCurve: Appearance.anim.curves.settleFast
             }
         }
     }

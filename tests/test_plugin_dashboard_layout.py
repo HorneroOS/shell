@@ -204,5 +204,5 @@ def test_card_chrome_is_quiet_for_healthy_extensions():
     assert "visible: !card.contentReady || (card.activeFocus && FocusMode.keyboard)" in CARDS
     assert "visible: root.hasPlugins && FocusMode.keyboard" in CARDS
     assert "visible: card.activeFocus && FocusMode.keyboard" in CARDS
-    assert "palette.base: Colours.palette.m3surfaceContainerHigh" in CARDS
-    assert "palette.placeholderText: Colours.palette.m3onSurfaceVariant" in CARDS
+    assert "palette.base: Signal.palette.raised" in CARDS
+    assert "palette.placeholderText: Signal.palette.inkMuted" in CARDS

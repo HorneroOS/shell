@@ -19,7 +19,7 @@ Item {
 
         // Night mode toggle
         ToggleChip {
-            icon: "dark_mode"
+            icon: "moon"
             label: qsTr("Night")
             description: qsTr("Toggle night mode")
             active: false  // No persistent service — just fire the script
@@ -28,7 +28,7 @@ Item {
 
         // Game mode toggle
         ToggleChip {
-            icon: "sports_esports"
+            icon: "device-gamepad-2"
             label: qsTr("Game")
             description: GameMode.enabled ? qsTr("Turn off game mode") : qsTr("Turn on game mode")
             active: GameMode.enabled
@@ -38,7 +38,7 @@ Item {
 
         // Screen recorder toggle
         ToggleChip {
-            icon: Recorder.running ? "stop_circle" : "fiber_manual_record"
+            icon: Recorder.running ? "player-stop" : "point"
             label: Recorder.running
                 ? (Recorder.elapsed > 0
                     ? "%1:%2".arg(Math.floor(Recorder.elapsed / 60)).arg(String(Math.floor(Recorder.elapsed % 60)).padStart(2, "0"))
@@ -71,14 +71,14 @@ Item {
         // Inactive chips used the card's own layer and read as plain text
         // (shell#462); a visible container keeps them recognisable as buttons.
         color: chip.active
-            ? Colours.palette.m3primaryContainer
-            : Colours.palette.m3surfaceContainerHighest
+            ? Signal.palette.signalWell
+            : Signal.palette.lifted
         implicitHeight: chipRow.implicitHeight + Appearance.padding.smaller * 2
         implicitWidth: chipRow.implicitWidth + Appearance.padding.normal * 2
 
         StateLayer {
             radius: parent.radius
-            color: chip.active ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+            color: chip.active ? Signal.palette.onSignalWell : Signal.palette.ink
             function onClicked() { chip.toggled(); }
         }
 
@@ -87,11 +87,11 @@ Item {
             anchors.centerIn: parent
             spacing: Appearance.spacing.small
 
-            MaterialIcon {
-                text: chip.icon
+            Glyph {
+                name: chip.icon
                 color: chip.active
-                    ? Colours.palette.m3onPrimaryContainer
-                    : Colours.palette.m3onSurfaceVariant
+                    ? Signal.palette.onSignalWell
+                    : Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.normal
                 animate: true
             }
@@ -99,8 +99,8 @@ Item {
             StyledText {
                 text: chip.label
                 color: chip.active
-                    ? Colours.palette.m3onPrimaryContainer
-                    : Colours.palette.m3onSurfaceVariant
+                    ? Signal.palette.onSignalWell
+                    : Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.smaller
                 font.weight: chip.active ? 600 : 400
             }

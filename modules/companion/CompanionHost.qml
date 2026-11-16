@@ -98,7 +98,7 @@ Scope {
             readonly property bool peekMode: CompanionStore.state === "peeking"
             readonly property bool menuOpen: menu.visible
             readonly property bool flipped: (win.px + win.sizePx / 2) > win.screenW / 2
-            readonly property string resolvedTheme: CompanionStore.bubbleTheme === "auto" ? (Colours.light ? "light" : "dark") : CompanionStore.bubbleTheme
+            readonly property string resolvedTheme: CompanionStore.bubbleTheme === "auto" ? (Signal.light ? "light" : "dark") : CompanionStore.bubbleTheme
 
             // Free position inside the screen, committed to the store
             // (as fractions + monitor name) on drag release.

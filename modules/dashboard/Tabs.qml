@@ -39,12 +39,12 @@ Item {
         }
 
         Tab {
-            iconName: "queue_music"
+            iconName: "playlist"
             text: qsTr("Media")
         }
 
         Tab {
-            iconName: "speed"
+            iconName: "gauge"
             text: qsTr("Performance")
         }
 
@@ -54,12 +54,12 @@ Item {
         }
 
         Tab {
-            iconName: "workspaces"
+            iconName: "layout-grid"
             text: qsTr("Workspaces")
         }
 
         Tab {
-            iconName: "extension"
+            iconName: "puzzle"
             text: qsTr("Extensions")
         }
     }
@@ -87,7 +87,7 @@ Item {
             anchors.right: parent.right
             implicitHeight: parent.implicitHeight * 2
 
-            color: Colours.palette.m3primary
+            color: Signal.palette.signal
             radius: Appearance.rounding.full
         }
 
@@ -108,7 +108,7 @@ Item {
         anchors.right: parent.right
 
         implicitHeight: 1
-        color: Colours.palette.m3outlineVariant
+        color: Signal.palette.rule
     }
 
     component Tab: TabButton {
@@ -219,14 +219,14 @@ Item {
                     properties: "implicitWidth,implicitHeight"
                     from: 0
                     to: rippleAnim.radius * 2
-                    duration: Appearance.anim.durations.normal
-                    easing.bezierCurve: Appearance.anim.curves.standardDecel
+                    duration: Appearance.anim.durations.medium
+                    easing.bezierCurve: Appearance.anim.curves.enter
                 }
                 Anim {
                     target: ripple
                     property: "opacity"
                     to: 0
-                    duration: Appearance.anim.durations.normal
+                    duration: Appearance.anim.durations.medium
                     easing.type: Easing.BezierSpline
                     easing.bezierCurve: Appearance.anim.curves.standard
                 }
@@ -248,7 +248,7 @@ Item {
 
                     anchors.fill: parent
 
-                    color: tab.current ? Colours.palette.m3primary : Colours.palette.m3onSurface
+                    color: tab.current ? Signal.palette.signal : Signal.palette.ink
                     opacity: mouse.pressed ? 0.1 : tab.hovered ? 0.08 : 0
 
                     Behavior on opacity {
@@ -260,7 +260,7 @@ Item {
                     id: ripple
 
                     radius: Appearance.rounding.full
-                    color: tab.current ? Colours.palette.m3primary : Colours.palette.m3onSurface
+                    color: tab.current ? Signal.palette.signal : Signal.palette.ink
                     opacity: 0
 
                     transform: Translate {
@@ -270,20 +270,15 @@ Item {
                 }
             }
 
-            MaterialIcon {
+            Glyph {
                 id: icon
 
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.bottom: label.top
 
-                text: tab.iconName
-                color: tab.current ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
-                fill: tab.current ? 1 : 0
+                name: tab.iconName
+                color: tab.current ? Signal.palette.signal : Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.large
-
-                Behavior on fill {
-                    Anim {}
-                }
             }
 
             StyledText {
@@ -293,7 +288,7 @@ Item {
                 anchors.bottom: parent.bottom
 
                 text: tab.text
-                color: tab.current ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+                color: tab.current ? Signal.palette.signal : Signal.palette.inkMuted
             }
         }
     }

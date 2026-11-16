@@ -193,9 +193,8 @@ Item {
                 Component {
                     id: iconComp
 
-                    MaterialIcon {
-                        fill: 1
-                        text: ws.icon
+                    Glyph {
+                        name: ws.icon
                         verticalAlignment: Qt.AlignVCenter
                     }
                 }
@@ -240,7 +239,7 @@ Item {
                 properties: "scale"
                 from: 0
                 to: 1
-                easing.bezierCurve: Appearance.anim.curves.standardDecel
+                easing.bezierCurve: Appearance.anim.curves.enter
             }
         }
 
@@ -248,12 +247,12 @@ Item {
             Anim {
                 property: "scale"
                 to: 0.5
-                duration: Appearance.anim.durations.small
+                duration: Appearance.anim.durations.short
             }
             Anim {
                 property: "opacity"
                 to: 0
-                duration: Appearance.anim.durations.small
+                duration: Appearance.anim.durations.short
             }
         }
 
@@ -261,7 +260,7 @@ Item {
             Anim {
                 properties: "scale"
                 to: 1
-                easing.bezierCurve: Appearance.anim.curves.standardDecel
+                easing.bezierCurve: Appearance.anim.curves.enter
             }
             Anim {
                 properties: "x,y"
@@ -272,7 +271,7 @@ Item {
             Anim {
                 properties: "scale"
                 to: 1
-                easing.bezierCurve: Appearance.anim.curves.standardDecel
+                easing.bezierCurve: Appearance.anim.curves.enter
             }
             Anim {
                 properties: "x,y"
@@ -293,7 +292,7 @@ Item {
                     properties: "scale"
                     from: 0
                     to: 1
-                    easing.bezierCurve: Appearance.anim.curves.standardDecel
+                    easing.bezierCurve: Appearance.anim.curves.enter
                 }
             }
 
@@ -301,7 +300,7 @@ Item {
                 Anim {
                     properties: "scale"
                     to: 1
-                    easing.bezierCurve: Appearance.anim.curves.standardDecel
+                    easing.bezierCurve: Appearance.anim.curves.enter
                 }
                 Anim {
                     properties: "x,y"
@@ -313,12 +312,11 @@ Item {
                     values: Hypr.toplevels.values.filter(c => c.workspace?.id === wsId)
                 }
 
-                MaterialIcon {
+                Glyph {
                     required property var modelData
 
-                    grade: 0
-                    text: Icons.getAppCategoryIcon(modelData.lastIpcObject.class, "terminal")
-                    color: Colours.palette.m3onSurfaceVariant
+                    name: Icons.getAppCategoryIcon(modelData.lastIpcObject.class, "terminal")
+                    color: Signal.palette.inkMuted
                 }
             }
         }
@@ -337,7 +335,7 @@ Item {
                     properties: "scale"
                     from: 0
                     to: 1
-                    easing.bezierCurve: Appearance.anim.curves.standardDecel
+                    easing.bezierCurve: Appearance.anim.curves.enter
                 }
             }
 
@@ -345,7 +343,7 @@ Item {
                 Anim {
                     properties: "scale"
                     to: 1
-                    easing.bezierCurve: Appearance.anim.curves.standardDecel
+                    easing.bezierCurve: Appearance.anim.curves.enter
                 }
                 Anim {
                     properties: "x,y"
@@ -357,12 +355,11 @@ Item {
                     values: Hypr.toplevels.values.filter(c => c.workspace?.id === wsId)
                 }
 
-                MaterialIcon {
+                Glyph {
                     required property var modelData
 
-                    grade: 0
-                    text: Icons.getAppCategoryIcon(modelData.lastIpcObject.class, "terminal")
-                    color: Colours.palette.m3onSurfaceVariant
+                    name: Icons.getAppCategoryIcon(modelData.lastIpcObject.class, "terminal")
+                    color: Signal.palette.inkMuted
                 }
             }
         }
@@ -386,13 +383,13 @@ Item {
                 implicitWidth: root.vertical ? 0 : view.currentItem?.size ?? 0
                 implicitHeight: root.vertical ? view.currentItem?.size ?? 0 : 0
 
-                color: Colours.palette.m3tertiary
+                color: Signal.palette.phosphor
                 radius: Appearance.rounding.full
 
                 Colouriser {
                     source: view
-                    sourceColor: Colours.palette.m3onSurface
-                    colorizationColor: Colours.palette.m3onTertiary
+                    sourceColor: Signal.palette.ink
+                    colorizationColor: Signal.palette.onPhosphor
 
                     anchors.horizontalCenter: root.vertical ? parent.horizontalCenter : undefined
                     anchors.verticalCenter: root.vertical ? undefined : parent.verticalCenter
@@ -405,25 +402,25 @@ Item {
 
                 Behavior on x {
                     Anim {
-                        easing.bezierCurve: Appearance.anim.curves.emphasized
+                        easing.bezierCurve: Appearance.anim.curves.standard
                     }
                 }
 
                 Behavior on y {
                     Anim {
-                        easing.bezierCurve: Appearance.anim.curves.emphasized
+                        easing.bezierCurve: Appearance.anim.curves.standard
                     }
                 }
 
                 Behavior on implicitWidth {
                     Anim {
-                        easing.bezierCurve: Appearance.anim.curves.emphasized
+                        easing.bezierCurve: Appearance.anim.curves.standard
                     }
                 }
 
                 Behavior on implicitHeight {
                     Anim {
-                        easing.bezierCurve: Appearance.anim.curves.emphasized
+                        easing.bezierCurve: Appearance.anim.curves.standard
                     }
                 }
             }

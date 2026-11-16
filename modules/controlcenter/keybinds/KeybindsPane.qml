@@ -241,14 +241,14 @@ Item {
                     Layout.fillWidth: true
                     text: root.statusText
                     font.pointSize: Appearance.font.size.small
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                     wrapMode: Text.Wrap
                 }
 
                 StyledRect {
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
-                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: kbCol.implicitHeight + Appearance.padding.large * 2
 
                     ColumnLayout {
@@ -288,9 +288,9 @@ Item {
                                     Layout.fillWidth: true
                                     spacing: Appearance.spacing.small
 
-                                    MaterialIcon {
-                                        text: "keyboard"
-                                        color: Colours.palette.m3primary
+                                    Glyph {
+                                        name: "keyboard"
+                                        color: Signal.palette.signal
                                         font.pointSize: Appearance.font.size.small
                                     }
 
@@ -298,13 +298,13 @@ Item {
                                         text: modelData.name
                                         font.pointSize: Appearance.font.size.small
                                         font.weight: 600
-                                        color: Colours.palette.m3onSurface
+                                        color: Signal.palette.ink
                                     }
 
                                     StyledRect {
                                         Layout.preferredHeight: countLabel.implicitHeight + 6
                                         Layout.preferredWidth: countLabel.implicitWidth + 14
-                                        color: Colours.palette.m3primaryContainer
+                                        color: Signal.palette.signalWell
                                         radius: Appearance.rounding.full
 
                                         StyledText {
@@ -314,7 +314,7 @@ Item {
                                             text: modelData.rows.length
                                             font.pointSize: Appearance.font.size.smaller
                                             font.weight: 600
-                                            color: Colours.palette.m3onPrimaryContainer
+                                            color: Signal.palette.onSignalWell
                                         }
                                     }
 
@@ -322,7 +322,7 @@ Item {
                                         Layout.fillWidth: true
                                         Layout.preferredHeight: 1
                                         Layout.alignment: Qt.AlignVCenter
-                                        color: Colours.palette.m3outlineVariant
+                                        color: Signal.palette.rule
                                     }
                                 }
 
@@ -354,7 +354,7 @@ Item {
                                             Layout.fillWidth: true
                                             text: root.actionOf(modelData)
                                             font.pointSize: Appearance.font.size.small
-                                            color: Colours.palette.m3onSurface
+                                            color: Signal.palette.ink
                                             wrapMode: Text.Wrap
                                         }
 
@@ -382,7 +382,7 @@ Item {
                                 Layout.fillWidth: true
                                 text: qsTr("Rebind %1 to:").arg(root.editOld)
                                 font.pointSize: Appearance.font.size.small
-                                color: Colours.palette.m3onSurfaceVariant
+                                color: Signal.palette.inkMuted
                                 wrapMode: Text.Wrap
                             }
 
@@ -427,7 +427,7 @@ Item {
                                 Layout.fillWidth: true
                                 text: root.overrides > 0 ? qsTr("%1 user override(s) active").arg(root.overrides) : qsTr("No user overrides; factory keybindings are active.")
                                 font.pointSize: Appearance.font.size.small
-                                color: Colours.palette.m3onSurfaceVariant
+                                color: Signal.palette.inkMuted
                                 wrapMode: Text.Wrap
                             }
 
@@ -456,7 +456,7 @@ Item {
                             visible: root.actionText !== ""
                             text: root.actionText
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
 
@@ -465,7 +465,7 @@ Item {
                             visible: root.shown.length === 0
                             text: qsTr("No keybindings match.")
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3outline
+                            color: Signal.palette.ruleStrong
                         }
 
                         StyledText {
@@ -473,7 +473,7 @@ Item {
                             visible: root.managed
                             text: qsTr("Rebinds are stored as user overrides and apply live; factory keybindings are never edited. This list always shows what the session actually runs.")
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3outline
+                            color: Signal.palette.ruleStrong
                             wrapMode: Text.Wrap
                         }
 
@@ -482,7 +482,7 @@ Item {
                             visible: !root.managed
                             text: qsTr("This session's keybindings are read-only here (Lua configuration); the list shows what the session actually runs.")
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3outline
+                            color: Signal.palette.ruleStrong
                             wrapMode: Text.Wrap
                         }
                     }
@@ -505,10 +505,10 @@ Item {
         implicitWidth: capLabel.implicitWidth + 16
         implicitHeight: capLabel.implicitHeight + 8
 
-        color: Colours.palette.m3surfaceContainerHighest
+        color: Signal.palette.lifted
         radius: Appearance.rounding.small
         border.width: 1
-        border.color: Colours.palette.m3outlineVariant
+        border.color: Signal.palette.rule
 
         StyledText {
             id: capLabel
@@ -518,7 +518,7 @@ Item {
             mono: true
             font.pointSize: Appearance.font.size.smaller
             font.weight: 600
-            color: Colours.palette.m3onSurface
+            color: Signal.palette.ink
         }
     }
 }

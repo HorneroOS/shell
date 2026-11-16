@@ -128,8 +128,8 @@ Item {
                     property: "scale"
                     from: 0
                     to: 1
-                    duration: Appearance.anim.durations.expressiveDefaultSpatial
-                    easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                    duration: Appearance.anim.durations.settle
+                    easing.bezierCurve: Appearance.anim.curves.settle
                 }
             }
 
@@ -159,15 +159,15 @@ Item {
 
             Behavior on x {
                 Anim {
-                    duration: Appearance.anim.durations.expressiveDefaultSpatial
-                    easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                    duration: Appearance.anim.durations.settle
+                    easing.bezierCurve: Appearance.anim.curves.settle
                 }
             }
 
             Behavior on y {
                 Anim {
-                    duration: Appearance.anim.durations.expressiveDefaultSpatial
-                    easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                    duration: Appearance.anim.durations.settle
+                    easing.bezierCurve: Appearance.anim.curves.settle
                 }
             }
         }

@@ -3,7 +3,7 @@ import ".."
 
 PageView {
     PageHeader {
-        icon: "explore"
+        icon: "compass"
         title: qsTr("Navigate")
         subtitle: qsTr("Move around Hornero with the keyboard — or the mouse. These three cover almost everything.")
     }
@@ -25,7 +25,7 @@ PageView {
     }
 
     ActionCard {
-        icon: "grid_view"
+        icon: "layout-grid"
         title: qsTr("Workspace overview")
         description: qsTr("Zoom out to every workspace, then pick one. Works from anywhere.")
         shortcutId: "scrolloverview-overview:toggle"

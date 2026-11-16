@@ -29,27 +29,27 @@ ColumnLayout {
         StyledText {
             Layout.alignment: Qt.AlignVCenter
             text: Time.hourStr
-            color: Colours.palette.m3secondary
+            color: Signal.palette.cue
             font.pointSize: Math.floor(Appearance.font.size.extraLarge * 3 * root.centerScale)
-            font.family: Appearance.font.family.clock
+            font.family: Appearance.font.family.display
             font.bold: true
         }
 
         StyledText {
             Layout.alignment: Qt.AlignVCenter
             text: ":"
-            color: Colours.palette.m3primary
+            color: Signal.palette.signal
             font.pointSize: Math.floor(Appearance.font.size.extraLarge * 3 * root.centerScale)
-            font.family: Appearance.font.family.clock
+            font.family: Appearance.font.family.display
             font.bold: true
         }
 
         StyledText {
             Layout.alignment: Qt.AlignVCenter
             text: Time.minuteStr
-            color: Colours.palette.m3secondary
+            color: Signal.palette.cue
             font.pointSize: Math.floor(Appearance.font.size.extraLarge * 3 * root.centerScale)
-            font.family: Appearance.font.family.clock
+            font.family: Appearance.font.family.display
             font.bold: true
         }
 
@@ -62,9 +62,9 @@ ColumnLayout {
 
             sourceComponent: StyledText {
                 text: Time.amPmStr
-                color: Colours.palette.m3primary
+                color: Signal.palette.signal
                 font.pointSize: Math.floor(Appearance.font.size.extraLarge * 2 * root.centerScale)
-                font.family: Appearance.font.family.clock
+                font.family: Appearance.font.family.display
                 font.bold: true
             }
         }
@@ -75,7 +75,7 @@ ColumnLayout {
         Layout.topMargin: -Appearance.padding.large * 2
 
         text: Time.format("dddd, d MMMM yyyy")
-        color: Colours.palette.m3tertiary
+        color: Signal.palette.phosphor
         font.pointSize: Math.floor(Appearance.font.size.extraLarge * root.centerScale)
         font.family: Appearance.font.family.mono
         font.bold: true
@@ -88,14 +88,14 @@ ColumnLayout {
         implicitWidth: root.centerWidth / 2
         implicitHeight: root.centerWidth / 2
 
-        color: Colours.tPalette.m3surfaceContainer
+        color: Signal.tPalette.panel
         radius: Appearance.rounding.full
 
-        MaterialIcon {
+        Glyph {
             anchors.centerIn: parent
 
-            text: "person"
-            color: Colours.palette.m3onSurfaceVariant
+            name: "user"
+            color: Signal.palette.inkMuted
             font.pointSize: Math.floor(root.centerWidth / 4)
         }
 
@@ -113,7 +113,7 @@ ColumnLayout {
         implicitWidth: root.centerWidth * 0.8
         implicitHeight: input.implicitHeight + Appearance.padding.small * 2
 
-        color: Colours.tPalette.m3surfaceContainer
+        color: Signal.tPalette.panel
         radius: Appearance.rounding.full
 
         focus: true
@@ -152,19 +152,19 @@ ColumnLayout {
                 implicitWidth: implicitHeight
                 implicitHeight: fprintIcon.implicitHeight + Appearance.padding.small * 2
 
-                MaterialIcon {
+                Glyph {
                     id: fprintIcon
 
                     anchors.centerIn: parent
                     animate: true
-                    text: {
+                    name: {
                         if (root.lock.pam.fprint.tries >= Config.lock.maxFprintTries)
-                            return "fingerprint_off";
+                            return "fingerprint-off";
                         if (root.lock.pam.fprint.active)
                             return "fingerprint";
                         return "lock";
                     }
-                    color: root.lock.pam.fprint.tries >= Config.lock.maxFprintTries ? Colours.palette.m3error : Colours.palette.m3onSurface
+                    color: root.lock.pam.fprint.tries >= Config.lock.maxFprintTries ? Signal.palette.alert : Signal.palette.ink
                     opacity: root.lock.pam.passwd.active ? 0 : 1
 
                     Behavior on opacity {
@@ -188,11 +188,11 @@ ColumnLayout {
                 implicitWidth: implicitHeight
                 implicitHeight: enterIcon.implicitHeight + Appearance.padding.small * 2
 
-                color: root.lock.pam.buffer ? Colours.palette.m3primary : Colours.layer(Colours.palette.m3surfaceContainerHigh, 2)
+                color: root.lock.pam.buffer ? Signal.palette.signal : Signal.layer(Signal.palette.raised, 2)
                 radius: Appearance.rounding.full
 
                 StateLayer {
-                    color: root.lock.pam.buffer ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
+                    color: root.lock.pam.buffer ? Signal.palette.onSignal : Signal.palette.ink
 
                     Accessible.role: Accessible.Button
                     Accessible.name: qsTr("Unlock")
@@ -202,12 +202,12 @@ ColumnLayout {
                     }
                 }
 
-                MaterialIcon {
+                Glyph {
                     id: enterIcon
 
                     anchors.centerIn: parent
-                    text: "arrow_forward"
-                    color: root.lock.pam.buffer ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
+                    name: "arrow-forward"
+                    color: root.lock.pam.buffer ? Signal.palette.onSignal : Signal.palette.ink
                     font.weight: 500
                 }
             }
@@ -274,7 +274,7 @@ ColumnLayout {
 
             scale: shouldBeVisible && !message.msg ? 1 : 0.7
             opacity: shouldBeVisible && !message.msg ? 1 : 0
-            color: Colours.palette.m3onSurfaceVariant
+            color: Signal.palette.inkMuted
             animateProp: "opacity"
 
             font.family: Appearance.font.family.mono
@@ -330,7 +330,7 @@ ColumnLayout {
 
             scale: 0.7
             opacity: 0
-            color: Colours.palette.m3error
+            color: Signal.palette.alert
 
             font.pointSize: Appearance.font.size.small
             font.family: Appearance.font.family.mono
@@ -402,13 +402,13 @@ ColumnLayout {
                     target: message
                     property: "scale"
                     to: 0.7
-                    duration: Appearance.anim.durations.large
+                    duration: Appearance.anim.durations.long
                 }
                 Anim {
                     target: message
                     property: "opacity"
                     to: 0
-                    duration: Appearance.anim.durations.large
+                    duration: Appearance.anim.durations.long
                 }
             }
         }
@@ -417,7 +417,7 @@ ColumnLayout {
     component FlashAnim: NumberAnimation {
         target: message
         property: "opacity"
-        duration: Appearance.anim.durations.small
+        duration: Appearance.anim.durations.short
         easing.type: Easing.Linear
     }
 }

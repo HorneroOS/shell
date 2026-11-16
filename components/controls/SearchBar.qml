@@ -19,10 +19,10 @@ StyledTextField {
         id: bg
 
         anchors.fill: parent
-        color: Colours.tPalette.m3surfaceContainer
+        color: Signal.tPalette.panel
         radius: Appearance.rounding.full
         border.width: 1
-        border.color: root.activeFocus ? Colours.palette.m3primary : "transparent"
+        border.color: root.activeFocus ? Signal.palette.signal : "transparent"
         opacity: root.enabled ? 1 : 0.5
 
         Behavior on border.color {
@@ -34,26 +34,26 @@ StyledTextField {
             disabled: !root.enabled
         }
 
-        MaterialIcon {
+        Glyph {
             id: searchIcon
 
             anchors.verticalCenter: parent.verticalCenter
             anchors.left: parent.left
             anchors.leftMargin: Appearance.spacing.normal
-            text: "search"
-            color: Colours.palette.m3onSurfaceVariant
+            name: "search"
+            color: Signal.palette.inkMuted
         }
     }
 
-    MaterialIcon {
+    Glyph {
         id: clearIcon
 
         anchors.verticalCenter: parent.verticalCenter
         anchors.right: parent.right
         anchors.rightMargin: Appearance.spacing.normal
         visible: root.text.length > 0
-        color: Colours.palette.m3onSurfaceVariant
-        text: "close"
+        color: Signal.palette.inkMuted
+        name: "x"
 
         Accessible.role: Accessible.Button
         Accessible.name: qsTr("Clear search")

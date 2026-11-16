@@ -253,7 +253,7 @@ Item {
 
                     PaneHeader {
                         title: qsTr("Gaming")
-                        icon: "sports_esports"
+                        icon: "device-gamepad-2"
                         description: qsTr("Gaming profiles, launchers and Gaming Focus")
                         intro: qsTr("Gaming is in Preview. Choose the gaming setups you want: Hornero remembers your choice and installs nothing until you confirm it. Hardware detection is a hint, not a guarantee that a game will run well.")
                     }
@@ -270,7 +270,7 @@ Item {
                             Layout.fillWidth: true
                             text: root.selectionState === "recorded" ? qsTr("Selection recorded. No packages were installed or removed by recording it.") : root.selectionState === "not-selected" ? qsTr("No selection recorded yet. Choose a profile or individual applications below.") : qsTr("Reading selection…")
                             wrapMode: Text.WordWrap
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                         }
 
                         StyledText {
@@ -278,7 +278,7 @@ Item {
                             visible: root.actionError.length > 0
                             text: root.actionError
                             wrapMode: Text.WordWrap
-                            color: Colours.palette.m3error
+                            color: Signal.palette.alert
                             font.pointSize: Appearance.font.size.small
                         }
 
@@ -328,7 +328,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Steam is proprietary and always an explicit opt-in. Removing an application from the selection never deletes your files, settings, or games.")
                             wrapMode: Text.WordWrap
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.small
                         }
                     }
@@ -345,7 +345,7 @@ Item {
                             Layout.fillWidth: true
                             text: root.performanceError.length > 0 ? root.performanceError : root.performanceCurrent.length > 0 ? qsTr("Current profile: %1. Switching is reversible — pick another profile to change back. Performance can raise heat, fan noise, and battery use; no improvement is guaranteed.").arg(root.performanceCurrent) : qsTr("Reading power profile…")
                             wrapMode: Text.WordWrap
-                            color: root.performanceError.length > 0 ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
+                            color: root.performanceError.length > 0 ? Signal.palette.alert : Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.small
                         }
 
@@ -375,7 +375,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Hornero Gaming Focus only trims Hyprland visual effects while you play and restores them afterwards. It is separate from Feral GameMode (per-process performance) and from power profiles. Unavailable on compositors without Hyprland tuning.")
                             wrapMode: Text.WordWrap
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.small
                         }
 
@@ -398,7 +398,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("The experimental Gamescope session is chosen at the greeter (login screen), not launched from here. It fails closed when gamescope or Steam is missing; check Diagnostics below for both. Kernel-level anti-cheat is unsupported; EAC/BattlEye depend on publisher Proton enablement.")
                             wrapMode: Text.WordWrap
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.small
                         }
                     }
@@ -416,7 +416,7 @@ Item {
                             visible: root.doctorLoading || root.doctorError.length > 0 || root.doctorChecks.length === 0
                             text: root.doctorLoading ? qsTr("Running diagnostics…") : root.doctorError.length > 0 ? root.doctorError : qsTr("No diagnostics yet.")
                             wrapMode: Text.WordWrap
-                            color: root.doctorError.length > 0 ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
+                            color: root.doctorError.length > 0 ? Signal.palette.alert : Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.small
                         }
 
@@ -428,7 +428,7 @@ Item {
 
                                 Layout.fillWidth: true
                                 text: (modelData.ok ? "✓ " : "✗ ") + modelData.name
-                                color: modelData.ok ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3error
+                                color: modelData.ok ? Signal.palette.inkMuted : Signal.palette.alert
                                 font.pointSize: Appearance.font.size.small
                             }
                         }

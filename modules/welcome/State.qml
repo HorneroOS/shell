@@ -91,7 +91,7 @@ Singleton {
         if (missing)
             root.horneroctlMissing = true;
         root.lastWriteError = message;
-        Toaster.toast(qsTr("Welcome"), message, "sync_problem", Toast.Warning);
+        Toaster.toast(qsTr("Welcome"), message, "refresh-alert", Toast.Warning);
         console.warn("[welcome]", message);
     }
 

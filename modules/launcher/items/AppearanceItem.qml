@@ -44,7 +44,7 @@ Item {
                 implicitWidth: 40
                 implicitHeight: 22
                 radius: Appearance.rounding.small
-                color: Colours.tPalette.m3surfaceContainer
+                color: Signal.tPalette.panel
 
                 CachingImage {
                     anchors.fill: parent
@@ -54,10 +54,10 @@ Item {
             }
         }
 
-        MaterialIcon {
+        Glyph {
             id: icon
 
-            text: "palette"
+            name: "palette"
             font.pointSize: Appearance.font.size.extraLarge
 
             anchors.left: previewThumb.active ? previewThumb.right : parent.left
@@ -81,7 +81,7 @@ Item {
             StyledText {
                 text: root.modelData?.description ?? ""
                 font.pointSize: Appearance.font.size.small
-                color: Colours.palette.m3outline
+                color: Signal.palette.ruleStrong
 
                 elide: Text.ElideRight
                 anchors.left: parent.left

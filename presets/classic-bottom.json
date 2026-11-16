@@ -2,7 +2,7 @@
   "_name": "Classic Bottom",
   "_description": "Bottom bar — dock-like layout with all status icons",
   "_icon": "🖥️",
-  "_iconMaterial": "vertical_align_bottom",
+  "_iconMaterial": "layout-bottombar",
   "bar": {
     "persistent": true,
     "showOnHover": true,

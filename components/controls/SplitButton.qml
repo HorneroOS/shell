@@ -30,10 +30,10 @@ Row {
     property alias label: label
     property alias stateLayer: stateLayer
 
-    property color colour: type == SplitButton.Filled ? Colours.palette.m3primary : Colours.palette.m3secondaryContainer
-    property color textColour: type == SplitButton.Filled ? Colours.palette.m3onPrimary : Colours.palette.m3onSecondaryContainer
-    property color disabledColour: Qt.alpha(Colours.palette.m3onSurface, 0.1)
-    property color disabledTextColour: Qt.alpha(Colours.palette.m3onSurface, 0.38)
+    property color colour: type == SplitButton.Filled ? Signal.palette.signal : Signal.palette.cueWell
+    property color textColour: type == SplitButton.Filled ? Signal.palette.onSignal : Signal.palette.onCueWell
+    property color disabledColour: Qt.alpha(Signal.palette.ink, 0.1)
+    property color disabledTextColour: Qt.alpha(Signal.palette.ink, 0.38)
 
     spacing: Math.floor(Appearance.spacing.small / 2)
 
@@ -69,14 +69,13 @@ Row {
             anchors.horizontalCenterOffset: Math.floor(root.verticalPadding / 4)
             spacing: Appearance.spacing.small
 
-            MaterialIcon {
+            Glyph {
                 id: iconLabel
 
                 Layout.alignment: Qt.AlignVCenter
                 animate: true
-                text: root.active?.activeIcon ?? root.fallbackIcon
+                name: root.active?.activeIcon ?? root.fallbackIcon
                 color: root.disabled ? root.disabledTextColour : root.textColour
-                fill: 1
             }
 
             StyledText {
@@ -91,7 +90,7 @@ Row {
 
                 Behavior on Layout.preferredWidth {
                     Anim {
-                        easing.bezierCurve: Appearance.anim.curves.emphasized
+                        easing.bezierCurve: Appearance.anim.curves.standard
                     }
                 }
             }
@@ -127,13 +126,13 @@ Row {
             }
         }
 
-        MaterialIcon {
+        Glyph {
             id: expandIcon
 
             anchors.centerIn: parent
             anchors.horizontalCenterOffset: root.expanded ? 0 : -Math.floor(root.verticalPadding / 4)
 
-            text: "expand_more"
+            name: "chevron-down"
             color: root.disabled ? root.disabledTextColour : root.textColour
             rotation: root.expanded ? 180 : 0
 

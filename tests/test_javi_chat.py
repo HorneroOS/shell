@@ -66,8 +66,8 @@ def test_panel_scrollable_markdown_bubbles():
 
 
 def test_panel_input_voice_attach_clarify():
-    assert '"mic"' in PANEL
-    assert '"attach_file"' in PANEL
+    assert '"microphone"' in PANEL
+    assert '"paperclip"' in PANEL
     assert "pendingClarify" in PANEL
     assert "pendingApproval" in PANEL
     assert "sugerencias" not in PANEL  # chips are translatable strings, not hardcoded ES

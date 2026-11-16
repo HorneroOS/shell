@@ -32,10 +32,10 @@ Item {
         anchors.rightMargin: Appearance.padding.larger
         anchors.margins: Appearance.padding.smaller
 
-        MaterialIcon {
+        Glyph {
             id: icon
 
-            text: root.modelData?.icon ?? ""
+            name: root.modelData?.icon ?? ""
             font.pointSize: Appearance.font.size.extraLarge
 
             anchors.verticalCenter: parent.verticalCenter
@@ -61,7 +61,7 @@ Item {
 
                 text: root.modelData?.desc ?? ""
                 font.pointSize: Appearance.font.size.small
-                color: Colours.palette.m3outline
+                color: Signal.palette.ruleStrong
 
                 elide: Text.ElideRight
                 width: root.width - icon.width - Appearance.rounding.normal * 2

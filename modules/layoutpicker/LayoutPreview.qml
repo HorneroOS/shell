@@ -73,11 +73,11 @@ Item {
         gradient: Gradient {
             GradientStop {
                 position: 0
-                color: Colours.layer(Colours.palette.m3surfaceContainerHighest, 1)
+                color: Signal.layer(Signal.palette.lifted, 1)
             }
             GradientStop {
                 position: 1
-                color: Colours.layer(Colours.palette.m3secondaryContainer, 1)
+                color: Signal.layer(Signal.palette.cueWell, 1)
             }
         }
 
@@ -101,9 +101,9 @@ Item {
                     width: index === 0 ? work.width * 0.55 : work.width * 0.45 - 3
                     height: work.height
                     radius: 3
-                    color: Colours.layer(Colours.palette.m3surface, 2)
+                    color: Signal.layer(Signal.palette.base, 2)
                     border.width: 1
-                    border.color: Qt.alpha(Colours.palette.m3outline, 0.35)
+                    border.color: Qt.alpha(Signal.palette.ruleStrong, 0.35)
 
                     // Title line
                     StyledRect {
@@ -112,7 +112,7 @@ Item {
                         width: parent.width * 0.4
                         height: 2
                         radius: 1
-                        color: Qt.alpha(Colours.palette.m3onSurfaceVariant, 0.35)
+                        color: Qt.alpha(Signal.palette.inkMuted, 0.35)
                     }
                 }
             }
@@ -127,12 +127,12 @@ Item {
         StyledRect {
             anchors.fill: parent
             visible: root.topology.length === 0
-            color: Colours.layer(Colours.palette.m3surface, 2)
+            color: Signal.layer(Signal.palette.base, 2)
 
             StyledText {
                 anchors.centerIn: parent
                 text: qsTr("Preview unavailable")
-                color: Colours.palette.m3onSurfaceVariant
+                color: Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.smaller
             }
         }
@@ -207,7 +207,7 @@ Item {
                 width: bar.vertical ? bar.t : modelData.len
                 height: bar.vertical ? modelData.len : bar.t
                 radius: bar.style === "attached" ? 0 : Appearance.rounding.full
-                color: bar.clear ? "transparent" : Qt.alpha(Colours.palette.m3primary, root.highlighted ? 0.95 : 0.8)
+                color: bar.clear ? "transparent" : Qt.alpha(Signal.palette.signal, root.highlighted ? 0.95 : 0.8)
 
                 // Component dots per group: packed pills lay groups end to
                 // end; strips/islands align them start/center/end.
@@ -252,7 +252,7 @@ Item {
                                 width: root.dot
                                 height: root.dot
                                 radius: root.dot / 2
-                                color: bar.clear ? Colours.palette.m3primary : Colours.palette.m3onPrimary
+                                color: bar.clear ? Signal.palette.signal : Signal.palette.onSignal
                                 opacity: grp.modelData === "center" ? 1 : 0.85
                             }
                         }

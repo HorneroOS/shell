@@ -27,10 +27,9 @@ Item {
     required property Session session
 
     property real animDurationsScale: Config.appearance.anim.durations.scale ?? 1
-    property string fontFamilyMaterial: Config.appearance.font.family.material ?? "Material Symbols Rounded"
-    property string fontFamilyMono: Config.appearance.font.family.mono ?? "CaskaydiaCove NF"
-    property string fontFamilySans: Config.appearance.font.family.sans ?? "Rubik"
-    property string fontFamilyClock: Config.appearance.font.family.clock ?? "Rubik"
+    property string fontFamilyMono: Config.appearance.font.family.mono ?? "IBM Plex Mono"
+    property string fontFamilySans: Config.appearance.font.family.sans ?? "IBM Plex Sans"
+    property string fontFamilyDisplay: Config.appearance.font.family.display ?? "IBM Plex Sans Condensed"
     property real fontSizeScale: Config.appearance.font.size.scale ?? 1
     property real paddingScale: Config.appearance.padding.scale ?? 1
     property real roundingScale: Config.appearance.rounding.scale ?? 1
@@ -46,7 +45,7 @@ Item {
     // Config.controlCenter.appearanceExpandedSections (default: Themes).
     // _sectionsReady guards write-back while initial state is restored.
     property bool _sectionsReady: false
-    readonly property var _sectionKeys: ["themes", "themeMode", "colorVariant", "colorScheme", "gtkTheme", "gtkColorScheme", "iconTheme", "fonts", "animations", "scales", "transparency", "border", "background", "health"]
+    readonly property var _sectionKeys: ["themes", "gtkTheme", "gtkColorScheme", "iconTheme", "fonts", "animations", "scales", "transparency", "border", "background", "health"]
     property var sectionItems: ({})
     property var sectionScroll: null
 
@@ -119,7 +118,7 @@ Item {
     }
 
     function syncCurrentThemePreview(): void {
-        if (!ThemeCatalogue.loaded || !Colours.themeStateReady)
+        if (!ThemeCatalogue.loaded || !Signal.themeStateReady)
             return;
 
         // Keep an explicit hover/focus preview authoritative. This refresh
@@ -127,13 +126,13 @@ Item {
         // update must not replace the item the user is exploring.
         if (previewActive && previewSource !== "current") {
             const previewIsAppliedTheme = previewSource === "theme"
-                && !!Colours.themeId
-                && previewThemeId === Colours.themeId;
+                && !!Signal.themeId
+                && previewThemeId === Signal.themeId;
             if (!previewIsAppliedTheme)
                 return;
         }
 
-        const theme = Colours.themeId ? Themes.themeById(Colours.themeId) : null;
+        const theme = Signal.themeId ? Themes.themeById(Signal.themeId) : null;
         if (theme) {
             if (previewSource === "theme" && previewThemeId === theme.id)
                 return;
@@ -144,15 +143,13 @@ Item {
             return;
         }
 
-        // A generated/custom appearance has no catalogue card. Keep the
-        // preview useful and truthful by showing live semantic colors and
-        // the current wallpaper instead of leaving the whole pane empty.
+        // A live scheme from an external writer has no catalogue card.
+        // Keep the preview truthful by showing the live roles.
         previewActive = true;
         previewSource = "current";
-        previewTitle = Colours.scheme === "dynamic" ? qsTr("Following your wallpaper") : qsTr("Custom appearance");
+        previewTitle = qsTr("Custom appearance");
         previewSubtitle = qsTr("Your current look");
-        previewVariant = Schemes.currentVariant;
-        previewMode = Colours.currentLight ? "light" : "dark";
+        previewMode = Signal.light ? "light" : "dark";
         previewWallpaperPath = Wallpapers.actualCurrent;
         previewWallpaperLabel = previewWallpaperPath ? previewWallpaperPath.split("/").pop() : "";
         previewGtkTheme = pendingGtkTheme;
@@ -162,15 +159,21 @@ Item {
         previewThemeId = "";
         previewTags = [];
         previewWallpaperCount = 0;
-        const roles = [
-            "m3surface", "m3surfaceContainer", "m3surfaceContainerHigh",
-            "m3onSurface", "m3onSurfaceVariant", "m3primary", "m3primaryContainer",
-            "m3onPrimaryContainer", "m3secondaryContainer", "m3onSecondaryContainer", "m3outline"
-        ];
         const colors = {};
-        for (const role of roles)
-            colors[role] = Colours.current[role];
+        for (const role of Signal.roles)
+            colors[role] = Signal.current[role];
         previewPalette = colors;
+    }
+
+    // Signal role table a theme would apply, for the preview swatches.
+    function paletteForTheme(theme: var): var {
+        if (!theme)
+            return ({});
+        if (Signal.isBuiltInTheme(theme.id))
+            return Signal.builtInThemes[theme.id].palette;
+        // Registry listings carry a partial preview `swatch`; the preview
+        // falls back to live roles for anything it does not name.
+        return Signal.isCompletePalette(theme.palette) ? theme.palette : (theme.swatch ?? ({}));
     }
 
     Connections {
@@ -181,11 +184,8 @@ Item {
     }
 
     Connections {
-        target: Colours
+        target: Signal
         function onThemeIdChanged(): void {
-            root.syncCurrentThemePreview();
-        }
-        function onSchemeChanged(): void {
             root.syncCurrentThemePreview();
         }
     }
@@ -207,9 +207,6 @@ Item {
     property real visualiserRounding: Config.background.visualiser.rounding ?? 1
     property real visualiserSpacing: Config.background.visualiser.spacing ?? 1
     property string pendingThemeId: ""
-    property string pendingSchemeKey: Schemes.currentScheme
-    property string pendingVariant: Schemes.currentVariant
-    property string pendingMode: Colours.currentLight ? "light" : "dark"
     property string pendingWallpaperPath: Wallpapers.actualCurrent
     property string stagedThemeWallpaper: ""
     property string pendingGtkTheme: ""
@@ -218,22 +215,16 @@ Item {
     property string wallpaperScopeDir: ""
     property bool wallpaperShowAll: false
     property bool themeDirty: false
-    property bool schemeDirty: false
-    property bool variantDirty: false
-    property bool modeDirty: false
     property bool wallpaperDirty: false
     property bool gtkDirty: false
     property bool iconDirty: false
     property bool gtkColorSchemeDirty: false
-    // True only when Theme mode was toggled by the user (not implied by theme stage).
-    property bool modeOverrideDirty: false
-    property string deferredMode: ""
     property string deferredGtk: ""
     property string deferredIcon: ""
     property string deferredGtkColorScheme: ""
     property string applyStatusMessage: ""
     property bool applyFailed: false
-    readonly property bool hasPendingChanges: themeDirty || schemeDirty || variantDirty || modeDirty || wallpaperDirty || gtkDirty || iconDirty || gtkColorSchemeDirty
+    readonly property bool hasPendingChanges: themeDirty || wallpaperDirty || gtkDirty || iconDirty || gtkColorSchemeDirty
     readonly property bool pipelineBusy: ThemePipeline.busy
     readonly property bool canApply: hasPendingChanges && !pipelineBusy
     readonly property string footerStatusText: {
@@ -250,10 +241,8 @@ Item {
     property string previewTitle: ""
     property string previewSubtitle: ""
     property string previewReadinessDetails: ""
-    property string previewVariant: ""
     property string previewMode: ""
     property string previewWallpaperPath: ""
-    property string previewSchemeType: ""
     property string previewGtkTheme: ""
     property string previewIconTheme: ""
     property string previewGtkPrefer: ""
@@ -262,50 +251,9 @@ Item {
     property string previewThemeId: ""
     property var previewTags: []
     property int previewWallpaperCount: 0
-    property string previewGenWallpaper: ""
-    property string previewGenMode: "dark"
-    property string previewGenSchemeType: "tonal-spot"
-    // Native instant tone for the palette-generation input (issue #2, step
-    // (b)): dominant colour + luminance straight from the ImageAnalyser
-    // plugin. The full generated palette below runs through horneroctl.
-    readonly property color previewNativeDominant: previewAnalyser.dominantColour
-    readonly property real previewNativeLuminance: previewAnalyser.luminance
-    readonly property bool previewNativeReady: previewAnalyser.luminance > 0
-    property bool previewPaletteQueued: false
     property var previewPalette: ({})
-    property var previewPaletteCache: ({})
-    property string previewRequestKey: ""
-    property string previewRunningKey: ""
-    property int previewQuality: 8
-    readonly property var m3Base: ["horneroctl", "appearance", "colors", "m3", "--yes", "--"]
 
     anchors.fill: parent
-
-    function normalizeVariantKey(value: string): string {
-        return (value ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
-    }
-
-    function normalizeSchemeType(value: string): string {
-        const v = (value ?? "").toLowerCase().replace(/[_\s]/g, "-");
-        switch (v) {
-        case "tonalspot":
-        case "tonal-spot":
-            return "tonal-spot";
-        case "fruitsalad":
-        case "fruit-salad":
-        case "rainbow":
-            return "expressive";
-        case "vibrant":
-        case "expressive":
-        case "fidelity":
-        case "content":
-        case "neutral":
-        case "monochrome":
-            return v;
-        default:
-            return "tonal-spot";
-        }
-    }
 
     function normalizeGtkColorScheme(value: string): string {
         return ThemePipeline.normalizeGtkColorScheme(value) || "follow";
@@ -326,90 +274,6 @@ Item {
         }
     }
 
-    function currentSchemeEntry(): var {
-        for (const scheme of Schemes.list) {
-            if (`${scheme.name} ${scheme.flavour}` === Schemes.currentScheme)
-                return scheme;
-        }
-        return null;
-    }
-
-    function findSchemeByVariant(variant: string, preferredName: string): var {
-        const target = normalizeVariantKey(variant);
-        if (!target)
-            return null;
-
-        if (preferredName) {
-            for (const scheme of Schemes.list) {
-                if (scheme.name === preferredName && normalizeVariantKey(scheme.flavour) === target)
-                    return scheme;
-            }
-        }
-
-        for (const scheme of Schemes.list) {
-            if (normalizeVariantKey(scheme.flavour) === target)
-                return scheme;
-        }
-
-        return null;
-    }
-
-    function normalizePreviewPalette(colours: var): var {
-        const out = {};
-        for (const [name, value] of Object.entries(colours ?? {})) {
-            const key = name.startsWith("term") ? name : `m3${name}`;
-            out[key] = `#${String(value).replace(/^#/, "")}`;
-        }
-        return out;
-    }
-
-    function buildPreviewKey(wallpaperPath: string, mode: string, schemeType: string): string {
-        return `${wallpaperPath}::${mode === "light" ? "light" : "dark"}::${normalizeSchemeType(schemeType)}`;
-    }
-
-    function applyPreviewFromCache(key: string): bool {
-        if (!key)
-            return false;
-        if (!Object.prototype.hasOwnProperty.call(previewPaletteCache, key))
-            return false;
-
-        const entry = previewPaletteCache[key];
-        if (!entry || !entry.palette)
-            return false;
-
-        previewPalette = entry.palette;
-        previewMode = entry.mode === "light" ? "light" : "dark";
-        previewRequestKey = key;
-        return true;
-    }
-
-    function scheduleGeneratedPreview(wallpaperPath: string, mode: string, schemeType: string): void {
-        if (!wallpaperPath) {
-            previewPaletteDebounce.stop();
-            previewPaletteQueued = false;
-            previewPalette = {};
-            previewRequestKey = "";
-            return;
-        }
-
-        const normalizedMode = mode === "light" ? "light" : "dark";
-        const normalizedSchemeType = normalizeSchemeType(schemeType);
-        const key = buildPreviewKey(wallpaperPath, normalizedMode, normalizedSchemeType);
-
-        if (applyPreviewFromCache(key)) {
-            previewPaletteDebounce.stop();
-            previewPaletteQueued = false;
-            return;
-        }
-
-        previewRequestKey = key;
-        previewGenWallpaper = wallpaperPath;
-        previewGenMode = normalizedMode;
-        previewGenSchemeType = normalizedSchemeType;
-        previewPaletteQueued = true;
-        previewPaletteDebounce.restart();
-    }
-
     function resetPreviewRecipe(): void {
         previewGtkTheme = "";
         previewIconTheme = "";
@@ -421,67 +285,6 @@ Item {
         previewWallpaperCount = 0;
     }
 
-    function startSchemePreview(modelData: var): void {
-        if (!modelData)
-            return;
-
-        previewActive = true;
-        previewSource = "scheme";
-        previewTitle = `${modelData.name ?? ""} ${modelData.flavour ?? ""}`.trim();
-        previewSubtitle = qsTr("Color scheme");
-        previewVariant = modelData.flavour ?? "";
-        previewSchemeType = normalizeSchemeType(modelData.flavour ?? "");
-        resetPreviewRecipe();
-        previewMode = pendingMode;
-        previewGtkTheme = pendingGtkTheme;
-        previewIconTheme = pendingIconTheme;
-        previewGtkColorScheme = pendingGtkColorScheme;
-        previewGtkPrefer = pendingGtkColorScheme;
-        previewWallpaperLabel = pendingWallpaperPath ? pendingWallpaperPath.split("/").pop() : "";
-        scheduleGeneratedPreview(previewWallpaperPath || pendingWallpaperPath, pendingMode, previewSchemeType);
-    }
-
-    function startVariantPreview(variant: string): void {
-        const current = currentSchemeEntry();
-        const scheme = findSchemeByVariant(variant, current?.name ?? "");
-        if (!scheme)
-            return;
-
-        previewActive = true;
-        previewSource = "variant";
-        previewTitle = scheme.flavour ?? variant;
-        previewSubtitle = qsTr("Color variant");
-        previewVariant = scheme.flavour ?? variant;
-        previewSchemeType = normalizeSchemeType(scheme.flavour ?? variant);
-        resetPreviewRecipe();
-        previewMode = pendingMode;
-        previewGtkTheme = pendingGtkTheme;
-        previewIconTheme = pendingIconTheme;
-        previewGtkColorScheme = pendingGtkColorScheme;
-        previewGtkPrefer = pendingGtkColorScheme;
-        scheduleGeneratedPreview(previewWallpaperPath || pendingWallpaperPath, pendingMode, previewSchemeType);
-    }
-
-    function startModePreview(mode: string): void {
-        const current = currentSchemeEntry();
-        if (!current)
-            return;
-
-        previewActive = true;
-        previewSource = "mode";
-        previewTitle = mode === "light" ? qsTr("Light mode") : qsTr("Dark mode");
-        previewSubtitle = qsTr("Theme mode");
-        previewMode = mode;
-        previewSchemeType = normalizeSchemeType(previewVariant || current.flavour || pendingVariant);
-        resetPreviewRecipe();
-        previewVariant = previewSchemeType;
-        previewGtkTheme = pendingGtkTheme;
-        previewIconTheme = pendingIconTheme;
-        previewGtkColorScheme = pendingGtkColorScheme;
-        previewGtkPrefer = pendingGtkColorScheme;
-        scheduleGeneratedPreview(previewWallpaperPath || pendingWallpaperPath, mode, previewSchemeType);
-    }
-
     function startGtkColorSchemePreview(policy: string): void {
         const normalized = normalizeGtkColorScheme(policy);
         previewActive = true;
@@ -490,16 +293,16 @@ Item {
         previewSubtitle = qsTr("GTK color scheme");
         previewGtkColorScheme = normalized;
         previewGtkPrefer = normalized;
-        previewMode = pendingMode;
+        previewMode = Signal.light ? "light" : "dark";
         previewGtkTheme = pendingGtkTheme;
         previewIconTheme = pendingIconTheme;
-        previewSchemeType = normalizeSchemeType(pendingVariant);
-        previewVariant = previewSchemeType;
         previewWallpaperPath = previewWallpaperPath || pendingWallpaperPath;
         previewWallpaperLabel = pendingWallpaperPath ? pendingWallpaperPath.split("/").pop() : "";
-        scheduleGeneratedPreview(previewWallpaperPath || pendingWallpaperPath, pendingMode, previewSchemeType);
+        previewPalette = {};
     }
 
+    // Wallpapers never recolour the shell: the preview keeps the current
+    // (or previewed theme's) roles and only swaps the image.
     function startWallpaperPreview(path: string, label: string): void {
         if (!path)
             return;
@@ -512,19 +315,15 @@ Item {
             previewTitle = label || path.split("/").pop();
             previewSubtitle = qsTr("Wallpaper");
             resetPreviewRecipe();
-            previewMode = previewMode || pendingMode;
+            previewMode = Signal.light ? "light" : "dark";
             previewGtkTheme = pendingGtkTheme;
             previewIconTheme = pendingIconTheme;
             previewGtkColorScheme = pendingGtkColorScheme;
             previewGtkPrefer = pendingGtkColorScheme;
+            previewPalette = {};
         }
         previewWallpaperPath = path;
-        previewSchemeType = normalizeSchemeType(previewVariant || pendingVariant);
-        previewVariant = previewSchemeType;
         previewWallpaperLabel = label || path.split("/").pop();
-        if (!previewMode)
-            previewMode = pendingMode;
-        scheduleGeneratedPreview(path, previewMode || pendingMode, previewSchemeType);
     }
 
     function startThemePreview(modelData: var, resolvedWallpaper: string, readinessDetails: string): void {
@@ -536,7 +335,6 @@ Item {
         previewTitle = modelData.name ?? modelData.id ?? qsTr("Theme");
         previewSubtitle = modelData.description ?? qsTr("Theme pack");
         previewReadinessDetails = readinessDetails;
-        previewVariant = modelData.schemeType ?? "";
         previewMode = modelData.darkMode ? "dark" : "light";
         previewWallpaperPath = resolvedWallpaper || Wallpapers.actualCurrent || "";
         if (!modelData.colorOnly
@@ -544,8 +342,7 @@ Item {
                 && previewWallpaperPath === Wallpapers.actualCurrent
                 && previewWallpaperPath)
             previewSubtitle += ` · ${qsTr("previewing with your current wallpaper")}`;
-        previewSchemeType = normalizeSchemeType(modelData.schemeType ?? "");
-        previewGtkTheme = modelData.gtkTheme || "Orchis-Light-Compact";
+        previewGtkTheme = modelData.gtkTheme || "";
         previewIconTheme = modelData.iconTheme || "";
         previewGtkColorScheme = modelData.gtkColorScheme || ThemePipeline.resolveGtkColorScheme(modelData, !!modelData.darkMode);
         previewGtkPrefer = previewGtkColorScheme;
@@ -553,13 +350,7 @@ Item {
         previewThemeId = modelData.id || "";
         previewTags = modelData.tags ?? [];
         previewWallpaperCount = Array.isArray(modelData.wallpapers) ? modelData.wallpapers.length : 0;
-
-        if (previewWallpaperPath) {
-            scheduleGeneratedPreview(previewWallpaperPath, previewMode, previewSchemeType);
-        } else {
-            scheduleGeneratedPreview("", previewMode, previewSchemeType);
-            previewSubtitle += ` · ${qsTr("choose a wallpaper to preview these colors")}`;
-        }
+        previewPalette = paletteForTheme(modelData);
     }
 
     function clearPreviewFor(source: string): void {
@@ -573,50 +364,27 @@ Item {
         previewTitle = "";
         previewSubtitle = "";
         previewReadinessDetails = "";
-        previewVariant = "";
         previewMode = "";
         previewWallpaperPath = "";
-        previewSchemeType = "";
         resetPreviewRecipe();
-        previewPaletteDebounce.stop();
-        previewPaletteQueued = false;
         previewPalette = {};
-        previewRequestKey = "";
-        previewRunningKey = "";
     }
 
     function commitSelection(): void {
-        // ThemePipeline.applyTheme is a full preset: wallpaper + schemeType + darkMode
-        // from theme.json. Mode/GTK/icon overrides only run when the user explicitly
-        // staged them, and only after apply finishes (avoids racing gtkFinalizeProc).
+        // ThemePipeline.applyTheme applies a complete Signal role table
+        // (plus the theme's wallpaper/GTK recipe). GTK/icon overrides only
+        // run when the user explicitly staged them, and only after apply
+        // finishes (avoids racing the GTK finalize step).
         const appliedTheme = themeDirty && pendingThemeId;
         const appliedWallpaper = !appliedTheme && wallpaperDirty && pendingWallpaperPath;
         const pipelineJob = appliedTheme || appliedWallpaper;
-        deferredMode = "";
         deferredGtk = "";
         deferredIcon = "";
 
-        if (appliedTheme) {
+        if (appliedTheme)
             ThemePipeline.applyTheme(pendingThemeId, stagedThemeWallpaper || "");
-            if (modeOverrideDirty && pendingMode)
-                deferredMode = pendingMode;
-        } else if (appliedWallpaper) {
+        else if (appliedWallpaper)
             ThemePipeline.setWallpaper(pendingWallpaperPath);
-            if (modeOverrideDirty && pendingMode)
-                deferredMode = pendingMode;
-        } else {
-            if (schemeDirty && pendingSchemeKey) {
-                const parts = pendingSchemeKey.split(" ");
-                const flavour = parts.slice(1).join(" ") || pendingVariant;
-                // set-variant persists the selected variant and its derived
-                // flavour; the single "dynamic" scheme name stays server-side.
-                session.runAction(["horneroctl", "appearance", "scheme", "set-variant", root.normalizeVariantKey(flavour), "--yes"]);
-            } else if (variantDirty && pendingVariant) {
-                session.runAction(["horneroctl", "appearance", "scheme", "set-variant", pendingVariant, "--yes"]);
-            }
-            if (modeDirty && pendingMode)
-                session.runAction(["horneroctl", "appearance", "scheme", "set-mode", pendingMode, "--yes"]);
-        }
 
         if (gtkDirty && pendingGtkTheme) {
             if (pipelineJob)
@@ -638,14 +406,10 @@ Item {
         }
 
         // If a pipeline job is in flight, wait for applyFinished. If already idle, flush now.
-        if ((deferredMode || deferredGtk || deferredIcon || deferredGtkColorScheme) && !ThemePipeline.busy)
+        if ((deferredGtk || deferredIcon || deferredGtkColorScheme) && !ThemePipeline.busy)
             root._flushDeferredPipelineExtras();
 
         themeDirty = false;
-        schemeDirty = false;
-        variantDirty = false;
-        modeDirty = false;
-        modeOverrideDirty = false;
         wallpaperDirty = false;
         gtkDirty = false;
         iconDirty = false;
@@ -667,16 +431,7 @@ Item {
         saveConfig();
     }
 
-    function _flushDeferredMode(): void {
-        if (!deferredMode)
-            return;
-        const mode = deferredMode;
-        deferredMode = "";
-        session.runAction(["horneroctl", "appearance", "scheme", "set-mode", mode, "--yes"]);
-    }
-
     function _flushDeferredPipelineExtras(): void {
-        root._flushDeferredMode();
         if (deferredGtk) {
             const theme = deferredGtk;
             deferredGtk = "";
@@ -699,22 +454,13 @@ Item {
         stagedThemeWallpaper = "";
         themeDirty = !!themeId;
         wallpaperDirty = false;
-        modeOverrideDirty = false;
         const theme = Themes.themeById(themeId);
         if (theme) {
             wallpaperScopeDir = theme.wallpaperDir || themeId;
             wallpaperShowAll = false;
-            // Recipe packs without bundled wallpaper media still have a
-            // useful, deterministic apply path: keep the user's current
-            // background and generate the recipe colors from it.
+            // Colour-only themes (every built-in) keep the user's current
+            // background; colour never depends on it.
             stagedThemeWallpaper = Themes.wallpaperOverrideFor(theme);
-            pendingMode = theme.darkMode ? "dark" : "light";
-            const current = Colours.currentLight ? "light" : "dark";
-            modeDirty = pendingMode !== current;
-            if (theme.schemeType) {
-                pendingVariant = theme.schemeType;
-                previewSchemeType = normalizeSchemeType(theme.schemeType);
-            }
             if (theme.wallpaperPath)
                 pendingWallpaperPath = theme.wallpaperPath;
             if (theme.gtkTheme)
@@ -749,26 +495,6 @@ Item {
         gtkColorSchemeDirty = !!pendingGtkColorScheme;
     }
 
-    function stageSchemeApply(name: string, flavour: string): void {
-        pendingSchemeKey = `${name} ${flavour}`;
-        pendingVariant = flavour;
-        schemeDirty = pendingSchemeKey !== Schemes.currentScheme;
-        variantDirty = false;
-    }
-
-    function stageVariantApply(variant: string): void {
-        pendingVariant = variant;
-        variantDirty = normalizeVariantKey(variant) !== normalizeVariantKey(Schemes.currentVariant);
-        schemeDirty = false;
-    }
-
-    function stageModeApply(mode: string): void {
-        pendingMode = mode;
-        const current = Colours.currentLight ? "light" : "dark";
-        modeDirty = mode !== current;
-        modeOverrideDirty = modeDirty;
-    }
-
     function stageWallpaperApply(path: string): void {
         pendingWallpaperPath = path;
         wallpaperDirty = path !== Wallpapers.actualCurrent;
@@ -778,19 +504,11 @@ Item {
 
     function resetPendingSelections(): void {
         pendingThemeId = "";
-        pendingSchemeKey = Schemes.currentScheme;
-        pendingVariant = Schemes.currentVariant;
-        pendingMode = Colours.currentLight ? "light" : "dark";
         pendingWallpaperPath = Wallpapers.actualCurrent;
         stagedThemeWallpaper = "";
         wallpaperScopeDir = "";
         wallpaperShowAll = false;
         themeDirty = false;
-        schemeDirty = false;
-        variantDirty = false;
-        modeDirty = false;
-        modeOverrideDirty = false;
-        deferredMode = "";
         deferredGtk = "";
         deferredIcon = "";
         deferredGtkColorScheme = "";
@@ -810,19 +528,16 @@ Item {
         applyStatusMessage = "";
         if (!previewActive) {
             previewWallpaperPath = pendingWallpaperPath;
-            previewVariant = pendingVariant;
-            previewMode = pendingMode;
-            previewSchemeType = normalizeSchemeType(pendingVariant);
+            previewMode = Signal.light ? "light" : "dark";
         }
     }
 
     function saveConfig() {
         Config.appearance.anim.durations.scale = root.animDurationsScale;
 
-        Config.appearance.font.family.material = root.fontFamilyMaterial;
         Config.appearance.font.family.mono = root.fontFamilyMono;
         Config.appearance.font.family.sans = root.fontFamilySans;
-        Config.appearance.font.family.clock = root.fontFamilyClock;
+        Config.appearance.font.family.display = root.fontFamilyDisplay;
         Config.appearance.font.size.scale = root.fontSizeScale;
 
         Config.appearance.padding.scale = root.paddingScale;
@@ -889,7 +604,6 @@ Item {
                     titleText: root.previewTitle
                     subtitleText: root.previewSubtitle
                     readinessDetails: root.previewReadinessDetails
-                    variantText: root.previewVariant
                     modeText: root.previewMode
                     wallpaperPath: root.previewWallpaperPath || root.pendingWallpaperPath
                     gtkThemeText: root.previewGtkTheme
@@ -941,73 +655,6 @@ Item {
         }
     }
 
-    Timer {
-        id: previewPaletteDebounce
-        interval: 60
-        onTriggered: {
-            if (!previewPaletteQueued || !previewGenWallpaper)
-                return;
-            if (!previewPaletteProc.running) {
-                previewPaletteQueued = false;
-                previewRunningKey = previewRequestKey;
-                previewPaletteProc.running = true;
-            }
-        }
-    }
-
-    ImageAnalyser {
-        id: previewAnalyser
-
-        source: root.previewGenWallpaper
-    }
-
-    // Full M3 preview palettes run through horneroctl (materialyoucolor
-    // backend); native dominant/luminance comes from previewAnalyser above.
-    // See docs/NATIVE-APPEARANCE.md.
-    Process {
-        id: previewPaletteProc
-        command: [
-            ...root.m3Base,
-            "--image",
-            root.previewGenWallpaper,
-            "--mode",
-            root.previewGenMode,
-            "--scheme-type",
-            root.previewGenSchemeType,
-            "--quality",
-            String(root.previewQuality)
-        ]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try {
-                    const parsed = JSON.parse(text);
-                    const palette = normalizePreviewPalette(parsed.colours ?? {});
-                    const mode = parsed.mode === "light" ? "light" : "dark";
-                    const runningKey = root.previewRunningKey;
-                    if (runningKey) {
-                        root.previewPaletteCache[runningKey] = {
-                            palette,
-                            mode
-                        };
-                    }
-                    if (runningKey && runningKey === root.previewRequestKey) {
-                        root.previewPalette = palette;
-                        root.previewMode = mode;
-                    }
-                } catch (e) {
-                    // Keep previous preview if parse fails.
-                }
-            }
-        }
-        onRunningChanged: {
-            if (!running && previewPaletteQueued) {
-                previewPaletteQueued = false;
-                previewRunningKey = previewRequestKey;
-                running = true;
-            }
-        }
-    }
-
     SplitPaneLayout {
         anchors.fill: parent
 
@@ -1033,9 +680,6 @@ Item {
                     readonly property var rootPane: sidebarFlickable.rootPane
                     readonly property var sections: ({
                         themes: themesSection,
-                        themeMode: themeModeSection,
-                        colorVariant: colorVariantSection,
-                        colorScheme: colorSchemeSection,
                         gtkTheme: gtkThemeSection,
                         gtkColorScheme: gtkColorSchemeSection,
                         iconTheme: iconThemeSection,
@@ -1048,7 +692,7 @@ Item {
                         health: healthSection
                     })
 
-                    readonly property bool allSectionsExpanded: themesSection.expanded && themeModeSection.expanded && colorVariantSection.expanded && colorSchemeSection.expanded && gtkThemeSection.expanded && gtkColorSchemeSection.expanded && iconThemeSection.expanded && fontsSection.expanded && animationsSection.expanded && scalesSection.expanded && transparencySection.expanded && borderSection.expanded && backgroundSection.expanded && healthSection.expanded
+                    readonly property bool allSectionsExpanded: themesSection.expanded && gtkThemeSection.expanded && gtkColorSchemeSection.expanded && iconThemeSection.expanded && fontsSection.expanded && animationsSection.expanded && scalesSection.expanded && transparencySection.expanded && borderSection.expanded && backgroundSection.expanded && healthSection.expanded
 
                     Component.onCompleted: {
                         root.sectionItems = sidebarLayout.sections;
@@ -1071,7 +715,7 @@ Item {
                         }
 
                         IconButton {
-                            icon: sidebarLayout.allSectionsExpanded ? "unfold_less" : "unfold_more"
+                            icon: sidebarLayout.allSectionsExpanded ? "fold" : "selector"
                             accessibleName: sidebarLayout.allSectionsExpanded ? qsTr("Collapse all sections") : qsTr("Expand all sections")
                             type: IconButton.Text
                             label.animate: true
@@ -1089,30 +733,6 @@ Item {
                         previewController: root
                         Component.onCompleted: expanded = root.isSectionExpanded("themes")
                         onExpandedChanged: root.persistSection("themes", expanded)
-                    }
-
-                    ThemeModeSection {
-                        id: themeModeSection
-                        session: root.session
-                        previewController: root
-                        Component.onCompleted: expanded = root.isSectionExpanded("themeMode")
-                        onExpandedChanged: root.persistSection("themeMode", expanded)
-                    }
-
-                    ColorVariantSection {
-                        id: colorVariantSection
-                        session: root.session
-                        previewController: root
-                        Component.onCompleted: expanded = root.isSectionExpanded("colorVariant")
-                        onExpandedChanged: root.persistSection("colorVariant", expanded)
-                    }
-
-                    ColorSchemeSection {
-                        id: colorSchemeSection
-                        session: root.session
-                        previewController: root
-                        Component.onCompleted: expanded = root.isSectionExpanded("colorScheme")
-                        onExpandedChanged: root.persistSection("colorScheme", expanded)
                     }
 
                     GtkThemeSection {
@@ -1198,10 +818,10 @@ Item {
                             text: root.footerStatusText
                             color: {
                                 if (root.applyFailed)
-                                    return Colours.palette.m3error;
+                                    return Signal.palette.alert;
                                 if (root.pipelineBusy || root.hasPendingChanges)
-                                    return Colours.palette.m3primary;
-                                return Colours.palette.m3outline;
+                                    return Signal.palette.signal;
+                                return Signal.palette.ruleStrong;
                             }
                             font.pointSize: Appearance.font.size.small
                             wrapMode: Text.WordWrap
@@ -1223,7 +843,7 @@ Item {
                         }
 
                         IconButton {
-                            icon: root.pipelineBusy ? "hourglass_top" : "check"
+                            icon: root.pipelineBusy ? "hourglass-high" : "check"
                             type: IconButton.Filled
                             enabled: root.canApply
                             accessibleName: qsTr("Apply appearance changes")
@@ -1345,7 +965,6 @@ Item {
 
         function onApplyFinished(ok: bool): void {
             if (!ok) {
-                root.deferredMode = "";
                 root.deferredGtk = "";
                 root.deferredIcon = "";
                 root.deferredGtkColorScheme = "";

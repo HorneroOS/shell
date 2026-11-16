@@ -21,7 +21,7 @@ RowLayout {
 
             topLeftRadius: Appearance.rounding.large
             radius: Appearance.rounding.small
-            color: Colours.tPalette.m3surfaceContainer
+            color: Signal.tPalette.panel
 
             WeatherInfo {
                 id: weather
@@ -35,7 +35,7 @@ RowLayout {
             Layout.fillHeight: true
 
             radius: Appearance.rounding.small
-            color: Colours.tPalette.m3surfaceContainer
+            color: Signal.tPalette.panel
 
             Fetch {}
         }
@@ -46,7 +46,7 @@ RowLayout {
 
             bottomLeftRadius: Appearance.rounding.large
             radius: Appearance.rounding.small
-            color: Colours.tPalette.m3surfaceContainer
+            color: Signal.tPalette.panel
 
             Media {
                 id: media
@@ -70,7 +70,7 @@ RowLayout {
 
             topRightRadius: Appearance.rounding.large
             radius: Appearance.rounding.small
-            color: Colours.tPalette.m3surfaceContainer
+            color: Signal.tPalette.panel
 
             Resources {
                 id: resources
@@ -83,7 +83,7 @@ RowLayout {
 
             bottomRightRadius: Appearance.rounding.large
             radius: Appearance.rounding.small
-            color: Colours.tPalette.m3surfaceContainer
+            color: Signal.tPalette.panel
 
             NotifDock {
                 lock: root.lock

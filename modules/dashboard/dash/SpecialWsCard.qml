@@ -33,22 +33,22 @@ Item {
 
         radius: Appearance.rounding.full
         color: root.isActive
-            ? Colours.tPalette.m3tertiaryContainer
-            : Colours.tPalette.m3surfaceContainerHigh
+            ? Signal.tPalette.phosphorWell
+            : Signal.tPalette.raised
 
         implicitWidth: content.implicitWidth + Appearance.padding.normal * 2
         implicitHeight: content.implicitHeight + Appearance.padding.small
 
         Behavior on color {
             ColorAnimation {
-                duration: Appearance.anim.durations.small
+                duration: Appearance.anim.durations.short
             }
         }
 
         StateLayer {
             color: root.isActive
-                ? Colours.palette.m3onTertiaryContainer
-                : Colours.palette.m3onSurface
+                ? Signal.palette.onPhosphorWell
+                : Signal.palette.ink
 
             function onClicked(): void {
                 root.clicked();
@@ -70,11 +70,11 @@ Item {
                 Component {
                     id: iconComp
 
-                    MaterialIcon {
-                        text: root.iconName
+                    Glyph {
+                        name: root.iconName
                         color: root.isActive
-                            ? Colours.palette.m3onTertiaryContainer
-                            : Colours.palette.m3tertiary
+                            ? Signal.palette.onPhosphorWell
+                            : Signal.palette.phosphor
                         font.pointSize: Appearance.font.size.normal
                     }
                 }
@@ -85,8 +85,8 @@ Item {
                     StyledText {
                         text: root.iconName
                         color: root.isActive
-                            ? Colours.palette.m3onTertiaryContainer
-                            : Colours.palette.m3tertiary
+                            ? Signal.palette.onPhosphorWell
+                            : Signal.palette.phosphor
                         font.pointSize: Appearance.font.size.small
                         font.weight: 600
                     }
@@ -99,15 +99,15 @@ Item {
                 font.pointSize: Appearance.font.size.small
                 font.weight: root.isActive ? 600 : 400
                 color: root.isActive
-                    ? Colours.palette.m3onTertiaryContainer
-                    : Colours.palette.m3onSurfaceVariant
+                    ? Signal.palette.onPhosphorWell
+                    : Signal.palette.inkMuted
             }
 
             // Window count
             StyledRect {
                 visible: root.windowCount > 0
                 radius: Appearance.rounding.full
-                color: Qt.alpha(Colours.palette.m3onTertiaryContainer, 0.2)
+                color: Qt.alpha(Signal.palette.onPhosphorWell, 0.2)
                 implicitWidth: wcText.implicitWidth + 6
                 implicitHeight: wcText.implicitHeight + 2
 
@@ -117,8 +117,8 @@ Item {
                     text: root.windowCount
                     font.pointSize: Appearance.font.size.smaller
                     color: root.isActive
-                        ? Colours.palette.m3onTertiaryContainer
-                        : Colours.palette.m3onSurfaceVariant
+                        ? Signal.palette.onPhosphorWell
+                        : Signal.palette.inkMuted
                 }
             }
         }

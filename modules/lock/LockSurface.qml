@@ -34,8 +34,8 @@ WlSessionLockSurface {
                 target: lockContent
                 properties: "implicitWidth,implicitHeight"
                 to: lockContent.size
-                duration: Appearance.anim.durations.expressiveDefaultSpatial
-                easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                duration: Appearance.anim.durations.settle
+                easing.bezierCurve: Appearance.anim.curves.settle
             }
             Anim {
                 target: lockBg
@@ -46,30 +46,30 @@ WlSessionLockSurface {
                 target: content
                 property: "scale"
                 to: 0
-                duration: Appearance.anim.durations.expressiveDefaultSpatial
-                easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                duration: Appearance.anim.durations.settle
+                easing.bezierCurve: Appearance.anim.curves.settle
             }
             Anim {
                 target: content
                 property: "opacity"
                 to: 0
-                duration: Appearance.anim.durations.small
+                duration: Appearance.anim.durations.short
             }
             Anim {
                 target: lockIcon
                 property: "opacity"
                 to: 1
-                duration: Appearance.anim.durations.large
+                duration: Appearance.anim.durations.long
             }
             Anim {
                 target: background
                 property: "opacity"
                 to: 0
-                duration: Appearance.anim.durations.large
+                duration: Appearance.anim.durations.long
             }
             SequentialAnimation {
                 PauseAnimation {
-                    duration: Appearance.anim.durations.small
+                    duration: Appearance.anim.durations.short
                 }
                 Anim {
                     target: lockContent
@@ -94,7 +94,7 @@ WlSessionLockSurface {
             target: background
             property: "opacity"
             to: 1
-            duration: Appearance.anim.durations.large
+            duration: Appearance.anim.durations.long
         }
         SequentialAnimation {
             ParallelAnimation {
@@ -102,15 +102,15 @@ WlSessionLockSurface {
                     target: lockContent
                     property: "scale"
                     to: 1
-                    duration: Appearance.anim.durations.expressiveFastSpatial
-                    easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+                    duration: Appearance.anim.durations.settleFast
+                    easing.bezierCurve: Appearance.anim.curves.settleFast
                 }
                 Anim {
                     target: lockContent
                     property: "rotation"
                     to: 360
-                    duration: Appearance.anim.durations.expressiveFastSpatial
-                    easing.bezierCurve: Appearance.anim.curves.standardAccel
+                    duration: Appearance.anim.durations.settleFast
+                    easing.bezierCurve: Appearance.anim.curves.exit
                 }
             }
             ParallelAnimation {
@@ -118,7 +118,7 @@ WlSessionLockSurface {
                     target: lockIcon
                     property: "rotation"
                     to: 360
-                    easing.bezierCurve: Appearance.anim.curves.standardDecel
+                    easing.bezierCurve: Appearance.anim.curves.enter
                 }
                 Anim {
                     target: lockIcon
@@ -134,8 +134,8 @@ WlSessionLockSurface {
                     target: content
                     property: "scale"
                     to: 1
-                    duration: Appearance.anim.durations.expressiveDefaultSpatial
-                    easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                    duration: Appearance.anim.durations.settle
+                    easing.bezierCurve: Appearance.anim.curves.settle
                 }
                 Anim {
                     target: lockBg
@@ -146,15 +146,15 @@ WlSessionLockSurface {
                     target: lockContent
                     property: "implicitWidth"
                     to: (root.screen?.height ?? 0) * Config.lock.sizes.heightMult * Config.lock.sizes.ratio
-                    duration: Appearance.anim.durations.expressiveDefaultSpatial
-                    easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                    duration: Appearance.anim.durations.settle
+                    easing.bezierCurve: Appearance.anim.curves.settle
                 }
                 Anim {
                     target: lockContent
                     property: "implicitHeight"
                     to: (root.screen?.height ?? 0) * Config.lock.sizes.heightMult
-                    duration: Appearance.anim.durations.expressiveDefaultSpatial
-                    easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                    duration: Appearance.anim.durations.settle
+                    easing.bezierCurve: Appearance.anim.curves.settle
                 }
             }
         }
@@ -194,23 +194,23 @@ WlSessionLockSurface {
             id: lockBg
 
             anchors.fill: parent
-            color: Colours.palette.m3surface
+            color: Signal.palette.base
             radius: parent.radius
-            opacity: Colours.elementAlpha("lock")
+            opacity: Signal.elementAlpha("lock")
 
             layer.enabled: true
             layer.effect: MultiEffect {
                 shadowEnabled: true
                 blurMax: 15
-                shadowColor: Qt.alpha(Colours.palette.m3shadow, 0.7)
+                shadowColor: Qt.alpha(Signal.palette.shadow, 0.7)
             }
         }
 
-        MaterialIcon {
+        Glyph {
             id: lockIcon
 
             anchors.centerIn: parent
-            text: "lock"
+            name: "lock"
             font.pointSize: Appearance.font.size.extraLarge * 4
             font.bold: true
             rotation: 180

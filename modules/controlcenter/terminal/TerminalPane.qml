@@ -80,7 +80,7 @@ Item {
         Layout.fillWidth: true
         implicitHeight: row.implicitHeight + Appearance.padding.normal * 2
         radius: Appearance.rounding.normal
-        color: Colours.layer(Colours.palette.m3surfaceContainerHigh, 2)
+        color: Signal.layer(Signal.palette.raised, 2)
 
         Item {
             id: row
@@ -89,15 +89,15 @@ Item {
             anchors.margins: Appearance.padding.normal
             implicitHeight: Math.max(icon.implicitHeight, details.implicitHeight, action.implicitHeight)
 
-            MaterialIcon {
+            Glyph {
                 id: icon
 
                 anchors.left: parent.left
                 anchors.leftMargin: Appearance.spacing.normal
                 anchors.verticalCenter: parent.verticalCenter
                 width: Appearance.font.size.extraLarge * 1.5
-                text: "terminal"
-                color: terminalCard.installed && terminalCard.terminalId === root.selectedTerminal ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+                name: "terminal"
+                color: terminalCard.installed && terminalCard.terminalId === root.selectedTerminal ? Signal.palette.signal : Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.large
                 horizontalAlignment: Text.AlignHCenter
             }
@@ -120,7 +120,7 @@ Item {
 
                 StyledText {
                     text: !terminalCard.installed ? qsTr("Not installed") : terminalCard.terminalId === root.selectedTerminal ? qsTr("Selected default") : qsTr("Installed and ready to use")
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                     font.pointSize: Appearance.font.size.smaller
                 }
             }
@@ -290,7 +290,7 @@ Item {
                     StyledText {
                         Layout.fillWidth: true
                         text: qsTr("Choose the terminal Hornero opens for shortcuts and integrated actions. The selection is shared with Exo, XDG terminal preferences, and Hornero Shell.")
-                        color: Colours.palette.m3onSurfaceVariant
+                        color: Signal.palette.inkMuted
                         wrapMode: Text.Wrap
                     }
 
@@ -298,7 +298,7 @@ Item {
                         visible: !root.loading && root.installedTerminals.indexOf(root.selectedTerminal) < 0
                         Layout.fillWidth: true
                         text: qsTr("The saved default (%1) is not currently installed. Install it or choose an available terminal below.").arg(root.selectedTerminal)
-                        color: Colours.palette.m3tertiary
+                        color: Signal.palette.phosphor
                         wrapMode: Text.Wrap
                     }
 
@@ -323,14 +323,14 @@ Item {
                         visible: root.loading
                         Layout.fillWidth: true
                         text: qsTr("Checking installed terminals…")
-                        color: Colours.palette.m3onSurfaceVariant
+                        color: Signal.palette.inkMuted
                     }
 
                     StyledText {
                         visible: root.statusMessage.length > 0
                         Layout.fillWidth: true
                         text: root.statusMessage
-                        color: root.actionSucceeded ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+                        color: root.actionSucceeded ? Signal.palette.signal : Signal.palette.inkMuted
                         wrapMode: Text.Wrap
                         Accessible.role: Accessible.StaticText
                         Accessible.name: root.statusMessage
@@ -348,7 +348,7 @@ Item {
                 StyledText {
                     Layout.fillWidth: true
                     text: qsTr("Hornero keeps the terminal shortcut, XDG preference, Exo handler, and Shell app launches aligned. Install an alternative first, then return here to select it.")
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                     font.pointSize: Appearance.font.size.smaller
                     wrapMode: Text.Wrap
                 }

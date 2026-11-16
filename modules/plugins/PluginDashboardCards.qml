@@ -109,7 +109,7 @@ Item {
         height: visible ? implicitHeight : 0
         text: qsTr("Arrows move between cards · Ctrl+arrows reorder · P pins · S resizes")
         font.pointSize: Appearance.font.size.smaller
-        color: Colours.palette.m3onSurfaceVariant
+        color: Signal.palette.inkMuted
     }
 
     Flickable {
@@ -161,7 +161,7 @@ Item {
                         text: section.modelData.pinned ? qsTr("Pinned") : section.modelData.category !== "" ? section.modelData.category : qsTr("Other")
                         font.pointSize: Appearance.font.size.normal
                         font.weight: 600
-                        color: Colours.palette.m3onSurfaceVariant
+                        color: Signal.palette.inkMuted
                         Accessible.role: Accessible.Heading
                         Accessible.name: text
                     }
@@ -190,7 +190,7 @@ Item {
                                 implicitWidth: content.implicitWidth + Appearance.padding.large * 2
                                 implicitHeight: content.implicitHeight + Appearance.padding.large * 2
                                 radius: Appearance.rounding.large
-                                color: Colours.palette.m3surfaceContainer
+                                color: Signal.palette.panel
 
                                 activeFocusOnTab: true
                                 Accessible.role: Accessible.Pane
@@ -220,7 +220,7 @@ Item {
                                     radius: parent.radius + 2
                                     color: "transparent"
                                     border.width: 2
-                                    border.color: Colours.focusRing
+                                    border.color: Signal.palette.focus
                                     visible: card.activeFocus && FocusMode.keyboard
                                 }
 
@@ -237,7 +237,7 @@ Item {
                                         visible: !card.contentReady
                                         text: card.modelData.name || card.modelData.id
                                         font.pointSize: Appearance.font.size.normal
-                                        color: Colours.palette.m3onSurface
+                                        color: Signal.palette.ink
                                     }
 
                                     Loader {
@@ -262,19 +262,19 @@ Item {
                                         // Raw Qt Controls an extension uses (TextField,
                                         // ComboBox, ...) take the shell palette instead of
                                         // the Basic style's white fields.
-                                        palette.windowText: Colours.palette.m3onSurface
-                                        palette.window: Colours.palette.m3surfaceContainer
-                                        palette.base: Colours.palette.m3surfaceContainerHigh
-                                        palette.alternateBase: Colours.palette.m3surfaceContainerHighest
-                                        palette.text: Colours.palette.m3onSurface
-                                        palette.placeholderText: Colours.palette.m3onSurfaceVariant
-                                        palette.button: Colours.palette.m3surfaceContainerHigh
-                                        palette.buttonText: Colours.palette.m3onSurface
-                                        palette.highlight: Colours.palette.m3primary
-                                        palette.highlightedText: Colours.palette.m3onPrimary
-                                        palette.mid: Colours.palette.m3outline
-                                        palette.dark: Colours.palette.m3outline
-                                        palette.light: Colours.palette.m3surfaceContainerHighest
+                                        palette.windowText: Signal.palette.ink
+                                        palette.window: Signal.palette.panel
+                                        palette.base: Signal.palette.raised
+                                        palette.alternateBase: Signal.palette.lifted
+                                        palette.text: Signal.palette.ink
+                                        palette.placeholderText: Signal.palette.inkMuted
+                                        palette.button: Signal.palette.raised
+                                        palette.buttonText: Signal.palette.ink
+                                        palette.highlight: Signal.palette.signal
+                                        palette.highlightedText: Signal.palette.onSignal
+                                        palette.mid: Signal.palette.ruleStrong
+                                        palette.dark: Signal.palette.ruleStrong
+                                        palette.light: Signal.palette.lifted
                                         source: card.modelData.entrypoint ? `file://${Plugins.pluginsDir}/${card.modelData.id}/${card.modelData.entrypoint}` : ""
                                         asynchronous: true
 
@@ -339,7 +339,7 @@ Item {
                                     StyledText {
                                         visible: pluginLoader.status === Loader.Error
                                         text: qsTr("This plugin failed to load.")
-                                        color: Colours.palette.m3error
+                                        color: Signal.palette.alert
                                     }
 
                                     // Status metadata is diagnostic: hidden for a healthy
@@ -353,7 +353,7 @@ Item {
                                             Layout.preferredHeight: stateLabel.implicitHeight + 6
                                             Layout.preferredWidth: stateLabel.implicitWidth + 14
                                             radius: Appearance.rounding.full
-                                            color: card.modelData.state === "failed" || card.modelData.state === "blocked" ? Colours.palette.m3errorContainer : card.modelData.state === "loaded" ? Colours.palette.m3primaryContainer : Colours.palette.m3surfaceContainerHigh
+                                            color: card.modelData.state === "failed" || card.modelData.state === "blocked" ? Signal.palette.alertWell : card.modelData.state === "loaded" ? Signal.palette.signalWell : Signal.palette.raised
 
                                             StyledText {
                                                 id: stateLabel
@@ -362,7 +362,7 @@ Item {
                                                 text: card.modelData.state === "loaded" ? qsTr("Loaded") : card.modelData.state === "failed" ? qsTr("Failed") : card.modelData.state === "blocked" ? qsTr("Blocked") : qsTr("Pending")
                                                 font.pointSize: Appearance.font.size.smaller
                                                 font.weight: 600
-                                                color: card.modelData.state === "failed" || card.modelData.state === "blocked" ? Colours.palette.m3onErrorContainer : card.modelData.state === "loaded" ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurfaceVariant
+                                                color: card.modelData.state === "failed" || card.modelData.state === "blocked" ? Signal.palette.onAlertWell : card.modelData.state === "loaded" ? Signal.palette.onSignalWell : Signal.palette.inkMuted
                                             }
                                         }
 
@@ -370,27 +370,27 @@ Item {
                                             visible: !!card.modelData.version
                                             text: "v" + (card.modelData.version || "")
                                             font.pointSize: Appearance.font.size.smaller
-                                            color: Colours.palette.m3onSurfaceVariant
+                                            color: Signal.palette.inkMuted
                                         }
 
                                         StyledText {
                                             visible: !!card.modelData.trust
                                             text: card.modelData.trust || ""
                                             font.pointSize: Appearance.font.size.smaller
-                                            color: Colours.palette.m3onSurfaceVariant
+                                            color: Signal.palette.inkMuted
                                         }
 
                                         StyledText {
                                             visible: !!card.modelData.pinned
                                             text: qsTr("Pinned")
                                             font.pointSize: Appearance.font.size.smaller
-                                            color: Colours.palette.m3primary
+                                            color: Signal.palette.signal
                                         }
 
                                         StyledText {
                                             text: card.modelData.sizeClass || "standard"
                                             font.pointSize: Appearance.font.size.smaller
-                                            color: Colours.palette.m3onSurfaceVariant
+                                            color: Signal.palette.inkMuted
                                         }
                                     }
                                 }
@@ -415,7 +415,7 @@ Item {
 
         StyledText {
             text: qsTr("Enabled plugins that declare dashboard placement show up here as cards.")
-            color: Colours.palette.m3onSurfaceVariant
+            color: Signal.palette.inkMuted
         }
     }
 }

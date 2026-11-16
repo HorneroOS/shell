@@ -51,7 +51,7 @@ StyledRect {
 
     clip: true
     radius: Appearance.rounding.normal
-    color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
+    color: Signal.layer(Signal.palette.panel, 2)
 
     RowLayout {
         id: content
@@ -87,7 +87,7 @@ StyledRect {
                 ColouredIcon {
                     implicitSize: Math.round(Config.notifs.sizes.image * 0.6)
                     source: Quickshell.iconPath(root.appIcon)
-                    colour: root.urgency === NotificationUrgency.Critical ? Colours.palette.m3onError : root.urgency === NotificationUrgency.Low ? Colours.palette.m3onSurface : Colours.palette.m3onSecondaryContainer
+                    colour: root.urgency === NotificationUrgency.Critical ? Signal.palette.onAlert : root.urgency === NotificationUrgency.Low ? Signal.palette.ink : Signal.palette.onCueWell
                     layer.enabled: root.appIcon.endsWith("symbolic")
                 }
             }
@@ -95,16 +95,16 @@ StyledRect {
             Component {
                 id: materialIconComp
 
-                MaterialIcon {
-                    text: Icons.getNotifIcon(root.notifs[0]?.summary, root.urgency)
-                    color: root.urgency === NotificationUrgency.Critical ? Colours.palette.m3onError : root.urgency === NotificationUrgency.Low ? Colours.palette.m3onSurface : Colours.palette.m3onSecondaryContainer
+                Glyph {
+                    name: Icons.getNotifIcon(root.notifs[0]?.summary, root.urgency)
+                    color: root.urgency === NotificationUrgency.Critical ? Signal.palette.onAlert : root.urgency === NotificationUrgency.Low ? Signal.palette.ink : Signal.palette.onCueWell
                     font.pointSize: Appearance.font.size.large
                 }
             }
 
             StyledClippingRect {
                 anchors.fill: parent
-                color: root.urgency === NotificationUrgency.Critical ? Colours.palette.m3error : root.urgency === NotificationUrgency.Low ? Colours.layer(Colours.palette.m3surfaceContainerHigh, 3) : Colours.palette.m3secondaryContainer
+                color: root.urgency === NotificationUrgency.Critical ? Signal.palette.alert : root.urgency === NotificationUrgency.Low ? Signal.layer(Signal.palette.raised, 3) : Signal.palette.cueWell
                 radius: Appearance.rounding.full
 
                 Loader {
@@ -122,14 +122,14 @@ StyledRect {
                     implicitWidth: Config.notifs.sizes.badge
                     implicitHeight: Config.notifs.sizes.badge
 
-                    color: root.urgency === NotificationUrgency.Critical ? Colours.palette.m3error : root.urgency === NotificationUrgency.Low ? Colours.palette.m3surfaceContainerHigh : Colours.palette.m3secondaryContainer
+                    color: root.urgency === NotificationUrgency.Critical ? Signal.palette.alert : root.urgency === NotificationUrgency.Low ? Signal.palette.raised : Signal.palette.cueWell
                     radius: Appearance.rounding.full
 
                     ColouredIcon {
                         anchors.centerIn: parent
                         implicitSize: Math.round(Config.notifs.sizes.badge * 0.6)
                         source: Quickshell.iconPath(root.appIcon)
-                        colour: root.urgency === NotificationUrgency.Critical ? Colours.palette.m3onError : root.urgency === NotificationUrgency.Low ? Colours.palette.m3onSurface : Colours.palette.m3onSecondaryContainer
+                        colour: root.urgency === NotificationUrgency.Critical ? Signal.palette.onAlert : root.urgency === NotificationUrgency.Low ? Signal.palette.ink : Signal.palette.onCueWell
                         layer.enabled: root.appIcon.endsWith("symbolic")
                     }
                 }
@@ -154,7 +154,7 @@ StyledRect {
                 StyledText {
                     Layout.fillWidth: true
                     text: root.modelData
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                     font.pointSize: Appearance.font.size.small
                     elide: Text.ElideRight
                 }
@@ -162,7 +162,7 @@ StyledRect {
                 StyledText {
                     animate: true
                     text: root.notifs.find(n => !n.closed)?.timeStr ?? ""
-                    color: Colours.palette.m3outline
+                    color: Signal.palette.ruleStrong
                     font.pointSize: Appearance.font.size.small
                 }
 
@@ -170,11 +170,11 @@ StyledRect {
                     implicitWidth: expandBtn.implicitWidth + Appearance.padding.smaller * 2
                     implicitHeight: groupCount.implicitHeight + Appearance.padding.small
 
-                    color: root.urgency === NotificationUrgency.Critical ? Colours.palette.m3error : Colours.layer(Colours.palette.m3surfaceContainerHigh, 3)
+                    color: root.urgency === NotificationUrgency.Critical ? Signal.palette.alert : Signal.layer(Signal.palette.raised, 3)
                     radius: Appearance.rounding.full
 
                     StateLayer {
-                        color: root.urgency === NotificationUrgency.Critical ? Colours.palette.m3onError : Colours.palette.m3onSurface
+                        color: root.urgency === NotificationUrgency.Critical ? Signal.palette.onAlert : Signal.palette.ink
 
                         function onClicked(): void {
                             root.toggleExpand(!root.expanded);
@@ -193,28 +193,28 @@ StyledRect {
                             Layout.leftMargin: Appearance.padding.small / 2
                             animate: true
                             text: root.notifCount
-                            color: root.urgency === NotificationUrgency.Critical ? Colours.palette.m3onError : Colours.palette.m3onSurface
+                            color: root.urgency === NotificationUrgency.Critical ? Signal.palette.onAlert : Signal.palette.ink
                             font.pointSize: Appearance.font.size.small
                         }
 
-                        MaterialIcon {
+                        Glyph {
                             Layout.rightMargin: -Appearance.padding.small / 2
-                            text: "expand_more"
-                            color: root.urgency === NotificationUrgency.Critical ? Colours.palette.m3onError : Colours.palette.m3onSurface
+                            name: "chevron-down"
+                            color: root.urgency === NotificationUrgency.Critical ? Signal.palette.onAlert : Signal.palette.ink
                             rotation: root.expanded ? 180 : 0
                             Layout.topMargin: root.expanded ? -Math.floor(Appearance.padding.smaller / 2) : 0
 
                             Behavior on rotation {
                                 Anim {
-                                    duration: Appearance.anim.durations.expressiveDefaultSpatial
-                                    easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                                    duration: Appearance.anim.durations.settle
+                                    easing.bezierCurve: Appearance.anim.curves.settle
                                 }
                             }
 
                             Behavior on Layout.topMargin {
                                 Anim {
-                                    duration: Appearance.anim.durations.expressiveDefaultSpatial
-                                    easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                                    duration: Appearance.anim.durations.settle
+                                    easing.bezierCurve: Appearance.anim.curves.settle
                                 }
                             }
                         }

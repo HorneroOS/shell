@@ -17,7 +17,7 @@ PageView {
     }
 
     ActionCard {
-        icon: "replay"
+        icon: "rotate"
         title: qsTr("Restart the tour")
         description: qsTr("Walk the eight sections again from the beginning.")
         onActivated: Actions.openWelcome("start")

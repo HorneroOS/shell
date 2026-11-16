@@ -17,7 +17,7 @@ StyledRect {
     Layout.fillWidth: true
     implicitHeight: layout.implicitHeight + Appearance.padding.large * 2
     radius: Appearance.rounding.normal
-    color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
+    color: Signal.layer(Signal.palette.panel, 2)
     clip: true
 
     Behavior on implicitHeight {
@@ -76,7 +76,7 @@ StyledRect {
                     radius: stateLayer.pressed ? Appearance.rounding.small / 2 : internalChecked ? Appearance.rounding.small : Appearance.rounding.normal
 
                     // Match utilities Toggles inactive color
-                    inactiveColour: Colours.layer(Colours.palette.m3surfaceContainerHighest, 2)
+                    inactiveColour: Signal.layer(Signal.palette.lifted, 2)
 
                     // Adjust width similar to utilities toggles
                     Layout.preferredWidth: implicitWidth + (stateLayer.pressed ? Appearance.padding.large : internalChecked ? Appearance.padding.smaller : 0)
@@ -90,15 +90,15 @@ StyledRect {
 
                     Behavior on Layout.preferredWidth {
                         Anim {
-                            duration: Appearance.anim.durations.expressiveFastSpatial
-                            easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+                            duration: Appearance.anim.durations.settleFast
+                            easing.bezierCurve: Appearance.anim.curves.settleFast
                         }
                     }
 
                     Behavior on radius {
                         Anim {
-                            duration: Appearance.anim.durations.expressiveFastSpatial
-                            easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+                            duration: Appearance.anim.durations.settleFast
+                            easing.bezierCurve: Appearance.anim.curves.settleFast
                         }
                     }
                 }

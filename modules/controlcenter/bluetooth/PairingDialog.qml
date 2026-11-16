@@ -48,7 +48,7 @@ Item {
         implicitWidth: 400
         implicitHeight: content.implicitHeight + Appearance.padding.large * 2
         radius: Appearance.rounding.normal
-        color: Colours.tPalette.m3surface
+        color: Signal.tPalette.base
 
         ColumnLayout {
             id: content
@@ -59,9 +59,9 @@ Item {
             anchors.margins: Appearance.padding.large
             spacing: Appearance.spacing.normal
 
-            MaterialIcon {
+            Glyph {
                 Layout.alignment: Qt.AlignHCenter
-                text: "bluetooth"
+                name: "bluetooth"
                 font.pointSize: Appearance.font.size.extraLarge * 2
             }
 
@@ -77,7 +77,7 @@ Item {
                 horizontalAlignment: Text.AlignHCenter
                 wrapMode: Text.WordWrap
                 text: root.session.bt.pairingDeviceAddress ? qsTr("Device: %1 (%2)").arg(root.session.bt.pairingDeviceName).arg(root.session.bt.pairingDeviceAddress) : qsTr("Device: %1").arg(root.session.bt.pairingDeviceName)
-                color: Colours.palette.m3outline
+                color: Signal.palette.ruleStrong
                 font.pointSize: Appearance.font.size.small
             }
 
@@ -96,7 +96,7 @@ Item {
                 wrapMode: Text.WordWrap
                 visible: root.session.bt.pairingKind === "confirmation"
                 text: qsTr("Only confirm if this code matches the code shown on the other device.")
-                color: Colours.palette.m3outline
+                color: Signal.palette.ruleStrong
                 font.pointSize: Appearance.font.size.small
             }
 
@@ -132,8 +132,8 @@ Item {
 
                 TextButton {
                     Layout.fillWidth: true
-                    inactiveColour: Colours.palette.m3secondaryContainer
-                    inactiveOnColour: Colours.palette.m3onSecondaryContainer
+                    inactiveColour: Signal.palette.cueWell
+                    inactiveOnColour: Signal.palette.onCueWell
                     text: qsTr("Reject")
 
                     onClicked: root.session.bt.rejectPairing()
@@ -141,8 +141,8 @@ Item {
 
                 TextButton {
                     Layout.fillWidth: true
-                    inactiveColour: Colours.palette.m3primary
-                    inactiveOnColour: Colours.palette.m3onPrimary
+                    inactiveColour: Signal.palette.signal
+                    inactiveOnColour: Signal.palette.onSignal
                     text: root.session.bt.pairingKind === "confirmation" ? qsTr("Confirm") : qsTr("Pair")
                     enabled: root.session.bt.pairingKind === "confirmation" || pinField.text.length > 0
 

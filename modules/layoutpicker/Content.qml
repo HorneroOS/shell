@@ -32,7 +32,7 @@ Item {
 
     StyledClippingRect {
         anchors.fill: parent
-        color: Colours.surface(Colours.layer(Colours.palette.m3surfaceContainer, 1), "layoutpicker")
+        color: Signal.surface(Signal.layer(Signal.palette.panel, 1), "layoutpicker")
         radius: Appearance.rounding.large
 
         ColumnLayout {
@@ -51,12 +51,12 @@ Item {
                     implicitWidth: 44
                     implicitHeight: 44
                     radius: Appearance.rounding.full
-                    color: Colours.layer(Colours.palette.m3primaryContainer, 2)
+                    color: Signal.layer(Signal.palette.signalWell, 2)
 
-                    MaterialIcon {
+                    Glyph {
                         anchors.centerIn: parent
-                        text: "dashboard_customize"
-                        color: Colours.palette.m3onPrimaryContainer
+                        name: "layout-dashboard"
+                        color: Signal.palette.onSignalWell
                         font.pointSize: Appearance.font.size.large
                     }
                 }
@@ -69,18 +69,18 @@ Item {
                         text: qsTr("Shell layout")
                         font.pointSize: Appearance.font.size.large
                         font.weight: Font.Medium
-                        color: Colours.palette.m3onSurface
+                        color: Signal.palette.ink
                     }
 
                     StyledText {
                         text: qsTr("Pick a bar arrangement — it applies instantly, no restart")
                         font.pointSize: Appearance.font.size.small
-                        color: Colours.palette.m3onSurfaceVariant
+                        color: Signal.palette.inkMuted
                     }
                 }
 
                 IconButton {
-                    icon: "close"
+                    icon: "x"
                     type: IconButton.Text
                     accessibleName: qsTr("Close layout picker")
                     onClicked: root.visibilities.layoutPicker = false
@@ -99,7 +99,7 @@ Item {
                 Layout.alignment: Qt.AlignHCenter
                 text: qsTr("←→↑↓ navigate · Enter applies · Esc closes")
                 font.pointSize: Appearance.font.size.smaller
-                color: Colours.layer(Colours.palette.m3onSurfaceVariant, 2)
+                color: Signal.layer(Signal.palette.inkMuted, 2)
             }
         }
     }

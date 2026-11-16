@@ -25,7 +25,7 @@ Item {
             Layout.fillHeight: true
 
             radius: Appearance.rounding.normal
-            color: Colours.tPalette.m3surfaceContainerLow
+            color: Signal.tPalette.sunken
 
             NotifDock {
                 props: root.props
@@ -38,7 +38,7 @@ Item {
             Layout.fillWidth: true
             implicitHeight: 1
 
-            color: Colours.tPalette.m3outlineVariant
+            color: Signal.tPalette.rule
         }
     }
 }

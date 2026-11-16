@@ -23,17 +23,17 @@ Item {
         rowSpacing: 0
         columnSpacing: Appearance.spacing.smaller / 2
 
-        MaterialIcon {
+        Glyph {
             Layout.alignment: Qt.AlignCenter
-            text: "keyboard"
-            color: Colours.palette.m3onSurfaceVariant
+            name: "keyboard"
+            color: Signal.palette.inkMuted
             font.pointSize: Appearance.font.size.normal
         }
 
         StyledText {
             Layout.alignment: Qt.AlignCenter
             text: Compositor.keyboardLayoutShort
-            color: Colours.palette.m3onSurface
+            color: Signal.palette.ink
             font.pointSize: Appearance.font.size.smaller
             font.capitalization: Font.AllUppercase
         }

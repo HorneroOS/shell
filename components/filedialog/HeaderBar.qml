@@ -14,7 +14,7 @@ StyledRect {
     implicitWidth: inner.implicitWidth + Appearance.padding.normal * 2
     implicitHeight: inner.implicitHeight + Appearance.padding.normal * 2
 
-    color: Colours.tPalette.m3surfaceContainer
+    color: Signal.tPalette.panel
 
     RowLayout {
         id: inner
@@ -36,13 +36,12 @@ StyledRect {
                 }
             }
 
-            MaterialIcon {
+            Glyph {
                 id: upIcon
 
                 anchors.centerIn: parent
-                text: "drive_folder_upload"
-                color: root.dialog.cwd.length === 1 ? Colours.palette.m3outline : Colours.palette.m3onSurface
-                grade: 200
+                name: "folder-up"
+                color: root.dialog.cwd.length === 1 ? Signal.palette.ruleStrong : Signal.palette.ink
             }
         }
 
@@ -50,7 +49,7 @@ StyledRect {
             Layout.fillWidth: true
 
             radius: Appearance.rounding.small
-            color: Colours.tPalette.m3surfaceContainerHigh
+            color: Signal.tPalette.raised
 
             implicitHeight: pathComponents.implicitHeight + pathComponents.anchors.margins * 2
 
@@ -79,7 +78,7 @@ StyledRect {
                             active: folder.index > 0
                             sourceComponent: StyledText {
                                 text: "/"
-                                color: Colours.palette.m3onSurfaceVariant
+                                color: Signal.palette.inkMuted
                                 font.bold: true
                             }
                         }
@@ -108,10 +107,9 @@ StyledRect {
                                 anchors.leftMargin: Appearance.padding.normal
 
                                 active: folder.index === 0 && folder.modelData === "Home"
-                                sourceComponent: MaterialIcon {
-                                    text: "home"
-                                    color: root.dialog.cwd.length === 1 ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
-                                    fill: 1
+                                sourceComponent: Glyph {
+                                    name: "home"
+                                    color: root.dialog.cwd.length === 1 ? Signal.palette.ink : Signal.palette.inkMuted
                                 }
                             }
 
@@ -123,7 +121,7 @@ StyledRect {
                                 anchors.leftMargin: homeIcon.active ? Appearance.padding.small : 0
 
                                 text: folder.modelData
-                                color: folder.index < root.dialog.cwd.length - 1 ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3onSurface
+                                color: folder.index < root.dialog.cwd.length - 1 ? Signal.palette.inkMuted : Signal.palette.ink
                                 font.bold: true
                             }
                         }

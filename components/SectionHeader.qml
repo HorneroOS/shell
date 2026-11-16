@@ -22,6 +22,6 @@ ColumnLayout {
     StyledText {
         visible: root.description !== ""
         text: root.description
-        color: Colours.palette.m3onSurfaceVariant
+        color: Signal.palette.inkMuted
     }
 }

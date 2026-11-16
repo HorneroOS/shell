@@ -80,7 +80,7 @@ ColumnLayout {
         implicitHeight: content.implicitHeight + Appearance.padding.large * 2
 
         radius: Appearance.rounding.normal
-        color: Colours.tPalette.m3surfaceContainer
+        color: Signal.tPalette.panel
         visible: root.shouldBeVisible || root.isClosing
         opacity: root.shouldBeVisible && !root.isClosing ? 1 : 0
         scale: root.shouldBeVisible && !root.isClosing ? 1 : 0.7
@@ -125,9 +125,9 @@ ColumnLayout {
 
             spacing: Appearance.spacing.normal
 
-            MaterialIcon {
+            Glyph {
                 Layout.alignment: Qt.AlignHCenter
-                text: "lock"
+                name: "lock"
                 font.pointSize: Appearance.font.size.extraLarge * 2
             }
 
@@ -150,7 +150,7 @@ ColumnLayout {
                     }
                     return qsTr("Network: Unknown");
                 }
-                color: Colours.palette.m3outline
+                color: Signal.palette.ruleStrong
                 font.pointSize: Appearance.font.size.small
             }
 
@@ -197,7 +197,7 @@ ColumnLayout {
                     }
                     return "";
                 }
-                color: connectButton.hasError ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
+                color: connectButton.hasError ? Signal.palette.alert : Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.small
                 font.weight: 400
                 wrapMode: Text.WordWrap
@@ -275,16 +275,16 @@ ColumnLayout {
                 StyledRect {
                     anchors.fill: parent
                     radius: Appearance.rounding.normal
-                    color: passwordContainer.activeFocus ? Qt.lighter(Colours.tPalette.m3surfaceContainer, 1.05) : Colours.tPalette.m3surfaceContainer
+                    color: passwordContainer.activeFocus ? Qt.lighter(Signal.tPalette.panel, 1.05) : Signal.tPalette.panel
                     border.width: passwordContainer.activeFocus || connectButton.hasError ? 4 : (root.shouldBeVisible ? 1 : 0)
                     border.color: {
                         if (connectButton.hasError) {
-                            return Colours.palette.m3error;
+                            return Signal.palette.alert;
                         }
                         if (passwordContainer.activeFocus) {
-                            return Colours.palette.m3primary;
+                            return Signal.palette.signal;
                         }
-                        return root.shouldBeVisible ? Colours.palette.m3outline : "transparent";
+                        return root.shouldBeVisible ? Signal.palette.ruleStrong : "transparent";
                     }
 
                     Behavior on border.color {
@@ -315,7 +315,7 @@ ColumnLayout {
 
                     anchors.centerIn: parent
                     text: qsTr("Password")
-                    color: Colours.palette.m3outline
+                    color: Signal.palette.ruleStrong
                     font.pointSize: Appearance.font.size.normal
                     font.family: Appearance.font.family.mono
                     opacity: passwordContainer.passwordBuffer ? 0 : 1
@@ -348,7 +348,7 @@ ColumnLayout {
                         implicitWidth: implicitHeight
                         implicitHeight: charList.implicitHeight
 
-                        color: Colours.palette.m3onSurface
+                        color: Signal.palette.ink
                         radius: Appearance.rounding.small / 2
 
                         opacity: 0
@@ -392,8 +392,8 @@ ColumnLayout {
 
                         Behavior on scale {
                             Anim {
-                                duration: Appearance.anim.durations.expressiveFastSpatial
-                                easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+                                duration: Appearance.anim.durations.settleFast
+                                easing.bezierCurve: Appearance.anim.curves.settleFast
                             }
                         }
                     }
@@ -414,8 +414,8 @@ ColumnLayout {
 
                     Layout.fillWidth: true
                     Layout.minimumHeight: Appearance.font.size.normal + Appearance.padding.normal * 2
-                    inactiveColour: Colours.palette.m3secondaryContainer
-                    inactiveOnColour: Colours.palette.m3onSecondaryContainer
+                    inactiveColour: Signal.palette.cueWell
+                    inactiveOnColour: Signal.palette.onCueWell
                     text: qsTr("Cancel")
 
                     onClicked: root.closeDialog()
@@ -429,8 +429,8 @@ ColumnLayout {
 
                     Layout.fillWidth: true
                     Layout.minimumHeight: Appearance.font.size.normal + Appearance.padding.normal * 2
-                    inactiveColour: Colours.palette.m3primary
-                    inactiveOnColour: Colours.palette.m3onPrimary
+                    inactiveColour: Signal.palette.signal
+                    inactiveOnColour: Signal.palette.onSignal
                     text: qsTr("Connect")
                     enabled: passwordContainer.passwordBuffer.length > 0 && !connecting
 

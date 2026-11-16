@@ -52,7 +52,7 @@ Item {
         }
 
         animate: true
-        color: root.pam.passwd.active ? Colours.palette.m3secondary : Colours.palette.m3outline
+        color: root.pam.passwd.active ? Signal.palette.cue : Signal.palette.ruleStrong
         font.pointSize: Appearance.font.size.normal
         font.family: Appearance.font.family.mono
 
@@ -94,7 +94,7 @@ Item {
             implicitWidth: implicitHeight
             implicitHeight: charList.implicitHeight
 
-            color: Colours.palette.m3onSurface
+            color: Signal.palette.ink
             radius: Appearance.rounding.small / 2
 
             opacity: 0
@@ -138,8 +138,8 @@ Item {
 
             Behavior on scale {
                 Anim {
-                    duration: Appearance.anim.durations.expressiveFastSpatial
-                    easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+                    duration: Appearance.anim.durations.settleFast
+                    easing.bezierCurve: Appearance.anim.curves.settleFast
                 }
             }
         }

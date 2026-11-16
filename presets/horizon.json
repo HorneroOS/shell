@@ -1,7 +1,7 @@
 {
   "_name": "Horizon",
   "_description": "One slab carries every control and reading; workspaces rest on a clear line below",
-  "_iconMaterial": "horizontal_split",
+  "_iconMaterial": "layout-rows",
   "_lineage": "Polybar top-only profile with transparent workspace strip",
   "bar": {
     "persistent": true,

@@ -31,7 +31,7 @@ ColumnLayout {
         visible: !root.session.bt.hasAdapter
         wrapMode: Text.WordWrap
         text: qsTr("No Bluetooth adapter found. The Bluetooth service may be stopped, or this machine has no Bluetooth hardware.")
-        color: Colours.palette.m3outline
+        color: Signal.palette.ruleStrong
     }
 
     StyledText {
@@ -39,7 +39,7 @@ ColumnLayout {
         visible: root.session.bt.lastError !== ""
         wrapMode: Text.WordWrap
         text: root.session.bt.lastError
-        color: Colours.palette.m3error
+        color: Signal.palette.alert
     }
 
     StyledText {
@@ -51,7 +51,7 @@ ColumnLayout {
 
     StyledText {
         text: qsTr("General adapter settings")
-        color: Colours.palette.m3outline
+        color: Signal.palette.ruleStrong
     }
 
     StyledRect {
@@ -59,7 +59,7 @@ ColumnLayout {
         implicitHeight: adapterStatus.implicitHeight + Appearance.padding.large * 2
 
         radius: Appearance.rounding.normal
-        color: Colours.tPalette.m3surfaceContainer
+        color: Signal.tPalette.panel
 
         ColumnLayout {
             id: adapterStatus
@@ -112,7 +112,7 @@ ColumnLayout {
 
     StyledText {
         text: qsTr("Per-adapter settings")
-        color: Colours.palette.m3outline
+        color: Signal.palette.ruleStrong
     }
 
     StyledRect {
@@ -120,7 +120,7 @@ ColumnLayout {
         implicitHeight: adapterSettings.implicitHeight + Appearance.padding.large * 2
 
         radius: Appearance.rounding.normal
-        color: Colours.tPalette.m3surfaceContainer
+        color: Signal.tPalette.panel
 
         ColumnLayout {
             id: adapterSettings
@@ -171,8 +171,8 @@ ColumnLayout {
                             text: root.session.bt.currentAdapter?.name ?? qsTr("None")
                         }
 
-                        MaterialIcon {
-                            text: "expand_more"
+                        Glyph {
+                            name: "chevron-down"
                         }
                     }
 
@@ -189,8 +189,8 @@ ColumnLayout {
 
                         Behavior on scale {
                             Anim {
-                                duration: Appearance.anim.durations.expressiveFastSpatial
-                                easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+                                duration: Appearance.anim.durations.settleFast
+                                easing.bezierCurve: Appearance.anim.curves.settleFast
                             }
                         }
                     }
@@ -203,7 +203,7 @@ ColumnLayout {
                         anchors.bottom: parent.bottom
                         implicitHeight: adapterPickerButton.expanded ? adapterList.implicitHeight : adapterPickerButton.implicitHeight
 
-                        color: Colours.palette.m3secondaryContainer
+                        color: Signal.palette.cueWell
                         radius: Appearance.rounding.small
                         opacity: adapterPickerButton.expanded ? 1 : 0
                         scale: adapterPickerButton.expanded ? 1 : 0.7
@@ -250,12 +250,12 @@ ColumnLayout {
                                             Layout.fillWidth: true
                                             Layout.leftMargin: Appearance.padding.small
                                             text: adapter.modelData.name
-                                            color: Colours.palette.m3onSecondaryContainer
+                                            color: Signal.palette.onCueWell
                                         }
 
-                                        MaterialIcon {
-                                            text: "check"
-                                            color: Colours.palette.m3onSecondaryContainer
+                                        Glyph {
+                                            name: "check"
+                                            color: Signal.palette.onCueWell
                                             visible: adapter.modelData === root.session.bt.currentAdapter
                                         }
                                     }
@@ -269,15 +269,15 @@ ColumnLayout {
 
                         Behavior on scale {
                             Anim {
-                                duration: Appearance.anim.durations.expressiveFastSpatial
-                                easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+                                duration: Appearance.anim.durations.settleFast
+                                easing.bezierCurve: Appearance.anim.curves.settleFast
                             }
                         }
 
                         Behavior on implicitHeight {
                             Anim {
-                                duration: Appearance.anim.durations.expressiveDefaultSpatial
-                                easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                                duration: Appearance.anim.durations.settle
+                                easing.bezierCurve: Appearance.anim.curves.settle
                             }
                         }
                     }
@@ -333,7 +333,7 @@ ColumnLayout {
 
                     transitions: Transition {
                         AnchorAnimation {
-                            duration: Appearance.anim.durations.normal
+                            duration: Appearance.anim.durations.medium
                             easing.type: Easing.BezierSpline
                             easing.bezierCurve: Appearance.anim.curves.standard
                         }
@@ -348,7 +348,7 @@ ColumnLayout {
                         anchors.left: parent.left
 
                         text: qsTr("Rename adapter")
-                        color: Colours.palette.m3outline
+                        color: Signal.palette.ruleStrong
                         font.pointSize: Appearance.font.size.small
                     }
 
@@ -377,7 +377,7 @@ ColumnLayout {
                         background: StyledRect {
                             radius: Appearance.rounding.small
                             border.width: 2
-                            border.color: Colours.palette.m3primary
+                            border.color: Signal.palette.signal
                             opacity: root.session.bt.editingAdapterName ? 1 : 0
 
                             Behavior on border.color {
@@ -400,12 +400,12 @@ ColumnLayout {
                     implicitHeight: cancelEditIcon.implicitHeight + Appearance.padding.smaller * 2
 
                     radius: Appearance.rounding.small
-                    color: Colours.palette.m3secondaryContainer
+                    color: Signal.palette.cueWell
                     opacity: root.session.bt.editingAdapterName ? 1 : 0
                     scale: root.session.bt.editingAdapterName ? 1 : 0.5
 
                     Interactive {
-                        color: Colours.palette.m3onSecondaryContainer
+                        color: Signal.palette.onCueWell
                         disabled: !root.session.bt.editingAdapterName
 
                         function onClicked(): void {
@@ -414,13 +414,13 @@ ColumnLayout {
                         }
                     }
 
-                    MaterialIcon {
+                    Glyph {
                         id: cancelEditIcon
 
                         anchors.centerIn: parent
                         animate: true
-                        text: "cancel"
-                        color: Colours.palette.m3onSecondaryContainer
+                        name: "cancel"
+                        color: Signal.palette.onCueWell
                     }
 
                     Behavior on opacity {
@@ -429,8 +429,8 @@ ColumnLayout {
 
                     Behavior on scale {
                         Anim {
-                            duration: Appearance.anim.durations.expressiveFastSpatial
-                            easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+                            duration: Appearance.anim.durations.settleFast
+                            easing.bezierCurve: Appearance.anim.curves.settleFast
                         }
                     }
                 }
@@ -440,10 +440,10 @@ ColumnLayout {
                     implicitHeight: editIcon.implicitHeight + Appearance.padding.smaller * 2
 
                     radius: root.session.bt.editingAdapterName ? Appearance.rounding.small : implicitHeight / 2 * Math.min(1, Appearance.rounding.scale)
-                    color: Qt.alpha(Colours.palette.m3primary, root.session.bt.editingAdapterName ? 1 : 0)
+                    color: Qt.alpha(Signal.palette.signal, root.session.bt.editingAdapterName ? 1 : 0)
 
                     Interactive {
-                        color: root.session.bt.editingAdapterName ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
+                        color: root.session.bt.editingAdapterName ? Signal.palette.onSignal : Signal.palette.ink
 
                         function onClicked(): void {
                             root.session.bt.editingAdapterName = !root.session.bt.editingAdapterName;
@@ -454,13 +454,13 @@ ColumnLayout {
                         }
                     }
 
-                    MaterialIcon {
+                    Glyph {
                         id: editIcon
 
                         anchors.centerIn: parent
                         animate: true
-                        text: root.session.bt.editingAdapterName ? "check_circle" : "edit"
-                        color: root.session.bt.editingAdapterName ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
+                        name: root.session.bt.editingAdapterName ? "circle-check" : "edit"
+                        color: root.session.bt.editingAdapterName ? Signal.palette.onSignal : Signal.palette.ink
                     }
 
                     Behavior on radius {
@@ -480,7 +480,7 @@ ColumnLayout {
 
     StyledText {
         text: qsTr("Information about the current adapter")
-        color: Colours.palette.m3outline
+        color: Signal.palette.ruleStrong
     }
 
     StyledRect {
@@ -488,7 +488,7 @@ ColumnLayout {
         implicitHeight: adapterInfo.implicitHeight + Appearance.padding.large * 2
 
         radius: Appearance.rounding.normal
-        color: Colours.tPalette.m3surfaceContainer
+        color: Signal.tPalette.panel
 
         ColumnLayout {
             id: adapterInfo
@@ -506,7 +506,7 @@ ColumnLayout {
 
             StyledText {
                 text: root.session.bt.currentAdapter ? BluetoothAdapterState.toString(root.session.bt.currentAdapter.state) : qsTr("Unknown")
-                color: Colours.palette.m3outline
+                color: Signal.palette.ruleStrong
                 font.pointSize: Appearance.font.size.small
             }
 
@@ -517,7 +517,7 @@ ColumnLayout {
 
             StyledText {
                 text: root.session.bt.currentAdapter?.dbusPath ?? ""
-                color: Colours.palette.m3outline
+                color: Signal.palette.ruleStrong
                 font.pointSize: Appearance.font.size.small
             }
 
@@ -528,7 +528,7 @@ ColumnLayout {
 
             StyledText {
                 text: root.session.bt.currentAdapter?.adapterId ?? ""
-                color: Colours.palette.m3outline
+                color: Signal.palette.ruleStrong
                 font.pointSize: Appearance.font.size.small
             }
         }

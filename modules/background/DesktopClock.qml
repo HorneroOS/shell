@@ -18,10 +18,10 @@ Item {
     readonly property bool bgEnabled: Config.background.desktopClock.background.enabled
     readonly property bool blurEnabled: bgEnabled && Config.background.desktopClock.background.blur && !GameMode.enabled
     readonly property bool invertColors: Config.background.desktopClock.invertColors
-    readonly property bool useLightSet: Colours.light ? !invertColors : invertColors
-    readonly property color safePrimary: useLightSet ? Colours.palette.m3primaryContainer : Colours.palette.m3primary
-    readonly property color safeSecondary: useLightSet ? Colours.palette.m3secondaryContainer : Colours.palette.m3secondary
-    readonly property color safeTertiary: useLightSet ? Colours.palette.m3tertiaryContainer : Colours.palette.m3tertiary
+    readonly property bool useLightSet: Signal.light ? !invertColors : invertColors
+    readonly property color safePrimary: useLightSet ? Signal.palette.signalWell : Signal.palette.signal
+    readonly property color safeSecondary: useLightSet ? Signal.palette.cueWell : Signal.palette.cue
+    readonly property color safeTertiary: useLightSet ? Signal.palette.phosphorWell : Signal.palette.phosphor
 
     implicitWidth: layout.implicitWidth + (Appearance.padding.large * 4 * root.scale)
     implicitHeight: layout.implicitHeight + (Appearance.padding.large * 2 * root.scale)
@@ -34,7 +34,7 @@ Item {
         layer.enabled: Config.background.desktopClock.shadow.enabled
         layer.effect: MultiEffect {
             shadowEnabled: true
-            shadowColor: Colours.palette.m3shadow
+            shadowColor: Signal.palette.shadow
             shadowOpacity: Config.background.desktopClock.shadow.opacity
             shadowBlur: Config.background.desktopClock.shadow.blur
         }
@@ -64,7 +64,7 @@ Item {
             anchors.fill: parent
             radius: Appearance.rounding.large * root.scale
             opacity: Config.background.desktopClock.background.opacity
-            color: Colours.palette.m3surface
+            color: Signal.palette.base
 
             layer.enabled: root.blurEnabled
         }
@@ -156,14 +156,14 @@ Item {
 
     Behavior on scale {
         Anim {
-            duration: Appearance.anim.durations.expressiveDefaultSpatial
-            easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+            duration: Appearance.anim.durations.settle
+            easing.bezierCurve: Appearance.anim.curves.settle
         }
     }
 
     Behavior on implicitWidth {
         Anim {
-            duration: Appearance.anim.durations.small
+            duration: Appearance.anim.durations.short
         }
     }
 }

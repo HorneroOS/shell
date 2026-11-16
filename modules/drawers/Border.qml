@@ -18,7 +18,7 @@ Item {
 
     StyledRect {
         anchors.fill: parent
-        color: Colours.palette.m3surface
+        color: Signal.palette.base
 
         layer.enabled: true
         layer.effect: MultiEffect {

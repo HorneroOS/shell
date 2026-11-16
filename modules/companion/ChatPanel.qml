@@ -31,7 +31,7 @@ Item {
 
     Behavior on opacity {
         NumberAnimation {
-            duration: Appearance.anim.durations.normal
+            duration: Appearance.anim.durations.medium
             easing.type: Easing.OutCubic
         }
     }
@@ -63,10 +63,10 @@ Item {
         width: root.implicitWidth
         implicitHeight: layout.implicitHeight + Appearance.padding.large * 2
         radius: Appearance.rounding.large
-        color: Colours.palette.m3surfaceContainer
+        color: Signal.palette.panel
         // Hornero 199X frame: a phosphor accent edge around the card.
         border.width: 1
-        border.color: Qt.alpha(Colours.palette.m3tertiary, 0.55)
+        border.color: Qt.alpha(Signal.palette.phosphor, 0.55)
 
         // Static CRT scanlines over the whole card (texture only —
         // no animation, so reduced-motion is honored by construction).
@@ -84,7 +84,7 @@ Item {
                     Rectangle {
                         width: card.width
                         height: 1
-                        color: Qt.alpha(Colours.palette.m3onSurface, 0.035)
+                        color: Qt.alpha(Signal.palette.ink, 0.035)
                     }
                 }
             }
@@ -128,7 +128,7 @@ Item {
                             font.family: Appearance.font.family.mono
                             font.pointSize: Appearance.font.size.normal
                             font.bold: true
-                            color: Colours.palette.m3onSurface
+                            color: Signal.palette.ink
                         }
 
                         // 199X badge: the retrofuturist marque.
@@ -136,9 +136,9 @@ Item {
                             implicitWidth: badgeText.implicitWidth + 10
                             implicitHeight: badgeText.implicitHeight + 4
                             radius: 3
-                            color: Qt.alpha(Colours.palette.m3tertiary, 0.18)
+                            color: Qt.alpha(Signal.palette.phosphor, 0.18)
                             border.width: 1
-                            border.color: Qt.alpha(Colours.palette.m3tertiary, 0.65)
+                            border.color: Qt.alpha(Signal.palette.phosphor, 0.65)
 
                             StyledText {
                                 id: badgeText
@@ -148,7 +148,7 @@ Item {
                                 font.family: Appearance.font.family.mono
                                 font.pointSize: Appearance.font.size.smaller
                                 font.bold: true
-                                color: Colours.palette.m3tertiary
+                                color: Signal.palette.phosphor
                             }
                         }
                     }
@@ -157,7 +157,7 @@ Item {
                         text: root.bridge.busy ? qsTr("pensando") + ".".repeat(root.dotPhase) : (root.bridge.gatewayReachable ? qsTr("Hermes conectado") : qsTr("Hermes no disponible"))
                         font.family: Appearance.font.family.mono
                         font.pointSize: Appearance.font.size.smaller
-                        color: root.bridge.gatewayReachable ? Colours.palette.m3primary : Colours.palette.m3error
+                        color: root.bridge.gatewayReachable ? Signal.palette.signal : Signal.palette.alert
                     }
                 }
 
@@ -170,19 +170,19 @@ Item {
                     implicitWidth: 9
                     implicitHeight: 9
                     radius: 5
-                    color: root.bridge.busy ? Colours.palette.m3tertiary : root.bridge.gatewayReachable ? Colours.palette.m3primary : Colours.palette.m3error
+                    color: root.bridge.busy ? Signal.palette.phosphor : root.bridge.gatewayReachable ? Signal.palette.signal : Signal.palette.alert
                     opacity: root.bridge.busy && !CompanionStore.reducedMotion ? (root.dotPhase % 2 === 0 ? 1 : 0.35) : 1
                 }
 
                 IconButton {
-                    icon: "delete_sweep"
+                    icon: "trash"
                     accessibleName: qsTr("Clear chat history")
                     type: IconButton.Text
                     onClicked: root.bridge.clearHistory()
                 }
 
                 IconButton {
-                    icon: "close"
+                    icon: "x"
                     type: IconButton.Text
                     accessibleName: qsTr("Close chat")
                     onClicked: root.bridge.chatOpen = false
@@ -194,7 +194,7 @@ Item {
             Rectangle {
                 Layout.fillWidth: true
                 implicitHeight: 2
-                color: Qt.alpha(Colours.palette.m3primary, CompanionStore.reducedMotion ? 0.25 : 0.45)
+                color: Qt.alpha(Signal.palette.signal, CompanionStore.reducedMotion ? 0.25 : 0.45)
                 radius: 1
             }
 
@@ -203,10 +203,10 @@ Item {
                 Layout.fillWidth: true
                 spacing: Appearance.spacing.small
 
-                MaterialIcon {
-                    text: "forum"
+                Glyph {
+                    name: "messages"
                     font.pointSize: Appearance.font.size.normal
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                 }
 
                 StyledText {
@@ -215,7 +215,7 @@ Item {
                     text: root.bridge.currentSessionTitle
                     font.family: Appearance.font.family.mono
                     font.pointSize: Appearance.font.size.smaller
-                    color: Colours.palette.m3onSurface
+                    color: Signal.palette.ink
                     elide: Text.ElideRight
                 }
 
@@ -224,11 +224,11 @@ Item {
                     text: root.bridge.currentModel
                     font.family: Appearance.font.family.mono
                     font.pointSize: Appearance.font.size.smaller
-                    color: Colours.palette.m3outline
+                    color: Signal.palette.ruleStrong
                 }
 
                 IconButton {
-                    icon: "swap_horiz"
+                    icon: "arrows-exchange"
                     accessibleName: qsTr("Switch chat session")
                     type: IconButton.Text
                     visible: root.bridge.chatSessions.length > 1
@@ -236,7 +236,7 @@ Item {
                 }
 
                 IconButton {
-                    icon: "add_comment"
+                    icon: "message-plus"
                     accessibleName: qsTr("New chat")
                     type: IconButton.Text
                     onClicked: root.bridge.newChatSession()
@@ -249,10 +249,10 @@ Item {
                 Layout.fillWidth: true
                 spacing: Appearance.spacing.small
 
-                MaterialIcon {
-                    text: "shield"
+                Glyph {
+                    name: "shield"
                     font.pointSize: Appearance.font.size.normal
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                 }
 
                 Repeater {
@@ -278,7 +278,7 @@ Item {
                     text: CompanionStore.chatMode === "agent" ? qsTr("Approvals ask you first") : qsTr("Never asks for approvals")
                     font.family: Appearance.font.family.mono
                     font.pointSize: Appearance.font.size.smaller
-                    color: Colours.palette.m3outline
+                    color: Signal.palette.ruleStrong
                     elide: Text.ElideRight
                 }
             }
@@ -325,7 +325,7 @@ Item {
                         width: parent.width * 0.86
                         implicitHeight: textItem.implicitHeight + (histTrace.visible ? histTrace.implicitHeight + Appearance.spacing.small : 0) + Appearance.padding.normal * 2
                         radius: Appearance.rounding.normal
-                        color: bubble.system ? Qt.alpha(Colours.palette.m3error, 0.14) : bubble.mine ? Colours.palette.m3primaryContainer : Colours.palette.m3surfaceContainerHigh
+                        color: bubble.system ? Qt.alpha(Signal.palette.alert, 0.14) : bubble.mine ? Signal.palette.signalWell : Signal.palette.raised
 
                         Rectangle {
                             visible: modelData.role === "assistant"
@@ -335,7 +335,7 @@ Item {
                             anchors.margins: 6
                             width: 3
                             radius: 2
-                            color: Qt.alpha(Colours.palette.m3tertiary, 0.8)
+                            color: Qt.alpha(Signal.palette.phosphor, 0.8)
                         }
 
                         StyledText {
@@ -348,8 +348,8 @@ Item {
                             text: modelData.text
                             textFormat: modelData.role === "assistant" ? Text.MarkdownText : Text.PlainText
                             font.pointSize: Appearance.font.size.small
-                            color: bubble.mine ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
-                            linkColor: bubble.mine ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3primary
+                            color: bubble.mine ? Signal.palette.onSignalWell : Signal.palette.ink
+                            linkColor: bubble.mine ? Signal.palette.onSignalWell : Signal.palette.signal
                             wrapMode: Text.Wrap
                             onLinkActivated: link => Qt.openUrlExternally(link)
                         }
@@ -368,7 +368,7 @@ Item {
                                 text: parent.parent.parent.traceOpen ? qsTr("HIDE ACTIVITY TRACE") : qsTr("SHOW ACTIVITY TRACE")
                                 font.family: Appearance.font.family.mono
                                 font.pointSize: Appearance.font.size.smaller
-                                color: Colours.palette.m3tertiary
+                                color: Signal.palette.phosphor
 
                                 MouseArea {
                                     anchors.fill: parent
@@ -384,7 +384,7 @@ Item {
                                 textFormat: Text.PlainText
                                 font.family: Appearance.font.family.mono
                                 font.pointSize: Appearance.font.size.smaller
-                                color: Colours.palette.m3onSurfaceVariant
+                                color: Signal.palette.inkMuted
                                 wrapMode: Text.Wrap
                             }
                         }
@@ -404,7 +404,7 @@ Item {
                         implicitWidth: Math.min(view.width * 0.86, traceText.implicitWidth + Appearance.padding.large * 2)
                         implicitHeight: traceCol.implicitHeight + Appearance.padding.normal * 2
                         radius: Appearance.rounding.normal
-                        color: Qt.alpha(Colours.palette.m3tertiaryContainer, 0.35)
+                        color: Qt.alpha(Signal.palette.phosphorWell, 0.35)
 
                         ColumnLayout {
                             id: traceCol
@@ -419,7 +419,7 @@ Item {
                                 text: qsTr("ACTIVITY TRACE · LIVE")
                                 font.family: Appearance.font.family.mono
                                 font.pointSize: Appearance.font.size.smaller
-                                color: Colours.palette.m3tertiary
+                                color: Signal.palette.phosphor
                             }
 
                             StyledText {
@@ -430,7 +430,7 @@ Item {
                                 textFormat: Text.PlainText
                                 font.family: Appearance.font.family.mono
                                 font.pointSize: Appearance.font.size.smaller
-                                color: Colours.palette.m3onSurfaceVariant
+                                color: Signal.palette.inkMuted
                                 wrapMode: Text.Wrap
                             }
                         }
@@ -442,7 +442,7 @@ Item {
                         implicitWidth: Math.min(view.width * 0.86, streamText.implicitWidth + Appearance.padding.large * 2)
                         implicitHeight: streamText.implicitHeight + Appearance.padding.normal * 2
                         radius: Appearance.rounding.normal
-                        color: Colours.palette.m3surfaceContainerHigh
+                        color: Signal.palette.raised
 
                         StyledText {
                             id: streamText
@@ -454,8 +454,8 @@ Item {
                             text: root.bridge.streamText !== "" ? root.bridge.streamText : qsTr("Javi está pensando") + ".".repeat(root.dotPhase)
                             textFormat: Text.MarkdownText
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3onSurface
-                            linkColor: Colours.palette.m3primary
+                            color: Signal.palette.ink
+                            linkColor: Signal.palette.signal
                             wrapMode: Text.Wrap
                         }
                     }
@@ -492,14 +492,14 @@ Item {
                     text: qsTr("Javi necesita tu OK:")
                     font.family: Appearance.font.family.mono
                     font.pointSize: Appearance.font.size.smaller
-                    color: Colours.palette.m3error
+                    color: Signal.palette.alert
                 }
 
                 StyledText {
                     Layout.fillWidth: true
                     text: root.bridge.pendingApproval ? root.bridge.pendingApproval.detail : ""
                     font.pointSize: Appearance.font.size.small
-                    color: Colours.palette.m3onSurface
+                    color: Signal.palette.ink
                     wrapMode: Text.Wrap
                 }
 
@@ -530,7 +530,7 @@ Item {
                     Layout.fillWidth: true
                     text: root.bridge.pendingClarify ? root.bridge.pendingClarify.detail : ""
                     font.pointSize: Appearance.font.size.small
-                    color: Colours.palette.m3onSurface
+                    color: Signal.palette.ink
                     wrapMode: Text.Wrap
                 }
 
@@ -589,14 +589,14 @@ Item {
                 spacing: Appearance.spacing.small
 
                 IconButton {
-                    icon: "attach_file"
+                    icon: "paperclip"
                     accessibleName: qsTr("Attach file")
                     type: IconButton.Text
                     onClicked: fileDialog.open()
                 }
 
                 IconButton {
-                    icon: root.bridge.recording ? "stop_circle" : "mic"
+                    icon: root.bridge.recording ? "player-stop" : "microphone"
                     accessibleName: root.bridge.recording ? qsTr("Stop recording") : qsTr("Record voice message")
                     type: IconButton.Text
                     checked: root.bridge.recording
@@ -651,7 +651,7 @@ Item {
                     text: qsTr("● Grabando… tocá el mic para enviar")
                     font.family: Appearance.font.family.mono
                     font.pointSize: Appearance.font.size.smaller
-                    color: Colours.palette.m3error
+                    color: Signal.palette.alert
                 }
             }
         }

@@ -28,18 +28,18 @@ RowLayout {
     implicitWidth: icon.implicitWidth + spacing + slider.implicitWidth + (showValue ? spacing + valueText.implicitWidth : 0)
     implicitHeight: Math.max(icon.implicitHeight, slider.implicitHeight)
 
-    MaterialIcon {
+    Glyph {
         id: icon
 
         Layout.alignment: Qt.AlignVCenter
-        text: {
+        name: {
             if (!root.isAudio)
-                return "brightness_6";
+                return "brightness-half";
             if (Audio.muted || Audio.volume === 0)
-                return "volume_off";
-            return "volume_up";
+                return "volume-off";
+            return "volume";
         }
-        color: Colours.palette.m3onSurfaceVariant
+        color: Signal.palette.inkMuted
 
         Behavior on text {
             Anim {}
@@ -107,7 +107,7 @@ RowLayout {
         text: `${Math.round(slider.value * 100)}%`
         font.pointSize: Appearance.font.size.smaller
         font.family: Appearance.font.family.mono
-        color: Colours.palette.m3onSurfaceVariant
+        color: Signal.palette.inkMuted
 
         TextMetrics {
             id: valueMetrics

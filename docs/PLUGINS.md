@@ -184,6 +184,22 @@ unless `animated: true` is set (reduced-motion by default).
 | `UiPopover` | Host-owned anchored panel | `target` (required `Item`, the trigger/anchor), `accessibleName`, `preferredSide` (same values as `UiTooltip`), `contentPadding`, `initialFocusItem`; default content slot; `open()` / `close()` / `toggle()`, read-only-by-convention `actualSide` |
 | `UiStack` | Adaptive row/column layout | `orientation` (`horizontal` / `vertical`), `compact`, `spacing`; children stack vertically when `orientation` is `vertical` or `compact` is set |
 
+### Icons: Hornero Glyphs (breaking change)
+
+`UiIcon { icon: "clock" }`, `UiButton { iconName: "refresh" }`, a card's
+`icon`, a launcher provider's `icon` and the `icon` argument of
+`Notifications.toast()` keep their property names but now take a
+**Hornero Glyph name**: a curated Tabler Icons outline subset bundled with
+the shell (`assets/fonts/hornero-glyphs.ttf`; the full list is
+`assets/fonts/hornero-glyphs.names`, kebab-case, for example `wifi`,
+`clock`, `calculator`, `wave-sine`, `puzzle`, `settings`). Material-era icon
+names such as `graphic_eq` or `power_settings_new` no longer render: an
+unknown name shows nothing and logs one `Glyph: unknown glyph name`
+warning. The `fill` axis (`UiIcon.fill`, `UiButton.iconFill`) was removed;
+glyphs are outline-only. Port an extension by replacing each Material name
+with its Hornero Glyph equivalent; ask for a missing glyph in a shell issue
+rather than shipping an icon font.
+
 Tooltips are host-owned: set `tooltipText` on `UiButton`, `UiToggle` or
 `UiSlider`, or attach a `UiTooltip { target: someItem; text: "…" }` to
 any item. They show on hover **and** keyboard focus after the same
@@ -299,8 +315,9 @@ interactive items must provide it themselves.
   honour the host settings; for your own animations use
   `Theme.motionDuration(ms)` (0 under reduced motion, scaled by
   the host animation speed otherwise) and gate looping motion on
-  `!Theme.reducedMotion`. Theme colours already swap to the
-  high-contrast palette; `Theme.highContrast` is exposed for
+  `!Theme.reducedMotion` (true when the host's reduced-motion setting,
+  the system preference or animation speed 0 is active). Theme colours
+  already swap to the high-contrast palette; `Theme.highContrast` is exposed for
   emphasis decisions. Do not hardcode colours or durations.
 - **Custom interactive surfaces.** A `MouseArea` click with no
   keyboard path is a contract violation: prefer a kit control, or

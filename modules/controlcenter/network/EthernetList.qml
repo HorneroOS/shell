@@ -38,7 +38,7 @@ DeviceList {
             ToggleButton {
                 toggled: !root.session.ethernet.active
                 icon: "settings"
-                accent: "Primary"
+                accent: "signal"
                 iconSize: Appearance.font.size.normal
                 horizontalPadding: Appearance.padding.normal
                 verticalPadding: Appearance.padding.smaller
@@ -64,7 +64,7 @@ DeviceList {
             width: ListView.view ? ListView.view.width : undefined
             implicitHeight: rowLayout.implicitHeight + Appearance.padding.normal * 2
 
-            color: Qt.alpha(Colours.tPalette.m3surfaceContainer, ethernetItem.isActive ? Colours.tPalette.m3surfaceContainer.a : 0)
+            color: Qt.alpha(Signal.tPalette.panel, ethernetItem.isActive ? Signal.tPalette.panel.a : 0)
             radius: Appearance.rounding.normal
 
             Accessible.role: Accessible.Button
@@ -91,26 +91,21 @@ DeviceList {
                     implicitHeight: icon.implicitHeight + Appearance.padding.normal * 2
 
                     radius: Appearance.rounding.normal
-                    color: modelData.connected ? Colours.palette.m3primaryContainer : Colours.tPalette.m3surfaceContainerHigh
+                    color: modelData.connected ? Signal.palette.signalWell : Signal.tPalette.raised
 
                     StyledRect {
                         anchors.fill: parent
                         radius: parent.radius
-                        color: Qt.alpha(modelData.connected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface, stateLayer.pressed ? 0.1 : stateLayer.containsMouse ? 0.08 : 0)
+                        color: Qt.alpha(modelData.connected ? Signal.palette.onSignalWell : Signal.palette.ink, stateLayer.pressed ? 0.1 : stateLayer.containsMouse ? 0.08 : 0)
                     }
 
-                    MaterialIcon {
+                    Glyph {
                         id: icon
 
                         anchors.centerIn: parent
-                        text: "cable"
+                        name: "plug-connected"
                         font.pointSize: Appearance.font.size.large
-                        fill: modelData.connected ? 1 : 0
-                        color: modelData.connected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
-
-                        Behavior on fill {
-                            Anim {}
-                        }
+                        color: modelData.connected ? Signal.palette.onSignalWell : Signal.palette.ink
                     }
                 }
 
@@ -132,7 +127,7 @@ DeviceList {
                         StyledText {
                             Layout.fillWidth: true
                             text: modelData.connected ? qsTr("Connected") : qsTr("Disconnected")
-                            color: modelData.connected ? Colours.palette.m3primary : Colours.palette.m3outline
+                            color: modelData.connected ? Signal.palette.signal : Signal.palette.ruleStrong
                             font.pointSize: Appearance.font.size.small
                             font.weight: modelData.connected ? 500 : 400
                             elide: Text.ElideRight
@@ -147,13 +142,13 @@ DeviceList {
                     implicitHeight: connectIcon.implicitHeight + Appearance.padding.smaller * 2
 
                     radius: Appearance.rounding.full
-                    color: Qt.alpha(Colours.palette.m3primaryContainer, modelData.connected ? 1 : 0)
+                    color: Qt.alpha(Signal.palette.signalWell, modelData.connected ? 1 : 0)
 
                     Accessible.role: Accessible.Button
                     Accessible.name: modelData.connected ? qsTr("Disconnect") : qsTr("Connect")
 
                     Interactive {
-                        color: modelData.connected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+                        color: modelData.connected ? Signal.palette.onSignalWell : Signal.palette.ink
 
                         function onClicked(): void {
                             if (modelData.connected && modelData.connection) {
@@ -164,13 +159,13 @@ DeviceList {
                         }
                     }
 
-                    MaterialIcon {
+                    Glyph {
                         id: connectIcon
 
                         anchors.centerIn: parent
                         animate: true
-                        text: modelData.connected ? "link_off" : "link"
-                        color: modelData.connected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+                        name: modelData.connected ? "link-off" : "link"
+                        color: modelData.connected ? Signal.palette.onSignalWell : Signal.palette.ink
                     }
                 }
             }

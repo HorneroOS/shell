@@ -55,7 +55,7 @@ Item {
                         StyledRect {
                             visible: VPN.connected || VPN.connecting
                             radius: Appearance.rounding.full
-                            color: VPN.connected ? Colours.palette.m3primary : Colours.layer(Colours.palette.m3surfaceContainerHigh, 2)
+                            color: VPN.connected ? Signal.palette.signal : Signal.layer(Signal.palette.raised, 2)
                             implicitWidth: connLabel.implicitWidth + Appearance.padding.normal * 2
                             implicitHeight: connLabel.implicitHeight + Appearance.padding.smaller
 
@@ -63,7 +63,7 @@ Item {
                                 id: connLabel
                                 anchors.centerIn: parent
                                 text: VPN.connecting ? qsTr("…") : qsTr("On")
-                                color: VPN.connected ? Colours.palette.m3onPrimary : Colours.palette.m3onSurfaceVariant
+                                color: VPN.connected ? Signal.palette.onSignal : Signal.palette.inkMuted
                                 font.pointSize: Appearance.font.size.smaller
                                 font.weight: 600
                             }

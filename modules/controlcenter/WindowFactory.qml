@@ -171,7 +171,7 @@ Singleton {
             // PaneRegistry; applied once the content exists.
             property string pane: ""
 
-            color: Colours.tPalette.m3surface
+            color: Signal.tPalette.base
 
             Component.onCompleted: {
                 if (win.pane !== "" && PaneRegistry.getById(win.pane))

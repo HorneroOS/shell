@@ -232,5 +232,5 @@ def test_quickshell_hyprland_global_shortcuts_only_register_in_hyprland():
 
 def test_theme_application_only_reloads_hyprland_owned_files_in_hyprland():
     pipeline = (ROOT / "services/ThemePipeline.qml").read_text(encoding="utf-8")
-    assert pipeline.count("if (Compositor.isHyprland) {") >= 2
+    assert pipeline.count("if (Compositor.isHyprland)") >= 2
     assert 'command: ["hyprctl", "reload"]' in pipeline

@@ -23,12 +23,12 @@ Item {
     readonly property bool charging: [UPowerDeviceState.Charging, UPowerDeviceState.FullyCharged, UPowerDeviceState.PendingCharge].includes(root.device.state)
     readonly property real level: Math.max(0, Math.min(1, root.device.percentage))
     readonly property bool low: !root.charging && root.level <= 0.2
-    readonly property bool reducedMotion: Appearance.anim.durations.scale <= 0
+    readonly property bool reducedMotion: Appearance.anim.reduced || Appearance.anim.durations.scale <= 0
 
-    readonly property color fillColour: root.charging ? Colours.palette.m3success : root.low ? Colours.palette.m3error : Colours.palette.m3secondary
-    readonly property color trackColour: root.charging ? Qt.alpha(Colours.palette.m3success, 0.22) : root.low ? Qt.alpha(Colours.palette.m3error, 0.22) : Colours.palette.m3secondaryContainer
-    readonly property color onTrack: Colours.palette.m3onSurface
-    readonly property color onFill: Colours.on(root.fillColour)
+    readonly property color fillColour: root.charging ? Signal.palette.phosphor : root.low ? Signal.palette.alert : Signal.palette.cue
+    readonly property color trackColour: root.charging ? Qt.alpha(Signal.palette.phosphor, 0.22) : root.low ? Qt.alpha(Signal.palette.alert, 0.22) : Signal.palette.cueWell
+    readonly property color onTrack: Signal.palette.ink
+    readonly property color onFill: Signal.on(root.fillColour)
 
     readonly property string timeLabel: {
         if (root.charging && Math.round(root.level * 100) >= 100)
@@ -74,11 +74,10 @@ Item {
                     color: contents.textColour
                 }
 
-                MaterialIcon {
+                Glyph {
                     anchors.verticalCenter: parent.verticalCenter
                     visible: root.charging
-                    text: "bolt"
-                    fill: 1
+                    name: "bolt"
                     font.pointSize: Appearance.font.size.large
                     color: contents.textColour
                 }
@@ -172,11 +171,11 @@ Item {
                         property: "x"
                         from: -sheen.width
                         to: fill.width
-                        duration: Appearance.anim.durations.extraLarge * 2
+                        duration: Appearance.anim.durations.scan * 2
                         easing.type: Easing.InOutQuad
                     }
                     PauseAnimation {
-                        duration: Appearance.anim.durations.extraLarge
+                        duration: Appearance.anim.durations.scan
                     }
                 }
             }

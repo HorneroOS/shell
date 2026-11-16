@@ -23,29 +23,29 @@ StyledRect {
     readonly property bool isLow: root.modelData.urgency === "low"
     readonly property color bgColor: {
         if (isCritical)
-            return Colours.palette.m3errorContainer;
+            return Signal.palette.alertWell;
         if (isLow)
-            return Colours.layer(Colours.palette.m3surfaceContainerLow, 2);
-        return Colours.layer(Colours.palette.m3surfaceContainerHigh, 2);
+            return Signal.layer(Signal.palette.sunken, 2);
+        return Signal.layer(Signal.palette.raised, 2);
     }
     readonly property color accentColor: {
         if (isCritical)
-            return Colours.palette.m3error;
+            return Signal.palette.alert;
         if (isLow)
-            return Colours.palette.m3outline;
-        return Colours.palette.m3secondary;
+            return Signal.palette.ruleStrong;
+        return Signal.palette.cue;
     }
     readonly property color textColor: {
         if (isCritical)
-            return Colours.palette.m3onErrorContainer;
-        return Colours.palette.m3onSurface;
+            return Signal.palette.onAlertWell;
+        return Signal.palette.ink;
     }
     readonly property color bodyColor: {
         if (isCritical)
-            return Colours.palette.m3onErrorContainer;
+            return Signal.palette.onAlertWell;
         if (isLow)
-            return Qt.alpha(Colours.palette.m3outline, 0.7);
-        return Colours.palette.m3outline;
+            return Qt.alpha(Signal.palette.ruleStrong, 0.7);
+        return Signal.palette.ruleStrong;
     }
 
     implicitHeight: nonAnimHeight
@@ -82,7 +82,7 @@ StyledRect {
             color: "transparent"
             radius: Appearance.rounding.small
             border.width: 1
-            border.color: Qt.alpha(Colours.palette.m3error, 0.6)
+            border.color: Qt.alpha(Signal.palette.alert, 0.6)
         }
     }
 
@@ -167,7 +167,7 @@ StyledRect {
         sourceComponent: StyledText {
             animate: true
             text: root.modelData.timeStr
-            color: Colours.palette.m3outline
+            color: Signal.palette.ruleStrong
             font.pointSize: Appearance.font.size.small
         }
     }
@@ -209,8 +209,8 @@ StyledRect {
 
     Behavior on implicitHeight {
         Anim {
-            duration: Appearance.anim.durations.expressiveDefaultSpatial
-            easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+            duration: Appearance.anim.durations.settle
+            easing.bezierCurve: Appearance.anim.curves.settle
         }
     }
 

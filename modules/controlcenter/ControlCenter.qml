@@ -56,7 +56,7 @@ Item {
             topLeftRadius: root.rounding
             bottomLeftRadius: root.rounding
             implicitWidth: navRail.implicitWidth
-            color: Colours.tPalette.m3surfaceContainer
+            color: Signal.tPalette.panel
 
             CustomMouseArea {
                 anchors.fill: parent

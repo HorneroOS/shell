@@ -54,16 +54,16 @@ Item {
 
         anchors.horizontalCenter: parent.horizontalCenter
         y: Appearance.padding.large
-        color: Colours.tPalette.m3surfaceContainer
+        color: Signal.tPalette.panel
         radius: Appearance.rounding.normal
 
         implicitWidth: Config.launcher.sizes.wallpaperWidth
         implicitHeight: implicitWidth / 16 * 9
 
-        MaterialIcon {
+        Glyph {
             anchors.centerIn: parent
-            text: "image"
-            color: Colours.tPalette.m3outline
+            name: "photo"
+            color: Signal.tPalette.ruleStrong
             font.pointSize: Appearance.font.size.extraLarge * 2
             font.weight: 600
         }

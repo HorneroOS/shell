@@ -13,7 +13,7 @@ Item {
 
     required property ShellScreen screen
 
-    property color colour: Colours.palette.m3tertiary
+    property color colour: Signal.palette.phosphor
     // Orientation of the owning bar (set by Bar.qml); defaults to the
     // primary bar for standalone use.
     property bool vertical: Config.bar.isVerticalFor(screen.name)
@@ -29,7 +29,7 @@ Item {
         visible: Config.bar.clock.background && !root.vertical
         anchors.fill: parent
         anchors.margins: -Appearance.padding.normal
-        color: Colours.tPalette.m3surfaceContainer
+        color: Signal.tPalette.panel
         radius: Appearance.rounding.normal
     }
 
@@ -50,8 +50,8 @@ Item {
             active: Config.bar.clock.showIcon
             visible: active
 
-            sourceComponent: MaterialIcon {
-                text: "calendar_month"
+            sourceComponent: Glyph {
+                name: "calendar-month"
                 color: root.colour
             }
         }
@@ -65,7 +65,7 @@ Item {
             text: Time.format("ddd d MMM")
             font.pointSize: Appearance.font.size.smaller
             font.family: Appearance.font.family.sans
-            color: Colours.palette.m3onSurfaceVariant
+            color: Signal.palette.inkMuted
         }
 
         // Time: split into two texts with anti-jitter equalisation
@@ -118,7 +118,7 @@ Item {
                 text: Time.amPmStr
                 font.pointSize: Appearance.font.size.smaller
                 font.family: Appearance.font.family.sans
-                color: Colours.palette.m3onSurfaceVariant
+                color: Signal.palette.inkMuted
             }
         }
 
@@ -153,7 +153,7 @@ Item {
                     text: Time.amPmStr
                     font.pointSize: Appearance.font.size.small
                     font.family: Appearance.font.family.sans
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                 }
             }
         }

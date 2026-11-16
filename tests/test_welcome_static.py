@@ -44,11 +44,11 @@ def test_only_horneroctl_spawns():
 
 
 def _strip_material_icons(text):
-    return re.sub(r"MaterialIcon\s*\{[^}]*\}", "MaterialIcon{}", text)
+    return re.sub(r"Glyph\s*\{[^}]*\}", "Glyph{}", text)
 
 
 def test_qstr_on_ui_literals():
-    # Heuristic but deterministic: after removing MaterialIcon blocks
+    # Heuristic but deterministic: after removing Glyph blocks
     # (glyph names, not user copy), every `text:` / `title:` string
     # literal on the same line must be wrapped in qsTr().
     violations = []
@@ -70,9 +70,9 @@ def test_semantic_tokens_only():
         for lineno, line in enumerate(path.read_text().splitlines(), 1):
             if re.search(r"#[0-9a-fA-F]{3,8}\b", line):
                 hits.append(f"{rel}:{lineno}: {line.strip()}")
-    assert not hits, "hardcoded colours (use Colours/Appearance tokens):\n" + "\n".join(hits)
+    assert not hits, "hardcoded colours (use Signal/Appearance tokens):\n" + "\n".join(hits)
     combined = "\n".join(_read_all().values())
-    assert "Colours." in combined, "welcome UI must use the Colours singleton"
+    assert "Signal." in combined, "welcome UI must use the Signal singleton"
     assert "Appearance." in combined, "welcome UI must use Appearance tokens"
 
 

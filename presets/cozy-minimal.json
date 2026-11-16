@@ -2,7 +2,7 @@
   "_name": "Cozy Minimal",
   "_description": "Soft floating top ribbon — workspaces, centred time, a few tools",
   "_icon": "🌸",
-  "_iconMaterial": "weekend",
+  "_iconMaterial": "armchair",
   "_lineage": "Waybar cozy-minimal profile",
   "bar": {
     "persistent": true,

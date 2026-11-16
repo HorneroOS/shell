@@ -63,7 +63,7 @@ Item {
                         ToggleButton {
                             toggled: Nmcli.wifiEnabled
                             icon: "wifi"
-                            accent: "Tertiary"
+                            accent: "phosphor"
                             iconSize: Appearance.font.size.normal
                             horizontalPadding: Appearance.padding.normal
                             verticalPadding: Appearance.padding.smaller
@@ -76,8 +76,8 @@ Item {
 
                         ToggleButton {
                             toggled: Nmcli.scanning
-                            icon: "wifi_find"
-                            accent: "Secondary"
+                            icon: "wifi"
+                            accent: "cue"
                             iconSize: Appearance.font.size.normal
                             horizontalPadding: Appearance.padding.normal
                             verticalPadding: Appearance.padding.smaller
@@ -91,7 +91,7 @@ Item {
                         ToggleButton {
                             toggled: !root.session.ethernet.active && !root.session.network.active
                             icon: "settings"
-                            accent: "Primary"
+                            accent: "signal"
                             iconSize: Appearance.font.size.normal
                             horizontalPadding: Appearance.padding.normal
                             verticalPadding: Appearance.padding.smaller

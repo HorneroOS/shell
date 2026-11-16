@@ -40,7 +40,7 @@ StyledClippingRect {
     implicitWidth: vertical ? Config.bar.sizes.innerWidth : layout.implicitWidth + Appearance.padding.small * 2
     implicitHeight: vertical ? layout.implicitHeight + Appearance.padding.small * 2 : Config.bar.sizes.innerWidth
 
-    color: labels ? "transparent" : Colours.tPalette.m3surfaceContainer
+    color: labels ? "transparent" : Signal.tPalette.panel
     radius: Appearance.rounding.full
 
     Item {
@@ -118,7 +118,7 @@ StyledClippingRect {
                 width: root.vertical ? (isActive ? 3 : 2) : (ws?.width ?? 0)
                 height: root.vertical ? (ws?.height ?? 0) : (isActive ? 3 : 2)
                 radius: Appearance.rounding.full
-                color: isActive ? Colours.palette.m3primary : Colours.palette.m3outlineVariant
+                color: isActive ? Signal.palette.signal : Signal.palette.rule
 
                 Behavior on color {
                     CAnim {}
@@ -177,7 +177,7 @@ StyledClippingRect {
 
     Behavior on blur {
         Anim {
-            duration: Appearance.anim.durations.small
+            duration: Appearance.anim.durations.short
         }
     }
 }

@@ -122,7 +122,7 @@ grab() {
 # 3. Fresh-boot simulation ----------------------------------------------------
 echo "==> wiping welcome state (installer factory state)"
 # shellcheck disable=SC2016
-vm_ssh 'rm -rf ~/.local/state/hornero/welcome ~/.local/state/hornero/scheme /run/user/$(id -u)/hornero-welcome-seen-* ~/.cache/hornero/smart-colors/scheme.json' || true
+vm_ssh 'rm -rf ~/.local/state/hornero/welcome ~/.local/state/hornero/scheme /run/user/$(id -u)/hornero-welcome-seen-* ~/.local/state/hornero/signal/scheme.json' || true
 # shellcheck disable=SC2016
 vm_ssh 'test -f ~/.local/share/hornero/shortcuts.json' || fail "shortcuts.json missing in guest"
 
@@ -136,16 +136,16 @@ echo "    status: ${STATUS}"
 grab "welcome-firstlogin-dark.png"
 
 # 5. Theme matrix (live scheme swap, no restart) -------------------------------
-echo "==> theme matrix: light"
-python3 "${VM_LIB_DIR}/welcome-schemes.py" --mode light | vm_ssh 'mkdir -p ~/.cache/hornero/smart-colors && cat > ~/.cache/hornero/smart-colors/scheme.json'
+echo "==> theme matrix: signal day"
+python3 "${VM_LIB_DIR}/welcome-schemes.py" --mode day | vm_ssh 'mkdir -p ~/.local/state/hornero/signal && cat > ~/.local/state/hornero/signal/scheme.json.tmp && mv -f ~/.local/state/hornero/signal/scheme.json.tmp ~/.local/state/hornero/signal/scheme.json'
 sleep 3
-grab "welcome-learn-light.png"
-echo "==> theme matrix: pampa"
-python3 "${VM_LIB_DIR}/welcome-schemes.py" --mode pampa | vm_ssh 'cat > ~/.cache/hornero/smart-colors/scheme.json'
+grab "welcome-learn-day.png"
+echo "==> theme matrix: signal high contrast"
+python3 "${VM_LIB_DIR}/welcome-schemes.py" --mode contrast | vm_ssh 'cat > ~/.local/state/hornero/signal/scheme.json.tmp && mv -f ~/.local/state/hornero/signal/scheme.json.tmp ~/.local/state/hornero/signal/scheme.json'
 sleep 3
-grab "welcome-learn-pampa.png"
+grab "welcome-learn-contrast.png"
 # shellcheck disable=SC2016
-vm_ssh 'rm -f ~/.cache/hornero/smart-colors/scheme.json'
+vm_ssh 'rm -f ~/.local/state/hornero/signal/scheme.json'
 sleep 3
 
 # 6. Flow 2: repeat login (new session) auto-opens again ----------------------

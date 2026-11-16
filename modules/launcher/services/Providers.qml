@@ -193,12 +193,12 @@ Singleton {
         registerProvider({
             "id": "win",
             "prefix": "win",
-            "icon": "web_asset",
+            "icon": "app-window",
             "section": "win",
             "query": text => Windows.query(text).map(w => ({
                         "providerId": "win",
                         "section": "win",
-                        "icon": "web_asset",
+                        "icon": "app-window",
                         "title": w.title,
                         "subtitle": w.appClass,
                         "payload": w
@@ -212,7 +212,7 @@ Singleton {
         registerProvider({
             "id": "file",
             "prefix": "file",
-            "icon": "folder_open",
+            "icon": "folder-open",
             "section": "Files",
             // Async provider: requestSearch is debounced and
             // idempotent per query text; this returns the current
@@ -225,7 +225,7 @@ Singleton {
                 return Files.results.map(e => ({
                             "providerId": "file",
                             "section": "Files",
-                            "icon": e.isDir ? "folder_open" : "description",
+                            "icon": e.isDir ? "folder-open" : "file-text",
                             "title": e.name,
                             "subtitle": e.parent,
                             "payload": e
@@ -240,7 +240,7 @@ Singleton {
         registerProvider({
             "id": "ai",
             "prefix": "ai",
-            "icon": "raven",
+            "icon": "feather",
             "section": "ai",
             // Inline ask (shell#250 slice 3): one row for the
             // question; the AiItem delegate renders the streamed
@@ -251,7 +251,7 @@ Singleton {
             "query": text => [{
                         "providerId": "ai",
                         "section": "ai",
-                        "icon": "raven",
+                        "icon": "feather",
                         "title": text,
                         "subtitle": InlineAsk.busy ? qsTr("Javi is thinking…") : "",
                         "payload": {

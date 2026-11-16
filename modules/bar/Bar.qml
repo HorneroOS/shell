@@ -159,11 +159,35 @@ Item {
             }
     }
 
+    // Extensions islands (entry or legacy end-group instance) collapse like
+    // the compact tray: on another entry, or when the pointer leaves the bar.
+    function extensionIslandOf(entry: var): var {
+        if (!entry)
+            return null;
+        if (entry.item && "fallbackSections" in entry.item && "expandIcon" in entry.item)
+            return entry.item;
+        if ("fallbackSections" in entry && "expandIcon" in entry)
+            return entry;
+        return null;
+    }
+
+    function closeExtensionIslands(keep: var): void {
+        if (!Config.bar.extensions.compact)
+            return;
+        for (const g of allGroups())
+            for (const c of g.layout.children) {
+                const island = extensionIslandOf(c);
+                if (island && island !== keep)
+                    island.expanded = false;
+            }
+    }
+
     function resetPopout(): void {
         popouts.hasCurrent = false;
         popouts.currentName = "";
         popouts.currentCenter = 0;
         closeTray();
+        closeExtensionIslands(null);
     }
 
     function claimPopouts(): void {
@@ -287,6 +311,8 @@ Item {
 
             if (ch?.id !== "tray")
                 closeTray();
+            const extIsland = extensionIslandOf(ch);
+            closeExtensionIslands(extIsland);
 
             if (!ch) {
                 popouts.hasCurrent = false;
@@ -346,7 +372,17 @@ Item {
                     popouts.hasCurrent = false;
                     item.expanded = true;
                 }
-            } else if (pluginHit !== null || id === "extensions" || id === "clock" || id === "quickActions") {
+            } else if (pluginHit !== null || extIsland !== null || id === "clock" || id === "quickActions") {
+                // Compact Extensions island: same flow as the compact tray —
+                // the chevron (or a collapsed island) expands it first.
+                if (extIsland && extIsland.compact) {
+                    const overExpandIcon = extIsland.expandIcon.contains(root.mapToItem(extIsland.expandIcon, lx, ly));
+                    if (!extIsland.expanded || overExpandIcon) {
+                        popouts.hasCurrent = false;
+                        extIsland.expanded = true;
+                        return;
+                    }
+                }
                 // Extensions in their own island or joined to a native one.
                 if (pluginHit && pluginHit.hostPopoutContent)
                     openPluginPopout(pluginHit, false);

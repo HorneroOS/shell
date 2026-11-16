@@ -38,6 +38,10 @@ Button {
         return null;
     }
     readonly property bool islandStyled: hostStyle !== null && hostStyle.hostIconSize > 0
+    // Tray items and native status icons have no hover background: the
+    // popout is the hover feedback. Indicators in those islands match; the
+    // quick actions and clock islands keep the native button hover.
+    readonly property bool quietHover: root.islandStyled && (root.hostStyle.hostSection === "status" || root.hostStyle.hostSection === "end")
     // A host may advertise sizes without a colour (transparent): then the
     // button keeps the native bar label colour instead of painting its
     // icon and text transparent (invisible inside the island).
@@ -180,7 +184,7 @@ Button {
 
                 anchors.fill: parent
                 radius: surface.radius
-                hovered: hover.hovered
+                hovered: hover.hovered && !root.quietHover
                 pressed: root.down
                 disabled: !root.enabled
                 color: root.labelColor

@@ -31,7 +31,7 @@ def test_native_panel_shows_extension_content():
 def test_bar_opens_extension_popouts_like_native_ones():
     bar = read("modules/bar/Bar.qml")
     for needle in ("function pluginLoaderAt", "function openPluginPopout", "function onPopoutRequested",
-                   'pluginHit !== null || id === "extensions"', "const item = ch.item ?? ch", '"hostRegisterPopout" in icon',
+                   'pluginHit !== null || extIsland !== null', "function closeExtensionIslands", "const item = ch.item ?? ch", '"hostRegisterPopout" in icon',
                    "hostPopoutOpen = true"):
         assert needle in bar, needle
 
@@ -42,3 +42,9 @@ def test_pluginkit_hands_popovers_to_the_host():
     assert "root.hostPopout.hostTogglePopout()" in pop and "root.hostPopout.hostClosePopout()" in pop
     tip = read("plugin/qml/Hornero/PluginKit/UiTooltip.qml")
     assert "_popoutOwned" in tip and "!root._popoutOwned &&" in tip
+
+
+def test_indicators_in_tray_like_islands_have_no_hover_background():
+    button = read("plugin/qml/Hornero/PluginKit/UiButton.qml")
+    assert 'root.hostStyle.hostSection === "status" || root.hostStyle.hostSection === "end"' in button
+    assert "hovered: hover.hovered && !root.quietHover" in button

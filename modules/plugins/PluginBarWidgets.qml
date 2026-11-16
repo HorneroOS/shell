@@ -46,6 +46,9 @@ Repeater {
     // Each island embeds one instance with its own icon style, so an
     // extension indicator looks like its native neighbours.
     property string section: "end"
+    // Inside a Column/Row island (Extensions, tray-like) the indicators are
+    // centred across the island like tray items.
+    property bool centerChildren: false
     property color iconColour: "transparent"
     property int iconSize: 0
     property int textSize: 0
@@ -111,6 +114,8 @@ Repeater {
         readonly property int hostTextSize: root.textSize
 
         Layout.alignment: root.vertical ? Qt.AlignHCenter : Qt.AlignVCenter
+        anchors.horizontalCenter: root.centerChildren && root.vertical ? parent?.horizontalCenter : undefined
+        anchors.verticalCenter: root.centerChildren && !root.vertical ? parent?.verticalCenter : undefined
         Layout.maximumWidth: root.availableWidth
         Layout.maximumHeight: root.availableHeight
         clip: true

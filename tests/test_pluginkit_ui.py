@@ -67,9 +67,10 @@ def test_uibutton_contract():
     # Host-owned UiTooltip (#370) replaces the raw Controls ToolTip.
     assert "UiTooltip" in src
     assert "text: root.tooltipText" in src
-    # Primary variant background is Theme.primary, so its focus border
-    # must use the contrasting onPrimary token (ghost keeps primary).
-    assert 'root.variant === "ghost" ? Theme.primary : Theme.onPrimary' in src
+    # Primary variant background is Theme.primary, so its label uses the
+    # contrasting onPrimary token; ghost keeps primary outside bars.
+    assert 'root.variant === "primary" ? Theme.onPrimary' in src
+    assert "root.inBar ? Theme.onSurface : Theme.primary" in src
 
 
 def test_uitext_roles():
@@ -548,3 +549,32 @@ def test_real_theme_on_colours_resolve_offscreen(tmp_path):
     assert "RealThemeOnColours" in out, out
     assert ", 0 failed" in out, out
     assert result.returncode == 0, out
+
+
+def test_buttons_cards_and_text_read_like_native_controls():
+    """Taste pass: ghost is a text button (no outline) with explicit
+    outlined/tonal variants; bar indicators use the plain onSurface label and
+    a full-pill hover like native bar items; rail sizing applies in bars only
+    (a compact dashboard card also reports hostCompact); a UiCard inside a
+    dashboard card draws no second surface or inset; titles are semibold.
+    """
+    button = (KIT / "UiButton.qml").read_text(encoding="utf-8")
+    assert 'border.width: root.variant === "outlined" ? 1 : 0' in button
+    assert 'root.variant === "tonal" ? Theme.surfaceContainerHighest' in button
+    assert 'hostContext.hostSurface === "bar"' in button
+    assert "readonly property bool railCompact: inBar &&" in button
+    assert "radius: root.inBar ? height / 2 : Theme.rounding" in button
+
+    card = (KIT / "UiCard.qml").read_text(encoding="utf-8")
+    assert 'p.hostSurface === "dashboard"' in card
+    assert 'color: hostedOnDashboard ? "transparent" : Theme.surfaceContainer' in card
+    assert "property int padding: hostedOnDashboard ? 0 : Theme.spacing" in card
+
+    text = (KIT / "UiText.qml").read_text(encoding="utf-8")
+    assert "Font.DemiBold" in text and "font.bold" not in text
+
+    bar_host = (ROOT / "modules/plugins/PluginBarWidgets.qml").read_text(encoding="utf-8")
+    assert 'readonly property string hostSurface: "bar"' in bar_host
+    assert "readonly property int hostAvailableWidth: root.availableWidth" in bar_host
+    dash_host = (ROOT / "modules/plugins/PluginDashboardCards.qml").read_text(encoding="utf-8")
+    assert 'readonly property string hostSurface: "dashboard"' in dash_host

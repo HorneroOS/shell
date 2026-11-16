@@ -251,6 +251,11 @@ Item {
                                         // compact card reports hostCompact.
                                         readonly property int hostAvailableWidth: card.cardContentWidth
                                         readonly property int hostAvailableHeight: 0
+                                        // Advertised on the Loader too, so PluginKit
+                                        // primitives (UiCard) know they sit inside a
+                                        // host card even when the entrypoint does not
+                                        // opt in to the host* properties.
+                                        readonly property string hostSurface: "dashboard"
 
                                         Layout.maximumWidth: hostAvailableWidth
                                         clip: true

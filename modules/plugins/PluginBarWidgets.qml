@@ -61,6 +61,13 @@ Repeater {
 
         required property var modelData
 
+        // Host context advertised on the Loader itself, so PluginKit
+        // primitives find it by ancestry even when the entrypoint does not
+        // opt in to the host* properties (it still wins when it does).
+        readonly property string hostSurface: "bar"
+        readonly property int hostAvailableWidth: root.availableWidth
+        readonly property bool hostCompact: root.hostCompact
+
         Layout.alignment: root.vertical ? Qt.AlignHCenter : Qt.AlignVCenter
         Layout.maximumWidth: root.availableWidth
         Layout.maximumHeight: root.availableHeight

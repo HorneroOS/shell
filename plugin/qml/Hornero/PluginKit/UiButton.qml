@@ -16,14 +16,22 @@ Button {
     readonly property var hostContext: {
         let p = root.parent;
         while (p) {
-            if ("hostAvailableWidth" in p)
+            if ("hostSurface" in p && "hostAvailableWidth" in p)
                 return p;
             p = p.parent;
         }
         return null;
     }
-    readonly property bool railCompact: hostContext !== null && hostContext.hostCompact === true && hostContext.hostAvailableWidth > 0
+    // In a bar an indicator reads like the native bar items: plain
+    // onSurface label, no outline, a fully rounded hover layer.
+    readonly property bool inBar: hostContext !== null && hostContext.hostSurface === "bar"
+    // Rail styling is a bar concern only: a compact dashboard card also
+    // reports hostCompact, and must keep full-size buttons.
+    readonly property bool railCompact: inBar && hostContext.hostCompact === true && hostContext.hostAvailableWidth > 0
     readonly property int railWidth: railCompact ? hostContext.hostAvailableWidth : 0
+    // Variants: "primary" (filled), "tonal" (quiet fill), "ghost" (text
+    // button, no outline), "outlined" (explicit outline).
+    readonly property color labelColor: root.variant === "primary" ? Theme.onPrimary : root.variant === "tonal" ? Theme.onSurface : root.inBar ? Theme.onSurface : Theme.primary
 
     Accessible.name: root.accessibleName
     Accessible.role: Accessible.Button
@@ -64,7 +72,7 @@ Button {
 
     contentItem: Text {
         text: root.text
-        color: root.variant === "ghost" ? Theme.primary : Theme.onPrimary
+        color: root.labelColor
         font.family: Theme.fontFamily
         font.pixelSize: root.railCompact ? Theme.fontSizeSmall : Theme.fontSize
         horizontalAlignment: Text.AlignHCenter
@@ -106,11 +114,11 @@ Button {
             id: surface
 
             anchors.fill: parent
-            color: root.variant === "ghost" ? "transparent" : Theme.primary
-            // A capsule (full rounding) clips the ends of a label on a
-            // narrow rail; a small radius keeps the whole label inside.
-            radius: root.railCompact ? Theme.roundingSmall : Theme.rounding
-            border.width: root.variant === "ghost" ? 1 : 0
+            color: root.variant === "primary" ? Theme.primary : root.variant === "tonal" ? Theme.surfaceContainerHighest : "transparent"
+            // Bar items hover as a full pill like native bar buttons; with
+            // no outline nothing clips the label ends.
+            radius: root.inBar ? height / 2 : Theme.rounding
+            border.width: root.variant === "outlined" ? 1 : 0
             border.color: Theme.outline
             opacity: root.enabled ? 1 : 0.5
 
@@ -122,7 +130,7 @@ Button {
                 hovered: hover.hovered
                 pressed: root.down
                 disabled: !root.enabled
-                color: root.variant === "ghost" ? Theme.primary : Theme.onPrimary
+                color: root.labelColor
             }
         }
 

@@ -38,13 +38,17 @@ Button {
         return null;
     }
     readonly property bool islandStyled: hostStyle !== null && hostStyle.hostIconSize > 0
+    // A host may advertise sizes without a colour (transparent): then the
+    // button keeps the native bar label colour instead of painting its
+    // icon and text transparent (invisible inside the island).
+    readonly property bool islandColoured: islandStyled && hostStyle.hostIconColor.a > 0
     // Rail styling is a bar concern only: a compact dashboard card also
     // reports hostCompact, and must keep full-size buttons.
     readonly property bool railCompact: inBar && hostContext.hostCompact === true && hostContext.hostAvailableWidth > 0
     readonly property int railWidth: railCompact ? hostContext.hostAvailableWidth : 0
     // Variants: "primary" (filled), "tonal" (quiet fill), "ghost" (text
     // button, no outline), "outlined" (explicit outline).
-    readonly property color labelColor: root.variant === "primary" ? Theme.onPrimary : root.variant === "tonal" ? Theme.onSurface : root.islandStyled ? root.hostStyle.hostIconColor : root.inBar ? Theme.onSurface : Theme.primary
+    readonly property color labelColor: root.variant === "primary" ? Theme.onPrimary : root.variant === "tonal" ? Theme.onSurface : root.islandColoured ? root.hostStyle.hostIconColor : root.inBar ? Theme.onSurface : Theme.primary
 
     Accessible.name: root.accessibleName
     Accessible.role: Accessible.Button

@@ -14,7 +14,7 @@ JsonObject {
         groups: {
             start: [{id: "logo", enabled: true}, {id: "workspaces", enabled: true}],
             center: [{id: "activeWindow", enabled: true}],
-            end: [{id: "tray", enabled: true}, {id: "clock", enabled: true}, {id: "statusIcons", enabled: true}, {id: "power", enabled: true}]
+            end: [{id: "tray", enabled: true}, {id: "extensions", enabled: true}, {id: "clock", enabled: true}, {id: "statusIcons", enabled: true}, {id: "power", enabled: true}]
         }
     }]
 
@@ -128,6 +128,7 @@ JsonObject {
     property Workspaces workspaces: Workspaces {}
     property ActiveWindow activeWindow: ActiveWindow {}
     property Tray tray: Tray {}
+    property Extensions extensions: Extensions {}
     property Status status: Status {}
     property Clock clock: Clock {}
     property Sizes sizes: Sizes {}
@@ -174,6 +175,12 @@ JsonObject {
         property bool compact: false
         property list<var> iconSubs: []
         property list<string> hiddenIcons: []
+    }
+
+    // Extensions island (shell#441): chip and compact behave like the tray.
+    component Extensions: JsonObject {
+        property bool background: true
+        property bool compact: false
     }
 
     component Status: JsonObject {

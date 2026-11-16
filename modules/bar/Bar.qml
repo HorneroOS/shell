@@ -136,7 +136,8 @@ Item {
         const map = ({
                 "statusIcons": "status",
                 "quickActions": "actions",
-                "clock": "clock"
+                "clock": "clock",
+                "extensions": "end"
             });
         const out = [];
         const groups = root.spec?.groups ?? ({});
@@ -551,6 +552,17 @@ Item {
                         }
                     }
                     DelegateChoice {
+                        roleValue: "extensions"
+                        delegate: WrappedLoader {
+                            sourceComponent: ExtensionsIsland {
+                                screen: root.screen
+                                vertical: root.vertical
+                                clear: root.clear
+                                fallbackSections: ["status", "actions", "clock"].filter(s => !root.presentSections.includes(s))
+                            }
+                        }
+                    }
+                    DelegateChoice {
                         roleValue: "clock"
                         delegate: WrappedLoader {
                             id: clockLoader
@@ -686,7 +698,9 @@ Item {
             // through the Plugins service). Empty when none are enabled.
             PluginBarWidgets {
                 vertical: root.vertical
-                surfaceActive: group.name === "end"
+                // Layouts with an "extensions" entry render indicators in
+                // that island (shell#441); older layouts keep this block.
+                surfaceActive: group.name === "end" && !root.presentSections.includes("end")
                 // Islands missing from this layout (shell#439): their
                 // extension indicators render here rather than nowhere.
                 fallbackSections: ["status", "actions", "clock"].filter(s => !root.presentSections.includes(s))

@@ -246,6 +246,10 @@
               "options": {}
             },
             {
+              "id": "extensions",
+              "enabled": true
+            },
+            {
               "id": "clock",
               "enabled": true,
               "options": {}
@@ -298,6 +302,10 @@
       "compact": false,
       "iconSubs": [],
       "hiddenIcons": []
+    },
+    "extensions": {
+      "background": true,
+      "compact": false
     },
     "status": {
       "showAudio": false,

@@ -229,7 +229,10 @@ def test_factory_values_match_code_defaults():
         ("bar.status.showAudio", False),
         ("bar.sizes.innerWidth", 40),
         ("bar.bars.0.groups.start.0.id", "logo"),
-        ("bar.bars.0.groups.end.3.id", "power"),
+        ("bar.bars.0.groups.end.1.id", "extensions"),  # shell#441 island
+        ("bar.bars.0.groups.end.4.id", "power"),
+        ("bar.extensions.background", True),
+        ("bar.extensions.compact", False),
         # border resolves Appearance tokens at scale 1: padding.normal=10,
         # rounding.large=25 (BorderConfig.qml)
         ("border.frameEnabled", True),

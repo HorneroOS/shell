@@ -57,6 +57,10 @@
               "options": {}
             },
             {
+              "id": "extensions",
+              "enabled": true
+            },
+            {
               "id": "clock",
               "enabled": true,
               "options": {}

@@ -34,6 +34,8 @@ Item {
     property bool trayBackground: Config.bar.tray.background ?? false
     property bool trayCompact: Config.bar.tray.compact ?? false
     property bool trayRecolour: Config.bar.tray.recolour ?? false
+    property bool extensionsBackground: Config.bar.extensions.background ?? true
+    property bool extensionsCompact: Config.bar.extensions.compact ?? false
     property int workspacesShown: Config.bar.workspaces.shown ?? 5
     property bool workspacesActiveIndicator: Config.bar.workspaces.activeIndicator ?? true
     property bool workspacesOccupiedBg: Config.bar.workspaces.occupiedBg ?? false
@@ -64,6 +66,8 @@ Item {
         Config.bar.tray.background = root.trayBackground;
         Config.bar.tray.compact = root.trayCompact;
         Config.bar.tray.recolour = root.trayRecolour;
+        Config.bar.extensions.background = root.extensionsBackground;
+        Config.bar.extensions.compact = root.extensionsCompact;
         Config.bar.workspaces.shown = root.workspacesShown;
         Config.bar.workspaces.activeIndicator = root.workspacesActiveIndicator;
         Config.bar.workspaces.occupiedBg = root.workspacesOccupiedBg;
@@ -605,6 +609,40 @@ Item {
                                         propertyName: "trayRecolour",
                                         onToggled: function (checked) {
                                             root.trayRecolour = checked;
+                                            root.saveConfig();
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+
+                        // Extensions island (shell#441): configured like the tray.
+                        SectionContainer {
+                            Layout.fillWidth: true
+                            alignTop: true
+
+                            StyledText {
+                                text: qsTr("Extensions Settings")
+                                font.pointSize: Appearance.font.size.normal
+                            }
+
+                            ConnectedButtonGroup {
+                                rootItem: root
+
+                                options: [
+                                    {
+                                        label: qsTr("Background"),
+                                        propertyName: "extensionsBackground",
+                                        onToggled: function (checked) {
+                                            root.extensionsBackground = checked;
+                                            root.saveConfig();
+                                        }
+                                    },
+                                    {
+                                        label: qsTr("Compact"),
+                                        propertyName: "extensionsCompact",
+                                        onToggled: function (checked) {
+                                            root.extensionsCompact = checked;
                                             root.saveConfig();
                                         }
                                     }

@@ -541,7 +541,21 @@ Variants {
                         popout: {
                             name: panels.popouts.currentName,
                             hasCurrent: panels.popouts.hasCurrent,
-                            detached: panels.popouts.detachedMode
+                            detached: panels.popouts.detachedMode,
+                            // Anchored-surface state in window coordinates
+                            // (docs/INTERACTION.md): live frame, solved
+                            // target, trigger and the solver's verdict.
+                            phase: panels.popouts.phase,
+                            intent: panels.popouts.intent,
+                            keyboard: panels.popouts.keyboardIntent,
+                            frame: [panels.x + panels.popouts.x, panels.y + panels.popouts.y, panels.popouts.width, panels.popouts.height],
+                            target: [panels.x + panels.popouts.target.x, panels.y + panels.popouts.target.y, panels.popouts.target.width, panels.popouts.target.height],
+                            trigger: [panels.x + panels.popouts.anchorRect.x, panels.y + panels.popouts.anchorRect.y, panels.popouts.anchorRect.width, panels.popouts.anchorRect.height],
+                            side: panels.popouts.placement.side,
+                            attached: panels.popouts.placement.attached,
+                            flipped: panels.popouts.placement.flipped,
+                            scroll: panels.popouts.placement.scroll,
+                            opacity: panels.popouts.opacity
                         },
                         panelsMargins: {
                             left: bar.marginLeft, top: bar.marginTop,

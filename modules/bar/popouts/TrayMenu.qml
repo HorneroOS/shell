@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import qs.components
+import qs.components.motion
 import qs.services
 import qs.config
 import Quickshell
@@ -42,8 +43,9 @@ StackView {
         padding: Appearance.padding.smaller
         spacing: Appearance.spacing.small
 
+        // Submenus cross-fade; the surface frame morphs to their size.
+        // Content is never scaled (visual language §11.1).
         opacity: shown ? 1 : 0
-        scale: shown ? 1 : 0.8
 
         Component.onCompleted: shown = true
         StackView.onActivating: shown = true
@@ -51,11 +53,7 @@ StackView {
         StackView.onRemoved: destroy()
 
         Behavior on opacity {
-            Anim {}
-        }
-
-        Behavior on scale {
-            Anim {}
+            FadeAnim {}
         }
 
         QsMenuOpener {

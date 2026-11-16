@@ -150,8 +150,10 @@ def test_backdrop_contract():
     for f in ("modules/drawers/Border.qml", "modules/drawers/Panels.qml"):
         src = (ROOT / f).read_text()
         assert "openOn(" in src and "floatingOn(" not in src, f"{f} must use BarSet.openOn"
-    wrapper = (ROOT / "modules/bar/popouts/Wrapper.qml").read_text()
-    assert 'ownerBackdrop !== "clear"' in wrapper
+    # Clear owners have no slab to attach to: the shared solver makes
+    # their popouts free-standing cards (RFC 0001 §5.1).
+    solver = (ROOT / "components/placement/Placement.js").read_text()
+    assert "var attachable = bar !== null && !floating && !clear;" in solver
     for path in PRESETS:
         for b in json.loads(path.read_text())["bar"].get("bars") or []:
             assert b.get("backdrop", "solid") in ("solid", "clear"), f"{path.name}: bad backdrop"

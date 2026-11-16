@@ -92,7 +92,7 @@ Item {
         if (b)
             b.checkPopoutAt(x, y);
         else
-            popouts.hasCurrent = false;
+            popouts.hoverLeave();
     }
 
     function handleWheel(x: real, y: real, angleDelta: point): void {

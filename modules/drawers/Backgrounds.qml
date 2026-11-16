@@ -6,7 +6,6 @@ import qs.modules.notifications as Notifications
 import qs.modules.session as Session
 import qs.modules.launcher as Launcher
 import qs.modules.dashboard as Dashboard
-import qs.modules.bar.popouts as BarPopouts
 import qs.modules.utilities as Utilities
 import qs.modules.sidebar as Sidebar
 import QtQuick
@@ -65,33 +64,6 @@ Shape {
 
         startX: (root.width - wrapper.width) / 2 - rounding
         startY: wrapper.y
-    }
-
-    BarPopouts.Background {
-        wrapper: root.panels.popouts
-        invertBottomRounding: wrapper.y + wrapper.height + 1 >= root.height
-
-        startX: wrapper.x
-        startY: wrapper.y - rounding * sideRounding
-    }
-
-    StyledRect {
-        readonly property BarPopouts.Wrapper wrapper: root.panels.popouts
-
-        x: wrapper.x
-        y: wrapper.y
-        width: wrapper.width
-        height: wrapper.height
-        visible: wrapper.visible && !wrapper.usesConnectedBackground
-        // Floating, clear-bar and horizontal popouts are standalone cards.
-        // Give them the same lifted surface used by other shell cards so
-        // they remain legible over near-black wallpapers and terminal panes.
-        color: Signal.surface(Signal.palette.panel, "bar")
-        radius: wrapper.isDetached ? Appearance.rounding.normal : Config.border.rounding
-
-        Behavior on color {
-            CAnim {}
-        }
     }
 
     Utilities.Background {

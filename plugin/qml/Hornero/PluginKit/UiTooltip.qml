@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import "Placement.js" as Placement
 
 // Host-owned accessible tooltip for PluginKit controls and plugin items.
 // Mirrors the shell Tooltip placement (four bar edges, dashboard,
@@ -15,8 +16,10 @@ Popup {
     property string text: ""
     property int delay: 500
     property int timeout: 0
-    // "auto" picks right/left beside rail triggers and below/above by
-    // vertical half; an explicit side is flipped only when it clips.
+    // "auto" | "below" | "above" | "left" | "right". "auto" opens away
+    // from the owning bar (beside rail triggers, below/above horizontal
+    // bars) and by free vertical half elsewhere; an explicit side flips
+    // once only when it would clip.
     property string preferredSide: "auto"
 
     // A bar indicator with a native popout (shell issue 449) shows the
@@ -33,6 +36,7 @@ Popup {
     readonly property bool _popoutOwned: root._hostPopout !== null && root._hostPopout.hostPopoutContent !== null
     readonly property bool _triggered: !root._popoutOwned && (hoverHandler.hovered || (target ? target.activeFocus : false))
     property bool _wanted: false
+    property string _lastSide: ""
     property bool _dismissed: false
 
     // Tooltips live in surface (window-root) coordinates so a clipped
@@ -66,46 +70,43 @@ Popup {
         }
     }
 
-    // Pure placement: given the target rect and tooltip size in surface
-    // coordinates, return the clamped position and the side used.
-    function placementFor(tx, ty, tw, th, tipW, tipH, availW, availH, gap, margin) {
-        const centerX = tx + tw / 2;
-        const centerY = ty + th / 2;
-        let side = root.preferredSide;
-        if (side === "auto") {
-            if (centerX < availW * 0.18 && tx + tw + gap + tipW + margin <= availW)
-                side = "right";
-            else if (centerX > availW * 0.82 && tx - gap - tipW >= margin)
-                side = "left";
-            else
-                side = centerY < availH / 2 ? "below" : "above";
+    // The bar (if any) that owns the trigger: the nearest ancestor that
+    // publishes `surfaceOwner` (the shell's bars do). Its edge decides
+    // the side, exactly like the shell's own popouts and tooltips.
+    readonly property var _ownerBar: {
+        let p = root.target ? root.target.parent : null;
+        while (p) {
+            if (p.surfaceOwner !== undefined)
+                return p.surfaceOwner;
+            p = p.parent;
         }
-        if (side === "below" && ty + th + gap + tipH > availH - margin && ty - gap - tipH >= margin)
-            side = "above";
-        else if (side === "above" && ty - gap - tipH < margin && ty + th + gap + tipH <= availH - margin)
-            side = "below";
-        else if (side === "right" && tx + tw + gap + tipW > availW - margin && tx - gap - tipW >= margin)
-            side = "left";
-        else if (side === "left" && tx - gap - tipW < margin && tx + tw + gap + tipW <= availW - margin)
-            side = "right";
+        return null;
+    }
 
-        let newX = centerX - tipW / 2;
-        let newY = centerY - tipH / 2;
-        if (side === "below")
-            newY = ty + th + gap;
-        else if (side === "above")
-            newY = ty - tipH - gap;
-        else if (side === "right")
-            newX = tx + tw + gap;
-        else if (side === "left")
-            newX = tx - tipW - gap;
-
-        const maxX = Math.max(margin, availW - tipW - margin);
-        const maxY = Math.max(margin, availH - tipH - margin);
+    // Placement through the shell's shared anchored-surface solver
+    // (Placement.js, a verbatim copy of components/placement/Placement.js;
+    // RFC 0001 §4): given the target rect and tooltip size in surface
+    // coordinates, return the clamped position and the side used. Bar
+    // triggers open away from their bar; elsewhere "auto" prefers the
+    // free vertical half; an explicit side flips once when it clips.
+    function placementFor(tx, ty, tw, th, tipW, tipH, availW, availH, gap, margin) {
+        const auto = root.preferredSide === "auto";
+        const owner = auto ? root._ownerBar : null;
+        const side = auto ? (ty + th / 2 < availH / 2 ? "below" : "above") : root.preferredSide;
+        const placed = Placement.solve({
+            trigger: { x: tx, y: ty, width: tw, height: th },
+            bar: owner ? Object.assign({}, owner, { floating: true, item: undefined }) : null,
+            preferredSide: side,
+            previousSide: root._lastSide,
+            screen: { x: 0, y: 0, width: availW, height: availH, scale: 1, reserved: {} },
+            size: { width: tipW, height: tipH },
+            gutter: margin,
+            gap: gap
+        });
         return {
-            "x": Math.max(margin, Math.min(newX, maxX)),
-            "y": Math.max(margin, Math.min(newY, maxY)),
-            "side": side
+            "x": placed.x,
+            "y": placed.y,
+            "side": placed.side
         };
     }
 
@@ -122,6 +123,7 @@ Popup {
                 const placed = placementFor(pos.x, pos.y, target.width, target.height, tipW, tipH, parent.width, parent.height, Theme.spacing.small, Theme.spacing.smaller);
                 x = placed.x;
                 y = placed.y;
+                root._lastSide = placed.side;
             } catch (e) {
                 // Target destroyed mid-layout — skip this pass.
             }

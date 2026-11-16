@@ -61,6 +61,8 @@ CustomMouseArea {
 
     // Whether a point is inside the popout panel growing from the bar's edge
     function inPopoutPanel(x: real, y: real): bool {
+        if (!panels.popouts.visible)
+            return false;
         switch (popouts.ownerEdge) {
         case "right":
             return inRightPanel(panels.popouts, x, y);
@@ -136,8 +138,10 @@ CustomMouseArea {
                 visibilities.utilities = false;
             utilitiesHoverInside = false;
 
+            // Leaving the surface starts the close grace (RFC §4 rule 6);
+            // an open tray submenu holds the popout.
             if (!popouts.currentName.startsWith("traymenu") || (popouts.current?.depth ?? 0) <= 1) {
-                popouts.hasCurrent = false;
+                popouts.hoverLeave();
                 bar.closeTray();
             }
 
@@ -282,11 +286,15 @@ CustomMouseArea {
         }
         utilitiesHoverInside = inUtilitiesArea;
 
-        // Show popouts on hover
+        // Popouts on hover: the bar resolves the trigger (with the 120 ms
+        // intent delay); inside the surface or the bridged gap the popout
+        // holds; anywhere else the 240 ms close grace runs.
         if (inBarArea(x, y)) {
             bar.checkPopout(x, y);
-        } else if ((!popouts.currentName.startsWith("traymenu") || (popouts.current?.depth ?? 0) <= 1) && !inPopoutPanel(x, y)) {
-            popouts.hasCurrent = false;
+        } else if (inPopoutPanel(x, y)) {
+            popouts.holdOpen();
+        } else if (!popouts.currentName.startsWith("traymenu") || (popouts.current?.depth ?? 0) <= 1) {
+            popouts.hoverLeave();
             bar.closeTray();
         }
     }

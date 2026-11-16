@@ -67,7 +67,7 @@ Item {
                 property: "opacity"
                 from: 1
                 to: 0
-                duration: Appearance.anim.durations.small
+                duration: Appearance.anim.durations.short
             }
             PropertyAction {}
             Anim {
@@ -75,7 +75,7 @@ Item {
                 property: "opacity"
                 from: 0
                 to: 1
-                duration: Appearance.anim.durations.small
+                duration: Appearance.anim.durations.short
             }
         }
     }
@@ -122,9 +122,9 @@ Item {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter
 
-        MaterialIcon {
-            text: root.state === "wallpapers" ? "wallpaper_slideshow" : (root.showThemesList ? "palette" : "search")
-            color: Colours.palette.m3onSurfaceVariant
+        Glyph {
+            name: root.state === "wallpapers" ? "slideshow" : (root.showThemesList ? "palette" : "search")
+            color: Signal.palette.inkMuted
             font.pointSize: Appearance.font.size.extraLarge
 
             anchors.verticalCenter: parent.verticalCenter
@@ -135,14 +135,14 @@ Item {
 
             StyledText {
                 text: root.state === "wallpapers" ? qsTr("No wallpapers found") : (root.showThemesList ? qsTr("No themes found") : qsTr("No results found"))
-                color: Colours.palette.m3onSurfaceVariant
+                color: Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.larger
                 font.weight: 500
             }
 
             StyledText {
                 text: root.state === "wallpapers" && Wallpapers.list.length === 0 ? qsTr("Try putting some wallpapers in %1").arg(Paths.shortenHome(Paths.wallsdir)) : qsTr("Try searching for something else")
-                color: Colours.palette.m3onSurfaceVariant
+                color: Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.normal
             }
         }
@@ -160,8 +160,8 @@ Item {
         enabled: root.visibilities.launcher
 
         Anim {
-            duration: Appearance.anim.durations.large
-            easing.bezierCurve: Appearance.anim.curves.emphasizedDecel
+            duration: Appearance.anim.durations.long
+            easing.bezierCurve: Appearance.anim.curves.enter
         }
     }
 
@@ -169,8 +169,8 @@ Item {
         enabled: root.visibilities.launcher
 
         Anim {
-            duration: Appearance.anim.durations.large
-            easing.bezierCurve: Appearance.anim.curves.emphasizedDecel
+            duration: Appearance.anim.durations.long
+            easing.bezierCurve: Appearance.anim.curves.enter
         }
     }
 }

@@ -27,5 +27,5 @@ def test_seven_day_forecast_is_not_hidden_by_hourly_data():
 
 def test_attribution_is_a_quiet_footer_with_themed_links():
     assert "textFormat: Text.StyledText" in TAB
-    assert "linkColor: Colours.palette.m3onSurfaceVariant" in TAB
+    assert "linkColor: Signal.palette.inkMuted" in TAB
     assert "Text.MarkdownText" not in TAB

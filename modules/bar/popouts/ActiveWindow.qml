@@ -52,7 +52,7 @@ Item {
                 StyledText {
                     Layout.fillWidth: true
                     text: Compositor.activeWindowAppId
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                     elide: Text.ElideRight
                 }
             }
@@ -71,13 +71,13 @@ Item {
                     }
                 }
 
-                MaterialIcon {
+                Glyph {
                     id: expandIcon
 
                     anchors.centerIn: parent
                     anchors.horizontalCenterOffset: font.pointSize * 0.05
 
-                    text: "chevron_right"
+                    name: "chevron-right"
 
                     font.pointSize: Appearance.font.size.large
                 }

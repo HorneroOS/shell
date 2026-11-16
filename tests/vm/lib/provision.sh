@@ -115,7 +115,7 @@ vm_ssh 'sudo pacman -Syu --noconfirm --needed --overwrite "/usr/lib/*" \
     base-devel cmake git curl jq \
     pipewire-jack aubio libqalculate \
     networkmanager bluez \
-    noto-fonts noto-fonts-emoji ttf-jetbrains-mono-nerd ttf-material-symbols-variable'
+    noto-fonts noto-fonts-emoji ttf-jetbrains-mono-nerd ttf-ibm-plex'
 
 echo "==> checking the installed stable Quickshell version"
 # shellcheck disable=SC2016

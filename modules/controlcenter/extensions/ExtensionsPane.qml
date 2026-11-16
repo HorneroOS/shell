@@ -68,7 +68,7 @@ Item {
     }
 
     function placementIcon(placement): string {
-        return placement === "bar" ? "toolbar" : placement === "dashboard" ? "dashboard" : placement === "desktop" ? "wallpaper" : placement === "launcher" ? "search" : "extension";
+        return placement === "bar" ? "layout-navbar" : placement === "dashboard" ? "dashboard" : placement === "desktop" ? "wallpaper" : placement === "launcher" ? "search" : "puzzle";
     }
 
     function placementLabel(placement): string {
@@ -482,7 +482,7 @@ Item {
                         ? qsTr("Safe mode is on (HORNERO_SAFE_MODE): no extension was loaded, not even its manifest. Disable the broken extension below, then restart the shell without HORNERO_SAFE_MODE.")
                         : qsTr("Safe mode is on: no extension was loaded, not even its manifest. Disable the broken extension below, then turn safe mode off.")
                     font.pointSize: Appearance.font.size.small
-                    color: Colours.palette.m3error
+                    color: Signal.palette.alert
                     wrapMode: Text.Wrap
                 }
 
@@ -491,7 +491,7 @@ Item {
                     visible: root.actionError.length > 0
                     text: root.actionError
                     font.pointSize: Appearance.font.size.small
-                    color: Colours.palette.m3error
+                    color: Signal.palette.alert
                     wrapMode: Text.Wrap
                 }
 
@@ -500,7 +500,7 @@ Item {
                     visible: root.actionMessage.length > 0
                     text: root.actionMessage
                     font.pointSize: Appearance.font.size.small
-                    color: Colours.palette.m3primary
+                    color: Signal.palette.signal
                     wrapMode: Text.Wrap
                 }
 
@@ -509,7 +509,7 @@ Item {
                     visible: Plugins.discovered && Plugins.entries.length === 0 && Plugins.discoveryError.length === 0
                     text: qsTr("No plugins installed. Add one with: horneroctl plugin install <path>")
                     font.pointSize: Appearance.font.size.small
-                    color: Colours.palette.m3outline
+                    color: Signal.palette.ruleStrong
                     wrapMode: Text.Wrap
                 }
 
@@ -518,7 +518,7 @@ Item {
                     visible: Plugins.discoveryError.length > 0
                     text: Plugins.discoveryError
                     font.pointSize: Appearance.font.size.small
-                    color: Colours.palette.m3error
+                    color: Signal.palette.alert
                     wrapMode: Text.Wrap
                 }
 
@@ -569,7 +569,7 @@ Item {
                     visible: Plugins.entries.length > 0 && root.filteredPlugins().length === 0
                     text: qsTr("No installed plugins match this search or filter.")
                     font.pointSize: Appearance.font.size.small
-                    color: Colours.palette.m3outline
+                    color: Signal.palette.ruleStrong
                     wrapMode: Text.Wrap
                 }
 
@@ -583,7 +583,7 @@ Item {
 
                         Layout.fillWidth: true
                         radius: Appearance.rounding.normal
-                        color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                        color: Signal.layer(Signal.palette.panel, 1)
                         implicitHeight: rowCol.implicitHeight + Appearance.padding.large * 2
 
                         ColumnLayout {
@@ -606,13 +606,13 @@ Item {
                                     implicitWidth: 44
                                     implicitHeight: 44
                                     radius: Appearance.rounding.normal
-                                    color: row.modelData.enabled ? Colours.palette.m3primaryContainer : Colours.tPalette.m3surfaceContainerHighest
+                                    color: row.modelData.enabled ? Signal.palette.signalWell : Signal.tPalette.lifted
 
-                                    MaterialIcon {
+                                    Glyph {
                                         anchors.centerIn: parent
-                                        text: root.placementIcon(row.modelData.placement)
+                                        name: root.placementIcon(row.modelData.placement)
                                         font.pointSize: Appearance.font.size.large
-                                        color: row.modelData.enabled ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurfaceVariant
+                                        color: row.modelData.enabled ? Signal.palette.onSignalWell : Signal.palette.inkMuted
                                     }
                                 }
 
@@ -634,7 +634,7 @@ Item {
                                             Layout.fillWidth: true
                                             text: row.modelData.version ? `v${row.modelData.version}` : ""
                                             font.pointSize: Appearance.font.size.small
-                                            color: Colours.palette.m3outline
+                                            color: Signal.palette.ruleStrong
                                         }
                                     }
 
@@ -643,7 +643,7 @@ Item {
                                         visible: !!row.modelData.description
                                         text: row.modelData.description ?? ""
                                         font.pointSize: Appearance.font.size.small
-                                        color: Colours.palette.m3onSurfaceVariant
+                                        color: Signal.palette.inkMuted
                                         wrapMode: Text.Wrap
                                         maximumLineCount: root.expandedPluginId === row.modelData.id ? 20 : 2
                                         elide: Text.ElideRight
@@ -669,7 +669,7 @@ Item {
                                             label: root.trustLabel(row.modelData.trust)
                                             Accessible.role: Accessible.StaticText
                                             Accessible.name: qsTr("Trust: %1").arg(row.modelData.trust ?? qsTr("unknown"))
-                                            icon: (["untrusted", "stale-trust", "modified", "unverified"].includes(row.modelData.trust)) ? "warning" : "verified"
+                                            icon: (["untrusted", "stale-trust", "modified", "unverified"].includes(row.modelData.trust)) ? "alert-triangle" : "rosette-discount-check"
                                             tone: (["untrusted", "stale-trust", "modified", "unverified"].includes(row.modelData.trust)) ? "bad" : "neutral"
                                         }
                                     }
@@ -684,7 +684,7 @@ Item {
                                     .arg(row.modelData.catalog_sha256 || qsTr("Not recorded"))
                                 font.pointSize: Appearance.font.size.smaller
                                 font.family: Appearance.font.family.mono
-                                color: Colours.palette.m3outline
+                                color: Signal.palette.ruleStrong
                                 wrapMode: Text.WrapAnywhere
                             }
 
@@ -693,7 +693,7 @@ Item {
                                 visible: root.isDeprecated(row.modelData)
                                 text: root.deprecationText(row.modelData)
                                 font.pointSize: Appearance.font.size.small
-                                color: Colours.palette.m3error
+                                color: Signal.palette.alert
                                 wrapMode: Text.Wrap
                             }
 
@@ -709,7 +709,7 @@ Item {
                                 visible: root.pendingTrust === row.modelData.id
                                 text: qsTr("You are trusting the exact code currently installed for this plugin. If its files change, you will be asked again. Trusting does not enable it.")
                                 font.pointSize: Appearance.font.size.small
-                                color: Colours.palette.m3error
+                                color: Signal.palette.alert
                                 wrapMode: Text.Wrap
                             }
 
@@ -718,7 +718,7 @@ Item {
                                 visible: !!row.modelData.detail
                                 text: row.modelData.detail ?? ""
                                 font.pointSize: Appearance.font.size.small
-                                color: Colours.palette.m3error
+                                color: Signal.palette.alert
                                 wrapMode: Text.Wrap
                             }
 
@@ -728,7 +728,7 @@ Item {
                                 text: qsTr("This plugin's QML will run as your user, without a sandbox. Enable only if you reviewed its source.\n%1")
                                     .arg(root.declaredCapabilities(row.modelData.capabilities, row.modelData.capabilities_verified))
                                 font.pointSize: Appearance.font.size.small
-                                color: Colours.palette.m3error
+                                color: Signal.palette.alert
                                 wrapMode: Text.Wrap
                             }
 
@@ -737,7 +737,7 @@ Item {
                                 visible: root.expandedPluginId === row.modelData.id
                                 text: root.pluginDetail(row.modelData)
                                 font.pointSize: Appearance.font.size.small
-                                color: Colours.palette.m3onSurfaceVariant
+                                color: Signal.palette.inkMuted
                                 wrapMode: Text.Wrap
                             }
 
@@ -772,7 +772,7 @@ Item {
                                     visible: root.screenshotSources(row.modelData).length === 0 && root.screenshotCaptions(row.modelData).length > 0
                                     text: root.screenshotCaptions(row.modelData)
                                     font.pointSize: Appearance.font.size.small
-                                    color: Colours.palette.m3onSurfaceVariant
+                                    color: Signal.palette.inkMuted
                                     wrapMode: Text.Wrap
                                 }
 
@@ -781,7 +781,7 @@ Item {
                                     visible: root.compatibilityText(row.modelData).length > 0
                                     text: root.compatibilityText(row.modelData)
                                     font.pointSize: Appearance.font.size.small
-                                    color: Colours.palette.m3onSurfaceVariant
+                                    color: Signal.palette.inkMuted
                                     wrapMode: Text.Wrap
                                 }
 
@@ -790,7 +790,7 @@ Item {
                                     visible: root.changelogText(row.modelData).length > 0
                                     text: root.changelogText(row.modelData)
                                     font.pointSize: Appearance.font.size.small
-                                    color: Colours.palette.m3onSurfaceVariant
+                                    color: Signal.palette.inkMuted
                                     wrapMode: Text.Wrap
                                 }
 
@@ -798,7 +798,7 @@ Item {
                                     Layout.fillWidth: true
                                     text: root.permissionExplanations(row.modelData)
                                     font.pointSize: Appearance.font.size.small
-                                    color: Colours.palette.m3onSurfaceVariant
+                                    color: Signal.palette.inkMuted
                                     wrapMode: Text.Wrap
                                 }
                             }
@@ -947,7 +947,7 @@ Item {
                     Layout.fillWidth: true
                     text: qsTr("Official extensions from HorneroOS/plugins. Installing copies hash-verified, pinned data but does not run it. Enabling is a separate confirmed step. Capability lists describe plugin declarations; they do not restrict what QML can do.")
                     font.pointSize: Appearance.font.size.small
-                    color: Colours.palette.m3outline
+                    color: Signal.palette.ruleStrong
                     wrapMode: Text.Wrap
                 }
 
@@ -956,7 +956,7 @@ Item {
                     visible: root.catalogRevision.length > 0
                     text: qsTr("Catalogue revision: %1").arg(root.catalogRevision)
                     font.pointSize: Appearance.font.size.small
-                    color: Colours.palette.m3outline
+                    color: Signal.palette.ruleStrong
                     wrapMode: Text.Wrap
                 }
 
@@ -980,7 +980,7 @@ Item {
                     visible: root.catalogError.length > 0
                     text: root.catalogError
                     font.pointSize: Appearance.font.size.small
-                    color: Colours.palette.m3error
+                    color: Signal.palette.alert
                     wrapMode: Text.Wrap
                 }
 
@@ -989,7 +989,7 @@ Item {
                     visible: root.catalogEntries.length > 0 && root.filteredCatalogEntries().length === 0
                     text: qsTr("No official extensions match this search.")
                     font.pointSize: Appearance.font.size.small
-                    color: Colours.palette.m3outline
+                    color: Signal.palette.ruleStrong
                     wrapMode: Text.Wrap
                 }
 
@@ -1003,7 +1003,7 @@ Item {
 
                         Layout.fillWidth: true
                         radius: Appearance.rounding.normal
-                        color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                        color: Signal.layer(Signal.palette.panel, 1)
                         implicitHeight: catCol.implicitHeight + Appearance.padding.large * 2
 
                         ColumnLayout {
@@ -1022,7 +1022,7 @@ Item {
                                 Layout.fillWidth: true
                                 text: catRow.modelData.description || qsTr("No description provided.")
                                 font.pointSize: Appearance.font.size.small
-                                color: Colours.palette.m3onSurface
+                                color: Signal.palette.ink
                                 wrapMode: Text.Wrap
                             }
 
@@ -1034,7 +1034,7 @@ Item {
                                     .arg(catRow.modelData.category || qsTr("Uncategorized"))
                                     .arg(catRow.modelData.placement || qsTr("Placement not listed"))
                                 font.pointSize: Appearance.font.size.small
-                                color: Colours.palette.m3outline
+                                color: Signal.palette.ruleStrong
                                 wrapMode: Text.Wrap
                             }
 
@@ -1042,7 +1042,7 @@ Item {
                                 Layout.fillWidth: true
                                 text: root.declaredCapabilities(catRow.modelData.capabilities)
                                 font.pointSize: Appearance.font.size.small
-                                color: Colours.palette.m3outline
+                                color: Signal.palette.ruleStrong
                                 wrapMode: Text.Wrap
                             }
 
@@ -1057,7 +1057,7 @@ Item {
                                 visible: root.isDeprecated(catRow.modelData)
                                 text: `${root.deprecationText(catRow.modelData)}\n${qsTr("New installs of a deprecated extension are disabled.")}`
                                 font.pointSize: Appearance.font.size.small
-                                color: Colours.palette.m3error
+                                color: Signal.palette.alert
                                 wrapMode: Text.Wrap
                             }
 
@@ -1082,7 +1082,7 @@ Item {
                                 visible: root.screenshotSources(catRow.modelData).length === 0 && root.screenshotCaptions(catRow.modelData).length > 0
                                 text: root.screenshotCaptions(catRow.modelData)
                                 font.pointSize: Appearance.font.size.small
-                                color: Colours.palette.m3outline
+                                color: Signal.palette.ruleStrong
                                 wrapMode: Text.Wrap
                             }
 
@@ -1091,7 +1091,7 @@ Item {
                                 visible: root.compatibilityText(catRow.modelData).length > 0
                                 text: root.compatibilityText(catRow.modelData)
                                 font.pointSize: Appearance.font.size.small
-                                color: Colours.palette.m3outline
+                                color: Signal.palette.ruleStrong
                                 wrapMode: Text.Wrap
                             }
 
@@ -1100,7 +1100,7 @@ Item {
                                 visible: root.changelogText(catRow.modelData).length > 0
                                 text: root.changelogText(catRow.modelData)
                                 font.pointSize: Appearance.font.size.small
-                                color: Colours.palette.m3outline
+                                color: Signal.palette.ruleStrong
                                 wrapMode: Text.Wrap
                             }
 
@@ -1108,7 +1108,7 @@ Item {
                                 Layout.fillWidth: true
                                 text: root.permissionExplanations(catRow.modelData)
                                 font.pointSize: Appearance.font.size.small
-                                color: Colours.palette.m3outline
+                                color: Signal.palette.ruleStrong
                                 wrapMode: Text.Wrap
                             }
 
@@ -1140,7 +1140,7 @@ Item {
                                     .arg(catRow.modelData.sha256 || qsTr("Not listed"))
                                     .arg(catRow.modelData.generatedFrom || qsTr("Not listed"))
                                 font.pointSize: Appearance.font.size.smaller
-                                color: Colours.palette.m3outline
+                                color: Signal.palette.ruleStrong
                                 wrapMode: Text.Wrap
                             }
 
@@ -1148,7 +1148,7 @@ Item {
                                 Layout.fillWidth: true
                                 text: qsTr("%1 · %2 · %3").arg(catRow.modelData.category || "").arg(catRow.modelData.placement || "").arg(catRow.modelData.state || "")
                                 font.pointSize: Appearance.font.size.small
-                                color: Colours.palette.m3outline
+                                color: Signal.palette.ruleStrong
                                 wrapMode: Text.Wrap
                             }
 
@@ -1225,7 +1225,7 @@ Item {
                                     visible: catRow.modelData.state === "installed"
                                     text: qsTr("Installed — enable it in the list above")
                                     font.pointSize: Appearance.font.size.small
-                                    color: Colours.palette.m3outline
+                                    color: Signal.palette.ruleStrong
                                 }
                             }
                         }
@@ -1245,12 +1245,12 @@ Item {
         property string label
         property string icon: ""
         property string tone: "neutral"
-        readonly property color fg: chip.tone === "good" ? Colours.palette.m3success : chip.tone === "bad" ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
+        readonly property color fg: chip.tone === "good" ? Signal.palette.phosphor : chip.tone === "bad" ? Signal.palette.alert : Signal.palette.inkMuted
 
         implicitWidth: chipRow.implicitWidth + Appearance.padding.normal * 2
         implicitHeight: chipRow.implicitHeight + Appearance.padding.small
         radius: Appearance.rounding.full
-        color: chip.tone === "neutral" ? Colours.tPalette.m3surfaceContainerHighest : Qt.alpha(chip.fg, 0.14)
+        color: chip.tone === "neutral" ? Signal.tPalette.lifted : Qt.alpha(chip.fg, 0.14)
 
         Row {
             id: chipRow
@@ -1258,10 +1258,10 @@ Item {
             anchors.centerIn: parent
             spacing: Appearance.spacing.small / 2
 
-            MaterialIcon {
+            Glyph {
                 visible: chip.icon.length > 0
                 anchors.verticalCenter: parent.verticalCenter
-                text: chip.icon
+                name: chip.icon
                 color: chip.fg
                 font.pointSize: Appearance.font.size.small
             }
@@ -1287,9 +1287,9 @@ Item {
         implicitWidth: fchipRow.implicitWidth + Appearance.padding.normal * 2
         implicitHeight: fchipRow.implicitHeight + Appearance.padding.small * 2
         radius: Appearance.rounding.small
-        color: fchip.selected ? Colours.palette.m3secondaryContainer : "transparent"
+        color: fchip.selected ? Signal.palette.cueWell : "transparent"
         border.width: fchip.selected ? 0 : 1
-        border.color: Colours.palette.m3outlineVariant
+        border.color: Signal.palette.rule
 
         Accessible.role: Accessible.CheckBox
         Accessible.name: fchip.label
@@ -1297,7 +1297,7 @@ Item {
 
         Interactive {
             radius: fchip.radius
-            color: fchip.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+            color: fchip.selected ? Signal.palette.onCueWell : Signal.palette.ink
             function onClicked(): void {
                 fchip.activated();
             }
@@ -1309,18 +1309,18 @@ Item {
             anchors.centerIn: parent
             spacing: Appearance.spacing.small / 2
 
-            MaterialIcon {
+            Glyph {
                 visible: fchip.selected || fchip.icon.length > 0
                 anchors.verticalCenter: parent.verticalCenter
-                text: fchip.selected ? "check" : fchip.icon
-                color: fchip.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
+                name: fchip.selected ? "check" : fchip.icon
+                color: fchip.selected ? Signal.palette.onCueWell : Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.small
             }
 
             StyledText {
                 anchors.verticalCenter: parent.verticalCenter
                 text: fchip.label
-                color: fchip.selected ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
+                color: fchip.selected ? Signal.palette.onCueWell : Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.small
                 font.weight: 500
             }

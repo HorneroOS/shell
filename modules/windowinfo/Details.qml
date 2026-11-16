@@ -25,7 +25,7 @@ ColumnLayout {
 
     Label {
         text: root.client?.lastIpcObject.class ?? qsTr("No active client")
-        color: Colours.palette.m3tertiary
+        color: Signal.palette.phosphor
 
         font.pointSize: Appearance.font.size.larger
     }
@@ -38,34 +38,34 @@ ColumnLayout {
         Layout.topMargin: Appearance.spacing.normal
         Layout.bottomMargin: Appearance.spacing.large
 
-        color: Colours.palette.m3secondary
+        color: Signal.palette.cue
     }
 
     Detail {
-        icon: "location_on"
+        icon: "map-pin"
         text: qsTr("Address: %1").arg(`0x${root.client?.address}` ?? "unknown")
-        color: Colours.palette.m3primary
+        color: Signal.palette.signal
     }
 
     Detail {
-        icon: "location_searching"
+        icon: "current-location"
         text: qsTr("Position: %1, %2").arg(root.client?.lastIpcObject.at[0] ?? -1).arg(root.client?.lastIpcObject.at[1] ?? -1)
     }
 
     Detail {
         icon: "resize"
         text: qsTr("Size: %1 x %2").arg(root.client?.lastIpcObject.size[0] ?? -1).arg(root.client?.lastIpcObject.size[1] ?? -1)
-        color: Colours.palette.m3tertiary
+        color: Signal.palette.phosphor
     }
 
     Detail {
-        icon: "workspaces"
+        icon: "layout-grid"
         text: qsTr("Workspace: %1 (%2)").arg(root.client?.workspace.name ?? -1).arg(root.client?.workspace.id ?? -1)
-        color: Colours.palette.m3secondary
+        color: Signal.palette.cue
     }
 
     Detail {
-        icon: "desktop_windows"
+        icon: "device-desktop"
         text: {
             const mon = root.client?.monitor;
             if (mon)
@@ -75,9 +75,9 @@ ColumnLayout {
     }
 
     Detail {
-        icon: "page_header"
+        icon: "layout-navbar"
         text: qsTr("Initial title: %1").arg(root.client?.lastIpcObject.initialTitle ?? "unknown")
-        color: Colours.palette.m3tertiary
+        color: Signal.palette.phosphor
     }
 
     Detail {
@@ -86,37 +86,37 @@ ColumnLayout {
     }
 
     Detail {
-        icon: "account_tree"
+        icon: "hierarchy-2"
         text: qsTr("Process id: %1").arg(root.client?.lastIpcObject.pid ?? -1)
-        color: Colours.palette.m3primary
+        color: Signal.palette.signal
     }
 
     Detail {
-        icon: "picture_in_picture_center"
+        icon: "picture-in-picture-on"
         text: qsTr("Floating: %1").arg(root.client?.lastIpcObject.floating ? "yes" : "no")
-        color: Colours.palette.m3secondary
+        color: Signal.palette.cue
     }
 
     Detail {
-        icon: "gradient"
+        icon: "gradienter"
         text: qsTr("Xwayland: %1").arg(root.client?.lastIpcObject.xwayland ? "yes" : "no")
     }
 
     Detail {
-        icon: "keep"
+        icon: "pin"
         text: qsTr("Pinned: %1").arg(root.client?.lastIpcObject.pinned ? "yes" : "no")
-        color: Colours.palette.m3secondary
+        color: Signal.palette.cue
     }
 
     Detail {
-        icon: "fullscreen"
+        icon: "maximize"
         text: {
             const fs = root.client?.lastIpcObject.fullscreen;
             if (fs)
                 return qsTr("Fullscreen state: %1").arg(fs == 0 ? "off" : fs == 1 ? "maximised" : "on");
             return qsTr("Fullscreen state: unknown");
         }
-        color: Colours.palette.m3tertiary
+        color: Signal.palette.phosphor
     }
 
     Item {
@@ -136,11 +136,11 @@ ColumnLayout {
 
         spacing: Appearance.spacing.smaller
 
-        MaterialIcon {
+        Glyph {
             id: icon
 
             Layout.alignment: Qt.AlignVCenter
-            text: detail.icon
+            name: detail.icon
         }
 
         StyledText {

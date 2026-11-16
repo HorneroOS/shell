@@ -20,7 +20,7 @@ ColumnLayout {
     spacing: Appearance.spacing.normal
 
     SettingsHeader {
-        icon: "cable"
+        icon: "plug-connected"
         title: qsTr("Ethernet settings")
     }
 
@@ -33,7 +33,7 @@ ColumnLayout {
 
     StyledText {
         text: qsTr("Available ethernet devices")
-        color: Colours.palette.m3outline
+        color: Signal.palette.ruleStrong
     }
 
     StyledRect {
@@ -41,7 +41,7 @@ ColumnLayout {
         implicitHeight: ethernetInfo.implicitHeight + Appearance.padding.large * 2
 
         radius: Appearance.rounding.normal
-        color: Colours.tPalette.m3surfaceContainer
+        color: Signal.tPalette.panel
 
         ColumnLayout {
             id: ethernetInfo
@@ -59,7 +59,7 @@ ColumnLayout {
 
             StyledText {
                 text: qsTr("%1").arg(Nmcli.ethernetDevices.length)
-                color: Colours.palette.m3outline
+                color: Signal.palette.ruleStrong
                 font.pointSize: Appearance.font.size.small
             }
 
@@ -70,7 +70,7 @@ ColumnLayout {
 
             StyledText {
                 text: qsTr("%1").arg(Nmcli.ethernetDevices.filter(d => d.connected).length)
-                color: Colours.palette.m3outline
+                color: Signal.palette.ruleStrong
                 font.pointSize: Appearance.font.size.small
             }
         }

@@ -8,15 +8,15 @@ import QtQuick
 // declared in the same file, `onSurface: ...` is taken as the handler of
 // surfaceChanged and the colour reads as #000000 (shell#427).
 QtObject {
-    readonly property color onPrimary: Colours.palette.m3onPrimary
-    readonly property color onSurface: Colours.palette.m3onSurface
-    readonly property color onSurfaceVariant: Colours.palette.m3onSurfaceVariant
-    readonly property color onBackground: Colours.palette.m3onBackground
-    readonly property color onPrimaryContainer: Colours.palette.m3onPrimaryContainer
-    readonly property color onSecondary: Colours.palette.m3onSecondary
-    readonly property color onSecondaryContainer: Colours.palette.m3onSecondaryContainer
-    readonly property color onTertiary: Colours.palette.m3onTertiary
-    readonly property color onTertiaryContainer: Colours.palette.m3onTertiaryContainer
-    readonly property color onErrorContainer: Colours.palette.m3onErrorContainer
-    readonly property color onError: Colours.palette.m3onError
+    readonly property color onPrimary: Signal.palette.onSignal
+    readonly property color onSurface: Signal.palette.ink
+    readonly property color onSurfaceVariant: Signal.palette.inkMuted
+    readonly property color onBackground: Signal.palette.ink
+    readonly property color onPrimaryContainer: Signal.palette.onSignalWell
+    readonly property color onSecondary: Signal.palette.onCue
+    readonly property color onSecondaryContainer: Signal.palette.onCueWell
+    readonly property color onTertiary: Signal.palette.onPhosphor
+    readonly property color onTertiaryContainer: Signal.palette.onPhosphorWell
+    readonly property color onErrorContainer: Signal.palette.onAlertWell
+    readonly property color onError: Signal.palette.onAlert
 }

@@ -28,7 +28,7 @@ Singleton {
                 return;
             }
             if (active.trackArtist != "" && active.trackTitle != "") {
-                Toaster.toast(qsTr("Now Playing"), qsTr("%1 - %2").arg(active.trackArtist).arg(active.trackTitle), "music_note");
+                Toaster.toast(qsTr("Now Playing"), qsTr("%1 - %2").arg(active.trackArtist).arg(active.trackTitle), "music");
             }
         }
     }

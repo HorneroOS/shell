@@ -18,8 +18,6 @@ JsonObject {
     component UseFuzzy: JsonObject {
         property bool apps: false
         property bool actions: false
-        property bool schemes: false
-        property bool variants: false
         property bool wallpapers: false
     }
 
@@ -33,7 +31,7 @@ JsonObject {
     property list<var> actions: [
         {
             name: "Welcome",
-            icon: "waving_hand",
+            icon: "hand-stop",
             description: "Open the Hornero Welcome Center",
             // Explicit "start": the welcome IPC handler requires its
             // page argument (open with no args is rejected).
@@ -43,7 +41,7 @@ JsonObject {
         },
         {
             name: "Ask Hornero",
-            icon: "raven",
+            icon: "feather",
             description: "Ask the Hornero assistant (needs horneroctl assistant enable)",
             command: ["autocomplete", "ai"],
             enabled: true,
@@ -51,7 +49,7 @@ JsonObject {
         },
         {
             name: "Windows",
-            icon: "web_asset",
+            icon: "app-window",
             description: "Switch to an open window",
             command: ["autocomplete", "win"],
             enabled: true,
@@ -59,7 +57,7 @@ JsonObject {
         },
         {
             name: "Files",
-            icon: "folder_open",
+            icon: "folder-open",
             description: "Find files in your home folders",
             command: ["autocomplete", "file"],
             enabled: true,
@@ -67,39 +65,23 @@ JsonObject {
         },
         {
             name: "Calculator",
-            icon: "calculate",
+            icon: "calculator",
             description: "Do simple math equations (powered by Qalc)",
             command: ["autocomplete", "calc"],
             enabled: true,
             dangerous: false
         },
         {
-            name: "Scheme",
-            icon: "palette",
-            description: "Change the current colour scheme",
-            command: ["autocomplete", "scheme"],
-            enabled: true,
-            dangerous: false
-        },
-        {
             name: "Wallpaper",
-            icon: "image",
+            icon: "photo",
             description: "Change the current wallpaper",
             command: ["autocomplete", "wallpaper"],
             enabled: true,
             dangerous: false
         },
         {
-            name: "Variant",
-            icon: "colors",
-            description: "Change the current scheme variant",
-            command: ["autocomplete", "variant"],
-            enabled: true,
-            dangerous: false
-        },
-        {
             name: "Themes",
-            icon: "style",
+            icon: "brush",
             description: "Apply a desktop theme pack",
             command: ["autocomplete", "theme"],
             enabled: true,
@@ -107,7 +89,7 @@ JsonObject {
         },
         {
             name: "Layout",
-            icon: "dashboard_customize",
+            icon: "layout-dashboard",
             description: "Change the shell bar layout",
             command: ["layoutpicker"],
             enabled: true,
@@ -123,7 +105,7 @@ JsonObject {
         },
         {
             name: "Random",
-            icon: "casino",
+            icon: "dice-5",
             description: "Switch to a random wallpaper",
             command: ["sh", "-c", "f=\"$(find -L \"$HOME/Pictures/Wallpapers\" -type f | shuf -n 1)\"; [ -n \"$f\" ] && horneroctl wallpaper set --yes \"$f\""],
             enabled: true,
@@ -131,23 +113,23 @@ JsonObject {
         },
         {
             name: "Light",
-            icon: "light_mode",
-            description: "Change the scheme to light mode",
-            command: ["setMode", "light"],
+            icon: "sun",
+            description: "Switch to Hornero Signal Day",
+            command: ["theme", "hornero-signal-day"],
             enabled: true,
             dangerous: false
         },
         {
             name: "Dark",
-            icon: "dark_mode",
-            description: "Change the scheme to dark mode",
-            command: ["setMode", "dark"],
+            icon: "moon",
+            description: "Switch to Hornero Signal Night",
+            command: ["theme", "hornero-signal-night"],
             enabled: true,
             dangerous: false
         },
         {
             name: "Shutdown",
-            icon: "power_settings_new",
+            icon: "power",
             description: "Shutdown the system",
             command: ["systemctl", "poweroff"],
             enabled: true,
@@ -155,7 +137,7 @@ JsonObject {
         },
         {
             name: "Reboot",
-            icon: "cached",
+            icon: "refresh",
             description: "Reboot the system",
             command: ["systemctl", "reboot"],
             enabled: true,
@@ -163,7 +145,7 @@ JsonObject {
         },
         {
             name: "Logout",
-            icon: "exit_to_app",
+            icon: "logout",
             description: "Log out of the current session",
             command: ["loginctl", "terminate-user", ""],
             enabled: true,
@@ -179,7 +161,7 @@ JsonObject {
         },
         {
             name: "Sleep",
-            icon: "bedtime",
+            icon: "moon-stars",
             description: "Suspend then hibernate",
             command: ["systemctl", "suspend-then-hibernate"],
             enabled: true,

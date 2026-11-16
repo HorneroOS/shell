@@ -77,7 +77,7 @@ def test_shortcuts_cozy_visual_contract():
     assert "function iconFor" in text
     for group in ("Launch & apps", "Shell", "Workspaces", "Windows", "System"):
         assert group in text, f"group missing: {group}"
-    assert "m3primaryContainer" in text, "group count pill missing"
+    assert "signalWell" in text, "group count pill missing"
     assert "ShortcutHints.entries" in text, (
         "page must reuse the ShortcutHints data layer, not reload")
 

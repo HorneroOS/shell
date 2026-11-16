@@ -1,5 +1,6 @@
 pragma Singleton
 
+import qs.services
 import Quickshell
 import Quickshell.Io
 import QtQuick
@@ -64,48 +65,69 @@ Singleton {
         }
     }
 
+    // Hornero Signal built-ins (services/Signal.qml owns their palettes).
     readonly property var _builtIns: [
         {
-            id: "hornero-dark",
-            name: "Hornero Dark",
-            description: "Default dark theme with rose accent",
+            id: "hornero-signal-night",
+            name: "Hornero Signal Night",
+            description: "Graphite instrument panels, phosphor-cream ink, amber signal",
+            mode: "dark",
             darkMode: true,
-            schemeType: "tonal-spot",
             collection: "hornero-originals",
             collectionOrder: 1,
-            tags: ["hornero", "dark", "builtin"]
+            colorOnly: true,
+            tags: ["hornero", "signal", "dark", "builtin"]
         },
         {
-            id: "hornero-light",
-            name: "Hornero Light",
-            description: "Default light theme with rose accent",
+            id: "hornero-signal-day",
+            name: "Hornero Signal Day",
+            description: "Technical-drawing paper with ink-black text",
+            mode: "light",
             darkMode: false,
-            schemeType: "tonal-spot",
             collection: "hornero-originals",
-            collectionOrder: 4,
-            tags: ["hornero", "light", "builtin"]
+            collectionOrder: 2,
+            colorOnly: true,
+            tags: ["hornero", "signal", "light", "builtin"]
+        },
+        {
+            id: "hornero-signal-contrast",
+            name: "Hornero Signal High Contrast",
+            description: "Black ground, white ink and boosted signal colours",
+            mode: "dark",
+            darkMode: true,
+            collection: "hornero-originals",
+            collectionOrder: 3,
+            colorOnly: true,
+            tags: ["hornero", "signal", "dark", "contrast", "builtin"]
         }
     ]
 
+    // A catalogue theme is offered only when the registry lists it as a
+    // schema-v2 Signal theme (`mode` plus a full `palette` or the preview
+    // `swatch`); legacy M3-seed packs cannot render under Signal and are
+    // omitted. horneroctl writes the full live scheme on apply.
     function _withBuiltIns(items: var): var {
-        const actual = Array.isArray(items) ? items.filter(item => item && typeof item.id === "string") : [];
-        const builtIns = _builtIns.map(fallback => {
-            for (let i = 0; i < actual.length; i++) {
-                if (actual[i].id === fallback.id)
-                    return actual[i];
-            }
-            return fallback;
+        const listed = Array.isArray(items) ? items.filter(item => item && typeof item.id === "string") : [];
+        const listedById = {};
+        for (const item of listed)
+            listedById[item.id] = item;
+        const builtIns = _builtIns.map(builtIn => {
+            const registry = listedById[builtIn.id];
+            return registry ? Object.assign({}, registry, builtIn, {
+                inRegistry: true
+            }) : builtIn;
         });
-        const combined = builtIns.concat(actual.filter(item => item.id !== "hornero-dark" && item.id !== "hornero-light"));
-        return combined.sort((a, b) => {
-            const aOriginal = a.collection === "hornero-originals";
-            const bOriginal = b.collection === "hornero-originals";
-            if (aOriginal !== bOriginal)
-                return aOriginal ? -1 : 1;
-            if (aOriginal && bOriginal)
-                return (a.collectionOrder ?? 999) - (b.collectionOrder ?? 999);
-            return String(a.name ?? a.id).localeCompare(String(b.name ?? b.id));
-        });
+        const catalogue = listed.filter(item => !Signal.isBuiltInTheme(item.id) && root.isSignalTheme(item)).map(item => Object.assign({}, item, {
+            inRegistry: true,
+            darkMode: item.mode !== "light"
+        }));
+        return builtIns.concat(catalogue.sort((a, b) => String(a.name ?? a.id).localeCompare(String(b.name ?? b.id))));
+    }
+
+    function isSignalTheme(item: var): bool {
+        if (!item || (item.mode !== "dark" && item.mode !== "light"))
+            return false;
+        return Signal.isCompletePalette(item.palette) || (!!item.swatch && typeof item.swatch === "object");
     }
 
     function themeById(id: string): var {

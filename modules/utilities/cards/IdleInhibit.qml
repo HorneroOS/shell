@@ -12,7 +12,7 @@ StyledRect {
     implicitHeight: layout.implicitHeight + (IdleInhibitor.enabled ? activeChip.implicitHeight + activeChip.anchors.topMargin : 0) + Appearance.padding.large * 2
 
     radius: Appearance.rounding.normal
-    color: Colours.tPalette.m3surfaceContainer
+    color: Signal.tPalette.panel
     clip: true
 
     RowLayout {
@@ -29,14 +29,14 @@ StyledRect {
             implicitHeight: icon.implicitHeight + Appearance.padding.smaller * 2
 
             radius: Appearance.rounding.full
-            color: IdleInhibitor.enabled ? Colours.palette.m3secondary : Colours.palette.m3secondaryContainer
+            color: IdleInhibitor.enabled ? Signal.palette.cue : Signal.palette.cueWell
 
-            MaterialIcon {
+            Glyph {
                 id: icon
 
                 anchors.centerIn: parent
-                text: "coffee"
-                color: IdleInhibitor.enabled ? Colours.palette.m3onSecondary : Colours.palette.m3onSecondaryContainer
+                name: "coffee"
+                color: IdleInhibitor.enabled ? Signal.palette.onCue : Signal.palette.onCueWell
                 font.pointSize: Appearance.font.size.large
             }
         }
@@ -55,7 +55,7 @@ StyledRect {
             StyledText {
                 Layout.fillWidth: true
                 text: IdleInhibitor.enabled ? qsTr("Preventing sleep mode") : qsTr("Normal power management")
-                color: Colours.palette.m3onSurfaceVariant
+                color: Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.small
                 elide: Text.ElideRight
             }
@@ -86,28 +86,28 @@ StyledRect {
             implicitHeight: activeText.implicitHeight + Appearance.padding.small * 2
 
             radius: Appearance.rounding.full
-            color: Colours.palette.m3primary
+            color: Signal.palette.signal
 
             StyledText {
                 id: activeText
 
                 anchors.centerIn: parent
                 text: qsTr("Active since %1").arg(Qt.formatTime(IdleInhibitor.enabledSince, Config.services.useTwelveHourClock ? "hh:mm a" : "hh:mm"))
-                color: Colours.palette.m3onPrimary
+                color: Signal.palette.onSignal
                 font.pointSize: Math.round(Appearance.font.size.small * 0.9)
             }
         }
 
         Behavior on anchors.bottomMargin {
             Anim {
-                duration: Appearance.anim.durations.expressiveDefaultSpatial
-                easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                duration: Appearance.anim.durations.settle
+                easing.bezierCurve: Appearance.anim.curves.settle
             }
         }
 
         Behavior on opacity {
             Anim {
-                duration: Appearance.anim.durations.small
+                duration: Appearance.anim.durations.short
             }
         }
 
@@ -118,8 +118,8 @@ StyledRect {
 
     Behavior on implicitHeight {
         Anim {
-            duration: Appearance.anim.durations.expressiveDefaultSpatial
-            easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+            duration: Appearance.anim.durations.settle
+            easing.bezierCurve: Appearance.anim.curves.settle
         }
     }
 }

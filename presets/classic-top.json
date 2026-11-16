@@ -2,7 +2,7 @@
   "_name": "Classic Top",
   "_description": "Traditional top bar with all status icons",
   "_icon": "🖥️",
-  "_iconMaterial": "vertical_align_top",
+  "_iconMaterial": "layout-navbar",
   "bar": {
     "persistent": true,
     "showOnHover": true,

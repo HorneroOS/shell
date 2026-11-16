@@ -1,21 +1,180 @@
-# Native appearance layers — HorneroOS/shell issue #2
+# Native appearance — Hornero Signal
 
-QML applies theming through native layers first (`gsettings`,
-`ImageAnalyser`, `horneroctl` verbs owned by `HorneroOS/hornero`) and
-reaches outside the repo through the Hornero CLI and the platform APIs.
+The shell's appearance is **Hornero Signal**
+([RFC 0001](https://github.com/HorneroOS/docs/blob/main/development/rfc-0001-hornero-signal.md),
+tracked in [HorneroOS/.github#28](https://github.com/HorneroOS/.github/issues/28)).
+This page describes how the shell implements it: colour roles, typography,
+glyphs, motion, geometry, and the native layers that apply GTK settings.
 
-## Native layers
+Colours never come from the wallpaper. A theme is a complete table of
+Signal roles; changing the wallpaper changes only the wallpaper.
+
+## Colour roles — `services/Signal.qml`
+
+`Signal.palette.<role>` is the only colour API for shell surfaces. The roles
+are exactly RFC 0001 §3.1:
+
+| Group | Roles |
+|---|---|
+| Surfaces (back to front) | `ground`, `sunken`, `base`, `panel`, `raised`, `lifted` |
+| Ink | `ink`, `inkMuted`, `inkFaint` (decorative only) |
+| Rules | `rule` (hairlines inside a surface), `ruleStrong` (control boundaries, 3:1) |
+| Accents | `signal`/`onSignal`, `signalWell`/`onSignalWell` (amber: primary, live) |
+| | `cue`/`onCue`, `cueWell`/`onCueWell` (celeste: focus, selection, information) |
+| | `phosphor`/`onPhosphor`, `phosphorWell`/`onPhosphorWell` (positive, connected) |
+| | `alert`/`onAlert`, `alertWell`/`onAlertWell` (destructive, error) |
+| Inverse | `inverse`, `onInverse`, `inverseSignal` |
+| Other | `focus` (keyboard ring), `scrim`, `shadow`, `term0`…`term15` |
+| Optional | `glow` (luminous accent; falls back to `signal` when a theme omits it) |
+
+Other members:
+
+- `Signal.tPalette.<role>` — translucent variants used when transparency is
+  enabled (surface roles become see-through, content roles stay opaque).
+- `Signal.layer(colour, depth)`, `Signal.surface(colour, element)`,
+  `Signal.elementAlpha(element)`, `Signal.transparency` — the translucency
+  helpers (`appearance.transparency` in `shell.json`).
+- `Signal.on(colour)` — readable ink for data-driven fills only; use the
+  paired `on*` role whenever one exists.
+- `Signal.light`, `Signal.themeId`, `Signal.themeStateReady`,
+  `Signal.roles`, `Signal.builtInThemes`, `Signal.isBuiltInTheme(id)`,
+  `Signal.isCompletePalette(palette)`, `Signal.applyScheme(scheme)`,
+  `Signal.persistScheme(scheme)`, `Signal.schemePath`.
+
+High contrast (`appearance.highContrast`) swaps in the
+`hornero-signal-contrast` table and disables translucency without changing
+the stored theme identity.
+
+### Built-in themes
+
+| Id | Mode | Notes |
+|---|---|---|
+| `hornero-signal-night` | dark | Factory default: graphite panels, phosphor-cream ink |
+| `hornero-signal-day` | light | Technical-drawing paper with ink-black text |
+| `hornero-signal-contrast` | dark | Black ground, white ink, boosted accents |
+
+The hex values are RFC 0001 §3.2 (with amendment 2). `tests/test_contrast_aa.py`
+and `tests/test_high_contrast_mode.py` check WCAG AA: `ink`/`inkMuted` and
+every accent used as text reach 4.5:1 on every surface (including `sunken`
+wells and `lifted` tooltips), every paired `on*` role reaches 4.5:1 on its
+fill, and `ruleStrong`/`focus` reach 3:1 on every surface.
+
+### Live scheme contract
+
+```text
+${XDG_STATE_HOME:-~/.local/state}/hornero/signal/scheme.json
+{"schemaVersion": 2, "id": "…", "mode": "dark"|"light",
+ "palette": {"<role>": "#RRGGBB", …}, "terminal": ["#RRGGBB", × 16]}
+```
+
+- `horneroctl appearance theme apply <id>` writes it atomically for catalogue
+  themes; the shell writes it for built-ins (`Signal.persistScheme`, an
+  atomic `mv`) and on first run when the file is missing.
+- `Signal` watches the file and applies any complete schema-v2 scheme.
+  Incomplete or legacy (schema 1, M3) files are ignored and the configured
+  built-in is shown instead.
+- The `signal` IPC target exposes `reload()`, `mode()` and `theme()`
+  (`docs/IPC.md`).
+
+### Theme catalogue
+
+`services/ThemeCatalogue.qml` lists the three built-ins first, then every
+catalogue theme from `horneroctl appearance theme list --full` that carries a
+complete schema-v2 `palette`. Theme packs that only define M3 seeds cannot
+render under Signal and are not offered.
+
+### One-shot migration
+
+`Config.migrateLegacyAppearance()` (`config/Config.qml`) runs when
+`shell.json` loads and rewrites removed values once, then saves:
+
+- `appearance.theme`: `hornero-dark` → `hornero-signal-night`,
+  `hornero-light` → `hornero-signal-day`, `hornero-199x` → `hornero-signal-night`.
+- `appearance.font.family`: `Rubik` → `IBM Plex Sans`,
+  `CaskaydiaCove NF` → `IBM Plex Mono`; the removed `material`/`clock`
+  keys disappear on save (`display` replaces `clock`).
+- Icon names stored in `session.icons`, `general.battery.warnLevels[].icon`
+  and `launcher.actions[].icon` that are not Hornero Glyphs fall back to the
+  shipped default for that slot.
+- Launcher actions: the removed Scheme/Variant actions are dropped and the
+  Light/Dark actions now apply `hornero-signal-day`/`hornero-signal-night`.
+- The persisted motion curve table is no longer serialized and disappears
+  on the next save.
+
+## Typography — `config/AppearanceConfig.qml`
+
+| `Appearance.font.family.*` | Font | Use |
+|---|---|---|
+| `sans` | IBM Plex Sans | UI text |
+| `mono` | IBM Plex Mono | Readouts, numerals, eyebrows, code |
+| `display` | IBM Plex Sans Condensed | Clock, lock, large headings |
+
+Sizes (`Appearance.font.size.*`, points at scale 1): `small 11`,
+`smaller 12`, `normal 13`, `larger 15`, `large 18`, `extraLarge 28`,
+`display 56`. Package dependency: `ttf-ibm-plex` (Arch `extra`, OFL-1.1;
+Nix `ibm-plex`).
+
+## Glyphs — Hornero Glyphs
+
+`Glyph { name: "wifi"; color: …; size: … }` (`components/Glyph.qml`)
+renders one glyph from `assets/fonts/hornero-glyphs.ttf`, a curated subset of
+Tabler Icons (outline, MIT). `font.pointSize` also works; there are no fill
+or grade axes. `utils/Glyphs.qml` loads the font and resolves names
+(`Glyphs.glyph(name)`, `Glyphs.has(name)`, `Glyphs.family`, `Glyphs.names`);
+an unknown name renders nothing and logs one warning.
+
+The glyph set is listed in `assets/fonts/hornero-glyphs.names`. To add a
+glyph, add its Tabler name there and run `python3 scripts/build-glyphs.py`
+(pinned `@tabler/icons-webfont` release, SHA-256 verified), which rewrites the
+font, `utils/GlyphMap.js` and `assets/fonts/LICENSE.tabler-icons`.
+`tests/test_glyphs.py` fails when code uses a name that is not in the set.
+
+## Motion — `Appearance.anim`
+
+| Curve (`Appearance.anim.curves.*`) | Bezier | Use |
+|---|---|---|
+| `standard` | 0.2, 0, 0, 1 | State changes |
+| `enter` | 0.05, 0.7, 0.1, 1 | Things appearing |
+| `exit` | 0.3, 0, 1, 1 | Things leaving |
+| `sweep` | 0.65, 0, 0.35, 1 | Reveal wipes, page transitions |
+| `settle` | 0.32, 1.24, 0.42, 1 | Small overshoot, spatial motion only |
+| `settleFast` | 0.34, 1.3, 0.5, 1 | Quick controls, chips |
+
+Durations (`Appearance.anim.durations.*`, ms at scale 1): `quick 90`,
+`short 160`, `medium 240`, `long 360`, `scan 480`, `settleFast 220`,
+`settle 320`, plus `fade` (≤ 90 ms opacity cross-fade). `durations.scale`
+is the user's animation-speed setting.
+
+Reduced motion (`appearance.reducedMotion`, the Accessibility pane switch,
+or the system preference `org.gnome.desktop.interface enable-animations`
+read by `config/SystemMotion.qml`) sets `Appearance.anim.reduced` and every
+duration except `fade` to 0. PluginKit `Theme.reducedMotion` follows it.
+
+## Geometry — `Appearance.rounding/spacing/padding`
+
+4 px grid (RFC 0001 §3.5). Rounding: `small 3`, `normal 5`, `large 8`,
+`full` only for genuinely circular elements. Spacing: `small 4`,
+`smaller 8`, `normal 12`, `larger 16`, `large 24`. Padding: `small 4`,
+`smaller 6`, `normal 8`, `larger 12`, `large 16`. Each has a user `scale`.
+
+## Theme application — `services/ThemePipeline.qml`
+
+- Built-in themes apply natively: `Signal.applyScheme` + `persistScheme`,
+  optional wallpaper pointer write, Hyprland/hyprlock regeneration, then the
+  GTK light/dark preference (or the full GTK recipe when the shared registry
+  knows the id).
+- Catalogue themes go through `horneroctl appearance theme apply <id>`, which
+  owns verification and persisted state and writes the live scheme (or calls
+  back through the `appearance.applyTheme` IPC path).
+- `setWallpaper` only writes the wallpaper pointer.
 
 ### GtkSettings (`services/GtkSettings.qml`)
 
-Applies GTK themes, icon themes, and color-scheme policy through the
-deterministic `gsettings` desktop APIs, then mirrors successful live changes
-through `horneroctl appearance gtk` so GTK's persistent settings files stay in
-sync. If gsettings is unavailable or fails, the Hornero CLI adapter applies
-both live and persistent state directly.
-
-Policy mapping (`toGsettingsScheme`, input normalized by
-`ThemePipeline.normalizeGtkColorScheme`):
+Applies GTK themes, icon themes, and colour-scheme policy through
+`gsettings`, then mirrors successful live changes through
+`horneroctl appearance gtk` so GTK's persistent settings files stay in sync.
+If gsettings is unavailable or fails, the Hornero CLI adapter applies both
+live and persistent state directly.
 
 | Policy | `org.gnome.desktop.interface color-scheme` |
 |---|---|
@@ -24,113 +183,24 @@ Policy mapping (`toGsettingsScheme`, input normalized by
 | `default` | `default` |
 | `follow` (or empty) | `prefer-dark` when dark mode, else `prefer-light` |
 
-Live writes:
-
-| Request | `gsettings set` keys |
-|---|---|
-| GTK theme | `org.gnome.desktop.interface gtk-theme`, `org.gnome.desktop.wm.preferences theme` |
-| Icon theme | `org.gnome.desktop.interface icon-theme` |
-| Color scheme | `org.gnome.desktop.interface color-scheme` |
-
-Every successful live write is followed by the equivalent `horneroctl`
-operation. That operation also writes GTK 2/3/4 settings, which the theme
-pipeline uses for verification and which applications may read independently
-of the desktop schema. Apply is reported complete only after that persistence
-step succeeds.
-
-Live queries (`refreshLive`) read the same three keys back into
-`liveGtkTheme` / `liveIconTheme` / `liveColorScheme`. When `gsettings` is
-absent (exit 99) the layer falls through to the `horneroctl appearance gtk`
-fallback (`_compatFor`); theme-pack ids with no explicit GTK theme always
-use the fallback path because id resolution lives in the shared theme
-registry.
-
-Consumers: `ThemePipeline` (queued gtk/gtk-color-scheme/icons jobs and the
-pipeline finalize step via `applyFull`), `AppearancePane` (live seeding via
-`refreshLive` plus change connections; its `horneroctl gtk` live queries
-yield whenever a native value exists).
-
-### WallpaperAnalysis (`services/WallpaperAnalysis.qml`)
-
-Thin wrapper around the native `ImageAnalyser` plugin exposing
-`dominantColour` / `luminance` plus `ready` and `isLight` helpers for any
-wallpaper path via `analyze(path)`.
-
-Consumers: `Wallpapers.preview()` (instant preview tone alongside the full
-M3 palette job), `Colours.wallLuminance` / `Colours.wallDominantColour`
-(translucency layering and native tone), `AppearancePane.previewAnalyser`
-(an `ImageAnalyser` bound to the palette-generation input; the preview pane
-shows its dominant colour as an instant swatch while the generated palette
-is absent).
-
-## Migrated call sites
-
-| Former call site | Native replacement |
-|---|---|
-| `ThemePipeline` finalize script (`horneroctl appearance gtk theme/apply/set-icons/color-scheme/sync-color-scheme`) | `GtkSettings.applyFull` |
-| `ThemePipeline` standalone gtk apply | `GtkSettings.applyGtkTheme` |
-| `ThemePipeline` standalone gtk color-scheme | `GtkSettings.applyColorScheme` |
-| `ThemePipeline` standalone gtk set-icons | `GtkSettings.applyIconTheme` |
-| `AppearancePane` live current GTK/icon/color-scheme queries | `GtkSettings.refreshLive` first; `horneroctl gtk` queries yield when native values exist |
-| Wallpaper tone for translucency | `Colours.wallLuminance` (already native) plus new `wallDominantColour` |
-| Wallpaper preview tone | `WallpaperAnalysis` (`Wallpapers`) and `previewAnalyser` (`AppearancePane`) |
-
-## First-class built-in themes (P2 appearance tokens)
-
-`hornero-dark` / `hornero-light` are fully described by the canonical
-semantic tables in `services/Colours.qml` (`_horneroDark` / `_horneroLight`;
-dark is byte-identical to the compiled palette defaults, fixed colours are
-shared mode-independent per M3). `ThemePipeline.applyTheme` short-circuits
-these ids natively — no wallpaper, `wal`, or M3 round-trip —
-then follows the pack's GTK theme, icon theme and color-scheme policy
-through `GtkSettings.applyFull` with the theme id, which resolves via
-`horneroctl appearance gtk theme` (native; writes the gtk2/3/4 ini files
-that `horneroctl appearance theme set` verifies). A color-scheme-only
-apply would leave the GTK theme name behind and fail that verify. The launcher
-`Themes` model always lists both first, even when the registry is
-absent. The default theme id lives in `config/AppearanceConfig.qml`
-(`theme: "hornero-dark"`), persisted via `serializeAppearance()` and pinned
-in `config/shell.default.json`. Switching writes the whole table, so there
-is no light/dark leakage; text pairs are covered by contrast tests in
-`tests/test_appearance_tokens.py`.
-
-### Flagship provenance (cross-repo mapping)
-
-Both tables are GENERATED by `scripts/gen-flagship-m3.py` (M3 tonal-spot,
-`materialyoucolor==3.0.4`) from one HorneroOS/config brand seed: `#E07856`
-(the `palette.primary` of `profiles/themes/hornero-dark/theme.json`). One
-source feeds both modes because M3 Fixed colors are mode-independent --
-two seeds would break that invariant. Config owns static semantic
-palettes; the shell owns M3 tonal roles, so the two namespaces never
-share hexes role-for-role -- coherence means the same terracotta hue
-family, with role-appropriate lightness per the M3 spec (a dark-mode
-primary is tone 80, hence lighter than the brand hex). If config moves
-that primary, update the seed here and re-run; `test_gen_stability`
-fails CI on drift. `scrim`/`shadow`/`success*`/`term*` are hand-owned extras
-outside the generated roles.
-
 ## External CLI surface (all horneroctl)
 
-| Call site | Command | Notes |
-|---|---|---|
-| `ThemePipeline.m3Proc`, `Wallpapers` preview colours, `AppearancePane.previewPaletteProc` | `horneroctl appearance colors m3 --yes -- …` | Passthrough to the M3 backend script (materialyoucolor lives outside this repo); same stdout payload as before |
-| `ThemePipeline` scheme regenerate/sync-state; `Colours.setMode`; `Schemes` list/current/set-variant; `M3Variants`; `AppearancePane` scheme/mode commits | `horneroctl appearance scheme …` | Scheme persistence runs natively in `HorneroOS/hornero` |
-| `GtkSettings` full-mode with theme-pack id | `horneroctl appearance gtk theme …` | Theme-pack id resolution lives in the shared theme registry |
-| `GtkThemeSection` / `IconThemeSection` listings | `horneroctl appearance gtk list/icons` | Catalogue parsing plus de-dup across system/user roots |
-| `AppearancePane` live queries (fallback branch) | `horneroctl appearance gtk current*` | Hosts without `gsettings` |
-| `ThemePipeline` side effects | `horneroctl apps switcher apply-theme-pack --yes`, `horneroctl appearance hyprlock --yes` | Shell switcher action plus GTK/lock integration |
-| `Themes.qml` loader | `horneroctl appearance theme list --full` | JSON manifest array; empty-model fallback when absent (see `docs/GTK-PACK-OWNERSHIP.md`) |
-| `ColorVariantSection.qml` accent set/clear | `horneroctl appearance accent …` | Persists the user accent override |
-| `Wallpapers.resolveProc` | `horneroctl wallpaper current` | Reads the canonical wallpaper pointer |
-| `QuickToggles` / `SystemPane` night toggle | `horneroctl appearance night-mode toggle --yes` | Updates the selected mode and GTK policy |
-| `Recorder.qml` start/stop/pause | `horneroctl capture record … --yes` | Uses the configured screen recorder |
+| Call site | Command |
+|---|---|
+| `ThemePipeline` catalogue apply | `horneroctl appearance theme apply <id> [--wallpaper …] --yes` |
+| `ThemePipeline` side effects | `horneroctl appearance hyprland --yes`, `horneroctl appearance hyprlock --yes`, `horneroctl apps switcher apply-theme-pack <id> --yes` |
+| `GtkSettings` full mode with a registry id | `horneroctl appearance gtk theme …` |
+| `GtkThemeSection` / `IconThemeSection` | `horneroctl appearance gtk list/icons` |
+| `AppearancePane` live queries (fallback) | `horneroctl appearance gtk current*` |
+| `ThemeCatalogue` | `horneroctl appearance theme list --full` |
+| `Wallpapers.resolveProc` | `horneroctl wallpaper current` |
+| `QuickToggles` / `SystemPane` night toggle | `horneroctl appearance night-mode toggle --yes` |
 
 ## Contracts and checks
 
-- Appearance operations use the shared Hornero CLI contract and do not invoke
-  helper scripts directly from QML — enforced by
-  `tests/test_appearance_consistency.py` and `scripts/check_forbidden_paths.sh`.
-- The same test file requires both native layers to exist and every
-  appearance call site to go through `horneroctl`.
-- Outbound process contracts are documented in `docs/IPC.md`; the
-  see `docs/INTEGRATION.md` for current process boundaries.
+- QML never invokes appearance helper scripts directly
+  (`tests/test_appearance_consistency.py`, `scripts/check_forbidden_paths.sh`).
+- `tests/test_signal_contract.py` fails on Material-era names (`m3` roles,
+  the Material icon component and font, the M3 palette type, the
+  wallpaper-synthesis library) anywhere in first-party code, packaging and
+  docs except `docs/PROVENANCE.md` and `NOTICE`.

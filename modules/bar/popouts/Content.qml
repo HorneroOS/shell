@@ -235,7 +235,7 @@ Item {
                 SequentialAnimation {
                     Anim {
                         properties: "opacity,revealScale"
-                        duration: Appearance.anim.durations.small
+                        duration: Appearance.anim.durations.short
                     }
                     PropertyAction {
                         target: popout

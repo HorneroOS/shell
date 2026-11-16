@@ -58,7 +58,7 @@ Item {
 
         Behavior on contentY {
             Anim {
-                duration: Appearance.anim.durations.small
+                duration: Appearance.anim.durations.short
             }
         }
 
@@ -97,13 +97,13 @@ Item {
                     implicitWidth: nonAnimWidth
                     implicitHeight: root.session.navExpanded ? normalWinIcon.implicitHeight + Appearance.padding.normal * 2 : nonAnimWidth
 
-                    color: Colours.palette.m3primaryContainer
+                    color: Signal.palette.signalWell
                     radius: Appearance.rounding.small
 
                     Interactive {
                         id: normalWinState
 
-                        color: Colours.palette.m3onPrimaryContainer
+                        color: Signal.palette.onSignalWell
                         Accessible.role: Accessible.Button
                         Accessible.name: qsTr("Float Settings window")
                         Accessible.description: qsTr("Open the current Settings page in a floating window")
@@ -117,17 +117,16 @@ Item {
                         }
                     }
 
-                    MaterialIcon {
+                    Glyph {
                         id: normalWinIcon
 
                         anchors.left: parent.left
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.leftMargin: Appearance.padding.large
 
-                        text: "select_window"
-                        color: Colours.palette.m3onPrimaryContainer
+                        name: "app-window"
+                        color: Signal.palette.onSignalWell
                         font.pointSize: Appearance.font.size.large
-                        fill: 1
                     }
 
                     StyledText {
@@ -138,27 +137,27 @@ Item {
                         anchors.leftMargin: Appearance.spacing.normal
 
                         text: qsTr("Float window")
-                        color: Colours.palette.m3onPrimaryContainer
+                        color: Signal.palette.onSignalWell
                         opacity: root.session.navExpanded ? 1 : 0
 
                         Behavior on opacity {
                             Anim {
-                                duration: Appearance.anim.durations.small
+                                duration: Appearance.anim.durations.short
                             }
                         }
                     }
 
                     Behavior on implicitWidth {
                         Anim {
-                            duration: Appearance.anim.durations.expressiveDefaultSpatial
-                            easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                            duration: Appearance.anim.durations.settle
+                            easing.bezierCurve: Appearance.anim.curves.settle
                         }
                     }
 
                     Behavior on implicitHeight {
                         Anim {
-                            duration: Appearance.anim.durations.expressiveDefaultSpatial
-                            easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                            duration: Appearance.anim.durations.settle
+                            easing.bezierCurve: Appearance.anim.curves.settle
                         }
                     }
                 }
@@ -189,7 +188,7 @@ Item {
                         visible: root.session.navExpanded && firstInCategory
                         opacity: root.session.navExpanded ? 1 : 0
                         text: firstInCategory ? PaneRegistry.categoryTitle(pane.category) : ""
-                        color: Colours.palette.m3outline
+                        color: Signal.palette.ruleStrong
                         font.pointSize: Appearance.font.size.small
                         font.capitalization: Font.Capitalize
                     }
@@ -202,7 +201,7 @@ Item {
                         Layout.preferredWidth: 28
                         Layout.preferredHeight: visible ? 1 : 0
                         Layout.topMargin: visible ? Appearance.spacing.small : 0
-                        color: Colours.palette.m3outlineVariant
+                        color: Signal.palette.rule
                     }
 
                     NavItem {
@@ -254,13 +253,13 @@ Item {
         transitions: Transition {
             Anim {
                 property: "opacity"
-                duration: Appearance.anim.durations.small
+                duration: Appearance.anim.durations.short
             }
 
             Anim {
                 properties: "implicitWidth,implicitHeight"
-                duration: Appearance.anim.durations.expressiveDefaultSpatial
-                easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                duration: Appearance.anim.durations.settle
+                easing.bezierCurve: Appearance.anim.curves.settle
             }
         }
 
@@ -268,7 +267,7 @@ Item {
             id: background
 
             radius: Appearance.rounding.full
-            color: Qt.alpha(Colours.palette.m3secondaryContainer, item.active ? 1 : 0)
+            color: Qt.alpha(Signal.palette.cueWell, item.active ? 1 : 0)
 
             implicitWidth: icon.implicitWidth + icon.anchors.leftMargin * 2
             implicitHeight: icon.implicitHeight + Appearance.padding.small
@@ -278,7 +277,7 @@ Item {
                 Accessible.name: item.active ? qsTr("%1, current Settings page").arg(item.title) : item.title
                 Accessible.description: qsTr("Open the %1 Settings page").arg(item.title)
 
-                color: item.active ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                color: item.active ? Signal.palette.onCueWell : Signal.palette.ink
 
                 function onClicked(): void {
                     // Allow navigation even during the short opening gate; the
@@ -293,21 +292,16 @@ Item {
                 }
             }
 
-            MaterialIcon {
+            Glyph {
                 id: icon
 
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.leftMargin: Appearance.padding.large
 
-                text: item.icon
-                color: item.active ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                name: item.icon
+                color: item.active ? Signal.palette.onCueWell : Signal.palette.ink
                 font.pointSize: Appearance.font.size.large
-                fill: item.active ? 1 : 0
-
-                Behavior on fill {
-                    Anim {}
-                }
             }
 
             StyledRect {
@@ -319,7 +313,7 @@ Item {
                 implicitWidth: 8
                 implicitHeight: 8
                 radius: Appearance.rounding.full
-                color: Colours.palette.m3error
+                color: Signal.palette.alert
                 visible: item.badgeVisible
 
                 SequentialAnimation on scale {
@@ -339,7 +333,7 @@ Item {
 
                 opacity: 0
                 text: item.title
-                color: item.active ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                color: item.active ? Signal.palette.onCueWell : Signal.palette.ink
                 font.capitalization: Font.Capitalize
             }
 

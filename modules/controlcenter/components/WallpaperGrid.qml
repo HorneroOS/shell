@@ -72,7 +72,7 @@ Item {
                     ? qsTr("All wallpapers")
                     : qsTr("Theme wallpapers: %1").arg(wallpaperScopeDir)
                 font.pointSize: Appearance.font.size.small
-                color: Colours.palette.m3outline
+                color: Signal.palette.ruleStrong
             }
 
             TextButton {
@@ -106,7 +106,7 @@ Item {
                     : root.wallpaperScopeDir && !root.showAllWallpapers
                         ? qsTr("No wallpapers found for this theme")
                         : qsTr("No wallpapers found")
-                color: Colours.palette.m3outline
+                color: Signal.palette.ruleStrong
                 font.pointSize: Appearance.font.size.normal
             }
 
@@ -176,7 +176,7 @@ Item {
             anchors.rightMargin: itemMargin
             anchors.topMargin: itemMargin
             anchors.bottomMargin: itemMargin
-            color: Colours.tPalette.m3surfaceContainer
+            color: Signal.tPalette.panel
             radius: itemRadius
             antialiasing: true
             layer.enabled: true
@@ -251,19 +251,19 @@ Item {
                 gradient: Gradient {
                     GradientStop {
                         position: 0.0
-                        color: Qt.rgba(Colours.palette.m3surface.r, Colours.palette.m3surface.g, Colours.palette.m3surface.b, 0)
+                        color: Qt.rgba(Signal.palette.base.r, Signal.palette.base.g, Signal.palette.base.b, 0)
                     }
                     GradientStop {
                         position: 0.3
-                        color: Qt.rgba(Colours.palette.m3surface.r, Colours.palette.m3surface.g, Colours.palette.m3surface.b, 0.7)
+                        color: Qt.rgba(Signal.palette.base.r, Signal.palette.base.g, Signal.palette.base.b, 0.7)
                     }
                     GradientStop {
                         position: 0.6
-                        color: Qt.rgba(Colours.palette.m3surface.r, Colours.palette.m3surface.g, Colours.palette.m3surface.b, 0.9)
+                        color: Qt.rgba(Signal.palette.base.r, Signal.palette.base.g, Signal.palette.base.b, 0.9)
                     }
                     GradientStop {
                         position: 1.0
-                        color: Qt.rgba(Colours.palette.m3surface.r, Colours.palette.m3surface.g, Colours.palette.m3surface.b, 0.95)
+                        color: Qt.rgba(Signal.palette.base.r, Signal.palette.base.g, Signal.palette.base.b, 0.95)
                     }
                 }
 
@@ -291,7 +291,7 @@ Item {
             color: "transparent"
             radius: itemRadius + border.width
             border.width: isCurrent ? 2 : 0
-            border.color: Colours.palette.m3primary
+            border.color: Signal.palette.signal
             antialiasing: true
             smooth: true
 
@@ -302,14 +302,14 @@ Item {
                 }
             }
 
-            MaterialIcon {
+            Glyph {
                 anchors.right: parent.right
                 anchors.top: parent.top
                 anchors.margins: Appearance.padding.small
 
                 visible: isCurrent
-                text: "check_circle"
-                color: Colours.palette.m3primary
+                name: "circle-check"
+                color: Signal.palette.signal
                 font.pointSize: Appearance.font.size.large
             }
         }
@@ -326,7 +326,7 @@ Item {
             text: Strings.wallpaperDisplayName(modelData.name)
             font.pointSize: Appearance.font.size.smaller
             font.weight: 500
-            color: isCurrent ? Colours.palette.m3primary : Colours.palette.m3onSurface
+            color: isCurrent ? Signal.palette.signal : Signal.palette.ink
             elide: Text.ElideMiddle
             maximumLineCount: 1
             horizontalAlignment: Text.AlignHCenter

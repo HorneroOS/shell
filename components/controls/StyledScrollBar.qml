@@ -81,7 +81,7 @@ ScrollBar {
             return 0;
         }
         radius: Appearance.rounding.full
-        color: Colours.palette.m3secondary
+        color: Signal.palette.cue
 
         MouseArea {
             id: mouse

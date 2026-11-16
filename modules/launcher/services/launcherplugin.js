@@ -35,7 +35,7 @@ function launcherRow(pluginId, displayName, icon, raw) {
     return {
         "providerId": pluginId,
         "section": pluginId,
-        "icon": typeof icon === "string" && icon.length > 0 ? icon : "extension",
+        "icon": typeof icon === "string" && icon.length > 0 ? icon : "puzzle",
         "title": raw.text,
         "subtitle": typeof displayName === "string" && displayName.length > 0 ? displayName : pluginId,
         "payload": raw

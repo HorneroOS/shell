@@ -57,9 +57,9 @@ Item {
                     Layout.fillWidth: true
                     Layout.preferredHeight: renameField.implicitHeight + Appearance.padding.small
                     radius: Appearance.rounding.small
-                    color: Colours.tPalette.m3surfaceContainerHigh
+                    color: Signal.tPalette.raised
                     border.width: 1
-                    border.color: Colours.palette.m3primary
+                    border.color: Signal.palette.signal
 
                     StyledTextField {
                         id: renameField
@@ -101,7 +101,7 @@ Item {
 
                 IconButton {
                     type: IconButton.Text
-                    icon: "close"
+                    icon: "x"
                     accessibleName: qsTr("Cancel workspace rename")
                     padding: Appearance.padding.small / 2
                     font.pointSize: Appearance.font.size.small

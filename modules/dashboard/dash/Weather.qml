@@ -13,15 +13,15 @@ Item {
 
     Component.onCompleted: Weather.reload()
 
-    MaterialIcon {
+    Glyph {
         id: icon
 
         anchors.verticalCenter: parent.verticalCenter
         anchors.left: parent.left
 
         animate: true
-        text: Weather.icon
-        color: Weather.lastError && !Weather.ready ? Colours.palette.m3error : Colours.palette.m3secondary
+        name: Weather.icon
+        color: Weather.lastError && !Weather.ready ? Signal.palette.alert : Signal.palette.cue
         font.pointSize: Appearance.font.size.extraLarge * 2
     }
 
@@ -39,7 +39,7 @@ Item {
 
             animate: true
             text: Weather.temp
-            color: Colours.palette.m3primary
+            color: Signal.palette.signal
             font.pointSize: Appearance.font.size.extraLarge
             font.weight: 500
         }

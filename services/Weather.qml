@@ -20,7 +20,7 @@ Singleton {
     readonly property bool locationConfigured: !!(Config.services.weatherLocation || "").trim()
     property int _requestGeneration: 0
     readonly property bool ready: locationConfigured && !!cc && forecast.length > 0
-    readonly property string icon: cc ? Icons.getWeatherIcon(String(cc.weatherCode)) : "cloud_alert"
+    readonly property string icon: cc ? Icons.getWeatherIcon(String(cc.weatherCode)) : "cloud-exclamation"
     readonly property string description: {
         if (!locationConfigured)
             return qsTr("Set a location");

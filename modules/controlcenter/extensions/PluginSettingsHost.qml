@@ -46,7 +46,7 @@ ColumnLayout {
         Layout.fillWidth: true
         text: qsTr("This plugin's own settings UI runs in-process as your user, without a sandbox — the same trust as its other surfaces. Review its source before use.")
         font.pointSize: Appearance.font.size.small
-        color: Colours.palette.m3outline
+        color: Signal.palette.ruleStrong
         wrapMode: Text.Wrap
     }
 
@@ -58,7 +58,7 @@ ColumnLayout {
 
         Layout.fillWidth: true
         clip: true
-        palette.windowText: Colours.palette.m3onSurface
+        palette.windowText: Signal.palette.ink
         active: root.surfaceAvailable && root.visible
         source: active ? `file://${Plugins.pluginsDir}/${root.pluginId}/${root.entrypoint}` : ""
         asynchronous: true
@@ -126,7 +126,7 @@ ColumnLayout {
         visible: root.loadFailed
         text: qsTr("This plugin's custom settings failed to load.")
         font.pointSize: Appearance.font.size.small
-        color: Colours.palette.m3error
+        color: Signal.palette.alert
         wrapMode: Text.Wrap
     }
 }

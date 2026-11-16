@@ -1,12 +1,15 @@
 import Quickshell.Io
 
 JsonObject {
-    // Canonical theme id. "hornero-dark" / "hornero-light" are first-class
-    // built-in semantic palettes (services/Colours.qml); any other value
-    // resolves through the shared theme registry (ThemePipeline).
-    property string theme: "hornero-dark"
+    // Canonical Hornero Signal theme id. The built-ins (hornero-signal-
+    // night/day/contrast) are complete role tables in services/Signal.qml;
+    // any other id resolves through the shared theme registry and must
+    // carry a schema-v2 palette (ThemePipeline).
+    property string theme: "hornero-signal-night"
     // Shell-wide accessibility override; external applications keep their theme.
     property bool highContrast: false
+    // Shell-wide reduced motion (also follows the system preference).
+    property bool reducedMotion: false
     property Rounding rounding: Rounding {}
     property Spacing spacing: Spacing {}
     property Padding padding: Padding {}
@@ -14,37 +17,40 @@ JsonObject {
     property Anim anim: Anim {}
     property Transparency transparency: Transparency {}
 
+    // Geometry on a 4 px grid (RFC 0001 §3.5). `full` is only for
+    // genuinely circular elements (avatars, radio dots).
     component Rounding: JsonObject {
         property real scale: 1
-        property int small: 12 * scale
-        property int normal: 17 * scale
-        property int large: 25 * scale
+        property int small: 3 * scale
+        property int normal: 5 * scale
+        property int large: 8 * scale
         property int full: 1000 * scale
     }
 
     component Spacing: JsonObject {
         property real scale: 1
-        property int small: 7 * scale
-        property int smaller: 10 * scale
+        property int small: 4 * scale
+        property int smaller: 8 * scale
         property int normal: 12 * scale
-        property int larger: 15 * scale
-        property int large: 20 * scale
+        property int larger: 16 * scale
+        property int large: 24 * scale
     }
 
     component Padding: JsonObject {
         property real scale: 1
-        property int small: 5 * scale
-        property int smaller: 7 * scale
-        property int normal: 10 * scale
+        property int small: 4 * scale
+        property int smaller: 6 * scale
+        property int normal: 8 * scale
         property int larger: 12 * scale
-        property int large: 15 * scale
+        property int large: 16 * scale
     }
 
+    // IBM Plex superfamily (RFC 0001 §3.3, package ttf-ibm-plex). Glyphs
+    // come from the bundled Hornero Glyphs font, not a family setting.
     component FontFamily: JsonObject {
-        property string sans: "Rubik"
-        property string mono: "CaskaydiaCove NF"
-        property string material: "Material Symbols Rounded"
-        property string clock: "Rubik"
+        property string sans: "IBM Plex Sans"
+        property string mono: "IBM Plex Mono"
+        property string display: "IBM Plex Sans Condensed"
     }
 
     component FontSize: JsonObject {
@@ -55,6 +61,7 @@ JsonObject {
         property int larger: 15 * scale
         property int large: 18 * scale
         property int extraLarge: 28 * scale
+        property int display: 56 * scale
     }
 
     component FontStuff: JsonObject {
@@ -62,31 +69,15 @@ JsonObject {
         property FontSize size: FontSize {}
     }
 
-    component AnimCurves: JsonObject {
-        property list<real> emphasized: [0.05, 0, 2 / 15, 0.06, 1 / 6, 0.4, 5 / 24, 0.82, 0.25, 1, 1, 1]
-        property list<real> emphasizedAccel: [0.3, 0, 0.8, 0.15, 1, 1]
-        property list<real> emphasizedDecel: [0.05, 0.7, 0.1, 1, 1, 1]
-        property list<real> standard: [0.2, 0, 0, 1, 1, 1]
-        property list<real> standardAccel: [0.3, 0, 1, 1, 1, 1]
-        property list<real> standardDecel: [0, 0, 0, 1, 1, 1]
-        property list<real> expressiveFastSpatial: [0.42, 1.67, 0.21, 0.9, 1, 1]
-        property list<real> expressiveDefaultSpatial: [0.38, 1.21, 0.22, 1, 1, 1]
-    }
-
+    // Motion knobs only; the curve and duration tokens are derived in
+    // config/Appearance.qml (Appearance.anim), so they are never persisted.
     component AnimDurations: JsonObject {
         property real scale: 1
-        property int small: 200 * scale
-        property int normal: 400 * scale
-        property int large: 600 * scale
-        property int extraLarge: 1000 * scale
-        property int expressiveFastSpatial: 350 * scale
-        property int expressiveDefaultSpatial: 500 * scale
     }
 
     component Anim: JsonObject {
         property real mediaGifSpeedAdjustment: 300
         property real sessionGifSpeed: 0.7
-        property AnimCurves curves: AnimCurves {}
         property AnimDurations durations: AnimDurations {}
     }
 

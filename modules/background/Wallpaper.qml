@@ -55,14 +55,14 @@ Item {
         active: root.completed && !root.source
 
         sourceComponent: StyledRect {
-            color: Colours.palette.m3surface
+            color: Signal.palette.base
 
             StyledRect {
                 anchors.centerIn: parent
                 width: Math.max(0, Math.min(420, parent.width - Appearance.padding.large * 2))
                 implicitHeight: emptyContent.implicitHeight + Appearance.padding.large * 2
                 radius: Appearance.rounding.large
-                color: Colours.palette.m3surfaceContainer
+                color: Signal.palette.panel
 
                 Column {
                     id: emptyContent
@@ -71,17 +71,17 @@ Item {
                     width: parent.width - Appearance.padding.large * 2
                     spacing: Appearance.spacing.normal
 
-                    MaterialIcon {
+                    Glyph {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: "wallpaper"
-                        color: Colours.palette.m3primary
+                        name: "wallpaper"
+                        color: Signal.palette.signal
                         font.pointSize: 40
                     }
 
                     StyledText {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: qsTr("Choose a wallpaper")
-                        color: Colours.palette.m3onSurface
+                        color: Signal.palette.ink
                         font.pointSize: Appearance.font.size.large
                         font.bold: true
                     }
@@ -89,7 +89,7 @@ Item {
                     StyledText {
                         width: parent.width
                         text: qsTr("Pick an image or video for your desktop background.")
-                        color: Colours.palette.m3onSurfaceVariant
+                        color: Signal.palette.inkMuted
                         font.pointSize: Appearance.font.size.small
                         wrapMode: Text.WordWrap
                         horizontalAlignment: Text.AlignHCenter
@@ -101,7 +101,7 @@ Item {
                         implicitHeight: selectWallText.implicitHeight + Appearance.padding.small * 2
 
                         radius: Appearance.rounding.full
-                        color: Colours.palette.m3primary
+                        color: Signal.palette.signal
 
                         FileDialog {
                             id: dialog
@@ -114,7 +114,7 @@ Item {
 
                         StateLayer {
                             radius: parent.radius
-                            color: Colours.palette.m3onPrimary
+                            color: Signal.palette.onSignal
                             Accessible.name: qsTr("Choose wallpaper")
 
                             function onClicked(): void {
@@ -128,7 +128,7 @@ Item {
                             anchors.centerIn: parent
 
                             text: qsTr("Browse wallpapers")
-                            color: Colours.palette.m3onPrimary
+                            color: Signal.palette.onSignal
                             font.pointSize: Appearance.font.size.normal
                         }
                     }
@@ -241,7 +241,7 @@ Item {
 
                 target: vidRoot
                 property: "opacity"
-                duration: Appearance.anim.durations.extraLarge
+                duration: Appearance.anim.durations.scan
                 from: 0
                 to: 1
             }

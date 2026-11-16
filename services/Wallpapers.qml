@@ -16,7 +16,6 @@ Searcher {
     readonly property string current: showPreview ? previewPath : actualCurrent
     property string previewPath
     property string actualCurrent
-    property bool previewColourLock
     property string colorFilter: ""
 
     function setWallpaper(path: string): void {
@@ -24,25 +23,13 @@ Searcher {
         ThemePipeline.setWallpaper(path);
     }
 
-    // Instant native tone analysis for the preview path (issue #2, step
-    // (b)). The full M3 preview palette below runs through horneroctl.
-    readonly property color previewDominantColour: WallpaperAnalysis.dominantColour
-    readonly property real previewLuminance: WallpaperAnalysis.luminance
-    readonly property bool previewNativeReady: WallpaperAnalysis.ready
-
     function preview(path: string): void {
         previewPath = path;
         showPreview = true;
-        WallpaperAnalysis.analyze(path);
-
-        if (Colours.scheme === "dynamic")
-            getPreviewColoursProc.running = true;
     }
 
     function stopPreview(): void {
         showPreview = false;
-        if (!previewColourLock)
-            Colours.showPreview = false;
     }
 
     function reloadWallpaperPath(): void {
@@ -106,7 +93,6 @@ Searcher {
                 if (path.length > 0)
                     root.actualCurrent = path;
             }
-            root.previewColourLock = false;
         }
     }
 
@@ -147,35 +133,4 @@ Searcher {
 
     Component.onCompleted: Qt.callLater(() => reloadWallpaperPath())
 
-    // M3 preview palette via the horneroctl passthrough (same backend
-    // script, same stdout payload Colours.load parses); native
-    // dominant/luminance comes from WallpaperAnalysis above.
-    Process {
-        id: getPreviewColoursProc
-
-        command: [
-            "horneroctl",
-            "appearance",
-            "colors",
-            "m3",
-            "--yes",
-            "--",
-            "--image",
-            root.previewPath,
-            "--mode",
-            Colours.currentLight ? "light" : "dark"
-        ]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                // horneroctl prints the backend payload on success; anything
-                // else is a failure report, not a palette.
-                if (!text.trim().startsWith("{")) {
-                    console.warn("Wallpapers: M3 preview failed:", text.trim().slice(0, 160));
-                    return;
-                }
-                Colours.load(text, true);
-                Colours.showPreview = true;
-            }
-        }
-    }
 }

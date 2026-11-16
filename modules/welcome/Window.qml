@@ -13,7 +13,7 @@ FloatingWindow {
     id: win
 
     title: qsTr("Hornero Welcome")
-    color: Colours.tPalette.m3surface
+    color: Signal.tPalette.base
 
     implicitWidth: 1024
     implicitHeight: 640
@@ -41,12 +41,12 @@ FloatingWindow {
     readonly property var navPages: [
         {
             id: "start",
-            icon: "waving_hand",
+            icon: "hand-stop",
             label: qsTr("Start")
         },
         {
             id: "navigate",
-            icon: "explore",
+            icon: "compass",
             label: qsTr("Navigate")
         },
         {
@@ -66,17 +66,17 @@ FloatingWindow {
         },
         {
             id: "tools",
-            icon: "handyman",
+            icon: "tools",
             label: qsTr("Tools")
         },
         {
             id: "javi",
-            icon: "raven",
+            icon: "feather",
             label: qsTr("Javi")
         },
         {
             id: "settings",
-            icon: "tune",
+            icon: "adjustments-horizontal",
             label: qsTr("Settings")
         },
         {
@@ -136,7 +136,7 @@ FloatingWindow {
         StyledRect {
             Layout.fillWidth: true
             Layout.preferredHeight: 60
-            color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+            color: Signal.layer(Signal.palette.panel, 1)
 
             RowLayout {
                 anchors.fill: parent
@@ -151,7 +151,7 @@ FloatingWindow {
                     Layout.preferredWidth: 34
                     Layout.preferredHeight: 34
                     radius: 9
-                    color: Colours.palette.m3inverseSurface
+                    color: Signal.palette.inverse
 
                     Image {
                         anchors.centerIn: parent
@@ -175,7 +175,7 @@ FloatingWindow {
 
                 IconButton {
                     type: IconButton.Text
-                    icon: "close"
+                    icon: "x"
                     accessibleName: qsTr("Close Welcome")
                     onClicked: Welcome.close()
                 }
@@ -201,7 +201,7 @@ FloatingWindow {
                 keyNavigationWraps: true
                 activeFocusOnTab: true
                 spacing: Appearance.spacing.smaller
-                highlightMoveDuration: Appearance.anim.durations.normal
+                highlightMoveDuration: Appearance.anim.durations.medium
                 clip: true
 
                 model: win.navPages
@@ -221,9 +221,9 @@ FloatingWindow {
 
                 highlight: StyledRect {
                     radius: Appearance.rounding.normal
-                    color: navList.activeFocus ? Colours.palette.m3secondaryContainer : Colours.layer(Colours.palette.m3surfaceContainerHigh, 1)
+                    color: navList.activeFocus ? Signal.palette.cueWell : Signal.layer(Signal.palette.raised, 1)
                     border.width: navList.activeFocus ? 2 : 0
-                    border.color: Colours.palette.m3primary
+                    border.color: Signal.palette.signal
                 }
 
                 delegate: StyledRect {
@@ -237,7 +237,7 @@ FloatingWindow {
                     width: ListView.view.width
                     implicitHeight: 44
                     radius: Appearance.rounding.normal
-                    color: isCurrent ? "transparent" : navMouse.containsMouse ? Colours.layer(Colours.palette.m3surfaceContainerHigh, 1) : "transparent"
+                    color: isCurrent ? "transparent" : navMouse.containsMouse ? Signal.layer(Signal.palette.raised, 1) : "transparent"
 
                     RowLayout {
                         anchors.fill: parent
@@ -245,16 +245,16 @@ FloatingWindow {
                         anchors.rightMargin: Appearance.padding.normal
                         spacing: Appearance.spacing.normal
 
-                        MaterialIcon {
-                            text: navItem.modelData.icon
-                            color: navItem.isCurrent ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
+                        Glyph {
+                            name: navItem.modelData.icon
+                            color: navItem.isCurrent ? Signal.palette.onCueWell : Signal.palette.inkMuted
                         }
 
                         StyledText {
                             Layout.fillWidth: true
                             text: navItem.modelData.label
                             font.weight: navItem.isCurrent ? 600 : 400
-                            color: navItem.isCurrent ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                            color: navItem.isCurrent ? Signal.palette.onCueWell : Signal.palette.ink
                             elide: Text.ElideRight
                         }
                     }
@@ -295,7 +295,7 @@ FloatingWindow {
         StyledRect {
             Layout.fillWidth: true
             Layout.preferredHeight: WelcomeModule.State.writeFailed ? 88 : 64
-            color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+            color: Signal.layer(Signal.palette.panel, 1)
 
             RowLayout {
                 anchors.fill: parent
@@ -322,13 +322,13 @@ FloatingWindow {
                     visible: loginSwitch.activeFocus
                     color: "transparent"
                     border.width: 2
-                    border.color: Colours.palette.m3primary
+                    border.color: Signal.palette.signal
                 }
 
                 StyledText {
                     visible: WelcomeModule.State.writeFailed
                     text: WelcomeModule.State.lastWriteError !== "" ? WelcomeModule.State.lastWriteError : qsTr("Preference kept for this session only")
-                    color: Colours.palette.m3error
+                    color: Signal.palette.alert
                     font.pointSize: Appearance.font.size.smaller
                     elide: Text.ElideRight
                 }
@@ -352,7 +352,7 @@ FloatingWindow {
                         radius: Appearance.rounding.full
                         color: "transparent"
                         border.width: doneWrap.activeFocus ? 2 : 0
-                        border.color: Colours.palette.m3primary
+                        border.color: Signal.palette.signal
                     }
 
                     TextButton {

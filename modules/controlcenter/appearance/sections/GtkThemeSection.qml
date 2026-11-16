@@ -35,10 +35,10 @@ CollapsibleSection {
 
                 readonly property bool isCurrent: modelData === previewController.pendingGtkTheme
 
-                color: Qt.alpha(Colours.tPalette.m3surfaceContainer, isCurrent ? Colours.tPalette.m3surfaceContainer.a : 0)
+                color: Qt.alpha(Signal.tPalette.panel, isCurrent ? Signal.tPalette.panel.a : 0)
                 radius: Appearance.rounding.normal
                 border.width: isCurrent ? 1 : 0
-                border.color: Colours.palette.m3primary
+                border.color: Signal.palette.signal
 
                 Accessible.role: Accessible.Button
                 Accessible.name: isCurrent ? qsTr("%1, current").arg(modelData) : modelData
@@ -62,10 +62,10 @@ CollapsibleSection {
                         font.pointSize: Appearance.font.size.normal
                     }
 
-                    MaterialIcon {
+                    Glyph {
                         visible: isCurrent
-                        text: "check"
-                        color: Colours.palette.m3primary
+                        name: "check"
+                        color: Signal.palette.signal
                         font.pointSize: Appearance.font.size.large
                     }
                 }
@@ -79,7 +79,7 @@ CollapsibleSection {
             visible: !ThemeCatalogue.gtkThemesLoaded
             text: qsTr("Checking installed GTK styles…")
             font.pointSize: Appearance.font.size.small
-            color: Colours.palette.m3onSurfaceVariant
+            color: Signal.palette.inkMuted
         }
 
         StyledText {
@@ -89,7 +89,7 @@ CollapsibleSection {
                 ? qsTr("Hornero couldn't load the installed GTK styles.")
                 : qsTr("No GTK styles are available. Install a GTK theme to style your apps.")
             font.pointSize: Appearance.font.size.small
-            color: Colours.palette.m3onSurfaceVariant
+            color: Signal.palette.inkMuted
             wrapMode: Text.WordWrap
         }
 

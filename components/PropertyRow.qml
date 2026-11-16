@@ -20,7 +20,7 @@ ColumnLayout {
 
     StyledText {
         text: root.value
-        color: Colours.palette.m3onSurfaceVariant
+        color: Signal.palette.inkMuted
         font.pointSize: Appearance.font.size.small
     }
 }

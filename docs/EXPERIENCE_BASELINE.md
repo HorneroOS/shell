@@ -99,7 +99,7 @@ providers, dock layouts, copying any bar/sidebar geometry.
   names, resource values. Hierarchy is size/weight-based, consistent.
 - **Keycaps**: `StyledText.mono` pills (SUPER/CTRL/ALT/SHIFT/F4/minus/
   apostrophe/comma/equal) — cozy and legible at 1080p.
-- **Iconography**: Material Symbols for system actions; real app icons in
+- **Iconography** (at the time of this baseline): Google's icon font for system actions; real app icons in
   launcher; pixel-art Companion sprite. No icon gaps observed in captured
   panes.
 - **Motion**: not yet audited (needs screen recordings). Deferred to

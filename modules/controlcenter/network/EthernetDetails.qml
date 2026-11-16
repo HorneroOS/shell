@@ -35,7 +35,7 @@ DeviceDetails {
 
     headerComponent: Component {
         ConnectionHeader {
-            icon: "cable"
+            icon: "plug-connected"
             title: root.ethernetDevice?.interface ?? qsTr("Unknown")
         }
     }

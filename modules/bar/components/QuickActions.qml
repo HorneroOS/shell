@@ -42,7 +42,7 @@ Item {
 
                 icon: ShellActions.known[modelData].icon
                 label: ShellActions.known[modelData].label
-                colour: Colours.palette.m3onSurfaceVariant
+                colour: Signal.palette.inkMuted
                 iconSize: Appearance.font.size.normal
                 onActivated: ShellActions.run(modelData)
             }
@@ -53,7 +53,7 @@ Item {
         PluginBarWidgets {
             vertical: root.vertical
             section: "actions"
-            iconColour: Colours.palette.m3onSurfaceVariant
+            iconColour: Signal.palette.inkMuted
             iconSize: Appearance.font.size.normal
             textSize: Appearance.font.size.smaller
             thickness: Config.bar.sizes.innerWidth

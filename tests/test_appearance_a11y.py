@@ -13,8 +13,6 @@ ROOT = Path(__file__).resolve().parent.parent
 SECTIONS = ROOT / "modules" / "controlcenter" / "appearance" / "sections"
 
 FILES = [
-    SECTIONS / "ColorSchemeSection.qml",
-    SECTIONS / "ColorVariantSection.qml",
     SECTIONS / "GtkColorSchemeSection.qml",
     SECTIONS / "GtkThemeSection.qml",
     SECTIONS / "IconThemeSection.qml",
@@ -31,6 +29,6 @@ def test_option_rows_are_named_buttons():
         assert 'qsTr("%1, current")' in src, path.name
 
 
-def test_fonts_section_names_both_lists():
+def test_fonts_section_names_every_list():
     src = (SECTIONS / "FontsSection.qml").read_text()
-    assert src.count("Accessible.role: Accessible.Button") == 2
+    assert src.count("Accessible.role: Accessible.Button") == 3

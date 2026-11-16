@@ -59,37 +59,37 @@ ColumnLayout {
     MenuItem {
         id: verticalTop
         text: qsTr("Top")
-        icon: "vertical_align_top"
+        icon: "layout-navbar"
         property string value: "top"
     }
     MenuItem {
         id: verticalMiddle
         text: qsTr("Middle")
-        icon: "vertical_align_center"
+        icon: "layout-align-middle"
         property string value: "middle"
     }
     MenuItem {
         id: verticalBottom
         text: qsTr("Bottom")
-        icon: "vertical_align_bottom"
+        icon: "layout-bottombar"
         property string value: "bottom"
     }
     MenuItem {
         id: horizontalLeft
         text: qsTr("Left")
-        icon: "align_horizontal_left"
+        icon: "layout-align-left"
         property string value: "left"
     }
     MenuItem {
         id: horizontalCenter
         text: qsTr("Center")
-        icon: "align_horizontal_center"
+        icon: "layout-align-center"
         property string value: "center"
     }
     MenuItem {
         id: horizontalRight
         text: qsTr("Right")
-        icon: "align_horizontal_right"
+        icon: "layout-align-right"
         property string value: "right"
     }
 }

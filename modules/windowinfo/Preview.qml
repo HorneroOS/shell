@@ -29,7 +29,7 @@ Item {
 
         implicitWidth: view.implicitWidth
 
-        color: Colours.tPalette.m3surfaceContainer
+        color: Signal.tPalette.panel
         radius: Appearance.rounding.small
 
         Loader {
@@ -39,17 +39,17 @@ Item {
             sourceComponent: ColumnLayout {
                 spacing: 0
 
-                MaterialIcon {
+                Glyph {
                     Layout.alignment: Qt.AlignHCenter
-                    text: "web_asset_off"
-                    color: Colours.palette.m3outline
+                    name: "app-window"
+                    color: Signal.palette.ruleStrong
                     font.pointSize: Appearance.font.size.extraLarge * 3
                 }
 
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
                     text: qsTr("No active client")
-                    color: Colours.palette.m3outline
+                    color: Signal.palette.ruleStrong
                     font.pointSize: Appearance.font.size.extraLarge
                     font.weight: 500
                 }
@@ -57,7 +57,7 @@ Item {
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
                     text: qsTr("Try switching to a window")
-                    color: Colours.palette.m3outline
+                    color: Signal.palette.ruleStrong
                     font.pointSize: Appearance.font.size.large
                 }
             }

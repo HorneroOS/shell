@@ -2,6 +2,7 @@ import ".."
 import "../effects"
 import qs.services
 import qs.config
+import qs.utils
 import QtQuick
 import QtQuick.Templates
 
@@ -30,7 +31,7 @@ Slider {
     orientation: Qt.Vertical
 
     background: StyledRect {
-        color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
+        color: Signal.layer(Signal.palette.panel, 2)
         radius: Appearance.rounding.full
 
         StyledRect {
@@ -40,7 +41,7 @@ Slider {
             y: root.handle.y
             implicitHeight: parent.height - y
 
-            color: Colours.palette.m3secondary
+            color: Signal.palette.cue
             radius: parent.radius
         }
     }
@@ -65,7 +66,7 @@ Slider {
 
             anchors.fill: parent
 
-            color: Colours.palette.m3inverseSurface
+            color: Signal.palette.inverse
             radius: Appearance.rounding.full
 
             MouseArea {
@@ -77,7 +78,7 @@ Slider {
                 acceptedButtons: Qt.NoButton
             }
 
-            MaterialIcon {
+            Glyph {
                 id: icon
 
                 property bool moving
@@ -86,11 +87,11 @@ Slider {
                     animate = !moving;
                     binding.when = moving;
                     font.pointSize = moving ? Appearance.font.size.small : Appearance.font.size.larger;
-                    font.family = moving ? Appearance.font.family.sans : Appearance.font.family.material;
+                    font.family = moving ? Appearance.font.family.sans : Glyphs.family;
                 }
 
-                text: root.icon
-                color: Colours.palette.m3inverseOnSurface
+                name: root.icon
+                color: Signal.palette.onInverse
                 anchors.centerIn: parent
 
                 onMovingChanged: anim.restart()
@@ -111,8 +112,8 @@ Slider {
                         target: icon
                         property: "scale"
                         to: 0
-                        duration: Appearance.anim.durations.normal / 2
-                        easing.bezierCurve: Appearance.anim.curves.standardAccel
+                        duration: Appearance.anim.durations.medium / 2
+                        easing.bezierCurve: Appearance.anim.curves.exit
                     }
                     ScriptAction {
                         script: icon.update()
@@ -121,8 +122,8 @@ Slider {
                         target: icon
                         property: "scale"
                         to: 1
-                        duration: Appearance.anim.durations.normal / 2
-                        easing.bezierCurve: Appearance.anim.curves.standardDecel
+                        duration: Appearance.anim.durations.medium / 2
+                        easing.bezierCurve: Appearance.anim.curves.enter
                     }
                 }
             }
@@ -155,7 +156,7 @@ Slider {
 
     Behavior on value {
         Anim {
-            duration: Appearance.anim.durations.large
+            duration: Appearance.anim.durations.long
         }
     }
     FocusRing {

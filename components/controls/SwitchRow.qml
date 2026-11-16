@@ -17,7 +17,7 @@ StyledRect {
     Layout.fillWidth: true
     implicitHeight: row.implicitHeight + Appearance.padding.large * 2
     radius: Appearance.rounding.normal
-    color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
+    color: Signal.layer(Signal.palette.panel, 2)
 
     Behavior on implicitHeight {
         Anim {}

@@ -109,6 +109,6 @@ GridLayout {
     }
 
     component Rect: StyledRect {
-        color: Colours.tPalette.m3surfaceContainer
+        color: Signal.tPalette.panel
     }
 }

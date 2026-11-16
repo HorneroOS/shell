@@ -63,7 +63,7 @@ StyledRect {
     }
 
     radius: Appearance.rounding.large
-    color: Colours.tPalette.m3surfaceContainer
+    color: Signal.tPalette.panel
     implicitHeight: content.height + Appearance.padding.normal * 2
 
     Accessible.role: Accessible.Chart
@@ -102,11 +102,11 @@ StyledRect {
 
                         GradientStop {
                             position: 0
-                            color: Qt.alpha(Colours.palette.m3primary, 0.26)
+                            color: Qt.alpha(Signal.palette.signal, 0.26)
                         }
                         GradientStop {
                             position: 1
-                            color: Qt.alpha(Colours.palette.m3primary, 0)
+                            color: Qt.alpha(Signal.palette.signal, 0)
                         }
                     }
 
@@ -123,7 +123,7 @@ StyledRect {
 
                 ShapePath {
                     strokeWidth: 3
-                    strokeColor: Colours.palette.m3primary
+                    strokeColor: Signal.palette.signal
                     fillColor: "transparent"
                     capStyle: ShapePath.RoundCap
                     joinStyle: ShapePath.RoundJoin
@@ -154,9 +154,9 @@ StyledRect {
                         width: point.emphasised ? 10 : 7
                         height: width
                         radius: width / 2
-                        color: point.index === 0 ? Colours.palette.m3primary : Colours.palette.m3surfaceContainerHighest
+                        color: point.index === 0 ? Signal.palette.signal : Signal.palette.lifted
                         border.width: 2
-                        border.color: Colours.palette.m3primary
+                        border.color: Signal.palette.signal
                     }
 
                     StyledText {
@@ -165,7 +165,7 @@ StyledRect {
                         text: Math.round(point.temp) + "°"
                         font.pointSize: Appearance.font.size.smaller
                         font.weight: point.emphasised ? 700 : 500
-                        color: point.emphasised ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant
+                        color: point.emphasised ? Signal.palette.ink : Signal.palette.inkMuted
                     }
                 }
             }
@@ -192,14 +192,14 @@ StyledRect {
                             text: root.hourLabel(cell.modelData, cell.index)
                             font.pointSize: Appearance.font.size.smaller
                             font.weight: cell.index === 0 ? 700 : 400
-                            color: cell.index === 0 ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+                            color: cell.index === 0 ? Signal.palette.signal : Signal.palette.inkMuted
                         }
 
-                        MaterialIcon {
+                        Glyph {
                             anchors.horizontalCenter: parent.horizontalCenter
-                            text: cell.modelData.icon ?? "cloud"
+                            name: cell.modelData.icon ?? "cloud"
                             font.pointSize: Appearance.font.size.larger
-                            color: Colours.palette.m3secondary
+                            color: Signal.palette.cue
                         }
                     }
                 }

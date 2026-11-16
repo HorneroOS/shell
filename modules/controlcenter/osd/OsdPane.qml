@@ -58,7 +58,7 @@ Item {
                 StyledRect {
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
-                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: settingsCol.implicitHeight + Appearance.padding.large * 2
 
                     ColumnLayout {
@@ -106,7 +106,7 @@ Item {
                 StyledRect {
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
-                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: timingCol.implicitHeight + Appearance.padding.large * 2
 
                     ColumnLayout {
@@ -148,7 +148,7 @@ Item {
                 StyledRect {
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
-                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: sizeCol.implicitHeight + Appearance.padding.large * 2
 
                     ColumnLayout {

@@ -38,8 +38,8 @@ Item {
             Anim {
                 target: root
                 properties: "implicitWidth,implicitHeight"
-                duration: Appearance.anim.durations.expressiveDefaultSpatial
-                easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                duration: Appearance.anim.durations.settle
+                easing.bezierCurve: Appearance.anim.curves.settle
             }
         },
         Transition {
@@ -49,8 +49,8 @@ Item {
             Anim {
                 target: root
                 properties: "implicitWidth,implicitHeight"
-                duration: Appearance.anim.durations.normal
-                easing.bezierCurve: Appearance.anim.curves.emphasized
+                duration: Appearance.anim.durations.medium
+                easing.bezierCurve: Appearance.anim.curves.standard
             }
         }
     ]

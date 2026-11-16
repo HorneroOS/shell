@@ -23,6 +23,8 @@ Singleton {
     readonly property string cache: `${cacheHome}/hornero`
     readonly property string config: `${configHome}/hornero`
     readonly property string wallpaperPointer: `${state}/wallpaper/path`
+    // Live Hornero Signal scheme (schema v2, RFC 0001); see services/Signal.qml.
+    readonly property string signalScheme: `${state}/signal/scheme.json`
     readonly property string imagecache: `${cache}/imagecache`
     readonly property string notifimagecache: `${imagecache}/notifs`
     readonly property string wallsdir: Quickshell.env("HORNERO_WALLPAPERS_DIR") || absolutePath(Config.paths.wallpaperDir)

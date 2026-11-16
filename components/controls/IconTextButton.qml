@@ -14,7 +14,7 @@ StyledRect {
         Text
     }
 
-    property alias icon: iconLabel.text
+    property alias icon: iconLabel.name
     property alias text: label.text
     property bool checked
     property bool toggle
@@ -31,10 +31,10 @@ StyledRect {
     property alias label: label
 
     property bool internalChecked
-    property color activeColour: type === IconTextButton.Filled ? Colours.palette.m3primary : Colours.palette.m3secondary
-    property color inactiveColour: type === IconTextButton.Filled ? Colours.tPalette.m3surfaceContainer : Colours.palette.m3secondaryContainer
-    property color activeOnColour: type === IconTextButton.Filled ? Colours.palette.m3onPrimary : Colours.palette.m3onSecondary
-    property color inactiveOnColour: type === IconTextButton.Filled ? Colours.palette.m3onSurface : Colours.palette.m3onSecondaryContainer
+    property color activeColour: type === IconTextButton.Filled ? Signal.palette.signal : Signal.palette.cue
+    property color inactiveColour: type === IconTextButton.Filled ? Signal.tPalette.panel : Signal.palette.cueWell
+    property color activeOnColour: type === IconTextButton.Filled ? Signal.palette.onSignal : Signal.palette.onCue
+    property color inactiveOnColour: type === IconTextButton.Filled ? Signal.palette.ink : Signal.palette.onCueWell
 
     signal clicked
 
@@ -64,17 +64,12 @@ StyledRect {
         anchors.centerIn: parent
         spacing: Appearance.spacing.small
 
-        MaterialIcon {
+        Glyph {
             id: iconLabel
 
             Layout.alignment: Qt.AlignVCenter
             Layout.topMargin: Math.round(fontInfo.pointSize * 0.0575)
             color: root.internalChecked ? root.activeOnColour : root.inactiveOnColour
-            fill: root.internalChecked ? 1 : 0
-
-            Behavior on fill {
-                Anim {}
-            }
         }
 
         StyledText {

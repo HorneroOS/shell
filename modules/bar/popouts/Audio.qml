@@ -109,8 +109,8 @@ Item {
         IconTextButton {
             Layout.fillWidth: true
             Layout.topMargin: Appearance.spacing.normal
-            inactiveColour: Colours.palette.m3primaryContainer
-            inactiveOnColour: Colours.palette.m3onPrimaryContainer
+            inactiveColour: Signal.palette.signalWell
+            inactiveOnColour: Signal.palette.onSignalWell
             verticalPadding: Appearance.padding.small
             text: qsTr("Open settings")
             icon: "settings"

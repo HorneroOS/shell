@@ -9,10 +9,10 @@ import QtQuick.Controls
 TextField {
     id: root
 
-    color: root.enabled ? Colours.palette.m3onSurface : Qt.alpha(Colours.palette.m3onSurface, 0.38)
-    placeholderTextColor: root.enabled ? Colours.palette.m3outline : Qt.alpha(Colours.palette.m3outline, 0.38)
-    selectionColor: Colours.palette.m3primary
-    selectedTextColor: Colours.palette.m3onPrimary
+    color: root.enabled ? Signal.palette.ink : Qt.alpha(Signal.palette.ink, 0.38)
+    placeholderTextColor: root.enabled ? Signal.palette.ruleStrong : Qt.alpha(Signal.palette.ruleStrong, 0.38)
+    selectionColor: Signal.palette.signal
+    selectedTextColor: Signal.palette.onSignal
     font.family: Appearance.font.family.sans
     font.pointSize: Appearance.font.size.smaller
     renderType: echoMode === TextField.Password ? TextField.QtRendering : TextField.NativeRendering
@@ -44,7 +44,7 @@ TextField {
         property bool disableBlink
 
         implicitWidth: 2
-        color: Colours.palette.m3primary
+        color: Signal.palette.signal
         radius: Appearance.rounding.normal
 
         Connections {
@@ -81,7 +81,7 @@ TextField {
 
         Behavior on opacity {
             Anim {
-                duration: Appearance.anim.durations.small
+                duration: Appearance.anim.durations.short
             }
         }
     }

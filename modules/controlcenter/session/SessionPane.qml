@@ -61,14 +61,14 @@ Item {
                     Layout.fillWidth: true
                     text: qsTr("The power/session menu and how it responds to keyboard and drag.")
                     font.pointSize: Appearance.font.size.small
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                     wrapMode: Text.Wrap
                 }
 
                 StyledRect {
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
-                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: sessionCol.implicitHeight + Appearance.padding.large * 2
 
                     ColumnLayout {

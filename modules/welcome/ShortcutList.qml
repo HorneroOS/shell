@@ -89,9 +89,9 @@ ColumnLayout {
         if (group === qsTr("Shell"))
             return "terminal";
         if (group === qsTr("Workspaces"))
-            return "workspaces";
+            return "layout-grid";
         if (group === qsTr("Windows"))
-            return "select_window";
+            return "app-window";
         return "settings";
     }
 
@@ -267,7 +267,7 @@ ColumnLayout {
     StyledText {
         visible: root.loaded && root.totalCount > 0
         text: root.query.trim() === "" && root.selectedGroup === "" ? qsTr("%1 shortcuts").arg(root.totalCount) : qsTr("%1 of %2").arg(root.filteredCount()).arg(root.totalCount)
-        color: Colours.palette.m3onSurfaceVariant
+        color: Signal.palette.inkMuted
         font.pointSize: Appearance.font.size.smaller
         Layout.alignment: Qt.AlignHCenter
     }
@@ -277,17 +277,17 @@ ColumnLayout {
         Layout.fillWidth: true
         spacing: Appearance.spacing.small
 
-        MaterialIcon {
+        Glyph {
             Layout.alignment: Qt.AlignHCenter
-            text: "keyboard"
+            name: "keyboard"
             font.pointSize: Appearance.font.size.large * 2
-            color: Colours.palette.m3onSurfaceVariant
+            color: Signal.palette.inkMuted
         }
 
         StyledText {
             Layout.alignment: Qt.AlignHCenter
             text: qsTr("No keybindings found. Regenerate the shortcuts manifest.")
-            color: Colours.palette.m3onSurfaceVariant
+            color: Signal.palette.inkMuted
             font.pointSize: Appearance.font.size.smaller
         }
     }
@@ -305,7 +305,7 @@ ColumnLayout {
 
             readonly property var filteredRows: groupCard.modelData.rows.filter(r => root.matches(r))
 
-            color: Colours.palette.m3surfaceContainer
+            color: Signal.palette.panel
             radius: Appearance.rounding.large
             implicitHeight: cardColumn.implicitHeight + Appearance.padding.normal * 2
 
@@ -322,9 +322,9 @@ ColumnLayout {
                     Layout.fillWidth: true
                     spacing: Appearance.spacing.small
 
-                    MaterialIcon {
-                        text: root.iconFor(groupCard.modelData.name)
-                        color: Colours.palette.m3primary
+                    Glyph {
+                        name: root.iconFor(groupCard.modelData.name)
+                        color: Signal.palette.signal
                         font.pointSize: Appearance.font.size.small
                     }
 
@@ -332,14 +332,14 @@ ColumnLayout {
                         text: groupCard.modelData.name
                         font.pointSize: Appearance.font.size.small
                         font.weight: 600
-                        color: Colours.palette.m3onSurface
+                        color: Signal.palette.ink
                         clip: true
                     }
 
                     StyledRect {
                         Layout.preferredHeight: countLabel.implicitHeight + 6
                         Layout.preferredWidth: countLabel.implicitWidth + 14
-                        color: Colours.palette.m3primaryContainer
+                        color: Signal.palette.signalWell
                         radius: Appearance.rounding.full
 
                         StyledText {
@@ -349,7 +349,7 @@ ColumnLayout {
                             text: groupCard.filteredRows.length
                             font.pointSize: Appearance.font.size.smaller
                             font.weight: 600
-                            color: Colours.palette.m3onPrimaryContainer
+                            color: Signal.palette.onSignalWell
                         }
                     }
 
@@ -357,7 +357,7 @@ ColumnLayout {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 1
                         Layout.alignment: Qt.AlignVCenter
-                        color: Colours.palette.m3outline
+                        color: Signal.palette.ruleStrong
                     }
                 }
 
@@ -372,7 +372,7 @@ ColumnLayout {
                         Layout.fillWidth: true
                         implicitHeight: rowInner.implicitHeight + Appearance.padding.normal
                         radius: Appearance.rounding.normal
-                        color: Colours.layer(Colours.palette.m3surfaceContainerHigh, 1)
+                        color: Signal.layer(Signal.palette.raised, 1)
 
                         RowLayout {
                             id: rowInner
@@ -401,7 +401,7 @@ ColumnLayout {
                                 Layout.fillWidth: true
                                 text: shortcutRow.modelData.label
                                 font.pointSize: Appearance.font.size.smaller
-                                color: Colours.palette.m3onSurface
+                                color: Signal.palette.ink
                                 clip: true
                             }
                         }
@@ -418,10 +418,10 @@ ColumnLayout {
         implicitWidth: capLabel.implicitWidth + 16
         implicitHeight: capLabel.implicitHeight + 8
 
-        color: Colours.palette.m3surfaceContainerHighest
+        color: Signal.palette.lifted
         radius: Appearance.rounding.small
         border.width: 1
-        border.color: Colours.palette.m3outline
+        border.color: Signal.palette.ruleStrong
 
         StyledText {
             id: capLabel
@@ -431,7 +431,7 @@ ColumnLayout {
             mono: true
             font.pointSize: Appearance.font.size.smaller
             font.weight: 600
-            color: Colours.palette.m3onSurface
+            color: Signal.palette.ink
         }
     }
 
@@ -446,10 +446,10 @@ ColumnLayout {
         Layout.preferredHeight: chipLabel.implicitHeight + 10
         Layout.preferredWidth: chipLabel.implicitWidth + 24
 
-        color: chip.selected ? Colours.palette.m3primaryContainer : Colours.palette.m3surfaceContainerHigh
+        color: chip.selected ? Signal.palette.signalWell : Signal.palette.raised
         radius: Appearance.rounding.full
         border.width: 1
-        border.color: chip.selected ? "transparent" : Colours.palette.m3outline
+        border.color: chip.selected ? "transparent" : Signal.palette.ruleStrong
 
         StyledText {
             id: chipLabel
@@ -458,7 +458,7 @@ ColumnLayout {
             text: chip.label
             font.pointSize: Appearance.font.size.smaller
             font.weight: chip.selected ? 600 : 400
-            color: chip.selected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurfaceVariant
+            color: chip.selected ? Signal.palette.onSignalWell : Signal.palette.inkMuted
         }
 
         MouseArea {

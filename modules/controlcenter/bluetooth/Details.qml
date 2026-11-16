@@ -66,7 +66,7 @@ StyledFlickable {
 
                         StyledText {
                             text: qsTr("Connection settings for this device")
-                            color: Colours.palette.m3outline
+                            color: Signal.palette.ruleStrong
                         }
 
                         StyledText {
@@ -74,7 +74,7 @@ StyledFlickable {
                             visible: root.session.bt.lastError !== ""
                             wrapMode: Text.WordWrap
                             text: root.session.bt.lastError
-                            color: Colours.palette.m3error
+                            color: Signal.palette.alert
                         }
 
                         StyledRect {
@@ -82,7 +82,7 @@ StyledFlickable {
                             implicitHeight: deviceStatus.implicitHeight + Appearance.padding.large * 2
 
                             radius: Appearance.rounding.normal
-                            color: Colours.tPalette.m3surfaceContainer
+                            color: Signal.tPalette.panel
 
                             ColumnLayout {
                                 id: deviceStatus
@@ -138,7 +138,7 @@ StyledFlickable {
 
                         StyledText {
                             text: qsTr("Additional settings")
-                            color: Colours.palette.m3outline
+                            color: Signal.palette.ruleStrong
                         }
 
                         StyledRect {
@@ -146,7 +146,7 @@ StyledFlickable {
                             implicitHeight: deviceProps.implicitHeight + Appearance.padding.large * 2
 
                             radius: Appearance.rounding.normal
-                            color: Colours.tPalette.m3surfaceContainer
+                            color: Signal.tPalette.panel
 
                             ColumnLayout {
                                 id: deviceProps
@@ -187,7 +187,7 @@ StyledFlickable {
 
                                         transitions: Transition {
                                             AnchorAnimation {
-                                                duration: Appearance.anim.durations.normal
+                                                duration: Appearance.anim.durations.medium
                                                 easing.type: Easing.BezierSpline
                                                 easing.bezierCurve: Appearance.anim.curves.standard
                                             }
@@ -202,7 +202,7 @@ StyledFlickable {
                                             anchors.left: parent.left
 
                                             text: qsTr("Device name")
-                                            color: Colours.palette.m3outline
+                                            color: Signal.palette.ruleStrong
                                             font.pointSize: Appearance.font.size.small
                                         }
 
@@ -228,7 +228,7 @@ StyledFlickable {
                                             background: StyledRect {
                                                 radius: Appearance.rounding.small
                                                 border.width: 2
-                                                border.color: Colours.palette.m3primary
+                                                border.color: Signal.palette.signal
                                                 opacity: root.session.bt.editingDeviceName ? 1 : 0
 
                                                 Behavior on border.color {
@@ -251,12 +251,12 @@ StyledFlickable {
                                         implicitHeight: cancelEditIcon.implicitHeight + Appearance.padding.smaller * 2
 
                                         radius: Appearance.rounding.small
-                                        color: Colours.palette.m3secondaryContainer
+                                        color: Signal.palette.cueWell
                                         opacity: root.session.bt.editingDeviceName ? 1 : 0
                                         scale: root.session.bt.editingDeviceName ? 1 : 0.5
 
                                         Interactive {
-                                            color: Colours.palette.m3onSecondaryContainer
+                                            color: Signal.palette.onCueWell
                                             disabled: !root.session.bt.editingDeviceName
 
                                             function onClicked(): void {
@@ -265,13 +265,13 @@ StyledFlickable {
                                             }
                                         }
 
-                                        MaterialIcon {
+                                        Glyph {
                                             id: cancelEditIcon
 
                                             anchors.centerIn: parent
                                             animate: true
-                                            text: "cancel"
-                                            color: Colours.palette.m3onSecondaryContainer
+                                            name: "cancel"
+                                            color: Signal.palette.onCueWell
                                         }
 
                                         Behavior on opacity {
@@ -280,8 +280,8 @@ StyledFlickable {
 
                                         Behavior on scale {
                                             Anim {
-                                                duration: Appearance.anim.durations.expressiveFastSpatial
-                                                easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+                                                duration: Appearance.anim.durations.settleFast
+                                                easing.bezierCurve: Appearance.anim.curves.settleFast
                                             }
                                         }
                                     }
@@ -291,10 +291,10 @@ StyledFlickable {
                                         implicitHeight: editIcon.implicitHeight + Appearance.padding.smaller * 2
 
                                         radius: root.session.bt.editingDeviceName ? Appearance.rounding.small : implicitHeight / 2 * Math.min(1, Appearance.rounding.scale)
-                                        color: Qt.alpha(Colours.palette.m3primary, root.session.bt.editingDeviceName ? 1 : 0)
+                                        color: Qt.alpha(Signal.palette.signal, root.session.bt.editingDeviceName ? 1 : 0)
 
                                         Interactive {
-                                            color: root.session.bt.editingDeviceName ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
+                                            color: root.session.bt.editingDeviceName ? Signal.palette.onSignal : Signal.palette.ink
 
                                             function onClicked(): void {
                                                 root.session.bt.editingDeviceName = !root.session.bt.editingDeviceName;
@@ -305,13 +305,13 @@ StyledFlickable {
                                             }
                                         }
 
-                                        MaterialIcon {
+                                        Glyph {
                                             id: editIcon
 
                                             anchors.centerIn: parent
                                             animate: true
-                                            text: root.session.bt.editingDeviceName ? "check_circle" : "edit"
-                                            color: root.session.bt.editingDeviceName ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
+                                            name: root.session.bt.editingDeviceName ? "circle-check" : "edit"
+                                            color: root.session.bt.editingDeviceName ? Signal.palette.onSignal : Signal.palette.ink
                                         }
 
                                         Behavior on radius {
@@ -351,7 +351,7 @@ StyledFlickable {
 
                         StyledText {
                             text: qsTr("Information about this device")
-                            color: Colours.palette.m3outline
+                            color: Signal.palette.ruleStrong
                         }
 
                         StyledRect {
@@ -359,7 +359,7 @@ StyledFlickable {
                             implicitHeight: deviceInfo.implicitHeight + Appearance.padding.large * 2
 
                             radius: Appearance.rounding.normal
-                            color: Colours.tPalette.m3surfaceContainer
+                            color: Signal.tPalette.panel
 
                             ColumnLayout {
                                 id: deviceInfo
@@ -386,7 +386,7 @@ StyledFlickable {
                                         Layout.fillWidth: true
                                         Layout.fillHeight: true
                                         radius: Appearance.rounding.full
-                                        color: Colours.palette.m3secondaryContainer
+                                        color: Signal.palette.cueWell
 
                                         StyledRect {
                                             anchors.left: parent.left
@@ -396,7 +396,7 @@ StyledFlickable {
 
                                             implicitWidth: root.device?.batteryAvailable ? batteryPercent.width * root.device.battery : 0
                                             radius: Appearance.rounding.full
-                                            color: Colours.palette.m3primary
+                                            color: Signal.palette.signal
                                         }
                                     }
                                 }
@@ -408,7 +408,7 @@ StyledFlickable {
 
                                 StyledText {
                                     text: root.device?.dbusPath ?? ""
-                                    color: Colours.palette.m3outline
+                                    color: Signal.palette.ruleStrong
                                     font.pointSize: Appearance.font.size.small
                                 }
 
@@ -419,7 +419,7 @@ StyledFlickable {
 
                                 StyledText {
                                     text: root.device?.address ?? ""
-                                    color: Colours.palette.m3outline
+                                    color: Signal.palette.ruleStrong
                                     font.pointSize: Appearance.font.size.small
                                 }
 
@@ -430,7 +430,7 @@ StyledFlickable {
 
                                 StyledText {
                                     text: root.device?.bonded ? qsTr("Yes") : qsTr("No")
-                                    color: Colours.palette.m3outline
+                                    color: Signal.palette.ruleStrong
                                     font.pointSize: Appearance.font.size.small
                                 }
 
@@ -441,7 +441,7 @@ StyledFlickable {
 
                                 StyledText {
                                     text: root.device?.deviceName ?? ""
-                                    color: Colours.palette.m3outline
+                                    color: Signal.palette.ruleStrong
                                     font.pointSize: Appearance.font.size.small
                                 }
                             }
@@ -463,19 +463,19 @@ StyledFlickable {
             model: ListModel {
                 ListElement {
                     name: "trust"
-                    icon: "handshake"
+                    icon: "heart-handshake"
                 }
                 ListElement {
                     name: "block"
-                    icon: "block"
+                    icon: "ban"
                 }
                 ListElement {
                     name: "pair"
-                    icon: "missing_controller"
+                    icon: "device-gamepad-2"
                 }
                 ListElement {
                     name: "connect"
-                    icon: "bluetooth_connected"
+                    icon: "bluetooth-connected"
                 }
             }
 
@@ -490,7 +490,7 @@ StyledFlickable {
                 implicitHeight: fabMenuItemInner.implicitHeight + Appearance.padding.larger * 2
 
                 radius: Appearance.rounding.full
-                color: Colours.palette.m3primaryContainer
+                color: Signal.palette.signalWell
 
                 opacity: 0
 
@@ -511,17 +511,17 @@ StyledFlickable {
 
                         SequentialAnimation {
                             PauseAnimation {
-                                duration: (fabMenu.count - 1 - fabMenuItem.index) * Appearance.anim.durations.small / 8
+                                duration: (fabMenu.count - 1 - fabMenuItem.index) * Appearance.anim.durations.short / 8
                             }
                             ParallelAnimation {
                                 Anim {
                                     property: "implicitWidth"
-                                    duration: Appearance.anim.durations.expressiveFastSpatial
-                                    easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+                                    duration: Appearance.anim.durations.settleFast
+                                    easing.bezierCurve: Appearance.anim.curves.settleFast
                                 }
                                 Anim {
                                     property: "opacity"
-                                    duration: Appearance.anim.durations.small
+                                    duration: Appearance.anim.durations.short
                                 }
                             }
                         }
@@ -531,17 +531,17 @@ StyledFlickable {
 
                         SequentialAnimation {
                             PauseAnimation {
-                                duration: fabMenuItem.index * Appearance.anim.durations.small / 8
+                                duration: fabMenuItem.index * Appearance.anim.durations.short / 8
                             }
                             ParallelAnimation {
                                 Anim {
                                     property: "implicitWidth"
-                                    duration: Appearance.anim.durations.expressiveFastSpatial
-                                    easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+                                    duration: Appearance.anim.durations.settleFast
+                                    easing.bezierCurve: Appearance.anim.curves.settleFast
                                 }
                                 Anim {
                                     property: "opacity"
-                                    duration: Appearance.anim.durations.small
+                                    duration: Appearance.anim.durations.short
                                 }
                             }
                         }
@@ -589,22 +589,21 @@ StyledFlickable {
                     spacing: Appearance.spacing.normal
                     opacity: 0
 
-                    MaterialIcon {
-                        text: fabMenuItem.modelData.icon
-                        color: Colours.palette.m3onPrimaryContainer
-                        fill: 1
+                    Glyph {
+                        name: fabMenuItem.modelData.icon
+                        color: Signal.palette.onSignalWell
                     }
 
                     StyledText {
                         animate: true
                         text: (root.device && root.device[`${fabMenuItem.modelData.name}ed`] ? fabMenuItem.modelData.name === "connect" ? "dis" : "un" : "") + fabMenuItem.modelData.name
-                        color: Colours.palette.m3onPrimaryContainer
+                        color: Signal.palette.onSignalWell
                         font.capitalization: Font.Capitalize
                         Layout.preferredWidth: implicitWidth
 
                         Behavior on Layout.preferredWidth {
                             Anim {
-                                duration: Appearance.anim.durations.small
+                                duration: Appearance.anim.durations.short
                             }
                         }
                     }
@@ -632,7 +631,7 @@ StyledFlickable {
             implicitHeight: 64
 
             radius: Appearance.rounding.normal
-            color: root.session.bt.fabMenuOpen ? Colours.palette.m3primary : Colours.palette.m3primaryContainer
+            color: root.session.bt.fabMenuOpen ? Signal.palette.signal : Signal.palette.signalWell
 
             states: State {
                 name: "expanded"
@@ -649,8 +648,8 @@ StyledFlickable {
             transitions: Transition {
                 Anim {
                     properties: "implicitWidth,implicitHeight"
-                    duration: Appearance.anim.durations.expressiveFastSpatial
-                    easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+                    duration: Appearance.anim.durations.settleFast
+                    easing.bezierCurve: Appearance.anim.curves.settleFast
                 }
                 Anim {
                     properties: "radius,font.pointSize"
@@ -667,22 +666,21 @@ StyledFlickable {
             Interactive {
                 id: fabState
 
-                color: root.session.bt.fabMenuOpen ? Colours.palette.m3onPrimary : Colours.palette.m3onPrimaryContainer
+                color: root.session.bt.fabMenuOpen ? Signal.palette.onSignal : Signal.palette.onSignalWell
 
                 function onClicked(): void {
                     root.session.bt.fabMenuOpen = !root.session.bt.fabMenuOpen;
                 }
             }
 
-            MaterialIcon {
+            Glyph {
                 id: fab
 
                 anchors.centerIn: parent
                 animate: true
-                text: root.session.bt.fabMenuOpen ? "close" : "settings"
-                color: root.session.bt.fabMenuOpen ? Colours.palette.m3onPrimary : Colours.palette.m3onPrimaryContainer
+                name: root.session.bt.fabMenuOpen ? "x" : "settings"
+                color: root.session.bt.fabMenuOpen ? Signal.palette.onSignal : Signal.palette.onSignalWell
                 font.pointSize: Appearance.font.size.large
-                fill: 1
             }
         }
     }

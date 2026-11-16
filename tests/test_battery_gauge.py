@@ -16,7 +16,7 @@ def test_popout_uses_the_gauge_instead_of_plain_text():
 
 
 def test_gauge_uses_semantic_palette_colours_only():
-    for needle in ("m3success", "m3error", "m3secondary", "m3secondaryContainer", "Colours.on(root.fillColour)"):
+    for needle in ("phosphor", "alert", "cue", "cueWell", "Signal.on(root.fillColour)"):
         assert needle in GAUGE, needle
     code = "\n".join(line.split("//", 1)[0] for line in GAUGE.splitlines())
     assert not re.search(r'"#[0-9a-fA-F]{3,8}"', code)

@@ -25,9 +25,6 @@ ALLOWLIST = {
         "named NavRail buttons",
     "modules/controlcenter/Panes.qml":
         "focus guard: onPressed re-focuses the pane and is not accepted",
-    "modules/controlcenter/appearance/sections/ThemeModeSection.qml":
-        "hover-only live preview (acceptedButtons: Qt.NoButton); the "
-        "mode itself is chosen with named radio controls",
     "modules/dashboard/Performance.qml":
         "wheel-only disk cycling on the storage gauge; the gauge data "
         "is also rendered as text",

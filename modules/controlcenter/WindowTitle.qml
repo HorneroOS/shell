@@ -12,7 +12,7 @@ StyledRect {
     required property Session session
 
     implicitHeight: text.implicitHeight + Appearance.padding.normal
-    color: Colours.tPalette.m3surfaceContainer
+    color: Signal.tPalette.panel
 
     // Brand tile (same treatment as Welcome): the graphite logo
     // needs its paper chip to read on the title bar.
@@ -23,7 +23,7 @@ StyledRect {
         width: 30
         height: 30
         radius: 8
-        color: Colours.palette.m3inverseSurface
+        color: Signal.palette.inverse
 
         Image {
             anchors.centerIn: parent
@@ -67,11 +67,11 @@ StyledRect {
             }
         }
 
-        MaterialIcon {
+        Glyph {
             id: closeIcon
 
             anchors.centerIn: parent
-            text: "close"
+            name: "x"
         }
     }
 }

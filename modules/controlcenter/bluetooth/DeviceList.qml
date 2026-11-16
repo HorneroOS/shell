@@ -48,7 +48,7 @@ DeviceList {
             ToggleButton {
                 toggled: root.session.bt.effectiveAdapter?.enabled ?? false
                 icon: "power"
-                accent: "Tertiary"
+                accent: "phosphor"
                 iconSize: Appearance.font.size.normal
                 horizontalPadding: Appearance.padding.normal
                 verticalPadding: Appearance.padding.smaller
@@ -59,7 +59,7 @@ DeviceList {
 
             ToggleButton {
                 toggled: root.session.bt.effectiveAdapter?.discoverable ?? false
-                icon: root.smallDiscoverable ? "group_search" : ""
+                icon: root.smallDiscoverable ? "users" : ""
                 label: root.smallDiscoverable ? "" : qsTr("Discoverable")
                 iconSize: Appearance.font.size.normal
                 horizontalPadding: Appearance.padding.normal
@@ -77,7 +77,7 @@ DeviceList {
 
             ToggleButton {
                 toggled: root.session.bt.effectiveAdapter?.pairable ?? false
-                icon: "missing_controller"
+                icon: "device-gamepad-2"
                 label: root.smallPairable ? "" : qsTr("Pairable")
                 iconSize: Appearance.font.size.normal
                 horizontalPadding: Appearance.padding.normal
@@ -95,8 +95,8 @@ DeviceList {
 
             ToggleButton {
                 toggled: root.session.bt.effectiveAdapter?.discovering ?? false
-                icon: "bluetooth_searching"
-                accent: "Secondary"
+                icon: "bluetooth"
+                accent: "cue"
                 iconSize: Appearance.font.size.normal
                 horizontalPadding: Appearance.padding.normal
                 verticalPadding: Appearance.padding.smaller
@@ -113,7 +113,7 @@ DeviceList {
             ToggleButton {
                 toggled: !root.session.bt.active
                 icon: "settings"
-                accent: "Primary"
+                accent: "signal"
                 iconSize: Appearance.font.size.normal
                 horizontalPadding: Appearance.padding.normal
                 verticalPadding: Appearance.padding.smaller
@@ -141,7 +141,7 @@ DeviceList {
             width: ListView.view ? ListView.view.width : undefined
             implicitHeight: deviceInner.implicitHeight + Appearance.padding.normal * 2
 
-            color: Qt.alpha(Colours.tPalette.m3surfaceContainer, root.activeItem === modelData ? Colours.tPalette.m3surfaceContainer.a : 0)
+            color: Qt.alpha(Signal.tPalette.panel, root.activeItem === modelData ? Signal.tPalette.panel.a : 0)
             radius: Appearance.rounding.normal
 
             Accessible.role: Accessible.Button
@@ -169,26 +169,21 @@ DeviceList {
                     implicitHeight: icon.implicitHeight + Appearance.padding.normal * 2
 
                     radius: Appearance.rounding.normal
-                    color: device.connected ? Colours.palette.m3primaryContainer : (device.modelData && device.modelData.bonded) ? Colours.palette.m3secondaryContainer : Colours.tPalette.m3surfaceContainerHigh
+                    color: device.connected ? Signal.palette.signalWell : (device.modelData && device.modelData.bonded) ? Signal.palette.cueWell : Signal.tPalette.raised
 
                     StyledRect {
                         anchors.fill: parent
                         radius: parent.radius
-                        color: Qt.alpha(device.connected ? Colours.palette.m3onPrimaryContainer : (device.modelData && device.modelData.bonded) ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface, stateLayer.pressed ? 0.1 : stateLayer.containsMouse ? 0.08 : 0)
+                        color: Qt.alpha(device.connected ? Signal.palette.onSignalWell : (device.modelData && device.modelData.bonded) ? Signal.palette.onCueWell : Signal.palette.ink, stateLayer.pressed ? 0.1 : stateLayer.containsMouse ? 0.08 : 0)
                     }
 
-                    MaterialIcon {
+                    Glyph {
                         id: icon
 
                         anchors.centerIn: parent
-                        text: Icons.getBluetoothIcon(device.modelData ? device.modelData.icon : "")
-                        color: device.connected ? Colours.palette.m3onPrimaryContainer : (device.modelData && device.modelData.bonded) ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                        name: Icons.getBluetoothIcon(device.modelData ? device.modelData.icon : "")
+                        color: device.connected ? Signal.palette.onSignalWell : (device.modelData && device.modelData.bonded) ? Signal.palette.onCueWell : Signal.palette.ink
                         font.pointSize: Appearance.font.size.large
-                        fill: device.connected ? 1 : 0
-
-                        Behavior on fill {
-                            Anim {}
-                        }
                     }
                 }
 
@@ -206,7 +201,7 @@ DeviceList {
                     StyledText {
                         Layout.fillWidth: true
                         text: (device.modelData ? device.modelData.address : "") + (device.connected ? qsTr(" (Connected)") : (device.modelData && device.modelData.bonded) ? qsTr(" (Paired)") : "")
-                        color: Colours.palette.m3outline
+                        color: Signal.palette.ruleStrong
                         font.pointSize: Appearance.font.size.small
                         elide: Text.ElideRight
                     }
@@ -219,7 +214,7 @@ DeviceList {
                     implicitHeight: connectIcon.implicitHeight + Appearance.padding.smaller * 2
 
                     radius: Appearance.rounding.full
-                    color: Qt.alpha(Colours.palette.m3primaryContainer, device.connected ? 1 : 0)
+                    color: Qt.alpha(Signal.palette.signalWell, device.connected ? 1 : 0)
 
                     CircularIndicator {
                         anchors.fill: parent
@@ -227,7 +222,7 @@ DeviceList {
                     }
 
                     Interactive {
-                        color: device.connected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+                        color: device.connected ? Signal.palette.onSignalWell : Signal.palette.ink
                         disabled: device.loading
 
                         function onClicked(): void {
@@ -241,13 +236,13 @@ DeviceList {
                         }
                     }
 
-                    MaterialIcon {
+                    Glyph {
                         id: connectIcon
 
                         anchors.centerIn: parent
                         animate: true
-                        text: device.connected ? "link_off" : "link"
-                        color: device.connected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+                        name: device.connected ? "link-off" : "link"
+                        color: device.connected ? Signal.palette.onSignalWell : Signal.palette.ink
 
                         opacity: device.loading ? 0 : 1
 
@@ -265,13 +260,13 @@ DeviceList {
         visible: !root.session.bt.hasAdapter
         wrapMode: Text.WordWrap
         text: qsTr("No Bluetooth adapter found. The Bluetooth service may be stopped, or this machine has no Bluetooth hardware.")
-        color: Colours.palette.m3outline
+        color: Signal.palette.ruleStrong
     }
 
     TextButton {
         visible: !root.session.bt.hasAdapter
-        inactiveColour: Colours.palette.m3secondaryContainer
-        inactiveOnColour: Colours.palette.m3onSecondaryContainer
+        inactiveColour: Signal.palette.cueWell
+        inactiveOnColour: Signal.palette.onCueWell
         text: qsTr("Restart Bluetooth service")
 
         onClicked: root.session.bt.restartService()
@@ -282,7 +277,7 @@ DeviceList {
         visible: root.session.bt.hasAdapter && !root.session.bt.adapterPowered
         wrapMode: Text.WordWrap
         text: qsTr("Bluetooth is off. Turn it on to find nearby devices.")
-        color: Colours.palette.m3outline
+        color: Signal.palette.ruleStrong
     }
 
     StyledText {
@@ -290,7 +285,7 @@ DeviceList {
         visible: root.session.bt.hasAdapter && root.session.bt.adapterPowered && Bluetooth.devices.values.length === 0
         wrapMode: Text.WordWrap
         text: qsTr("No devices found. Use Scan to look for nearby devices.")
-        color: Colours.palette.m3outline
+        color: Signal.palette.ruleStrong
     }
 
     StyledText {
@@ -298,13 +293,13 @@ DeviceList {
         visible: root.session.bt.lastError !== ""
         wrapMode: Text.WordWrap
         text: root.session.bt.lastError
-        color: Colours.palette.m3error
+        color: Signal.palette.alert
     }
 
     TextButton {
         visible: root.session.bt.lastError !== ""
-        inactiveColour: Colours.palette.m3secondaryContainer
-        inactiveOnColour: Colours.palette.m3onSecondaryContainer
+        inactiveColour: Signal.palette.cueWell
+        inactiveOnColour: Signal.palette.onCueWell
         text: qsTr("Dismiss")
 
         onClicked: root.session.bt.clearError()

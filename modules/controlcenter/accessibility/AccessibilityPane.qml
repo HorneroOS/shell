@@ -121,14 +121,14 @@ Item {
                     Layout.fillWidth: true
                     text: qsTr("Make HorneroOS easier to see and calmer to use. Changes apply instantly.")
                     font.pointSize: Appearance.font.size.small
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                     wrapMode: Text.Wrap
                 }
 
                 StyledRect {
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
-                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: visionCol.implicitHeight + Appearance.padding.large * 2
 
                     ColumnLayout {
@@ -157,7 +157,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Uses an opaque high-contrast palette across Hornero Shell. Other applications keep their current theme.")
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
 
@@ -192,7 +192,7 @@ Item {
                             visible: Config.appearance.highContrast
                             text: qsTr("Transparency is disabled while high contrast is on.")
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
                     }
@@ -201,7 +201,7 @@ Item {
                 StyledRect {
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
-                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: motionCol.implicitHeight + Appearance.padding.large * 2
 
                     ColumnLayout {
@@ -236,6 +236,24 @@ Item {
                         }
 
                         SwitchRow {
+                            label: qsTr("Reduce motion")
+                            checked: Config.appearance.reducedMotion
+                            onToggled: checked => {
+                                Config.appearance.reducedMotion = checked;
+                                Config.save();
+                            }
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            visible: SystemMotion.reduced
+                            text: qsTr("Your system asks for reduced motion, so the shell already keeps movement to short fades.")
+                            font.pointSize: Appearance.font.size.small
+                            color: Signal.palette.inkMuted
+                            wrapMode: Text.Wrap
+                        }
+
+                        SwitchRow {
                             label: qsTr("Calm Javi (reduced motion)")
                             checked: CompanionStore.reducedMotion
                             onToggled: checked => CompanionStore.reducedMotion = checked
@@ -245,7 +263,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Javi's chat also honors reduced motion: no pulse or scanline shimmer while it is on.")
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3outline
+                            color: Signal.palette.ruleStrong
                             wrapMode: Text.Wrap
                         }
                     }
@@ -254,7 +272,7 @@ Item {
                 StyledRect {
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
-                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: cursorCol.implicitHeight + Appearance.padding.large * 2
 
                     ColumnLayout {
@@ -274,7 +292,7 @@ Item {
                             Layout.fillWidth: true
                             text: root.cursorText
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
 
@@ -304,7 +322,7 @@ Item {
                             visible: root.cursorAction !== ""
                             text: root.cursorAction
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
 
@@ -312,7 +330,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Applies to the Hyprland cursor immediately and is restored at login; other apps pick up the size when they start.")
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3outline
+                            color: Signal.palette.ruleStrong
                             wrapMode: Text.Wrap
                         }
                     }

@@ -38,7 +38,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
 
-                color: Colours.tPalette.m3surfaceContainer
+                color: Signal.tPalette.panel
                 radius: Appearance.rounding.normal
 
                 Details {
@@ -50,7 +50,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredHeight: buttons.implicitHeight
 
-                color: Colours.tPalette.m3surfaceContainer
+                color: Signal.tPalette.panel
                 radius: Appearance.rounding.normal
 
                 Buttons {

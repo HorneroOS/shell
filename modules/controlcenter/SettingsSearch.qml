@@ -141,10 +141,10 @@ Popup {
     }
 
     background: StyledRect {
-        color: Colours.tPalette.m3surfaceContainerHigh
+        color: Signal.tPalette.raised
         radius: Appearance.rounding.large
         border.width: 1
-        border.color: Colours.palette.m3onSurfaceVariant
+        border.color: Signal.palette.inkMuted
     }
 
     Overlay.modal: Rectangle {
@@ -160,9 +160,9 @@ Popup {
             Layout.topMargin: Appearance.padding.larger
             spacing: Appearance.spacing.normal
 
-            MaterialIcon {
-                text: "search"
-                color: Colours.palette.m3primary
+            Glyph {
+                name: "search"
+                color: Signal.palette.signal
                 font.pointSize: Appearance.font.size.large
             }
 
@@ -175,7 +175,7 @@ Popup {
 
             StyledText {
                 text: "ESC"
-                color: Colours.palette.m3onSurfaceVariant
+                color: Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.smaller
             }
         }
@@ -225,7 +225,7 @@ Popup {
         Rectangle {
             Layout.fillWidth: true
             height: 1
-            color: Colours.palette.m3onSurfaceVariant
+            color: Signal.palette.inkMuted
         }
 
         Item {
@@ -258,19 +258,19 @@ Popup {
                         anchors.fill: parent
                         implicitHeight: Appearance.padding.larger * 2 + resultIcon.implicitHeight
                         radius: Appearance.rounding.normal
-                        color: row.index === root.session.searchSelection ? Colours.palette.m3secondaryContainer : "transparent"
+                        color: row.index === root.session.searchSelection ? Signal.palette.cueWell : "transparent"
 
                         StateLayer {
                             onClicked: root.selectResult(row.index)
                         }
 
-                        MaterialIcon {
+                        Glyph {
                             id: resultIcon
                             anchors.left: parent.left
                             anchors.leftMargin: Appearance.padding.normal
                             anchors.verticalCenter: parent.verticalCenter
-                            text: row.modelData.icon
-                            color: row.index === root.session.searchSelection ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3primary
+                            name: row.modelData.icon
+                            color: row.index === root.session.searchSelection ? Signal.palette.onCueWell : Signal.palette.signal
                         }
 
                         ColumnLayout {
@@ -284,7 +284,7 @@ Popup {
                             StyledText {
                                 Layout.fillWidth: true
                                 text: row.modelData.title
-                                color: row.index === root.session.searchSelection ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                                color: row.index === root.session.searchSelection ? Signal.palette.onCueWell : Signal.palette.ink
                                 font.weight: 500
                                 elide: Text.ElideRight
                             }
@@ -292,7 +292,7 @@ Popup {
                             StyledText {
                                 Layout.fillWidth: true
                                 text: row.modelData.detail
-                                color: row.index === root.session.searchSelection ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
+                                color: row.index === root.session.searchSelection ? Signal.palette.onCueWell : Signal.palette.inkMuted
                                 font.pointSize: Appearance.font.size.smaller
                                 elide: Text.ElideRight
                             }
@@ -304,7 +304,7 @@ Popup {
                     anchors.centerIn: parent
                     visible: root.results.length === 0
                     text: root.session.searchQuery.trim().length > 0 ? qsTr("No settings found. Try a shorter search.") : qsTr("Type to find a page or setting")
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                 }
             }
         }
@@ -313,7 +313,7 @@ Popup {
             Layout.alignment: Qt.AlignHCenter
             Layout.bottomMargin: Appearance.padding.normal
             text: qsTr("↑ ↓ move     Enter open     Esc close")
-            color: Colours.palette.m3onSurfaceVariant
+            color: Signal.palette.inkMuted
             font.pointSize: Appearance.font.size.smaller
         }
     }

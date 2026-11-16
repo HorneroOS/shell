@@ -29,7 +29,7 @@ StyledRect {
 
     clip: true
     radius: Appearance.rounding.normal
-    color: root.urgency === "critical" ? Colours.palette.m3secondaryContainer : Colours.layer(Colours.palette.m3surfaceContainerHigh, 2)
+    color: root.urgency === "critical" ? Signal.palette.cueWell : Signal.layer(Signal.palette.raised, 2)
 
     RowLayout {
         id: content
@@ -65,7 +65,7 @@ StyledRect {
                 ColouredIcon {
                     implicitSize: Math.round(Config.notifs.sizes.image * 0.6)
                     source: Quickshell.iconPath(root.appIcon)
-                    colour: root.urgency === "critical" ? Colours.palette.m3onError : root.urgency === "low" ? Colours.palette.m3onSurface : Colours.palette.m3onSecondaryContainer
+                    colour: root.urgency === "critical" ? Signal.palette.onAlert : root.urgency === "low" ? Signal.palette.ink : Signal.palette.onCueWell
                     layer.enabled: root.appIcon.endsWith("symbolic")
                 }
             }
@@ -73,16 +73,16 @@ StyledRect {
             Component {
                 id: materialIconComp
 
-                MaterialIcon {
-                    text: Icons.getNotifIcon(root.notifs[0]?.summary, root.urgency)
-                    color: root.urgency === "critical" ? Colours.palette.m3onError : root.urgency === "low" ? Colours.palette.m3onSurface : Colours.palette.m3onSecondaryContainer
+                Glyph {
+                    name: Icons.getNotifIcon(root.notifs[0]?.summary, root.urgency)
+                    color: root.urgency === "critical" ? Signal.palette.onAlert : root.urgency === "low" ? Signal.palette.ink : Signal.palette.onCueWell
                     font.pointSize: Appearance.font.size.large
                 }
             }
 
             ClippingRectangle {
                 anchors.fill: parent
-                color: root.urgency === "critical" ? Colours.palette.m3error : root.urgency === "low" ? Colours.layer(Colours.palette.m3surfaceContainerHighest, 3) : Colours.palette.m3secondaryContainer
+                color: root.urgency === "critical" ? Signal.palette.alert : root.urgency === "low" ? Signal.layer(Signal.palette.lifted, 3) : Signal.palette.cueWell
                 radius: Appearance.rounding.full
 
                 Loader {
@@ -100,14 +100,14 @@ StyledRect {
                     implicitWidth: Config.notifs.sizes.badge
                     implicitHeight: Config.notifs.sizes.badge
 
-                    color: root.urgency === "critical" ? Colours.palette.m3error : root.urgency === "low" ? Colours.palette.m3surfaceContainerHighest : Colours.palette.m3secondaryContainer
+                    color: root.urgency === "critical" ? Signal.palette.alert : root.urgency === "low" ? Signal.palette.lifted : Signal.palette.cueWell
                     radius: Appearance.rounding.full
 
                     ColouredIcon {
                         anchors.centerIn: parent
                         implicitSize: Math.round(Config.notifs.sizes.badge * 0.6)
                         source: Quickshell.iconPath(root.appIcon)
-                        colour: root.urgency === "critical" ? Colours.palette.m3onError : root.urgency === "low" ? Colours.palette.m3onSurface : Colours.palette.m3onSecondaryContainer
+                        colour: root.urgency === "critical" ? Signal.palette.onAlert : root.urgency === "low" ? Signal.palette.ink : Signal.palette.onCueWell
                         layer.enabled: root.appIcon.endsWith("symbolic")
                     }
                 }
@@ -128,7 +128,7 @@ StyledRect {
                 StyledText {
                     Layout.fillWidth: true
                     text: root.modelData
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                     font.pointSize: Appearance.font.size.small
                     elide: Text.ElideRight
                 }
@@ -136,7 +136,7 @@ StyledRect {
                 StyledText {
                     animate: true
                     text: root.notifs[0]?.timeStr ?? ""
-                    color: Colours.palette.m3outline
+                    color: Signal.palette.ruleStrong
                     font.pointSize: Appearance.font.size.small
                 }
 
@@ -144,14 +144,14 @@ StyledRect {
                     implicitWidth: expandBtn.implicitWidth + Appearance.padding.smaller * 2
                     implicitHeight: groupCount.implicitHeight + Appearance.padding.small
 
-                    color: root.urgency === "critical" ? Colours.palette.m3error : Colours.layer(Colours.palette.m3surfaceContainerHighest, 2)
+                    color: root.urgency === "critical" ? Signal.palette.alert : Signal.layer(Signal.palette.lifted, 2)
                     radius: Appearance.rounding.full
 
                     opacity: root.notifs.length > Config.notifs.groupPreviewNum ? 1 : 0
                     Layout.preferredWidth: root.notifs.length > Config.notifs.groupPreviewNum ? implicitWidth : 0
 
                     StateLayer {
-                        color: root.urgency === "critical" ? Colours.palette.m3onError : Colours.palette.m3onSurface
+                        color: root.urgency === "critical" ? Signal.palette.onAlert : Signal.palette.ink
 
                         function onClicked(): void {
                             root.expanded = !root.expanded;
@@ -170,15 +170,15 @@ StyledRect {
                             Layout.leftMargin: Appearance.padding.small / 2
                             animate: true
                             text: root.notifs.length
-                            color: root.urgency === "critical" ? Colours.palette.m3onError : Colours.palette.m3onSurface
+                            color: root.urgency === "critical" ? Signal.palette.onAlert : Signal.palette.ink
                             font.pointSize: Appearance.font.size.small
                         }
 
-                        MaterialIcon {
+                        Glyph {
                             Layout.rightMargin: -Appearance.padding.small / 2
                             animate: true
-                            text: root.expanded ? "expand_less" : "expand_more"
-                            color: root.urgency === "critical" ? Colours.palette.m3onError : Colours.palette.m3onSurface
+                            name: root.expanded ? "chevron-up" : "chevron-down"
+                            color: root.urgency === "critical" ? Signal.palette.onAlert : Signal.palette.ink
                         }
                     }
 
@@ -272,8 +272,8 @@ StyledRect {
 
     Behavior on implicitHeight {
         Anim {
-            duration: Appearance.anim.durations.expressiveDefaultSpatial
-            easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+            duration: Appearance.anim.durations.settle
+            easing.bezierCurve: Appearance.anim.curves.settle
         }
     }
 
@@ -287,7 +287,7 @@ StyledRect {
         text: {
             const summary = modelData.summary.replace(/\n/g, " ");
             const body = modelData.body.replace(/\n/g, " ");
-            const colour = root.urgency === "critical" ? Colours.palette.m3secondary : Colours.palette.m3outline;
+            const colour = root.urgency === "critical" ? Signal.palette.cue : Signal.palette.ruleStrong;
 
             if (metrics.text === metrics.elidedText)
                 return `${summary} <span style='color:${colour}'>${body}</span>`;
@@ -298,7 +298,7 @@ StyledRect {
 
             return `${summary} <span style='color:${colour}'>${body.slice(0, t - summary.length)}...</span>`;
         }
-        color: root.urgency === "critical" ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+        color: root.urgency === "critical" ? Signal.palette.onCueWell : Signal.palette.ink
 
         Component.onCompleted: modelData.lock(this)
         Component.onDestruction: modelData.unlock(this)

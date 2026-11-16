@@ -21,21 +21,21 @@ Row {
         icon: "memory"
         label: qsTr("CPU")
         value: SystemUsage.cpuPerc
-        colour: Colours.palette.m3primary
+        colour: Signal.palette.signal
     }
 
     Resource {
-        icon: "memory_alt"
+        icon: "cpu-2"
         label: qsTr("Memory")
         value: SystemUsage.memPerc
-        colour: Colours.palette.m3secondary
+        colour: Signal.palette.cue
     }
 
     Resource {
-        icon: "hard_disk"
+        icon: "device-sd-card"
         label: qsTr("Storage")
         value: SystemUsage.storagePerc
-        colour: Colours.palette.m3tertiary
+        colour: Signal.palette.phosphor
     }
 
     component Resource: Item {
@@ -76,7 +76,7 @@ Row {
 
             implicitWidth: Config.dashboard.sizes.resourceProgessThickness
 
-            color: Colours.layer(Colours.palette.m3surfaceContainerHigh, 2)
+            color: Signal.layer(Signal.palette.raised, 2)
             radius: Appearance.rounding.full
 
             StyledRect {
@@ -90,18 +90,18 @@ Row {
             }
         }
 
-        MaterialIcon {
+        Glyph {
             id: icon
 
             anchors.bottom: parent.bottom
 
-            text: res.icon
+            name: res.icon
             color: res.colour
         }
 
         Behavior on value {
             Anim {
-                duration: Appearance.anim.durations.large
+                duration: Appearance.anim.durations.long
             }
         }
     }

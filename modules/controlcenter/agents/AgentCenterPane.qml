@@ -346,7 +346,7 @@ Item {
 
                     PaneHeader {
                         title: qsTr("Agent Center")
-                        icon: "smart_toy"
+                        icon: "robot"
                         description: qsTr("Coding assistants on this computer and Javi")
                         intro: qsTr("Coding assistants found on this computer, plus Javi, Hornero's own assistant. Choose which one Hornero uses by default. Nothing is fetched or started from this page.")
                     }
@@ -371,7 +371,7 @@ Item {
                                     Layout.fillWidth: true
                                     text: root.defaultAgent.length > 0 ? qsTr("Default: %1").arg(root.defaultAgent) : root.defaultState === "not-selected" ? qsTr("No default agent recorded. Choose one from the list below.") : qsTr("Default agent state unavailable.")
                                     wrapMode: Text.WordWrap
-                                    color: Colours.palette.m3onSurfaceVariant
+                                    color: Signal.palette.inkMuted
                                     font.pointSize: Appearance.font.size.small
                                 }
                             }
@@ -389,7 +389,7 @@ Item {
                             visible: root.loading
                             text: qsTr("Reading agents…")
                             wrapMode: Text.WordWrap
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.small
                         }
 
@@ -398,7 +398,7 @@ Item {
                             visible: !root.loading && root.listError.length > 0
                             text: root.listError
                             wrapMode: Text.WordWrap
-                            color: Colours.palette.m3error
+                            color: Signal.palette.alert
                             font.pointSize: Appearance.font.size.small
                         }
 
@@ -407,7 +407,7 @@ Item {
                             visible: !root.loading && root.listError.length === 0 && root.agentsModel.length === 0
                             text: qsTr("No agents reported by horneroctl.")
                             wrapMode: Text.WordWrap
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.small
                         }
 
@@ -416,7 +416,7 @@ Item {
                             visible: root.actionError.length > 0
                             text: root.actionError
                             wrapMode: Text.WordWrap
-                            color: Colours.palette.m3error
+                            color: Signal.palette.alert
                             font.pointSize: Appearance.font.size.small
                         }
 
@@ -425,7 +425,7 @@ Item {
                             visible: root.actionMessage.length > 0
                             text: root.actionMessage
                             wrapMode: Text.WordWrap
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.small
                         }
 
@@ -444,7 +444,7 @@ Item {
                                 Layout.fillWidth: true
                                 implicitHeight: agentLayout.implicitHeight + Appearance.padding.large * 2
                                 radius: Appearance.rounding.normal
-                                color: agentRow.isDefault ? Colours.palette.m3secondaryContainer : Colours.tPalette.m3surfaceContainerHigh
+                                color: agentRow.isDefault ? Signal.palette.cueWell : Signal.tPalette.raised
 
                                 RowLayout {
                                     id: agentLayout
@@ -458,13 +458,13 @@ Item {
                                         implicitWidth: 44
                                         implicitHeight: 44
                                         radius: Appearance.rounding.full
-                                        color: agentRow.isDefault ? Colours.palette.m3secondary : Colours.palette.m3primaryContainer
+                                        color: agentRow.isDefault ? Signal.palette.cue : Signal.palette.signalWell
 
-                                        MaterialIcon {
+                                        Glyph {
                                             anchors.centerIn: parent
-                                            text: agentRow.modelData.id.indexOf("javi") >= 0 ? "raven" : "smart_toy"
+                                            name: agentRow.modelData.id.indexOf("javi") >= 0 ? "feather" : "robot"
                                             font.pointSize: Appearance.font.size.large
-                                            color: agentRow.isDefault ? Colours.palette.m3onSecondary : Colours.palette.m3onPrimaryContainer
+                                            color: agentRow.isDefault ? Signal.palette.onCue : Signal.palette.onSignalWell
                                         }
                                     }
 
@@ -480,7 +480,7 @@ Item {
                                                 text: agentRow.modelData.name
                                                 font.pointSize: Appearance.font.size.normal
                                                 font.weight: 600
-                                                color: agentRow.isDefault ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                                                color: agentRow.isDefault ? Signal.palette.onCueWell : Signal.palette.ink
                                             }
 
                                             AgentChip {
@@ -518,7 +518,7 @@ Item {
                                             Layout.fillWidth: true
                                             text: (agentRow.modelData.installed ? (agentRow.modelData.resolvedPath.length > 0 ? agentRow.modelData.resolvedPath : agentRow.modelData.exec) + "  ·  " : "") + qsTr("Version: not reported by horneroctl")
                                             elide: Text.ElideMiddle
-                                            color: Colours.palette.m3onSurfaceVariant
+                                            color: Signal.palette.inkMuted
                                             font.pointSize: Appearance.font.size.small
                                         }
                                     }
@@ -550,7 +550,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Recording a default only saves your choice; it does not start the agent. A launch proposal shows the command without running it.")
                             wrapMode: Text.WordWrap
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.small
                         }
 
@@ -559,7 +559,7 @@ Item {
                             visible: root.proposalText.length > 0
                             text: root.proposalText
                             wrapMode: Text.WordWrap
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.small
                         }
                     }
@@ -576,7 +576,7 @@ Item {
                             Layout.fillWidth: true
                             text: !root.assistantKnown ? qsTr("Assistant status unavailable (is horneroctl installed?).") : root.assistantEnabled ? qsTr("Enabled · Gateway: %1 · Hermes: %2").arg(root.assistantGateway.length > 0 ? root.assistantGateway : qsTr("unknown")).arg(root.assistantHermes) : qsTr("Disabled")
                             wrapMode: Text.WordWrap
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                         }
 
                         StyledText {
@@ -584,7 +584,7 @@ Item {
                             visible: root.assistantMessage.length > 0
                             text: root.assistantMessage
                             wrapMode: Text.WordWrap
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.small
                         }
 
@@ -592,7 +592,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Manage Javi in the Javi pane; this pane only reports assistant state.")
                             wrapMode: Text.WordWrap
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.small
                         }
                     }
@@ -609,7 +609,7 @@ Item {
                             Layout.fillWidth: true
                             text: root.configSummary.length > 0 ? root.configSummary : qsTr("Reading agent config…")
                             wrapMode: Text.WordWrap
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.small
                         }
                     }
@@ -623,12 +623,12 @@ Item {
 
         property string label
         property string tone: "neutral"
-        readonly property color fg: chip.tone === "good" ? Colours.palette.m3success : chip.tone === "bad" ? Colours.palette.m3error : chip.tone === "primary" ? Colours.palette.m3onPrimary : Colours.palette.m3onSurfaceVariant
+        readonly property color fg: chip.tone === "good" ? Signal.palette.phosphor : chip.tone === "bad" ? Signal.palette.alert : chip.tone === "primary" ? Signal.palette.onSignal : Signal.palette.inkMuted
 
         implicitWidth: chipText.implicitWidth + Appearance.padding.normal * 2
         implicitHeight: chipText.implicitHeight + Appearance.padding.small
         radius: Appearance.rounding.full
-        color: chip.tone === "primary" ? Colours.palette.m3primary : Qt.alpha(chip.fg, 0.14)
+        color: chip.tone === "primary" ? Signal.palette.signal : Qt.alpha(chip.fg, 0.14)
 
         StyledText {
             id: chipText

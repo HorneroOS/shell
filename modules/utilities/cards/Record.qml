@@ -17,7 +17,7 @@ StyledRect {
     implicitHeight: layout.implicitHeight + layout.anchors.margins * 2
 
     radius: Appearance.rounding.normal
-    color: Colours.tPalette.m3surfaceContainer
+    color: Signal.tPalette.panel
 
     ColumnLayout {
         id: layout
@@ -38,16 +38,16 @@ StyledRect {
                 }
 
                 radius: Appearance.rounding.full
-                color: Recorder.running ? Colours.palette.m3secondary : Colours.palette.m3secondaryContainer
+                color: Recorder.running ? Signal.palette.cue : Signal.palette.cueWell
 
-                MaterialIcon {
+                Glyph {
                     id: icon
 
                     anchors.centerIn: parent
                     anchors.horizontalCenterOffset: -0.5
                     anchors.verticalCenterOffset: 1.5
-                    text: "screen_record"
-                    color: Recorder.running ? Colours.palette.m3onSecondary : Colours.palette.m3onSecondaryContainer
+                    name: "video"
+                    color: Recorder.running ? Signal.palette.onCue : Signal.palette.onCueWell
                     font.pointSize: Appearance.font.size.large
                 }
             }
@@ -66,7 +66,7 @@ StyledRect {
                 StyledText {
                     Layout.fillWidth: true
                     text: Recorder.paused ? qsTr("Recording paused") : Recorder.running ? qsTr("Recording running") : qsTr("Recording off")
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                     font.pointSize: Appearance.font.size.small
                     elide: Text.ElideRight
                 }
@@ -79,25 +79,25 @@ StyledRect {
 
                 menuItems: [
                     MenuItem {
-                        icon: "fullscreen"
+                        icon: "maximize"
                         text: qsTr("Record fullscreen")
                         activeText: qsTr("Fullscreen")
                         onClicked: Recorder.start()
                     },
                     MenuItem {
-                        icon: "screenshot_region"
+                        icon: "crop"
                         text: qsTr("Record region")
                         activeText: qsTr("Region")
                         onClicked: Recorder.start(["--region"])
                     },
                     MenuItem {
-                        icon: "select_to_speak"
+                        icon: "speakerphone"
                         text: qsTr("Record fullscreen with sound")
                         activeText: qsTr("Fullscreen")
                         onClicked: Recorder.start(["--sound"])
                     },
                     MenuItem {
-                        icon: "volume_up"
+                        icon: "volume"
                         text: qsTr("Record region with sound")
                         activeText: qsTr("Region")
                         onClicked: Recorder.start(["--sr"])
@@ -130,15 +130,15 @@ StyledRect {
                             target: listOrControls
                             property: "scale"
                             to: 0.7
-                            duration: Appearance.anim.durations.small
-                            easing.bezierCurve: Appearance.anim.curves.standardAccel
+                            duration: Appearance.anim.durations.short
+                            easing.bezierCurve: Appearance.anim.curves.exit
                         }
                         Anim {
                             target: listOrControls
                             property: "opacity"
                             to: 0
-                            duration: Appearance.anim.durations.small
-                            easing.bezierCurve: Appearance.anim.curves.standardAccel
+                            duration: Appearance.anim.durations.short
+                            easing.bezierCurve: Appearance.anim.curves.exit
                         }
                     }
                     PropertyAction {
@@ -157,15 +157,15 @@ StyledRect {
                             target: listOrControls
                             property: "scale"
                             to: 1
-                            duration: Appearance.anim.durations.small
-                            easing.bezierCurve: Appearance.anim.curves.standardDecel
+                            duration: Appearance.anim.durations.short
+                            easing.bezierCurve: Appearance.anim.curves.enter
                         }
                         Anim {
                             target: listOrControls
                             property: "opacity"
                             to: 1
-                            duration: Appearance.anim.durations.small
-                            easing.bezierCurve: Appearance.anim.curves.standardDecel
+                            duration: Appearance.anim.durations.short
+                            easing.bezierCurve: Appearance.anim.curves.enter
                         }
                     }
                 }
@@ -190,7 +190,7 @@ StyledRect {
 
             StyledRect {
                 radius: Appearance.rounding.full
-                color: Recorder.paused ? Colours.palette.m3tertiary : Colours.palette.m3error
+                color: Recorder.paused ? Signal.palette.phosphor : Signal.palette.alert
 
                 implicitWidth: recText.implicitWidth + Appearance.padding.normal * 2
                 implicitHeight: recText.implicitHeight + Appearance.padding.smaller * 2
@@ -201,7 +201,7 @@ StyledRect {
                     anchors.centerIn: parent
                     animate: true
                     text: Recorder.paused ? "PAUSED" : "REC"
-                    color: Recorder.paused ? Colours.palette.m3onTertiary : Colours.palette.m3onError
+                    color: Recorder.paused ? Signal.palette.onPhosphor : Signal.palette.onAlert
                     font.family: Appearance.font.family.mono
                 }
 
@@ -217,14 +217,14 @@ StyledRect {
                     Anim {
                         from: 1
                         to: 0
-                        duration: Appearance.anim.durations.large
-                        easing.bezierCurve: Appearance.anim.curves.emphasizedAccel
+                        duration: Appearance.anim.durations.long
+                        easing.bezierCurve: Appearance.anim.curves.exit
                     }
                     Anim {
                         from: 0
                         to: 1
-                        duration: Appearance.anim.durations.extraLarge
-                        easing.bezierCurve: Appearance.anim.curves.emphasizedDecel
+                        duration: Appearance.anim.durations.scan
+                        easing.bezierCurve: Appearance.anim.curves.enter
                     }
                 }
             }
@@ -254,7 +254,7 @@ StyledRect {
 
             IconButton {
                 label.animate: true
-                icon: Recorder.paused ? "play_arrow" : "pause"
+                icon: Recorder.paused ? "player-play" : "player-pause"
                 accessibleName: Recorder.paused ? qsTr("Resume recording") : qsTr("Pause recording")
                 toggle: true
                 checked: Recorder.paused
@@ -267,10 +267,10 @@ StyledRect {
             }
 
             IconButton {
-                icon: "stop"
+                icon: "player-stop"
                 accessibleName: qsTr("Stop recording")
-                inactiveColour: Colours.palette.m3error
-                inactiveOnColour: Colours.palette.m3onError
+                inactiveColour: Signal.palette.alert
+                inactiveOnColour: Signal.palette.onAlert
                 font.pointSize: Appearance.font.size.large
                 onClicked: Recorder.stop()
             }

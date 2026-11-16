@@ -24,6 +24,8 @@ depends=(
   'python'
   'qt6-base'
   'qt6-declarative'
+  # Hornero Signal typography, RFC 0001 section 3.3; glyphs ship in-tree.
+  'ttf-ibm-plex'
   'quickshell>=0.3.2'
 )
 makedepends=(

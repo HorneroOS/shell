@@ -53,7 +53,7 @@ Item {
 
         Layout.fillWidth: true
         radius: Appearance.rounding.normal
-        color: Colours.layer(Colours.palette.m3surfaceContainerHigh, 2)
+        color: Signal.layer(Signal.palette.raised, 2)
         implicitHeight: row.implicitHeight + Appearance.padding.normal * 2
 
         RowLayout {
@@ -69,13 +69,13 @@ Item {
                 Layout.maximumWidth: Appearance.font.size.extraLarge * 1.5
                 Layout.alignment: Qt.AlignVCenter
                 radius: Appearance.rounding.normal
-                color: Colours.layer(Colours.palette.m3primaryContainer, 2)
+                color: Signal.layer(Signal.palette.signalWell, 2)
                 implicitHeight: 36
 
-                MaterialIcon {
+                Glyph {
                     anchors.centerIn: parent
-                    text: tile.icon
-                    color: Colours.palette.m3onPrimaryContainer
+                    name: tile.icon
+                    color: Signal.palette.onSignalWell
                     font.pointSize: Appearance.font.size.large
                 }
             }
@@ -93,7 +93,7 @@ Item {
                 StyledText {
                     Layout.fillWidth: true
                     text: tile.description
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                     font.pointSize: Appearance.font.size.smaller
                     elide: Text.ElideRight
                 }
@@ -124,7 +124,7 @@ Item {
             StyledText {
                 text: bar.label
                 font.pointSize: Appearance.font.size.smaller
-                color: Colours.palette.m3onSurfaceVariant
+                color: Signal.palette.inkMuted
             }
 
             Item {
@@ -134,7 +134,7 @@ Item {
             StyledText {
                 text: bar.detail
                 font.pointSize: Appearance.font.size.smaller
-                color: Colours.palette.m3onSurfaceVariant
+                color: Signal.palette.inkMuted
             }
         }
 
@@ -142,7 +142,7 @@ Item {
             Layout.fillWidth: true
             implicitHeight: 6
             radius: Appearance.rounding.full
-            color: Colours.layer(Colours.palette.m3surfaceContainerHighest, 1)
+            color: Signal.layer(Signal.palette.lifted, 1)
 
             StyledRect {
                 anchors.left: parent.left
@@ -150,11 +150,11 @@ Item {
                 anchors.bottom: parent.bottom
                 width: parent.width * Math.min(bar.value, 1)
                 radius: parent.radius
-                color: bar.value > 0.85 ? Colours.palette.m3error : bar.value > 0.6 ? Colours.palette.m3tertiary : Colours.palette.m3primary
+                color: bar.value > 0.85 ? Signal.palette.alert : bar.value > 0.6 ? Signal.palette.phosphor : Signal.palette.signal
 
                 Behavior on width {
                     Anim {
-                        duration: Appearance.anim.durations.large
+                        duration: Appearance.anim.durations.long
                     }
                 }
             }
@@ -202,7 +202,7 @@ Item {
                 StyledRect {
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
-                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: statsCol.implicitHeight + Appearance.padding.large * 2
 
                     ColumnLayout {
@@ -296,7 +296,7 @@ Item {
                 StyledRect {
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
-                    color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
+                    color: Signal.layer(Signal.palette.panel, 2)
                     implicitHeight: actionsCol.implicitHeight + Appearance.padding.large * 2
 
                     ColumnLayout {
@@ -314,7 +314,7 @@ Item {
 
                         ActionTile {
                             Layout.fillWidth: true
-                            icon: "waving_hand"
+                            icon: "hand-stop"
                             label: qsTr("Hornero Welcome")
                             description: qsTr("Open the Welcome Center tour")
                             action: () => Welcome.open("start")
@@ -330,7 +330,7 @@ Item {
 
                         ActionTile {
                             Layout.fillWidth: true
-                            icon: "screenshot_monitor"
+                            icon: "screenshot"
                             label: qsTr("Screenshot")
                             description: qsTr("Capture the screen with selection")
                             action: () => root.run(["horneroctl", "capture", "screenshot", "--region", "--yes"])
@@ -338,7 +338,7 @@ Item {
 
                         ActionTile {
                             Layout.fillWidth: true
-                            icon: "fiber_manual_record"
+                            icon: "point"
                             label: qsTr("Screen recorder")
                             description: qsTr("Open GPU screen recorder")
                             action: () => root.run(["gsr-ui", "launch-hide-announce"])
@@ -346,7 +346,7 @@ Item {
 
                         ActionTile {
                             Layout.fillWidth: true
-                            icon: "content_paste"
+                            icon: "clipboard"
                             label: qsTr("Clipboard")
                             description: qsTr("Open clipboard history")
                             action: () => root.run(["copyq", "show"])
@@ -354,7 +354,7 @@ Item {
 
                         ActionTile {
                             Layout.fillWidth: true
-                            icon: "dark_mode"
+                            icon: "moon"
                             label: qsTr("Night mode")
                             description: qsTr("Toggle blue-light filter")
                             action: () => root.run(["horneroctl", "appearance", "night-mode", "toggle", "--yes"])
@@ -362,7 +362,7 @@ Item {
 
                         ActionTile {
                             Layout.fillWidth: true
-                            icon: "system_update_alt"
+                            icon: "download"
                             label: qsTr("System updates")
                             description: qsTr("Pending updates and backups")
                             action: () => Actions.openControlCenter("updates")
@@ -374,7 +374,7 @@ Item {
                 StyledRect {
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
-                    color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
+                    color: Signal.layer(Signal.palette.panel, 2)
                     implicitHeight: toolsCol.implicitHeight + Appearance.padding.large * 2
 
                     ColumnLayout {
@@ -392,7 +392,7 @@ Item {
 
                         ActionTile {
                             Layout.fillWidth: true
-                            icon: "monitor"
+                            icon: "device-desktop"
                             label: qsTr("Monitor layout")
                             description: qsTr("Configure display arrangement")
                             action: () => root.run(["nwg-displays"])
@@ -434,7 +434,7 @@ Item {
                 StyledText {
                     Layout.fillWidth: true
                     text: qsTr("Run on demand. All checks are read-only; nothing is changed or fixed from here.")
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                     font.pointSize: Appearance.font.size.smaller
                     wrapMode: Text.Wrap
                 }

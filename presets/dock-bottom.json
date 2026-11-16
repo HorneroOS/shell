@@ -2,7 +2,7 @@
   "_name": "Dock Bottom",
   "_description": "Bottom dock — launcher, workspaces, pinned apps, tools and status",
   "_icon": "🛟",
-  "_iconMaterial": "dock_to_bottom",
+  "_iconMaterial": "layout-bottombar",
   "_lineage": "Waybar dock-bottom profile",
   "bar": {
     "persistent": true,

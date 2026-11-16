@@ -27,7 +27,7 @@ ColumnLayout {
     StyledText {
         Layout.fillWidth: true
         text: !root.contentHidden && Notifs.list.length > 0 ? qsTr("%1 notification%2").arg(Notifs.list.length).arg(Notifs.list.length === 1 ? "" : "s") : qsTr("Notifications")
-        color: Colours.palette.m3outline
+        color: Signal.palette.ruleStrong
         font.family: Appearance.font.family.mono
         font.weight: 500
         elide: Text.ElideRight
@@ -58,7 +58,7 @@ ColumnLayout {
 
                     layer.enabled: true
                     layer.effect: Colouriser {
-                        colorizationColor: Colours.palette.m3outlineVariant
+                        colorizationColor: Signal.palette.rule
                         brightness: 1
                     }
                 }
@@ -66,7 +66,7 @@ ColumnLayout {
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
                     text: Config.lock.hideNotifs ? qsTr("Unlock for Notifications") : qsTr("No Notifications")
-                    color: Colours.palette.m3outlineVariant
+                    color: Signal.palette.rule
                     font.pointSize: Appearance.font.size.large
                     font.family: Appearance.font.family.mono
                     font.weight: 500
@@ -75,7 +75,7 @@ ColumnLayout {
 
             Behavior on opacity {
                 Anim {
-                    duration: Appearance.anim.durations.extraLarge
+                    duration: Appearance.anim.durations.scan
                 }
             }
         }
@@ -106,8 +106,8 @@ ColumnLayout {
                     property: "scale"
                     from: 0
                     to: 1
-                    duration: Appearance.anim.durations.expressiveDefaultSpatial
-                    easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                    duration: Appearance.anim.durations.settle
+                    easing.bezierCurve: Appearance.anim.curves.settle
                 }
             }
 
@@ -129,8 +129,8 @@ ColumnLayout {
                 }
                 Anim {
                     property: "y"
-                    duration: Appearance.anim.durations.expressiveDefaultSpatial
-                    easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                    duration: Appearance.anim.durations.settle
+                    easing.bezierCurve: Appearance.anim.curves.settle
                 }
             }
 
@@ -141,8 +141,8 @@ ColumnLayout {
                 }
                 Anim {
                     property: "y"
-                    duration: Appearance.anim.durations.expressiveDefaultSpatial
-                    easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                    duration: Appearance.anim.durations.settle
+                    easing.bezierCurve: Appearance.anim.curves.settle
                 }
             }
         }

@@ -55,8 +55,8 @@ Item {
             Layout.fillWidth: true
             spacing: Appearance.spacing.normal
 
-            MaterialIcon {
-                text: "raven"
+            Glyph {
+                name: "feather"
                 font.pointSize: Appearance.font.size.extraLarge
                 Layout.alignment: Qt.AlignVCenter
             }
@@ -73,7 +73,7 @@ Item {
                         return qsTr("Ask Javi: %1").arg(root.question);
                     return qsTr("Type a question after %1ai").arg(Config.launcher.actionPrefix);
                 }
-                color: Colours.palette.m3onSurfaceVariant
+                color: Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.normal
             }
         }
@@ -82,7 +82,7 @@ Item {
             Layout.fillWidth: true
             visible: InlineAsk.errorText !== ""
             text: InlineAsk.errorText
-            color: Colours.palette.m3error
+            color: Signal.palette.alert
             wrapMode: Text.Wrap
             maximumLineCount: 4
             elide: Text.ElideRight
@@ -93,7 +93,7 @@ Item {
             Layout.fillWidth: true
             visible: InlineAsk.text !== ""
             text: InlineAsk.text
-            color: Colours.palette.m3onSurface
+            color: Signal.palette.ink
             wrapMode: Text.Wrap
             maximumLineCount: 8
             elide: Text.ElideRight

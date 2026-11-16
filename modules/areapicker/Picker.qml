@@ -166,7 +166,7 @@ MouseArea {
                 target: root
                 property: "opacity"
                 to: 0
-                duration: Appearance.anim.durations.large
+                duration: Appearance.anim.durations.long
             }
             ExAnim {
                 target: root
@@ -214,7 +214,7 @@ MouseArea {
         id: overlay
 
         anchors.fill: parent
-        color: Colours.palette.m3secondaryContainer
+        color: Signal.palette.cueWell
         opacity: 0.3
 
         layer.enabled: true
@@ -251,7 +251,7 @@ MouseArea {
         color: "transparent"
         radius: root.realRounding > 0 ? root.realRounding + root.realBorderWidth : 0
         border.width: root.realBorderWidth
-        border.color: Colours.palette.m3primary
+        border.color: Signal.palette.signal
 
         x: selectionRect.x - root.realBorderWidth
         y: selectionRect.y - root.realBorderWidth
@@ -265,7 +265,7 @@ MouseArea {
 
     Behavior on opacity {
         Anim {
-            duration: Appearance.anim.durations.large
+            duration: Appearance.anim.durations.long
         }
     }
 
@@ -294,7 +294,7 @@ MouseArea {
     }
 
     component ExAnim: Anim {
-        duration: Appearance.anim.durations.expressiveDefaultSpatial
-        easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+        duration: Appearance.anim.durations.settle
+        easing.bezierCurve: Appearance.anim.curves.settle
     }
 }

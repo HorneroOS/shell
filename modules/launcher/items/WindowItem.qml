@@ -45,8 +45,8 @@ Item {
         anchors.margins: Appearance.padding.larger
         spacing: Appearance.spacing.normal
 
-        MaterialIcon {
-            text: "web_asset"
+        Glyph {
+            name: "app-window"
             font.pointSize: Appearance.font.size.extraLarge
             Layout.alignment: Qt.AlignVCenter
         }
@@ -67,7 +67,7 @@ Item {
                 Layout.fillWidth: true
                 text: qsTr("%1 · workspace %2").arg(root.modelData?.appClass ?? "").arg(root.modelData?.workspaceName ?? "?")
                 font.pointSize: Appearance.font.size.small
-                color: Colours.palette.m3onSurfaceVariant
+                color: Signal.palette.inkMuted
                 elide: Text.ElideRight
             }
         }

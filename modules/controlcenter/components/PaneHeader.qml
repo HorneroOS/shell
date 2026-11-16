@@ -30,11 +30,11 @@ ColumnLayout {
         Layout.fillWidth: true
         spacing: Appearance.spacing.normal
 
-        MaterialIcon {
+        Glyph {
             visible: root.icon.length > 0
-            text: root.icon
+            name: root.icon
             font.pointSize: Appearance.font.size.extraLarge
-            color: Colours.palette.m3primary
+            color: Signal.palette.signal
         }
 
         StyledText {
@@ -52,7 +52,7 @@ ColumnLayout {
         Layout.fillWidth: true
         text: root.description
         font.pointSize: Appearance.font.size.normal
-        color: Colours.palette.m3onSurfaceVariant
+        color: Signal.palette.inkMuted
         wrapMode: Text.WordWrap
     }
 
@@ -62,7 +62,7 @@ ColumnLayout {
         Layout.topMargin: Appearance.spacing.small
         implicitHeight: introRow.implicitHeight + Appearance.padding.large * 2
         radius: Appearance.rounding.normal
-        color: Colours.tPalette.m3surfaceContainerHigh
+        color: Signal.tPalette.raised
 
         RowLayout {
             id: introRow
@@ -71,17 +71,17 @@ ColumnLayout {
             anchors.margins: Appearance.padding.large
             spacing: Appearance.spacing.normal
 
-            MaterialIcon {
+            Glyph {
                 Layout.alignment: Qt.AlignTop
-                text: "info"
-                color: Colours.palette.m3secondary
+                name: "info-circle"
+                color: Signal.palette.cue
             }
 
             StyledText {
                 Layout.fillWidth: true
                 text: root.intro
                 wrapMode: Text.WordWrap
-                color: Colours.palette.m3onSurface
+                color: Signal.palette.ink
             }
         }
     }

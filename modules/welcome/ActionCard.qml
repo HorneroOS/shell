@@ -28,7 +28,7 @@ StyledRect {
     implicitHeight: Math.max(88, content.implicitHeight + Appearance.padding.normal * 2)
 
     radius: Appearance.rounding.normal
-    color: root.interactive && cardState.containsMouse ? Colours.layer(Colours.palette.m3surfaceContainerHigh, 1) : Colours.layer(Colours.palette.m3surfaceContainer, 1)
+    color: root.interactive && cardState.containsMouse ? Signal.layer(Signal.palette.raised, 1) : Signal.layer(Signal.palette.panel, 1)
 
     Behavior on color {
         CAnim {}
@@ -44,9 +44,9 @@ StyledRect {
         anchors.bottomMargin: Appearance.padding.small
         spacing: Appearance.spacing.normal
 
-        MaterialIcon {
-            text: root.icon
-            color: Colours.palette.m3primary
+        Glyph {
+            name: root.icon
+            color: Signal.palette.signal
             font.pointSize: Appearance.font.size.large
         }
 
@@ -64,7 +64,7 @@ StyledRect {
             StyledText {
                 Layout.fillWidth: true
                 text: root.description
-                color: Colours.palette.m3onSurfaceVariant
+                color: Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.smaller
                 wrapMode: Text.WordWrap
             }
@@ -72,7 +72,7 @@ StyledRect {
             StyledRect {
                 visible: root.shortcutId !== "" && ShortcutHints.has(root.shortcutId)
                 radius: Appearance.rounding.full
-                color: Colours.palette.m3secondaryContainer
+                color: Signal.palette.cueWell
                 Layout.preferredHeight: badgeText.implicitHeight + 8
                 Layout.preferredWidth: badgeText.implicitWidth + 20
 
@@ -81,17 +81,17 @@ StyledRect {
 
                     anchors.centerIn: parent
                     text: ShortcutHints.badge(root.shortcutId)
-                    color: Colours.palette.m3onSecondaryContainer
+                    color: Signal.palette.onCueWell
                     font.pointSize: Appearance.font.size.smaller
                     font.weight: 600
                 }
             }
         }
 
-        MaterialIcon {
+        Glyph {
             visible: root.interactive
-            text: "chevron_right"
-            color: Colours.palette.m3onSurfaceVariant
+            name: "chevron-right"
+            color: Signal.palette.inkMuted
         }
     }
 

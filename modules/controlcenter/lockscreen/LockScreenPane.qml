@@ -62,14 +62,14 @@ Item {
                     Layout.fillWidth: true
                     text: qsTr("How HorneroOS looks and behaves while locked. Changes apply to the next lock.")
                     font.pointSize: Appearance.font.size.small
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                     wrapMode: Text.Wrap
                 }
 
                 StyledRect {
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
-                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: lockCol.implicitHeight + Appearance.padding.large * 2
 
                     ColumnLayout {
@@ -146,7 +146,7 @@ Item {
                 StyledRect {
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
-                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: idleCol.implicitHeight + Appearance.padding.large * 2
 
                     ColumnLayout {
@@ -184,7 +184,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Idle timeouts and battery warnings live in Control Center › Power.")
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3outline
+                            color: Signal.palette.ruleStrong
                             wrapMode: Text.Wrap
                         }
                     }

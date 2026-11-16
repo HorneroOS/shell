@@ -93,7 +93,7 @@ Elevation {
     StyledClippingRect {
         anchors.fill: parent
         radius: parent.radius
-        color: Colours.palette.m3surfaceContainer
+        color: Signal.palette.panel
 
         ColumnLayout {
             id: column
@@ -116,10 +116,10 @@ Elevation {
                     implicitWidth: menuOptionRow.implicitWidth + Appearance.padding.normal * 2
                     implicitHeight: menuOptionRow.implicitHeight + Appearance.padding.normal * 2
 
-                    color: Qt.alpha(Colours.palette.m3secondaryContainer, active ? 1 : 0)
+                    color: Qt.alpha(Signal.palette.cueWell, active ? 1 : 0)
 
                     StateLayer {
-                        color: item.active ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                        color: item.active ? Signal.palette.onCueWell : Signal.palette.ink
                         disabled: !root.expanded
 
                         function onClicked(): void {
@@ -136,17 +136,17 @@ Elevation {
                         anchors.margins: Appearance.padding.normal
                         spacing: Appearance.spacing.small
 
-                        MaterialIcon {
+                        Glyph {
                             Layout.alignment: Qt.AlignVCenter
-                            text: item.modelData.icon
-                            color: item.active ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
+                            name: item.modelData.icon
+                            color: item.active ? Signal.palette.onCueWell : Signal.palette.inkMuted
                         }
 
                         StyledText {
                             Layout.alignment: Qt.AlignVCenter
                             Layout.fillWidth: true
                             text: item.modelData.text
-                            color: item.active ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                            color: item.active ? Signal.palette.onCueWell : Signal.palette.ink
                         }
 
                         Loader {
@@ -154,9 +154,9 @@ Elevation {
                             active: item.modelData.trailingIcon.length > 0
                             visible: active
 
-                            sourceComponent: MaterialIcon {
-                                text: item.modelData.trailingIcon
-                                color: item.active ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                            sourceComponent: Glyph {
+                                name: item.modelData.trailingIcon
+                                color: item.active ? Signal.palette.onCueWell : Signal.palette.ink
                             }
                         }
                     }
@@ -167,14 +167,14 @@ Elevation {
 
     Behavior on opacity {
         Anim {
-            duration: Appearance.anim.durations.expressiveDefaultSpatial
+            duration: Appearance.anim.durations.settle
         }
     }
 
     Behavior on implicitHeight {
         Anim {
-            duration: Appearance.anim.durations.expressiveDefaultSpatial
-            easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+            duration: Appearance.anim.durations.settle
+            easing.bezierCurve: Appearance.anim.curves.settle
         }
     }
 

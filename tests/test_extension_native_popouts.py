@@ -54,5 +54,5 @@ def test_popover_content_fits_the_native_popout():
     state = read("plugin/qml/Hornero/PluginKit/UiState.qml")
     assert "Math.min(implicitWidth, root.parent.width)" in state
     bar = read("modules/plugins/PluginBarWidgets.qml")
-    assert "palette.base: Colours.palette.m3surfaceContainerHigh" in bar
-    assert "palette.placeholderText: Colours.palette.m3onSurfaceVariant" in bar
+    assert "palette.base: Signal.palette.raised" in bar
+    assert "palette.placeholderText: Signal.palette.inkMuted" in bar

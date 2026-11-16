@@ -12,8 +12,8 @@ Shape {
     property int strokeWidth: Appearance.padding.smaller
     property int padding: 0
     property int spacing: Appearance.spacing.small
-    property color fgColour: Colours.palette.m3primary
-    property color bgColour: Colours.palette.m3secondaryContainer
+    property color fgColour: Signal.palette.signal
+    property color bgColour: Signal.palette.cueWell
 
     readonly property real size: Math.min(width, height)
     readonly property real arcRadius: (size - padding - strokeWidth) / 2
@@ -40,7 +40,7 @@ Shape {
 
         Behavior on strokeColor {
             CAnim {
-                duration: Appearance.anim.durations.large
+                duration: Appearance.anim.durations.long
             }
         }
     }
@@ -62,7 +62,7 @@ Shape {
 
         Behavior on strokeColor {
             CAnim {
-                duration: Appearance.anim.durations.large
+                duration: Appearance.anim.durations.long
             }
         }
     }

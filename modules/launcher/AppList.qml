@@ -36,7 +36,7 @@ StyledListView {
     highlightFollowsCurrentItem: false
     highlight: StyledRect {
         radius: Appearance.rounding.normal
-        color: Colours.palette.m3onSurface
+        color: Signal.palette.ink
         opacity: 0.08
 
         y: root.currentItem?.y ?? 0
@@ -45,8 +45,8 @@ StyledListView {
 
         Behavior on y {
             Anim {
-                duration: Appearance.anim.durations.expressiveDefaultSpatial
-                easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                duration: Appearance.anim.durations.settle
+                easing.bezierCurve: Appearance.anim.curves.settle
             }
         }
     }
@@ -68,7 +68,7 @@ StyledListView {
             if (providerState !== "")
                 return "plugin";
 
-            for (const action of ["calc", "win", "file", "ai", "scheme", "variant", "appearance", "theme"])
+            for (const action of ["calc", "win", "file", "ai", "appearance", "theme"])
                 if (text.startsWith(`${prefix}${action} `))
                     return action === "theme" ? "appearance" : action;
 
@@ -86,8 +86,6 @@ StyledListView {
         // last partial text in memory.
         if (state !== "ai")
             InlineAsk.cancel();
-        if (state === "scheme" || state === "variant")
-            Schemes.reload();
         if (state === "appearance")
             Themes.reload();
     }
@@ -150,22 +148,6 @@ StyledListView {
             }
         },
         State {
-            name: "scheme"
-
-            PropertyChanges {
-                model.values: Schemes.query(search.text)
-                root.delegate: schemeItem
-            }
-        },
-        State {
-            name: "variant"
-
-            PropertyChanges {
-                model.values: M3Variants.query(search.text)
-                root.delegate: variantItem
-            }
-        },
-        State {
             name: "appearance"
 
             PropertyChanges {
@@ -183,16 +165,16 @@ StyledListView {
                     property: "opacity"
                     from: 1
                     to: 0
-                    duration: Appearance.anim.durations.small
-                    easing.bezierCurve: Appearance.anim.curves.standardAccel
+                    duration: Appearance.anim.durations.short
+                    easing.bezierCurve: Appearance.anim.curves.exit
                 }
                 Anim {
                     target: root
                     property: "scale"
                     from: 1
                     to: 0.9
-                    duration: Appearance.anim.durations.small
-                    easing.bezierCurve: Appearance.anim.curves.standardAccel
+                    duration: Appearance.anim.durations.short
+                    easing.bezierCurve: Appearance.anim.curves.exit
                 }
             }
             // Only the delegate swaps at the animation midpoint. The
@@ -210,16 +192,16 @@ StyledListView {
                     property: "opacity"
                     from: 0
                     to: 1
-                    duration: Appearance.anim.durations.small
-                    easing.bezierCurve: Appearance.anim.curves.standardDecel
+                    duration: Appearance.anim.durations.short
+                    easing.bezierCurve: Appearance.anim.curves.enter
                 }
                 Anim {
                     target: root
                     property: "scale"
                     from: 0.9
                     to: 1
-                    duration: Appearance.anim.durations.small
-                    easing.bezierCurve: Appearance.anim.curves.standardDecel
+                    duration: Appearance.anim.durations.short
+                    easing.bezierCurve: Appearance.anim.curves.enter
                 }
             }
             PropertyAction {
@@ -267,7 +249,7 @@ StyledListView {
     addDisplaced: Transition {
         Anim {
             property: "y"
-            duration: Appearance.anim.durations.small
+            duration: Appearance.anim.durations.short
         }
         Anim {
             properties: "opacity,scale"
@@ -337,22 +319,6 @@ StyledListView {
         id: aiItem
 
         AiItem {
-            list: root
-        }
-    }
-
-    Component {
-        id: schemeItem
-
-        SchemeItem {
-            list: root
-        }
-    }
-
-    Component {
-        id: variantItem
-
-        VariantItem {
             list: root
         }
     }

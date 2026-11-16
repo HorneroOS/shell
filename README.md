@@ -9,6 +9,14 @@ launcher, dashboard, Control Center, notifications, lock screen, and
 wallpaper/theme pipeline, plus a native `Hornero` C++ plugin for
 performance-critical work (image analysis, audio, calculator).
 
+Its design language is **Hornero Signal**
+([RFC 0001](https://github.com/HorneroOS/docs/blob/main/development/rfc-0001-hornero-signal.md)):
+semantic colour roles (`Signal.palette.*`, default theme
+`hornero-signal-night`), IBM Plex typography (runtime dependency
+`ttf-ibm-plex`), the bundled Hornero Glyphs icon font (a Tabler Icons
+subset, MIT) and instrument-like motion. See
+[`docs/NATIVE-APPEARANCE.md`](docs/NATIVE-APPEARANCE.md).
+
 ![Hornero desktop](docs/assets/desktop-hero.png)
 
 *Pre-release snapshot from the graphical test VM (1280×720).*

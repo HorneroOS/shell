@@ -75,11 +75,14 @@ def test_canonical_cli_calls_present():
     spawning = list(_spawning())
     gtk = [p for p, text in spawning if '"gtk"' in text]
     assert gtk, "expected horneroctl appearance gtk calls in QML"
-    scheme = [p for p, text in spawning if '"appearance", "scheme"' in text]
-    assert scheme, "expected nested horneroctl appearance scheme calls in QML"
-    m3 = [p for p, text in spawning if '"m3"' in text]
-    assert m3, "expected horneroctl appearance colors m3 calls in QML"
-    for path in gtk + scheme + m3:
+    theme = [p for p, text in spawning if '"appearance", "theme", "apply"' in text]
+    assert theme, "expected horneroctl appearance theme apply calls in QML"
+    # Hornero Signal: no wallpaper colour synthesis or scheme variants.
+    retired = [p for p, text in spawning
+               if '"colors", "m3"' in text or '"scheme", "set-variant"' in text
+               or '"scheme", "regenerate"' in text]
+    assert not retired, f"retired colour-synthesis calls: {retired}"
+    for path in gtk + theme:
         assert '"horneroctl"' in path.read_text(), (
             f"{path.relative_to(ROOT)}: appearance calls must go through horneroctl"
         )
@@ -147,7 +150,7 @@ def test_theme_pipeline_uses_installed_catalogue_metadata():
     pipeline = (ROOT / "services" / "ThemePipeline.qml").read_text()
     launcher = (ROOT / "modules" / "launcher" / "services" / "Themes.qml").read_text()
     assert '\"list\", \"--full\"' in catalogue
-    assert "ThemeCatalogue.themeById(job.themeId)" in pipeline
+    assert "ThemeCatalogue.themeById(id)" in pipeline
     assert "cfg.wallpaperPath" in pipeline
     assert "ThemeCatalogue.reload()" in launcher
 
@@ -196,7 +199,7 @@ def test_recipe_without_wallpaper_uses_the_current_wallpaper_when_applying():
     assert "theme.colorOnly" not in override
     assert 'return Wallpapers.actualCurrent || "";' in launcher
     assert 'stagedThemeWallpaper = Themes.wallpaperOverrideFor(theme);' in pane
-    assert "!Colours.isBuiltInTheme(modelData.id) && !modelData.colorOnly" in section
+    assert "!Signal.isBuiltInTheme(modelData.id) && !modelData.colorOnly" in section
     assert 'ThemePipeline.applyTheme(id, Themes.wallpaperOverrideFor(modelData));' in launcher
     assert "&& !Wallpapers.actualCurrent" in section
     assert "Choose a wallpaper in Appearance → Background before applying this theme." in section
@@ -262,18 +265,17 @@ def test_theme_collection_metadata_reaches_appearance_cards():
     cards = (ROOT / "modules" / "controlcenter" / "appearance" / "sections" / "ThemesSection.qml").read_text()
 
     assert 'collection: "hornero-originals"' in catalogue
-    assert "collectionOrder: 1" in catalogue and "collectionOrder: 4" in catalogue
+    assert all(f"collectionOrder: {n}" in catalogue for n in (1, 2, 3))
     assert 'readonly property string collection: modelData.collection || ""' in themes
     assert "readonly property int collectionOrder:" in themes
     sorting = catalogue.split("function _withBuiltIns(items: var): var", 1)[1].split(
         "function themeById", 1
     )[0]
-    assert "return combined.sort((a, b) =>" in sorting
-    assert "a.collectionOrder ?? 999" in sorting and "b.collectionOrder ?? 999" in sorting
+    assert "return builtIns.concat(catalogue.sort((a, b) =>" in sorting
     assert 'modelData.collection === "hornero-originals"' in cards
     assert "collectionId !== (Themes.list[index - 1]?.collection" in cards
     assert 'qsTr("Hornero Originals")' in cards
-    assert 'qsTr("First-party looks, from warm clay' in cards
+    assert 'qsTr("First-party Hornero Signal looks' in cards
     assert "Eight first-party looks" not in cards
     assert 'qsTr("Other looks")' in cards
 
@@ -313,45 +315,27 @@ def test_theme_readiness_keeps_theme_rows_compact_and_explains_requirements_in_p
     assert 'qsTr("Theme requirements")' in preview
 
 
-def test_generated_theme_preview_keeps_latest_request_authoritative():
-    pane = (ROOT / "modules" / "controlcenter" / "appearance" / "AppearancePane.qml").read_text()
-    themes = (ROOT / "modules" / "launcher" / "services" / "Themes.qml").read_text()
-    preview_process = pane.split("id: previewPaletteProc", 1)[1].split("\n    }\n\n    SplitPaneLayout", 1)[0]
-    queue_handler = preview_process.split("onRunningChanged:", 1)[1]
-    scheduling = pane.split("function scheduleGeneratedPreview", 1)[1].split("function resetPreviewRecipe", 1)[0]
-
-    assert "runningKey === root.previewRequestKey" in preview_process
-    assert "previewPaletteCache[runningKey]" in preview_process
-    assert "previewRunningKey = previewRequestKey;" in queue_handler
-    assert "previewPaletteQueued = false;" in scheduling
-    assert "previewPaletteDebounce.stop();" in scheduling
-    assert 'return palettePreviewPathFor(theme, false) || theme.preview || Wallpapers.actualCurrent || "";' in themes
 
 
-def test_native_analyser_layer_present():
-    layer = ROOT / "services" / "WallpaperAnalysis.qml"
-    assert layer.exists(), "services/WallpaperAnalysis.qml native layer missing"
-    text = layer.read_text()
-    assert "ImageAnalyser" in text, "WallpaperAnalysis must wrap ImageAnalyser"
-    assert "dominantColour" in text, "WallpaperAnalysis must expose dominantColour"
-    assert "luminance" in text, "WallpaperAnalysis must expose luminance"
-    colours = (ROOT / "services" / "Colours.qml").read_text()
-    assert "wallDominantColour" in colours, "Colours must expose native dominant colour"
-    assert "wallLuminance" in colours, "Colours must keep native luminance"
-    pane = (ROOT / "modules" / "controlcenter" / "appearance" / "AppearancePane.qml").read_text()
-    assert "previewAnalyser" in pane, "AppearancePane must analyse previews natively"
 
 
-def test_dynamic_appearance_cannot_claim_a_catalogue_theme():
-    colours = (ROOT / "services" / "Colours.qml").read_text()
+def test_custom_appearance_cannot_claim_a_catalogue_theme():
+    signal = (ROOT / "services" / "Signal.qml").read_text()
     themes = (ROOT / "modules/controlcenter/appearance/sections/ThemesSection.qml").read_text()
     pane = (ROOT / "modules/controlcenter/appearance/AppearancePane.qml").read_text()
 
-    assert 'scheme.name === "dynamic" ? ""' in colours
-    assert "themeStateReady && !!Colours.themeId" in themes
+    assert 'themeId = scheme.id || ""' in signal
+    assert "themeStateReady && !!Signal.themeId" in themes
     assert "savedThemeMissing" in themes
-    assert 'Colours.scheme === "dynamic" ? qsTr("Following your wallpaper")' in themes
+    assert "Following your wallpaper" not in themes + pane
     assert 'previewSource = "current"' in pane
-    assert 'previewTitle = Colours.scheme === "dynamic" ? qsTr("Following your wallpaper")' in pane
+    assert 'previewTitle = qsTr("Custom appearance")' in pane
     assert 'if (previewActive && previewSource !== "current")' in pane
-    assert "if (!root.themeStateReady)" in colours
+
+
+def test_wallpaper_never_recolours_the_shell():
+    wallpapers = (ROOT / "services" / "Wallpapers.qml").read_text()
+    pane = (ROOT / "modules/controlcenter/appearance/AppearancePane.qml").read_text()
+    assert "Signal" not in wallpapers and "ImageAnalyser" not in wallpapers
+    assert "ImageAnalyser" not in pane
+    assert not (ROOT / "services" / "WallpaperAnalysis.qml").exists()

@@ -35,23 +35,23 @@ Item {
 
         BarButton {
             visible: !root.vertical && (root.player?.canGoPrevious ?? false)
-            icon: "skip_previous"
+            icon: "player-skip-back"
             label: qsTr("Previous track")
             iconSize: Appearance.font.size.normal
             onActivated: root.player?.previous()
         }
 
         BarButton {
-            icon: root.player?.isPlaying ? "pause" : "play_arrow"
+            icon: root.player?.isPlaying ? "player-pause" : "player-play"
             label: root.player?.isPlaying ? qsTr("Pause") : qsTr("Play")
-            colour: Colours.palette.m3primary
+            colour: Signal.palette.signal
             filled: true
             onActivated: root.player?.togglePlaying()
         }
 
         BarButton {
             visible: !root.vertical && (root.player?.canGoNext ?? false)
-            icon: "skip_next"
+            icon: "player-skip-forward"
             label: qsTr("Next track")
             iconSize: Appearance.font.size.normal
             onActivated: root.player?.next()
@@ -63,7 +63,7 @@ Item {
             Layout.maximumWidth: root.maxTitleWidth
             text: root.title
             elide: Text.ElideRight
-            color: Colours.palette.m3onSurfaceVariant
+            color: Signal.palette.inkMuted
             font.pointSize: Appearance.font.size.smaller
         }
     }

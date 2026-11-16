@@ -16,10 +16,10 @@ ColumnLayout {
     Layout.fillWidth: true
     spacing: Appearance.spacing.small
 
-    MaterialIcon {
+    Glyph {
         Layout.alignment: Qt.AlignHCenter
-        text: root.icon
-        color: Colours.palette.m3primary
+        name: root.icon
+        color: Signal.palette.signal
         font.pointSize: Appearance.font.size.large * 2
     }
 
@@ -37,7 +37,7 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.maximumWidth: 520
         text: root.subtitle
-        color: Colours.palette.m3onSurfaceVariant
+        color: Signal.palette.inkMuted
         wrapMode: Text.WordWrap
         horizontalAlignment: Text.AlignHCenter
     }

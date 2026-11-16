@@ -73,7 +73,7 @@ def test_all_rendering_placements_inherit_themed_foreground_and_clip():
     # instead of Qt's default black on dark surfaces.
     for widgets in (WIDGETS, CARDS, WIDGETS_DESKTOP):
         block = _loader_block(widgets)
-        assert "palette.windowText: Colours.palette.m3onSurface" in block
+        assert "palette.windowText: Signal.palette.ink" in block
         assert "clip: true" in block
     # Vertical bars cap plugin width so single-line bar plugins cannot
     # overflow the pill; horizontal bars get a sane maximum too. Since

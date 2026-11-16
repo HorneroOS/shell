@@ -15,9 +15,7 @@
   libqalculate,
   bash,
   hyprland,
-  material-symbols,
-  rubik,
-  nerd-fonts,
+  ibm-plex,
   qt6,
   quickshell,
   aubio,
@@ -53,7 +51,7 @@
     ++ lib.optional withCli cli;
 
   fontconfig = makeFontsConf {
-    fontDirectories = [material-symbols rubik nerd-fonts.caskaydia-cove];
+    fontDirectories = [ibm-plex];
   };
 
   cmakeBuildType =

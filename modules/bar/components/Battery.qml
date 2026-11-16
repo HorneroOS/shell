@@ -32,11 +32,10 @@ Item {
         rowSpacing: 0
         columnSpacing: Appearance.spacing.smaller / 2
 
-        MaterialIcon {
+        Glyph {
             Layout.alignment: Qt.AlignCenter
-            text: root.charging ? "battery_charging_full" : root.percent > 80 ? "battery_full" : root.percent > 50 ? "battery_5_bar" : root.percent > 20 ? "battery_3_bar" : "battery_alert"
-            color: root.low ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
-            fill: 1
+            name: root.charging ? "battery-charging" : root.percent > 80 ? "battery-4" : root.percent > 50 ? "battery-3" : root.percent > 20 ? "battery-2" : "battery-exclamation"
+            color: root.low ? Signal.palette.alert : Signal.palette.inkMuted
             font.pointSize: Appearance.font.size.normal
         }
 
@@ -44,7 +43,7 @@ Item {
             Layout.alignment: Qt.AlignCenter
             visible: root.density === "values" && !root.vertical
             text: `${Math.round(root.percent)}%`
-            color: root.low ? Colours.palette.m3error : Colours.palette.m3onSurface
+            color: root.low ? Signal.palette.alert : Signal.palette.ink
             font.pointSize: Appearance.font.size.smaller
         }
     }

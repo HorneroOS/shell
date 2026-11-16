@@ -49,12 +49,18 @@ locations. See [PATH_CONTRACT.md](PATH_CONTRACT.md).
 
 ## Appearance flow
 
-Theme catalogue metadata comes from HorneroOS/config packs. The Shell presents
-the catalogue and previews, then submits a validated apply request. The shared
-pipeline coordinates the Shell palette, selected mode, wallpaper, GTK theme and
-color-scheme policy, icons, and generated color roles. Wallpaper-derived color
-generation is cached and debounced; the latest selection wins. Pack-owned
-assets are never downloaded automatically. See
+The shell's design language is Hornero Signal (RFC 0001). Surfaces read
+colour only through `Signal.palette.<role>` (`services/Signal.qml`), type and
+geometry through `Appearance.font/rounding/spacing/padding`, motion through
+`Appearance.anim.curves/durations`, and icons through `Glyph { name }`
+(bundled Hornero Glyphs font). Themes are complete role tables: three
+built-ins ship in `Signal.qml`, catalogue themes come from HorneroOS/config
+packs with a schema-v2 palette and are applied by `horneroctl`, which writes
+the live scheme the shell watches
+(`$XDG_STATE_HOME/hornero/signal/scheme.json`). Wallpapers never recolour the
+UI. The pipeline also coordinates the wallpaper pointer, GTK theme and
+colour-scheme policy and icons; the latest selection wins. Pack-owned assets
+are never downloaded automatically. See
 [theme data ownership](theme-split-plan.md) and
 [native appearance](NATIVE-APPEARANCE.md).
 

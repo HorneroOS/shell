@@ -3,7 +3,7 @@ import ".."
 
 PageView {
     PageHeader {
-        icon: "tune"
+        icon: "adjustments-horizontal"
         title: qsTr("Control Center")
         subtitle: qsTr("Everything configurable lives in one place — and it is all searchable.")
     }
@@ -37,21 +37,21 @@ PageView {
     }
 
     ActionCard {
-        icon: "accessibility"
+        icon: "accessible"
         title: qsTr("Comfort first")
         description: qsTr("Text size, calmer motion and transparency live under Accessibility — Javi honors them too.")
         onActivated: Actions.openControlCenter("accessibility")
     }
 
     ActionCard {
-        icon: "extension"
+        icon: "puzzle"
         title: qsTr("Extensions & plugins")
         description: qsTr("Community plugins and their widgets are managed in Extensions. Plugins run as your user — enable only ones you trust.")
         onActivated: Actions.openControlCenter("extensions")
     }
 
     ActionCard {
-        icon: "restart_alt"
+        icon: "reload"
         title: qsTr("Changes apply instantly")
         description: qsTr("Most settings take effect as you toggle them, with no restart and no config files to edit by hand.")
         interactive: false

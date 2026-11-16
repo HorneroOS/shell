@@ -70,7 +70,7 @@ ClippingRectangle {
         Timer {
             id: initialOpeningTimer
             // Short gate so the first pane can mount before rapid tab switches.
-            interval: Appearance.anim.durations.small
+            interval: Appearance.anim.durations.short
             running: true
             onTriggered: layout.initialOpeningComplete = true
         }
@@ -92,7 +92,7 @@ ClippingRectangle {
         Behavior on y {
             Anim {
                 // Snappier pane switches — long slides feel like input lag.
-                duration: Appearance.anim.durations.small
+                duration: Appearance.anim.durations.short
             }
         }
     }
@@ -157,7 +157,7 @@ ClippingRectangle {
             wrapMode: Text.WordWrap
             visible: loader.status === Loader.Error
             text: qsTr("This panel failed to load. Restart the shell; if it keeps failing, report the error from the shell log.")
-            color: Colours.palette.m3error
+            color: Signal.palette.alert
         }
 
         Connections {

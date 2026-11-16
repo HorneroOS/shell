@@ -36,11 +36,11 @@ Singleton {
         if (enabled) {
             setDynamicConfs();
             if (Config.utilities.toasts.gameModeChanged)
-                Toaster.toast(qsTr("Game mode enabled"), qsTr("Disabled Hyprland animations, blur, gaps and shadows"), "gamepad");
+                Toaster.toast(qsTr("Game mode enabled"), qsTr("Disabled Hyprland animations, blur, gaps and shadows"), "device-gamepad");
         } else {
             Hypr.extras.message("reload");
             if (Config.utilities.toasts.gameModeChanged)
-                Toaster.toast(qsTr("Game mode disabled"), qsTr("Hyprland settings restored"), "gamepad");
+                Toaster.toast(qsTr("Game mode disabled"), qsTr("Hyprland settings restored"), "device-gamepad");
         }
     }
 

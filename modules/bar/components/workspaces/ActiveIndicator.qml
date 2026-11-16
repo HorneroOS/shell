@@ -53,12 +53,12 @@ StyledRect {
     implicitWidth: vertical ? Config.bar.sizes.innerWidth - Appearance.padding.small * 2 : size
     implicitHeight: vertical ? size : Config.bar.sizes.innerWidth - Appearance.padding.small * 2
     radius: Appearance.rounding.full
-    color: Colours.palette.m3primary
+    color: Signal.palette.signal
 
     Colouriser {
         source: root.mask
-        sourceColor: Colours.palette.m3onSurface
-        colorizationColor: Colours.palette.m3onPrimary
+        sourceColor: Signal.palette.ink
+        colorizationColor: Signal.palette.onSignal
 
         x: root.vertical ? 0 : -parent.offset
         y: root.vertical ? -parent.offset : 0
@@ -79,7 +79,7 @@ StyledRect {
         enabled: Config.bar.workspaces.activeTrail
 
         EAnim {
-            duration: Appearance.anim.durations.normal * 2
+            duration: Appearance.anim.durations.medium * 2
         }
     }
 
@@ -102,6 +102,6 @@ StyledRect {
     }
 
     component EAnim: Anim {
-        easing.bezierCurve: Appearance.anim.curves.emphasized
+        easing.bezierCurve: Appearance.anim.curves.standard
     }
 }

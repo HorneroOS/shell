@@ -81,13 +81,13 @@ RowLayout {
         background: StyledRect {
             implicitWidth: 100
             radius: Appearance.rounding.small
-            color: Colours.tPalette.m3surfaceContainerHigh
+            color: Signal.tPalette.raised
         }
     }
 
     StyledRect {
         radius: Appearance.rounding.small
-        color: Colours.palette.m3primary
+        color: Signal.palette.signal
 
         implicitWidth: implicitHeight
         implicitHeight: upIcon.implicitHeight + Appearance.padding.small * 2
@@ -98,7 +98,7 @@ RowLayout {
         Interactive {
             id: upState
 
-            color: Colours.palette.m3onPrimary
+            color: Signal.palette.onSignal
 
             onPressAndHold: timer.start()
             onReleased: timer.stop()
@@ -114,18 +114,18 @@ RowLayout {
             }
         }
 
-        MaterialIcon {
+        Glyph {
             id: upIcon
 
             anchors.centerIn: parent
-            text: "keyboard_arrow_up"
-            color: Colours.palette.m3onPrimary
+            name: "chevron-up"
+            color: Signal.palette.onSignal
         }
     }
 
     StyledRect {
         radius: Appearance.rounding.small
-        color: Colours.palette.m3primary
+        color: Signal.palette.signal
 
         implicitWidth: implicitHeight
         Accessible.role: Accessible.Button
@@ -136,7 +136,7 @@ RowLayout {
         Interactive {
             id: downState
 
-            color: Colours.palette.m3onPrimary
+            color: Signal.palette.onSignal
 
             onPressAndHold: timer.start()
             onReleased: timer.stop()
@@ -152,12 +152,12 @@ RowLayout {
             }
         }
 
-        MaterialIcon {
+        Glyph {
             id: downIcon
 
             anchors.centerIn: parent
-            text: "keyboard_arrow_down"
-            color: Colours.palette.m3onPrimary
+            name: "chevron-down"
+            color: Signal.palette.onSignal
         }
     }
 

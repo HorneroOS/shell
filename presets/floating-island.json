@@ -2,7 +2,7 @@
   "_name": "Floating Island",
   "_description": "Pill-shaped floating island on top — glassy and glowy",
   "_icon": "🏝️",
-  "_iconMaterial": "web_asset",
+  "_iconMaterial": "app-window",
   "bar": {
     "persistent": true,
     "showOnHover": true,

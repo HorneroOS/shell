@@ -18,23 +18,23 @@ StyledRect {
     radius: Appearance.rounding.normal
     color: {
         if (root.modelData.type === Toast.Success)
-            return Colours.palette.m3successContainer;
+            return Signal.palette.phosphorWell;
         if (root.modelData.type === Toast.Warning)
-            return Colours.palette.m3secondary;
+            return Signal.palette.cue;
         if (root.modelData.type === Toast.Error)
-            return Colours.palette.m3errorContainer;
-        return Colours.palette.m3surface;
+            return Signal.palette.alertWell;
+        return Signal.palette.base;
     }
 
     border.width: 1
     border.color: {
-        let colour = Colours.palette.m3outlineVariant;
+        let colour = Signal.palette.rule;
         if (root.modelData.type === Toast.Success)
-            colour = Colours.palette.m3success;
+            colour = Signal.palette.phosphor;
         if (root.modelData.type === Toast.Warning)
-            colour = Colours.palette.m3secondaryContainer;
+            colour = Signal.palette.cueWell;
         if (root.modelData.type === Toast.Error)
-            colour = Colours.palette.m3error;
+            colour = Signal.palette.alert;
         return Qt.alpha(colour, 0.3);
     }
 
@@ -59,30 +59,30 @@ StyledRect {
             radius: Appearance.rounding.normal
             color: {
                 if (root.modelData.type === Toast.Success)
-                    return Colours.palette.m3success;
+                    return Signal.palette.phosphor;
                 if (root.modelData.type === Toast.Warning)
-                    return Colours.palette.m3secondaryContainer;
+                    return Signal.palette.cueWell;
                 if (root.modelData.type === Toast.Error)
-                    return Colours.palette.m3error;
-                return Colours.palette.m3surfaceContainerHigh;
+                    return Signal.palette.alert;
+                return Signal.palette.raised;
             }
 
             implicitWidth: implicitHeight
             implicitHeight: icon.implicitHeight + Appearance.padding.smaller * 2
 
-            MaterialIcon {
+            Glyph {
                 id: icon
 
                 anchors.centerIn: parent
-                text: root.modelData.icon
+                name: root.modelData.icon
                 color: {
                     if (root.modelData.type === Toast.Success)
-                        return Colours.palette.m3onSuccess;
+                        return Signal.palette.onPhosphor;
                     if (root.modelData.type === Toast.Warning)
-                        return Colours.palette.m3onSecondaryContainer;
+                        return Signal.palette.onCueWell;
                     if (root.modelData.type === Toast.Error)
-                        return Colours.palette.m3onError;
-                    return Colours.palette.m3onSurfaceVariant;
+                        return Signal.palette.onAlert;
+                    return Signal.palette.inkMuted;
                 }
                 font.pointSize: Math.round(Appearance.font.size.large * 1.2)
             }
@@ -99,12 +99,12 @@ StyledRect {
                 text: root.modelData.title
                 color: {
                     if (root.modelData.type === Toast.Success)
-                        return Colours.palette.m3onSuccessContainer;
+                        return Signal.palette.onPhosphorWell;
                     if (root.modelData.type === Toast.Warning)
-                        return Colours.palette.m3onSecondary;
+                        return Signal.palette.onCue;
                     if (root.modelData.type === Toast.Error)
-                        return Colours.palette.m3onErrorContainer;
-                    return Colours.palette.m3onSurface;
+                        return Signal.palette.onAlertWell;
+                    return Signal.palette.ink;
                 }
                 font.pointSize: Appearance.font.size.normal
                 elide: Text.ElideRight
@@ -116,12 +116,12 @@ StyledRect {
                 text: root.modelData.message
                 color: {
                     if (root.modelData.type === Toast.Success)
-                        return Colours.palette.m3onSuccessContainer;
+                        return Signal.palette.onPhosphorWell;
                     if (root.modelData.type === Toast.Warning)
-                        return Colours.palette.m3onSecondary;
+                        return Signal.palette.onCue;
                     if (root.modelData.type === Toast.Error)
-                        return Colours.palette.m3onErrorContainer;
-                    return Colours.palette.m3onSurface;
+                        return Signal.palette.onAlertWell;
+                    return Signal.palette.ink;
                 }
                 opacity: 0.8
                 elide: Text.ElideRight

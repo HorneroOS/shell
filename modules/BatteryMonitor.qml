@@ -16,7 +16,7 @@ Scope {
         function onOnBatteryChanged(): void {
             if (UPower.onBattery) {
                 if (Config.utilities.toasts.chargingChanged)
-                    Toaster.toast(qsTr("Charger unplugged"), qsTr("Battery is discharging"), "power_off");
+                    Toaster.toast(qsTr("Charger unplugged"), qsTr("Battery is discharging"), "plug-off");
             } else {
                 if (Config.utilities.toasts.chargingChanged)
                     Toaster.toast(qsTr("Charger plugged in"), qsTr("Battery is charging"), "power");
@@ -37,18 +37,18 @@ Scope {
             for (const level of root.warnLevels) {
                 if (p <= level.level && !level.warned) {
                     level.warned = true;
-                    Toaster.toast(level.title ?? qsTr("Battery warning"), level.message ?? qsTr("Battery level is low"), level.icon ?? "battery_android_alert", level.critical ? Toast.Error : Toast.Warning);
+                    Toaster.toast(level.title ?? qsTr("Battery warning"), level.message ?? qsTr("Battery level is low"), level.icon ?? "battery-exclamation", level.critical ? Toast.Error : Toast.Warning);
                     // Critical levels also file a durable, DND-aware
                     // notification (shell#224); plain warnings stay
                     // momentary toasts.
                     if (level.critical)
-                        Notifs.promoteCritical(level.title ?? qsTr("Battery warning"), level.message ?? qsTr("Battery level is low"), level.icon ?? "battery_android_alert");
+                        Notifs.promoteCritical(level.title ?? qsTr("Battery warning"), level.message ?? qsTr("Battery level is low"), level.icon ?? "battery-exclamation");
                 }
             }
 
             if (!hibernateTimer.running && p <= Config.general.battery.criticalLevel) {
-                Toaster.toast(qsTr("Hibernating in 5 seconds"), qsTr("Hibernating to prevent data loss"), "battery_android_alert", Toast.Error);
-                Notifs.promoteCritical(qsTr("Hibernating in 5 seconds"), qsTr("Hibernating to prevent data loss"), "battery_android_alert");
+                Toaster.toast(qsTr("Hibernating in 5 seconds"), qsTr("Hibernating to prevent data loss"), "battery-exclamation", Toast.Error);
+                Notifs.promoteCritical(qsTr("Hibernating in 5 seconds"), qsTr("Hibernating to prevent data loss"), "battery-exclamation");
                 hibernateTimer.start();
             }
         }

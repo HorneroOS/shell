@@ -133,7 +133,7 @@ Item {
 
                     GradientStop {
                         position: 0
-                        color: Qt.alpha(Colours.palette.m3primary, 0.7)
+                        color: Qt.alpha(Signal.palette.signal, 0.7)
 
                         Behavior on color {
                             CAnim {}
@@ -141,7 +141,7 @@ Item {
                     }
                     GradientStop {
                         position: 1
-                        color: Qt.alpha(Colours.palette.m3inversePrimary, 0.7)
+                        color: Qt.alpha(Signal.palette.inverseSignal, 0.7)
 
                         Behavior on color {
                             CAnim {}
@@ -157,7 +157,7 @@ Item {
 
             Behavior on value {
                 Anim {
-                    duration: Appearance.anim.durations.small
+                    duration: Appearance.anim.durations.short
                 }
             }
         }

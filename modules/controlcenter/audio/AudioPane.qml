@@ -81,7 +81,7 @@ Item {
                             StyledText {
                                 Layout.fillWidth: true
                                 text: qsTr("All available output devices")
-                                color: Colours.palette.m3outline
+                                color: Signal.palette.ruleStrong
                             }
 
                             Repeater {
@@ -93,7 +93,7 @@ Item {
 
                                     Layout.fillWidth: true
 
-                                    color: Audio.sink?.id === modelData.id ? Colours.layer(Colours.palette.m3surfaceContainer, 2) : "transparent"
+                                    color: Audio.sink?.id === modelData.id ? Signal.layer(Signal.palette.panel, 2) : "transparent"
                                     radius: Appearance.rounding.normal
 
                                     Accessible.role: Accessible.Button
@@ -115,14 +115,13 @@ Item {
 
                                         spacing: Appearance.spacing.normal
 
-                                        MaterialIcon {
+                                        Glyph {
                                             Layout.minimumWidth: Appearance.font.size.extraLarge * 1.5
                                             Layout.preferredWidth: Appearance.font.size.extraLarge * 1.5
                                             Layout.maximumWidth: Appearance.font.size.extraLarge * 1.5
-                                            text: Audio.sink?.id === modelData.id ? "speaker" : "speaker_group"
+                                            name: Audio.sink?.id === modelData.id ? "device-speaker" : "devices"
                                             font.pointSize: Appearance.font.size.large
                                             horizontalAlignment: Text.AlignHCenter
-                                            fill: Audio.sink?.id === modelData.id ? 1 : 0
                                         }
 
                                         StyledText {
@@ -166,7 +165,7 @@ Item {
                             StyledText {
                                 Layout.fillWidth: true
                                 text: qsTr("All available input devices")
-                                color: Colours.palette.m3outline
+                                color: Signal.palette.ruleStrong
                             }
 
                             Repeater {
@@ -178,7 +177,7 @@ Item {
 
                                     Layout.fillWidth: true
 
-                                    color: Audio.source?.id === modelData.id ? Colours.layer(Colours.palette.m3surfaceContainer, 2) : "transparent"
+                                    color: Audio.source?.id === modelData.id ? Signal.layer(Signal.palette.panel, 2) : "transparent"
                                     radius: Appearance.rounding.normal
 
                                     Accessible.role: Accessible.Button
@@ -200,14 +199,13 @@ Item {
 
                                         spacing: Appearance.spacing.normal
 
-                                        MaterialIcon {
+                                        Glyph {
                                             Layout.minimumWidth: Appearance.font.size.extraLarge * 1.5
                                             Layout.preferredWidth: Appearance.font.size.extraLarge * 1.5
                                             Layout.maximumWidth: Appearance.font.size.extraLarge * 1.5
-                                            text: "mic"
+                                            name: "microphone"
                                             font.pointSize: Appearance.font.size.large
                                             horizontalAlignment: Text.AlignHCenter
-                                            fill: Audio.source?.id === modelData.id ? 1 : 0
                                         }
 
                                         StyledText {
@@ -249,7 +247,7 @@ Item {
                     spacing: Appearance.spacing.normal
 
                     SettingsHeader {
-                        icon: "volume_up"
+                        icon: "volume"
                         title: qsTr("Audio Settings")
                     }
 
@@ -320,7 +318,7 @@ Item {
 
                                 StyledText {
                                     text: "%"
-                                    color: Colours.palette.m3onSurfaceVariant
+                                    color: Signal.palette.inkMuted
                                     font.pointSize: Appearance.font.size.normal
                                 }
 
@@ -329,7 +327,7 @@ Item {
                                     implicitHeight: muteIcon.implicitHeight + Appearance.padding.normal * 2
 
                                     radius: Appearance.rounding.normal
-                                    color: Audio.muted ? Colours.palette.m3secondary : Colours.palette.m3secondaryContainer
+                                    color: Audio.muted ? Signal.palette.cue : Signal.palette.cueWell
 
                                     Interactive {
                                         function onClicked(): void {
@@ -339,12 +337,12 @@ Item {
                                         }
                                     }
 
-                                    MaterialIcon {
+                                    Glyph {
                                         id: muteIcon
 
                                         anchors.centerIn: parent
-                                        text: Audio.muted ? "volume_off" : "volume_up"
-                                        color: Audio.muted ? Colours.palette.m3onSecondary : Colours.palette.m3onSecondaryContainer
+                                        name: Audio.muted ? "volume-off" : "volume"
+                                        color: Audio.muted ? Signal.palette.onCue : Signal.palette.onCueWell
                                     }
                                 }
                             }
@@ -435,7 +433,7 @@ Item {
 
                                 StyledText {
                                     text: "%"
-                                    color: Colours.palette.m3onSurfaceVariant
+                                    color: Signal.palette.inkMuted
                                     font.pointSize: Appearance.font.size.normal
                                 }
 
@@ -444,7 +442,7 @@ Item {
                                     implicitHeight: muteInputIcon.implicitHeight + Appearance.padding.normal * 2
 
                                     radius: Appearance.rounding.normal
-                                    color: Audio.sourceMuted ? Colours.palette.m3secondary : Colours.palette.m3secondaryContainer
+                                    color: Audio.sourceMuted ? Signal.palette.cue : Signal.palette.cueWell
 
                                     Interactive {
                                         function onClicked(): void {
@@ -454,12 +452,12 @@ Item {
                                         }
                                     }
 
-                                    MaterialIcon {
+                                    Glyph {
                                         id: muteInputIcon
 
                                         anchors.centerIn: parent
-                                        text: "mic_off"
-                                        color: Audio.sourceMuted ? Colours.palette.m3onSecondary : Colours.palette.m3onSecondaryContainer
+                                        name: "microphone-off"
+                                        color: Audio.sourceMuted ? Signal.palette.onCue : Signal.palette.onCueWell
                                     }
                                 }
                             }
@@ -510,10 +508,9 @@ Item {
                                         Layout.fillWidth: true
                                         spacing: Appearance.spacing.normal
 
-                                        MaterialIcon {
-                                            text: "apps"
+                                        Glyph {
+                                            name: "apps"
                                             font.pointSize: Appearance.font.size.normal
-                                            fill: 0
                                         }
 
                                         StyledText {
@@ -566,7 +563,7 @@ Item {
 
                                         StyledText {
                                             text: "%"
-                                            color: Colours.palette.m3outline
+                                            color: Signal.palette.ruleStrong
                                             font.pointSize: Appearance.font.size.normal
                                             opacity: Audio.getStreamMuted(modelData) ? 0.5 : 1
                                         }
@@ -576,7 +573,7 @@ Item {
                                             implicitHeight: streamMuteIcon.implicitHeight + Appearance.padding.normal * 2
 
                                             radius: Appearance.rounding.normal
-                                            color: Audio.getStreamMuted(modelData) ? Colours.palette.m3secondary : Colours.palette.m3secondaryContainer
+                                            color: Audio.getStreamMuted(modelData) ? Signal.palette.cue : Signal.palette.cueWell
 
                                             Interactive {
                                                 function onClicked(): void {
@@ -584,12 +581,12 @@ Item {
                                                 }
                                             }
 
-                                            MaterialIcon {
+                                            Glyph {
                                                 id: streamMuteIcon
 
                                                 anchors.centerIn: parent
-                                                text: Audio.getStreamMuted(modelData) ? "volume_off" : "volume_up"
-                                                color: Audio.getStreamMuted(modelData) ? Colours.palette.m3onSecondary : Colours.palette.m3onSecondaryContainer
+                                                name: Audio.getStreamMuted(modelData) ? "volume-off" : "volume"
+                                                color: Audio.getStreamMuted(modelData) ? Signal.palette.onCue : Signal.palette.onCueWell
                                             }
                                         }
                                     }
@@ -625,7 +622,7 @@ Item {
                                 Layout.fillWidth: true
                                 visible: Audio.streams.length === 0
                                 text: qsTr("No applications currently playing audio")
-                                color: Colours.palette.m3outline
+                                color: Signal.palette.ruleStrong
                                 font.pointSize: Appearance.font.size.small
                                 horizontalAlignment: Text.AlignHCenter
                             }

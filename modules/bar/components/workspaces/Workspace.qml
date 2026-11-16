@@ -89,8 +89,8 @@ Item {
             }
             color: {
                 if (root.labels)
-                    return root.isActive ? Colours.palette.m3primary : root.isOccupied ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant;
-                return Config.bar.workspaces.occupiedBg || root.isOccupied || root.isActive ? Colours.palette.m3onSurface : Colours.palette.m3onSurfaceVariant;
+                    return root.isActive ? Signal.palette.signal : root.isOccupied ? Signal.palette.ink : Signal.palette.inkMuted;
+                return Config.bar.workspaces.occupiedBg || root.isOccupied || root.isActive ? Signal.palette.ink : Signal.palette.inkMuted;
             }
             verticalAlignment: Qt.AlignVCenter
             horizontalAlignment: Qt.AlignHCenter
@@ -122,7 +122,7 @@ Item {
                         properties: "scale"
                         from: 0
                         to: 1
-                        easing.bezierCurve: Appearance.anim.curves.standardDecel
+                        easing.bezierCurve: Appearance.anim.curves.enter
                     }
                 }
 
@@ -130,7 +130,7 @@ Item {
                     Anim {
                         properties: "scale"
                         to: 1
-                        easing.bezierCurve: Appearance.anim.curves.standardDecel
+                        easing.bezierCurve: Appearance.anim.curves.enter
                     }
                     Anim {
                         properties: "x,y"
@@ -142,12 +142,11 @@ Item {
                         values: root.windowItems.slice(0, Config.bar.workspaces.maxWindowIcons)
                     }
 
-                    MaterialIcon {
+                    Glyph {
                         required property var modelData
 
-                        grade: 0
-                        text: root.iconForWindow(modelData)
-                        color: Colours.palette.m3onSurfaceVariant
+                        name: root.iconForWindow(modelData)
+                        color: Signal.palette.inkMuted
                     }
                 }
             }
@@ -164,7 +163,7 @@ Item {
                         properties: "scale"
                         from: 0
                         to: 1
-                        easing.bezierCurve: Appearance.anim.curves.standardDecel
+                        easing.bezierCurve: Appearance.anim.curves.enter
                     }
                 }
 
@@ -172,7 +171,7 @@ Item {
                     Anim {
                         properties: "scale"
                         to: 1
-                        easing.bezierCurve: Appearance.anim.curves.standardDecel
+                        easing.bezierCurve: Appearance.anim.curves.enter
                     }
                     Anim {
                         properties: "x,y"
@@ -184,12 +183,11 @@ Item {
                     values: root.windowItems.slice(0, Config.bar.workspaces.maxWindowIcons)
                     }
 
-                    MaterialIcon {
+                    Glyph {
                         required property var modelData
 
-                        grade: 0
-                        text: root.iconForWindow(modelData)
-                        color: Colours.palette.m3onSurfaceVariant
+                        name: root.iconForWindow(modelData)
+                        color: Signal.palette.inkMuted
                     }
                 }
             }

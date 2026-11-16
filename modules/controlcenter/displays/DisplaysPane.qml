@@ -307,14 +307,14 @@ Item {
                     Layout.fillWidth: true
                     text: root.statusText
                     font.pointSize: Appearance.font.size.small
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                     wrapMode: Text.Wrap
                 }
 
                 StyledRect {
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
-                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: monCol.implicitHeight + Appearance.padding.large * 2
 
                     ColumnLayout {
@@ -340,7 +340,7 @@ Item {
                                 text: "🖥  " + modelData.label
                                 font.family: Appearance.font.family.mono
                                 font.pointSize: Appearance.font.size.small
-                                color: Colours.palette.m3onSurface
+                                color: Signal.palette.ink
                                 wrapMode: Text.Wrap
                             }
                         }
@@ -356,7 +356,7 @@ Item {
                 StyledRect {
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
-                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: arrCol.implicitHeight + Appearance.padding.large * 2
 
                     ColumnLayout {
@@ -376,7 +376,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Applied through horneroctl (Hyprland). With a single display most modes change nothing. Per-output resolution and scale editing is coming in a later slice.")
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3outline
+                            color: Signal.palette.ruleStrong
                             wrapMode: Text.Wrap
                         }
 
@@ -410,7 +410,7 @@ Item {
                             visible: root.actionText !== ""
                             text: root.actionText
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
                     }
@@ -419,7 +419,7 @@ Item {
                 StyledRect {
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
-                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: brightCol.implicitHeight + Appearance.padding.large * 2
 
                     ColumnLayout {
@@ -458,7 +458,7 @@ Item {
                             Layout.fillWidth: true
                             text: root.brightnessText
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
                     }
@@ -467,7 +467,7 @@ Item {
                 StyledRect {
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
-                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: compCol.implicitHeight + Appearance.padding.large * 2
 
                     ColumnLayout {
@@ -488,7 +488,7 @@ Item {
                             visible: root.layoutCurrent === ""
                             text: qsTr("Compositor controls are unavailable on this session; nothing is faked.")
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
 
@@ -500,7 +500,7 @@ Item {
                             StyledText {
                                 text: qsTr("Layout")
                                 font.pointSize: Appearance.font.size.small
-                                color: Colours.palette.m3onSurfaceVariant
+                                color: Signal.palette.inkMuted
                             }
 
                             Flow {
@@ -529,7 +529,7 @@ Item {
                             StyledText {
                                 text: qsTr("Animation profile")
                                 font.pointSize: Appearance.font.size.small
-                                color: Colours.palette.m3onSurfaceVariant
+                                color: Signal.palette.inkMuted
                             }
 
                             Flow {
@@ -561,7 +561,7 @@ Item {
                             visible: root.compositorText !== ""
                             text: root.compositorText
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
                     }

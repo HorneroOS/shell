@@ -119,7 +119,7 @@ Item {
 
                     Layout.preferredWidth: implicitWidth + (actionStateLayer.pressed ? Appearance.padding.large : 0)
                     radius: actionStateLayer.pressed ? Appearance.rounding.small / 2 : Appearance.rounding.small
-                    color: Colours.layer(Colours.palette.m3surfaceContainerHighest, 4)
+                    color: Signal.layer(Signal.palette.lifted, 4)
 
                     Timer {
                         id: copyTimer
@@ -156,10 +156,10 @@ Item {
                     Component {
                         id: iconBtn
 
-                        MaterialIcon {
+                        Glyph {
                             animate: action.modelData.isCopy ?? false
-                            text: action.modelData.isCopy ? "content_copy" : "close"
-                            color: Colours.palette.m3onSurfaceVariant
+                            name: action.modelData.isCopy ? "copy" : "x"
+                            color: Signal.palette.inkMuted
                         }
                     }
 
@@ -176,21 +176,21 @@ Item {
 
                         StyledText {
                             text: action.modelData.text
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                         }
                     }
 
                     Behavior on Layout.preferredWidth {
                         Anim {
-                            duration: Appearance.anim.durations.expressiveFastSpatial
-                            easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+                            duration: Appearance.anim.durations.settleFast
+                            easing.bezierCurve: Appearance.anim.curves.settleFast
                         }
                     }
 
                     Behavior on radius {
                         Anim {
-                            duration: Appearance.anim.durations.expressiveFastSpatial
-                            easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+                            duration: Appearance.anim.durations.settleFast
+                            easing.bezierCurve: Appearance.anim.curves.settleFast
                         }
                     }
                 }

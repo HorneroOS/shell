@@ -1,10 +1,10 @@
-"""P2 appearance tokens: hornero-dark + hornero-light are first-class
-coherent themes with correct switching (no light/dark leakage).
+"""Hornero Signal appearance tokens (RFC 0001 §3).
 
-Covers the canonical semantic token tables in services/Colours.qml, their
-native apply path in services/ThemePipeline.qml, the factory default theme
-key (config/AppearanceConfig.qml + Config.qml + config/shell.default.json),
-the always-listed built-ins in the theme registry, and the audited
+Covers the built-in role tables in services/Signal.qml and their native
+apply path in services/ThemePipeline.qml, the factory default theme key
+(config/AppearanceConfig.qml + Config.qml + config/shell.default.json), the
+always-listed built-ins in the theme registry, the one-shot legacy
+migration, typography/geometry/motion tokens and the audited
 contrast/hover/focus/disabled/selection states of the shared controls.
 """
 import json
@@ -12,212 +12,173 @@ import re
 import sys
 from pathlib import Path
 
-import pytest
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from signal_tokens import BUILT_INS, ROOT, SIGNAL, built_in_themes, luminance  # noqa: E402
 
-ROOT = Path(__file__).resolve().parent.parent
-
-
-def test_scheme_operations_use_nested_appearance_command():
-    for path in [ROOT / "services/Colours.qml", ROOT / "services/ThemePipeline.qml",
-                 ROOT / "modules/launcher/services/Schemes.qml",
-                 ROOT / "modules/launcher/services/M3Variants.qml",
-                 ROOT / "modules/controlcenter/appearance/AppearancePane.qml"]:
-        text = path.read_text()
-        assert '"horneroctl", "scheme"' not in text
-
-
-def test_theme_recipe_palette_entrypoint_is_defined_and_used():
-    text = PIPELINE.read_text()
-    assert "function _startPaletteFromTheme()" in text
-    assert "root._startPaletteFromTheme()" in text
-    assert "_startWalFromTheme" not in text
-COLOURS = ROOT / "services" / "Colours.qml"
 PIPELINE = ROOT / "services" / "ThemePipeline.qml"
 APPEARANCE_CONFIG = ROOT / "config" / "AppearanceConfig.qml"
 CONFIG_QML = ROOT / "config" / "Config.qml"
 FACTORY = ROOT / "config" / "shell.default.json"
-THEMES = ROOT / "modules" / "launcher" / "services" / "Themes.qml"
 THEME_CATALOGUE = ROOT / "services" / "ThemeCatalogue.qml"
-
-BUILT_INS = ("hornero-dark", "hornero-light")
-
-# (foreground token, background token, minimum WCAG contrast)
-TEXT_PAIRS = [
-    ("onPrimary", "primary", 4.5),
-    ("onSecondary", "secondary", 4.5),
-    ("onTertiary", "tertiary", 4.5),
-    ("onError", "error", 4.5),
-    ("onSuccess", "success", 4.5),
-    ("onPrimaryContainer", "primaryContainer", 4.5),
-    ("onSecondaryContainer", "secondaryContainer", 4.5),
-    ("onTertiaryContainer", "tertiaryContainer", 4.5),
-    ("onErrorContainer", "errorContainer", 4.5),
-    ("onSuccessContainer", "successContainer", 4.5),
-    ("onBackground", "background", 4.5),
-    ("onSurface", "surface", 4.5),
-    ("onSurfaceVariant", "surfaceVariant", 4.5),
-    ("inverseOnSurface", "inverseSurface", 4.5),
-    ("outline", "background", 3.0),
-]
-
-
-def _table_region(text, name):
-    start = text.index(f"readonly property var {name}")
-    region = text[start:]
-    entries = {}
-    for line in region.splitlines()[1:]:
-        if line.strip() == "})":
-            break
-        m = re.match(r'\s*"([^"]+)":\s*"(#[0-9a-fA-F]{6})"\s*,?\s*$', line)
-        if m:
-            entries[m.group(1)] = m.group(2)
-    assert entries, f"{name} token table parsed empty"
-    return entries
-
-
-def _tables():
-    text = COLOURS.read_text()
-    return (_table_region(text, "_horneroDark"),
-            _table_region(text, "_horneroLight"))
-
-
-def _rel_luminance(hex_color):
-    h = hex_color.lstrip("#")
-    rgb = [int(h[i:i + 2], 16) / 255 for i in (0, 2, 4)]
-    lin = [c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
-           for c in rgb]
-    return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2]
-
-
-def _contrast(a, b):
-    hi, lo = sorted([_rel_luminance(a), _rel_luminance(b)], reverse=True)
-    return (hi + 0.05) / (lo + 0.05)
-
-
-def test_builtin_tables_cover_same_tokens():
-    dark, light = _tables()
-    assert set(dark) == set(light), (
-        f"token key mismatch: dark-only={sorted(set(dark) - set(light))} "
-        f"light-only={sorted(set(light) - set(dark))}"
-    )
-    assert len(dark) >= 60, f"expected full M3 + term set, got {len(dark)} keys"
-
-
-def test_dark_table_matches_palette_defaults():
-    # No leakage at first run: the compiled M3Palette defaults must equal the
-    # canonical hornero-dark table exactly.
-    text = COLOURS.read_text()
-    defaults = dict(re.findall(
-        r'property color (m3\w+|term\d+):\s*"(#[0-9a-fA-F]{6})"', text))
-    dark, _ = _tables()
-    for name, colour in dark.items():
-        prop = name if name.startswith("term") else f"m3{name}"
-        assert prop in defaults, f"{prop} missing from M3Palette defaults"
-        assert defaults[prop].lower() == colour.lower(), (
-            f"{prop}: default {defaults[prop]} != hornero-dark {colour}")
-    assert len(defaults) == len(dark), (
-        f"M3Palette has {len(defaults)} defaults but table has {len(dark)}")
 
 
 def test_mode_coherence_no_leakage():
-    dark, light = _tables()
-    assert _rel_luminance(dark["background"]) < 0.05, "dark bg must be dark"
-    assert _rel_luminance(light["background"]) > 0.5, "light bg must be light"
-    assert _rel_luminance(dark["surface"]) < 0.05, "dark surface must be dark"
-    assert _rel_luminance(light["surface"]) > 0.5, "light surface must be light"
-    for key in ("surfaceContainerLowest", "surfaceContainerLow",
-                "surfaceContainer", "surfaceContainerHigh",
-                "surfaceContainerHighest"):
-        assert _rel_luminance(dark[key]) < _rel_luminance(light[key]), (
-            f"{key}: dark {dark[key]} not darker than light {light[key]}")
-    # Fixed colours are mode-independent per M3.
-    for key in [k for k in dark if "Fixed" in k]:
-        assert dark[key].lower() == light[key].lower(), (
-            f"{key} must be mode-independent, dark={dark[key]} light={light[key]}")
+    themes = built_in_themes()
+    night = themes["hornero-signal-night"]
+    day = themes["hornero-signal-day"]
+    assert night["mode"] == "dark" and day["mode"] == "light"
+    for role in ("ground", "sunken", "base", "panel", "raised", "lifted"):
+        assert luminance(night["palette"][role]) < 0.05, role
+        assert luminance(day["palette"][role]) > 0.5, role
+    # Elevation increases from base to lifted in both modes.
+    order = ("base", "panel", "raised", "lifted")
+    for theme in (night, day):
+        lums = [luminance(theme["palette"][r]) for r in order]
+        assert lums == sorted(lums), theme["id"]
 
 
-def test_text_contrast_against_token_model():
-    dark, light = _tables()
-    for table, label in ((dark, "hornero-dark"), (light, "hornero-light")):
-        for fg, bg, minimum in TEXT_PAIRS:
-            ratio = _contrast(table[fg], table[bg])
-            assert ratio >= minimum, (
-                f"{label} {fg}/{bg}: {ratio:.2f} < {minimum} "
-                f"({table[fg]} on {table[bg]})")
-
-
-def test_colours_apply_path_sets_mode_and_theme():
-    text = COLOURS.read_text()
-    assert 'property string themeId: "hornero-dark"' in text
+def test_signal_apply_path_sets_mode_and_theme():
+    text = SIGNAL.read_text()
+    assert 'readonly property string defaultThemeId: "hornero-signal-night"' in text
     assert "function isBuiltInTheme(id: string): bool" in text
-    assert "function applyBuiltInTheme(id: string): void" in text
-    for theme in BUILT_INS:
-        assert f'"{theme}"' in text
-    body = text[text.index("function applyBuiltInTheme"):text.index(
-        "function applyBuiltInTheme") + 1200]
-    assert "currentLight" in body, "apply must drive currentLight (no leakage)"
-    assert "showPreview = false" in body, "built-in must clear previews"
-    assert "themeId = id" in body, "apply must track the active theme id"
-    assert "scheme = id" in body, "apply must label the scheme"
-    load = text[text.index("function load("):text.index(
-        "function load(") + 1200]
-    assert "isBuiltInTheme" in load, "disk load must track built-in theme ids"
+    assert "function applyScheme(scheme: var): bool" in text
+    body = text[text.index("function applyScheme"):text.index("function applyBuiltInTheme")]
+    assert "themeMode = scheme.mode" in body, "apply must drive the mode (no leakage)"
+    assert "themeId = scheme.id" in body
+    assert "isCompletePalette(scheme.palette)" in body, "partial schemes are rejected"
+    load = text[text.index("function load("):text.index("function load(") + 600]
+    assert "scheme.schemaVersion === 2" in load
 
 
-def test_pipeline_applies_builtins_natively():
+def test_live_scheme_path_is_the_contract():
+    paths = (ROOT / "utils" / "Paths.qml").read_text()
+    assert "readonly property string signalScheme: `${state}/signal/scheme.json`" in paths
+    text = SIGNAL.read_text()
+    assert "path: root.schemePath" in text and "watchChanges: true" in text
+    assert '"schemaVersion": 2' in text
+    # Atomic write: temp file + mv, payload passed through the environment.
+    assert 'mv -f "$tmp" "$HORNERO_SIGNAL_SCHEME"' in text
+    assert '"HORNERO_SIGNAL_PAYLOAD": writeSchemeProc.payload' in text
+
+
+def test_pipeline_applies_builtins_natively_without_wallpaper_synthesis():
     text = PIPELINE.read_text()
-    assert "function _applyBuiltInTheme(id: string, wallpaper: string)" in text
-    pump = text[text.index("function _pump()"):]
-    intercept = pump.index("isBuiltInTheme")
-    assert intercept < pump.index("themeLoader.themeId = job.themeId"), (
-        "built-ins must short-circuit before the theme.json loader")
-    native = text[text.index("function _applyBuiltInTheme"):]
-    native = native[:native.index("function _finishJob")]
-    assert "Colours.applyBuiltInTheme(id)" in native
-    assert "Colours.persistBuiltInTheme(id, _pendingGtkColorScheme)" in native, (
-        "built-in identity must persist before GTK application")
-    completion = text[text.index("function _finishBuiltInThemeApply"):
-                      text.index("function _finishJob")]
-    assert 'GtkSettings.applyFull("", "", _pendingThemeId,' in completion, (
-        "built-ins must resolve the pack's gtkTheme/iconTheme via the theme id: "
-        "the ini files must switch or `horneroctl appearance theme set` fails verify; "
-        "the registry path is native (`horneroctl appearance gtk theme`), not dots-owned"
-    )
-    assert '"scheme", "sync-state", "--yes"' in text
-    assert '"dots-' not in native and "'dots-" not in native, (
-        "built-in apply must not shell out to dots-* CLIs")
-    for proc in ("walProc", "walPrepProc", "m3Proc", "themeLoader.running"):
-        assert proc not in native, f"built-in apply must not use {proc}"
-    assert "snappyProc" not in native, (
-        "dots-owned switcher extras are skipped for built-ins")
+    apply = text[text.index("function applyTheme("):text.index("function applyThemeFromIpc(")]
+    assert "Signal.isBuiltInTheme(id)" in apply
+    assert apply.index("Signal.isBuiltInTheme(id)") < apply.index("applyThemeCliProc.running = true")
+    native = text[text.index("function _applyTheme("):text.index("function _continueThemeApply(")]
+    assert "Signal.applyScheme(scheme)" in native
+    assert "Signal.persistScheme(scheme)" in native
+    for gone in ("colors\", \"m3", "scheme\", \"regenerate", "schemeType", "--scheme-type"):
+        assert gone not in text, gone
+    marker = '} else if (job.kind === "wallpaper") {'
+    wallpaper = text[text.index(marker) + len(marker):]
+    wallpaper = wallpaper[:wallpaper.index("} else if")]
+    assert "writeWallpaperPointer.running = true" in wallpaper
+    assert "Signal" not in wallpaper, "wallpaper changes never recolour the UI"
 
 
-def test_recipe_theme_sync_persists_the_selected_theme_id():
+def test_catalogue_themes_need_a_complete_palette():
     text = PIPELINE.read_text()
-    sync = text[text.index("id: syncStateProc"):text.index("id: touchSchemeProc")]
-    assert '"--theme-id", root._pendingThemeId' in sync
-    assert "command: root._pendingThemeId" in sync
+    scheme_for = text[text.index("function schemeFor("):text.index("function _pump(")]
+    assert "Signal.isCompletePalette(cfg.palette)" in scheme_for
+    catalogue = THEME_CATALOGUE.read_text()
+    assert "Signal.isCompletePalette(item.palette)" in catalogue
 
 
 def test_factory_theme_key_end_to_end():
-    assert 'property string theme: "hornero-dark"' in APPEARANCE_CONFIG.read_text()
+    assert 'property string theme: "hornero-signal-night"' in APPEARANCE_CONFIG.read_text()
     assert "theme: appearance.theme" in CONFIG_QML.read_text(), (
         "serializeAppearance must persist the theme key")
     factory = json.loads(FACTORY.read_text())
-    assert factory["appearance"]["theme"] == "hornero-dark"
+    assert factory["appearance"]["theme"] == "hornero-signal-night"
+    assert factory["appearance"]["reducedMotion"] is False
+    assert factory["appearance"]["font"]["family"] == {
+        "sans": "IBM Plex Sans", "mono": "IBM Plex Mono", "display": "IBM Plex Sans Condensed"}
+    assert "curves" not in factory["appearance"]["anim"]
 
 
 def test_registry_lists_builtins_first():
     text = THEME_CATALOGUE.read_text()
     assert "function _withBuiltIns(items: var)" in text
-    dark_at = text.index('"hornero-dark"')
-    light_at = text.index('"hornero-light"')
-    assert dark_at < light_at, "hornero-dark must lead the built-in pair"
-    assert "darkMode: true" in text and "darkMode: false" in text
+    positions = [text.index(f'id: "{theme_id}"') for theme_id in BUILT_INS]
+    assert positions == sorted(positions), "night, day, contrast order"
     assert "root.themes = root._withBuiltIns(JSON.parse(text))" in text, (
         "CLI results must merge over built-ins, never replace them")
     assert "root.themes = root._withBuiltIns([])" in text, (
         "built-ins must survive an empty/failed registry")
+
+
+def test_one_shot_legacy_migration():
+    text = CONFIG_QML.read_text()
+    migrate = text[text.index("function migrateLegacyAppearance()"):]
+    migrate = migrate[:migrate.index("\n    }\n")]
+    for old, new in (("hornero-dark", "hornero-signal-night"),
+                     ("hornero-light", "hornero-signal-day"),
+                     ("hornero-199x", "hornero-signal-night"),
+                     ("Rubik", "IBM Plex Sans"),
+                     ("CaskaydiaCove NF", "IBM Plex Mono")):
+        assert f'"{old}": "{new}"' in text, old
+    assert "Glyphs.has(" in migrate, "persisted non-glyph icon names fall back"
+    loaded = text[text.index("onLoaded: {"):]
+    assert loaded.index("root.migrateLegacyAppearance()") < loaded.index("root.loaded = true")
+
+
+def test_typography_tokens():
+    text = APPEARANCE_CONFIG.read_text()
+    assert 'property string sans: "IBM Plex Sans"' in text
+    assert 'property string mono: "IBM Plex Mono"' in text
+    assert 'property string display: "IBM Plex Sans Condensed"' in text
+    for name, size in (("small", 11), ("smaller", 12), ("normal", 13), ("larger", 15),
+                       ("large", 18), ("extraLarge", 28), ("display", 56)):
+        assert f"property int {name}: {size} * scale" in text, name
+
+
+def test_geometry_tokens_on_four_px_grid():
+    text = APPEARANCE_CONFIG.read_text()
+
+    def block(name):
+        return text[text.index(f"component {name}: JsonObject {{"):].split("\n    }", 1)[0]
+
+    assert re.findall(r"property int (\w+): (\d+) \* scale", block("Rounding")) == [
+        ("small", "3"), ("normal", "5"), ("large", "8"), ("full", "1000")]
+    assert re.findall(r"property int (\w+): (\d+) \* scale", block("Spacing")) == [
+        ("small", "4"), ("smaller", "8"), ("normal", "12"), ("larger", "16"), ("large", "24")]
+    assert re.findall(r"property int (\w+): (\d+) \* scale", block("Padding")) == [
+        ("small", "4"), ("smaller", "6"), ("normal", "8"), ("larger", "12"), ("large", "16")]
+
+
+def test_motion_tokens():
+    text = (ROOT / "config" / "Appearance.qml").read_text()
+    curves = dict((k, v) for k, v in re.findall(r"property list<real> (\w+): \[([^\]]+)\]", text))
+    assert curves == {
+        "standard": "0.2, 0, 0, 1, 1, 1",
+        "enter": "0.05, 0.7, 0.1, 1, 1, 1",
+        "exit": "0.3, 0, 1, 1, 1, 1",
+        "sweep": "0.65, 0, 0.35, 1, 1, 1",
+        "settle": "0.32, 1.24, 0.42, 1, 1, 1",
+        "settleFast": "0.34, 1.3, 0.5, 1, 1, 1",
+    }
+    for name, ms in (("quick", 90), ("short", 160), ("medium", 240), ("long", 360),
+                     ("scan", 480), ("settleFast", 220), ("settle", 320)):
+        assert f"readonly property int {name}: {ms} * _k" in text, name
+    assert "readonly property real _k: reduced ? 0 : scale" in text
+    assert "readonly property int fade: reduced ? 90 : 90 * scale" in text
+    assert "readonly property bool reduced: Config.appearance.reducedMotion || SystemMotion.reduced" in text
+    # Curves/durations are tokens, never persisted knobs.
+    config = APPEARANCE_CONFIG.read_text()
+    assert "list<real>" not in config and "property real scale: 1" in config
+
+
+def test_no_retired_motion_names_in_code():
+    retired = re.compile(r"anim\.(curves|durations)\.(emphasized\w*|standardAccel|standardDecel|"
+                         r"expressive\w*|small|normal|large|extraLarge)\b")
+    hits = []
+    for d in ("components", "config", "modules", "plugin/qml", "services", "utils"):
+        for path in (ROOT / d).rglob("*.qml"):
+            for m in retired.finditer(path.read_text(errors="ignore")):
+                hits.append(f"{path.relative_to(ROOT)}: {m.group(0)}")
+    assert not hits, hits
 
 
 def _control(name):
@@ -226,16 +187,16 @@ def _control(name):
 
 def test_text_selection_states_use_tokens():
     text = _control("StyledTextField.qml")
-    assert "selectionColor: Colours.palette.m3primary" in text
-    assert "selectedTextColor: Colours.palette.m3onPrimary" in text
-    assert "Qt.alpha(Colours.palette.m3onSurface, 0.38)" in text, (
-        "disabled text must use the 38% on-surface token")
+    assert "selectionColor: Signal.palette.signal" in text
+    assert "selectedTextColor: Signal.palette.onSignal" in text
+    assert "Qt.alpha(Signal.palette.ink, 0.38)" in text, (
+        "disabled text must use the 38% ink token")
 
 
 def test_search_focus_and_disabled_states():
     text = _control("SearchBar.qml")
-    assert "root.activeFocus ? Colours.palette.m3primary" in text, (
-        "search needs a primary focus ring")
+    assert "root.activeFocus ? Signal.palette.signal" in text, (
+        "search needs a visible focus boundary")
     assert "opacity: root.enabled ? 1 : 0.5" in text
 
 
@@ -254,25 +215,10 @@ def test_disabled_states_use_token_dimming():
 
 def test_state_colours_stay_on_tokens():
     # Hover/focus/disabled/selection colours must resolve through the token
-    # model so both built-ins stay coherent; no literal hex in controls.
+    # model so every built-in stays coherent; no literal hex in controls.
     offenders = []
     for path in (ROOT / "components" / "controls").glob("*.qml"):
         for i, line in enumerate(path.read_text().splitlines(), 1):
             if re.search(r"#[0-9a-fA-F]{3,8}", line):
                 offenders.append(f"{path.name}:{i}:{line.strip()}")
     assert not offenders, f"literal colours in controls: {offenders}"
-
-
-def test_gen_stability():
-    # Flagship tables are generated from the config brand seeds
-    # (scripts/gen-flagship-m3.py); committed tables must match, or the
-    # cross-repo hue contract has drifted.
-    import subprocess
-    proc = subprocess.run(
-        [sys.executable, str(ROOT / "scripts" / "gen-flagship-m3.py"),
-         "--check"],
-        capture_output=True, text=True, check=False)
-    if "SKIP:" in proc.stdout:
-        pytest.skip("materialyoucolor not installed")
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "OK:" in proc.stdout

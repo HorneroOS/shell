@@ -156,14 +156,14 @@ Item {
                     Layout.fillWidth: true
                     text: root.statusText
                     font.pointSize: Appearance.font.size.small
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                     wrapMode: Text.Wrap
                 }
 
                 StyledRect {
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
-                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: capCol.implicitHeight + Appearance.padding.large * 2
 
                     ColumnLayout {
@@ -183,7 +183,7 @@ Item {
                             Layout.fillWidth: true
                             text: root.screenshotPresent ? qsTr("Backend: %1 (%2) · Saved to %3").arg(root.screenshotBackendName).arg(root.screenshotBackend).arg(root.picturesDir) : qsTr("No screenshot backend detected (sss, or Niri in a Niri session).")
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
 
@@ -215,7 +215,7 @@ Item {
                             Layout.fillWidth: true
                             text: root.recorderPresent ? (root.recording ? (root.recordingPaused ? qsTr("Recording (paused): %1").arg(root.currentFile) : qsTr("Recording: %1").arg(root.currentFile)) : qsTr("Recorder ready (gpu-screen-recorder) · Saved to %1").arg(root.recordingsDir)) : qsTr("gpu-screen-recorder is not installed; recording controls stay hidden until it is.")
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
 
@@ -258,7 +258,7 @@ Item {
                             visible: root.clipboardState !== ""
                             text: qsTr("Clipboard backends: %1").arg(root.clipboardState)
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
 
@@ -267,7 +267,7 @@ Item {
                             visible: root.actionText !== ""
                             text: root.actionText
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
 
@@ -275,7 +275,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Screenshot and recording defaults live in horneroctl capture (XDG pictures/videos directories); this pane never shows a control the backend cannot honour.")
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3outline
+                            color: Signal.palette.ruleStrong
                             wrapMode: Text.Wrap
                         }
                     }

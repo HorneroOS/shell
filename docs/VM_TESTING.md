@@ -166,10 +166,10 @@ login auto-opens on `start`, a repeat login auto-opens again, a same-session
 shell reload stays silent, `horneroctl welcome set-show-on-login false`
 survives a new login, and manual reopen (`horneroctl welcome open` plus
 `qs ipc call welcome open`) lands on the requested page. It also captures
-the dark/light/Pampa matrix by swapping `scheme.json` live
-(`tests/vm/lib/welcome-schemes.py` derives light from the built-in M3
-tables and Pampa from `profiles/themes/pampa/theme.json`; unit-tested in
-`tests/vm/test_welcome_schemes.py`).
+the Signal Night/Day/High Contrast matrix by swapping the live scheme
+(`~/.local/state/hornero/signal/scheme.json`; `tests/vm/lib/welcome-schemes.py`
+emits schema-v2 schemes from the built-in tables in `services/Signal.qml`;
+unit-tested in `tests/vm/test_welcome_schemes.py`).
 
 Login sessions are simulated with `XDG_SESSION_ID`, the same key the shell
 uses for its once-per-session marker. Requires the composed guest

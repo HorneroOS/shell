@@ -48,7 +48,7 @@ def test_sizing_clip_and_desktop_palette():
     desk = (ROOT / "modules/plugins/PluginDesktopWidgets.qml").read_text()
     assert "Layout.maximumWidth" in bar and "clip: true" in bar
     assert "Layout.maximumWidth" in dash and "clip: true" in dash
-    assert "palette.windowText: Colours.palette.m3onSurface" in desk
+    assert "palette.windowText: Signal.palette.ink" in desk
     assert "Layout.maximumWidth" in desk and "clip: true" in desk
 
 def test_theme_full_token_set():

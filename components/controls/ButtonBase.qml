@@ -14,7 +14,7 @@ StyledRect {
         Text
     }
 
-    property alias icon: iconLabel.text
+    property alias icon: iconLabel.name
     property alias text: label.text
     property alias font: label.font
 
@@ -26,10 +26,10 @@ StyledRect {
     property int type: ButtonBase.Filled
     property real horizontalPadding: Appearance.padding.normal
     property real verticalPadding: Appearance.padding.smaller
-    property color activeColour: type === ButtonBase.Filled ? Colours.palette.m3primary : Colours.palette.m3secondary
-    property color inactiveColour: type === ButtonBase.Filled ? Colours.tPalette.m3surfaceContainer : Colours.palette.m3secondaryContainer
-    property color activeOnColour: type === ButtonBase.Filled ? Colours.palette.m3onPrimary : Colours.palette.m3onSecondary
-    property color inactiveOnColour: type === ButtonBase.Filled ? Colours.palette.m3onSurface : Colours.palette.m3onSecondaryContainer
+    property color activeColour: type === ButtonBase.Filled ? Signal.palette.signal : Signal.palette.cue
+    property color inactiveColour: type === ButtonBase.Filled ? Signal.tPalette.panel : Signal.palette.cueWell
+    property color activeOnColour: type === ButtonBase.Filled ? Signal.palette.onSignal : Signal.palette.onCue
+    property color inactiveOnColour: type === ButtonBase.Filled ? Signal.palette.ink : Signal.palette.onCueWell
 
     signal clicked
 
@@ -65,16 +65,11 @@ StyledRect {
         anchors.centerIn: parent
         spacing: Appearance.spacing.small
 
-        MaterialIcon {
+        Glyph {
             id: iconLabel
 
             Layout.alignment: Qt.AlignVCenter
             color: root.internalChecked ? root.activeOnColour : root.inactiveOnColour
-            fill: root.internalChecked ? 1 : 0
-
-            Behavior on fill {
-                Anim {}
-            }
         }
 
         StyledText {

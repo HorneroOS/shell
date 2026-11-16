@@ -34,7 +34,7 @@ Item {
         anchors.fill: parent
         radius: Appearance.rounding.small
         color: root.isActive
-            ? Qt.alpha(Colours.palette.m3primary, 0.12)
+            ? Qt.alpha(Signal.palette.signal, 0.12)
             : "transparent"
         visible: root.isActive
     }
@@ -50,10 +50,10 @@ Item {
         spacing: Appearance.spacing.small
 
         // App icon
-        MaterialIcon {
+        Glyph {
             Layout.alignment: Qt.AlignVCenter
-            text: Icons.getAppCategoryIcon(root.appId, "terminal")
-            color: root.isActive ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+            name: Icons.getAppCategoryIcon(root.appId, "terminal")
+            color: root.isActive ? Signal.palette.signal : Signal.palette.inkMuted
             font.pointSize: Appearance.font.size.normal
         }
 
@@ -63,7 +63,7 @@ Item {
             text: root.modelData.title ?? qsTr("Unknown")
             font.pointSize: Appearance.font.size.small
             font.weight: root.isActive ? 600 : 400
-            color: root.isActive ? Colours.palette.m3primary : Colours.palette.m3onSurface
+            color: root.isActive ? Signal.palette.signal : Signal.palette.ink
             elide: Text.ElideRight
         }
 
@@ -72,24 +72,24 @@ Item {
             visible: Config.dashboard.workspaces.showWindowBadges
             spacing: 2
 
-            MaterialIcon {
+            Glyph {
                 visible: root.floating
-                text: "picture_in_picture"
-                color: Colours.palette.m3tertiary
+                name: "picture-in-picture"
+                color: Signal.palette.phosphor
                 font.pointSize: Appearance.font.size.small
             }
 
-            MaterialIcon {
+            Glyph {
                 visible: Compositor.supports("fullscreenState") && root.fullscreen > 0
-                text: "fullscreen"
-                color: Colours.palette.m3secondary
+                name: "maximize"
+                color: Signal.palette.cue
                 font.pointSize: Appearance.font.size.small
             }
 
-            MaterialIcon {
+            Glyph {
                 visible: root.pinned
-                text: "keep"
-                color: Colours.palette.m3secondary
+                name: "pin"
+                color: Signal.palette.cue
                 font.pointSize: Appearance.font.size.small
             }
         }
@@ -103,7 +103,7 @@ Item {
                 type: IconButton.Text
                 visible: Compositor.supports("windowFloatingToggle")
                 accessibleName: qsTr("Toggle floating")
-                icon: root.floating ? "select_window" : "select_window_off"
+                icon: root.floating ? "app-window" : "app-window"
                 padding: Appearance.padding.small / 2
                 font.pointSize: Appearance.font.size.small
 
@@ -112,7 +112,7 @@ Item {
 
             IconButton {
                 type: IconButton.Text
-                icon: "close"
+                icon: "x"
                 accessibleName: qsTr("Close window")
                 visible: Compositor.supports("windowClose")
                 padding: Appearance.padding.small / 2

@@ -53,7 +53,7 @@ Item {
             required property var modelData
             readonly property string pluginId: modelData.id
             readonly property string displayName: typeof modelData.name === "string" && modelData.name !== "" ? modelData.name : modelData.id
-            readonly property string icon: typeof modelData.icon === "string" && modelData.icon !== "" ? modelData.icon : "extension"
+            readonly property string icon: typeof modelData.icon === "string" && modelData.icon !== "" ? modelData.icon : "puzzle"
             readonly property string prefix: Providers.launcherPrefixFor(modelData.id)
             property bool registered: false
 

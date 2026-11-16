@@ -57,13 +57,13 @@ Item {
     property string queuedMode
     readonly property bool isDetached: detachedMode.length > 0
 
-    property int animLength: Appearance.anim.durations.normal
-    property list<real> animCurve: Appearance.anim.curves.emphasized
+    property int animLength: Appearance.anim.durations.medium
+    property list<real> animCurve: Appearance.anim.curves.standard
 
     function detach(mode: string): void {
         if (mode === "winfo" && !Compositor.supports("nativeWindowThumbnails"))
             return;
-        animLength = Appearance.anim.durations.large;
+        animLength = Appearance.anim.durations.long;
         if (mode === "winfo") {
             detachedMode = mode;
         } else {
@@ -78,9 +78,9 @@ Item {
         currentName = "";
         currentCenter = 0;
         currentAnchor = null;
-        animLength = Appearance.anim.durations.normal;
+        animLength = Appearance.anim.durations.medium;
         detachedMode = "";
-        animCurve = Appearance.anim.curves.emphasized;
+        animCurve = Appearance.anim.curves.standard;
     }
 
     visible: width > 0 && height > 0

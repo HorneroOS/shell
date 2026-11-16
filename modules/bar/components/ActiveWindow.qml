@@ -11,7 +11,7 @@ Item {
 
     required property var bar
     required property Brightness.Monitor monitor
-    property color colour: Colours.palette.m3primary
+    property color colour: Signal.palette.signal
 
     Accessible.role: Accessible.StaticText
     Accessible.name: Compositor.activeWindowTitle || qsTr("Desktop")
@@ -58,12 +58,12 @@ Item {
         anchors.horizontalCenter: root.vertical ? parent.horizontalCenter : undefined
         anchors.verticalCenter: root.vertical ? (root.compactRail ? parent.verticalCenter : undefined) : parent.verticalCenter
 
-        MaterialIcon {
+        Glyph {
             id: glyph
 
             anchors.centerIn: parent
             animate: true
-            text: Icons.getAppCategoryIcon(Compositor.activeWindowAppId, "desktop_windows")
+            name: Icons.getAppCategoryIcon(Compositor.activeWindowAppId, "device-desktop")
             color: root.colour
         }
     }
@@ -100,15 +100,15 @@ Item {
 
     Behavior on implicitHeight {
         Anim {
-            duration: Appearance.anim.durations.expressiveDefaultSpatial
-            easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+            duration: Appearance.anim.durations.settle
+            easing.bezierCurve: Appearance.anim.curves.settle
         }
     }
 
     Behavior on implicitWidth {
         Anim {
-            duration: Appearance.anim.durations.expressiveDefaultSpatial
-            easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+            duration: Appearance.anim.durations.settle
+            easing.bezierCurve: Appearance.anim.curves.settle
         }
     }
 

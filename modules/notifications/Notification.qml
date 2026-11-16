@@ -20,7 +20,7 @@ StyledRect {
     readonly property int nonAnimHeight: summary.implicitHeight + (root.expanded ? appName.height + body.height + actions.height + actions.anchors.topMargin : bodyPreview.height) + inner.anchors.margins * 2
     property bool expanded: Config.notifs.openExpanded
 
-    color: Colours.surface(root.modelData.urgency === NotificationUrgency.Critical ? Colours.palette.m3secondaryContainer : Colours.tPalette.m3surfaceContainer, "notifications")
+    color: Signal.surface(root.modelData.urgency === NotificationUrgency.Critical ? Signal.palette.cueWell : Signal.tPalette.panel, "notifications")
     radius: Appearance.rounding.normal
     implicitWidth: Config.notifs.sizes.width
     implicitHeight: inner.implicitHeight
@@ -34,7 +34,7 @@ StyledRect {
 
     Behavior on x {
         Anim {
-            easing.bezierCurve: Appearance.anim.curves.emphasizedDecel
+            easing.bezierCurve: Appearance.anim.curves.enter
         }
     }
 
@@ -99,8 +99,8 @@ StyledRect {
 
             Behavior on implicitHeight {
                 Anim {
-                    duration: Appearance.anim.durations.expressiveDefaultSpatial
-                    easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                    duration: Appearance.anim.durations.settle
+                    easing.bezierCurve: Appearance.anim.curves.settle
                 }
             }
 
@@ -142,7 +142,7 @@ StyledRect {
 
                 sourceComponent: StyledRect {
                     radius: Appearance.rounding.full
-                    color: root.modelData.urgency === NotificationUrgency.Critical ? Colours.palette.m3error : root.modelData.urgency === NotificationUrgency.Low ? Colours.layer(Colours.palette.m3surfaceContainerHighest, 2) : Colours.palette.m3secondaryContainer
+                    color: root.modelData.urgency === NotificationUrgency.Critical ? Signal.palette.alert : root.modelData.urgency === NotificationUrgency.Low ? Signal.layer(Signal.palette.lifted, 2) : Signal.palette.cueWell
                     implicitWidth: root.hasImage ? Config.notifs.sizes.badge : Config.notifs.sizes.image
                     implicitHeight: root.hasImage ? Config.notifs.sizes.badge : Config.notifs.sizes.image
 
@@ -159,7 +159,7 @@ StyledRect {
                         sourceComponent: ColouredIcon {
                             anchors.fill: parent
                             source: Quickshell.iconPath(root.modelData.appIcon)
-                            colour: root.modelData.urgency === NotificationUrgency.Critical ? Colours.palette.m3onError : root.modelData.urgency === NotificationUrgency.Low ? Colours.palette.m3onSurface : Colours.palette.m3onSecondaryContainer
+                            colour: root.modelData.urgency === NotificationUrgency.Critical ? Signal.palette.onAlert : root.modelData.urgency === NotificationUrgency.Low ? Signal.palette.ink : Signal.palette.onCueWell
                             layer.enabled: root.modelData.appIcon.endsWith("symbolic")
                         }
                     }
@@ -170,10 +170,10 @@ StyledRect {
                         anchors.horizontalCenterOffset: -Appearance.font.size.large * 0.02
                         anchors.verticalCenterOffset: Appearance.font.size.large * 0.02
 
-                        sourceComponent: MaterialIcon {
-                            text: Icons.getNotifIcon(root.modelData.summary, root.modelData.urgency)
+                        sourceComponent: Glyph {
+                            name: Icons.getNotifIcon(root.modelData.summary, root.modelData.urgency)
 
-                            color: root.modelData.urgency === NotificationUrgency.Critical ? Colours.palette.m3onError : root.modelData.urgency === NotificationUrgency.Low ? Colours.palette.m3onSurface : Colours.palette.m3onSecondaryContainer
+                            color: root.modelData.urgency === NotificationUrgency.Critical ? Signal.palette.onAlert : root.modelData.urgency === NotificationUrgency.Low ? Signal.palette.ink : Signal.palette.onCueWell
                             font.pointSize: Appearance.font.size.large
                         }
                     }
@@ -190,7 +190,7 @@ StyledRect {
                 animate: true
                 text: appNameMetrics.elidedText
                 maximumLineCount: 1
-                color: Colours.palette.m3onSurfaceVariant
+                color: Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.small
 
                 opacity: root.expanded ? 1 : 0
@@ -242,7 +242,7 @@ StyledRect {
                         property: "maximumLineCount"
                     }
                     AnchorAnimation {
-                        duration: Appearance.anim.durations.normal
+                        duration: Appearance.anim.durations.medium
                         easing.type: Easing.BezierSpline
                         easing.bezierCurve: Appearance.anim.curves.standard
                     }
@@ -271,7 +271,7 @@ StyledRect {
                 anchors.leftMargin: Appearance.spacing.small
 
                 text: "•"
-                color: Colours.palette.m3onSurfaceVariant
+                color: Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.small
 
                 states: State {
@@ -286,7 +286,7 @@ StyledRect {
 
                 transitions: Transition {
                     AnchorAnimation {
-                        duration: Appearance.anim.durations.normal
+                        duration: Appearance.anim.durations.medium
                         easing.type: Easing.BezierSpline
                         easing.bezierCurve: Appearance.anim.curves.standard
                     }
@@ -303,7 +303,7 @@ StyledRect {
                 animate: true
                 horizontalAlignment: Text.AlignLeft
                 text: root.modelData.timeStr
-                color: Colours.palette.m3onSurfaceVariant
+                color: Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.small
             }
 
@@ -321,20 +321,20 @@ StyledRect {
 
                 StateLayer {
                     radius: Appearance.rounding.full
-                    color: root.modelData.urgency === NotificationUrgency.Critical ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                    color: root.modelData.urgency === NotificationUrgency.Critical ? Signal.palette.onCueWell : Signal.palette.ink
 
                     function onClicked() {
                         root.expanded = !root.expanded;
                     }
                 }
 
-                MaterialIcon {
+                Glyph {
                     id: expandIcon
 
                     anchors.centerIn: parent
 
                     animate: true
-                    text: root.expanded ? "expand_less" : "expand_more"
+                    name: root.expanded ? "chevron-up" : "chevron-down"
                     font.pointSize: Appearance.font.size.normal
                 }
             }
@@ -350,7 +350,7 @@ StyledRect {
                 animate: true
                 textFormat: Text.MarkdownText
                 text: bodyPreviewMetrics.elidedText
-                color: Colours.palette.m3onSurfaceVariant
+                color: Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.small
 
                 opacity: root.expanded ? 0 : 1
@@ -381,7 +381,7 @@ StyledRect {
                 animate: true
                 textFormat: Text.MarkdownText
                 text: root.modelData.body
-                color: Colours.palette.m3onSurfaceVariant
+                color: Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.small
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                 height: text ? implicitHeight : 0
@@ -445,7 +445,7 @@ StyledRect {
         Accessible.name: action.modelData.text
 
         radius: Appearance.rounding.full
-        color: root.modelData.urgency === NotificationUrgency.Critical ? Colours.palette.m3secondary : Colours.layer(Colours.palette.m3surfaceContainerHigh, 2)
+        color: root.modelData.urgency === NotificationUrgency.Critical ? Signal.palette.cue : Signal.layer(Signal.palette.raised, 2)
 
         Layout.preferredWidth: actionText.width + Appearance.padding.normal * 2
         Layout.preferredHeight: actionText.height + Appearance.padding.small * 2
@@ -454,7 +454,7 @@ StyledRect {
 
         StateLayer {
             radius: Appearance.rounding.full
-            color: root.modelData.urgency === NotificationUrgency.Critical ? Colours.palette.m3onSecondary : Colours.palette.m3onSurface
+            color: root.modelData.urgency === NotificationUrgency.Critical ? Signal.palette.onCue : Signal.palette.ink
 
             function onClicked(): void {
                 action.modelData.invoke();
@@ -466,7 +466,7 @@ StyledRect {
 
             anchors.centerIn: parent
             text: actionTextMetrics.elidedText
-            color: root.modelData.urgency === NotificationUrgency.Critical ? Colours.palette.m3onSecondary : Colours.palette.m3onSurfaceVariant
+            color: root.modelData.urgency === NotificationUrgency.Critical ? Signal.palette.onCue : Signal.palette.inkMuted
             font.pointSize: Appearance.font.size.small
         }
 

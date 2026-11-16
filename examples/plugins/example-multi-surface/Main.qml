@@ -18,6 +18,6 @@ Item {
         variant: "ghost"
         text: pluginSettings.value("label", "HorneroOS")
         tooltipText: "Example Multi-Surface: activate for details"
-        onClicked: Notifications.toast("Example Multi-Surface", "Bar surface of a manifest v2 package; the same package also ships a dashboard card.", "extension")
+        onClicked: Notifications.toast("Example Multi-Surface", "Bar surface of a manifest v2 package; the same package also ships a dashboard card.", "puzzle")
     }
 }

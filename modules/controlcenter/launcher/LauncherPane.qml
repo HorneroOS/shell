@@ -168,7 +168,7 @@ Item {
                     ToggleButton {
                         toggled: !root.session.launcher.active
                         icon: "settings"
-                        accent: "Primary"
+                        accent: "signal"
                         iconSize: Appearance.font.size.normal
                         horizontalPadding: Appearance.padding.normal
                         verticalPadding: Appearance.padding.smaller
@@ -195,7 +195,7 @@ Item {
 
                 StyledText {
                     text: qsTr("All applications available in the launcher")
-                    color: Colours.palette.m3outline
+                    color: Signal.palette.ruleStrong
                 }
 
                 StyledRect {
@@ -203,20 +203,20 @@ Item {
                     Layout.topMargin: Appearance.spacing.normal
                     Layout.bottomMargin: Appearance.spacing.small
 
-                    color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
+                    color: Signal.layer(Signal.palette.panel, 2)
                     radius: Appearance.rounding.full
 
                     implicitHeight: Math.max(searchIcon.implicitHeight, searchField.implicitHeight, clearIcon.implicitHeight)
 
-                    MaterialIcon {
+                    Glyph {
                         id: searchIcon
 
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.left: parent.left
                         anchors.leftMargin: Appearance.padding.normal
 
-                        text: "search"
-                        color: Colours.palette.m3onSurfaceVariant
+                        name: "search"
+                        color: Signal.palette.inkMuted
                     }
 
                     StyledTextField {
@@ -237,7 +237,7 @@ Item {
                         }
                     }
 
-                    MaterialIcon {
+                    Glyph {
                         id: clearIcon
 
                         anchors.verticalCenter: parent.verticalCenter
@@ -255,8 +255,8 @@ Item {
                             return 1;
                         }
 
-                        text: "close"
-                        color: Colours.palette.m3onSurfaceVariant
+                        name: "x"
+                        color: Signal.palette.inkMuted
 
                         MouseArea {
                             id: clearMouse
@@ -270,13 +270,13 @@ Item {
 
                         Behavior on width {
                             Anim {
-                                duration: Appearance.anim.durations.small
+                                duration: Appearance.anim.durations.short
                             }
                         }
 
                         Behavior on opacity {
                             Anim {
-                                duration: Appearance.anim.durations.small
+                                duration: Appearance.anim.durations.short
                             }
                         }
                     }
@@ -311,7 +311,7 @@ Item {
 
                             readonly property bool isSelected: root.selectedApp === modelData
 
-                            color: isSelected ? Colours.layer(Colours.palette.m3surfaceContainer, 2) : "transparent"
+                            color: isSelected ? Signal.layer(Signal.palette.panel, 2) : "transparent"
                             radius: Appearance.rounding.normal
 
                             Accessible.role: Accessible.Button
@@ -370,19 +370,17 @@ Item {
 
                                 Component {
                                     id: hiddenIcon
-                                    MaterialIcon {
-                                        text: "visibility_off"
-                                        fill: 1
-                                        color: Colours.palette.m3primary
+                                    Glyph {
+                                        name: "eye-off"
+                                        color: Signal.palette.signal
                                     }
                                 }
 
                                 Component {
                                     id: favouriteIcon
-                                    MaterialIcon {
-                                        text: "favorite"
-                                        fill: 1
-                                        color: Colours.palette.m3primary
+                                    Glyph {
+                                        name: "heart"
+                                        color: Signal.palette.signal
                                     }
                                 }
                             }

@@ -27,7 +27,7 @@ ColumnLayout {
             implicitWidth: prompt.implicitWidth + Appearance.padding.normal * 2
             implicitHeight: prompt.implicitHeight + Appearance.padding.normal * 2
 
-            color: Colours.palette.m3primary
+            color: Signal.palette.signal
             radius: Appearance.rounding.small
 
             MonoText {
@@ -36,7 +36,7 @@ ColumnLayout {
                 anchors.centerIn: parent
                 text: ">"
                 font.pointSize: root.width > 400 ? Appearance.font.size.larger : Appearance.font.size.normal
-                color: Colours.palette.m3onPrimary
+                color: Signal.palette.onSignal
             }
         }
 
@@ -135,7 +135,7 @@ ColumnLayout {
 
                     implicitWidth: implicitHeight
                     implicitHeight: Appearance.font.size.larger * 2
-                    color: Colours.palette[`term${index}`]
+                    color: Signal.palette[`term${index}`]
                     radius: Appearance.rounding.small
                 }
             }
@@ -149,7 +149,7 @@ ColumnLayout {
     component OsLogo: ColouredIcon {
         source: SysInfo.osLogo
         implicitSize: height
-        colour: Colours.palette.m3primary
+        colour: Signal.palette.signal
         layer.enabled: Config.lock.recolourLogo || SysInfo.isDefaultLogo
     }
 

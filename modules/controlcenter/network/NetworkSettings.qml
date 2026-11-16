@@ -93,8 +93,8 @@ ColumnLayout {
             Layout.topMargin: Appearance.spacing.normal
             Layout.minimumHeight: Appearance.font.size.normal + Appearance.padding.normal * 2
             text: qsTr("⚙ Manage VPN Providers")
-            inactiveColour: Colours.palette.m3secondaryContainer
-            inactiveOnColour: Colours.palette.m3onSecondaryContainer
+            inactiveColour: Signal.palette.cueWell
+            inactiveOnColour: Signal.palette.onCueWell
 
             onClicked: {
                 vpnSettingsDialog.open();
@@ -150,7 +150,7 @@ ColumnLayout {
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
         background: StyledRect {
-            color: Colours.palette.m3surface
+            color: Signal.palette.base
             radius: Appearance.rounding.large
         }
 

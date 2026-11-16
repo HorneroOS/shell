@@ -10,8 +10,8 @@ ProgressBar {
     property bool wavy: false
     property real waveFrequency: 5
     property real waveAmplitude: 2
-    property color fgColour: Colours.palette.m3primary
-    property color bgColour: Colours.palette.m3surfaceContainerHighest
+    property color fgColour: Signal.palette.signal
+    property color bgColour: Signal.palette.lifted
 
     implicitHeight: 6
     implicitWidth: 200

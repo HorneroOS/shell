@@ -445,22 +445,22 @@ Item {
 
         visible: root.clear
         anchors.fill: parent
-        opacity: Config.appearance.highContrast ? 1 : 0.62 * Colours.elementAlpha("bar")
+        opacity: Config.appearance.highContrast ? 1 : 0.62 * Signal.elementAlpha("bar")
 
         gradient: Gradient {
             orientation: root.vertical ? Gradient.Horizontal : Gradient.Vertical
 
             GradientStop {
                 position: 0
-                color: Config.appearance.highContrast || scrim.fromStart ? Colours.palette.m3surface : "transparent"
+                color: Config.appearance.highContrast || scrim.fromStart ? Signal.palette.base : "transparent"
             }
             GradientStop {
                 position: scrim.fromStart ? 0.65 : 0.35
-                color: Colours.palette.m3surface
+                color: Signal.palette.base
             }
             GradientStop {
                 position: 1
-                color: Config.appearance.highContrast || !scrim.fromStart ? Colours.palette.m3surface : "transparent"
+                color: Config.appearance.highContrast || !scrim.fromStart ? Signal.palette.base : "transparent"
             }
         }
     }
@@ -541,7 +541,7 @@ Item {
         layer.enabled: root.clear
         layer.effect: MultiEffect {
             shadowEnabled: true
-            shadowColor: Colours.palette.m3surface
+            shadowColor: Signal.palette.base
             shadowBlur: 1
             shadowOpacity: 1
             shadowHorizontalOffset: 0
@@ -557,7 +557,7 @@ Item {
         StyledRect {
             visible: !root.clear && (root.floating || !Config.border.frameEnabled)
             anchors.fill: parent
-            color: Colours.surface(Colours.layer(Colours.palette.m3surface, 1), "bar")
+            color: Signal.surface(Signal.layer(Signal.palette.base, 1), "bar")
             radius: root.floating ? Appearance.rounding.full : 0
         }
 

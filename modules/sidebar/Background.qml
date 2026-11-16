@@ -22,7 +22,7 @@ ShapePath {
     // Paint nothing while the panel is closed: the concave corner arcs
     // live outside the wrapper and would otherwise linger as stray wings
     // on screens without the frame (frameEnabled false, clear bars).
-    fillColor: wrapper.width > 0 && wrapper.height > 0 ? Colours.surface(Colours.palette.m3surface, "sidebar") : "transparent"
+    fillColor: wrapper.width > 0 && wrapper.height > 0 ? Signal.surface(Signal.palette.base, "sidebar") : "transparent"
 
     PathLine {
         relativeX: -root.wrapper.width - root.notifsRoundingX

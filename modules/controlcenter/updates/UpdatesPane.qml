@@ -232,7 +232,7 @@ Item {
                 StyledRect {
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
-                    color: Colours.layer(Colours.palette.m3surfaceContainerHigh, 1)
+                    color: Signal.layer(Signal.palette.raised, 1)
 
                     implicitHeight: statusRow.implicitHeight + Appearance.padding.normal * 2
 
@@ -243,9 +243,9 @@ Item {
                         anchors.margins: Appearance.padding.normal
                         spacing: Appearance.spacing.normal
 
-                        MaterialIcon {
-                            text: root.pendingCount > 0 ? "update" : "check_circle"
-                            color: root.pendingCount > 0 ? Colours.palette.m3tertiary : Colours.palette.m3primary
+                        Glyph {
+                            name: root.pendingCount > 0 ? "clock-up" : "circle-check"
+                            color: root.pendingCount > 0 ? Signal.palette.phosphor : Signal.palette.signal
                             font.pointSize: Appearance.font.size.extraLarge
                         }
 
@@ -262,7 +262,7 @@ Item {
                             StyledText {
                                 visible: root.updatesError.length > 0
                                 text: root.updatesError
-                                color: Colours.palette.m3error
+                                color: Signal.palette.alert
                                 font.pointSize: Appearance.font.size.smaller
                                 wrapMode: Text.Wrap
                                 Layout.fillWidth: true
@@ -286,7 +286,7 @@ Item {
                     visible: root.rebootRequired
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
-                    color: Colours.layer(Colours.palette.m3tertiaryContainer, 1)
+                    color: Signal.layer(Signal.palette.phosphorWell, 1)
                     implicitHeight: rebootRow.implicitHeight + Appearance.padding.normal * 2
 
                     RowLayout {
@@ -296,9 +296,9 @@ Item {
                         anchors.margins: Appearance.padding.normal
                         spacing: Appearance.spacing.normal
 
-                        MaterialIcon {
-                            text: "restart_alt"
-                            color: Colours.palette.m3onTertiaryContainer
+                        Glyph {
+                            name: "reload"
+                            color: Signal.palette.onPhosphorWell
                             font.pointSize: Appearance.font.size.extraLarge
                         }
 
@@ -308,7 +308,7 @@ Item {
 
                             StyledText {
                                 text: qsTr("Reboot required to finish updating")
-                                color: Colours.palette.m3onTertiaryContainer
+                                color: Signal.palette.onPhosphorWell
                                 font.pointSize: Appearance.font.size.normal
                                 font.weight: 600
                                 wrapMode: Text.Wrap
@@ -318,7 +318,7 @@ Item {
                             StyledText {
                                 visible: root.rebootReason.length > 0
                                 text: root.rebootReason
-                                color: Colours.palette.m3onTertiaryContainer
+                                color: Signal.palette.onPhosphorWell
                                 font.pointSize: Appearance.font.size.smaller
                                 wrapMode: Text.Wrap
                                 Layout.fillWidth: true
@@ -326,7 +326,7 @@ Item {
 
                             StyledText {
                                 text: qsTr("Save your work and restart from the power menu when ready. Nothing restarts automatically.")
-                                color: Colours.palette.m3onTertiaryContainer
+                                color: Signal.palette.onPhosphorWell
                                 font.pointSize: Appearance.font.size.smaller
                                 wrapMode: Text.Wrap
                                 Layout.fillWidth: true
@@ -340,7 +340,7 @@ Item {
                     visible: root.horneroPendingCount >= 0
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
-                    color: Colours.layer(Colours.palette.m3surfaceContainerHigh, 1)
+                    color: Signal.layer(Signal.palette.raised, 1)
                     implicitHeight: horneroLane.implicitHeight + Appearance.padding.normal * 2
 
                     ColumnLayout {
@@ -361,7 +361,7 @@ Item {
                         StyledText {
                             visible: root.snapshotStatus.length > 0
                             text: qsTr("Snapshots: %1").arg(root.snapshotStatus)
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.smaller
                             wrapMode: Text.Wrap
                             Layout.fillWidth: true
@@ -388,7 +388,7 @@ Item {
                                 text: modelData
                                 font.pointSize: Appearance.font.size.smaller
                                 font.family: Appearance.font.family.mono
-                                color: Colours.palette.m3onSurfaceVariant
+                                color: Signal.palette.inkMuted
                                 elide: Text.ElideRight
                             }
                         }
@@ -414,7 +414,7 @@ Item {
                 StyledText {
                     visible: root.backupList.length === 0 && root.backupsError.length === 0
                     text: qsTr("No backups yet. Create one before big changes — restore brings it back.")
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                     font.pointSize: Appearance.font.size.smaller
                     wrapMode: Text.Wrap
                     Layout.fillWidth: true
@@ -423,7 +423,7 @@ Item {
                 StyledText {
                     visible: root.backupsError.length > 0
                     text: root.backupsError
-                    color: Colours.palette.m3error
+                    color: Signal.palette.alert
                     font.pointSize: Appearance.font.size.smaller
                     wrapMode: Text.Wrap
                     Layout.fillWidth: true
@@ -439,7 +439,7 @@ Item {
                         text: modelData
                         font.pointSize: Appearance.font.size.smaller
                         font.family: Appearance.font.family.mono
-                        color: Colours.palette.m3onSurfaceVariant
+                        color: Signal.palette.inkMuted
                         elide: Text.ElideRight
                     }
                 }
@@ -475,7 +475,7 @@ Item {
                     Layout.fillWidth: true
                     visible: root.snapshotBackend === "none"
                     text: qsTr("Update rollback is unavailable: no snapshot backend is recorded for this system.")
-                    color: Colours.palette.m3tertiary
+                    color: Signal.palette.phosphor
                     font.pointSize: Appearance.font.size.smaller
                     wrapMode: Text.Wrap
                 }
@@ -527,7 +527,7 @@ Item {
                     text: root.lastResult
                     font.pointSize: Appearance.font.size.smaller
                     font.family: Appearance.font.family.mono
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                     wrapMode: Text.Wrap
                     Layout.fillWidth: true
                 }

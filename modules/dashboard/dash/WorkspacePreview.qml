@@ -30,7 +30,7 @@ Item {
 
         anchors.fill: parent
         radius: Appearance.rounding.normal
-        color: Colours.tPalette.m3surfaceContainerHigh
+        color: Signal.tPalette.raised
 
         ScreencopyView {
             id: view
@@ -58,17 +58,17 @@ Item {
                 anchors.centerIn: parent
                 spacing: Appearance.spacing.small
 
-                MaterialIcon {
+                Glyph {
                     Layout.alignment: Qt.AlignHCenter
-                    text: "image_not_supported"
-                    color: Colours.palette.m3onSurfaceVariant
+                    name: "photo-off"
+                    color: Signal.palette.inkMuted
                     font.pointSize: Appearance.font.size.extraLarge * 2
                 }
 
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
                     text: qsTr("No windows to preview")
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                     font.pointSize: Appearance.font.size.normal
                 }
             }

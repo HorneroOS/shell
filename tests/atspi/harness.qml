@@ -19,7 +19,7 @@ ShellRoot {
         ColumnLayout {
             anchors.centerIn: parent
             TextButton { text: "Apply appearance changes" }
-            IconButton { icon: "close"; accessibleName: "Close Welcome" }
+            IconButton { icon: "x"; accessibleName: "Close Welcome" }
             ToggleRow { label: "Night mode" }
             StyledSlider { accessibleName: "Output volume"; value: 0.5; implicitWidth: 200 }
         }

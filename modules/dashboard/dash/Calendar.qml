@@ -61,12 +61,12 @@ CustomMouseArea {
                     }
                 }
 
-                MaterialIcon {
+                Glyph {
                     id: prevMonthText
 
                     anchors.centerIn: parent
-                    text: "chevron_left"
-                    color: Colours.palette.m3tertiary
+                    name: "chevron-left"
+                    color: Signal.palette.phosphor
                     font.pointSize: Appearance.font.size.normal
                     font.weight: 700
                 }
@@ -103,7 +103,7 @@ CustomMouseArea {
 
                     anchors.centerIn: parent
                     text: grid.title
-                    color: Colours.palette.m3primary
+                    color: Signal.palette.signal
                     font.pointSize: Appearance.font.size.normal
                     font.weight: 500
                     font.capitalization: Font.Capitalize
@@ -127,12 +127,12 @@ CustomMouseArea {
                     }
                 }
 
-                MaterialIcon {
+                Glyph {
                     id: nextMonthText
 
                     anchors.centerIn: parent
-                    text: "chevron_right"
-                    color: Colours.palette.m3tertiary
+                    name: "chevron-right"
+                    color: Signal.palette.phosphor
                     font.pointSize: Appearance.font.size.normal
                     font.weight: 700
                 }
@@ -151,7 +151,7 @@ CustomMouseArea {
                 horizontalAlignment: Text.AlignHCenter
                 text: model.shortName
                 font.weight: 500
-                color: (model.day === 0 || model.day === 6) ? Colours.palette.m3secondary : Colours.palette.m3onSurfaceVariant
+                color: (model.day === 0 || model.day === 6) ? Signal.palette.cue : Signal.palette.inkMuted
             }
         }
 
@@ -188,9 +188,9 @@ CustomMouseArea {
                         color: {
                             const dayOfWeek = dayItem.model.date.getUTCDay();
                             if (dayOfWeek === 0 || dayOfWeek === 6)
-                                return Colours.palette.m3secondary;
+                                return Signal.palette.cue;
 
-                            return Colours.palette.m3onSurfaceVariant;
+                            return Signal.palette.inkMuted;
                         }
                         opacity: 1
                         font.pointSize: Appearance.font.size.normal
@@ -218,7 +218,7 @@ CustomMouseArea {
 
                 clip: true
                 radius: Appearance.rounding.full
-                color: Colours.palette.m3primary
+                color: Signal.palette.signal
 
                 opacity: todayItem ? 1 : 0
                 scale: todayItem ? 1 : 0.7
@@ -231,8 +231,8 @@ CustomMouseArea {
                     implicitHeight: grid.height
 
                     source: grid
-                    sourceColor: Colours.palette.m3onSurface
-                    colorizationColor: Colours.palette.m3onPrimary
+                    sourceColor: Signal.palette.ink
+                    colorizationColor: Signal.palette.onSignal
                 }
 
                 Behavior on opacity {
@@ -245,15 +245,15 @@ CustomMouseArea {
 
                 Behavior on x {
                     Anim {
-                        duration: Appearance.anim.durations.expressiveDefaultSpatial
-                        easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                        duration: Appearance.anim.durations.settle
+                        easing.bezierCurve: Appearance.anim.curves.settle
                     }
                 }
 
                 Behavior on y {
                     Anim {
-                        duration: Appearance.anim.durations.expressiveDefaultSpatial
-                        easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                        duration: Appearance.anim.durations.settle
+                        easing.bezierCurve: Appearance.anim.curves.settle
                     }
                 }
             }

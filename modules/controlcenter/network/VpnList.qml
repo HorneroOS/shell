@@ -55,8 +55,8 @@ ColumnLayout {
     TextButton {
         Layout.fillWidth: true
         text: qsTr("+ Add VPN Provider")
-        inactiveColour: Colours.palette.m3primaryContainer
-        inactiveOnColour: Colours.palette.m3onPrimaryContainer
+        inactiveColour: Signal.palette.signalWell
+        inactiveOnColour: Signal.palette.onSignalWell
 
         onClicked: {
             vpnDialog.showProviderSelection();
@@ -98,7 +98,7 @@ ColumnLayout {
 
                 width: ListView.view ? ListView.view.width : undefined
 
-                color: Qt.alpha(Colours.tPalette.m3surfaceContainer, (root.session && root.session.vpn && root.session.vpn.active === modelData) ? Colours.tPalette.m3surfaceContainer.a : 0)
+                color: Qt.alpha(Signal.tPalette.panel, (root.session && root.session.vpn && root.session.vpn.active === modelData) ? Signal.tPalette.panel.a : 0)
                 radius: Appearance.rounding.normal
 
                 Accessible.role: Accessible.Button
@@ -127,16 +127,15 @@ ColumnLayout {
                         implicitHeight: icon.implicitHeight + Appearance.padding.normal * 2
 
                         radius: Appearance.rounding.normal
-                        color: modelData.enabled && VPN.connected ? Colours.palette.m3primaryContainer : Colours.tPalette.m3surfaceContainerHigh
+                        color: modelData.enabled && VPN.connected ? Signal.palette.signalWell : Signal.tPalette.raised
 
-                        MaterialIcon {
+                        Glyph {
                             id: icon
 
                             anchors.centerIn: parent
-                            text: modelData.enabled && VPN.connected ? "vpn_key" : "vpn_key_off"
+                            name: modelData.enabled && VPN.connected ? "key" : "key-off"
                             font.pointSize: Appearance.font.size.large
-                            fill: modelData.enabled && VPN.connected ? 1 : 0
-                            color: modelData.enabled && VPN.connected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+                            color: modelData.enabled && VPN.connected ? Signal.palette.onSignalWell : Signal.palette.ink
                         }
                     }
 
@@ -168,7 +167,7 @@ ColumnLayout {
                                         return qsTr("Enabled");
                                     return qsTr("Disabled");
                                 }
-                                color: modelData.enabled ? (VPN.connected ? Colours.palette.m3primary : Colours.palette.m3onSurface) : Colours.palette.m3outline
+                                color: modelData.enabled ? (VPN.connected ? Signal.palette.signal : Signal.palette.ink) : Signal.palette.ruleStrong
                                 font.pointSize: Appearance.font.size.small
                                 font.weight: modelData.enabled && VPN.connected ? 500 : 400
                                 elide: Text.ElideRight
@@ -181,7 +180,7 @@ ColumnLayout {
                         implicitHeight: connectIcon.implicitHeight + Appearance.padding.smaller * 2
 
                         radius: Appearance.rounding.full
-                        color: Qt.alpha(Colours.palette.m3primaryContainer, VPN.connected && modelData.enabled ? 1 : 0)
+                        color: Qt.alpha(Signal.palette.signalWell, VPN.connected && modelData.enabled ? 1 : 0)
 
                         Interactive {
                             disabled: VPN.connecting
@@ -221,12 +220,12 @@ ColumnLayout {
                             }
                         }
 
-                        MaterialIcon {
+                        Glyph {
                             id: connectIcon
 
                             anchors.centerIn: parent
-                            text: VPN.connected && modelData.enabled ? "link_off" : "link"
-                            color: VPN.connected && modelData.enabled ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+                            name: VPN.connected && modelData.enabled ? "link-off" : "link"
+                            color: VPN.connected && modelData.enabled ? Signal.palette.onSignalWell : Signal.palette.ink
                         }
                     }
 
@@ -250,12 +249,12 @@ ColumnLayout {
                             }
                         }
 
-                        MaterialIcon {
+                        Glyph {
                             id: deleteIcon
 
                             anchors.centerIn: parent
-                            text: "delete"
-                            color: Colours.palette.m3onSurface
+                            name: "trash"
+                            color: Signal.palette.ink
                         }
                     }
                 }
@@ -292,15 +291,15 @@ ColumnLayout {
                     property: "opacity"
                     from: 0
                     to: 1
-                    duration: Appearance.anim.durations.normal
-                    easing.bezierCurve: Appearance.anim.curves.emphasized
+                    duration: Appearance.anim.durations.medium
+                    easing.bezierCurve: Appearance.anim.curves.standard
                 }
                 Anim {
                     property: "scale"
                     from: 0.7
                     to: 1
-                    duration: Appearance.anim.durations.normal
-                    easing.bezierCurve: Appearance.anim.curves.emphasized
+                    duration: Appearance.anim.durations.medium
+                    easing.bezierCurve: Appearance.anim.curves.standard
                 }
             }
         }
@@ -311,15 +310,15 @@ ColumnLayout {
                     property: "opacity"
                     from: 1
                     to: 0
-                    duration: Appearance.anim.durations.small
-                    easing.bezierCurve: Appearance.anim.curves.emphasized
+                    duration: Appearance.anim.durations.short
+                    easing.bezierCurve: Appearance.anim.curves.standard
                 }
                 Anim {
                     property: "scale"
                     from: 1
                     to: 0.7
-                    duration: Appearance.anim.durations.small
-                    easing.bezierCurve: Appearance.anim.curves.emphasized
+                    duration: Appearance.anim.durations.short
+                    easing.bezierCurve: Appearance.anim.curves.standard
                 }
             }
         }
@@ -377,8 +376,8 @@ ColumnLayout {
                     target: selectionContent
                     property: "opacity"
                     to: 0
-                    duration: Appearance.anim.durations.small
-                    easing.bezierCurve: Appearance.anim.curves.emphasized
+                    duration: Appearance.anim.durations.short
+                    easing.bezierCurve: Appearance.anim.curves.standard
                 }
             }
 
@@ -393,14 +392,14 @@ ColumnLayout {
                     target: formContent
                     property: "opacity"
                     to: 1
-                    duration: Appearance.anim.durations.small
-                    easing.bezierCurve: Appearance.anim.curves.emphasized
+                    duration: Appearance.anim.durations.short
+                    easing.bezierCurve: Appearance.anim.curves.standard
                 }
             }
         }
 
         background: StyledRect {
-            color: Colours.palette.m3surfaceContainerHigh
+            color: Signal.palette.raised
             radius: Appearance.rounding.large
 
             Elevation {
@@ -412,8 +411,8 @@ ColumnLayout {
 
             Behavior on implicitHeight {
                 Anim {
-                    duration: Appearance.anim.durations.normal
-                    easing.bezierCurve: Appearance.anim.curves.emphasized
+                    duration: Appearance.anim.durations.medium
+                    easing.bezierCurve: Appearance.anim.curves.standard
                 }
             }
         }
@@ -423,8 +422,8 @@ ColumnLayout {
 
             Behavior on implicitHeight {
                 Anim {
-                    duration: Appearance.anim.durations.normal
-                    easing.bezierCurve: Appearance.anim.curves.emphasized
+                    duration: Appearance.anim.durations.medium
+                    easing.bezierCurve: Appearance.anim.curves.standard
                 }
             }
 
@@ -438,8 +437,8 @@ ColumnLayout {
 
                 Behavior on opacity {
                     Anim {
-                        duration: Appearance.anim.durations.small
-                        easing.bezierCurve: Appearance.anim.curves.emphasized
+                        duration: Appearance.anim.durations.short
+                        easing.bezierCurve: Appearance.anim.curves.standard
                     }
                 }
 
@@ -453,7 +452,7 @@ ColumnLayout {
                     Layout.fillWidth: true
                     text: qsTr("Choose a provider to add")
                     wrapMode: Text.WordWrap
-                    color: Colours.palette.m3outline
+                    color: Signal.palette.ruleStrong
                     font.pointSize: Appearance.font.size.small
                 }
 
@@ -461,8 +460,8 @@ ColumnLayout {
                     Layout.topMargin: Appearance.spacing.normal
                     Layout.fillWidth: true
                     text: qsTr("NetBird")
-                    inactiveColour: Colours.tPalette.m3surfaceContainerHigh
-                    inactiveOnColour: Colours.palette.m3onSurface
+                    inactiveColour: Signal.tPalette.raised
+                    inactiveOnColour: Signal.palette.ink
                     onClicked: {
                         const providers = [];
                         for (let i = 0; i < Config.utilities.vpn.provider.length; i++) {
@@ -482,8 +481,8 @@ ColumnLayout {
                 TextButton {
                     Layout.fillWidth: true
                     text: qsTr("Tailscale")
-                    inactiveColour: Colours.tPalette.m3surfaceContainerHigh
-                    inactiveOnColour: Colours.palette.m3onSurface
+                    inactiveColour: Signal.tPalette.raised
+                    inactiveOnColour: Signal.palette.ink
                     onClicked: {
                         const providers = [];
                         for (let i = 0; i < Config.utilities.vpn.provider.length; i++) {
@@ -503,8 +502,8 @@ ColumnLayout {
                 TextButton {
                     Layout.fillWidth: true
                     text: qsTr("Cloudflare WARP")
-                    inactiveColour: Colours.tPalette.m3surfaceContainerHigh
-                    inactiveOnColour: Colours.palette.m3onSurface
+                    inactiveColour: Signal.tPalette.raised
+                    inactiveOnColour: Signal.palette.ink
                     onClicked: {
                         const providers = [];
                         for (let i = 0; i < Config.utilities.vpn.provider.length; i++) {
@@ -524,8 +523,8 @@ ColumnLayout {
                 TextButton {
                     Layout.fillWidth: true
                     text: qsTr("WireGuard (Custom)")
-                    inactiveColour: Colours.tPalette.m3surfaceContainerHigh
-                    inactiveOnColour: Colours.palette.m3onSurface
+                    inactiveColour: Signal.tPalette.raised
+                    inactiveOnColour: Signal.palette.ink
                     onClicked: {
                         vpnDialog.showAddForm("wireguard", "WireGuard");
                     }
@@ -535,8 +534,8 @@ ColumnLayout {
                     Layout.topMargin: Appearance.spacing.normal
                     Layout.fillWidth: true
                     text: qsTr("Cancel")
-                    inactiveColour: Colours.palette.m3secondaryContainer
-                    inactiveOnColour: Colours.palette.m3onSecondaryContainer
+                    inactiveColour: Signal.palette.cueWell
+                    inactiveOnColour: Signal.palette.onCueWell
                     onClicked: vpnDialog.closeWithAnimation()
                 }
             }
@@ -551,8 +550,8 @@ ColumnLayout {
 
                 Behavior on opacity {
                     Anim {
-                        duration: Appearance.anim.durations.small
-                        easing.bezierCurve: Appearance.anim.curves.emphasized
+                        duration: Appearance.anim.durations.short
+                        easing.bezierCurve: Appearance.anim.curves.standard
                     }
                 }
 
@@ -569,16 +568,16 @@ ColumnLayout {
                     StyledText {
                         text: qsTr("Display Name")
                         font.pointSize: Appearance.font.size.small
-                        color: Colours.palette.m3onSurfaceVariant
+                        color: Signal.palette.inkMuted
                     }
 
                     StyledRect {
                         Layout.fillWidth: true
                         implicitHeight: 40
-                        color: displayNameField.activeFocus ? Colours.layer(Colours.palette.m3surfaceContainer, 3) : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+                        color: displayNameField.activeFocus ? Signal.layer(Signal.palette.panel, 3) : Signal.layer(Signal.palette.panel, 2)
                         radius: Appearance.rounding.small
                         border.width: 1
-                        border.color: displayNameField.activeFocus ? Colours.palette.m3primary : Qt.alpha(Colours.palette.m3outline, 0.3)
+                        border.color: displayNameField.activeFocus ? Signal.palette.signal : Qt.alpha(Signal.palette.ruleStrong, 0.3)
 
                         Behavior on color {
                             CAnim {}
@@ -605,16 +604,16 @@ ColumnLayout {
                     StyledText {
                         text: qsTr("Interface (e.g., wg0, torguard)")
                         font.pointSize: Appearance.font.size.small
-                        color: Colours.palette.m3onSurfaceVariant
+                        color: Signal.palette.inkMuted
                     }
 
                     StyledRect {
                         Layout.fillWidth: true
                         implicitHeight: 40
-                        color: interfaceNameField.activeFocus ? Colours.layer(Colours.palette.m3surfaceContainer, 3) : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+                        color: interfaceNameField.activeFocus ? Signal.layer(Signal.palette.panel, 3) : Signal.layer(Signal.palette.panel, 2)
                         radius: Appearance.rounding.small
                         border.width: 1
-                        border.color: interfaceNameField.activeFocus ? Colours.palette.m3primary : Qt.alpha(Colours.palette.m3outline, 0.3)
+                        border.color: interfaceNameField.activeFocus ? Signal.palette.signal : Qt.alpha(Signal.palette.ruleStrong, 0.3)
 
                         Behavior on color {
                             CAnim {}
@@ -642,8 +641,8 @@ ColumnLayout {
                     TextButton {
                         Layout.fillWidth: true
                         text: qsTr("Cancel")
-                        inactiveColour: Colours.tPalette.m3surfaceContainerHigh
-                        inactiveOnColour: Colours.palette.m3onSurface
+                        inactiveColour: Signal.tPalette.raised
+                        inactiveOnColour: Signal.palette.ink
                         onClicked: vpnDialog.closeWithAnimation()
                     }
 
@@ -651,8 +650,8 @@ ColumnLayout {
                         Layout.fillWidth: true
                         text: qsTr("Save")
                         enabled: vpnDialog.interfaceName.length > 0
-                        inactiveColour: Colours.palette.m3primaryContainer
-                        inactiveOnColour: Colours.palette.m3onPrimaryContainer
+                        inactiveColour: Signal.palette.signalWell
+                        inactiveOnColour: Signal.palette.onSignalWell
 
                         onClicked: {
                             const providers = [];

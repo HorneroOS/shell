@@ -407,7 +407,7 @@ def test_system_lock_action_description_is_compositor_neutral():
 def test_power_tiles_keep_variable_icons_from_shifting_the_label_column():
     pane = (CC / "power" / "PowerPane.qml").read_text()
     tile = pane.split("component PowerTile:", 1)[1].split("ClippingRectangle {", 1)[0]
-    icon = tile.split("MaterialIcon {", 1)[1].split("StyledText {", 1)[0]
+    icon = tile.split("Glyph {", 1)[1].split("StyledText {", 1)[0]
     slot_width = "Appearance.font.size.extraLarge * 1.5"
 
     assert icon.count(f"Layout.minimumWidth: {slot_width}") == 1
@@ -422,7 +422,7 @@ def test_audio_device_labels_keep_a_stable_icon_column():
 
     for section in ("outputRowLayout", "inputRowLayout"):
         row = pane.split(f"id: {section}", 1)[1].split("StyledText {", 1)[0]
-        icon = row.split("MaterialIcon {", 1)[1]
+        icon = row.split("Glyph {", 1)[1]
         for constraint in ("minimumWidth", "preferredWidth", "maximumWidth"):
             assert f"Layout.{constraint}: {slot_width}" in icon
         assert "horizontalAlignment: Text.AlignHCenter" in icon
@@ -437,7 +437,7 @@ def test_control_center_navigation_uses_keyboard_accessible_interactive_controls
     assert 'Accessible.description: qsTr("Open the %1 Settings page").arg(item.title)' in nav_items
     assert "Keys.onReturnPressed" not in nav_items, "use the shared Interactive keyboard contract"
 
-    float_action = nav.split("sourceComponent: StyledRect {", 1)[1].split("MaterialIcon {", 1)[0]
+    float_action = nav.split("sourceComponent: StyledRect {", 1)[1].split("Glyph {", 1)[0]
     assert "Interactive {" in float_action
     assert 'Accessible.name: qsTr("Float Settings window")' in float_action
 

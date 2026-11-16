@@ -13,10 +13,10 @@ ColumnLayout {
     spacing: Appearance.spacing.normal
     Layout.alignment: Qt.AlignHCenter
 
-    MaterialIcon {
+    Glyph {
         Layout.alignment: Qt.AlignHCenter
         animate: true
-        text: root.icon
+        name: root.icon
         font.pointSize: Appearance.font.size.extraLarge * 3
         font.bold: true
     }

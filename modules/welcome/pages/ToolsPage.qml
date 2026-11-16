@@ -3,13 +3,13 @@ import ".."
 
 PageView {
     PageHeader {
-        icon: "handyman"
+        icon: "tools"
         title: qsTr("Tools")
         subtitle: qsTr("Small utilities, exactly where you expect them.")
     }
 
     ActionCard {
-        icon: "screenshot_monitor"
+        icon: "screenshot"
         title: qsTr("Screenshot")
         description: qsTr("Capture a screen, a window or a selection.")
         shortcutId: "exec-screenshooter"
@@ -17,7 +17,7 @@ PageView {
     }
 
     ActionCard {
-        icon: "content_paste"
+        icon: "clipboard"
         title: qsTr("Clipboard history")
         description: qsTr("Everything you copied, searchable.")
         shortcutId: "exec-clipboard"
@@ -25,7 +25,7 @@ PageView {
     }
 
     ActionCard {
-        icon: "power_settings_new"
+        icon: "power"
         title: qsTr("Power menu")
         description: qsTr("Suspend, reboot or shut down without leaving the keyboard.")
         shortcutId: "exec-power-menu"
@@ -33,7 +33,7 @@ PageView {
     }
 
     ActionCard {
-        icon: "widgets"
+        icon: "apps"
         title: qsTr("Utilities drawer")
         description: qsTr("Timers, converters and quick tools from the bar.")
         onActivated: Actions.openUtilities()

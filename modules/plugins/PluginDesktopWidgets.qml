@@ -71,7 +71,7 @@ Item {
                             implicitWidth: content.implicitWidth + Appearance.padding.large * 2
                             implicitHeight: content.implicitHeight + Appearance.padding.large * 2
                             radius: Appearance.rounding.large
-                            color: Colours.palette.m3surfaceContainer
+                            color: Signal.palette.panel
 
                             ColumnLayout {
                                 id: content
@@ -82,7 +82,7 @@ Item {
                                 StyledText {
                                     text: card.modelData.name || card.modelData.id
                                     font.pointSize: Appearance.font.size.normal
-                                    color: Colours.palette.m3onSurface
+                                    color: Signal.palette.ink
                                 }
 
                                 Loader {
@@ -100,7 +100,7 @@ Item {
 
                                     Layout.maximumWidth: hostAvailableWidth
                                     clip: true
-                                    palette.windowText: Colours.palette.m3onSurface
+                                    palette.windowText: Signal.palette.ink
                                     source: card.modelData.entrypoint ? `file://${Plugins.pluginsDir}/${card.modelData.id}/${card.modelData.entrypoint}` : ""
                                     asynchronous: true
 
@@ -165,7 +165,7 @@ Item {
                                 StyledText {
                                     visible: pluginLoader.status === Loader.Error
                                     text: qsTr("This plugin failed to load.")
-                                    color: Colours.palette.m3error
+                                    color: Signal.palette.alert
                                 }
                             }
                         }

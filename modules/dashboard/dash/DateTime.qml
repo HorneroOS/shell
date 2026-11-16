@@ -23,27 +23,27 @@ Item {
             Layout.bottomMargin: -(font.pointSize * 0.4)
             Layout.alignment: Qt.AlignHCenter
             text: Time.hourStr
-            color: Colours.palette.m3secondary
+            color: Signal.palette.cue
             font.pointSize: Appearance.font.size.extraLarge
-            font.family: Appearance.font.family.clock
+            font.family: Appearance.font.family.display
             font.weight: 600
         }
 
         StyledText {
             Layout.alignment: Qt.AlignHCenter
             text: "•••"
-            color: Colours.palette.m3primary
+            color: Signal.palette.signal
             font.pointSize: Appearance.font.size.extraLarge * 0.9
-            font.family: Appearance.font.family.clock
+            font.family: Appearance.font.family.display
         }
 
         StyledText {
             Layout.topMargin: -(font.pointSize * 0.4)
             Layout.alignment: Qt.AlignHCenter
             text: Time.minuteStr
-            color: Colours.palette.m3secondary
+            color: Signal.palette.cue
             font.pointSize: Appearance.font.size.extraLarge
-            font.family: Appearance.font.family.clock
+            font.family: Appearance.font.family.display
             font.weight: 600
         }
 
@@ -55,9 +55,9 @@ Item {
 
             sourceComponent: StyledText {
                 text: Time.amPmStr
-                color: Colours.palette.m3primary
+                color: Signal.palette.signal
                 font.pointSize: Appearance.font.size.large
-                font.family: Appearance.font.family.clock
+                font.family: Appearance.font.family.display
                 font.weight: 600
             }
         }

@@ -195,8 +195,8 @@ Item {
                 implicitWidth: root.cardWidth
                 implicitHeight: 178
                 radius: Appearance.rounding.normal
-                color: isActive ? Colours.layer(Colours.palette.m3secondaryContainer, 2) : Colours.layer(Colours.palette.m3surfaceContainerHigh, 1)
-                border.color: isFocused ? Colours.palette.m3primary : isActive ? Colours.palette.m3secondary : Qt.alpha(Colours.palette.m3outline, 0.25)
+                color: isActive ? Signal.layer(Signal.palette.cueWell, 2) : Signal.layer(Signal.palette.raised, 1)
+                border.color: isFocused ? Signal.palette.signal : isActive ? Signal.palette.cue : Qt.alpha(Signal.palette.ruleStrong, 0.25)
                 border.width: isFocused || isActive ? 2 : 1
 
                 Behavior on color {
@@ -226,14 +226,14 @@ Item {
                             implicitWidth: currentIcon.implicitWidth + 4
                             implicitHeight: currentIcon.implicitHeight + 4
                             radius: Appearance.rounding.full
-                            color: Colours.palette.m3primary
+                            color: Signal.palette.signal
 
-                            MaterialIcon {
+                            Glyph {
                                 id: currentIcon
 
                                 anchors.centerIn: parent
-                                text: "check"
-                                color: Colours.palette.m3onPrimary
+                                name: "check"
+                                color: Signal.palette.onSignal
                                 font.pointSize: Appearance.font.size.small
                             }
                         }
@@ -243,9 +243,9 @@ Item {
                         Layout.fillWidth: true
                         spacing: Appearance.spacing.small
 
-                        MaterialIcon {
-                            text: card.modelData.iconMaterial || "widgets"
-                            color: card.isActive ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+                        Glyph {
+                            name: card.modelData.iconMaterial || "apps"
+                            color: card.isActive ? Signal.palette.signal : Signal.palette.inkMuted
                         }
 
                         ColumnLayout {
@@ -257,7 +257,7 @@ Item {
                                 text: card.modelData.display
                                 font.pointSize: Appearance.font.size.normal
                                 font.weight: card.isActive ? Font.Medium : Font.Normal
-                                color: Colours.palette.m3onSurface
+                                color: Signal.palette.ink
                                 elide: Text.ElideRight
                             }
 
@@ -265,11 +265,10 @@ Item {
                                 Layout.fillWidth: true
                                 text: root.topologyLabel(card.modelData)
                                 font.pointSize: Appearance.font.size.smaller
-                                color: Colours.palette.m3onSurfaceVariant
+                                color: Signal.palette.inkMuted
                                 elide: Text.ElideRight
                             }
                         }
-
                     }
 
                     Item {
@@ -298,6 +297,6 @@ Item {
         visible: root.count === 0
         // Presets are package data with user overrides in the Hornero XDG tree.
         text: qsTr("No presets found — check ~/.local/share/hornero/shell-presets")
-        color: Colours.palette.m3onSurfaceVariant
+        color: Signal.palette.inkMuted
     }
 }

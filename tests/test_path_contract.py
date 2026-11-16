@@ -35,7 +35,7 @@ def test_shell_appearance_uses_native_hornero_contracts():
     pipeline = (ROOT / "services" / "ThemePipeline.qml").read_text()
     assert '"horneroctl", "appearance", "theme", "list", "--full"' in (
         ROOT / "services" / "ThemeCatalogue.qml").read_text()
-    assert "ThemeCatalogue.themeById(job.themeId)" in pipeline
+    assert "ThemeCatalogue.themeById(id)" in pipeline
     assert "Fallback" not in pipeline
 
 

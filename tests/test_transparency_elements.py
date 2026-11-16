@@ -2,7 +2,7 @@
 
 `appearance.transparency.elements` maps surface keys to alpha overrides
 (missing/non-numeric follows the global base). This pins the full chain:
-schema + serializer + factory default, Colours helpers, control-center UI,
+schema + serializer + factory default, Signal helpers, control-center UI,
 and one consumer call per surface so no slider is dead."""
 
 import json
@@ -43,8 +43,8 @@ def test_serializer_and_factory_cover_elements():
     )
 
 
-def test_colours_helpers():
-    src = (ROOT / "services" / "Colours.qml").read_text()
+def test_signal_transparency_helpers():
+    src = (ROOT / "services" / "Signal.qml").read_text()
     assert "function elementAlpha(element: string): real" in src
     assert "function surface(c: color, element: string): color" in src
     assert "readonly property var elements: Appearance.transparency.elements" in src
@@ -95,9 +95,9 @@ def test_no_window_level_opacity_double_dim():
     per-surface alphas; the Border frame keeps the explicit global."""
     src = (ROOT / "modules" / "drawers" / "Drawers.qml").read_text()
     assert (
-        "opacity: Colours.transparency.enabled ? Colours.transparency.base : 1"
+        "opacity: Signal.transparency.enabled ? Signal.transparency.base : 1"
         in src
     ), "Border must keep the explicit global opacity"
-    assert src.count("Colours.transparency.base") == 1, (
+    assert src.count("Signal.transparency.base") == 1, (
         "only the Border may use the raw global base as opacity"
     )

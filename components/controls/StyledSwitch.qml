@@ -22,7 +22,7 @@ Switch {
 
     indicator: StyledRect {
         radius: Appearance.rounding.full
-        color: root.checked ? Colours.palette.m3primary : Colours.layer(Colours.palette.m3surfaceContainerHighest, root.cLayer)
+        color: root.checked ? Signal.palette.signal : Signal.layer(Signal.palette.lifted, root.cLayer)
         opacity: root.enabled ? 1 : 0.5
 
         implicitWidth: implicitHeight * 1.7
@@ -32,7 +32,7 @@ Switch {
             readonly property real nonAnimWidth: root.pressed ? implicitHeight * 1.3 : implicitHeight
 
             radius: Appearance.rounding.full
-            color: root.checked ? Colours.palette.m3onPrimary : Colours.layer(Colours.palette.m3outline, root.cLayer + 1)
+            color: root.checked ? Signal.palette.onSignal : Signal.layer(Signal.palette.ruleStrong, root.cLayer + 1)
 
             x: root.checked ? parent.implicitWidth - nonAnimWidth - Appearance.padding.small / 2 : Appearance.padding.small / 2
             implicitWidth: nonAnimWidth
@@ -43,7 +43,7 @@ Switch {
                 anchors.fill: parent
                 radius: parent.radius
 
-                color: root.checked ? Colours.palette.m3primary : Colours.palette.m3onSurface
+                color: root.checked ? Signal.palette.signal : Signal.palette.ink
                 opacity: root.pressed ? 0.1 : root.hovered ? 0.08 : 0
 
                 Behavior on opacity {
@@ -97,7 +97,7 @@ Switch {
 
                 ShapePath {
                     strokeWidth: Appearance.font.size.larger * 0.15
-                    strokeColor: root.checked ? Colours.palette.m3primary : Colours.palette.m3surfaceContainerHighest
+                    strokeColor: root.checked ? Signal.palette.signal : Signal.palette.lifted
                     fillColor: "transparent"
                     capStyle: Appearance.rounding.scale === 0 ? ShapePath.SquareCap : ShapePath.RoundCap
 
@@ -153,7 +153,7 @@ Switch {
     }
 
     component PropAnim: PropertyAnimation {
-        duration: Appearance.anim.durations.normal
+        duration: Appearance.anim.durations.medium
         easing.type: Easing.BezierSpline
         easing.bezierCurve: Appearance.anim.curves.standard
     }

@@ -60,14 +60,14 @@ Item {
                     Layout.fillWidth: true
                     text: qsTr("Pick a bar arrangement — it applies instantly, no restart needed.")
                     font.pointSize: Appearance.font.size.small
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                     wrapMode: Text.WordWrap
                 }
 
                 StyledRect {
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
-                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: grid.implicitHeight + Appearance.padding.large * 2
 
                     PresetGrid {
@@ -82,7 +82,7 @@ Item {
                     Layout.alignment: Qt.AlignHCenter
                     text: qsTr("Tip: Super+Shift+B opens the quick layout picker")
                     font.pointSize: Appearance.font.size.smaller
-                    color: Colours.layer(Colours.palette.m3onSurfaceVariant, 2)
+                    color: Signal.layer(Signal.palette.inkMuted, 2)
                 }
             }
         }

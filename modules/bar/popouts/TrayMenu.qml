@@ -82,7 +82,7 @@ StackView {
                 visible: hasEntry
 
                 radius: Appearance.rounding.full
-                color: isSeparator ? Colours.palette.m3outlineVariant : "transparent"
+                color: isSeparator ? Signal.palette.rule : "transparent"
 
                 Loader {
                     id: children
@@ -143,7 +143,7 @@ StackView {
                             anchors.leftMargin: icon.active ? Appearance.spacing.smaller : 0
 
                             text: labelMetrics.elidedText
-                            color: item.isEnabled ? Colours.palette.m3onSurface : Colours.palette.m3outline
+                            color: item.isEnabled ? Signal.palette.ink : Signal.palette.ruleStrong
                         }
 
                         TextMetrics {
@@ -165,9 +165,9 @@ StackView {
 
                             active: item.hasChildren
 
-                            sourceComponent: MaterialIcon {
-                                text: "chevron_right"
-                                color: item.isEnabled ? Colours.palette.m3onSurface : Colours.palette.m3outline
+                            sourceComponent: Glyph {
+                                name: "chevron-right"
+                                color: item.isEnabled ? Signal.palette.ink : Signal.palette.ruleStrong
                             }
                         }
                     }
@@ -194,11 +194,11 @@ StackView {
                         anchors.rightMargin: -Appearance.padding.smaller * 2
 
                         radius: Appearance.rounding.full
-                        color: Colours.palette.m3secondaryContainer
+                        color: Signal.palette.cueWell
 
                         StateLayer {
                             radius: parent.radius
-                            color: Colours.palette.m3onSecondaryContainer
+                            color: Signal.palette.onCueWell
 
                             function onClicked(): void {
                                 root.pop();
@@ -211,16 +211,16 @@ StackView {
 
                         anchors.verticalCenter: parent.verticalCenter
 
-                        MaterialIcon {
+                        Glyph {
                             anchors.verticalCenter: parent.verticalCenter
-                            text: "chevron_left"
-                            color: Colours.palette.m3onSecondaryContainer
+                            name: "chevron-left"
+                            color: Signal.palette.onCueWell
                         }
 
                         StyledText {
                             anchors.verticalCenter: parent.verticalCenter
                             text: qsTr("Back")
-                            color: Colours.palette.m3onSecondaryContainer
+                            color: Signal.palette.onCueWell
                         }
                     }
                 }

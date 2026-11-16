@@ -10,27 +10,27 @@
 var GROUPS = ["start", "center", "end"];
 
 var ENTRIES = {
-    logo: { label: "Logo", icon: "flutter_dash" },
-    workspaces: { label: "Workspaces", icon: "grid_view" },
-    activeWindow: { label: "Active window", icon: "web_asset" },
+    logo: { label: "Logo", icon: "feather" },
+    workspaces: { label: "Workspaces", icon: "layout-grid" },
+    activeWindow: { label: "Active window", icon: "app-window" },
     tray: { label: "System tray", icon: "apps" },
-    extensions: { label: "Extensions", icon: "extension" },
-    clock: { label: "Clock", icon: "schedule" },
+    extensions: { label: "Extensions", icon: "puzzle" },
+    clock: { label: "Clock", icon: "clock" },
     statusIcons: { label: "Status icons", icon: "wifi" },
-    audioSlider: { label: "Volume slider", icon: "volume_up" },
-    brightnessSlider: { label: "Brightness slider", icon: "brightness_6" },
-    media: { label: "Media", icon: "music_note" },
-    resources: { label: "Resources", icon: "monitoring" },
+    audioSlider: { label: "Volume slider", icon: "volume" },
+    brightnessSlider: { label: "Brightness slider", icon: "brightness-half" },
+    media: { label: "Media", icon: "music" },
+    resources: { label: "Resources", icon: "chart-line" },
     kbLayout: { label: "Keyboard layout", icon: "keyboard" },
-    weather: { label: "Weather", icon: "partly_cloudy_day" },
-    pinnedApps: { label: "Pinned apps", icon: "push_pin" },
+    weather: { label: "Weather", icon: "sun-low" },
+    pinnedApps: { label: "Pinned apps", icon: "pin" },
     quickActions: { label: "Quick actions", icon: "bolt" },
-    battery: { label: "Battery", icon: "battery_full" },
-    power: { label: "Power", icon: "power_settings_new" }
+    battery: { label: "Battery", icon: "battery-4" },
+    power: { label: "Power", icon: "power" }
 };
 
 function entryInfo(id) {
-    return ENTRIES[id] || { label: id, icon: "widgets" };
+    return ENTRIES[id] || { label: id, icon: "apps" };
 }
 
 function clone(value) {

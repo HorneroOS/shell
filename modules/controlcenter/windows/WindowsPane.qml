@@ -216,14 +216,14 @@ Item {
                     Layout.fillWidth: true
                     text: root.statusText
                     font.pointSize: Appearance.font.size.small
-                    color: Colours.palette.m3onSurfaceVariant
+                    color: Signal.palette.inkMuted
                     wrapMode: Text.Wrap
                 }
 
                 StyledRect {
                     Layout.fillWidth: true
                     radius: Appearance.rounding.normal
-                    color: Colours.layer(Colours.palette.m3surfaceContainer, 1)
+                    color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: geoCol.implicitHeight + Appearance.padding.large * 2
 
                     ColumnLayout {
@@ -325,7 +325,7 @@ Item {
                             visible: root.actionText !== ""
                             text: root.actionText
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
 
@@ -363,7 +363,7 @@ Item {
                                     text: modelData
                                     font.family: Appearance.font.family.mono
                                     font.pointSize: Appearance.font.size.small
-                                    color: Colours.palette.m3onSurface
+                                    color: Signal.palette.ink
                                     wrapMode: Text.Wrap
                                 }
 
@@ -380,7 +380,7 @@ Item {
                             visible: root.rules.length === 0
                             text: qsTr("No user window rules.")
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3outline
+                            color: Signal.palette.ruleStrong
                         }
 
                         RowLayout {
@@ -420,7 +420,7 @@ Item {
                             visible: root.rulesText !== ""
                             text: root.rulesText
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
 
@@ -428,7 +428,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Rules are stored in your window-rules overlay and take effect on Hyprland config reload (Super+Shift+R) or restart; already-open windows are unaffected. Geometry and focus apply live and are restored at login.")
                             font.pointSize: Appearance.font.size.small
-                            color: Colours.palette.m3outline
+                            color: Signal.palette.ruleStrong
                             wrapMode: Text.Wrap
                         }
                     }

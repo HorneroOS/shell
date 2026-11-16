@@ -257,7 +257,7 @@ Item {
                                 Layout.fillWidth: true
                                 implicitHeight: workspacesShownRow.implicitHeight + Appearance.padding.large * 2
                                 radius: Appearance.rounding.normal
-                                color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
+                                color: Signal.layer(Signal.palette.panel, 2)
 
                                 Behavior on implicitHeight {
                                     Anim {}
@@ -292,7 +292,7 @@ Item {
                                 Layout.fillWidth: true
                                 implicitHeight: workspacesActiveIndicatorRow.implicitHeight + Appearance.padding.large * 2
                                 radius: Appearance.rounding.normal
-                                color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
+                                color: Signal.layer(Signal.palette.panel, 2)
 
                                 Behavior on implicitHeight {
                                     Anim {}
@@ -325,7 +325,7 @@ Item {
                                 Layout.fillWidth: true
                                 implicitHeight: workspacesOccupiedBgRow.implicitHeight + Appearance.padding.large * 2
                                 radius: Appearance.rounding.normal
-                                color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
+                                color: Signal.layer(Signal.palette.panel, 2)
 
                                 Behavior on implicitHeight {
                                     Anim {}
@@ -358,7 +358,7 @@ Item {
                                 Layout.fillWidth: true
                                 implicitHeight: workspacesShowWindowsRow.implicitHeight + Appearance.padding.large * 2
                                 radius: Appearance.rounding.normal
-                                color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
+                                color: Signal.layer(Signal.palette.panel, 2)
 
                                 Behavior on implicitHeight {
                                     Anim {}
@@ -391,7 +391,7 @@ Item {
                                 Layout.fillWidth: true
                                 implicitHeight: workspacesPerMonitorRow.implicitHeight + Appearance.padding.large * 2
                                 radius: Appearance.rounding.normal
-                                color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
+                                color: Signal.layer(Signal.palette.panel, 2)
 
                                 Behavior on implicitHeight {
                                     Anim {}

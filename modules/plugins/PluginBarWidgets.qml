@@ -125,19 +125,19 @@ Repeater {
         // Raw Qt Controls an extension uses in its bar popover (TextField,
         // ComboBox, ...) take the shell palette instead of the Basic style's
         // white field, as on the dashboard host.
-        palette.windowText: Colours.palette.m3onSurface
-        palette.window: Colours.palette.m3surfaceContainer
-        palette.base: Colours.palette.m3surfaceContainerHigh
-        palette.alternateBase: Colours.palette.m3surfaceContainerHighest
-        palette.text: Colours.palette.m3onSurface
-        palette.placeholderText: Colours.palette.m3onSurfaceVariant
-        palette.button: Colours.palette.m3surfaceContainerHigh
-        palette.buttonText: Colours.palette.m3onSurface
-        palette.highlight: Colours.palette.m3primary
-        palette.highlightedText: Colours.palette.m3onPrimary
-        palette.mid: Colours.palette.m3outline
-        palette.dark: Colours.palette.m3outline
-        palette.light: Colours.palette.m3surfaceContainerHighest
+        palette.windowText: Signal.palette.ink
+        palette.window: Signal.palette.panel
+        palette.base: Signal.palette.raised
+        palette.alternateBase: Signal.palette.lifted
+        palette.text: Signal.palette.ink
+        palette.placeholderText: Signal.palette.inkMuted
+        palette.button: Signal.palette.raised
+        palette.buttonText: Signal.palette.ink
+        palette.highlight: Signal.palette.signal
+        palette.highlightedText: Signal.palette.onSignal
+        palette.mid: Signal.palette.ruleStrong
+        palette.dark: Signal.palette.ruleStrong
+        palette.light: Signal.palette.lifted
         source: modelData.entrypoint ? `file://${Plugins.pluginsDir}/${modelData.id}/${modelData.entrypoint}` : ""
         asynchronous: true
 

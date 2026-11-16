@@ -396,7 +396,7 @@ Item {
 
                     PaneHeader {
                         title: qsTr("Studio")
-                        icon: "movie_creation"
+                        icon: "movie"
                         description: qsTr("Tools for music, video, streaming and design work")
                         intro: qsTr("Studio is Planned. Choose the kinds of creative work you do on this computer: Hornero remembers your choice, and installing the related apps is a separate step you review and confirm later.")
                     }
@@ -417,7 +417,7 @@ Item {
                             Layout.fillWidth: true
                             text: (root.selectionState === "recorded" ? qsTr("✓ Selection recorded") : qsTr("○ Record a selection below")) + "\n" + (root.doctorChecks.length > 0 ? qsTr("✓ Audio stack health reported by horneroctl") : qsTr("○ Audio stack health unavailable (is horneroctl installed?)")) + "\n" + qsTr("○ Installer onboarding and QA acceptance: pending evidence, not passed")
                             wrapMode: Text.WordWrap
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.small
                         }
                     }
@@ -434,7 +434,7 @@ Item {
                             Layout.fillWidth: true
                             text: root.selectionState === "recorded" ? qsTr("Selection recorded. No packages were installed or removed by recording it.") : root.selectionState === "not-selected" ? qsTr("No selection recorded yet. Choose a specialization or individual applications below.") : qsTr("Reading selection…")
                             wrapMode: Text.WordWrap
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                         }
 
                         StyledText {
@@ -442,7 +442,7 @@ Item {
                             visible: root.actionError.length > 0 || root.selectionError.length > 0
                             text: root.actionError.length > 0 ? root.actionError : root.selectionError
                             wrapMode: Text.WordWrap
-                            color: Colours.palette.m3error
+                            color: Signal.palette.alert
                             font.pointSize: Appearance.font.size.small
                         }
 
@@ -501,7 +501,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Removing a workload or application from the selection never deletes your files, settings, or projects.")
                             wrapMode: Text.WordWrap
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.small
                         }
                     }
@@ -524,7 +524,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Managed by ArtCraft Launcher, outside system package repositories. Selecting it above only records your intent; installation is a separate manual step documented in the English Studio ArtCraft runbook, and removing the selection never uninstalls it.")
                             wrapMode: Text.WordWrap
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.small
                         }
                     }
@@ -547,7 +547,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Output: %1").arg(Audio.sink ? (Audio.sink.description || Audio.sink.name) : qsTr("No output device detected"))
                             wrapMode: Text.WordWrap
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.small
                         }
 
@@ -555,7 +555,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Input: %1").arg(Audio.source ? (Audio.source.description || Audio.source.name) : qsTr("No input device detected"))
                             wrapMode: Text.WordWrap
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.small
                         }
 
@@ -563,7 +563,7 @@ Item {
                             Layout.fillWidth: true
                             text: Audio.streams.length > 0 ? qsTr("Active streams: %1").arg(Audio.streams.map(stream => Audio.getStreamName(stream)).join(", ")) : qsTr("No active application streams.")
                             wrapMode: Text.WordWrap
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.small
                         }
 
@@ -571,7 +571,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Effective rate/quantum and XRUN counts are not exposed by this backend, so they are not estimated here. Use Balanced unless you measured otherwise; no audio is recorded by this view.")
                             wrapMode: Text.WordWrap
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.small
                         }
                     }
@@ -594,7 +594,7 @@ Item {
                             Layout.fillWidth: true
                             text: root.modeKnown ? qsTr("Audio mode: %1").arg(root.audioMode) + (root.previousAudioMode.length > 0 ? qsTr(" (previous: %1)").arg(root.previousAudioMode) : "") : qsTr("Mode state unavailable (is horneroctl installed?)")
                             wrapMode: Text.WordWrap
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.small
                         }
 
@@ -602,7 +602,7 @@ Item {
                             Layout.fillWidth: true
                             text: root.performanceActive ? qsTr("Temporary Performance is active. Restoring returns the exact previous power profile.") : qsTr("Temporary Performance is off. Enabling switches the power profile through power-profiles-daemon and records the previous profile for exact restore; it can increase heat, fan noise, and battery use. No performance improvement is guaranteed.")
                             wrapMode: Text.WordWrap
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.small
                         }
 
@@ -661,7 +661,7 @@ Item {
                             Layout.fillWidth: true
                             text: root.busy ? qsTr("Working…") : root.jobsError.length > 0 ? root.jobsError : root.jobsKnown ? (root.jobsModel.length > 0 ? qsTr("Jobs recorded by horneroctl. Queuing a job does not run it.") : qsTr("No Studio jobs recorded yet. Queue one below — queuing does not run it.")) : qsTr("Reading jobs…")
                             wrapMode: Text.WordWrap
-                            color: root.jobsError.length > 0 ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
+                            color: root.jobsError.length > 0 ? Signal.palette.alert : Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.small
                         }
 
@@ -728,7 +728,7 @@ Item {
                                     Layout.fillWidth: true
                                     text: `${modelData.input} → ${modelData.output}`
                                     wrapMode: Text.WordWrap
-                                    color: Colours.palette.m3onSurfaceVariant
+                                    color: Signal.palette.inkMuted
                                     font.pointSize: Appearance.font.size.small
                                 }
 
@@ -764,7 +764,7 @@ Item {
                             visible: root.jobLogText.length > 0
                             text: root.jobLogText
                             wrapMode: Text.WordWrap
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.small
                         }
                     }
@@ -785,7 +785,7 @@ Item {
 
                                 Layout.fillWidth: true
                                 text: `${modelData.ok ? "✓" : "✗"} ${modelData.name}`
-                                color: modelData.ok ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3error
+                                color: modelData.ok ? Signal.palette.inkMuted : Signal.palette.alert
                                 font.pointSize: Appearance.font.size.small
                             }
                         }
@@ -795,7 +795,7 @@ Item {
                             visible: root.doctorChecks.length === 0
                             text: qsTr("Health checks unavailable (is horneroctl installed?).")
                             wrapMode: Text.WordWrap
-                            color: Colours.palette.m3onSurfaceVariant
+                            color: Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.small
                         }
                     }

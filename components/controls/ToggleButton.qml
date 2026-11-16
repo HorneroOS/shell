@@ -13,7 +13,9 @@ StyledRect {
     required property bool toggled
     property string icon
     property string label
-    property string accent: "Secondary"
+    // Signal accent role: "signal", "cue" or "phosphor".
+    property string accent: "cue"
+    readonly property string onAccent: `on${accent.charAt(0).toUpperCase()}${accent.slice(1)}`
     property real iconSize: Appearance.font.size.large
     property real horizontalPadding: Appearance.padding.large
     property real verticalPadding: Appearance.padding.normal
@@ -46,13 +48,13 @@ StyledRect {
     Accessible.checked: root.toggled
 
     radius: toggled || toggleStateLayer.pressed ? Appearance.rounding.small : Math.min(width, height) / 2 * Math.min(1, Appearance.rounding.scale)
-    color: toggled ? Colours.palette[`m3${accent.toLowerCase()}`] : Colours.palette[`m3${accent.toLowerCase()}Container`]
+    color: toggled ? Signal.palette[accent] : Signal.palette[`${accent}Well`]
     opacity: root.disabled ? 0.5 : 1
 
     Interactive {
         id: toggleStateLayer
 
-        color: root.toggled ? Colours.palette[`m3on${root.accent}`] : Colours.palette[`m3on${root.accent}Container`]
+        color: root.toggled ? Signal.palette[root.onAccent] : Signal.palette[`${root.onAccent}Well`]
         disabled: root.disabled
 
         function onClicked(): void {
@@ -66,18 +68,13 @@ StyledRect {
         anchors.centerIn: parent
         spacing: Appearance.spacing.normal
 
-        MaterialIcon {
+        Glyph {
             id: toggleBtnIcon
 
             visible: !!text
-            fill: root.toggled ? 1 : 0
-            text: root.icon
-            color: root.toggled ? Colours.palette[`m3on${root.accent}`] : Colours.palette[`m3on${root.accent}Container`]
+            name: root.icon
+            color: root.toggled ? Signal.palette[root.onAccent] : Signal.palette[`${root.onAccent}Well`]
             font.pointSize: root.iconSize
-
-            Behavior on fill {
-                Anim {}
-            }
         }
 
         Loader {
@@ -86,22 +83,22 @@ StyledRect {
 
             sourceComponent: StyledText {
                 text: root.label
-                color: root.toggled ? Colours.palette[`m3on${root.accent}`] : Colours.palette[`m3on${root.accent}Container`]
+                color: root.toggled ? Signal.palette[root.onAccent] : Signal.palette[`${root.onAccent}Well`]
             }
         }
     }
 
     Behavior on radius {
         Anim {
-            duration: Appearance.anim.durations.expressiveFastSpatial
-            easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+            duration: Appearance.anim.durations.settleFast
+            easing.bezierCurve: Appearance.anim.curves.settleFast
         }
     }
 
     Behavior on Layout.preferredWidth {
         Anim {
-            duration: Appearance.anim.durations.expressiveFastSpatial
-            easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+            duration: Appearance.anim.durations.settleFast
+            easing.bezierCurve: Appearance.anim.curves.settleFast
         }
     }
 

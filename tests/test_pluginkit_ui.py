@@ -12,6 +12,7 @@ UI_TYPES = [
     "UiSlider",
     "UiMetric",
     "UiDetailRow",
+    "UiActionRow",
     "UiChip",
     "UiProgress",
     "UiState",
@@ -19,7 +20,7 @@ UI_TYPES = [
     "UiPopover",
 ]
 
-INTERACTIVE = ["UiButton", "UiToggle", "UiSlider"]
+INTERACTIVE = ["UiButton", "UiToggle", "UiSlider", "UiActionRow"]
 
 ALLOWED_IMPORTS = {"QtQuick", "QtQuick.Controls"}
 
@@ -619,6 +620,17 @@ def test_uidetailrow_is_the_native_popout_row():
     assert 'property string value: ""' in src
     assert "Text.AlignRight" in src
     assert "valueItem.implicitWidth" in src  # filler must leave room for the value
+
+
+def test_uiactionrow_is_the_native_popout_action():
+    src = (KIT / "UiActionRow.qml").read_text(encoding="utf-8")
+    assert 'property string text: ""' in src
+    assert "signal clicked()" in src
+    assert "UiStateLayer" in src  # native hover/press layer, not a button pill
+    assert "Theme.focusRing" in src  # keyboard-only focus ring
+    assert "Keys.onSpacePressed" in src  # Space activates (not a Controls Button)
+    assert "Text.ElideRight" in src  # label fills the row and elides
+    assert "UiActionRow 1.0 UiActionRow.qml" in (KIT / "qmldir").read_text(encoding="utf-8")
 
 
 def test_uibutton_transparent_island_colour_falls_back_to_bar_colour():

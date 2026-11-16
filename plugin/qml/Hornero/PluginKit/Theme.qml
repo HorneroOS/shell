@@ -60,6 +60,10 @@ ThemeBase {
     readonly property int spacingSmall: Appearance.spacing.small
     readonly property int spacing: Appearance.spacing.normal
     readonly property int spacingLarge: Appearance.spacing.large
+    // Native popout content margins (modules/bar/popouts/Content.qml pads
+    // every native popout with the large padding token).
+    readonly property int padding: Appearance.padding.normal
+    readonly property int paddingLarge: Appearance.padding.large
     readonly property int roundingSmall: Appearance.rounding.small
     readonly property int rounding: Appearance.rounding.normal
     readonly property int roundingLarge: Appearance.rounding.large

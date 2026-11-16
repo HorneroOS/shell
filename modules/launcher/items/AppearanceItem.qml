@@ -1,91 +1,50 @@
+pragma ComponentBehavior: Bound
+
 import "../services"
 import qs.components
-import qs.components.images
 import qs.services
 import qs.config
 import QtQuick
 
-Item {
+// Theme result: the leading cell is a Signal swatch strip built from the
+// theme's own roles (ground, panel, ink, signal, cue) — no wallpaper
+// thumbnail, no tonal variants.
+LauncherRow {
     id: root
 
     required property Themes.Theme modelData
     required property var list
+    readonly property var pal: root.modelData?.palette ?? ({})
 
-    implicitHeight: Config.launcher.sizes.itemHeight
+    title: root.modelData?.name ?? ""
+    detail: root.modelData?.description ?? ""
+    kind: root.modelData?.id === Signal.themeId ? qsTr("ON") : ""
+    onActivated: root.modelData?.onClicked(root.list)
 
-    anchors.left: parent?.left
-    anchors.right: parent?.right
+    leading: Rectangle {
+        width: 28
+        height: 20
+        radius: Appearance.rounding.small
+        color: root.pal.ground ?? Signal.palette.ground
+        border.width: 1
+        border.color: Signal.palette.ruleStrong
 
-    Accessible.role: Accessible.Button
-    Accessible.name: root.modelData?.name ?? ""
-
-    StateLayer {
-        radius: Appearance.rounding.normal
-
-        function onClicked(): void {
-            root.modelData?.onClicked(root.list);
-        }
-    }
-
-    Item {
-        anchors.fill: parent
-        anchors.leftMargin: Appearance.padding.larger
-        anchors.rightMargin: Appearance.padding.larger
-        anchors.margins: Appearance.padding.smaller
-
-        Loader {
-            id: previewThumb
-
+        Row {
             anchors.left: parent.left
+            anchors.leftMargin: 4
             anchors.verticalCenter: parent.verticalCenter
-            active: (root.modelData?.preview ?? "") !== ""
+            spacing: 2
 
-            sourceComponent: StyledClippingRect {
-                implicitWidth: 40
-                implicitHeight: 22
-                radius: Appearance.rounding.small
-                color: Signal.tPalette.panel
+            Repeater {
+                model: ["ink", "signal", "cue", "phosphor"]
 
-                CachingImage {
-                    anchors.fill: parent
-                    path: root.modelData?.preview ?? ""
-                    cache: true
+                Rectangle {
+                    required property string modelData
+
+                    width: 3
+                    height: 10
+                    color: root.pal[modelData] ?? "transparent"
                 }
-            }
-        }
-
-        Glyph {
-            id: icon
-
-            name: "palette"
-            font.pointSize: Appearance.font.size.extraLarge
-
-            anchors.left: previewThumb.active ? previewThumb.right : parent.left
-            anchors.leftMargin: previewThumb.active ? Appearance.spacing.small : 0
-            anchors.verticalCenter: parent.verticalCenter
-        }
-
-        Column {
-            anchors.left: icon.right
-            anchors.leftMargin: Appearance.spacing.larger
-            anchors.verticalCenter: icon.verticalCenter
-
-            width: parent.width - icon.implicitWidth - anchors.leftMargin - (previewThumb.active ? previewThumb.implicitWidth + Appearance.spacing.small : 0)
-            spacing: 0
-
-            StyledText {
-                text: root.modelData?.name ?? ""
-                font.pointSize: Appearance.font.size.normal
-            }
-
-            StyledText {
-                text: root.modelData?.description ?? ""
-                font.pointSize: Appearance.font.size.small
-                color: Signal.palette.ruleStrong
-
-                elide: Text.ElideRight
-                anchors.left: parent.left
-                anchors.right: parent.right
             }
         }
     }

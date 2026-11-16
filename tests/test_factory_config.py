@@ -255,10 +255,10 @@ def test_factory_values_match_code_defaults():
         # Appearance disclosure default exposes Themes first run
         # (ControlCenterConfig.qml appearanceExpandedSections).
         ("controlCenter.appearanceExpandedSections", ["themes"]),
-        ("launcher.maxShown", 7),
+        ("launcher.maxShown", 8),
         ("launcher.specialPrefix", "@"),
         ("launcher.useFuzzy.wallpapers", False),
-        ("launcher.sizes.itemHeight", 57),
+        ("launcher.sizes.itemHeight", 44),
         ("launcher.actions.5.name", "Random"),
         ("launcher.actions.10.command.2", ""),
         ("launcher.actions.13.command.0", "horneroctl"),

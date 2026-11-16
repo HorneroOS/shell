@@ -33,59 +33,85 @@ Item {
     Accessible.name: root.math.length > 0 ? qsTr("Copy calculation result: %1").arg(root.math) : qsTr("Calculator")
 
     StateLayer {
-        radius: Appearance.rounding.normal
+        radius: Appearance.rounding.small
 
         function onClicked(): void {
             root.onClicked();
         }
     }
 
+    // Readout: the expression in mono, the result in a sunken well.
     RowLayout {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
-        anchors.margins: Appearance.padding.larger
+        anchors.leftMargin: 14
+        anchors.rightMargin: 14
 
-        spacing: Appearance.spacing.normal
-
-        Glyph {
-            name: "function"
-            font.pointSize: Appearance.font.size.extraLarge
-            Layout.alignment: Qt.AlignVCenter
-        }
+        spacing: 12
 
         StyledText {
-            id: result
-
-            color: {
-                if (root.math.length > 0 && !root.result.ok)
-                    return Signal.palette.alert;
-                if (!root.math)
-                    return Signal.palette.inkMuted;
-                return Signal.palette.ink;
-            }
-
-            text: root.math.length === 0 ? qsTr("Type an expression to calculate") : (root.result.ok ? qsTr("%1 = %2").arg(root.math).arg(root.result.text) : qsTr("Error"))
+            mono: true
+            text: root.math.length === 0 ? qsTr("Type an expression to calculate") : root.math
+            color: Signal.palette.inkMuted
+            font.pointSize: Appearance.font.size.normal
             elide: Text.ElideLeft
-
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignVCenter
         }
 
-        StyledRect {
-            color: Signal.palette.phosphor
-            radius: Appearance.rounding.normal
-            clip: true
+        StyledText {
+            visible: root.math.length > 0
+            mono: true
+            text: "="
+            color: Signal.palette.inkMuted
+            Layout.alignment: Qt.AlignVCenter
+        }
 
-            implicitWidth: (stateLayer.containsMouse ? label.implicitWidth + label.anchors.rightMargin : 0) + icon.implicitWidth + Appearance.padding.normal * 2
-            implicitHeight: Math.max(label.implicitHeight, icon.implicitHeight) + Appearance.padding.small * 2
-
+        Rectangle {
+            visible: root.math.length > 0
+            color: Signal.palette.sunken
+            border.width: 1
+            border.color: root.result.ok ? Signal.palette.rule : Signal.palette.alert
+            radius: Appearance.rounding.small
+            implicitWidth: result.implicitWidth + 16
+            implicitHeight: result.implicitHeight + 4
+            Layout.maximumWidth: root.width * 0.45
             Layout.alignment: Qt.AlignVCenter
 
-            StateLayer {
-                id: stateLayer
+            StyledText {
+                id: result
 
-                color: Signal.palette.onPhosphor
+                anchors.centerIn: parent
+                width: Math.min(implicitWidth, parent.Layout.maximumWidth - 16)
+                text: root.result.ok ? root.result.text : qsTr("Error")
+                color: root.result.ok ? Signal.palette.ink : Signal.palette.alert
+                font.family: Appearance.font.family.display
+                font.weight: Font.Medium
+                font.pointSize: Appearance.font.size.large
+                elide: Text.ElideLeft
+            }
+        }
+
+        // Quiet secondary action: open the expression in qalc.
+        Rectangle {
+            id: qalc
+
+            implicitWidth: qalcLabel.implicitWidth + 16
+            implicitHeight: 24
+            radius: Appearance.rounding.small
+            color: qalcLayer.containsMouse ? Signal.palette.raised : "transparent"
+            border.width: 1
+            border.color: Signal.palette.ruleStrong
+            Layout.alignment: Qt.AlignVCenter
+
+            Accessible.role: Accessible.Button
+            Accessible.name: qsTr("Open in calculator")
+
+            StateLayer {
+                id: qalcLayer
+
+                radius: Appearance.rounding.small
 
                 function onClicked(): void {
                     Quickshell.execDetached(["app2unit", "--", ...Config.general.apps.terminal, "fish", "-C", `exec qalc -i '${root.math}'`]);
@@ -94,39 +120,13 @@ Item {
             }
 
             StyledText {
-                id: label
+                id: qalcLabel
 
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.right: icon.left
-                anchors.rightMargin: Appearance.spacing.small
-
-                text: qsTr("Open in calculator")
-                color: Signal.palette.onPhosphor
-                font.pointSize: Appearance.font.size.normal
-
-                opacity: stateLayer.containsMouse ? 1 : 0
-
-                Behavior on opacity {
-                    Anim {}
-                }
-            }
-
-            Glyph {
-                id: icon
-
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.right: parent.right
-                anchors.rightMargin: Appearance.padding.normal
-
-                name: "external-link"
-                color: Signal.palette.onPhosphor
-                font.pointSize: Appearance.font.size.large
-            }
-
-            Behavior on implicitWidth {
-                Anim {
-                    easing.bezierCurve: Appearance.anim.curves.standard
-                }
+                anchors.centerIn: parent
+                mono: true
+                text: qsTr("QALC ↗")
+                color: Signal.palette.inkMuted
+                font.pointSize: Appearance.font.size.small
             }
         }
     }

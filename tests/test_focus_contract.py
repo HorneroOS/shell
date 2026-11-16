@@ -4,6 +4,7 @@ Interactive.qml owns Tab stop + Enter/Space activation + outer ring +
 focus-reason report for StateLayer-based controls. Templates-based
 controls keep native key handling and only gain the shared ring.
 """
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -350,6 +351,10 @@ def test_launcher_rows_have_accessible_names():
         "WindowItem.qml",
     ):
         src = (items / name).read_text(encoding="utf-8")
+        if re.search(r"^LauncherRow \{", src, re.M):
+            # Rows built on the shared LauncherRow inherit its Button role
+            # and its name from the visible title + detail.
+            src = (items / "LauncherRow.qml").read_text(encoding="utf-8")
         assert "Accessible.role: Accessible.Button" in src, name
         assert "Accessible.name:" in src, name
 

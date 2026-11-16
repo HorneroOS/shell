@@ -5,37 +5,74 @@ import qs.components.effects
 import qs.services
 import qs.config
 import qs.utils
+import qs.modules.instruments as Instruments
 import Quickshell
 import Quickshell.Widgets
 import Quickshell.Services.Notifications
 import QtQuick
 import QtQuick.Layouts
 
+// Notification card (Signal Bezel §7.1, §11.2): calm feedback. A `panel`
+// module with a 1 px `rule` border and radius 3; source + time as a mono
+// eyebrow, summary in Plex Sans, body in `inkMuted`. Only a critical
+// notification earns colour: an `alert` edge bar and an URGENT chip.
+// Enters with a 6 px travel + fade (`enter`, short); reflow settles.
 StyledRect {
     id: root
 
     required property Notifs.Notif modelData
     readonly property bool hasImage: modelData.image.length > 0
     readonly property bool hasAppIcon: modelData.appIcon.length > 0
-    readonly property int nonAnimHeight: summary.implicitHeight + (root.expanded ? appName.height + body.height + actions.height + actions.anchors.topMargin : bodyPreview.height) + inner.anchors.margins * 2
+    readonly property bool critical: modelData.urgency === NotificationUrgency.Critical
+    readonly property int nonAnimHeight: Math.max(cell.height, column.implicitHeight) + 24
     property bool expanded: Config.notifs.openExpanded
 
-    color: Signal.surface(root.modelData.urgency === NotificationUrgency.Critical ? Signal.palette.cueWell : Signal.tPalette.panel, "notifications")
-    radius: Appearance.rounding.normal
+    color: Signal.surface(Signal.palette.panel, "notifications")
+    radius: Appearance.rounding.small
+    border.width: 1
+    border.color: root.critical ? Signal.palette.alert : Signal.palette.rule
     implicitWidth: Config.notifs.sizes.width
-    implicitHeight: inner.implicitHeight
+    implicitHeight: nonAnimHeight
+    clip: true
 
-    x: Config.notifs.sizes.width
+    x: 6
+    opacity: 0
     Component.onCompleted: {
         x = 0;
+        opacity = 1;
         modelData.lock(this);
     }
     Component.onDestruction: modelData.unlock(this)
 
     Behavior on x {
         Anim {
+            duration: Appearance.anim.durations.short
             easing.bezierCurve: Appearance.anim.curves.enter
         }
+    }
+
+    Behavior on opacity {
+        Anim {
+            duration: Appearance.anim.durations.fade
+            easing.bezierCurve: Appearance.anim.curves.enter
+        }
+    }
+
+    Behavior on implicitHeight {
+        Anim {
+            duration: Appearance.anim.durations.settle
+            easing.bezierCurve: Appearance.anim.curves.settle
+        }
+    }
+
+    // Critical edge bar on the leading edge.
+    Rectangle {
+        visible: root.critical
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        width: 2
+        color: Signal.palette.alert
     }
 
     MouseArea {
@@ -86,225 +123,86 @@ StyledRect {
             if (actions?.length === 1)
                 actions[0].invoke();
         }
+    }
 
-        Item {
-            id: inner
+    // Source cell: the notification image, else the app icon in a
+    // sunken well, else a glyph. Square, radius 3 — never a disc.
+    Instruments.Well {
+        id: cell
 
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.margins: Appearance.padding.normal
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.leftMargin: 12
+        anchors.topMargin: 12
+        width: root.hasImage ? 40 : 32
+        height: width
+        clip: true
 
-            implicitHeight: root.nonAnimHeight
+        Loader {
+            anchors.fill: parent
+            anchors.margins: 1
+            active: root.hasImage
 
-            Behavior on implicitHeight {
-                Anim {
-                    duration: Appearance.anim.durations.settle
-                    easing.bezierCurve: Appearance.anim.curves.settle
-                }
+            sourceComponent: Image {
+                source: Qt.resolvedUrl(root.modelData.image)
+                fillMode: Image.PreserveAspectCrop
+                cache: false
+                asynchronous: true
+            }
+        }
+
+        Loader {
+            anchors.centerIn: parent
+            active: !root.hasImage && root.hasAppIcon
+            width: 20
+            height: 20
+
+            sourceComponent: ColouredIcon {
+                anchors.fill: parent
+                source: Quickshell.iconPath(root.modelData.appIcon)
+                colour: Signal.palette.ink
+                layer.enabled: root.modelData.appIcon.endsWith("symbolic")
+            }
+        }
+
+        Loader {
+            anchors.centerIn: parent
+            active: !root.hasImage && !root.hasAppIcon
+
+            sourceComponent: Glyph {
+                name: Icons.getNotifIcon(root.modelData.summary, root.modelData.urgency)
+                color: root.critical ? Signal.palette.alert : Signal.palette.inkMuted
+                size: Appearance.font.size.large
+            }
+        }
+    }
+
+    ColumnLayout {
+        id: column
+
+        anchors.left: cell.right
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.leftMargin: 12
+        anchors.rightMargin: 8
+        anchors.topMargin: 10
+        spacing: 3
+
+        // Eyebrow: SOURCE · TIME, URGENT chip, expand control.
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 8
+
+            Instruments.Eyebrow {
+                Layout.fillWidth: true
+                label: `${root.modelData.appName || qsTr("System")} · ${root.modelData.timeStr}`
             }
 
-            Loader {
-                id: image
-
-                active: root.hasImage
-
-                anchors.left: parent.left
-                anchors.top: parent.top
-                width: Config.notifs.sizes.image
-                height: Config.notifs.sizes.image
-                visible: root.hasImage || root.hasAppIcon
-
-                sourceComponent: ClippingRectangle {
-                    radius: Appearance.rounding.full
-                    implicitWidth: Config.notifs.sizes.image
-                    implicitHeight: Config.notifs.sizes.image
-
-                    Image {
-                        anchors.fill: parent
-                        source: Qt.resolvedUrl(root.modelData.image)
-                        fillMode: Image.PreserveAspectCrop
-                        cache: false
-                        asynchronous: true
-                    }
-                }
-            }
-
-            Loader {
-                id: appIcon
-
-                active: root.hasAppIcon || !root.hasImage
-
-                anchors.horizontalCenter: root.hasImage ? undefined : image.horizontalCenter
-                anchors.verticalCenter: root.hasImage ? undefined : image.verticalCenter
-                anchors.right: root.hasImage ? image.right : undefined
-                anchors.bottom: root.hasImage ? image.bottom : undefined
-
-                sourceComponent: StyledRect {
-                    radius: Appearance.rounding.full
-                    color: root.modelData.urgency === NotificationUrgency.Critical ? Signal.palette.alert : root.modelData.urgency === NotificationUrgency.Low ? Signal.layer(Signal.palette.lifted, 2) : Signal.palette.cueWell
-                    implicitWidth: root.hasImage ? Config.notifs.sizes.badge : Config.notifs.sizes.image
-                    implicitHeight: root.hasImage ? Config.notifs.sizes.badge : Config.notifs.sizes.image
-
-                    Loader {
-                        id: icon
-
-                        active: root.hasAppIcon
-
-                        anchors.centerIn: parent
-
-                        width: Math.round(parent.width * 0.6)
-                        height: Math.round(parent.width * 0.6)
-
-                        sourceComponent: ColouredIcon {
-                            anchors.fill: parent
-                            source: Quickshell.iconPath(root.modelData.appIcon)
-                            colour: root.modelData.urgency === NotificationUrgency.Critical ? Signal.palette.onAlert : root.modelData.urgency === NotificationUrgency.Low ? Signal.palette.ink : Signal.palette.onCueWell
-                            layer.enabled: root.modelData.appIcon.endsWith("symbolic")
-                        }
-                    }
-
-                    Loader {
-                        active: !root.hasAppIcon
-                        anchors.centerIn: parent
-                        anchors.horizontalCenterOffset: -Appearance.font.size.large * 0.02
-                        anchors.verticalCenterOffset: Appearance.font.size.large * 0.02
-
-                        sourceComponent: Glyph {
-                            name: Icons.getNotifIcon(root.modelData.summary, root.modelData.urgency)
-
-                            color: root.modelData.urgency === NotificationUrgency.Critical ? Signal.palette.onAlert : root.modelData.urgency === NotificationUrgency.Low ? Signal.palette.ink : Signal.palette.onCueWell
-                            font.pointSize: Appearance.font.size.large
-                        }
-                    }
-                }
-            }
-
-            StyledText {
-                id: appName
-
-                anchors.top: parent.top
-                anchors.left: image.right
-                anchors.leftMargin: Appearance.spacing.smaller
-
-                animate: true
-                text: appNameMetrics.elidedText
-                maximumLineCount: 1
-                color: Signal.palette.inkMuted
-                font.pointSize: Appearance.font.size.small
-
-                opacity: root.expanded ? 1 : 0
-
-                Behavior on opacity {
-                    Anim {}
-                }
-            }
-
-            TextMetrics {
-                id: appNameMetrics
-
-                text: root.modelData.appName
-                font.family: appName.font.family
-                font.pointSize: appName.font.pointSize
-                elide: Text.ElideRight
-                elideWidth: expandBtn.x - time.width - timeSep.width - summary.x - Appearance.spacing.small * 3
-            }
-
-            StyledText {
-                id: summary
-
-                anchors.top: parent.top
-                anchors.left: image.right
-                anchors.leftMargin: Appearance.spacing.smaller
-
-                animate: true
-                text: summaryMetrics.elidedText
-                maximumLineCount: 1
-                height: implicitHeight
-
-                states: State {
-                    name: "expanded"
-                    when: root.expanded
-
-                    PropertyChanges {
-                        summary.maximumLineCount: undefined
-                    }
-
-                    AnchorChanges {
-                        target: summary
-                        anchors.top: appName.bottom
-                    }
-                }
-
-                transitions: Transition {
-                    PropertyAction {
-                        target: summary
-                        property: "maximumLineCount"
-                    }
-                    AnchorAnimation {
-                        duration: Appearance.anim.durations.medium
-                        easing.type: Easing.BezierSpline
-                        easing.bezierCurve: Appearance.anim.curves.standard
-                    }
-                }
-
-                Behavior on height {
-                    Anim {}
-                }
-            }
-
-            TextMetrics {
-                id: summaryMetrics
-
-                text: root.modelData.summary
-                font.family: summary.font.family
-                font.pointSize: summary.font.pointSize
-                elide: Text.ElideRight
-                elideWidth: expandBtn.x - time.width - timeSep.width - summary.x - Appearance.spacing.small * 3
-            }
-
-            StyledText {
-                id: timeSep
-
-                anchors.top: parent.top
-                anchors.left: summary.right
-                anchors.leftMargin: Appearance.spacing.small
-
-                text: "•"
-                color: Signal.palette.inkMuted
-                font.pointSize: Appearance.font.size.small
-
-                states: State {
-                    name: "expanded"
-                    when: root.expanded
-
-                    AnchorChanges {
-                        target: timeSep
-                        anchors.left: appName.right
-                    }
-                }
-
-                transitions: Transition {
-                    AnchorAnimation {
-                        duration: Appearance.anim.durations.medium
-                        easing.type: Easing.BezierSpline
-                        easing.bezierCurve: Appearance.anim.curves.standard
-                    }
-                }
-            }
-
-            StyledText {
-                id: time
-
-                anchors.top: parent.top
-                anchors.left: timeSep.right
-                anchors.leftMargin: Appearance.spacing.small
-
-                animate: true
-                horizontalAlignment: Text.AlignLeft
-                text: root.modelData.timeStr
-                color: Signal.palette.inkMuted
-                font.pointSize: Appearance.font.size.small
+            Instruments.OnAirChip {
+                visible: root.critical
+                text: qsTr("Urgent")
+                fill: Signal.palette.alert
+                ink: Signal.palette.onAlert
             }
 
             Item {
@@ -313,15 +211,12 @@ StyledRect {
                 Accessible.role: Accessible.Button
                 Accessible.name: root.expanded ? qsTr("Collapse notification") : qsTr("Expand notification")
 
-                anchors.right: parent.right
-                anchors.top: parent.top
-
-                implicitWidth: expandIcon.height
-                implicitHeight: expandIcon.height
+                implicitWidth: 24
+                implicitHeight: 20
 
                 StateLayer {
-                    radius: Appearance.rounding.full
-                    color: root.modelData.urgency === NotificationUrgency.Critical ? Signal.palette.onCueWell : Signal.palette.ink
+                    radius: Appearance.rounding.small
+                    color: Signal.palette.ink
 
                     function onClicked() {
                         root.expanded = !root.expanded;
@@ -329,113 +224,83 @@ StyledRect {
                 }
 
                 Glyph {
-                    id: expandIcon
-
                     anchors.centerIn: parent
-
-                    animate: true
                     name: root.expanded ? "chevron-up" : "chevron-down"
-                    font.pointSize: Appearance.font.size.normal
+                    color: Signal.palette.inkMuted
+                    size: Appearance.font.size.normal
+                }
+            }
+        }
+
+        StyledText {
+            id: summary
+
+            Layout.fillWidth: true
+            Layout.rightMargin: 8
+            text: root.modelData.summary
+            font.pointSize: Appearance.font.size.normal
+            font.weight: Font.Medium
+            maximumLineCount: root.expanded ? 4 : 1
+            wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+            elide: Text.ElideRight
+        }
+
+        StyledText {
+            id: body
+
+            Layout.fillWidth: true
+            Layout.rightMargin: 8
+            visible: text !== ""
+            textFormat: Text.MarkdownText
+            text: root.modelData.body
+            color: Signal.palette.inkMuted
+            font.pointSize: Appearance.font.size.smaller
+            wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+            maximumLineCount: root.expanded ? 12 : 1
+            elide: Text.ElideRight
+
+            onLinkActivated: link => {
+                if (!root.expanded)
+                    return;
+                Quickshell.execDetached(["app2unit", "-O", "--", link]);
+                root.modelData.popup = false;
+            }
+        }
+
+        RowLayout {
+            id: actions
+
+            visible: root.expanded
+            Layout.topMargin: 6
+            Layout.fillWidth: true
+            spacing: 6
+
+            Repeater {
+                model: root.modelData.actions
+
+                delegate: Component {
+                    Action {}
                 }
             }
 
-            StyledText {
-                id: bodyPreview
+            Action {
+                modelData: QtObject {
+                    readonly property string text: qsTr("Close")
 
-                anchors.left: summary.left
-                anchors.right: expandBtn.left
-                anchors.top: summary.bottom
-                anchors.rightMargin: Appearance.spacing.small
-
-                animate: true
-                textFormat: Text.MarkdownText
-                text: bodyPreviewMetrics.elidedText
-                color: Signal.palette.inkMuted
-                font.pointSize: Appearance.font.size.small
-
-                opacity: root.expanded ? 0 : 1
-
-                Behavior on opacity {
-                    Anim {}
-                }
-            }
-
-            TextMetrics {
-                id: bodyPreviewMetrics
-
-                text: root.modelData.body
-                font.family: bodyPreview.font.family
-                font.pointSize: bodyPreview.font.pointSize
-                elide: Text.ElideRight
-                elideWidth: bodyPreview.width
-            }
-
-            StyledText {
-                id: body
-
-                anchors.left: summary.left
-                anchors.right: expandBtn.left
-                anchors.top: summary.bottom
-                anchors.rightMargin: Appearance.spacing.small
-
-                animate: true
-                textFormat: Text.MarkdownText
-                text: root.modelData.body
-                color: Signal.palette.inkMuted
-                font.pointSize: Appearance.font.size.small
-                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                height: text ? implicitHeight : 0
-
-                onLinkActivated: link => {
-                    if (!root.expanded)
-                        return;
-
-                    Quickshell.execDetached(["app2unit", "-O", "--", link]);
-                    root.modelData.popup = false;
-                }
-
-                opacity: root.expanded ? 1 : 0
-
-                Behavior on opacity {
-                    Anim {}
-                }
-            }
-
-            RowLayout {
-                id: actions
-
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.top: body.bottom
-                anchors.topMargin: Appearance.spacing.small
-
-                spacing: Appearance.spacing.smaller
-
-                opacity: root.expanded ? 1 : 0
-
-                Behavior on opacity {
-                    Anim {}
-                }
-
-                Action {
-                    modelData: QtObject {
-                        readonly property string text: qsTr("Close")
-                        function invoke(): void {
-                            root.modelData.close();
-                        }
+                    function invoke(): void {
+                        root.modelData.close();
                     }
                 }
+            }
 
-                Repeater {
-                    model: root.modelData.actions
-
-                    delegate: Component {
-                        Action {}
-                    }
-                }
+            Item {
+                Layout.fillWidth: true
             }
         }
     }
 
+    // Quiet bordered action: mono label, `raised` on hover. The first
+    // application action is the primary one and carries `ruleStrong`.
     component Action: StyledRect {
         id: action
 
@@ -444,17 +309,17 @@ StyledRect {
         Accessible.role: Accessible.Button
         Accessible.name: action.modelData.text
 
-        radius: Appearance.rounding.full
-        color: root.modelData.urgency === NotificationUrgency.Critical ? Signal.palette.cue : Signal.layer(Signal.palette.raised, 2)
+        radius: Appearance.rounding.small
+        color: "transparent"
+        border.width: 1
+        border.color: Signal.palette.ruleStrong
 
-        Layout.preferredWidth: actionText.width + Appearance.padding.normal * 2
-        Layout.preferredHeight: actionText.height + Appearance.padding.small * 2
-        implicitWidth: actionText.width + Appearance.padding.normal * 2
-        implicitHeight: actionText.height + Appearance.padding.small * 2
+        implicitWidth: Math.min(actionText.implicitWidth + 16, (column.width - 24) / Math.max(1, root.modelData.actions.length + 1))
+        implicitHeight: 24
 
         StateLayer {
-            radius: Appearance.rounding.full
-            color: root.modelData.urgency === NotificationUrgency.Critical ? Signal.palette.onCue : Signal.palette.ink
+            radius: Appearance.rounding.small
+            color: Signal.palette.ink
 
             function onClicked(): void {
                 action.modelData.invoke();
@@ -465,22 +330,13 @@ StyledRect {
             id: actionText
 
             anchors.centerIn: parent
-            text: actionTextMetrics.elidedText
-            color: root.modelData.urgency === NotificationUrgency.Critical ? Signal.palette.onCue : Signal.palette.inkMuted
-            font.pointSize: Appearance.font.size.small
-        }
-
-        TextMetrics {
-            id: actionTextMetrics
-
+            width: Math.min(implicitWidth, action.width - 12)
+            mono: true
             text: action.modelData.text
-            font.family: actionText.font.family
-            font.pointSize: actionText.font.pointSize
+            color: Signal.palette.ink
+            font.pointSize: Appearance.font.size.small
+            font.capitalization: Font.AllUppercase
             elide: Text.ElideRight
-            elideWidth: {
-                const numActions = root.modelData.actions.length + 1;
-                return (inner.width - actions.spacing * (numActions - 1)) / numActions - Appearance.padding.normal * 2;
-            }
         }
     }
 }

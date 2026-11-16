@@ -3,7 +3,6 @@ import qs.components
 import qs.services
 import qs.config
 import QtQuick
-import QtQuick.Layouts
 
 // Launcher window provider (shell#250 slice 1): `>win <query>` lists
 // open windows from the compositor toplevels and focuses the chosen
@@ -11,7 +10,7 @@ import QtQuick.Layouts
 // shell's existing window-activation path). Hyprland-only today —
 // the toplevel source is Hypr.toplevels; Niri rows arrive with its
 // window read model.
-Item {
+LauncherRow {
     id: root
 
     required property var list
@@ -22,54 +21,9 @@ Item {
         root.list.visibilities.launcher = false;
     }
 
-    implicitHeight: Config.launcher.sizes.itemHeight
-
-    anchors.left: parent?.left
-    anchors.right: parent?.right
-
-    Accessible.role: Accessible.Button
-    Accessible.name: root.modelData?.title ?? ""
-
-    StateLayer {
-        radius: Appearance.rounding.normal
-
-        function onClicked(): void {
-            root.onClicked();
-        }
-    }
-
-    RowLayout {
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.margins: Appearance.padding.larger
-        spacing: Appearance.spacing.normal
-
-        Glyph {
-            name: "app-window"
-            font.pointSize: Appearance.font.size.extraLarge
-            Layout.alignment: Qt.AlignVCenter
-        }
-
-        ColumnLayout {
-            Layout.fillWidth: true
-            Layout.alignment: Qt.AlignVCenter
-            spacing: 0
-
-            StyledText {
-                Layout.fillWidth: true
-                text: root.modelData?.title ?? ""
-                font.pointSize: Appearance.font.size.normal
-                elide: Text.ElideRight
-            }
-
-            StyledText {
-                Layout.fillWidth: true
-                text: qsTr("%1 · workspace %2").arg(root.modelData?.appClass ?? "").arg(root.modelData?.workspaceName ?? "?")
-                font.pointSize: Appearance.font.size.small
-                color: Signal.palette.inkMuted
-                elide: Text.ElideRight
-            }
-        }
-    }
+    glyph: "app-window"
+    title: root.modelData?.title ?? ""
+    detail: root.modelData?.appClass ?? ""
+    kind: qsTr("WS %1").arg(root.modelData?.workspaceName ?? "?")
+    onActivated: root.onClicked()
 }

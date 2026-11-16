@@ -3,7 +3,7 @@ import Quickshell.Io
 JsonObject {
     property bool enabled: true
     property bool showOnHover: false
-    property int maxShown: 7
+    property int maxShown: 8
     property int maxWallpapers: 9 // Warning: even numbers look bad
     property string specialPrefix: "@"
     property string actionPrefix: ">"
@@ -22,8 +22,8 @@ JsonObject {
     }
 
     component Sizes: JsonObject {
-        property int itemWidth: 600
-        property int itemHeight: 57
+        property int itemWidth: 640
+        property int itemHeight: 44
         property int wallpaperWidth: 280
         property int wallpaperHeight: 200
     }

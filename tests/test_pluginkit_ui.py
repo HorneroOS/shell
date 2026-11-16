@@ -618,3 +618,9 @@ def test_uidetailrow_is_the_native_popout_row():
     assert 'property string label: ""' in src
     assert 'property string value: ""' in src
     assert "Text.AlignRight" in src
+
+
+def test_uibutton_transparent_island_colour_falls_back_to_bar_colour():
+    src = (KIT / "UiButton.qml").read_text(encoding="utf-8")
+    assert "islandColoured" in src and "hostIconColor.a > 0" in src
+    assert "root.islandColoured ? root.hostStyle.hostIconColor" in src

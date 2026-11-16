@@ -8,6 +8,6 @@ Text {
     color: root.role === "caption" ? Theme.onSurfaceVariant : Theme.onSurface
     font.family: Theme.fontFamily
     font.pixelSize: root.role === "title" ? Theme.fontSizeLarge : root.role === "caption" ? Theme.fontSizeSmall : Theme.fontSize
-    font.bold: root.role === "title"
+    font.weight: root.role === "title" ? Font.DemiBold : Font.Normal
     wrapMode: Text.WordWrap
 }

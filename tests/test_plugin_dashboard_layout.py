@@ -191,3 +191,18 @@ def test_dashboard_layout_offscreen(tmp_path):
     assert "DashboardLayout" in out, out
     assert "0 failed" in out, out
     assert result.returncode == 0, out
+
+
+def test_card_chrome_is_quiet_for_healthy_extensions():
+    """A loaded extension owns its card like a native dashboard card: the
+    host name and status metadata only show when the extension is not
+    showing content (or while configuring it by keyboard); keyboard help and
+    the focus ring are keyboard-only; raw Qt Controls get the shell palette.
+    """
+    assert 'readonly property bool contentReady: card.modelData.state === "loaded"' in CARDS
+    assert "visible: !card.contentReady" in CARDS
+    assert "visible: !card.contentReady || (card.activeFocus && FocusMode.keyboard)" in CARDS
+    assert "visible: root.hasPlugins && FocusMode.keyboard" in CARDS
+    assert "visible: card.activeFocus && FocusMode.keyboard" in CARDS
+    assert "palette.base: Colours.palette.m3surfaceContainerHigh" in CARDS
+    assert "palette.placeholderText: Colours.palette.m3onSurfaceVariant" in CARDS

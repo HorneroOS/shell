@@ -47,7 +47,7 @@ Item {
     readonly property int columns: layoutHelper.columnsForWidth(root.availableWidth, Appearance.spacing.normal)
 
     implicitWidth: 840
-    implicitHeight: hasPlugins ? hint.implicitHeight + Appearance.spacing.small + scroll.height : empty.implicitHeight
+    implicitHeight: hasPlugins ? hint.height + (hint.visible ? Appearance.spacing.small : 0) + scroll.height : empty.implicitHeight
 
     function focusCard(id: string): void {
         root.focusedId = id;
@@ -103,7 +103,10 @@ Item {
     StyledText {
         id: hint
 
-        visible: root.hasPlugins
+        // Keyboard help is noise for pointer users: shown only while the
+        // last input was the keyboard (FocusMode), collapsed otherwise.
+        visible: root.hasPlugins && FocusMode.keyboard
+        height: visible ? implicitHeight : 0
         text: qsTr("Arrows move between cards · Ctrl+arrows reorder · P pins · S resizes")
         font.pointSize: Appearance.font.size.smaller
         color: Colours.palette.m3onSurfaceVariant
@@ -114,7 +117,7 @@ Item {
 
         visible: root.hasPlugins
         anchors.top: hint.bottom
-        anchors.topMargin: Appearance.spacing.small
+        anchors.topMargin: hint.visible ? Appearance.spacing.small : 0
         width: root.availableWidth
         height: Math.min(sections.implicitHeight, root.maxViewportHeight)
         contentWidth: width
@@ -178,6 +181,7 @@ Item {
                                 id: card
 
                                 required property var modelData
+                                readonly property bool contentReady: card.modelData.state === "loaded" && pluginLoader.status === Loader.Ready
                                 readonly property int cardContentWidth: Math.min(layoutHelper.contentWidth(card.modelData.sizeClass), Math.max(160, root.availableWidth - Appearance.padding.large * 2))
 
                                 Layout.alignment: Qt.AlignTop
@@ -208,13 +212,16 @@ Item {
                                 }
                                 Keys.onPressed: event => root.handleCardKey(card.modelData, event)
 
+                                // Native FocusRing contract: keyboard focus only,
+                                // floating 2 px outside the card.
                                 Rectangle {
                                     anchors.fill: parent
-                                    radius: parent.radius
+                                    anchors.margins: -2
+                                    radius: parent.radius + 2
                                     color: "transparent"
                                     border.width: 2
-                                    border.color: Colours.palette.m3primary
-                                    visible: card.activeFocus
+                                    border.color: Colours.focusRing
+                                    visible: card.activeFocus && FocusMode.keyboard
                                 }
 
                                 ColumnLayout {
@@ -223,7 +230,11 @@ Item {
                                     anchors.centerIn: parent
                                     spacing: Appearance.spacing.small
 
+                                    // A loaded extension owns its card, like a native
+                                    // dashboard card: the host name only appears when
+                                    // there is no content to identify it (loading, failed).
                                     StyledText {
+                                        visible: !card.contentReady
                                         text: card.modelData.name || card.modelData.id
                                         font.pointSize: Appearance.font.size.normal
                                         color: Colours.palette.m3onSurface
@@ -243,7 +254,22 @@ Item {
 
                                         Layout.maximumWidth: hostAvailableWidth
                                         clip: true
+                                        // Raw Qt Controls an extension uses (TextField,
+                                        // ComboBox, ...) take the shell palette instead of
+                                        // the Basic style's white fields.
                                         palette.windowText: Colours.palette.m3onSurface
+                                        palette.window: Colours.palette.m3surfaceContainer
+                                        palette.base: Colours.palette.m3surfaceContainerHigh
+                                        palette.alternateBase: Colours.palette.m3surfaceContainerHighest
+                                        palette.text: Colours.palette.m3onSurface
+                                        palette.placeholderText: Colours.palette.m3onSurfaceVariant
+                                        palette.button: Colours.palette.m3surfaceContainerHigh
+                                        palette.buttonText: Colours.palette.m3onSurface
+                                        palette.highlight: Colours.palette.m3primary
+                                        palette.highlightedText: Colours.palette.m3onPrimary
+                                        palette.mid: Colours.palette.m3outline
+                                        palette.dark: Colours.palette.m3outline
+                                        palette.light: Colours.palette.m3surfaceContainerHighest
                                         source: card.modelData.entrypoint ? `file://${Plugins.pluginsDir}/${card.modelData.id}/${card.modelData.entrypoint}` : ""
                                         asynchronous: true
 
@@ -311,7 +337,11 @@ Item {
                                         color: Colours.palette.m3error
                                     }
 
+                                    // Status metadata is diagnostic: hidden for a healthy
+                                    // extension, shown when it failed/blocked/pending, and
+                                    // while the card has keyboard focus (P/S feedback).
                                     RowLayout {
+                                        visible: !card.contentReady || (card.activeFocus && FocusMode.keyboard)
                                         spacing: Appearance.spacing.small
 
                                         StyledRect {

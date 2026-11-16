@@ -377,25 +377,6 @@ Item {
     SplitPaneLayout {
         anchors.fill: parent
 
-        leftContent: Component {
-            ColumnLayout {
-                spacing: Appearance.spacing.normal
-
-                SettingsHeader {
-                    icon: "movie_creation"
-                    title: qsTr("Studio")
-                }
-
-                StyledText {
-                    Layout.fillWidth: true
-                    text: qsTr("Creative workloads for this machine. Studio is Planned: selections record what you want, and package installation stays a separate reviewed step.")
-                    wrapMode: Text.WordWrap
-                    color: Colours.palette.m3onSurfaceVariant
-                    font.pointSize: Appearance.font.size.small
-                }
-            }
-        }
-
         rightContent: Component {
             StyledFlickable {
                 flickableDirection: Flickable.VerticalFlick
@@ -412,6 +393,13 @@ Item {
                     anchors.right: parent.right
                     anchors.top: parent.top
                     spacing: Appearance.spacing.normal
+
+                    PaneHeader {
+                        title: qsTr("Studio")
+                        icon: "movie_creation"
+                        description: qsTr("Tools for music, video, streaming and design work")
+                        intro: qsTr("Studio is Planned. Choose the kinds of creative work you do on this computer: Hornero remembers your choice, and installing the related apps is a separate step you review and confirm later.")
+                    }
 
                     SectionContainer {
                         StyledText {

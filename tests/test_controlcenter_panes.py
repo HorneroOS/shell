@@ -291,7 +291,7 @@ def test_control_center_split_keeps_details_space_on_compact_windows():
 
     assert "property real leftWidthRatio: 0.4" in split_layout
     assert "property int leftMinimumWidth: 420" in split_layout
-    assert "Layout.minimumWidth: Math.min(root.leftMinimumWidth, parent.width * root.leftWidthRatio)" in split_layout
+    assert "Layout.minimumWidth: root.singleColumn ? 0 : Math.min(root.leftMinimumWidth, parent.width * root.leftWidthRatio)" in split_layout
 
 
 def test_flickable_column_content_uses_its_implicit_height():
@@ -873,3 +873,15 @@ def test_agent_center_shows_honest_states_and_no_invented_data():
     assert "root.defaultAgent" in pane
     for invented in ("cost", "quota", "token usage", "price"):
         assert invented not in pane.lower(), invented
+
+
+def test_purpose_panes_open_with_a_shared_header_not_a_decorative_column():
+    """Studio, Gaming and Agent Center wasted ~40% of the window on a giant
+    icon with the only explanation in small print (shell#454): they are single
+    column now, opening with PaneHeader (title, description, plain intro)."""
+    root = Path(__file__).resolve().parents[1] / "modules/controlcenter"
+    assert "readonly property bool singleColumn: root.leftContent === null" in (root / "components/SplitPaneLayout.qml").read_text()
+    for rel in ("studio/StudioPane.qml", "gaming/GamingPane.qml", "agents/AgentCenterPane.qml"):
+        src = (root / rel).read_text()
+        assert "leftContent" not in src and "SettingsHeader" not in src, rel
+        assert "PaneHeader {" in src and "intro: qsTr(" in src, rel

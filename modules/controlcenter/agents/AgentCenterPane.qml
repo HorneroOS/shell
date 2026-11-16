@@ -352,11 +352,36 @@ Item {
                     }
 
                     SectionContainer {
-                        StyledText {
+                        RowLayout {
                             Layout.fillWidth: true
-                            text: qsTr("Agents")
-                            font.pointSize: Appearance.font.size.large
-                            font.weight: 600
+                            spacing: Appearance.spacing.normal
+
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: 0
+
+                                StyledText {
+                                    Layout.fillWidth: true
+                                    text: qsTr("Your agents")
+                                    font.pointSize: Appearance.font.size.large
+                                    font.weight: 600
+                                }
+
+                                StyledText {
+                                    Layout.fillWidth: true
+                                    text: root.defaultAgent.length > 0 ? qsTr("Default: %1").arg(root.defaultAgent) : root.defaultState === "not-selected" ? qsTr("No default agent recorded. Choose one from the list below.") : qsTr("Default agent state unavailable.")
+                                    wrapMode: Text.WordWrap
+                                    color: Colours.palette.m3onSurfaceVariant
+                                    font.pointSize: Appearance.font.size.small
+                                }
+                            }
+
+                            TextButton {
+                                text: qsTr("Refresh")
+                                Accessible.name: qsTr("Refresh agent, default, config and assistant state")
+                                enabled: !root.loading && !root.busy
+                                onClicked: root.refresh()
+                            }
                         }
 
                         StyledText {
@@ -404,95 +429,129 @@ Item {
                             font.pointSize: Appearance.font.size.small
                         }
 
-                        TextButton {
-                            text: qsTr("Refresh")
-                            Accessible.name: qsTr("Refresh agent, default, config and assistant state")
-                            enabled: !root.loading && !root.busy
-                            onClicked: root.refresh()
-                        }
-                    }
-
-                    SectionContainer {
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: qsTr("Default agent")
-                            font.pointSize: Appearance.font.size.large
-                            font.weight: 600
-                        }
-
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: root.defaultAgent.length > 0 ? qsTr("Default: %1").arg(root.defaultAgent) : root.defaultState === "not-selected" ? qsTr("No default agent recorded. Choose one from the list below.") : qsTr("Default agent state unavailable.")
-                            wrapMode: Text.WordWrap
-                            color: Colours.palette.m3onSurfaceVariant
-                        }
-
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: qsTr("Recording a default only saves your choice; it does not start the agent.")
-                            wrapMode: Text.WordWrap
-                            color: Colours.palette.m3onSurfaceVariant
-                            font.pointSize: Appearance.font.size.small
-                        }
-                    }
-
-                    SectionContainer {
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: qsTr("Discovered agents")
-                            font.pointSize: Appearance.font.size.large
-                            font.weight: 600
-                        }
-
+                        // One row per agent (shell#458): icon, name, a Default
+                        // chip, plain-language status chips, the resolved path,
+                        // and the two honest actions.
                         Repeater {
                             model: root.agentsModel
 
-                            ColumnLayout {
+                            StyledRect {
+                                id: agentRow
+
                                 required property var modelData
+                                readonly property bool isDefault: modelData.id === root.defaultAgent
 
                                 Layout.fillWidth: true
-                                spacing: Appearance.spacing.small
-
-                                StyledText {
-                                    Layout.fillWidth: true
-                                    text: modelData.id === root.defaultAgent ? qsTr("%1 — default").arg(modelData.name) : modelData.name
-                                    wrapMode: Text.WordWrap
-                                    font.weight: 600
-                                }
-
-                                StyledText {
-                                    Layout.fillWidth: true
-                                    text: qsTr("Installed: %1 · Auth: %2 · Config present: %3").arg(modelData.installed ? qsTr("yes (%1)").arg(modelData.resolvedPath.length > 0 ? modelData.resolvedPath : modelData.exec) : qsTr("not found on PATH")).arg(modelData.auth).arg(modelData.configPresent)
-                                    wrapMode: Text.WordWrap
-                                    color: Colours.palette.m3onSurfaceVariant
-                                    font.pointSize: Appearance.font.size.small
-                                }
-
-                                StyledText {
-                                    Layout.fillWidth: true
-                                    text: qsTr("Version: not reported by horneroctl")
-                                    wrapMode: Text.WordWrap
-                                    color: Colours.palette.m3onSurfaceVariant
-                                    font.pointSize: Appearance.font.size.small
-                                }
+                                implicitHeight: agentLayout.implicitHeight + Appearance.padding.large * 2
+                                radius: Appearance.rounding.normal
+                                color: agentRow.isDefault ? Colours.palette.m3secondaryContainer : Colours.tPalette.m3surfaceContainerHigh
 
                                 RowLayout {
-                                    TextButton {
-                                        text: qsTr("Set default")
-                                        Accessible.name: qsTr("Record %1 as the default agent").arg(modelData.id)
-                                        enabled: !root.busy && !root.loading && modelData.id !== root.defaultAgent
-                                        visible: modelData.id !== root.defaultAgent
-                                        onClicked: root.setDefault(modelData.id)
+                                    id: agentLayout
+
+                                    anchors.fill: parent
+                                    anchors.margins: Appearance.padding.large
+                                    spacing: Appearance.spacing.large
+
+                                    StyledRect {
+                                        Layout.alignment: Qt.AlignTop
+                                        implicitWidth: 44
+                                        implicitHeight: 44
+                                        radius: Appearance.rounding.full
+                                        color: agentRow.isDefault ? Colours.palette.m3secondary : Colours.palette.m3primaryContainer
+
+                                        MaterialIcon {
+                                            anchors.centerIn: parent
+                                            text: agentRow.modelData.id.indexOf("javi") >= 0 ? "raven" : "smart_toy"
+                                            font.pointSize: Appearance.font.size.large
+                                            color: agentRow.isDefault ? Colours.palette.m3onSecondary : Colours.palette.m3onPrimaryContainer
+                                        }
                                     }
 
-                                    TextButton {
-                                        text: qsTr("Launch proposal")
-                                        Accessible.name: qsTr("Show the dry-run launch proposal for %1 (nothing is executed)").arg(modelData.id)
-                                        enabled: !root.busy && !root.loading
-                                        onClicked: root.showLaunchProposal(modelData.id)
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: Appearance.spacing.small
+
+                                        RowLayout {
+                                            Layout.fillWidth: true
+                                            spacing: Appearance.spacing.small
+
+                                            StyledText {
+                                                text: agentRow.modelData.name
+                                                font.pointSize: Appearance.font.size.normal
+                                                font.weight: 600
+                                                color: agentRow.isDefault ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                                            }
+
+                                            AgentChip {
+                                                visible: agentRow.isDefault
+                                                label: qsTr("Default")
+                                                tone: "primary"
+                                            }
+
+                                            Item {
+                                                Layout.fillWidth: true
+                                            }
+                                        }
+
+                                        Flow {
+                                            Layout.fillWidth: true
+                                            spacing: Appearance.spacing.small
+
+                                            AgentChip {
+                                                label: agentRow.modelData.installed ? qsTr("Installed") : qsTr("Not found on PATH")
+                                                tone: agentRow.modelData.installed ? "good" : "bad"
+                                            }
+
+                                            AgentChip {
+                                                label: agentRow.modelData.auth === "present" ? qsTr("Credentials found") : agentRow.modelData.auth === "absent" ? qsTr("No credentials") : qsTr("Credentials unknown")
+                                                tone: agentRow.modelData.auth === "present" ? "good" : agentRow.modelData.auth === "absent" ? "bad" : "neutral"
+                                            }
+
+                                            AgentChip {
+                                                label: agentRow.modelData.configPresent === "true" ? qsTr("Config found") : agentRow.modelData.configPresent === "false" ? qsTr("No config") : qsTr("Config unknown")
+                                                tone: agentRow.modelData.configPresent === "true" ? "good" : "neutral"
+                                            }
+                                        }
+
+                                        StyledText {
+                                            Layout.fillWidth: true
+                                            text: (agentRow.modelData.installed ? (agentRow.modelData.resolvedPath.length > 0 ? agentRow.modelData.resolvedPath : agentRow.modelData.exec) + "  ·  " : "") + qsTr("Version: not reported by horneroctl")
+                                            elide: Text.ElideMiddle
+                                            color: Colours.palette.m3onSurfaceVariant
+                                            font.pointSize: Appearance.font.size.small
+                                        }
+                                    }
+
+                                    RowLayout {
+                                        Layout.alignment: Qt.AlignVCenter
+                                        spacing: Appearance.spacing.small
+
+                                        TextButton {
+                                            text: qsTr("Set default")
+                                            Accessible.name: qsTr("Record %1 as the default agent").arg(agentRow.modelData.id)
+                                            enabled: !root.busy && !root.loading && agentRow.modelData.id !== root.defaultAgent
+                                            visible: agentRow.modelData.id !== root.defaultAgent
+                                            onClicked: root.setDefault(modelData.id)
+                                        }
+
+                                        TextButton {
+                                            text: qsTr("Launch proposal")
+                                            Accessible.name: qsTr("Show the dry-run launch proposal for %1 (nothing is executed)").arg(agentRow.modelData.id)
+                                            enabled: !root.busy && !root.loading
+                                            onClicked: root.showLaunchProposal(agentRow.modelData.id)
+                                        }
                                     }
                                 }
                             }
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Recording a default only saves your choice; it does not start the agent. A launch proposal shows the command without running it.")
+                            wrapMode: Text.WordWrap
+                            color: Colours.palette.m3onSurfaceVariant
+                            font.pointSize: Appearance.font.size.small
                         }
 
                         StyledText {
@@ -556,6 +615,29 @@ Item {
                     }
                 }
             }
+        }
+    }
+
+    component AgentChip: StyledRect {
+        id: chip
+
+        property string label
+        property string tone: "neutral"
+        readonly property color fg: chip.tone === "good" ? Colours.palette.m3success : chip.tone === "bad" ? Colours.palette.m3error : chip.tone === "primary" ? Colours.palette.m3onPrimary : Colours.palette.m3onSurfaceVariant
+
+        implicitWidth: chipText.implicitWidth + Appearance.padding.normal * 2
+        implicitHeight: chipText.implicitHeight + Appearance.padding.small
+        radius: Appearance.rounding.full
+        color: chip.tone === "primary" ? Colours.palette.m3primary : Qt.alpha(chip.fg, 0.14)
+
+        StyledText {
+            id: chipText
+
+            anchors.centerIn: parent
+            text: chip.label
+            color: chip.fg
+            font.pointSize: Appearance.font.size.small
+            font.weight: 500
         }
     }
 }

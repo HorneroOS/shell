@@ -903,3 +903,14 @@ def test_navigation_is_grouped_balanced_and_expanded_by_default():
     assert len(icons) == len(set(icons)), "every pane has its own icon"
     assert "property bool navExpanded: true" in (cc / "Session.qml").read_text()
     assert "visible: !root.session.navExpanded && firstInCategory && index > 0" in (cc / "NavRail.qml").read_text()
+
+
+def test_agent_center_lists_agents_as_rows_with_plain_status_chips():
+    """Agent state read as raw text ("Config present: true") under three
+    cards, one holding only Refresh (shell#458)."""
+    pane = (CC / "agents" / "AgentCenterPane.qml").read_text()
+    assert 'text: qsTr("Your agents")' in pane and "component AgentChip:" in pane
+    for chip in ("Credentials found", "No credentials", "Config found", "Not found on PATH"):
+        assert chip in pane, chip
+    assert "Installed: %1 · Auth: %2 · Config present: %3" not in pane
+    assert 'text: qsTr("Default agent")' not in pane

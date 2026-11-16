@@ -19,7 +19,19 @@ Popup {
     // vertical half; an explicit side is flipped only when it clips.
     property string preferredSide: "auto"
 
-    readonly property bool _triggered: hoverHandler.hovered || (target ? target.activeFocus : false)
+    // A bar indicator with a native popout (shell issue 449) shows the
+    // popout on hover, like native bar items, never a tooltip on top of it.
+    readonly property var _hostPopout: {
+        let p = root.target;
+        while (p) {
+            if ("hostRegisterPopout" in p)
+                return p;
+            p = p.parent;
+        }
+        return null;
+    }
+    readonly property bool _popoutOwned: root._hostPopout !== null && root._hostPopout.hostPopoutContent !== null
+    readonly property bool _triggered: !root._popoutOwned && (hoverHandler.hovered || (target ? target.activeFocus : false))
     property bool _wanted: false
     property bool _dismissed: false
 

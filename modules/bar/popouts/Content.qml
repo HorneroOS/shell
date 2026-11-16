@@ -28,6 +28,21 @@ Item {
         anchors.fill: parent
         anchors.margins: Appearance.padding.large
 
+        // Extension popovers (shell#449): one native Popout for whichever
+        // extension host Loader is the current anchor, so extension popouts
+        // reveal, size, move and close exactly like the native ones.
+        Popout {
+            id: pluginPopout
+
+            readonly property bool pluginCurrent: String(root.wrapper.currentName).startsWith("plugin:")
+            readonly property Item pluginContent: pluginCurrent && root.wrapper.currentAnchor && ("hostPopoutContent" in root.wrapper.currentAnchor) ? root.wrapper.currentAnchor.hostPopoutContent : null
+
+            name: pluginCurrent && pluginContent ? root.wrapper.currentName : "plugin:"
+            sourceComponent: PluginPopoutHost {
+                content: pluginPopout.pluginContent
+            }
+        }
+
         Popout {
             name: "activewindow"
             sourceComponent: ActiveWindow {

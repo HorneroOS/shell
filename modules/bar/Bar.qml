@@ -172,6 +172,87 @@ Item {
         popouts.ownerBackdrop = root.spec.backdrop;
     }
 
+    // Extension popouts (shell#449) share the native popout panel. A host
+    // Loader advertises `hostPopoutContent`; only extensions with a popover
+    // open one, and they follow exactly the native hover/claim flow.
+    function pluginLoaderAt(container: Item, lx: real, ly: real): var {
+        const stack = [container];
+        while (stack.length > 0) {
+            const it = stack.pop();
+            if (!it)
+                continue;
+            if ("hostRegisterPopout" in it && it.visible) {
+                const p = root.mapToItem(it, lx, ly);
+                if (vertical ? (p.y >= 0 && p.y <= it.height) : (p.x >= 0 && p.x <= it.width))
+                    return it;
+            }
+            for (const c of it.children)
+                stack.push(c);
+        }
+        return null;
+    }
+
+    function isOwnLoader(loader: Item): bool {
+        let p = loader;
+        while (p) {
+            if (p === root)
+                return true;
+            p = p.parent;
+        }
+        return false;
+    }
+
+    function openPluginPopout(loader: Item, keyboard: bool): void {
+        if (!loader || !loader.hostPopoutContent)
+            return;
+        claimPopouts();
+        popouts.currentName = loader.name;
+        popouts.currentCenter = centerBinding(loader, 0);
+        popouts.currentAnchor = loader;
+        popouts.hasCurrent = true;
+        popouts.keyboardIntent = keyboard;
+    }
+
+    property Item openPluginLoader: null
+
+    function syncPluginPopoutState(): void {
+        const next = popouts.hasCurrent && String(popouts.currentName).startsWith("plugin:") ? popouts.currentAnchor : null;
+        if (root.openPluginLoader === next)
+            return;
+        if (root.openPluginLoader)
+            root.openPluginLoader.hostPopoutOpen = false;
+        root.openPluginLoader = next;
+        if (next)
+            next.hostPopoutOpen = true;
+    }
+
+    Connections {
+        target: Plugins
+
+        function onPopoutRequested(loader: Item, open: bool): void {
+            if (!root.isOwnLoader(loader))
+                return;
+            if (open)
+                root.openPluginPopout(loader, FocusMode.keyboard);
+            else if (popouts.currentAnchor === loader)
+                popouts.hasCurrent = false;
+        }
+    }
+
+    Connections {
+        target: popouts
+
+        function onHasCurrentChanged(): void {
+            root.syncPluginPopoutState();
+        }
+        function onCurrentAnchorChanged(): void {
+            root.syncPluginPopoutState();
+        }
+        function onCurrentNameChanged(): void {
+            root.syncPluginPopoutState();
+        }
+    }
+
     function openStatusPopout(name: string, anchor: Item): void {
         if (!Config.bar.popouts.statusIcons || !anchor)
             return;
@@ -224,7 +305,14 @@ Item {
                     return;
                 const mapped = root.mapToItem(items, lx, ly);
                 const icon = vertical ? items.childAt(items.width / 2, mapped.y) : items.childAt(mapped.x, items.height / 2);
-                if (icon) {
+                if (icon && "hostRegisterPopout" in icon) {
+                    // Extension in the status island: native popout when it
+                    // has a popover, nothing (like a popout-less icon) otherwise.
+                    if (icon.hostPopoutContent)
+                        openPluginPopout(icon, false);
+                    else
+                        popouts.hasCurrent = false;
+                } else if (icon) {
                     claimPopouts();
                     popouts.currentName = icon.name;
                     popouts.currentCenter = centerBinding(icon, 0);
@@ -253,6 +341,13 @@ Item {
                     popouts.hasCurrent = false;
                     item.expanded = true;
                 }
+            } else if (id === "extensions" || id === "clock" || id === "quickActions") {
+                // Extensions in their own island or joined to a native one.
+                const pl = pluginLoaderAt(item, lx, ly);
+                if (pl && pl.hostPopoutContent)
+                    openPluginPopout(pl, false);
+                else
+                    popouts.hasCurrent = false;
             } else if (id === "activeWindow" && Config.bar.popouts.activeWindow) {
                 if (!item)
                     return;

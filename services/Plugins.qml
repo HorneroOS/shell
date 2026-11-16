@@ -545,6 +545,16 @@ Singleton {
         return root.settingsSurfaceFor(entry) !== null;
     }
 
+    // Native bar popouts for extensions (shell#449): an extension asks for
+    // its popout (click/keyboard); the bar that owns the requesting host
+    // Loader opens or closes it in its shared popout panel.
+    signal popoutRequested(Item loader, bool open)
+
+    function requestPopout(loader: Item, open: bool): void {
+        if (loader)
+            root.popoutRequested(loader, open);
+    }
+
     function markLoaded(id: string): void {
         root.setState(id, "loaded", "");
         root.logDiagnostic(id, "loaded", "");

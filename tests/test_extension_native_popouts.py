@@ -47,7 +47,7 @@ def test_pluginkit_hands_popovers_to_the_host():
 def test_indicators_in_tray_like_islands_have_no_hover_background():
     button = read("plugin/qml/Hornero/PluginKit/UiButton.qml")
     assert 'root.hostStyle.hostSection === "status" || root.hostStyle.hostSection === "end"' in button
-    assert "hovered: hover.hovered && !root.quietHover" in button
+    assert "(root.hovered && !root.quietHover) || root.open" in button
 
 
 def test_popover_content_fits_the_native_popout():

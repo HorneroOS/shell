@@ -1,31 +1,48 @@
+"""PluginKit 3 (Hornero Signal) component contract.
+
+Static checks pin the public API and the Signal Bezel rules (roles only,
+no Material names, no ripple/pill shapes, real-data instruments); the
+offscreen runtime probes run the REAL Theme and Ui* files over stub shell
+modules (tests/pluginkit_harness.py) for keyboard operation, reduced
+motion and the instrument specimen.
+"""
+
 import re
 from pathlib import Path
+
+import pytest
+
+import pluginkit_harness as harness
 
 ROOT = Path(__file__).resolve().parents[1]
 KIT = ROOT / "plugin/qml/Hornero/PluginKit"
 
 UI_TYPES = [
-    "UiText",
-    "UiCard",
-    "UiButton",
-    "UiToggle",
-    "UiSlider",
-    "UiMetric",
-    "UiDetailRow",
-    "UiActionRow",
-    "UiChip",
-    "UiProgress",
-    "UiState",
-    "UiTooltip",
-    "UiPopover",
+    "UiText", "UiEyebrow", "UiIcon", "UiCard", "UiWell", "UiButton", "UiToggle",
+    "UiSlider", "UiTextField", "UiTextArea", "UiSpinBox", "UiComboBox", "UiMetric", "UiDetailRow", "UiActionRow", "UiChip",
+    "UiProgress", "UiSegmentMeter", "UiMeterRow", "UiSparkline", "UiScope",
+    "UiPartition", "UiState", "UiTooltip", "UiPopover", "UiStack",
 ]
-
-INTERACTIVE = ["UiButton", "UiToggle", "UiSlider", "UiActionRow"]
-
-ALLOWED_IMPORTS = {"QtQuick", "QtQuick.Controls"}
-
+INTERACTIVE = ["UiButton", "UiToggle", "UiSlider", "UiActionRow", "UiTextField", "UiTextArea",
+               "UiSpinBox", "UiComboBox"]
+ALLOWED_IMPORTS = {"QtQuick", "QtQuick.Controls", "QtQuick.Layouts", "QtQuick.Shapes",
+                   "QtQuick.Effects", "qs.utils"}
 HEX_COLOR = re.compile(r"#[0-9a-fA-F]{3,8}\b")
 IMPORT_RE = re.compile(r"^\s*import\s+([A-Za-z0-9_.]+)", re.MULTILINE)
+MATERIAL_THEME = re.compile(
+    r"\bTheme\.(primary|onPrimary|surface\w*|onSurface\w*|secondary\w*|tertiary\w*|"
+    r"error\w*|outline\w*|background|componentBorder|success|focusRing|fontFamily|"
+    r"fontSize\w*|iconSize\w*|spacingSmall|spacingLarge|roundingSmall|duration[A-Z]\w*|"
+    r"curve[A-Z]\w*|state\w*Opacity)\b")
+
+
+def _src(name: str) -> str:
+    return (KIT / f"{name}.qml").read_text(encoding="utf-8")
+
+
+def _code(name: str) -> str:
+    """Source without // comments (comments may name retired APIs)."""
+    return re.sub(r"//[^\n]*", "", _src(name))
 
 
 def test_qmldir_declares_all_ui_types():
@@ -34,175 +51,191 @@ def test_qmldir_declares_all_ui_types():
     for name in UI_TYPES:
         assert f"{name} 1.0 {name}.qml" in qmldir, name
         assert (KIT / f"{name}.qml").is_file(), name
+    # Retired Material-era files stay gone.
+    for retired in ("UiStateLayer", "ThemeBase"):
+        assert not (KIT / f"{retired}.qml").exists(), retired
+        assert retired not in qmldir, retired
 
 
 def test_ui_files_import_only_allowed_modules():
     for name in UI_TYPES:
-        src = (KIT / f"{name}.qml").read_text(encoding="utf-8")
-        imports = IMPORT_RE.findall(src)
+        imports = IMPORT_RE.findall(_src(name))
         assert imports, name
         for imported in imports:
             assert imported in ALLOWED_IMPORTS, (name, imported)
-        assert "qs." not in src, name
-        assert "import qs" not in src, name
 
 
-def test_ui_files_have_no_hex_colors_and_use_theme():
+def test_ui_files_use_signal_roles_only():
     for name in UI_TYPES:
-        src = (KIT / f"{name}.qml").read_text(encoding="utf-8")
+        src = _code(name)
         assert not HEX_COLOR.search(src), name
         assert "Theme." in src, name
+        assert not MATERIAL_THEME.search(src), (name, MATERIAL_THEME.search(src))
+
+
+def test_theme_exposes_signal_tokens():
+    src = _src("Theme")
+    for token in ("readonly property var palette: Signal.palette",
+                  "readonly property var font: Appearance.font",
+                  "readonly property var rounding: Appearance.rounding",
+                  "readonly property var spacing: Appearance.spacing",
+                  "readonly property var padding: Appearance.padding",
+                  "readonly property var anim: Appearance.anim",
+                  "readonly property bool highContrast: Config.appearance.highContrast",
+                  "readonly property bool keyboardFocus: FocusMode.keyboard",
+                  "function duration(name: string): int"):
+        assert token in src, token
+    # Experience-driven motion level, glow gate and telemetry cadence.
+    # Mode, motion, glow, density and cadence come from the shell's
+    # Experience service (one owner), never re-derived in PluginKit.
+    assert "readonly property string experience: ExperienceBridge.mode" in src
+    assert "readonly property string motionLevel: Appearance.anim.effectiveLevel" in src
+    assert "readonly property bool glowEnabled: ExperienceBridge.glow" in src
+    assert "readonly property bool scanlines: ExperienceBridge.scanlines" in src
+    assert "readonly property int telemetryIntervalMs: ExperienceBridge.telemetryIntervalMs" in src
+    assert "readonly property real glowBlur: 4" in src
+    assert "readonly property real glowAlpha: 0.4" in src
+    bridge = _src("ExperienceBridge")
+    for token in ("Experience.mode", "Experience.glow", "Experience.scanlines",
+                  "Experience.telemetryIntervalMs", "Experience.density"):
+        assert token in bridge, token
+    # No Material aliases and no on*-beside-base trap: roles live on palette.
+    assert not re.search(r"property\s+color\s+", src)
 
 
 def test_interactive_ui_types_declare_accessible_name_and_focus():
     for name in INTERACTIVE:
-        src = (KIT / f"{name}.qml").read_text(encoding="utf-8")
+        src = _src(name)
         assert "Accessible.name" in src, name
         assert "activeFocus" in src, name
+        assert "activeFocusOnTab: enabled" in src, name
+        assert "Theme.palette.focus" in src, name
+        assert "Theme.keyboardFocus" in src, name
+
+
+def test_no_ripple_scale_or_pill_shapes():
+    for name in UI_TYPES:
+        src = _code(name)
+        assert "UiStateLayer" not in src and "ripple" not in src.lower(), name
+        assert "radius: height / 2" not in src, name
+        assert "radius: width / 2" not in src, name
+        assert "scale:" not in src, name
+        assert "Animation.Infinite" not in src, name
 
 
 def test_uibutton_contract():
-    src = (KIT / "UiButton.qml").read_text(encoding="utf-8")
-    assert 'property string variant: "primary"' in src
-    assert '"ghost"' in src
-    assert "property string tooltipText" in src
-    # Host-owned UiTooltip (#370) replaces the raw Controls ToolTip.
-    assert "UiTooltip" in src
-    assert "text: root.tooltipText" in src
-    # Primary variant background is Theme.primary, so its label uses the
-    # contrasting onPrimary token; ghost keeps primary outside bars.
-    assert 'root.variant === "primary" ? Theme.onPrimary' in src
-    assert "root.inBar ? Theme.onSurface : Theme.primary" in src
+    src = _src("UiButton")
+    assert 'property string variant: "secondary"' in src
+    for variant in ("primary", "secondary", "quiet", "danger"):
+        assert f'"{variant}"' in src, variant
+    assert 'property string glyph: ""' in src and "property bool open" in src
+    assert "iconName" not in src
+    assert "Theme.palette.onSignal" in src and "Theme.palette.signal" in src
+    # Rest → hover raised → pressed lifted; open = raised + signal underline.
+    assert "Theme.palette.lifted" in src and "Theme.palette.raised" in src
+    assert "radius: Theme.rounding.small" in src
+    # Bar rails: quiet segment, narrow-rail fit, island styling.
+    assert 'root.inBar ? "quiet"' in src
+    assert "Text.Fit" in src and "Math.min(root.railWidth" in src
+    assert "islandColoured" in src and "hostIconColor.a > 0" in src
+    assert "Keys.onReturnPressed" in src and "Keys.onEnterPressed" in src
 
 
-def test_uitext_roles():
-    src = (KIT / "UiText.qml").read_text(encoding="utf-8")
-    for role in ("title", "subtitle", "body", "caption"):
-        assert f'"{role}"' in src
-    assert "property string role" in src
+def test_text_roles_and_tabular_figures():
+    src = _src("UiText")
+    for role in ("body", "caption", "subtitle", "title", "eyebrow", "value", "readout", "display"):
+        assert f'"{role}"' in src, role
+    assert '"tnum": 1' in src
+    assert "Font.AllUppercase" in src and "0.08" in src
+    assert "Theme.font.family.mono" in src and "Theme.font.family.display" in src
 
 
-def test_uitoggle_contract():
-    src = (KIT / "UiToggle.qml").read_text(encoding="utf-8")
-    assert "property bool value" in src
-    # toggled() is inherited from Switch/AbstractButton; redeclaring it
-    # shadows the base signal and desyncs value/checked.
-    assert "signal toggled" not in src
-    assert "onCheckedChanged" in src
-    assert "onValueChanged" in src
-    assert "root.value = checked" in src
-    assert "checked = root.value" in src
-    # Focus border uses Theme.focusRing: it contrasts against the host
-    # surface outside the control in both states (onPrimary does not).
-    assert "border.color: Theme.focusRing" in src
-    assert "visible: root.activeFocus && Theme.keyboardFocus" in src
+def test_icon_takes_glyph_names_without_fill_axis():
+    icon = _code("UiIcon")
+    assert 'property string name: ""' in icon
+    assert "Glyphs.glyph(root.name)" in icon
+    assert "fill" not in icon.lower()
+    for name in ("UiButton", "UiChip", "UiCard", "UiDetailRow"):
+        assert 'property string glyph: ""' in _src(name), name
+    action = _src("UiActionRow")
+    assert 'property string glyph: ""' in action and 'property string trailingGlyph: ""' in action
 
 
-def test_uislider_contract():
-    src = (KIT / "UiSlider.qml").read_text(encoding="utf-8")
-    assert src.lstrip().splitlines()[2].startswith("Slider") or "Slider {" in src
+def test_toggle_is_a_rocker():
+    src = _src("UiToggle")
+    assert "property bool value" in src and "signal toggled" not in src
+    assert "root.value = checked" in src and "checked = root.value" in src
+    assert "Theme.palette.signalWell" in src and "Theme.palette.sunken" in src
+    assert "Theme.anim.curves.settleFast" in src
+
+
+def test_slider_is_a_fader():
+    src = _src("UiSlider")
     assert 'property string accessibleName: "Slider"' in src
-
-
-def test_uimetric_contract():
-    src = (KIT / "UiMetric.qml").read_text(encoding="utf-8")
-    assert "property string label" in src
-    assert "property string value" in src
-    assert "property string unit" in src
-
-
-def test_uichip_contract():
-    src = (KIT / "UiChip.qml").read_text(encoding="utf-8")
-    assert "property string text" in src
-    assert "property string tone" in src
-    for tone in ("neutral", "primary", "error"):
-        assert f'"{tone}"' in src
-
-
-def test_uiprogress_contract():
-    src = (KIT / "UiProgress.qml").read_text(encoding="utf-8")
-    assert "from: 0" in src
-    assert "to: 1" in src
-    assert "indeterminate" in src
-    assert "property bool animated: false" in src
-    assert "Animation.Infinite" in src
-    assert "Timer" not in src
-
-
-def test_uistate_contract():
-    src = (KIT / "UiState.qml").read_text(encoding="utf-8")
-    assert "property string kind" in src
-    assert "property string message" in src
-    for kind in ("loading", "error", "empty"):
-        assert f'"{kind}"' in src
-
-
-def test_uicard_contract():
-    src = (KIT / "UiCard.qml").read_text(encoding="utf-8")
-    assert "Theme.surfaceContainer" in src
-    assert "Theme.rounding" in src
-    assert "property int padding" in src
-
-
-def test_no_infinite_animation_unless_animated():
-    for name in UI_TYPES:
-        src = (KIT / f"{name}.qml").read_text(encoding="utf-8")
-        if "Animation.Infinite" in src:
-            assert name == "UiProgress", name
-            assert "animated" in src, name
-
-
-# --- Accessibility + keyboard/focus contract (#376) -----------------
-# Names/roles already asserted above; these pin the enforceable
-# keyboard half: deterministic tab stops, Enter/Space activation,
-# slider arrow/Home/End/Page semantics, visible focus stays on the
-# control (activeFocus borders asserted above), and host reduced
-# motion / high contrast inheritance through Theme.
-
-def test_interactive_controls_are_single_tab_stops_while_enabled():
-    for name in INTERACTIVE:
-        src = (KIT / f"{name}.qml").read_text(encoding="utf-8")
-        assert "activeFocusOnTab: enabled" in src, name
-
-
-def test_button_and_toggle_activate_on_enter_and_return():
-    # Space is native to Button/Switch; Enter/Return are not, so the
-    # contract adds them explicitly (offscreen probe proves firing).
-    for name in ("UiButton", "UiToggle"):
-        src = (KIT / f"{name}.qml").read_text(encoding="utf-8")
-        assert "Keys.onReturnPressed" in src, name
-        assert "Keys.onEnterPressed" in src, name
-        assert "root.click()" in src, name
-        assert "event.accepted = true" in src, name
-
-
-def test_slider_keyboard_steps_scale_with_range():
-    src = (KIT / "UiSlider.qml").read_text(encoding="utf-8")
     assert "stepSize: (to - from) / 20" in src
     for key in ("Qt.Key_Home", "Qt.Key_End", "Qt.Key_PageUp", "Qt.Key_PageDown"):
         assert key in src, key
-    assert "root.moved()" in src
+    assert "implicitWidth: 6" in src and "implicitHeight: 16" in src
 
 
-def test_theme_exposes_host_accessibility_inheritance():
-    src = (KIT / "Theme.qml").read_text(encoding="utf-8")
-    assert "readonly property color focusRing: Signal.palette.focus" in src
-    assert "readonly property bool highContrast: Config.appearance.highContrast" in src
-    assert "readonly property real animationScale: Appearance.anim.durations.scale" in src
-    assert "readonly property bool reducedMotion: Appearance.anim.reduced || animationScale <= 0" in src
-    assert "function motionDuration(ms: int): int" in src
+def test_chip_tones_and_on_air():
+    src = _src("UiChip")
+    for tone in ("neutral", "signal", "cue", "phosphor", "alert", "live"):
+        assert f'"{tone}"' in src, tone
+    assert "radius: Theme.rounding.small" in src
+    assert "Theme.palette.onSignal" in src
 
 
-def test_host_reduced_motion_gates_kit_animation():
-    progress = (KIT / "UiProgress.qml").read_text(encoding="utf-8")
-    assert "root.indeterminate && root.animated && !Theme.reducedMotion" in progress
-    # Fades take their duration from Theme motion tokens, which are zero
-    # under reduced motion (Theme.durationNormal / durationExpressiveFastSpatial).
-    gated = {"UiTooltip": "Theme.durationExpressiveFastSpatial", "UiPopover": "Theme.durationNormal"}
-    for name, token in gated.items():
-        src = (KIT / f"{name}.qml").read_text(encoding="utf-8")
-        assert token in src, name
-        assert "duration: 120" not in src, name
+def test_progress_never_pulses():
+    src = _src("UiProgress")
+    assert "indeterminate" in src and "SequentialAnimation" not in src and "Timer" not in src
+
+
+def test_card_is_an_instrument_module():
+    src = _src("UiCard")
+    assert "Theme.palette.panel" in src and "Theme.palette.rule" in src
+    assert "UiEyebrow" in src and "property int channel" in src
+    assert 'p.hostSurface === "dashboard" || p.hostSurface === "desktop"' in src
+    # Registration tick: 2 × 10 signal on focus, not a glow.
+    assert "width: 2" in src and "height: 10" in src
+
+
+def test_instruments_follow_the_real_data_rule():
+    meter = _src("UiSegmentMeter")
+    assert "property bool available: true" in meter
+    assert "root.available && isFinite(root.value)" in meter
+    assert "Theme.palette.rule" in meter and "Theme.palette.phosphor" in meter
+    scope = _src("UiScope")
+    assert "property bool available: true" in scope
+    assert "opacity: 0.22" in scope  # persistence
+    assert "Theme.scanlines" in scope and "Theme.glowEnabled" in scope
+    assert "GlowBudget.acquire(root)" in scope
+    assert '"—"' in scope
+    for name in ("UiMetric", "UiDetailRow", "UiMeterRow"):
+        assert '"—"' in _src(name), name
+    spark = _src("UiSparkline")
+    assert "n < 2" in spark  # fewer than two real samples draws nothing
+
+
+def test_glow_budget_rations_three_items():
+    src = _src("GlowBudget")
+    assert "readonly property int limit: 3" in src
+    for name in ("UiScope", "UiSparkline"):
+        body = _src(name)
+        assert "layer.enabled: root.glowing" in body, name
+        assert "shadowOpacity: Theme.glowAlpha" in body and "blurMax: Theme.glowBlur" in body, name
+
+
+def test_popover_and_tooltip_use_signal_motion():
+    popover = _src("UiPopover")
+    assert "Theme.anim.curves.enter" in popover and "Theme.anim.curves.exit" in popover
+    assert 'Theme.duration("short")' in popover and 'Theme.duration("quick")' in popover
+    assert "from: Theme.reducedMotion ? 0 : 6" in popover  # 6 px scan-in travel
+    assert "id: notch" in popover and "Theme.palette.signal" in popover
+    assert "Theme.palette.panel" in popover
+    tooltip = _src("UiTooltip")
+    assert 'Theme.duration("fade")' in tooltip
+    assert "Theme.palette.lifted" in tooltip and "Theme.palette.ruleStrong" in tooltip
 
 
 def test_reference_examples_are_keyboard_operable():
@@ -211,178 +244,10 @@ def test_reference_examples_are_keyboard_operable():
         src = main.read_text(encoding="utf-8")
         if "onClicked" not in src:
             continue
-        assert "MouseArea {" not in src, (
-            f"{main}: mouse-only action; use a PluginKit control")
+        assert "MouseArea {" not in src, f"{main}: mouse-only action; use a PluginKit control"
         assert "UiButton" in src, main
 
 
-_STUB_THEME_BASE = """import QtQuick
-
-QtObject {
-    readonly property color onPrimary: "#ffffff"
-    readonly property color onSurface: "#eeeeee"
-    readonly property color onSurfaceVariant: "#bbbbbb"
-    readonly property color onBackground: "#eeeeee"
-    readonly property color onPrimaryContainer: "#ddeeff"
-    readonly property color onSecondary: "#ffffff"
-    readonly property color onSecondaryContainer: "#ddeeff"
-    readonly property color onTertiary: "#ffffff"
-    readonly property color onTertiaryContainer: "#ffeedd"
-    readonly property color onErrorContainer: "#ffdddd"
-    readonly property color onError: "#ffffff"
-}
-"""
-
-_STUB_THEME = """pragma Singleton
-import QtQuick
-
-// Offscreen stub mirroring the real Theme property names. The on*
-// colors live in ThemeBase because this Qt rejects an on* property
-// declared beside its base-name property in one file.
-ThemeBase {
-    readonly property bool light: false
-    readonly property color primary: "#7aa2ff"
-    readonly property color surface: "#111111"
-    readonly property color surfaceContainer: "#222222"
-    readonly property color error: "#ff5555"
-    readonly property color background: "#000000"
-    readonly property color surfaceDim: "#111111"
-    readonly property color surfaceBright: "#333333"
-    readonly property color surfaceContainerLowest: "#0a0a0a"
-    readonly property color surfaceContainerLow: "#181818"
-    readonly property color surfaceContainerHigh: "#2a2a2a"
-    readonly property color surfaceContainerHighest: "#383838"
-    readonly property color surfaceVariant: "#444444"
-    readonly property color primaryContainer: "#334466"
-    readonly property color secondary: "#88cc88"
-    readonly property color secondaryContainer: "#335533"
-    readonly property color tertiary: "#cc88cc"
-    readonly property color tertiaryContainer: "#553355"
-    readonly property color errorContainer: "#663333"
-    readonly property color outline: "#888888"
-    readonly property color outlineVariant: "#555555"
-    readonly property color success: "#66bb66"
-    readonly property string fontFamily: "Sans"
-    readonly property string monoFontFamily: "Monospace"
-    readonly property int fontSizeSmall: 11
-    readonly property int fontSize: 13
-    readonly property int fontSizeLarge: 18
-    readonly property int fontSizeBody: 12
-    readonly property int fontSizeTitle: 15
-    readonly property int fontSizeDisplay: 28
-    readonly property string iconFontFamily: "Sans"
-    readonly property int iconSize: 15
-    readonly property int iconSizeLarge: 18
-    readonly property int spacingSmall: 7
-    readonly property int spacing: 12
-    readonly property int spacingLarge: 20
-    readonly property int roundingSmall: 6
-    readonly property int rounding: 10
-    readonly property int roundingLarge: 16
-    property bool stubReducedMotion: false
-    property real stubAnimScale: 1
-    readonly property color focusRing: "#ffcc00"
-    readonly property bool highContrast: false
-    readonly property bool reducedMotion: stubReducedMotion
-    readonly property real animationScale: stubAnimScale
-    readonly property int durationSmall: 200
-    readonly property int durationNormal: 400
-    readonly property var curveStandard: [0.2, 0, 0, 1, 1, 1]
-    readonly property var curveStandardDecel: [0, 0, 0, 1, 1, 1]
-    readonly property bool keyboardFocus: true
-    readonly property real stateHoverOpacity: 0.08
-    readonly property int durationExpressiveFastSpatial: 350
-    readonly property var curveExpressiveFastSpatial: [0.42, 1.67, 0.21, 0.9, 1, 1]
-    readonly property real statePressedOpacity: 0.12
-    function motionDuration(ms: int): int {
-        return reducedMotion ? 0 : Math.round(ms * animationScale);
-    }
-}
-"""
-
-_STUB_QMLDIR = """module Hornero.PluginKit
-singleton Theme 1.0 Theme.qml
-internal ThemeBase ThemeBase.qml
-UiText 1.0 UiText.qml
-UiIcon 1.0 UiIcon.qml
-UiCard 1.0 UiCard.qml
-UiButton 1.0 UiButton.qml
-UiToggle 1.0 UiToggle.qml
-UiSlider 1.0 UiSlider.qml
-UiMetric 1.0 UiMetric.qml
-UiChip 1.0 UiChip.qml
-UiProgress 1.0 UiProgress.qml
-UiState 1.0 UiState.qml
-UiTooltip 1.0 UiTooltip.qml
-UiPopover 1.0 UiPopover.qml
-UiStack 1.0 UiStack.qml
-UiStateLayer 1.0 UiStateLayer.qml
-"""
-
-
-def test_keyboard_only_operation_offscreen(tmp_path):
-    """Runtime probe (#376): drive the reference fixture keyboard-only
-    offscreen (tab order, Enter/Space, slider keys, popover focus
-    restore, reduced-motion scaling). QML-level evidence only — no
-    compositor grab or AT-SPI claim. Skips without Qt6 qmltestrunner.
-    """
-    import os
-    import shutil
-    import subprocess
-
-    import pytest
-
-    runner = Path("/usr/lib/qt6/bin/qmltestrunner")
-    if not runner.is_file():
-        candidate = shutil.which("qmltestrunner6")
-        if not candidate:
-            pytest.skip("Qt6 qmltestrunner not available")
-        runner = Path(candidate)
-
-    kit = tmp_path / "Hornero" / "PluginKit"
-    kit.mkdir(parents=True)
-    for name in UI_TYPES + ["UiStack", "UiStateLayer", "UiIcon"]:
-        shutil.copy(KIT / f"{name}.qml", kit / f"{name}.qml")
-    (kit / "ThemeBase.qml").write_text(_STUB_THEME_BASE, encoding="utf-8")
-    (kit / "Theme.qml").write_text(_STUB_THEME, encoding="utf-8")
-    (kit / "qmldir").write_text(_STUB_QMLDIR, encoding="utf-8")
-    _write_glyphs_stub(tmp_path)
-    fixture = ROOT / "tests" / "qa" / "tst_pluginkit_keyboard.qml"
-
-    env = dict(os.environ, QT_QPA_PLATFORM="offscreen",
-               QML2_IMPORT_PATH=str(tmp_path))
-    result = subprocess.run(
-        [str(runner), "-input", str(fixture)],
-        capture_output=True, text=True, env=env, timeout=120)
-    out = result.stdout + result.stderr
-    assert "PluginKitKeyboard" in out, out
-    assert "0 failed" in out, out
-    assert result.returncode == 0, out
-
-
-_STUB_GLYPHS = """pragma Singleton
-import QtQuick
-QtObject {
-    readonly property string family: "Sans"
-    function glyph(name) { return name ? "*" : ""; }
-    function has(name) { return true; }
-}
-"""
-
-
-def _write_glyphs_stub(base: Path) -> None:
-    utils = base / "qs" / "utils"
-    utils.mkdir(parents=True, exist_ok=True)
-    (utils / "qmldir").write_text("module qs.utils\nsingleton Glyphs 1.0 Glyphs.qml\n", encoding="utf-8")
-    (utils / "Glyphs.qml").write_text(_STUB_GLYPHS, encoding="utf-8")
-
-
-# Singletons defined outside the PluginKit module, mapped to the shell
-# module that owns them. A PluginKit file referencing one of these must
-# import its owning module, or the identifier is undefined at runtime and
-# every colour/value silently resolves to undefined (black cards, invisible
-# text). Regression for shell#408: Theme.qml used the palette singleton
-# with only `import qs.config`, so it was not defined.
 SHELL_SINGLETONS = {
     "Signal": "qs.services",
     "Glyphs": "qs.utils",
@@ -396,212 +261,11 @@ def test_pluginkit_files_import_the_module_defining_each_shell_singleton():
         src = path.read_text(encoding="utf-8")
         imports = set(IMPORT_RE.findall(src))
         for name, module in SHELL_SINGLETONS.items():
-            if re.search(rf"\b{name}\.", src):
+            if re.search(rf"(?<![.\w]){name}\.", src):
                 assert module in imports, (path.name, name, module)
 
 
-def test_ui_button_fits_narrow_bar_rails():
-    """Bar indicators on a thin vertical rail (64 px) clipped at the host
-    Loader edge: UiButton must detect the host rail from its ancestors,
-    shrink its label to fit (never clip characters) and keep its
-    implicit width within the rail. Regression for the bar pills (#410).
-    """
-    src = (KIT / "UiButton.qml").read_text(encoding="utf-8")
-    assert "hostCompact" in src
-    assert "hostAvailableWidth" in src
-    assert "Text.Fit" in src
-    assert "Math.min(root.railWidth" in src
-    assert "implicitLeftPadding" in src
-
-
-def test_state_layer_and_motion_contract_matches_native():
-    """Extension controls use the shell's state contract (#419): hover 8%,
-    pressed 12%, ripple with standardDecel, keyboard-only focus ring and
-    reduced-motion gating. Numbers live in Theme, never in controls.
-    """
-    theme = (KIT / "Theme.qml").read_text(encoding="utf-8")
-    assert "stateHoverOpacity: 0.08" in theme
-    assert "statePressedOpacity: 0.12" in theme
-    assert "curveStandardDecel" in theme and "curveStandard" in theme
-    assert "keyboardFocus: FocusMode.keyboard" in theme
-    assert "reducedMotion ? 0" in theme
-
-    layer = (KIT / "UiStateLayer.qml").read_text(encoding="utf-8")
-    assert "Theme.stateHoverOpacity" in layer and "Theme.statePressedOpacity" in layer
-    assert "Theme.curveStandardDecel" in layer
-    assert "Theme.reducedMotion" in layer
-
-    button = (KIT / "UiButton.qml").read_text(encoding="utf-8")
-    assert "UiStateLayer" in button and "HoverHandler" in button
-    assert "Theme.keyboardFocus" in button
-    assert "Theme.focusRing" in button
-
-
-def test_popover_and_tooltip_fades_use_native_motion_tokens():
-    """Native popouts fade over the normal duration (standard curve) and
-    native tooltips over expressiveFastSpatial. PluginKit must use the same
-    tokens, not hard-coded 120 ms fades scaled twice (#421).
-    """
-    popover = (KIT / "UiPopover.qml").read_text(encoding="utf-8")
-    tooltip = (KIT / "UiTooltip.qml").read_text(encoding="utf-8")
-    assert "Theme.durationNormal" in popover and "Theme.curveStandard" in popover
-    assert "motionDuration(120)" not in popover
-    assert "Theme.durationExpressiveFastSpatial" in tooltip
-    assert "Theme.curveExpressiveFastSpatial" in tooltip
-    assert "motionDuration(120)" not in tooltip
-
-
-def test_toggle_thumb_matches_native_switch_motion():
-    """Native switch thumb stretches while pressed (x1.3), has 8% hover and
-    10% press layers, and animates over the normal duration. Keyboard-only
-    focus ring (#419).
-    """
-    src = (KIT / "UiToggle.qml").read_text(encoding="utf-8")
-    assert "HoverHandler" in src
-    assert "pressedWidth" in src and "root.down" in src
-    assert "opacity: root.down ? 0.1 : hover.hovered ? 0.08 : 0" in src
-    assert "Theme.durationNormal" in src and "Theme.curveStandard" in src
-    assert "Theme.keyboardFocus" in src
-
-
-def test_slider_handle_matches_native_handle_motion():
-    """Native handle reacts to hover with a state layer and swells while
-    dragged (FilledSlider), animating over the half-normal duration. The
-    focus ring is keyboard-only (#419 follow-up).
-    """
-    src = (KIT / "UiSlider.qml").read_text(encoding="utf-8")
-    assert "HoverHandler" in src
-    assert "UiStateLayer" in src
-    assert "root.pressed ? 1.2 : 1" in src
-    assert "Theme.durationNormal / 2" in src and "Theme.curveStandardDecel" in src
-    assert "Theme.keyboardFocus" in src
-
-
-def test_theme_declares_no_on_colour_beside_its_base():
-    """Qt parses `onX: <expr>` declared beside a property X as the
-    X-changed signal handler, so the colour silently reads #000000 (#427).
-    Theme.qml must keep every on* colour in ThemeBase.
-    """
-    theme = (KIT / "Theme.qml").read_text(encoding="utf-8")
-    assert not re.search(r"property\s+color\s+on[A-Z]", theme)
-    base = (KIT / "ThemeBase.qml").read_text(encoding="utf-8")
-    assert "readonly property color onSurface" in base
-    assert re.search(r"^ThemeBase \{", theme, re.M)
-    assert "internal ThemeBase ThemeBase.qml" in (KIT / "qmldir").read_text(encoding="utf-8")
-
-
-_PROBE_COLOURS = """pragma Singleton
-import QtQuick
-QtObject {
-    readonly property bool light: false
-    readonly property color focusRing: "#ffd166"
-    readonly property var palette: ({ signal: "#a5baf5", onSignal: "#2a4073", base: "#080e1b",
-        panel: "#11192c", ink: "#dee5ff", inkMuted: "#a0aacb", alert: "#ff8a80",
-        ground: "#080e1b", ink: "#dee5ff", ground: "#080e1b", lifted: "#33404d",
-        ground: "#05080b", sunken: "#0c1323", raised: "#1b2833",
-        lifted: "#1b253f", raised: "#1b2833", signalWell: "#a5baf5",
-        onSignalWell: "#203769", cue: "#8ed8ff", onCue: "#07131a",
-        cueWell: "#8ed8ff", onCueWell: "#07131a", phosphor: "#c8a6ff",
-        onPhosphor: "#130c1f", phosphorWell: "#c8a6ff", onPhosphorWell: "#130c1f",
-        alertWell: "#8a1a1e", onAlertWell: "#1a0808", onAlert: "#1a0808", ruleStrong: "#6b7593",
-        rule: "#b8c8d8", phosphor: "#a8e6a1" })
-}
-"""
-
-_PROBE_APPEARANCE = """pragma Singleton
-import QtQuick
-QtObject {
-    readonly property var font: ({ family: { sans: "Sans", mono: "Monospace" }, size: { small: 11, normal: 13, large: 18 } })
-    readonly property var spacing: ({ small: 7, normal: 12, large: 20 })
-    readonly property var rounding: ({ small: 6, normal: 10, large: 16 })
-    readonly property var anim: ({ reduced: false, durations: { scale: 1, short: 160, medium: 240, settleFast: 220 },
-        curves: { standard: [0.2, 0, 0, 1, 1, 1], enter: [0.05, 0.7, 0.1, 1, 1, 1], settleFast: [0.34, 1.3, 0.5, 1, 1, 1] } })
-}
-"""
-
-_PROBE_TEST = """import QtQuick
-import QtTest
-import Hornero.PluginKit
-TestCase {
-    name: "RealThemeOnColours"
-    UiText { id: title; role: "title"; text: "T" }
-    UiText { id: caption; role: "caption"; text: "C" }
-    function test_on_colours_are_the_palette() {
-        compare(String(Theme.onSurface), "#dee5ff");
-        compare(String(Theme.onSurfaceVariant), "#a0aacb");
-        compare(String(Theme.onPrimary), "#2a4073");
-        compare(String(Theme.onPrimaryContainer), "#203769");
-        compare(String(title.color), "#dee5ff");
-        compare(String(caption.color), "#a0aacb");
-    }
-}
-"""
-
-
-def test_real_theme_on_colours_resolve_offscreen(tmp_path):
-    """Runtime proof with the REAL Theme.qml/ThemeBase.qml/UiText.qml and stub
-    qs modules: every on* colour equals the palette, never #000000 (#427).
-    """
-    import os
-    import shutil
-    import subprocess
-
-    import pytest
-
-    runner = Path("/usr/lib/qt6/bin/qmltestrunner")
-    if not runner.is_file():
-        candidate = shutil.which("qmltestrunner6")
-        if not candidate:
-            pytest.skip("NOT RUN (offscreen): Qt6 qmltestrunner not available")
-        runner = Path(candidate)
-    services = tmp_path / "qs" / "services"
-    config = tmp_path / "qs" / "config"
-    kit = tmp_path / "Hornero" / "PluginKit"
-    for d in (services, config, kit):
-        d.mkdir(parents=True)
-    (services / "qmldir").write_text("module qs.services\nsingleton Signal 1.0 Signal.qml\nsingleton FocusMode 1.0 FocusMode.qml\n", encoding="utf-8")
-    (services / "Signal.qml").write_text(_PROBE_COLOURS, encoding="utf-8")
-    _write_glyphs_stub(tmp_path)
-    (services / "FocusMode.qml").write_text("pragma Singleton\nimport QtQuick\nQtObject { property bool keyboard: false }\n", encoding="utf-8")
-    (config / "qmldir").write_text("module qs.config\nsingleton Appearance 1.0 Appearance.qml\nsingleton Config 1.0 Config.qml\n", encoding="utf-8")
-    (config / "Appearance.qml").write_text(_PROBE_APPEARANCE, encoding="utf-8")
-    (config / "Config.qml").write_text("pragma Singleton\nimport QtQuick\nQtObject { readonly property var appearance: ({ highContrast: false }) }\n", encoding="utf-8")
-    for name in ("Theme.qml", "ThemeBase.qml", "UiText.qml"):
-        shutil.copy(KIT / name, kit / name)
-    (kit / "qmldir").write_text("module Hornero.PluginKit\nsingleton Theme 1.0 Theme.qml\ninternal ThemeBase ThemeBase.qml\nUiText 1.0 UiText.qml\n", encoding="utf-8")
-    fixture = tmp_path / "tst_real_theme.qml"
-    fixture.write_text(_PROBE_TEST, encoding="utf-8")
-    env = dict(os.environ, QT_QPA_PLATFORM="offscreen")
-    result = subprocess.run([str(runner), "-import", str(tmp_path), "-input", str(fixture)],
-                            capture_output=True, text=True, env=env, timeout=120)
-    out = result.stdout + result.stderr
-    assert "RealThemeOnColours" in out, out
-    assert ", 0 failed" in out, out
-    assert result.returncode == 0, out
-
-
-def test_buttons_cards_and_text_read_like_native_controls():
-    """Taste pass: ghost is a text button (no outline) with explicit
-    outlined/tonal variants; bar indicators use the plain onSurface label and
-    a full-pill hover like native bar items; rail sizing applies in bars only
-    (a compact dashboard card also reports hostCompact); a UiCard inside a
-    dashboard card draws no second surface or inset; titles are semibold.
-    """
-    button = (KIT / "UiButton.qml").read_text(encoding="utf-8")
-    assert 'border.width: root.variant === "outlined" ? 1 : 0' in button
-    assert 'root.variant === "tonal" ? Theme.surfaceContainerHighest' in button
-    assert 'hostContext.hostSurface === "bar"' in button
-    assert "readonly property bool railCompact: inBar &&" in button
-    assert "radius: root.inBar ? height / 2 : Theme.rounding" in button
-
-    card = (KIT / "UiCard.qml").read_text(encoding="utf-8")
-    assert 'p.hostSurface === "dashboard"' in card
-    assert 'color: hostedOnDashboard ? "transparent" : Theme.surfaceContainer' in card
-    assert "property int padding: hostedOnDashboard ? 0 : Theme.spacing" in card
-
-    text = (KIT / "UiText.qml").read_text(encoding="utf-8")
-    assert "Font.DemiBold" in text and "font.bold" not in text
-
+def test_bar_and_dashboard_hosts_advertise_their_surface():
     bar_host = (ROOT / "modules/plugins/PluginBarWidgets.qml").read_text(encoding="utf-8")
     assert 'readonly property string hostSurface: "bar"' in bar_host
     assert "readonly property int hostAvailableWidth: root.availableWidth" in bar_host
@@ -609,52 +273,45 @@ def test_buttons_cards_and_text_read_like_native_controls():
     assert 'readonly property string hostSurface: "dashboard"' in dash_host
 
 
-def test_native_type_scale_and_icons():
-    """Native text is sized in points (StyledText); PluginKit used the same
-    numbers as pixels, so extension text rendered ~25% smaller than native.
-    Extensions also get the native Hornero Glyph icon and a native card
-    header (icon + title).
-    """
-    for name in ("UiText", "UiButton", "UiChip", "UiTooltip", "UiToggle"):
-        src = (KIT / f"{name}.qml").read_text(encoding="utf-8")
-        assert "font.pixelSize" not in src, name
-        assert "font.pointSize" in src, name
-    theme = (KIT / "Theme.qml").read_text(encoding="utf-8")
-    assert "iconFontFamily: Glyphs.family" in theme
-    assert "fontSizeBody: Appearance.font.size.smaller" in theme
-    icon = (KIT / "UiIcon.qml").read_text(encoding="utf-8")
-    assert "Theme.iconFontFamily" in icon and "Glyphs.glyph(root.icon)" in icon
-    assert "FILL:" not in icon and "GRAD:" not in icon
-    assert "UiIcon 1.0 UiIcon.qml" in (KIT / "qmldir").read_text(encoding="utf-8")
-    card = (KIT / "UiCard.qml").read_text(encoding="utf-8")
-    assert "property string title" in card and "property string icon" in card
-    assert "UiIcon" in card and "Accessible.Heading" in card
-    button = (KIT / "UiButton.qml").read_text(encoding="utf-8")
-    # AbstractButton owns a FINAL `icon` group, hence iconName.
-    assert "property string iconName" in button and "UiIcon" in button
-    assert "property string icon:" not in button
+def _runner_or_skip():
+    if harness.qmltestrunner() is None:
+        pytest.skip("NOT RUN (offscreen): Qt6 qmltestrunner not available")
 
 
-def test_uidetailrow_is_the_native_popout_row():
-    src = (KIT / "UiDetailRow.qml").read_text(encoding="utf-8")
-    assert 'property string label: ""' in src
-    assert 'property string value: ""' in src
-    assert "Text.AlignRight" in src
-    assert "valueItem.implicitWidth" in src  # filler must leave room for the value
+def test_keyboard_only_operation_offscreen(tmp_path):
+    """Runtime probe (#376) with the real Theme: tab order, Enter/Space,
+    slider keys, popover focus restore, reduced-motion inheritance.
+    QML-level evidence only — no compositor grab or AT-SPI claim."""
+    _runner_or_skip()
+    harness.build(tmp_path)
+    result = harness.run(ROOT / "tests/qa/tst_pluginkit_keyboard.qml", tmp_path)
+    out = result.stdout + result.stderr
+    assert "PluginKitKeyboard" in out, out
+    assert ", 0 failed" in out, out
+    assert result.returncode == 0, out
 
 
-def test_uiactionrow_is_the_native_popout_action():
-    src = (KIT / "UiActionRow.qml").read_text(encoding="utf-8")
-    assert 'property string text: ""' in src
-    assert "signal clicked()" in src
-    assert "UiStateLayer" in src  # native hover/press layer, not a button pill
-    assert "Theme.focusRing" in src  # keyboard-only focus ring
-    assert "Keys.onSpacePressed" in src  # Space activates (not a Controls Button)
-    assert "Text.ElideRight" in src  # label fills the row and elides
-    assert "UiActionRow 1.0 UiActionRow.qml" in (KIT / "qmldir").read_text(encoding="utf-8")
+@pytest.mark.parametrize("experience,light", [("everyday", False), ("signal", False), ("signal", True)])
+def test_specimen_renders_offscreen(tmp_path, experience, light):
+    """Every Signal component renders with fixture data; unavailable
+    instruments show no value; glow only in the signal experience on dark
+    themes. Set SPECIMEN_OUT=<dir> to keep the PNGs for review."""
+    import os
 
-
-def test_uibutton_transparent_island_colour_falls_back_to_bar_colour():
-    src = (KIT / "UiButton.qml").read_text(encoding="utf-8")
-    assert "islandColoured" in src and "hostIconColor.a > 0" in src
-    assert "root.islandColoured ? root.hostStyle.hostIconColor" in src
+    _runner_or_skip()
+    harness.build(tmp_path, experience=experience)
+    if light:
+        signal = tmp_path / "qs/services/Signal.qml"
+        signal.write_text(signal.read_text().replace("property bool light: false", "property bool light: true"))
+    out_dir = os.environ.get("SPECIMEN_OUT", "")
+    out = str(Path(out_dir) / f"pluginkit-{experience}-{'day' if light else 'night'}.png") if out_dir else ""
+    fixture = tmp_path / "tst_specimen.qml"
+    fixture.write_text((ROOT / "tests/qa/tst_pluginkit_specimen.qml").read_text(encoding="utf-8")
+                       .replace('property string specimenPath: ""', f"property string specimenPath: {out!r}".replace("'", '"')),
+                       encoding="utf-8")
+    result = harness.run(fixture, tmp_path)
+    text = result.stdout + result.stderr
+    assert "PluginKitSpecimen" in text, text
+    assert ", 0 failed" in text, text
+    expected_glow = experience == "signal" and not light
+    assert f"glow {experience} {str(expected_glow).lower()}" in text, text

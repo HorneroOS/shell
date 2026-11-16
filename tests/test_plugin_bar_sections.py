@@ -41,4 +41,4 @@ def test_islands_embed_section_hosts_with_their_style():
 def test_pluginkit_adopts_island_style():
     button = read("plugin/qml/Hornero/PluginKit/UiButton.qml")
     assert '"hostIconSize" in p' in button and "root.hostStyle.hostIconColor" in button
-    assert "property int size: 0" in read("plugin/qml/Hornero/PluginKit/UiIcon.qml")
+    assert "property real size: 0" in read("plugin/qml/Hornero/PluginKit/UiIcon.qml")

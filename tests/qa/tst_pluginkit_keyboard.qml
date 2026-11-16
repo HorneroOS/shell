@@ -1,13 +1,13 @@
 // Keyboard-only QA fixture for the PluginKit accessibility contract
-// (#376). Run offscreen by tests/test_pluginkit_ui.py with a stub
-// Theme (the real Theme singleton binds shell singletons that do
-// not exist outside quickshell; the stub mirrors the same property
-// names, including reducedMotion/animationScale/motionDuration).
+// (#376). Run offscreen by tests/test_pluginkit_ui.py with the REAL
+// PluginKit Theme over stub shell modules (tests/pluginkit_harness.py:
+// stub Appearance exposes stubReduced/stubScale to drive motion).
 // This proves the QML-level contract only: real compositor focus
 // grabs and AT-SPI announcements are NOT covered here.
 import QtQuick
 import QtTest
 import Hornero.PluginKit
+import qs.config
 
 Item {
     id: win
@@ -147,15 +147,19 @@ Item {
         }
 
         function test_reduced_motion_inheritance() {
-            Theme.stubReducedMotion = false
-            Theme.stubAnimScale = 1
-            compare(Theme.motionDuration(120), 120)
-            Theme.stubAnimScale = 0.5
-            compare(Theme.motionDuration(120), 60, "host animation scale applies")
-            Theme.stubReducedMotion = true
-            compare(Theme.motionDuration(120), 0, "reduced motion zeroes durations")
-            Theme.stubReducedMotion = false
-            Theme.stubAnimScale = 1
+            Appearance.stubReduced = false
+            Appearance.stubScale = 1
+            compare(Theme.duration("short"), 160)
+            compare(Theme.reducedMotion, false)
+            Appearance.stubScale = 0.5
+            compare(Theme.duration("short"), 80, "host animation scale applies")
+            Appearance.stubReduced = true
+            compare(Theme.duration("short"), 0, "reduced motion zeroes durations")
+            compare(Theme.duration("fade"), 90, "opacity fades stay at most 90 ms")
+            compare(Theme.motionLevel, "off")
+            verify(!Theme.glowEnabled, "no glow with reduced motion")
+            Appearance.stubReduced = false
+            Appearance.stubScale = 1
         }
     }
 }

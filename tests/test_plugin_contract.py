@@ -15,11 +15,11 @@ VALIDATOR = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(VALIDATOR)
 
 
-def make_plugin(tmp_path: Path, qml: str = "import QtQuick\nItem {}") -> Path:
+def make_plugin(tmp_path: Path, qml: str = "import QtQuick\nItem {}", providers: list | None = None) -> Path:
     plugin = tmp_path / "example-clock"
     plugin.mkdir()
     manifest = {
-        "schemaVersion": 1,
+        "schemaVersion": 3,
         "id": "example-clock",
         "name": "Example Clock",
         "version": "1.0.0",
@@ -34,6 +34,8 @@ def make_plugin(tmp_path: Path, qml: str = "import QtQuick\nItem {}") -> Path:
             "settings": {"twentyFourHour": {"type": "boolean", "default": True}},
         },
     }
+    if providers is not None:
+        manifest["capabilities"]["providers"] = providers
     (plugin / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
     (plugin / "Main.qml").write_text(qml, encoding="utf-8")
     (plugin / "README.md").write_text("# Example Clock\n", encoding="utf-8")
@@ -269,18 +271,22 @@ def test_data_facades_are_readonly_and_delegate_to_services():
 def test_power_facade_delegates_to_upower_display_device():
     src = (ROOT / "plugin/qml/Hornero/PluginKit/Power.qml").read_text()
     # Same source of truth as modules/bar/components/Battery.qml.
-    assert "UPower.displayDevice" in src
-    assert "UPower.displayDevice.isPresent" in src
-    assert "UPower.displayDevice.isLaptopBattery" in src
-    assert "displayDevice?.percentage" in src and "* 100" in src
+    assert "readonly property var _device: UPower.displayDevice" in src
+    assert "_device.isPresent" in src
+    assert "_device.isLaptopBattery" in src
+    assert "_device?.percentage" in src and "* 100" in src
     assert "readonly property int percentage" in src
     assert "UPower.onBattery" in src
     assert "UPowerDeviceState.Charging" in src
     assert "UPowerDeviceState.FullyCharged" in src
     assert "UPowerDeviceState.Discharging" in src
-    # Exactly the five readonly properties, nothing else exposed.
+    # Health is exposed only behind its availability flag.
+    assert "readonly property bool healthAvailable: hasBattery && (_device.healthSupported ?? false)" in src
+    assert "healthAvailable ? Math.round" in src
+    # Read-only facade: every property is readonly, no setters.
     props = [line.strip() for line in src.splitlines() if "property " in line]
-    assert len(props) == 5 and all(p.startswith("readonly property") for p in props)
+    assert props and all(p.startswith("readonly property") for p in props)
+    assert "function " not in src
 
 
 def test_audio_facade_only_delegates_user_controls_to_audio():
@@ -301,10 +307,11 @@ def test_audio_facade_only_delegates_user_controls_to_audio():
     assert "Services.Audio.sink.audio.muted = !Services.Audio.muted" in src
     assert "function toggleSourceMute(): void" in src
     assert "Services.Audio.source.audio.muted = !Services.Audio.sourceMuted" in src
-    # Exactly the six readonly scalar properties; no PwNode/node leak,
+    # Readonly scalars plus the shared spectrum; no PwNode/node leak,
     # no other setters, and no process internals.
     props = [line.strip() for line in src.splitlines() if "property " in line]
-    assert len(props) == 6 and all(p.startswith("readonly property") for p in props)
+    assert len(props) == 10 and all(p.startswith("readonly property") for p in props)
+    assert "readonly property var spectrum: Services.Audio.cava.values" in src
     for banned in ("PwNode", "Process", "Quickshell.Io", "setSourceVolume",
                    "incrementSourceVolume", "decrementSourceVolume",
                    "setAudioSink", "setAudioSource", "setStreamVolume"):
@@ -326,8 +333,15 @@ def test_time_facade_format_delegates():
 
 
 def test_sample_plugin_importing_pluginkit_passes_validator(tmp_path):
-    plugin = make_plugin(tmp_path, "import QtQuick\nimport Hornero.PluginKit\nItem { property real c: System.cpuPerc }")
+    plugin = make_plugin(tmp_path, "import QtQuick\nimport Hornero.PluginKit\nItem { property real c: System.cpuPerc }",
+                         providers=["system"])
     VALIDATOR.validate_plugin(plugin)
+
+
+def test_undeclared_provider_use_is_rejected(tmp_path):
+    plugin = make_plugin(tmp_path, "import QtQuick\nimport Hornero.PluginKit\nItem { property real c: System.cpuPerc }")
+    with pytest.raises(VALIDATOR.ValidationError, match="capabilities.providers"):
+        VALIDATOR.validate_plugin(plugin)
 
 
 def test_plugin_theme_reports_effective_palette_mode():
@@ -423,7 +437,7 @@ def test_settings_defaults_must_match_the_declared_type(tmp_path):
 
 def test_duplicate_manifest_keys_are_rejected(tmp_path):
     plugin = make_plugin(tmp_path)
-    (plugin / "manifest.json").write_text('{"schemaVersion": 1, "schemaVersion": 1}')
+    (plugin / "manifest.json").write_text('{"schemaVersion": 3, "schemaVersion": 3}')
     with pytest.raises(VALIDATOR.ValidationError, match="duplicate key"):
         VALIDATOR.validate_plugin(plugin)
 

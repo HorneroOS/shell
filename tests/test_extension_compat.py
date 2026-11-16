@@ -28,14 +28,14 @@ VALIDATOR = ROOT / "scripts" / "validate_plugin.py"
 EXAMPLES = ROOT / "examples" / "plugins"
 
 BASE_MANIFEST = {
-    "schemaVersion": 1, "id": "compat-fixture", "name": "Compat Fixture",
+    "schemaVersion": 3, "id": "compat-fixture", "name": "Compat Fixture",
     "version": "1.0.0", "description": "Compatibility fixture.",
     "author": "QA", "license": "MIT", "entrypoint": "Main.qml",
     "placement": "bar",
     "files": ["Main.qml", "README.md", "LICENSE"],
     "capabilities": {"processCommands": [], "networkHosts": [], "settings": {}},
 }
-QML = 'import QtQuick\nimport Hornero.PluginKit\nItem { Text { text: Theme.surface } }\n'
+QML = 'import QtQuick\nimport Hornero.PluginKit\nItem { Text { color: Theme.palette.ink } }\n'
 
 
 def _run_validator(plugin_dir: Path) -> subprocess.CompletedProcess:
@@ -63,7 +63,9 @@ def test_shipped_examples_accept():
 
 
 @pytest.mark.parametrize("overrides,why", [
-    ({"schemaVersion": 3}, "unknown schemaVersion must be rejected (RC5; only 1 and 2 exist)"),
+    ({"schemaVersion": 4}, "unknown schemaVersion must be rejected (RC5; only 3 exists)"),
+    ({"schemaVersion": 2}, "Material-era schemaVersion 2 must be rejected"),
+    ({"schemaVersion": 1}, "Material-era schemaVersion 1 must be rejected"),
     ({"schemaVersion": 0}, "schemaVersion 0 must be rejected"),
     ({"schemaVersion": "2"}, "string schemaVersion must be rejected"),
     ({"version": "1.0"}, "non-semver version must be rejected"),
@@ -94,13 +96,15 @@ def test_valid_fixture_per_placement_accepts(tmp_path):
         # reset for next iteration (same tmp dir, different id dir is fine)
 
 
-def test_v1_and_v2_without_surfaces_both_accept(tmp_path):
-    # shell#373: schemaVersion 2 without `surfaces` is a valid
-    # single-surface manifest; v1 fixtures keep working unchanged.
+def test_material_era_manifests_get_a_migration_message(tmp_path):
+    # PluginKit 3 (Hornero Signal) is a breaking contract: v1/v2 packages
+    # are refused with a pointer to the migration guide, not a QML error.
     for version in (1, 2):
         proc = _run_validator(_fixture(tmp_path, id=f"compat-v{version}",
                                        schemaVersion=version))
-        assert proc.returncode == 0, f"schemaVersion {version} rejected: {proc.stdout}{proc.stderr}"
+        out = proc.stdout + proc.stderr
+        assert proc.returncode != 0, f"schemaVersion {version} accepted"
+        assert "Migrating to PluginKit 3" in out and "Material-era" in out, out
 
 
 def test_pluginkit_surface_and_no_hardcoded_hex_in_examples():

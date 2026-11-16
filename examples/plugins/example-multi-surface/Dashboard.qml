@@ -13,8 +13,8 @@ Item {
     Text {
         id: label
         text: "Dashboard surface: " + pluginSettings.value("label", "HorneroOS")
-        color: Theme.onSurface
-        font.family: Theme.fontFamily
-        font.pointSize: Theme.fontSize
+        color: Theme.palette.ink
+        font.family: Theme.font.family.sans
+        font.pointSize: Theme.font.size.normal
     }
 }

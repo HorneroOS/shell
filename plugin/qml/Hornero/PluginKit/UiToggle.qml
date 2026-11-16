@@ -1,11 +1,14 @@
 import QtQuick
 import QtQuick.Controls
 
+// Signal rocker switch: a `sunken` well with a square thumb. Off: thumb
+// in `inkMuted` on the leading side; on: `signalWell` well, `signal`
+// outline and thumb on the trailing side. The thumb travels with
+// `settleFast`; colour changes use `standard`/`quick`.
 Switch {
     id: root
 
-    // Two-way synced with `checked`; `toggled()` is inherited from
-    // Switch/AbstractButton and must not be redeclared here.
+    // Two-way synced with `checked`; `toggled()` is inherited.
     property bool value: false
     property string tooltipText: ""
     property string accessibleName: root.text
@@ -14,10 +17,8 @@ Switch {
     Accessible.role: Accessible.CheckBox
     Accessible.description: root.tooltipText
 
-    // Keyboard contract (shell issue 376): one deterministic tab stop while
-    // enabled (declaration order is tab order), Space is native to
-    // Switch, Enter/Return are added here so both toggle.
     activeFocusOnTab: enabled
+    hoverEnabled: enabled
     Keys.onReturnPressed: event => {
         if (enabled) {
             root.click();
@@ -49,82 +50,60 @@ Switch {
             root.value = checked;
     }
 
-    // Native switch (components/controls/StyledSwitch.qml): the thumb grows
-    // while pressed, carries an 8% hover / 10% press layer, and both animate
-    // over the normal duration. The focus ring is keyboard-only.
-    HoverHandler {
-        id: hover
-
-        enabled: root.enabled
-    }
+    spacing: Theme.spacing.smaller
 
     indicator: Rectangle {
-        implicitWidth: 44
-        implicitHeight: 24
-        x: 0
+        id: track
+
+        implicitWidth: 34
+        implicitHeight: 18
+        x: root.leftPadding
         y: parent.height / 2 - height / 2
-        radius: height / 2
-        color: root.checked ? Theme.primary : Theme.surfaceContainerHighest
+        radius: Theme.rounding.small
+        color: !root.enabled ? Theme.palette.sunken : root.checked ? Theme.palette.signalWell : root.hovered ? Theme.palette.raised : Theme.palette.sunken
         border.width: 1
-        border.color: Theme.outline
-        opacity: root.enabled ? 1 : 0.5
+        border.color: !root.enabled ? Theme.palette.rule : root.checked ? Theme.palette.signal : Theme.palette.ruleStrong
+
+        Behavior on color {
+            ColorAnimation {
+                duration: Theme.duration("quick")
+            }
+        }
 
         Rectangle {
-            id: thumb
-
-            readonly property real restWidth: 18
-            readonly property real pressedWidth: 23.4
-
-            x: root.checked ? parent.width - width - 3 : 3
+            width: 12
+            height: 12
+            radius: 2
             anchors.verticalCenter: parent.verticalCenter
-            width: root.down ? pressedWidth : restWidth
-            height: 18
-            radius: height / 2
-            color: root.checked ? Theme.onPrimary : Theme.onSurfaceVariant
+            x: root.checked ? parent.width - width - 3 : 3
+            color: !root.enabled ? Theme.palette.inkFaint : root.checked ? Theme.palette.signal : Theme.palette.inkMuted
 
-            Behavior on width {
+            Behavior on x {
                 NumberAnimation {
-                    duration: Theme.durationNormal
+                    duration: Theme.duration("settleFast")
                     easing.type: Easing.BezierSpline
-                    easing.bezierCurve: Theme.curveStandard
-                }
-            }
-
-            Rectangle {
-                anchors.fill: parent
-                radius: parent.radius
-                color: root.checked ? Theme.primary : Theme.onSurface
-                opacity: root.down ? 0.1 : hover.hovered ? 0.08 : 0
-
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: Theme.durationNormal
-                        easing.type: Easing.BezierSpline
-                        easing.bezierCurve: Theme.curveStandard
-                    }
+                    easing.bezierCurve: Theme.anim.curves.settleFast
                 }
             }
         }
 
-        // Keyboard-only focus ring (shell FocusRing contract).
         Rectangle {
             anchors.fill: parent
             anchors.margins: -2
-            radius: height / 2 + 2
+            radius: Theme.rounding.small + 2
             color: "transparent"
             border.width: 2
-            border.color: Theme.focusRing
+            border.color: Theme.palette.focus
             visible: root.activeFocus && Theme.keyboardFocus && root.enabled
         }
     }
 
     contentItem: Text {
         text: root.text
-        color: Theme.onSurface
-        font.family: Theme.fontFamily
-        font.pointSize: Theme.fontSizeBody
-        leftPadding: root.indicator.width + Theme.spacingSmall
+        color: root.enabled ? Theme.palette.ink : Theme.palette.inkFaint
+        font.family: Theme.font.family.sans
+        font.pointSize: Theme.font.size.smaller
+        leftPadding: root.text.length > 0 ? track.width + root.spacing : track.width
         verticalAlignment: Text.AlignVCenter
-        opacity: root.enabled ? 1 : 0.5
     }
 }

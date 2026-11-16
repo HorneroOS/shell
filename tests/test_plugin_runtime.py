@@ -128,7 +128,8 @@ def test_dashboard_placement_contract():
     assert '"placement": "dashboard"' in example.read_text()
 
 
-WIDGETS_DESKTOP = (ROOT / "modules" / "plugins" / "PluginDesktopWidgets.qml").read_text()
+WIDGETS_DESKTOP = (ROOT / "modules" / "plugins" / "DesktopWidgetFrame.qml").read_text()
+DESKTOP_HOST = (ROOT / "modules" / "plugins" / "PluginDesktopWidgets.qml").read_text()
 BACKGROUND = (ROOT / "modules" / "background" / "Background.qml").read_text()
 
 
@@ -140,7 +141,7 @@ def test_desktop_placement_contract():
     # (it loads only the effective background surface, shell#373).
     assert 'active: slot.backgroundEntrypoint !== ""' in HOST
     assert "function desktopPlugins()" in SERVICE
-    assert "Plugins.desktopPlugins()" in WIDGETS_DESKTOP
+    assert "Plugins.desktopPlugins()" in DESKTOP_HOST
     assert "Loader.Error" in WIDGETS_DESKTOP and "Plugins.markFailed" in WIDGETS_DESKTOP
     assert "Plugins.markLoaded" in WIDGETS_DESKTOP
     # Rendered on the desktop background layer, per screen.
@@ -183,14 +184,21 @@ def test_plugin_settings_are_typed_namespaced_and_persisted_by_config():
 def test_desktop_widget_slots_persist_per_display_and_fallback_safely():
     plugin_config = (ROOT / "config/PluginsConfig.qml").read_text()
     desktop_api = (ROOT / "plugin/qml/Hornero/PluginKit/Desktop.qml").read_text()
-    desktop_widgets = (ROOT / "modules/plugins/PluginDesktopWidgets.qml").read_text()
+    desktop_widgets = (ROOT / "modules/plugins/DesktopWidgetFrame.qml").read_text()
     extensions = (ROOT / "modules/controlcenter/extensions/ExtensionsPane.qml").read_text()
     position_picker = (ROOT / "modules/controlcenter/extensions/DesktopWidgetPosition.qml").read_text()
     assert '"top-left"' in plugin_config and '"bottom-right"' in plugin_config
     assert 'source[screenName || "default"]' in plugin_config
     assert '"bottom-right"' in plugin_config
     assert "Config.plugins.desktopWidgetSlot" in desktop_api
-    assert "screenName" in desktop_widgets and "desktopWidgetSlot" in desktop_widgets
+    assert "screenName" in desktop_widgets and "desktopWidgetSlots" in desktop_widgets
+    # Free geometry (PluginKit 3): per screen, fraction of free space,
+    # validated on read, reset when the person picks an anchor.
+    assert "function desktopWidgetGeometry" in plugin_config
+    assert "function setDesktopWidgetGeometry" in plugin_config
+    assert "Config.plugins.desktopWidgetGeometry(root.pluginId, root.screenName)" in desktop_widgets
+    assert "Config.plugins.setDesktopWidgetGeometry(root.pluginId, root.screenName" in desktop_widgets
+    assert "desktopWidgets: plugins.desktopWidgets" in (ROOT / "config/Config.qml").read_text()
     assert "Quickshell.screens" in extensions and "DesktopWidgetPosition" in extensions
     assert "Config.plugins.setDesktopWidgetSlot" in position_picker
     assert "function setPosition" not in desktop_api

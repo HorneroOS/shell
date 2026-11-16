@@ -12,6 +12,14 @@ Singleton {
     property string cpuName: ""
     property real cpuPerc
     property real cpuTemp
+    // Sensor availability: false until a real reading arrives, so
+    // consumers show "unavailable" instead of a fabricated 0.
+    property bool cpuTempAvailable: false
+    property bool gpuTempAvailable: false
+    readonly property bool gpuAvailable: gpuType !== "NONE"
+
+    // Emitted after each /proc/stat sample (PluginKit Telemetry history).
+    signal sampled
 
     // GPU properties
     readonly property string gpuType: Config.services.gpuType.toUpperCase() || autoGpuType
@@ -127,6 +135,7 @@ Singleton {
 
                 root.lastCpuTotal = total;
                 root.lastCpuIdle = idle;
+                root.sampled();
             }
             const cores = [];
             const idles = [];
@@ -287,6 +296,7 @@ Singleton {
                     const [usage, temp] = text.trim().split(",");
                     root.gpuPerc = parseInt(usage, 10) / 100;
                     root.gpuTemp = parseInt(temp, 10);
+                    root.gpuTempAvailable = isFinite(root.gpuTemp);
                 } else {
                     root.gpuPerc = 0;
                     root.gpuTemp = 0;
@@ -312,6 +322,7 @@ Singleton {
 
                 if (cpuTemp)
                     root.cpuTemp = parseFloat(cpuTemp[1]);
+                root.cpuTempAvailable = !!cpuTemp;
 
                 if (root.gpuType !== "GENERIC")
                     return;
@@ -339,6 +350,7 @@ Singleton {
                 }
 
                 root.gpuTemp = count > 0 ? sum / count : 0;
+                root.gpuTempAvailable = count > 0;
             }
         }
     }

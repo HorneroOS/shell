@@ -1,9 +1,9 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "example-desktop-note",
   "name": "Example Desktop Note",
   "version": "1.0.0",
-  "description": "A minimal desktop-placement example for the Hornero Shell extension contract.",
+  "description": "A minimal desktop widget example for the Hornero Shell extension contract (PluginKit 3).",
   "author": "HorneroOS contributors",
   "license": "MIT",
   "entrypoint": "Main.qml",
@@ -22,5 +22,15 @@
       }
     }
   },
-  "placement": "desktop"
+  "placement": "desktop",
+  "surfaces": {
+    "desktop": {
+      "entrypoint": "Main.qml",
+      "width": 320,
+      "height": 148,
+      "minWidth": 240,
+      "minHeight": 120,
+      "anchor": "bottom-right"
+    }
+  }
 }

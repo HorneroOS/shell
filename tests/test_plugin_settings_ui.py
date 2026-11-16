@@ -29,7 +29,7 @@ def make_plugin(tmp_path: Path, settings: dict) -> Path:
     plugin = tmp_path / "example-clock"
     plugin.mkdir()
     manifest = {
-        "schemaVersion": 1,
+        "schemaVersion": 3,
         "id": "example-clock",
         "name": "Example Clock",
         "version": "1.0.0",
@@ -53,7 +53,7 @@ def make_plugin(tmp_path: Path, settings: dict) -> Path:
 
 def manifest_with(settings: dict) -> dict:
     return {
-        "schemaVersion": 1,
+        "schemaVersion": 3,
         "id": "example-clock",
         "name": "Example Clock",
         "version": "1.0.0",

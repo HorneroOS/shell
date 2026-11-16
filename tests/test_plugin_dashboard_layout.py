@@ -37,7 +37,7 @@ def _plugin(tmp_path: Path, plugin_id: str, dashboard_surface=None,
     if dashboard_surface:
         surface.update(dashboard_surface)
     manifest = {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "id": plugin_id,
         "name": f"Card {plugin_id}",
         "version": "1.0.0",
@@ -72,7 +72,7 @@ def test_unhinted_and_v1_effective_surfaces_unchanged(tmp_path):
     root = _plugin(tmp_path, "plain-card")
     manifest = json.loads((root / "manifest.json").read_text())
     assert "size" not in VALIDATOR.effective_surfaces(manifest)["dashboard"]
-    v1 = {"schemaVersion": 1, "entrypoint": "Main.qml", "placement": "dashboard"}
+    v1 = {"schemaVersion": 3, "entrypoint": "Main.qml", "placement": "dashboard"}
     assert VALIDATOR.effective_surfaces(v1) == {
         "dashboard": {"entrypoint": "Main.qml", "enabled": True}}
 

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "example-clock",
   "name": "Example Clock",
   "version": "1.0.0",
@@ -33,7 +33,9 @@
   },
   "translations": {
     "sourceLocale": "en",
-    "locales": ["es"],
+    "locales": [
+      "es"
+    ],
     "directory": "translations"
   },
   "capabilities": {

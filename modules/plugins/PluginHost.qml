@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import qs.services
 import qs.utils
+import Hornero.PluginKit as Kit
 import Quickshell
 import Quickshell.Io
 import QtQuick
@@ -77,8 +78,17 @@ Scope {
                             Plugins.markFailed(slot.modelData.id, "manifest id does not match its directory");
                             return;
                         }
-                        if (manifest.schemaVersion !== 1 && manifest.schemaVersion !== 2) {
-                            Plugins.markFailed(slot.modelData.id, "manifest schemaVersion must be 1 or 2 (unknown manifest versions are rejected)");
+                        // PluginKit 3 (Hornero Signal) is a breaking
+                        // contract: extensions built for the Material-era
+                        // kit (schemaVersion 1/2) would fail to load or
+                        // render blank glyphs, so they are refused with
+                        // a migration pointer instead.
+                        if (manifest.schemaVersion === 1 || manifest.schemaVersion === 2) {
+                            Plugins.markFailed(slot.modelData.id, `built for PluginKit ${manifest.schemaVersion} (Material-era); update the extension to PluginKit 3 (Hornero Signal) and schemaVersion 3 — see docs/PLUGINS.md "Migrating to PluginKit 3"`);
+                            return;
+                        }
+                        if (manifest.schemaVersion !== 3) {
+                            Plugins.markFailed(slot.modelData.id, "manifest schemaVersion must be 3 (unknown manifest versions are rejected)");
                             return;
                         }
                         if (typeof manifest.version !== "string" || !/^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/.test(manifest.version)) {
@@ -115,10 +125,6 @@ Scope {
                             enabled: true
                         };
                         if (manifest.surfaces !== undefined) {
-                            if (manifest.schemaVersion !== 2) {
-                                Plugins.markFailed(slot.modelData.id, "manifest surfaces requires schemaVersion 2");
-                                return;
-                            }
                             if (!manifest.surfaces || typeof manifest.surfaces !== "object" || Array.isArray(manifest.surfaces)
                                     || Object.keys(manifest.surfaces).length === 0) {
                                 Plugins.markFailed(slot.modelData.id, "manifest surfaces must be a non-empty object");
@@ -134,7 +140,8 @@ Scope {
                                     Plugins.markFailed(slot.modelData.id, `manifest surfaces.${name} must be an object`);
                                     return;
                                 }
-                                const extra = Object.keys(surface).filter(key => key !== "entrypoint" && key !== "enabled" && key !== "size" && key !== "category" && key !== "section");
+                                const desktopKeys = ["width", "height", "minWidth", "minHeight", "resizable", "anchor"];
+                                const extra = Object.keys(surface).filter(key => key !== "entrypoint" && key !== "enabled" && key !== "size" && key !== "category" && key !== "section" && !desktopKeys.includes(key));
                                 if (extra.length > 0) {
                                     Plugins.markFailed(slot.modelData.id, `manifest surfaces.${name} contains unknown fields: ${extra.join(", ")}`);
                                     return;
@@ -168,6 +175,29 @@ Scope {
                                     Plugins.markFailed(slot.modelData.id, `manifest surfaces.${name}.section must be one of status, actions, clock, end`);
                                     return;
                                 }
+                                // Desktop widget geometry hints (PluginKit 3):
+                                // default and minimum logical size, whether
+                                // the person may resize it, and the default
+                                // anchor. The person's saved geometry wins.
+                                const desktopHints = desktopKeys.filter(key => surface[key] !== undefined);
+                                if (desktopHints.length > 0 && name !== "desktop") {
+                                    Plugins.markFailed(slot.modelData.id, `manifest surfaces.${name}.${desktopHints[0]} is a desktop widget hint and is only allowed on the desktop surface`);
+                                    return;
+                                }
+                                for (const key of ["width", "height", "minWidth", "minHeight"]) {
+                                    if (surface[key] !== undefined && (!Number.isInteger(surface[key]) || surface[key] < 80 || surface[key] > 1600)) {
+                                        Plugins.markFailed(slot.modelData.id, `manifest surfaces.desktop.${key} must be an integer between 80 and 1600 (logical pixels)`);
+                                        return;
+                                    }
+                                }
+                                if (surface.resizable !== undefined && typeof surface.resizable !== "boolean") {
+                                    Plugins.markFailed(slot.modelData.id, "manifest surfaces.desktop.resizable must be a boolean");
+                                    return;
+                                }
+                                if (surface.anchor !== undefined && !["top-left", "top-center", "top-right", "middle-left", "middle-center", "middle-right", "bottom-left", "bottom-center", "bottom-right"].includes(surface.anchor)) {
+                                    Plugins.markFailed(slot.modelData.id, "manifest surfaces.desktop.anchor must be one of top-left, top-center, top-right, middle-left, middle-center, middle-right, bottom-left, bottom-center, bottom-right");
+                                    return;
+                                }
                                 if (!safeEntrypoint(surface.entrypoint)) {
                                     Plugins.markFailed(slot.modelData.id, `manifest surfaces.${name}.entrypoint is not a safe relative path`);
                                     return;
@@ -190,6 +220,12 @@ Scope {
                                 };
                                 if (name === "bar" && surface.section !== undefined)
                                     effectiveSurfaces[name].section = surface.section;
+                                if (name === "desktop") {
+                                    for (const key of desktopKeys) {
+                                        if (surface[key] !== undefined)
+                                            effectiveSurfaces[name][key] = surface[key];
+                                    }
+                                }
                                 if (name === "dashboard") {
                                     if (surface.size !== undefined)
                                         effectiveSurfaces[name].size = surface.size;
@@ -348,6 +384,14 @@ Scope {
                                 }
                             }
                         }
+                        // Provider permission declarations (RFC §5b):
+                        // the shared data domains the extension reads.
+                        const providerDomains = ["system", "network", "spectrum", "media", "audio", "power", "weather", "time", "workspaces"];
+                        const declaredProviders = manifest.capabilities ? manifest.capabilities.providers : undefined;
+                        if (declaredProviders !== undefined && (!Array.isArray(declaredProviders) || declaredProviders.some(d => !providerDomains.includes(d)) || new Set(declaredProviders).size !== declaredProviders.length)) {
+                            Plugins.markFailed(slot.modelData.id, `manifest capabilities.providers must list unique provider domains from: ${providerDomains.join(", ")}`);
+                            return;
+                        }
                         slot.placement = placement;
                         const settings = manifest.capabilities && manifest.capabilities.settings;
                         Plugins.markPlacement(slot.modelData.id, placement, manifest.entrypoint, settings || ({}), effectiveSurfaces);
@@ -438,6 +482,37 @@ Scope {
 
         function reloadPlugin(id: string): string {
             return Plugins.reloadPlugin(id) ? "reloading" : "not reloadable (unknown, disabled, or safe mode)";
+        }
+
+        // Desktop widget edit mode: move/resize desktop extensions.
+        function editDesktop(): string {
+            Plugins.setDesktopEditing(true);
+            return Plugins.desktopEditing ? "editing" : "not available (safe mode)";
+        }
+
+        function doneDesktop(): void {
+            Plugins.setDesktopEditing(false);
+        }
+
+        function toggleEditDesktop(): string {
+            Plugins.setDesktopEditing(!Plugins.desktopEditing);
+            return Plugins.desktopEditing ? "editing" : "done";
+        }
+
+        // Shared provider leases and measured PluginKit-side cost per
+        // sample (JSON): {domain: {leases, intervalMs, samples, meanMs}}.
+        function telemetry(): string {
+            const out = {};
+            for (const domain of Kit.Providers.domains) {
+                const cost = Kit.Providers.cost(domain);
+                out[domain] = {
+                    leases: Kit.Providers.subscriberCount(domain),
+                    intervalMs: Kit.Providers.refreshIntervalMs(domain),
+                    samples: cost.samples,
+                    meanMs: Math.round(cost.meanMs * 1000) / 1000
+                };
+            }
+            return JSON.stringify(out);
         }
     }
 }

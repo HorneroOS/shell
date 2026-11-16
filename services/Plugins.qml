@@ -60,6 +60,12 @@ Singleton {
     // Bounded, secret-redacted event log: {atMs, id, event, detail}.
     property var diagnosticsLog: []
 
+    // Desktop widget edit mode (PluginKit 3): while true, desktop widget
+    // frames show move/resize handles and persist the person's geometry.
+    // Session state, never persisted; entered from Control Center or
+    // `qs ipc call plugins editDesktop`.
+    property bool desktopEditing: false
+
     // Loader error strings can embed URLs or argv a plugin built from
     // its own settings; redact credential-looking assignments before
     // anything is logged, stored, or shown.
@@ -130,6 +136,18 @@ Singleton {
                     // standard/uncategorized defaults at the host.
                     if (name === "bar" && ["status", "actions", "clock", "end"].includes(surface.section))
                         normalized[name].section = surface.section;
+                    // Desktop widget hints (PluginKit 3): geometry
+                    // defaults the desktop host starts from.
+                    if (name === "desktop") {
+                        for (const key of ["width", "height", "minWidth", "minHeight"]) {
+                            if (Number.isInteger(surface[key]) && surface[key] >= 80 && surface[key] <= 1600)
+                                normalized[name][key] = surface[key];
+                        }
+                        if (typeof surface.resizable === "boolean")
+                            normalized[name].resizable = surface.resizable;
+                        if (typeof surface.anchor === "string")
+                            normalized[name].anchor = surface.anchor;
+                    }
                     if (name === "dashboard") {
                         if (["compact", "standard", "wide"].includes(surface.size))
                             normalized[name].size = surface.size;
@@ -533,6 +551,10 @@ Singleton {
 
     function desktopPlugins(): var {
         return root.pluginsForSurface("desktop");
+    }
+
+    function setDesktopEditing(editing: bool): void {
+        root.desktopEditing = editing && !root.safeMode;
     }
 
     function backgroundPlugins(): var {

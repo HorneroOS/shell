@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 3,
+  "id": "example-instrument",
+  "name": "Example Instrument",
+  "version": "1.0.0",
+  "description": "A desktop telemetry widget built from PluginKit 3 instruments over the shared providers.",
+  "author": "HorneroOS contributors",
+  "license": "MIT",
+  "entrypoint": "Main.qml",
+  "placement": "desktop",
+  "surfaces": {
+    "desktop": {
+      "entrypoint": "Main.qml",
+      "width": 452,
+      "height": 288,
+      "minWidth": 360,
+      "minHeight": 240,
+      "anchor": "top-left"
+    }
+  },
+  "files": [
+    "Main.qml",
+    "README.md",
+    "LICENSE"
+  ],
+  "capabilities": {
+    "processCommands": [],
+    "networkHosts": [],
+    "settings": {},
+    "providers": [
+      "system"
+    ]
+  }
+}

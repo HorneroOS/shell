@@ -1,11 +1,17 @@
 import QtQuick
 import QtQuick.Controls
 
+// Signal progress: a 4 px `sunken` track with a `signal` fill. Use it for
+// task progress (downloads, timers). Telemetry levels use UiSegmentMeter.
+// Indeterminate progress is a static half-fill in `inkMuted` with a
+// "working" description — no pulsing (RFC §2: no constant blinking).
 ProgressBar {
     id: root
 
-    property bool animated: false
     property string accessibleName: ""
+    // Role used for the fill: "signal" (default), "phosphor", "cue",
+    // "alert".
+    property string tone: "signal"
 
     from: 0
     to: 1
@@ -16,44 +22,22 @@ ProgressBar {
     Accessible.role: Accessible.ProgressBar
 
     background: Rectangle {
-        implicitWidth: 200
-        implicitHeight: 6
-        radius: height / 2
-        color: Theme.surfaceContainerHighest
+        implicitWidth: 160
+        implicitHeight: 4
+        radius: 1
+        color: Theme.palette.sunken
         border.width: 1
-        border.color: Theme.componentBorder
+        border.color: Theme.palette.rule
     }
 
     contentItem: Item {
-        Rectangle {
-            visible: !root.indeterminate
-            width: root.position * parent.width
-            height: parent.height
-            radius: height / 2
-            color: Theme.primary
-        }
+        implicitHeight: 4
 
         Rectangle {
-            visible: root.indeterminate
-            width: parent.width * 0.4
+            width: root.indeterminate ? parent.width * 0.5 : root.position * parent.width
             height: parent.height
-            radius: height / 2
-            color: Theme.primary
-        }
-    }
-
-    SequentialAnimation on opacity {
-        // Host reduced motion (shell issue 376) wins over `animated`.
-        running: root.indeterminate && root.animated && !Theme.reducedMotion
-        loops: Animation.Infinite
-
-        NumberAnimation {
-            to: 0.4
-            duration: 600
-        }
-        NumberAnimation {
-            to: 1
-            duration: 600
+            radius: 1
+            color: root.indeterminate ? Theme.palette.inkMuted : root.tone === "phosphor" ? Theme.palette.phosphor : root.tone === "cue" ? Theme.palette.cue : root.tone === "alert" ? Theme.palette.alert : Theme.palette.signal
         }
     }
 }

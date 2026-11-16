@@ -12,7 +12,7 @@ Item {
     property string hostOrientation: "horizontal"
     property bool hostCompact: false
 
-    implicitWidth: label.implicitWidth + Theme.spacingSmall * 2
+    implicitWidth: label.implicitWidth + Theme.spacing.small * 2
     implicitHeight: label.implicitHeight
 
     Settings {
@@ -38,7 +38,7 @@ Item {
     UiButton {
         id: label
         anchors.centerIn: parent
-        variant: "ghost"
+        variant: "quiet"
         text: i18n.formatDateTime(new Date(), pluginSettings.value("twentyFourHour", true) ? (root.hostCompact ? "HH:mm" : "ddd, HH:mm") : (root.hostCompact ? "h:mm ap" : "ddd, h:mm ap"))
         tooltipText: i18n.tr("Example Clock: activate for details")
         onClicked: Notifications.toast(i18n.tr("Example Clock"), i18n.tr("This example uses the public PluginKit API.") + " " + i18n.tr("Today is %1").arg(i18n.formatDateTime(new Date(), "dddd, d MMMM")), "clock")

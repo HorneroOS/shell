@@ -5,7 +5,16 @@ JsonObject {
     // User-owned plugin data is namespaced by the manifest ID. Installed
     // packages and extension code never write the canonical shell config.
     property var settings: ({})
+    // Desktop widget anchor per screen and plugin (one of the nine
+    // allowedDesktopSlots): where a widget starts before it is moved.
     property var desktopWidgetSlots: ({})
+    // Desktop widget geometry per screen and plugin (PluginKit 3):
+    // {screen: {pluginId: {fx, fy, width, height}}}. fx/fy are the
+    // widget's position as a fraction (0–1) of the free space on that
+    // screen's widget area, so a resolution change keeps it in the same
+    // relative place; width/height are logical pixels. Written only when
+    // the person moves or resizes a widget in edit mode.
+    property var desktopWidgets: ({})
     // Persisted dashboard extension layout (shell#378):
     // {order: [pluginId], pinned: [pluginId], sizes: {pluginId:
     // "compact"|"standard"|"wide"}}. User-owned like settings above;
@@ -53,6 +62,69 @@ JsonObject {
             next[screenId] = {};
         next[screenId][pluginId] = slot;
         desktopWidgetSlots = next;
+        // Choosing an anchor places the widget there: drop any saved
+        // free position so the anchor takes effect (size is kept).
+        const geometry = desktopWidgetGeometry(pluginId, screenName);
+        if (geometry)
+            setDesktopWidgetGeometry(pluginId, screenName, {
+                width: geometry.width,
+                height: geometry.height
+            }, false);
+        saveRequested();
+        return true;
+    }
+
+    // Saved geometry or null. Malformed entries read as null.
+    function desktopWidgetGeometry(pluginId: string, screenName: string): var {
+        const source = desktopWidgets && typeof desktopWidgets === "object" && !Array.isArray(desktopWidgets) ? desktopWidgets : ({});
+        const screenGeometry = source[screenName || "default"];
+        const entry = screenGeometry && typeof screenGeometry === "object" && !Array.isArray(screenGeometry) ? screenGeometry[pluginId] : null;
+        if (!entry || typeof entry !== "object" || Array.isArray(entry))
+            return null;
+        const result = {};
+        for (const key of ["fx", "fy"]) {
+            if (typeof entry[key] === "number" && isFinite(entry[key]))
+                result[key] = Math.max(0, Math.min(1, entry[key]));
+        }
+        for (const key of ["width", "height"]) {
+            if (Number.isInteger(entry[key]) && entry[key] >= 80 && entry[key] <= 4000)
+                result[key] = entry[key];
+        }
+        return Object.keys(result).length > 0 ? result : null;
+    }
+
+    function setDesktopWidgetGeometry(pluginId: string, screenName: string, geometry: var, save: bool): bool {
+        if (!validPluginId(pluginId) || !geometry || typeof geometry !== "object")
+            return false;
+        const clean = {};
+        for (const key of ["fx", "fy"]) {
+            if (typeof geometry[key] === "number" && isFinite(geometry[key]))
+                clean[key] = Math.round(Math.max(0, Math.min(1, geometry[key])) * 10000) / 10000;
+        }
+        for (const key of ["width", "height"]) {
+            if (typeof geometry[key] === "number" && isFinite(geometry[key]))
+                clean[key] = Math.max(80, Math.min(4000, Math.round(geometry[key])));
+        }
+        const source = desktopWidgets && typeof desktopWidgets === "object" && !Array.isArray(desktopWidgets) ? desktopWidgets : ({});
+        const next = JSON.parse(JSON.stringify(source));
+        const screenId = screenName || "default";
+        if (!next[screenId] || typeof next[screenId] !== "object" || Array.isArray(next[screenId]))
+            next[screenId] = {};
+        next[screenId][pluginId] = clean;
+        desktopWidgets = next;
+        if (save !== false)
+            saveRequested();
+        return true;
+    }
+
+    function resetDesktopWidgetGeometry(pluginId: string, screenName: string): bool {
+        const source = desktopWidgets && typeof desktopWidgets === "object" && !Array.isArray(desktopWidgets) ? desktopWidgets : ({});
+        const screenId = screenName || "default";
+        if (!source[screenId] || !Object.prototype.hasOwnProperty.call(source[screenId], pluginId))
+            return false;
+        const next = JSON.parse(JSON.stringify(source));
+        delete next[screenId][pluginId];
+        desktopWidgets = next;
         saveRequested();
         return true;
     }

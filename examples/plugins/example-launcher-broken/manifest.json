@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "example-launcher-broken",
   "name": "Example Launcher Broken (QA fixture)",
   "version": "1.0.0",

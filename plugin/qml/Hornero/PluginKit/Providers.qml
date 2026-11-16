@@ -2,67 +2,72 @@ pragma Singleton
 
 import qs.config
 import qs.services as Services
+import Hornero.Services
 import QtQuick
 
-// Shared data providers (shell#377): one lease registry over the
-// telemetry domains the data facades read (System, Network, Media,
-// Weather, Time, Power, Audio). Every domain is backed by exactly one
-// shell-owned singleton, so N plugins reading the same domain share
-// that singleton's work instead of each running its own timer or
-// subprocess:
+// Shared data providers (RFC 0001 §5b). One lease registry over the
+// telemetry domains the facades read. Every domain is backed by exactly
+// one shell-owned service, so N extensions reading the same domain share
+// that service's work instead of each running its own timer or process.
 //
-//   - "system" / "network" are the only polling domains. Their
-//     services each own a single Timer gated on `refCount > 0`;
-//     subscribe() forwards one reference to that gate and
-//     unsubscribe() releases it. At zero references (no plugin
-//     subscription and no shell surface holding a reference) the
-//     timer stops and no /proc reads or child processes run at all.
-//   - "weather" is a cached domain: the Weather service performs one
-//     shared fetch per location, caches the parsed result, and
-//     refreshes on its own hourly timer. A lease records interest
-//     only; it never starts a second fetch.
-//   - "media" (MPRIS), "audio" (PipeWire), "power" (UPower) and
-//     "time" (SystemClock) are event-driven: the daemon/clock pushes
-//     changes into the shared singleton, so there is nothing to poll
-//     and a lease records interest only.
+//   polling — "system" (CPU/GPU/memory/temperatures/storage) and
+//             "network" (throughput). One Timer each, running only while
+//             a lease is held. While any lease is held the cheap /proc
+//             reads run at the experience cadence (1 Hz everyday, 2 Hz in
+//             the `signal` experience, Theme.telemetryIntervalMs);
+//             subprocess probes (sensors, GPU, lsblk) keep the configured
+//             dashboard interval.
+//   stream  — "spectrum": the shared PipeWire visualiser analysis, started
+//             only while a lease is held.
+//   cached  — "weather": one shared fetch per location, hourly.
+//   event   — "media", "audio", "power", "time", "workspaces": pushed by
+//             their daemon/compositor; a lease records interest only.
 //
-// Subscriptions are leases, not identity: counts are aggregate, a
-// caller cannot release another caller's lease by name, and an
-// unsubscribe with no matching lease is refused instead of driving a
-// service refCount negative. Reading a facade without subscribing
-// keeps working exactly as before — the values are whatever the
-// shared singleton currently holds (live while anyone holds a
-// reference, last-known otherwise). Prefer the declarative
-// Subscription component, which releases automatically when the
-// plugin item is destroyed (including when the host unloads a
-// disabled plugin).
+// Leases are aggregate (a caller cannot release another's lease) and an
+// unmatched unsubscribe is refused. Extensions declare the domains they
+// use in `capabilities.providers`; scripts/validate_plugin.py rejects
+// undeclared use. Prefer the declarative Subscription component, which
+// releases automatically when the extension surface is destroyed.
 QtObject {
-    readonly property var domains: ["system", "network", "media", "weather", "time", "power", "audio"]
+    id: root
+
+    readonly property var domains: ["system", "network", "spectrum", "media", "audio", "power", "weather", "time", "workspaces"]
 
     property var _leases: ({})
     property int _leaseEpoch: 0
+
+    readonly property int _spectrumLeases: root.subscriberCount("spectrum")
+
+    // The spectrum analyser is a reference-counted native service.
+    readonly property ServiceRef _spectrumRef: ServiceRef {
+        service: root._spectrumLeases > 0 ? Services.Audio.cava : null
+    }
 
     function isDomain(domain: string): bool {
         return domains.includes(domain);
     }
 
-    // "polling" | "cached" | "event" | "" for an unknown domain.
+    // "polling" | "stream" | "cached" | "event" | "" for an unknown domain.
     function mode(domain: string): string {
         if (domain === "system" || domain === "network")
             return "polling";
+        if (domain === "spectrum")
+            return "stream";
         if (domain === "weather")
             return "cached";
-        if (domain === "media" || domain === "time" || domain === "power" || domain === "audio")
+        if (isDomain(domain))
             return "event";
         return "";
     }
 
-    // Shared refresh period in milliseconds: the one polling interval
-    // for polling domains, the weather TTL for the cached domain, 0
-    // for event domains (pushed, never polled), -1 when unknown.
+    // Effective refresh period in ms: the polling interval for polling
+    // domains, the weather TTL for the cached domain, 0 for event and
+    // stream domains (pushed, never polled), -1 when unknown.
     function refreshIntervalMs(domain: string): int {
-        if (domain === "system" || domain === "network")
-            return Config.dashboard.resourceUpdateInterval;
+        if (domain === "system")
+            return Services.Experience.telemetryIntervalMs;
+        if (domain === "network")
+            return Services.Experience.telemetryIntervalMs;
         if (domain === "weather")
             return 3600000;
         if (isDomain(domain))
@@ -75,16 +80,14 @@ QtObject {
         return _leases[domain] ?? 0;
     }
 
-    // Whether the shared provider is currently producing fresh data:
-    // polling domains only while at least one reference (plugin
-    // subscription or shell surface) keeps their timer running;
-    // cached/event domains are pushed by their service whenever the
-    // underlying source is available.
+    // Whether the shared provider is producing fresh data right now.
     function active(domain: string): bool {
         if (domain === "system")
-            return Services.SystemUsage.refCount > 0;
+            return Services.SystemUsage.refCount > 0 && !Services.Experience.telemetryPaused;
         if (domain === "network")
-            return Services.NetworkUsage.refCount > 0;
+            return Services.NetworkUsage.refCount > 0 && !Services.Experience.telemetryPaused;
+        if (domain === "spectrum")
+            return root._spectrumLeases > 0;
         if (domain === "weather")
             return Services.Weather.locationConfigured;
         return isDomain(domain);
@@ -112,5 +115,13 @@ QtObject {
         else if (domain === "network")
             Services.NetworkUsage.refCount--;
         return true;
+    }
+
+    // Measured cost of the PluginKit side of a polling domain: samples
+    // taken and the mean/last JS handling time per sample (ms). The
+    // service's own /proc reads are measured on the host (docs/PLUGINS.md
+    // "Instrumentation cost").
+    function cost(domain: string): var {
+        return Telemetry.cost(domain);
     }
 }

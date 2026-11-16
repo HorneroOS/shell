@@ -7,7 +7,7 @@ Item {
         pluginId: "example-multi-surface"
     }
 
-    implicitWidth: label.implicitWidth + Theme.spacingSmall * 2
+    implicitWidth: label.implicitWidth + Theme.spacing.small * 2
     implicitHeight: label.implicitHeight
 
     // Keyboard contract (#376): an actionable label is a UiButton,
@@ -15,7 +15,7 @@ Item {
     UiButton {
         id: label
         anchors.centerIn: parent
-        variant: "ghost"
+        variant: "quiet"
         text: pluginSettings.value("label", "HorneroOS")
         tooltipText: "Example Multi-Surface: activate for details"
         onClicked: Notifications.toast("Example Multi-Surface", "Bar surface of a manifest v2 package; the same package also ships a dashboard card.", "puzzle")

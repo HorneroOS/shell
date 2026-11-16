@@ -1,8 +1,8 @@
 # Hornero Shell extension contract
 
-**Status: runtime slice 4 (loader, three visible placements, and public PluginKit API).** The
-Shell discovers plugins that `horneroctl plugin list` reports as enabled and
-installed, then instantiates each manifest entrypoint in its own Loader
+**Status: PluginKit 3 (Hornero Signal).** The Shell discovers plugins that
+`horneroctl plugin list` reports as enabled and installed, then instantiates
+each manifest entrypoint in its own Loader
 (`modules/plugins/PluginHost.qml`, state in `services/Plugins.qml`; inspect
 with `qs ipc call plugins status` and rediscover with
 `qs ipc call plugins reload`). `horneroctl plugin ...` owns install, enable,
@@ -11,22 +11,27 @@ Control Center can trust and enable with explicit confirmation; install,
 update, and remove remain CLI actions.
 
 Background plugins (the default) run headless. `placement: "bar"` renders in
-the bar's end group; `placement: "dashboard"` renders in the dashboard
-Extensions tab; `placement: "desktop"` renders on each display's background
-layer. Each plugin gets a separate Loader so one failure does not take down
-the shell or neighbouring extensions. Manifest v2 (`"schemaVersion": 2`)
-can declare additional entry points in the `surfaces` map so one package
-renders on several of those places at once — see
-[Manifest v2: multiple surfaces](#manifest-v2-multiple-surfaces) below.
-Schema version 1 manifests keep working unchanged. Desktop widgets use nine named slots
-per display. Their locations persist in the user's shell config, reflow when
-resolution changes, and remain saved while a display is disconnected. A new
-or unrecognized display and malformed slot data fall back to `bottom-right`.
-Users select a widget's vertical and horizontal slot in Control Center.
+the bar's islands; `placement: "dashboard"` renders in the dashboard
+Extensions tab; `placement: "desktop"` renders a **desktop widget** on each
+display's desktop layer (see [Desktop widgets](#desktop-widgets)). Each
+plugin gets a separate Loader so one failure does not take down the shell
+or neighbouring extensions. The `surfaces` map lets one package render on
+several of those places at once — see
+[Manifest: multiple surfaces](#manifest-multiple-surfaces) below.
+
+PluginKit 3 is the Hornero Signal contract (RFC 0001): extensions use the
+same colour roles, IBM Plex type, Hornero Glyphs, motion names and
+instrument components as native surfaces, so a bar indicator, a dashboard
+card and a desktop widget read as part of the shell. It is an intentional
+**breaking** change from the Material-era kit: manifests must declare
+`"schemaVersion": 3`, and packages built for PluginKit 1/2 are refused with
+a pointer to [Migrating to PluginKit 3](#migrating-to-pluginkit-3) instead
+of failing with an obscure QML error or blank glyphs.
 
 The package installs the stable `Hornero.PluginKit` QML module. It exposes
-`Settings`, `Translations`, `Theme`, `Notifications`, `Desktop`, `System`, `Network`,
-`Media`, `Weather`, `Time`, `Power`, `Audio`, and the shared-provider
+`Settings`, `Translations`, `Theme`, `Notifications`, `Desktop`, the data
+facades `System`, `Network`, `Media`, `Weather`, `Time`, `Power`, `Audio`
+and `Workspaces`, the shared history `Telemetry`, and the shared-provider
 `Providers` / `Subscription` lease (see
 [Shared data providers](#shared-data-providers)) without requiring plugins
 to import Shell internals:
@@ -41,59 +46,141 @@ to import Shell internals:
 - `Translations { pluginId: "example-clock" }` resolves the package's
   own JSON catalogs for the shell (system) locale and falls back to
   the source strings. See [Translations](#translations).
-- `Theme` exposes semantic colors and light-mode state. Token names form the
-  compatibility contract; internal palette implementation may change.
-- `Notifications.toast(summary, body, icon)` shows a bounded in-shell toast.
-  It does not create a persistent desktop notification.
-- `Desktop.position(pluginId, Screen.name)` reads the current named slot.
-  Users change placement in Control Center; plugin code has no PluginKit
-  setter for canonical widget positions.
-- `System` is a read-only singleton: `cpuPerc`, `cpuTemp`, `gpuPerc`,
-  `gpuTemp`, `memUsed`, `memTotal`, `memPerc`, `storagePerc`, and `disks`.
-- `Network` is a read-only singleton: `downloadSpeed`, `uploadSpeed`,
-  `downloadTotal`, and `uploadTotal`.
-- `Media` is a read-only singleton (`hasPlayer`, `identity`, `title`,
-  `artist`, `isPlaying`) plus the only mutating facade calls:
-  `playPause()`, `previous()`, and `next()`. Call them only from a
-  user-initiated handler; PluginKit never auto-plays.
-- `Weather` is a read-only singleton: `ready`, `locationConfigured`,
-  `temp`, `description`, `humidity`, `windSpeed`, `sunrise`, `sunset`,
+- `Theme` exposes the Signal tokens — see [Theme](#theme).
+- `Notifications.toast(summary, body, glyph)` shows a bounded in-shell
+  toast (the third argument is a Hornero Glyph name). It does not create a
+  persistent desktop notification.
+- `Desktop.editing`, `Desktop.anchor(pluginId, screenName)` and
+  `Desktop.geometry(pluginId, screenName)` read desktop widget state.
+  Users change placement in Control Center or in desktop edit mode;
+  plugin code has no PluginKit setter for widget geometry.
+- `System` (read-only): `cpuName`, `cpuPerc`, `cores` (per-core 0–1),
+  `cpuTemp` + `cpuTempAvailable`, `gpuAvailable`, `gpuName`, `gpuPerc`,
+  `gpuTemp` + `gpuTempAvailable`, `memUsed`, `memTotal`, `memPerc` (KiB /
+  fraction), `storagePerc`, `storageAvailable` and `disks`.
+- `Network` (read-only): `downloadSpeed`, `uploadSpeed` (bytes/s),
+  `downloadTotal`, `uploadTotal`, link state `connected`, `wifi`, `wired`,
+  `signalStrength`, `ssid`, and `formatRate(bytesPerSecond)`. The SSID is
+  personal data: show it where the person expects it (a popover), never
+  on an always-visible desktop widget by default.
+- `Media` (read-only): `hasPlayer`, `identity`, `title`, `artist`,
+  `album`, `artUrl`, `isPlaying`, `position`, `length`, `lengthSupported`,
+  `canGoNext`, `canGoPrevious`, `canTogglePlaying`, plus the only mutating
+  calls `playPause()`, `previous()`, `next()` and `refreshPosition()`.
+  Call transport only from a user-initiated handler; PluginKit never
+  auto-plays.
+- `Weather` (read-only): `ready`, `locationConfigured`, `temp`,
+  `description`, `humidity`, `windSpeed`, `sunrise`, `sunset`,
   `lastError`, and `forecast`.
-- `Time` is a read-only singleton (`date`, `hours`, `minutes`, `seconds`,
-  `timeStr`) plus `format(fmt)`.
-- `Power` is a read-only singleton: `hasBattery`, `percentage` (int
-  0-100), `charging`, `onBattery`, and `stateText` (`charging`,
-  `fully-charged`, `discharging`, `pending-charge`, or empty when no
-  battery or state is known). It is the one facade that delegates to
-  Quickshell's `UPower` service (`Quickshell.Services.UPower`, via
-  `UPower.displayDevice` / `UPower.onBattery`) rather than a
-  `qs.services` singleton, mirroring `modules/bar/components/Battery.qml`.
-- `Audio` is a singleton over `qs.services` `Audio`: read-only `volume`,
-  `muted`, `sourceVolume`, and `sourceMuted` (real/bool), plus `hasSink`
-  and `hasSource`. It also exposes the user-initiated controls
-  `setVolume(v)`, `incrementVolume()`, `decrementVolume()`,
-  `toggleMute()`, and `toggleSourceMute()`, delegating to the service
-  (increment/decrement use the service default step). Call them only from
-  a user-initiated handler. No PipeWire node (`PwNode`) object is exposed,
-  and there are no source-volume, sink/source-selection, or stream setters.
+- `Time` (read-only): `date`, `hours`, `minutes`, `seconds`, `timeStr`,
+  plus `format(fmt)`.
+- `Power` (read-only, from UPower): `hasBattery`, `percentage` (int
+  0–100), `charging`, `onBattery`, `stateText`, `timeToEmpty`,
+  `timeToFull` (s), `energyRate` (W), `healthAvailable` + `health`
+  (capacity vs design, %), and `profile` (power profile).
+- `Audio`: read-only `volume`, `muted`, `sourceVolume`, `sourceMuted`,
+  `hasSink`, `hasSource`, `outputName`, `inputName`, `streamCount` and
+  `spectrum` (shared visualiser bands, 0–1, real PipeWire data), plus the
+  user-initiated controls `setVolume(v)`, `incrementVolume()`,
+  `decrementVolume()`, `toggleMute()` and `toggleSourceMute()`. No
+  PipeWire node object is exposed.
+- `Workspaces`: `available`, `backend`, `activeWindowTitle`,
+  `activeWindowAppId`, `forScreen(screenName)` → `[{id, label, active,
+  occupied, special}]`, and the user-initiated `focus(screenName, id)`.
+- `Telemetry`: shared sample history for instruments —
+  `window(channel)`, `previousWindow(channel)`, `latest(channel)`,
+  `peak(channel)` over the channels `cpu`, `gpu`, `mem`, `cpuTemp`,
+  `gpuTemp`, `netDown`, `netUp` (see
+  [Instrumentation](#instrumentation)).
 
-All seven data facades are read-only except Media transport and the
-Audio controls above. They have no other setters, no `Process`, and no
-shell execution; they wrap only the shell's
-existing `qs.services` singletons, plus Quickshell's `UPower` for `Power`.
-They are QML running in-process: they
-are **not sandboxed**. Declared `capabilities` are review-only disclosures,
-not runtime enforcement. No AI quota is exposed by PluginKit; any AI quota
-is unknown and must not be assumed or displayed as a known value.
+All data facades are read-only except the Media transport, Audio and
+Workspaces calls above. They have no other setters, no `Process`, and no
+shell execution; they wrap only the shell's existing `qs.services`
+singletons, plus Quickshell's `UPower`. They are QML running in-process:
+they are **not sandboxed**. Declared `capabilities` (including
+`providers`) are review-only disclosures, not runtime enforcement. No AI
+quota is exposed by PluginKit; any AI quota is unknown and must not be
+assumed or displayed as a known value.
+
+## Theme
+
+`Theme` carries exactly the shell's Signal tokens (RFC 0001 §3), under the
+same names the shell uses:
+
+| Token | Values |
+| --- | --- |
+| `Theme.palette.<role>` | `ground` `sunken` `base` `panel` `raised` `lifted` · `ink` `inkMuted` `inkFaint` · `rule` `ruleStrong` `focus` · `signal`/`onSignal`/`signalWell`/`onSignalWell` · `cue…` · `phosphor…` · `alert…` · `inverse` `onInverse` `inverseSignal` · `scrim` `shadow` · `glow` |
+| `Theme.font.family.<f>` | `sans` (IBM Plex Sans), `mono` (IBM Plex Mono), `display` (IBM Plex Sans Condensed) |
+| `Theme.font.size.<s>` | `small` 11 · `smaller` 12 · `normal` 13 · `larger` 15 · `large` 18 · `extraLarge` 28 · `display` 56 (points, like native text) |
+| `Theme.rounding.<r>` | `small` 3 · `normal` 5 · `large` 8 · `full` (only for genuinely circular things) |
+| `Theme.spacing.<s>` | `small` 4 · `smaller` 8 · `normal` 12 · `larger` 16 · `large` 24 |
+| `Theme.padding.<p>` | `small` 4 · `smaller` 6 · `normal` 8 · `larger` 12 · `large` 16 |
+| `Theme.anim.curves.<c>` | `standard` `enter` `exit` `sweep` `settle` `settleFast` |
+| `Theme.duration(name)` | `quick` 90 · `short` 160 · `medium` 240 · `long` 360 · `scan` 480 · `settleFast` 220 · `settle` 320 · `fade` (ms; 0 under reduced motion except `fade` ≤ 90) |
+| `Theme.light`, `Theme.highContrast` | effective palette mode and the host's high-contrast override |
+| `Theme.experience` | `focus` / `everyday` / `signal` / `gaming` / `studio` (RFC §5a) |
+| `Theme.motionLevel`, `Theme.reducedMotion` | `full` / `standard` / `reduced` / `off`; reduced motion forces `off` |
+| `Theme.glowEnabled`, `Theme.scanlines` | luminous accent gate: only in the `signal` experience, dark themes, not high contrast, motion allowed |
+| `Theme.telemetryIntervalMs` | shared instrument cadence: 1000 (500 in `signal`) |
+| `Theme.keyboardFocus` | true when the last input was the keyboard (focus rings show only then) |
+
+Rules of the language, enforced by review and partly by the validator:
+`signal` (amber) means *live / active / primary* and `cue` (celeste) means
+*focus / selection / information*; numbers use tabular figures; panels are
+`panel` with a 1 px `rule` border and radius 3, never pills or glass;
+`inkFaint` is decorative only; glow is never drawn by hand (instruments
+apply it); nothing blinks or pulses. See the
+[Signal visual language](https://github.com/HorneroOS/docs/blob/main/development/signal-visual-language.md).
+
+## Migrating to PluginKit 3
+
+PluginKit 3 removes the Material-era API outright — there is no
+compatibility layer. `scripts/validate_plugin.py` rejects every removed
+name with its replacement, so a port is mechanical:
+
+1. Set `"schemaVersion": 3` in `manifest.json`.
+2. Colours: `Theme.primary` → `Theme.palette.signal`,
+   `Theme.onPrimary` → `Theme.palette.onSignal`,
+   `Theme.primaryContainer` → `Theme.palette.signalWell`,
+   `Theme.secondary*` → `Theme.palette.cue*`, `Theme.tertiary*` and
+   `Theme.success` → `Theme.palette.phosphor*`, `Theme.error*` →
+   `Theme.palette.alert*` (`*Container` → `*Well`),
+   `Theme.surface` → `base`, `surfaceContainer` → `panel`,
+   `surfaceContainerLow` → `sunken`, `surfaceContainerHigh` → `raised`,
+   `surfaceContainerHighest` → `lifted`, `onSurface` → `ink`,
+   `onSurfaceVariant` → `inkMuted`, `outline`/`componentBorder` →
+   `ruleStrong`, `outlineVariant` → `rule`, `focusRing` → `focus`.
+3. Tokens became groups: `Theme.spacingSmall` → `Theme.spacing.small`,
+   `Theme.spacing` → `Theme.spacing.normal`, `Theme.rounding` →
+   `Theme.rounding.normal`, `Theme.fontFamily` →
+   `Theme.font.family.sans`, `Theme.fontSize*` → `Theme.font.size.*`,
+   `Theme.durationNormal` → `Theme.duration("medium")`,
+   `Theme.motionDuration(ms)` → `Theme.duration(name)`.
+4. Glyphs: `UiIcon { icon: … }` → `UiIcon { name: … }`,
+   `UiButton { iconName: … }` → `glyph`, `UiActionRow { iconName,
+   trailingIconName }` → `glyph`, `trailingGlyph`, `UiCard { icon }` →
+   `glyph`. Values are Hornero Glyph names (Tabler outline, kebab-case);
+   Material names such as `graphic_eq` are rejected. Remove every
+   `iconFill` / `fill:` axis — glyphs are outline-only; express state with
+   colour or an on-air chip.
+5. Variants: `UiButton` `ghost` → `quiet`, `tonal`/`outlined` →
+   `secondary` (the default); `UiChip` tones `primary` → `signal`,
+   `error` → `alert`. `UiStateLayer` is gone (no ripples).
+6. Declare the data domains you read in `capabilities.providers` (below).
 
 ## Shared data providers
 
-The seven data facades are presentation over shared, single-instance
-providers (shell#377): each domain is backed by exactly one shell-owned
-singleton, so N extensions reading the same domain never duplicate its
-timers, file reads, or child processes. Declare interest with a
-`Subscription` lease so polling domains stay live while your surface is
-loaded:
+The data facades are presentation over shared, single-instance providers
+(RFC 0001 §5b, shell#377): each domain is backed by exactly one
+shell-owned service, so N extensions reading the same domain never
+duplicate its timers, file reads, or child processes. Declare interest
+with a `Subscription` lease so polling domains stay live while your
+surface is loaded, and declare every domain you read in the manifest:
+
+```json
+"capabilities": { "processCommands": [], "networkHosts": [], "settings": {},
+                  "providers": ["system", "network"] }
+```
 
 ```qml
 import QtQuick
@@ -101,137 +188,138 @@ import Hornero.PluginKit
 
 Item {
     Subscription { domain: "system" }
-    UiMetric { label: "CPU"; value: Math.round(System.cpuPerc * 100) + "%" }
+    UiMetric { label: "CPU"; value: Math.round(System.cpuPerc * 100); unit: "%" }
 }
 ```
 
 | Domain | Facade | Mode | Refresh |
 | --- | --- | --- | --- |
-| `system` | `System` | polling | one shared timer at `dashboard.resourceUpdateInterval` (default 1000 ms) while at least one lease or shell surface references it |
-| `network` | `Network` | polling | the same shared interval, from its own single timer |
-| `weather` | `Weather` | cached | one shared fetch per configured location; result cached, refreshed hourly |
-| `media` | `Media` | event | pushed by MPRIS; never polled |
-| `time` | `Time` | event | pushed by the system clock (second precision) |
-| `power` | `Power` | event | pushed by UPower; never polled |
-| `audio` | `Audio` | event | pushed by PipeWire; never polled |
+| `system` | `System`, `Telemetry` | polling | one shared timer while referenced: `/proc` reads at the experience cadence (1 Hz everyday, 2 Hz `signal`); `sensors`/GPU/`lsblk` probes at `dashboard.resourceUpdateInterval` (default 1000 ms) |
+| `network` | `Network`, `Telemetry` | polling | one shared `/proc/net/dev` read at the experience cadence |
+| `spectrum` | `Audio.spectrum` | stream | the shared PipeWire visualiser, running only while a lease is held |
+| `weather` | `Weather` | cached | one shared fetch per configured location; refreshed hourly |
+| `media` | `Media` | event | pushed by MPRIS |
+| `time` | `Time` | event | pushed by the system clock |
+| `power` | `Power` | event | pushed by UPower |
+| `audio` | `Audio` | event | pushed by PipeWire |
+| `workspaces` | `Workspaces` | event | pushed by the compositor (Hyprland or niri) |
 
 Semantics every extension can rely on:
 
+- **Permissions.** `capabilities.providers` lists the domains the package
+  reads; the validator rejects a facade or `Subscription` domain the
+  manifest does not declare. Like every capability, the declaration is
+  disclosure for review, not enforcement (extension QML is not sandboxed).
 - **One source per domain.** `system` and `network` are the only polling
   domains, and each owns exactly one timer gated on a reference count.
-  A `Subscription` forwards one reference to that gate; it never
-  creates a timer, process, or file poll of its own. Ten subscribers
-  cost the same wakeups as one.
-- **Caching.** Facade properties always read the shared singleton's
-  latest values. With no lease held by anyone, polling domains stop
-  updating and reads return the last-known values (zeros before the
-  first sample) — reading a facade without subscribing still works,
-  exactly as it did before subscriptions existed. Weather keeps its
-  last parsed result (and caches resolved city names) between fetches.
-- **Backoff.** There is no per-plugin rate to tune and no exponential
-  backoff to configure: polling runs at the one shared interval while
-  referenced and stops entirely at zero references, which is the idle
-  state backoff would approximate. A failed sample keeps the previous
-  values and is retried on the next shared tick; a failed weather
-  fetch records `Weather.lastError` and is retried on the next hourly
-  refresh (or when the configured location changes).
-- **Release.** Disabling an extension releases its subscriptions: the
-  host destroys the plugin's items on unload/disable, and
-  `Subscription` unsubscribes from `Component.onDestruction`. Setting
-  `enabled: false` or changing `domain` releases the previous lease
-  immediately. An `unsubscribe` with no matching lease is refused, so
-  one extension can never drive a shared gate negative for the others.
+  A `Subscription` forwards one reference to that gate; it never creates a
+  timer, process, or file poll of its own. Ten subscribers cost the same
+  wakeups as one.
+- **Cadence follows the experience.** While any extension holds a
+  `system`/`network` lease the cheap `/proc` reads run at
+  `Theme.telemetryIntervalMs`; in the `gaming` experience they fall back
+  to the configured interval and desktop widgets are suspended (their
+  leases released) until the mode changes.
+- **Never invented.** Facade values are whatever the service last read.
+  Sensors that do not exist report their availability flag as false
+  (`System.cpuTempAvailable`, `gpuAvailable`, `Power.hasBattery`,
+  `healthAvailable`, …): render "unavailable", never 0. Telemetry history
+  records nothing for an unavailable channel.
+- **Caching and backoff.** Without any lease, polling domains stop and
+  reads return the last-known values; there is no per-plugin rate or
+  exponential backoff to tune — polling runs at the one shared cadence
+  while referenced and stops entirely at zero references. A failed sample
+  keeps the previous values and is retried on the next shared tick; a
+  failed weather fetch records `Weather.lastError` and retries hourly.
+- **Release.** Disabling an extension releases its subscriptions: the host
+  destroys its items, and `Subscription` unsubscribes from
+  `Component.onDestruction`; an unsubscribe with no matching lease is
+  refused.
 
-The imperative form lives on the `Providers` singleton for code that
-cannot declare an object: `Providers.subscribe(domain)`,
-`Providers.unsubscribe(domain)`, `Providers.subscriberCount(domain)`,
-`Providers.active(domain)`, `Providers.mode(domain)`, and
-`Providers.refreshIntervalMs(domain)` (0 for event domains, -1 for an
-unknown domain; unknown domains are rejected by `subscribe`).
-Prefer `Subscription` — it cannot leak a lease.
+The imperative form lives on `Providers`: `subscribe(domain)`,
+`unsubscribe(domain)`, `subscriberCount(domain)`, `active(domain)`,
+`mode(domain)`, `refreshIntervalMs(domain)` and `cost(domain)`. Prefer
+`Subscription` — it cannot leak a lease.
 
-Idle-cost accounting (static analysis of this tree, not a host
-measurement): before shared providers, an extension that wanted live
-CPU/network figures had to run its own timer and subprocess per
-extension instance. Now the only timers that can drive those domains
-are the two refCount-gated service timers above, independent of
-extension count, and both are stopped when nothing references them.
-`tests/test_plugin_shared_providers.py` pins that count. A host-side
-idle CPU/wakeup measurement (e.g. `powertop` with several
-telemetry extensions enabled, before/after) still belongs in the
-change's PR description, labelled as a host measurement.
+### Instrumentation cost
+
+`Providers.cost(domain)` (and `qs ipc call plugins telemetry`) reports the
+samples taken and the mean PluginKit-side handling time per sample, so the
+JS cost of the shared history is measured, not assumed. The services' own
+`/proc` reads and probes are measured on the host as process CPU with and
+without instrumentation widgets; record that measurement, labelled as a
+host measurement, in the PR that changes instrumentation.
 
 ## UI primitives
 
-PluginKit also exposes native extension design-system primitives
-(`Hornero.PluginKit` 1.0). They use only `Theme` tokens — no hardcoded
-colors — and interactive controls declare accessible names and a
-visible focus indication. Indeterminate progress does not animate
-unless `animated: true` is set (reduced-motion by default).
+All primitives use only `Theme` tokens, draw the Signal Bezel language
+(matte modules, hairlines, small radii, tabular numerals) and carry the
+keyboard/accessibility contract.
 
 | Type | Purpose | Key properties |
 | --- | --- | --- |
-| `UiText` | Typography | `role`: `title` / `body` / `caption`, `text` |
-| `UiCard` | Surface container | `padding`; default content slot |
-| `UiButton` | Action button | `text`, `variant`: `primary` / `ghost`, `tooltipText`, `accessibleName` |
-| `UiToggle` | Boolean switch | `value` (two-way synced with `checked`), `text`, `tooltipText`, `accessibleName`; inherits `toggled()` from `Switch`/`AbstractButton` (no argument — read `checked`/`value` in `onToggled`) |
-| `UiSlider` | Range input | `from`, `to`, `value`, `stepSize` (keyboard step, defaults to 1/20 of the range), `tooltipText`, `accessibleName` (defaults to `Slider`) |
-| `UiMetric` | Labelled metric | `label`, `value`, optional `unit` |
-| `UiChip` | Small label chip | `text`, `tone`: `neutral` / `primary` / `error` |
-| `UiProgress` | Progress bar | `value` (0..1), `indeterminate`, `animated` (default `false`) |
-| `UiState` | State placeholder | `kind`: `loading` / `error` / `empty`, `message` |
-| `UiTooltip` | Host-owned tooltip | `target` (required `Item`), `text`, `delay` (default 500 ms), `timeout` (0 = until trigger ends), `preferredSide`: `auto` / `above` / `below` / `left` / `right` |
-| `UiPopover` | Host-owned anchored panel | `target` (required `Item`, the trigger/anchor), `accessibleName`, `preferredSide` (same values as `UiTooltip`), `contentPadding`, `initialFocusItem`; default content slot; `open()` / `close()` / `toggle()`, read-only-by-convention `actualSide` |
-| `UiStack` | Adaptive row/column layout | `orientation` (`horizontal` / `vertical`), `compact`, `spacing`; children stack vertically when `orientation` is `vertical` or `compact` is set |
+| `UiText` | Typography | `role`: `body` / `caption` / `subtitle` / `title` / `eyebrow` / `value` / `readout` / `display` |
+| `UiEyebrow` | Section label | `text`, `channel` (`02 · TELEMETRY`), `context` (right-aligned eyebrow) |
+| `UiIcon` | Hornero Glyph | `name`, `size` (points; 0 = default), `color` |
+| `UiCard` | Instrument module | `title`, `channel`, `context`, `glyph`, `padding`; registration tick while focus is inside |
+| `UiWell` | Sunken readout well | `padding`; default content slot |
+| `UiButton` | Action button | `text`, `glyph`, `variant`: `secondary` (default) / `primary` / `quiet` / `danger`, `open`, `tooltipText`, `accessibleName` |
+| `UiToggle` | Rocker switch | `value` (two-way with `checked`), `text`, `tooltipText`, `accessibleName`; inherits `toggled()` |
+| `UiSlider` | Fader | `from`, `to`, `value`, `stepSize` (default 1/20 of the range), `tooltipText`, `accessibleName` |
+| `UiMetric` | Large readout | `label`, `value`, `unit`, `available`, `tone`, `well`, `size` (`readout` / `display` / `value`) |
+| `UiDetailRow` | Fact row | `label`, `value`, `available`, `glyph` |
+| `UiActionRow` | Popout action row | `text`, `glyph`, `trailingGlyph`, `trailingText`, `selected`, `tooltipText`; `clicked()` |
+| `UiChip` | Tag / on-air chip | `text`, `glyph`, `tone`: `neutral` / `signal` / `cue` / `phosphor` / `alert` / `live` |
+| `UiProgress` | Task progress | `value` (0..1), `indeterminate` (static, never pulses), `tone` |
+| `UiSegmentMeter` | Segmented meter | `value`, `available`, `count`, `orientation`, `threshold` (0.85), `critical` (sensor-reported only), `vu`, `peak` |
+| `UiMeterRow` | Labelled meter row | `label`, `value`, `valueText`, `available`, `threshold`, `critical` |
+| `UiSparkline` | Inline trace | `values`, `minimum`, `maximum` (≤ minimum = auto), `window`, `tone` (`cue` network, `phosphor` load, `signal` temperature), `glow` |
+| `UiScope` | Oscilloscope well | `samples`, `previous` (persistence), `minimum`, `maximum`, `window`, `label`, `context`, `available`, `unavailableText`, `tone`, `glow` |
+| `UiPartition` | Partition + dimension line | `total`, `used`, `secondary`, `usedLabel`, `secondaryLabel`, `available`, `knockout` |
+| `UiState` | Empty / loading / error / unavailable | `kind`, `message`, `glyph` |
+| `UiTooltip` | Host-owned tooltip | `target`, `text`, `delay` (500 ms), `timeout`, `preferredSide` |
+| `UiPopover` | Host-owned anchored panel | `target`, `accessibleName`, `preferredSide`, `contentPadding`, `initialFocusItem`; `open()` / `close()` / `toggle()`, `actualSide` |
+| `UiStack` | Adaptive row/column | `orientation`, `compact`, `spacing` |
 
-### Icons: Hornero Glyphs (breaking change)
+### Icons: Hornero Glyphs
 
-`UiIcon { icon: "clock" }`, `UiButton { iconName: "refresh" }`, a card's
-`icon`, a launcher provider's `icon` and the `icon` argument of
-`Notifications.toast()` keep their property names but now take a
-**Hornero Glyph name**: a curated Tabler Icons outline subset bundled with
-the shell (`assets/fonts/hornero-glyphs.ttf`; the full list is
+`UiIcon { name }`, `UiButton { glyph }`, `UiActionRow { glyph,
+trailingGlyph }`, `UiCard`/`UiChip`/`UiDetailRow { glyph }`, a launcher
+provider's `icon` and the third argument of `Notifications.toast()` take a
+**Hornero Glyph name**: the curated Tabler Icons outline subset bundled
+with the shell (`assets/fonts/hornero-glyphs.ttf`; the full list is
 `assets/fonts/hornero-glyphs.names`, kebab-case, for example `wifi`,
-`clock`, `calculator`, `wave-sine`, `puzzle`, `settings`). Material-era icon
-names such as `graphic_eq` or `power_settings_new` no longer render: an
-unknown name shows nothing and logs one `Glyph: unknown glyph name`
-warning. The `fill` axis (`UiIcon.fill`, `UiButton.iconFill`) was removed;
-glyphs are outline-only. Port an extension by replacing each Material name
-with its Hornero Glyph equivalent; ask for a missing glyph in a shell issue
-rather than shipping an icon font.
+`clock`, `calculator`, `wave-sine`, `player-play`). Glyphs are
+outline-only — there is no fill axis. The validator rejects unknown and
+Material-style names before install; at runtime an unknown name renders
+nothing and logs one `Glyph: unknown glyph name` warning. Ask for a missing
+glyph in a shell issue rather than shipping an icon font.
 
-Tooltips are host-owned: set `tooltipText` on `UiButton`, `UiToggle` or
-`UiSlider`, or attach a `UiTooltip { target: someItem; text: "…" }` to
-any item. They show on hover **and** keyboard focus after the same
-delay, Escape dismisses them until the trigger is left and re-entered,
-and placement covers all four bar edges plus dashboard, popovers and
-desktop surfaces — the side flips when it would clip and the tooltip
-stays clamped inside its surface across moves, resizes and scale
-changes. The text is also exposed as the trigger's accessible
-description. Never put interactive content in a tooltip, and never
-rely on one for essential information: anything a tooltip says must
-also be visible (or otherwise available) elsewhere.
+### Tooltips and popovers
 
-Popovers are host-owned too: a compact indicator (for example a bar
-`UiButton`) is the `target` of a `UiPopover`, and the rich panel goes
-in the popover's default content slot using the other `Ui*`
-primitives. Never create an independent top-level window for this.
-The host owns positioning (the same placement as `UiTooltip`:
-left/right rails and top/bottom bars via `preferredSide: "auto"`, an
-explicit side flips when it would clip, and the panel stays clamped
-inside its surface across moves, resizes and scale changes), monitor
-selection (the panel opens on the surface that already hosts the
-trigger), and dismissal (Escape or a press outside the panel;
-`open()`, `close()` and `toggle()` cover programmatic control, so
-wire the trigger with `onClicked: popover.toggle()`). On open, focus
-moves into the panel — to `initialFocusItem` when set, else the first
-focusable control, else the panel itself — so Tab navigation works
-with the native controls inside. Escape closes the popover first,
-before any surface-level Escape handling underneath it (see the
-Escape cascade), and returns focus to the trigger; a press outside
-closes it without moving focus. Set `accessibleName` on the popover
-(it is exposed with the dialog accessible role) and an
-`accessibleName` on the trigger control.
+Tooltips are host-owned: set `tooltipText` on `UiButton`, `UiToggle`,
+`UiSlider` or `UiActionRow`, or attach a `UiTooltip { target: someItem;
+text: "…" }` to any item. They show on hover **and** keyboard focus after
+the same delay, Escape dismisses them until the trigger is left and
+re-entered, and they stay clamped inside their surface. Tooltips are the
+highest elevation (`lifted`, 1 px `ruleStrong`) and fade in 90 ms. The
+text is also exposed as the trigger's accessible description. Never put
+interactive content or essential-only information in a tooltip.
+
+Popovers are host-owned too: a compact indicator (a bar `UiButton`) is
+the `target` of a `UiPopover`, and the rich panel goes in its default
+content slot. In a bar, the content is handed to the shell's native
+popout panel — it opens on hover, grows from the bar edge and moves
+between triggers exactly like native popouts (anchored-surface contract,
+RFC 0001 §4); extensions never position themselves in screen
+coordinates. Elsewhere (dashboard, desktop) the popover is a `panel`
+surface with the **notch** — a 2 px `signal` line as wide as the trigger
+on the edge facing it — that scans in 6 px from its anchor edge with
+`enter`/short and leaves with 4 px travel back (`exit`/quick); reduced
+motion keeps only a ≤ 90 ms fade. On open, focus moves into the panel
+(`initialFocusItem`, else the first focusable control); Escape closes the
+popover before any surface underneath (the Escape cascade) and returns
+focus to the trigger. Set `accessibleName` on the popover and the trigger.
 
 ```qml
 import QtQuick
@@ -240,7 +328,7 @@ import Hornero.PluginKit
 Item {
     UiButton {
         id: indicator
-        text: "♪"
+        glyph: "music"
         accessibleName: "Media details"
         onClicked: popover.toggle()
     }
@@ -249,32 +337,109 @@ Item {
         target: indicator
         accessibleName: "Media details"
         Column {
-            UiMetric { label: "Track"; value: Media.title }
-            UiButton { text: "Play/Pause"; accessibleName: "Play or pause"; onClicked: Media.playPause() }
+            spacing: Theme.spacing.smaller
+            UiEyebrow { channel: 1; text: "Now playing" }
+            UiDetailRow { width: 320; label: "Track"; value: Media.title; available: Media.hasPlayer }
+            UiButton { glyph: "player-play"; text: "Play/Pause"; onClicked: Media.playPause() }
         }
     }
 }
 ```
 
-Usage example:
+## Instrumentation
+
+Rainmeter/Conky-class desktops are built on PluginKit — there is no
+second widget engine. Bar indicators, dashboard cards and desktop widgets
+share the same components, tokens, motion and data providers. The
+instrument components follow the visual language's real-data rule:
+
+- Only real telemetry is drawn. Bind instruments to facades or
+  `Telemetry`; when a source is unavailable pass `available: false` — the
+  instrument shows an em dash in `inkMuted`, all segments off, and (for a
+  scope) `unavailableText` naming what is missing. No placeholder waves,
+  no idle animation, no interpolated samples.
+- Every plot states its window and scale in an eyebrow
+  (`CPU · 10 %/DIV`, `60 S WINDOW`).
+- `UiScope` is the signature instrument: graticule, dashed centre line, a
+  1.5 px `phosphor` trace and the previous window at 22 % as persistence.
+  In the `signal` experience it gets the luminous accent (static 4 px halo
+  at 40 % in `glow`) and faint static scanlines; at most three glowing
+  items exist at once (a shared budget) and glow is off in day themes,
+  high contrast, focus, gaming and with reduced motion.
+- Meters threshold at 85 % to `signal`; `alert` only above a critical
+  value the sensor itself reports. Vertical VU meters use `phosphor`.
+- Plots shift on each sample with no tween; numerals update instantly.
 
 ```qml
 import QtQuick
 import Hornero.PluginKit
 
-UiCard {
-    UiMetric { label: "CPU"; value: "42"; unit: "%" }
-    UiProgress { value: 0.42 }
-    UiButton {
-        text: "Refresh"
-        tooltipText: "Reload data"
-        accessibleName: "Refresh"
-        onClicked: Notifications.toast("Example", "Refreshed", "")
+Column {
+    spacing: Theme.spacing.normal
+    Subscription { domain: "system" }
+    UiScope {
+        width: 360; height: 140
+        label: "CPU · 10 %/DIV"
+        context: Telemetry.windowSize + " SAMPLES"
+        samples: Telemetry.window("cpu")
+        previous: Telemetry.previousWindow("cpu")
     }
-    UiToggle { text: "Enabled"; accessibleName: "Enabled"; onToggled: () => print(checked) }
-    UiState { kind: "empty"; message: "No data yet" }
+    UiMeterRow {
+        width: 360
+        label: "GPU"
+        available: System.gpuAvailable
+        value: System.gpuPerc
+        valueText: Math.round(System.gpuPerc * 100) + " %"
+    }
 }
 ```
+
+## Desktop widgets
+
+A surface named `desktop` renders as a desktop widget on every display's
+desktop layer (`modules/plugins/PluginDesktopWidgets.qml`, one
+`DesktopWidgetFrame` per widget). The host owns the **module**: `panel`
+fill, 1 px `rule` border, radius 3, the single elevation shadow and an
+eyebrow header with a channel number (`02 · SYSTEM INSIGHT`). The
+extension owns only its content, laid out in the host context box
+(`hostAvailableWidth` × `hostAvailableHeight`). The entrypoint root may
+declare `property string widgetTitle` (replaces the package name in the
+header) and `property string widgetContext` (the right-hand eyebrow, e.g.
+`60 S WINDOW`). Use `UiCard` freely inside: on the desktop it draws only
+its header and content, never a second frame.
+
+Geometry hints live on the desktop surface:
+
+```json
+"surfaces": {
+  "desktop": { "entrypoint": "Desktop.qml", "width": 560, "height": 360,
+               "minWidth": 420, "minHeight": 280, "resizable": true,
+               "anchor": "top-left" }
+}
+```
+
+- `width`/`height` are the default size and `minWidth`/`minHeight` the
+  smallest the person can resize it to (80–1600 logical px);
+  `resizable: false` hides the resize grip; `anchor` (one of nine
+  positions) is where the widget starts. Without a size hint the widget
+  takes its content's implicit size.
+- **Edit mode.** `qs ipc call plugins editDesktop` (or `toggleEditDesktop`,
+  `doneDesktop`) shows a toolbar, a dashed `cue` outline, whole-module
+  drag, a corner resize grip and a live dimension readout. Positions snap
+  to an 8 px grid. While editing, widget content does not take input.
+- **Persistence.** Moves and resizes persist per display in
+  `plugins.desktopWidgets` of the user's shell config as a fraction of the
+  free space plus a logical size, so a resolution change keeps the layout
+  and a disconnected display keeps its entry. Choosing an anchor in
+  Control Center (`plugins.desktopWidgetSlots`) resets the free position
+  to that anchor; *Reset layout* in the edit toolbar returns every widget
+  on that display to its anchor and default size.
+- **Experiences.** In the `signal` experience modules gain hairline
+  registration marks at their corners and instruments their luminous
+  accent; in `gaming` desktop widgets are suspended (unloaded, leases
+  released) so they never cost CPU under a game.
+- Desktop widgets live on the desktop layer, below windows; they never
+  take keyboard focus from applications.
 
 ## Accessibility and keyboard contract
 
@@ -305,20 +470,21 @@ interactive items must provide it themselves.
   Enter/Space model with a single roving tab stop.
 - **Visible focus.** The kit draws a 2 px contrasting border on the
   focused control. Custom controls must show an equally visible
-  indication when `activeFocus` — use `Theme.focusRing` for the
-  host focus colour and never rely on hover styling alone.
+  indication when `activeFocus` — use `Theme.palette.focus` for the
+  host focus colour (2 px, 2 px outside the control, only while
+  `Theme.keyboardFocus`) and never rely on hover styling alone.
 - **Focus restoration.** Opening a `UiPopover` moves focus into it;
   closing it (Escape, or activating a control inside) returns focus
   to the trigger. Never leave focus on a hidden or destroyed item.
 - **Reduced motion and high contrast are inherited.** Kit
-  transitions and the indeterminate `UiProgress` animation already
-  honour the host settings; for your own animations use
-  `Theme.motionDuration(ms)` (0 under reduced motion, scaled by
-  the host animation speed otherwise) and gate looping motion on
-  `!Theme.reducedMotion` (true when the host's reduced-motion setting,
-  the system preference or animation speed 0 is active). Theme colours
-  already swap to the high-contrast palette; `Theme.highContrast` is exposed for
-  emphasis decisions. Do not hardcode colours or durations.
+  transitions already honour the host settings; for your own
+  animations use the motion names — `Theme.duration(name)` with
+  `Theme.anim.curves.<name>` (durations are 0 under reduced motion,
+  except `fade` which stays ≤ 90 ms) — and never loop motion: nothing
+  in Signal blinks or pulses. Settle curves move position/size only,
+  never opacity or colour. Theme colours already swap to the
+  high-contrast palette; `Theme.highContrast` is exposed for emphasis
+  decisions. Do not hardcode colours or durations.
 - **Custom interactive surfaces.** A `MouseArea` click with no
   keyboard path is a contract violation: prefer a kit control, or
   give the item an accessible name and role, `activeFocusOnTab`,
@@ -358,8 +524,8 @@ islands, styled like their native neighbours.
   i.e. the Extensions island). `status` joins the status icons island,
   `actions` the quick actions island, `clock` the clock island. The
   island's host advertises its icon colour and sizes; PluginKit
-  `UiButton`/`UiIcon` adopt them, so an icon-only indicator
-  (`iconName`) matches the native icons around it. If the target island
+  `UiButton`/`UiIcon` adopt them, so a glyph-only indicator
+  (`glyph`) matches the native glyphs around it. If the target island
   is not in the current layout, the indicator falls back to the
   Extensions island. `section` is bar-only and enforced by the schema,
   `scripts/validate_plugin.py` and the runtime host.
@@ -391,8 +557,9 @@ also renders sensibly before/without injection.
 Sizes are logical pixels, already corrected for output scale by Qt,
 so one layout serves every scale. On the bar, the cross-axis
 available size is the bar's configured content thickness and the
-main-axis cap is 240; dashboard cards report 380 wide and desktop
-cards 300 wide, both with uncapped height.
+main-axis cap is 240; dashboard cards report 380 wide with uncapped
+height; desktop widgets report their frame's content box (both axes,
+live while the person resizes the widget in edit mode).
 
 Never force a horizontal multi-button row into a vertical rail:
 bind a `UiStack` to the context and it stacks for you.
@@ -540,7 +707,7 @@ Minimal manifest:
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "id": "example-clock",
   "name": "Example Clock",
   "version": "1.0.0",
@@ -558,13 +725,15 @@ Minimal manifest:
 ```
 
 `placement` is optional: `"background"` (default, headless),
-`"bar"` (rendered in the bar end group), or `"dashboard"`
+`"bar"` (rendered in the bar's islands), or `"dashboard"`
 (rendered as a card in the dashboard Extensions tab), or `"desktop"`
-(rendered in a configurable slot on each display's background layer).
+(a [desktop widget](#desktop-widgets) on each display's desktop layer).
 Unknown values are rejected by the validator and by the runtime host.
 
-Use `processCommands` to disclose exact executable basenames and
-`networkHosts` to disclose intended network hosts. These fields support code
+Use `processCommands` to disclose exact executable basenames,
+`networkHosts` to disclose intended network hosts, and the optional
+`providers` list to disclose the [shared data domains](#shared-data-providers)
+the extension reads. These fields support code
 review only; they are not an operating-system permission grant. Settings are
 typed metadata with explicit defaults. The host owns persistence and exposes
 settings through PluginKit; extensions cannot write the canonical shell
@@ -658,20 +827,20 @@ default; the old key's stored value is ignored. Reset
 the stored value outright, so the default applies until the user
 changes it again.
 
-## Manifest v2: multiple surfaces
+## Manifest: multiple surfaces
 
-`"schemaVersion": 2` keeps every version 1 field with the same meaning and
-adds one optional field, `surfaces`: a map from surface name to that
-surface's own entry point. The top-level `entrypoint`/`placement` pair stays
-the package's **primary surface**, so a schemaVersion 1 manifest (or a v2
-manifest without `surfaces`) loads identically to before: exactly one
+Manifest v2 introduced, and `"schemaVersion": 3` keeps, one optional
+field, `surfaces`: a map from surface name to that surface's own entry
+point. The top-level `entrypoint`/`placement` pair stays the package's
+**primary surface**, so a manifest without `surfaces` loads exactly one
 effective surface, the placement, loading the top-level entrypoint,
-enabled. Those are the documented defaults; nothing about v1 packages
-changes.
+enabled. Those are the documented defaults. (Material-era schemaVersion 1
+and 2 packages are refused; see
+[Migrating to PluginKit 3](#migrating-to-pluginkit-3).)
 
 ```json
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "example-multi-surface",
   "name": "Example Multi-Surface",
   "version": "1.0.0",
@@ -699,7 +868,7 @@ changes.
 | --- | --- | --- |
 | `bar` | Bar indicator in the bar end group. A bar popover/panel is shown from this surface with PluginKit `UiPopover`; it is not a separate surface. | Yes |
 | `dashboard` | Card (with any detail content inside the card) in the dashboard Extensions tab. | Yes |
-| `desktop` | Widget in a named slot on each display's background layer. | Yes |
+| `desktop` | [Desktop widget](#desktop-widgets) on each display's desktop layer; may declare `width`, `height`, `minWidth`, `minHeight`, `resizable`, `anchor`. | Yes |
 | `background` | Headless entry point (timers, toasts); only declare it where a headless component is justified. | Yes |
 | `launcher` | Launcher/search action entry point. | Yes — `PluginLauncherHost` loads it hidden and registers it into the launcher provider registry ([LAUNCHER.md](LAUNCHER.md)). Contract (query/result): root `Item` with settable string `query` and readonly var `result` = `{ok: bool, text: string}`; prefix is the plugin id minus a leading `hornero-`; copy-on-activate copies `result.text` (wl-copy, the calc convention — no plugin activation hook). In-process QML running as your user, unsandboxed, same trust as every other surface. |
 | `settings` | Custom Control Center settings entry point. | Yes — Control Center › Extensions loads it in the plugin's Custom settings tab alongside the generated settings UI (above), which renders `capabilities.settings` without it. In-process QML, same trust as other surfaces. |
@@ -717,7 +886,7 @@ The `dashboard` surface may additionally declare two card hints
 short grouping label. Both are dashboard-only (declaring either on another
 surface is rejected), both are hints, and `"Pinned"` is reserved. A v1
 `placement: "dashboard"` plugin declares neither and renders as a standard
-uncategorized card, exactly as before.
+uncategorized card.
 
 ### Dashboard layout (shell#378)
 
@@ -749,13 +918,12 @@ silently overriding the top-level entrypoint. Load state (`loaded` /
 Validation is strict but additive, and the schema
 ([`schemas/plugin-manifest.schema.json`](../schemas/plugin-manifest.schema.json)),
 the static checker (`scripts/validate_plugin.py`), and the runtime host
-agree: unknown `schemaVersion` values are rejected (only `1` and `2` exist),
-`surfaces` under schemaVersion 1 is rejected (so an older host can never
-silently ignore it), and unknown top-level fields, unknown surface names,
+agree: unknown `schemaVersion` values are rejected (only `3` exists;
+`1` and `2` get the migration message), desktop geometry hints on any
+other surface are rejected, and unknown top-level fields, unknown surface names,
 unknown keys inside a surface, non-boolean `enabled`, empty `surfaces`, and
 unsafe or unlisted surface entrypoints all fail with an actionable message.
-Unknown extra fields are rejected, not ignored — the same policy v1 always
-had. One cross-field rule cannot be expressed in JSON Schema (a redeclared
+Unknown extra fields are rejected, not ignored. One cross-field rule cannot be expressed in JSON Schema (a redeclared
 primary surface must reuse the top-level entrypoint); the schema documents
 it, and the checker and runtime host enforce it.
 
@@ -769,9 +937,9 @@ only in `PluginLauncherHost` (hidden Loader, provider registry —
 see [LAUNCHER.md](LAUNCHER.md)), a `settings` declaration only
 in its Control Center host, above, and only for enabled,
 installed plugins. Installing
-or enabling a v2 package also requires a `horneroctl` build that accepts
-schemaVersion 2; the shell-side contract here does not change the CLI's own
-validation.
+or enabling a schemaVersion 3 package also requires a `horneroctl` build
+that accepts schemaVersion 3; the shell-side contract here does not change
+the CLI's own validation.
 
 ## Marketplace metadata: previews, compatibility, history, deprecation
 

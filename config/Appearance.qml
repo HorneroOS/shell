@@ -25,22 +25,6 @@ Singleton {
         readonly property list<real> settleFast: [0.34, 1.3, 0.5, 1, 1, 1]
     }
 
-    // Durations in ms. Reduced motion zeroes every duration; opacity
-    // cross-fades use `fade`, which stays at most 90 ms.
-    component Durations: QtObject {
-        required property bool reduced
-        readonly property real scale: Config.appearance.anim.durations.scale
-        readonly property real _k: reduced ? 0 : scale
-        readonly property int quick: 90 * _k
-        readonly property int short: 160 * _k
-        readonly property int medium: 240 * _k
-        readonly property int long: 360 * _k
-        readonly property int scan: 480 * _k
-        readonly property int settleFast: 220 * _k
-        readonly property int settle: 320 * _k
-        readonly property int fade: reduced ? 90 : 90 * scale
-    }
-
     component Motion: QtObject {
         id: motion
 
@@ -49,8 +33,21 @@ Singleton {
         readonly property real mediaGifSpeedAdjustment: Config.appearance.anim.mediaGifSpeedAdjustment
         readonly property real sessionGifSpeed: Config.appearance.anim.sessionGifSpeed
         readonly property Curves curves: Curves {}
-        readonly property Durations durations: Durations {
-            reduced: motion.reduced
-        }
+        readonly property real _scale: Config.appearance.anim.durations.scale
+        readonly property real _k: reduced ? 0 : _scale
+        // Durations in ms. Reduced motion zeroes every duration; opacity
+        // cross-fades use `fade`, which stays at most 90 ms. A plain map
+        // because `short` is not a legal property name on every Qt parser.
+        readonly property var durations: ({
+                "scale": motion._scale,
+                "quick": Math.round(90 * motion._k),
+                "short": Math.round(160 * motion._k),
+                "medium": Math.round(240 * motion._k),
+                "long": Math.round(360 * motion._k),
+                "scan": Math.round(480 * motion._k),
+                "settleFast": Math.round(220 * motion._k),
+                "settle": Math.round(320 * motion._k),
+                "fade": motion.reduced ? 90 : Math.round(90 * motion._scale)
+            })
     }
 }

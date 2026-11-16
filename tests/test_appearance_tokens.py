@@ -161,9 +161,9 @@ def test_motion_tokens():
     }
     for name, ms in (("quick", 90), ("short", 160), ("medium", 240), ("long", 360),
                      ("scan", 480), ("settleFast", 220), ("settle", 320)):
-        assert f"readonly property int {name}: {ms} * _k" in text, name
-    assert "readonly property real _k: reduced ? 0 : scale" in text
-    assert "readonly property int fade: reduced ? 90 : 90 * scale" in text
+        assert f'"{name}": Math.round({ms} * motion._k)' in text, name
+    assert "readonly property real _k: reduced ? 0 : _scale" in text
+    assert '"fade": motion.reduced ? 90 : Math.round(90 * motion._scale)' in text
     assert "readonly property bool reduced: Config.appearance.reducedMotion || SystemMotion.reduced" in text
     # Curves/durations are tokens, never persisted knobs.
     config = APPEARANCE_CONFIG.read_text()

@@ -278,9 +278,10 @@ def _motion_tokens():
         body = text.split(f"component {component}: QtObject {{", 1)[1].split("\n    }", 1)[0]
         return re.findall(r"readonly property [\w.<>]+ (\w+):", body)
 
-    tokens = {f"anim.{n}" for n in names("Motion")}
+    tokens = {f"anim.{n}" for n in names("Motion") if not n.startswith("_")}
     tokens |= {f"anim.curves.{n}" for n in names("Curves")}
-    tokens |= {f"anim.durations.{n}" for n in names("Durations") if not n.startswith("_")}
+    durations = text.split("readonly property var durations: ({", 1)[1].split("})", 1)[0]
+    tokens |= {f"anim.durations.{n}" for n in re.findall(r'"(\w+)":', durations)}
     return tokens
 
 

@@ -446,3 +446,105 @@ def test_slider_handle_matches_native_handle_motion():
     assert "root.pressed ? 1.2 : 1" in src
     assert "Theme.durationNormal / 2" in src and "Theme.curveStandardDecel" in src
     assert "Theme.keyboardFocus" in src
+
+
+def test_theme_declares_no_on_colour_beside_its_base():
+    """Qt parses `onX: <expr>` declared beside a property X as the
+    X-changed signal handler, so the colour silently reads #000000 (#427).
+    Theme.qml must keep every on* colour in ThemeBase.
+    """
+    theme = (KIT / "Theme.qml").read_text(encoding="utf-8")
+    assert not re.search(r"property\s+color\s+on[A-Z]", theme)
+    base = (KIT / "ThemeBase.qml").read_text(encoding="utf-8")
+    assert "readonly property color onSurface" in base
+    assert re.search(r"^ThemeBase \{", theme, re.M)
+    assert "internal ThemeBase ThemeBase.qml" in (KIT / "qmldir").read_text(encoding="utf-8")
+
+
+_PROBE_COLOURS = """pragma Singleton
+import QtQuick
+QtObject {
+    readonly property bool light: false
+    readonly property color focusRing: "#ffd166"
+    readonly property var palette: ({ m3primary: "#a5baf5", m3onPrimary: "#2a4073", m3surface: "#080e1b",
+        m3surfaceContainer: "#11192c", m3onSurface: "#dee5ff", m3onSurfaceVariant: "#a0aacb", m3error: "#ff8a80",
+        m3background: "#080e1b", m3onBackground: "#dee5ff", m3surfaceDim: "#080e1b", m3surfaceBright: "#33404d",
+        m3surfaceContainerLowest: "#05080b", m3surfaceContainerLow: "#0c1323", m3surfaceContainerHigh: "#1b2833",
+        m3surfaceContainerHighest: "#1b253f", m3surfaceVariant: "#1b2833", m3primaryContainer: "#a5baf5",
+        m3onPrimaryContainer: "#203769", m3secondary: "#8ed8ff", m3onSecondary: "#07131a",
+        m3secondaryContainer: "#8ed8ff", m3onSecondaryContainer: "#07131a", m3tertiary: "#c8a6ff",
+        m3onTertiary: "#130c1f", m3tertiaryContainer: "#c8a6ff", m3onTertiaryContainer: "#130c1f",
+        m3errorContainer: "#8a1a1e", m3onErrorContainer: "#1a0808", m3onError: "#1a0808", m3outline: "#6b7593",
+        m3outlineVariant: "#b8c8d8", m3success: "#a8e6a1" })
+}
+"""
+
+_PROBE_APPEARANCE = """pragma Singleton
+import QtQuick
+QtObject {
+    readonly property var font: ({ family: { sans: "Sans", mono: "Monospace" }, size: { small: 11, normal: 13, large: 18 } })
+    readonly property var spacing: ({ small: 7, normal: 12, large: 20 })
+    readonly property var rounding: ({ small: 6, normal: 10, large: 16 })
+    readonly property var anim: ({ durations: { scale: 1, small: 200, normal: 400, expressiveFastSpatial: 350 },
+        curves: { standard: [0.2, 0, 0, 1, 1, 1], standardDecel: [0, 0, 0, 1, 1, 1], expressiveFastSpatial: [0.42, 1.67, 0.21, 0.9, 1, 1] } })
+}
+"""
+
+_PROBE_TEST = """import QtQuick
+import QtTest
+import Hornero.PluginKit
+TestCase {
+    name: "RealThemeOnColours"
+    UiText { id: title; role: "title"; text: "T" }
+    UiText { id: caption; role: "caption"; text: "C" }
+    function test_on_colours_are_the_palette() {
+        compare(String(Theme.onSurface), "#dee5ff");
+        compare(String(Theme.onSurfaceVariant), "#a0aacb");
+        compare(String(Theme.onPrimary), "#2a4073");
+        compare(String(Theme.onPrimaryContainer), "#203769");
+        compare(String(title.color), "#dee5ff");
+        compare(String(caption.color), "#a0aacb");
+    }
+}
+"""
+
+
+def test_real_theme_on_colours_resolve_offscreen(tmp_path):
+    """Runtime proof with the REAL Theme.qml/ThemeBase.qml/UiText.qml and stub
+    qs modules: every on* colour equals the palette, never #000000 (#427).
+    """
+    import os
+    import shutil
+    import subprocess
+
+    import pytest
+
+    runner = Path("/usr/lib/qt6/bin/qmltestrunner")
+    if not runner.is_file():
+        candidate = shutil.which("qmltestrunner6")
+        if not candidate:
+            pytest.skip("NOT RUN (offscreen): Qt6 qmltestrunner not available")
+        runner = Path(candidate)
+    services = tmp_path / "qs" / "services"
+    config = tmp_path / "qs" / "config"
+    kit = tmp_path / "Hornero" / "PluginKit"
+    for d in (services, config, kit):
+        d.mkdir(parents=True)
+    (services / "qmldir").write_text("module qs.services\nsingleton Colours 1.0 Colours.qml\nsingleton FocusMode 1.0 FocusMode.qml\n", encoding="utf-8")
+    (services / "Colours.qml").write_text(_PROBE_COLOURS, encoding="utf-8")
+    (services / "FocusMode.qml").write_text("pragma Singleton\nimport QtQuick\nQtObject { property bool keyboard: false }\n", encoding="utf-8")
+    (config / "qmldir").write_text("module qs.config\nsingleton Appearance 1.0 Appearance.qml\nsingleton Config 1.0 Config.qml\n", encoding="utf-8")
+    (config / "Appearance.qml").write_text(_PROBE_APPEARANCE, encoding="utf-8")
+    (config / "Config.qml").write_text("pragma Singleton\nimport QtQuick\nQtObject { readonly property var appearance: ({ highContrast: false }) }\n", encoding="utf-8")
+    for name in ("Theme.qml", "ThemeBase.qml", "UiText.qml"):
+        shutil.copy(KIT / name, kit / name)
+    (kit / "qmldir").write_text("module Hornero.PluginKit\nsingleton Theme 1.0 Theme.qml\ninternal ThemeBase ThemeBase.qml\nUiText 1.0 UiText.qml\n", encoding="utf-8")
+    fixture = tmp_path / "tst_real_theme.qml"
+    fixture.write_text(_PROBE_TEST, encoding="utf-8")
+    env = dict(os.environ, QT_QPA_PLATFORM="offscreen")
+    result = subprocess.run([str(runner), "-import", str(tmp_path), "-input", str(fixture)],
+                            capture_output=True, text=True, env=env, timeout=120)
+    out = result.stdout + result.stderr
+    assert "RealThemeOnColours" in out, out
+    assert ", 0 failed" in out, out
+    assert result.returncode == 0, out

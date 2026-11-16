@@ -1,5 +1,6 @@
 module Hornero.PluginKit
 singleton Theme 1.0 Theme.qml
+internal ThemeBase ThemeBase.qml
 singleton Notifications 1.0 Notifications.qml
 singleton Desktop 1.0 Desktop.qml
 Settings 1.0 Settings.qml

@@ -88,3 +88,16 @@ defaults ship in `config/shell.default.json`; packaged layouts are installed
 under the Hornero data catalogue. User changes live under
 `$XDG_CONFIG_HOME/hornero/shell.json`. See [the path contract](PATH_CONTRACT.md)
 and the [layout picker module](../shell/modules/layoutpicker/).
+
+## Reordering sections
+
+Control Center → **Bars** → *Sections & order* edits the active layout in
+place: the bar set a preset wrote to `bar.bars`, or a screen's
+`bar.perScreen` override when one exists (a scope picker appears then). Each
+bar of the layout gets its own tab; entries move within and across the
+start/center/end groups (shown as Left/Center/Right or Top/Middle/Bottom by
+orientation), can be hidden (`enabled: false`), and missing sections can be
+added at the end of the bar. Per-entry `options` and unknown fields are kept,
+so the result is still a valid preset-shaped bar set. Choosing another layout
+replaces the order with that layout's, exactly as before. The pure logic lives
+in `modules/controlcenter/taskbar/barorder.js`.

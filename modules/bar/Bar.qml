@@ -294,7 +294,12 @@ Item {
             }
 
             const id = ch.id;
-            const item = ch.item;
+            // Entries are Loaders (ch.item); the legacy Extensions island
+            // (layouts without an "extensions" entry) is inserted directly.
+            const item = ch.item ?? ch;
+            // Extension indicators can sit in any island except the ones
+            // with their own popout routing below (shell#449).
+            const pluginHit = (id === "statusIcons" || id === "tray" || id === "activeWindow") ? null : pluginLoaderAt(item, lx, ly);
             const axisPos = vertical ? hit.pt.y : hit.pt.x;
             const start = vertical ? ch.y : ch.x;
             const itemLength = vertical ? item.implicitHeight : item.implicitWidth;
@@ -341,11 +346,10 @@ Item {
                     popouts.hasCurrent = false;
                     item.expanded = true;
                 }
-            } else if (id === "extensions" || id === "clock" || id === "quickActions") {
+            } else if (pluginHit !== null || id === "extensions" || id === "clock" || id === "quickActions") {
                 // Extensions in their own island or joined to a native one.
-                const pl = pluginLoaderAt(item, lx, ly);
-                if (pl && pl.hostPopoutContent)
-                    openPluginPopout(pl, false);
+                if (pluginHit && pluginHit.hostPopoutContent)
+                    openPluginPopout(pluginHit, false);
                 else
                     popouts.hasCurrent = false;
             } else if (id === "activeWindow" && Config.bar.popouts.activeWindow) {

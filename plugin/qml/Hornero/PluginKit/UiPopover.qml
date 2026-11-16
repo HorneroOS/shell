@@ -27,7 +27,9 @@ Popup {
     // "auto" picks right/left beside rail triggers and below/above by
     // vertical half; an explicit side is flipped only when it clips.
     property string preferredSide: "auto"
-    property int contentPadding: Theme.spacing
+    // Native popouts pad their content with the large padding token
+    // (modules/bar/popouts/Content.qml); plugin popovers match.
+    property int contentPadding: Theme.paddingLarge
     // Optional explicit first stop; by default the first focusable
     // descendant receives focus, falling back to the panel itself.
     property Item initialFocusItem: null

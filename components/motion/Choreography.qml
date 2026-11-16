@@ -38,7 +38,7 @@ Singleton {
 
     // Spatial durations (0 when off).
     readonly property int quick: _ms(90)
-    readonly property int short: _ms(160)
+    readonly property int brief: _ms(160)
     readonly property int medium: _ms(240)
     readonly property int long: _ms(360)
     readonly property int scan: _ms(480)

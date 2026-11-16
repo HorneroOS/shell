@@ -17,7 +17,7 @@ NumberAnimation {
 
     readonly property var _defaults: ({
             "standard": "medium",
-            "enter": "short",
+            "enter": "brief",
             "exit": "quick",
             "sweep": "long",
             "settle": "settle",

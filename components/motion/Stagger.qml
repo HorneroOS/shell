@@ -4,7 +4,7 @@ import QtQuick
 
 // Row stagger for a scan-in reveal (Signal visual language §11.1 rule 2):
 // each row fades in and travels `travel` px from the anchor side with
-// `enter`/`short`, starting `Choreography.staggerStart` ms after the frame
+// `enter`/`brief`, starting `Choreography.staggerStart` ms after the frame
 // and `staggerStep` ms apart; at most eight rows stagger, later rows start
 // with the eighth. Content is never scaled.
 //
@@ -24,7 +24,7 @@ Item {
     property real dx: 0
     property real dy: 1
     property real travel: Choreography.scanTravel
-    property int duration: Choreography.short
+    property int duration: Choreography.brief
     property list<real> curve: Choreography.curves.enter
 
     readonly property int poolSize: Choreography.staggerMax + 8

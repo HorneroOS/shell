@@ -69,7 +69,7 @@ Item {
     // Frame morph from the trigger notch on open. Tooltips do not morph:
     // they fade with 4 px travel from the anchor (visual language §11.2).
     property bool morphs: true
-    property int travelDuration: Choreography.short
+    property int travelDuration: Choreography.brief
     property int elevation: 2
     property color fill: Signal.palette.panel
     property real radius: Appearance.rounding.small

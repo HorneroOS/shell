@@ -164,7 +164,7 @@ Item {
                 target: shift
                 properties: "x,y"
                 to: 0
-                duration: Choreography.short
+                duration: Choreography.brief
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Choreography.curves.enter
             }

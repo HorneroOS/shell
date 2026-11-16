@@ -273,6 +273,26 @@ Singleton {
         return root.settingValueValid(declaration, stored) ? stored : declaration.default;
     }
 
+    // Manifest description for the Extensions pane cards (shell#470):
+    // plain text, single spaces, at most 400 characters; anything else is
+    // dropped. Unchanged values do not reassign entries.
+    function normalizeDescription(description: var): string {
+        if (typeof description !== "string")
+            return "";
+        const text = description.replace(/\s+/g, " ").trim();
+        return text.length > 0 && text.length <= 400 ? text : "";
+    }
+
+    function markDescription(id: string, description: var): void {
+        const text = root.normalizeDescription(description);
+        const current = root.entries.find(e => e.id === id);
+        if (!current || (current.description || "") === text)
+            return;
+        root.entries = root.entries.map(e => e.id === id ? Object.assign({}, e, {
+            description: text
+        }) : e);
+    }
+
     function markPlacement(id: string, placement: string, entrypoint: string, settings: var, surfaces: var): void {
         const current = root.entries.find(e => e.id === id);
         const normalized = root.normalizeSettings(settings);

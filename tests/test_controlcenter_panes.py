@@ -627,10 +627,12 @@ def test_extensions_installed_search_is_keyboard_accessible():
     assert 'Accessible.name: qsTr("Search installed plugins")' in search
     assert "text: root.pluginSearch" in search
     assert "onTextChanged: root.pluginSearch = text" in search
-    # Filter toggles expose toggle state/name via the shared ToggleButton.
-    assert 'label: qsTr("All")' in pane
-    assert "root.pluginTrustFilter = toggled ? \"all\" : modelData" in pane
-    assert "root.pluginPlacementFilter = toggled ? \"all\" : modelData" in pane
+    # Filter chips (shell#470) are keyboard controls (Interactive) that
+    # expose their checked state; selecting a chip again clears it.
+    chip = pane[pane.index("component FilterChip:"):]
+    assert "Interactive {" in chip and "Accessible.checked: fchip.selected" in chip
+    assert "root.pluginTrustFilter = selected ? \"all\" : modelData" in pane
+    assert "root.pluginPlacementFilter = selected ? \"all\" : modelData" in pane
 
 
 def test_extensions_expandable_detail_is_truthful_and_reuses_lifecycle():

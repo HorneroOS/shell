@@ -353,6 +353,7 @@ Scope {
                         Plugins.markPlacement(slot.modelData.id, placement, manifest.entrypoint, settings || ({}), effectiveSurfaces);
                         Plugins.markTranslations(slot.modelData.id, manifest.translations === undefined ? null : manifest.translations);
                         Plugins.markMarketplace(slot.modelData.id, manifest.marketplace === undefined ? null : manifest.marketplace);
+                        Plugins.markDescription(slot.modelData.id, manifest.description);
                         slot.entrypoint = manifest.entrypoint;
                         const background = effectiveSurfaces.background;
                         slot.backgroundEntrypoint = background && background.enabled !== false ? background.entrypoint : "";

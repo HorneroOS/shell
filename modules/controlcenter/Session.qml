@@ -15,7 +15,9 @@ QtObject {
     }
     readonly property string activeTitle: PaneRegistry.getById(active)?.title ?? active
     property int activeIndex: 0
-    property bool navExpanded: false
+    // Expanded by default (shell#456): names and group headers make the
+    // rail navigable; the compact icon rail stays one click away.
+    property bool navExpanded: true
     // Hover-prefetch target for NavRail → Panes loaders.
     property string warmLabel: ""
     property bool searchOpen: false

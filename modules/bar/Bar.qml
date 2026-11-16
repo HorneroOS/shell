@@ -130,6 +130,23 @@ Item {
         return null;
     }
 
+    // Native islands enabled in this bar's layout (shell#439), as the bar
+    // section names extension indicators can join.
+    readonly property var presentSections: {
+        const map = ({
+                "statusIcons": "status",
+                "quickActions": "actions",
+                "clock": "clock"
+            });
+        const out = [];
+        const groups = root.spec?.groups ?? ({});
+        for (const name in groups)
+            for (const entry of (groups[name] ?? []))
+                if (entry && entry.enabled && map[entry.id])
+                    out.push(map[entry.id]);
+        return out;
+    }
+
     function closeTray(): void {
         if (!Config.bar.tray.compact)
             return;
@@ -670,6 +687,9 @@ Item {
             PluginBarWidgets {
                 vertical: root.vertical
                 surfaceActive: group.name === "end"
+                // Islands missing from this layout (shell#439): their
+                // extension indicators render here rather than nowhere.
+                fallbackSections: ["status", "actions", "clock"].filter(s => !root.presentSections.includes(s))
                 // Responsive host context (#372): the real edge,
                 // content thickness, compact breakpoint and screen of
                 // this bar instance (one Bar per screen/edge).

@@ -4,6 +4,7 @@ import Quickshell
 import qs.components
 import qs.services
 import qs.config
+import qs.modules.plugins
 import QtQuick
 import QtQuick.Layouts
 
@@ -155,6 +156,18 @@ Item {
                     color: Colours.palette.m3onSurfaceVariant
                 }
             }
+        }
+
+        // Extension indicators that join this island (shell#439): same
+        // icon colour and size as the native items around them.
+        PluginBarWidgets {
+            vertical: root.vertical
+            section: "clock"
+            iconColour: root.colour
+            iconSize: Appearance.font.size.normal
+            textSize: Appearance.font.size.smaller
+            thickness: Config.bar.sizes.innerWidth
+            screenName: root.screen.name
         }
     }
 }

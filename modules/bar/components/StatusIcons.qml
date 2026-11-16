@@ -5,6 +5,7 @@ import qs.services
 import qs.utils
 import qs.components.controls
 import qs.config
+import qs.modules.plugins
 import Quickshell
 import Quickshell.Bluetooth
 import Quickshell.Services.UPower
@@ -328,6 +329,18 @@ StyledRect {
                 color: !UPower.onBattery || UPower.displayDevice.percentage > 0.2 ? root.colour : Colours.palette.m3error
                 fill: 1
             }
+        }
+
+        // Extension indicators that join this island (shell#439): same
+        // icon colour and size as the native items around them.
+        PluginBarWidgets {
+            vertical: root.vertical
+            section: "status"
+            iconColour: root.colour
+            iconSize: Appearance.font.size.larger
+            textSize: Appearance.font.size.smaller
+            thickness: Config.bar.sizes.innerWidth
+            screenName: root.screen.name
         }
     }
 

@@ -60,6 +60,7 @@ SURFACES = PLACEMENTS + ("launcher", "settings")
 # Dashboard card size classes (shell#378): preferred card width class a
 # dashboard surface may hint; the user's persisted layout wins.
 DASHBOARD_CARD_SIZES = ("compact", "standard", "wide")
+BAR_SECTIONS = ("status", "actions", "clock", "end")
 SCHEMA_VERSIONS = (1, 2)
 ALLOWED_IMPORTS = (
     "QtQuick",
@@ -145,12 +146,24 @@ def _validate_surfaces(
                 "bar surface with PluginKit UiPopover, not a separate surface)"
             )
         surface = _object(raw_surface, where)
-        extra = set(surface) - {"entrypoint", "enabled", "size", "category"}
+        extra = set(surface) - {"entrypoint", "enabled", "size", "category", "section"}
         if extra:
             raise ValidationError(
                 f"{where} contains unknown fields: {', '.join(sorted(extra))} "
                 "(a surface declares only entrypoint, optional enabled, and — "
-                "dashboard only — optional size/category card hints)"
+                "dashboard only — optional size/category card hints; bar only — "
+                "optional section)"
+            )
+        # Bar section hint (shell#439): which native bar island the
+        # indicator joins instead of a separate block after the end group.
+        if "section" in surface and name != "bar":
+            raise ValidationError(
+                f"{where}.section is a bar hint and is only allowed on the bar surface"
+            )
+        if "section" in surface and surface["section"] not in BAR_SECTIONS:
+            raise ValidationError(
+                f"{where}.section must be one of {', '.join(BAR_SECTIONS)} "
+                "(native bar island the indicator joins; default end)"
             )
         # Dashboard card hints (shell#378): the composable dashboard
         # layout reads a preferred card size class and grouping

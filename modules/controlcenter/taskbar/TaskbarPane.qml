@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import ".."
 import "../components"
+import "."
 import qs.components
 import qs.components.controls
 import qs.components.effects
@@ -139,6 +140,15 @@ Item {
 
                     PaneHeader {
                         paneId: "taskbar"
+                    }
+                }
+
+                SectionContainer {
+                    Layout.fillWidth: true
+                    alignTop: true
+
+                    BarOrderEditor {
+                        Layout.fillWidth: true
                     }
                 }
 

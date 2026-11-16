@@ -25,7 +25,8 @@ KIT = ROOT / "plugin/qml/Hornero/PluginKit"
 UI_FILES = [
     "Theme.qml", "ExperienceBridge.qml", "GlowBudget.qml",
     "UiText.qml", "UiEyebrow.qml", "UiIcon.qml", "UiCard.qml", "UiWell.qml",
-    "UiButton.qml", "UiToggle.qml", "UiSlider.qml", "UiMetric.qml",
+    "UiButton.qml", "UiToggle.qml", "UiSlider.qml", "UiTextField.qml",
+    "UiTextArea.qml", "UiSpinBox.qml", "UiComboBox.qml", "UiMetric.qml",
     "UiDetailRow.qml", "UiActionRow.qml", "UiChip.qml", "UiProgress.qml",
     "UiSegmentMeter.qml", "UiMeterRow.qml", "UiSparkline.qml", "UiScope.qml",
     "UiPartition.qml", "UiState.qml", "UiTooltip.qml", "UiPopover.qml",

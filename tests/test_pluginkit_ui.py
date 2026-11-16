@@ -19,11 +19,12 @@ KIT = ROOT / "plugin/qml/Hornero/PluginKit"
 
 UI_TYPES = [
     "UiText", "UiEyebrow", "UiIcon", "UiCard", "UiWell", "UiButton", "UiToggle",
-    "UiSlider", "UiMetric", "UiDetailRow", "UiActionRow", "UiChip",
+    "UiSlider", "UiTextField", "UiTextArea", "UiSpinBox", "UiComboBox", "UiMetric", "UiDetailRow", "UiActionRow", "UiChip",
     "UiProgress", "UiSegmentMeter", "UiMeterRow", "UiSparkline", "UiScope",
     "UiPartition", "UiState", "UiTooltip", "UiPopover", "UiStack",
 ]
-INTERACTIVE = ["UiButton", "UiToggle", "UiSlider", "UiActionRow"]
+INTERACTIVE = ["UiButton", "UiToggle", "UiSlider", "UiActionRow", "UiTextField", "UiTextArea",
+               "UiSpinBox", "UiComboBox"]
 ALLOWED_IMPORTS = {"QtQuick", "QtQuick.Controls", "QtQuick.Layouts", "QtQuick.Shapes",
                    "QtQuick.Effects", "qs.utils"}
 HEX_COLOR = re.compile(r"#[0-9a-fA-F]{3,8}\b")

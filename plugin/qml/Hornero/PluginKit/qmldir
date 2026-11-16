@@ -25,6 +25,10 @@ UiWell 1.0 UiWell.qml
 UiButton 1.0 UiButton.qml
 UiToggle 1.0 UiToggle.qml
 UiSlider 1.0 UiSlider.qml
+UiTextField 1.0 UiTextField.qml
+UiTextArea 1.0 UiTextArea.qml
+UiSpinBox 1.0 UiSpinBox.qml
+UiComboBox 1.0 UiComboBox.qml
 UiMetric 1.0 UiMetric.qml
 UiDetailRow 1.0 UiDetailRow.qml
 UiActionRow 1.0 UiActionRow.qml

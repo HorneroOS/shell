@@ -149,7 +149,7 @@ Rectangle {
 
             UiCard {
                 width: 460
-                height: 220
+                height: 262
                 channel: 3
                 title: "Controls"
 
@@ -229,6 +229,28 @@ Rectangle {
 
                         UiToggle {
                             text: "Off"
+                        }
+                    }
+
+                    Row {
+                        spacing: Theme.spacing.smaller
+
+                        UiTextField {
+                            width: 150
+                            mono: true
+                            placeholderText: "(2 + 3) * 4"
+                        }
+
+                        UiSpinBox {
+                            width: 112
+                            value: 25
+                            accessibleName: "Minutes"
+                        }
+
+                        UiComboBox {
+                            width: 150
+                            model: ["Balanced", "Performance"]
+                            accessibleName: "Profile"
                         }
                     }
 

@@ -31,30 +31,30 @@ def test_reload_guarded_and_discovery_errors_distinct_from_empty():
 
 def test_loader_errors_surface_error_string():
     for rel in ("modules/plugins/PluginHost.qml", "modules/plugins/PluginBarWidgets.qml",
-                "modules/plugins/PluginDashboardCards.qml", "modules/plugins/PluginDesktopWidgets.qml"):
+                "modules/plugins/PluginDashboardCards.qml", "modules/plugins/DesktopWidgetFrame.qml"):
         assert "errorString" in (ROOT / rel).read_text(), rel
 
 def test_runtime_compat_gate():
-    # RC5: schemaVersion (1 or 2 since shell#373; needle stays the
-    # shared substring of the host's rejection message), semver,
-    # strict entrypoint, files[] listing.
-    for needle in ("schemaVersion must be 1", "semantic versioning",
+    # RC5: schemaVersion 3 only (PluginKit 3); Material-era 1/2 get a
+    # migration message; semver, strict entrypoint, files[] listing.
+    for needle in ("schemaVersion must be 3", "Migrating to PluginKit 3", "semantic versioning",
                    "files must list the entrypoint", 'includes("\\\\")'):
         assert needle in HOST, needle
 
 def test_sizing_clip_and_desktop_palette():
     bar = (ROOT / "modules/plugins/PluginBarWidgets.qml").read_text()
     dash = (ROOT / "modules/plugins/PluginDashboardCards.qml").read_text()
-    desk = (ROOT / "modules/plugins/PluginDesktopWidgets.qml").read_text()
+    desk = (ROOT / "modules/plugins/DesktopWidgetFrame.qml").read_text()
     assert "Layout.maximumWidth" in bar and "clip: true" in bar
     assert "Layout.maximumWidth" in dash and "clip: true" in dash
-    assert "palette.windowText: Signal.palette.ink" in desk
-    assert "Layout.maximumWidth" in desk and "clip: true" in desk
+    # Desktop widgets: host-owned frame size, content clipped to it.
+    assert "color: Signal.palette.panel" in desk
+    assert "width: hostAvailableWidth" in desk and "clip: true" in desk
 
 def test_theme_full_token_set():
-    for token in ("surfaceContainerHigh", "primaryContainer", "secondaryContainer",
-                  "tertiaryContainer", "errorContainer", "outlineVariant",
-                  "fontFamily", "fontSize", "spacing", "rounding"):
+    for token in ("palette: Signal.palette", "font: Appearance.font",
+                  "spacing: Appearance.spacing", "padding: Appearance.padding",
+                  "rounding: Appearance.rounding", "anim: Appearance.anim"):
         assert token in THEME, token
 
 def test_every_first_party_example_validates_and_uses_theme():
@@ -71,4 +71,4 @@ def test_every_first_party_example_validates_and_uses_theme():
         if ex.name not in ("example-broken", "example-launcher-broken"):
             assert "Theme." in main, ex.name
         manifest = json.loads((ex / "manifest.json").read_text())
-        assert manifest["schemaVersion"] in (1, 2) and manifest["entrypoint"] in manifest["files"]
+        assert manifest["schemaVersion"] == 3 and manifest["entrypoint"] in manifest["files"]

@@ -114,7 +114,7 @@ cockpit preset and Signal Night theme itself).
 | `picker` | `modules/areapicker/AreaPicker.qml` | `open()`, `openFreeze()` (+ close variants per file) |
 | `lock` | `modules/lock/Lock.qml` | `lock()`, `unlock()` |
 | `companion` | `modules/companion/CompanionHost.qml` | `summon()`, `hide()`, `toggle()`, `say(text, timeoutMs)`, `tip()`, `play(animation)`, `setState(state)`, `setSkin(skin)`, `resetPosition()`, `status()`, `ask(text)`, `askStop()`, `approve(runId, decision)`, `clarify(runId, answer)`, `events(runId)` |
-| `plugins` | `modules/plugins/PluginHost.qml` | `status()`, `reload()`, `reloadPlugin(id)` |
+| `plugins` | `modules/plugins/PluginHost.qml` | `status()`, `reload()`, `reloadPlugin(id)`, `editDesktop()`, `doneDesktop()`, `toggleEditDesktop()`, `telemetry()` |
 | `debug` | `modules/drawers/Drawers.qml` | `borders()`, `bars()`, `dump()`, `focusState()` (debug only) |
 
 `debug bars()` returns bar geometry for every connected screen. Each entry has

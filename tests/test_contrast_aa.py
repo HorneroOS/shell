@@ -106,12 +106,11 @@ def test_rule_strong_is_never_text_colour():
         assert "color: Signal.palette.ruleStrong\n" not in src, rel
 
 
-def test_pluginkit_essential_borders_use_component_border():
+def test_pluginkit_essential_borders_use_rule_strong():
+    """Control boundaries reach 3:1 (RFC §3.1 `ruleStrong`); panel and well
+    edges inside a surface use the quieter `rule` (visual language §7.1)."""
     kit = ROOT / "plugin/qml/Hornero/PluginKit"
-    assert "componentBorder: Signal.palette.ruleStrong" in (kit / "Theme.qml").read_text()
-    for name in ("UiTooltip.qml", "UiPopover.qml"):
-        src = (kit / name).read_text()
-        assert "border.color: Theme.componentBorder" in src, name
-        assert "border.color: Theme.outlineVariant" not in src, name
-    for name in ("UiSlider.qml", "UiProgress.qml", "UiChip.qml"):
-        assert "border.color: Theme.componentBorder" in (kit / name).read_text(), name
+    for name in ("UiTooltip.qml", "UiSlider.qml", "UiToggle.qml", "UiButton.qml"):
+        assert "Theme.palette.ruleStrong" in (kit / name).read_text(), name
+    for name in ("UiPopover.qml", "UiCard.qml", "UiWell.qml", "UiScope.qml"):
+        assert "border.color: Theme.palette.rule" in (kit / name).read_text(), name

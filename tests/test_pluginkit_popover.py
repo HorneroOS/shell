@@ -22,7 +22,7 @@ def test_uipopover_public_contract():
     assert "required property Item target" in SRC
     assert 'property string accessibleName: ""' in SRC
     assert 'property string preferredSide: "auto"' in SRC
-    assert "property int contentPadding: Theme.paddingLarge" in SRC
+    assert "property int contentPadding: Theme.padding.large" in SRC
     assert "property Item initialFocusItem: null" in SRC
     assert "default property alias content: container.data" in SRC
     assert "function toggle()" in SRC
@@ -112,11 +112,11 @@ def test_uipopover_accessible_role_and_name():
 
 def test_uipopover_uses_theme_tokens_only():
     for token in (
-        "Theme.surfaceContainer",
-        "Theme.componentBorder",
-        "Theme.rounding",
-        "Theme.spacing",
-        "Theme.spacingSmall",
+        "Theme.palette.panel",
+        "Theme.palette.rule",
+        "Theme.palette.signal",
+        "Theme.rounding.small",
+        "Theme.spacing.small",
     ):
         assert token in SRC, token
     assert "qs." not in SRC

@@ -27,9 +27,8 @@ Popup {
     // "auto" picks right/left beside rail triggers and below/above by
     // vertical half; an explicit side is flipped only when it clips.
     property string preferredSide: "auto"
-    // Native popouts pad their content with the large padding token
-    // (modules/bar/popouts/Content.qml); plugin popovers match.
-    property int contentPadding: Theme.paddingLarge
+    // Popout framing (visual language §7.1): 16 px sides.
+    property int contentPadding: Theme.padding.large
     // Optional explicit first stop; by default the first focusable
     // descendant receives focus, falling back to the panel itself.
     property Item initialFocusItem: null
@@ -168,7 +167,7 @@ Popup {
                 const pos = target.mapToItem(parent, 0, 0);
                 const popW = popoverRect.width > 0 ? popoverRect.width : popoverRect.implicitWidth;
                 const popH = popoverRect.height > 0 ? popoverRect.height : popoverRect.implicitHeight;
-                const placed = placementFor(pos.x, pos.y, target.width, target.height, popW, popH, parent.width, parent.height, Theme.spacingSmall, Theme.spacingSmall);
+                const placed = placementFor(pos.x, pos.y, target.width, target.height, popW, popH, parent.width, parent.height, Theme.spacing.small, Theme.spacing.smaller);
                 x = placed.x;
                 y = placed.y;
                 root.actualSide = placed.side;
@@ -263,48 +262,83 @@ Popup {
         }
     }
 
-    // Native popout timing (modules/bar/popouts/Wrapper.qml): content fades
-    // over the shared normal duration with the standard curve, both ways.
+    // Scan-in (RFC 0001 §3.6): the panel travels 6 px out of its anchor
+    // edge and fades in with `enter`; it leaves with 4 px travel back
+    // toward the anchor and `exit`/quick. Reduced motion keeps only the
+    // ≤ 90 ms fade. Interactive from the first frame.
+    readonly property real _travelSign: root.actualSide === "above" || root.actualSide === "left" ? 1 : -1
+    readonly property bool _horizontalTravel: root.actualSide === "left" || root.actualSide === "right"
+    property real _travel: 0
+
     enter: Transition {
-        NumberAnimation {
-            property: "opacity"
-            from: 0
-            to: 1
-            duration: Theme.durationNormal
-            easing.type: Easing.BezierSpline
-            easing.bezierCurve: Theme.curveStandard
+        ParallelAnimation {
+            NumberAnimation {
+                property: "opacity"
+                from: 0
+                to: 1
+                duration: Theme.reducedMotion ? Theme.duration("fade") : Theme.duration("short")
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Theme.anim.curves.enter
+            }
+            NumberAnimation {
+                target: root
+                property: "_travel"
+                from: Theme.reducedMotion ? 0 : 6
+                to: 0
+                duration: Theme.duration("short")
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Theme.anim.curves.enter
+            }
         }
     }
 
     exit: Transition {
-        NumberAnimation {
-            property: "opacity"
-            from: 1
-            to: 0
-            duration: Theme.durationNormal
-            easing.type: Easing.BezierSpline
-            easing.bezierCurve: Theme.curveStandard
+        ParallelAnimation {
+            NumberAnimation {
+                property: "opacity"
+                from: 1
+                to: 0
+                duration: Theme.duration("fade")
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Theme.anim.curves.exit
+            }
+            NumberAnimation {
+                target: root
+                property: "_travel"
+                to: Theme.reducedMotion ? 0 : 4
+                duration: Theme.duration("quick")
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Theme.anim.curves.exit
+            }
         }
     }
 
+    // `panel` fill, 1 px `rule` border, radius 3, one restrained shadow,
+    // and the notch: a 2 px `signal` line exactly as wide as the trigger
+    // on the edge facing it, so the panel visibly originates from its
+    // trigger even with animations off.
     contentItem: Rectangle {
         id: popoverRect
 
-        implicitWidth: container.implicitWidth + root.contentPadding * 2
+        implicitWidth: Math.max(320, container.implicitWidth + root.contentPadding * 2)
         implicitHeight: container.implicitHeight + root.contentPadding * 2
 
-        color: Theme.surfaceContainer
-        radius: Theme.rounding
+        color: Theme.palette.panel
+        radius: Theme.rounding.small
         border.width: 1
-        border.color: Theme.componentBorder
+        border.color: Theme.palette.rule
         antialiasing: true
 
+        transform: Translate {
+            x: root._horizontalTravel ? root._travelSign * root._travel : 0
+            y: root._horizontalTravel ? 0 : root._travelSign * root._travel
+        }
+
         // Fallback focus stop when the panel has no focusable content,
-        // and the popover's Escape endpoint: the handler sits above
-        // the content in the focus chain, so inner transient state
-        // accepts its own Escape first (cascade tier 1) and only an
-        // unhandled Escape reaches here, where it is accepted so the
-        // surface-level cascade does not also fire.
+        // and the popover's Escape endpoint: inner transient state
+        // accepts its own Escape first; only an unhandled Escape
+        // reaches here, where it is accepted so the surface-level
+        // cascade does not also fire.
         focus: true
         Keys.onEscapePressed: event => {
             event.accepted = true;
@@ -313,6 +347,39 @@ Popup {
 
         Accessible.role: Accessible.Dialog
         Accessible.name: root.accessibleName
+
+        Rectangle {
+            id: notch
+
+            readonly property point _trigger: {
+                const _x = root.x + root.y + root.width + root.height;
+                if (!root.target || !root.visible)
+                    return Qt.point(0, 0);
+                try {
+                    return root.target.mapToItem(popoverRect, 0, 0);
+                } catch (e) {
+                    return Qt.point(0, 0);
+                }
+            }
+            readonly property bool vertical: root.actualSide === "left" || root.actualSide === "right"
+
+            visible: root.target !== null && root.actualSide.length > 0
+            color: Theme.palette.signal
+            x: vertical ? (root.actualSide === "right" ? 0 : parent.width - 2) : Math.max(0, Math.min(parent.width - width, _trigger.x))
+            y: vertical ? Math.max(0, Math.min(parent.height - height, _trigger.y)) : (root.actualSide === "below" ? 0 : parent.height - 2)
+            width: vertical ? 2 : Math.min(parent.width, root.target ? root.target.width : 0)
+            height: vertical ? Math.min(parent.height, root.target ? root.target.height : 0) : 2
+        }
+
+        // Registration tick: the surface has keyboard focus.
+        Rectangle {
+            visible: root.opened && Theme.keyboardFocus
+            x: 0
+            y: 0
+            width: 2
+            height: 10
+            color: Theme.palette.signal
+        }
 
         Item {
             id: container

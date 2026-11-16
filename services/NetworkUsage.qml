@@ -12,6 +12,9 @@ Singleton {
 
     property int refCount: 0
 
+    // Emitted after each rate sample (PluginKit Telemetry history).
+    signal sampled
+
     // Current speeds in bytes per second
     readonly property real downloadSpeed: _downloadSpeed
     readonly property real uploadSpeed: _uploadSpeed
@@ -208,6 +211,7 @@ Singleton {
                     }
                     root._uploadHistory = newUpHist;
                 }
+                root.sampled();
             }
 
             // Calculate totals with overflow handling

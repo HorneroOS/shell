@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://horneroos.com/schemas/shell-plugin-manifest.json",
   "title": "Hornero Shell Plugin Manifest",
-  "description": "Metadata contract for community-authored Hornero Shell extensions (schema versions 1 and 2). Version 2 adds the optional multi-surface `surfaces` map; every version 1 field keeps its meaning. This schema does not define a sandbox or runtime loader, and declared capabilities/surfaces are review metadata, not permission grants or enforcement.",
+  "description": "Metadata contract for community-authored Hornero Shell extensions, schema version 3 (PluginKit 3, Hornero Signal). Versions 1 and 2 targeted the removed Material-era PluginKit and are rejected with a migration hint by scripts/validate_plugin.py and the runtime host. This schema does not define a sandbox or runtime loader, and declared capabilities/surfaces/providers are review metadata, not permission grants or enforcement.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -19,17 +19,14 @@
   ],
   "properties": {
     "schemaVersion": {
-      "enum": [
-        1,
-        2
-      ],
-      "description": "Manifest contract version. 1 = single placement (top-level entrypoint + placement). 2 = same, plus the optional `surfaces` map for extra independently-enabled entry points. Unknown versions are rejected."
+      "const": 3,
+      "description": "Manifest contract version. 3 = PluginKit 3 (Hornero Signal): single placement (top-level entrypoint + placement) plus the optional `surfaces` map. 1 and 2 (Material-era PluginKit) are rejected; unknown versions are rejected."
     },
     "surfaces": {
       "type": "object",
       "minProperties": 1,
       "additionalProperties": false,
-      "description": "schemaVersion 2 only. Extra entry points, one per surface, each independently enabled (default true). The top-level entrypoint/placement remain the primary surface; redeclaring that surface here is allowed only with the same entrypoint (to set `enabled`) — that cross-field rule is enforced by scripts/validate_plugin.py and the runtime host, not by this structural schema. Hosted today: background, bar, dashboard, desktop, settings (Control Center › Extensions). `launcher` is a validated declaration reserved for its host (launcher/search provider); no host loads it yet and declaring one grants no privilege. A bar surface shows a popover/panel with PluginKit UiPopover; it is not a separate surface.",
+      "description": "Extra entry points, one per surface, each independently enabled (default true). The top-level entrypoint/placement remain the primary surface; redeclaring that surface here is allowed only with the same entrypoint (to set `enabled`) — that cross-field rule is enforced by scripts/validate_plugin.py and the runtime host, not by this structural schema. Hosted today: background, bar, dashboard, desktop, settings (Control Center › Extensions). `launcher` is a validated declaration reserved for its host (launcher/search provider); no host loads it yet and declaring one grants no privilege. A bar surface shows a popover/panel with PluginKit UiPopover; it is not a separate surface.",
       "properties": {
         "background": {
           "$ref": "#/$defs/surface"
@@ -559,31 +556,28 @@
             "type": "string",
             "pattern": "^[a-z][a-z0-9_]{0,63}$"
           }
+        },
+        "providers": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "system",
+              "network",
+              "spectrum",
+              "media",
+              "audio",
+              "power",
+              "weather",
+              "time",
+              "workspaces"
+            ]
+          },
+          "description": "Shared PluginKit data-provider domains (RFC 0001 §5b) the extension reads. Every facade or Subscription domain used in QML must be declared; scripts/validate_plugin.py cross-checks it. Review metadata, not enforcement: extension QML is not sandboxed."
         }
       }
     }
   },
-  "allOf": [
-    {
-      "if": {
-        "properties": {
-          "schemaVersion": {
-            "const": 1
-          }
-        },
-        "required": [
-          "schemaVersion"
-        ]
-      },
-      "then": {
-        "not": {
-          "required": [
-            "surfaces"
-          ]
-        }
-      }
-    }
-  ],
   "$defs": {
     "surface": {
       "type": "object",
@@ -629,6 +623,51 @@
           ],
           "default": "end",
           "description": "Bar surface only (shell#439): the native bar section the indicator joins — status (status icons island), actions (quick actions island), clock (clock island) or end (after the end group, the historic placement). The host renders it inside that island with the island's own icon colour and size. Declaring it on another surface is rejected by scripts/validate_plugin.py and the runtime host, not by this structural schema."
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 80,
+          "maximum": 1600,
+          "description": "Desktop surface only (PluginKit 3): the widget's default width in logical pixels. The person's saved geometry wins. Declaring it on another surface is rejected by scripts/validate_plugin.py and the runtime host."
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 80,
+          "maximum": 1600,
+          "description": "Desktop surface only (PluginKit 3): the widget's default height in logical pixels. The person's saved geometry wins. Declaring it on another surface is rejected by scripts/validate_plugin.py and the runtime host."
+        },
+        "minWidth": {
+          "type": "integer",
+          "minimum": 80,
+          "maximum": 1600,
+          "description": "Desktop surface only (PluginKit 3): the widget's minimum width in logical pixels. The person's saved geometry wins. Declaring it on another surface is rejected by scripts/validate_plugin.py and the runtime host."
+        },
+        "minHeight": {
+          "type": "integer",
+          "minimum": 80,
+          "maximum": 1600,
+          "description": "Desktop surface only (PluginKit 3): the widget's minimum height in logical pixels. The person's saved geometry wins. Declaring it on another surface is rejected by scripts/validate_plugin.py and the runtime host."
+        },
+        "resizable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Desktop surface only: whether the person may resize the widget in edit mode."
+        },
+        "anchor": {
+          "type": "string",
+          "enum": [
+            "top-left",
+            "top-center",
+            "top-right",
+            "middle-left",
+            "middle-center",
+            "middle-right",
+            "bottom-left",
+            "bottom-center",
+            "bottom-right"
+          ],
+          "default": "bottom-right",
+          "description": "Desktop surface only: where the widget starts on a screen before the person moves it."
         }
       }
     }

@@ -88,11 +88,12 @@ def test_uitooltip_has_no_interactive_content():
 
 def test_uitooltip_uses_theme_tokens_only():
     for token in (
-        "Theme.surfaceContainerHighest",
-        "Theme.onSurface",
-        "Theme.roundingSmall",
-        "Theme.fontSizeSmall",
-        "Theme.spacingSmall",
+        "Theme.palette.lifted",
+        "Theme.palette.ink",
+        "Theme.palette.ruleStrong",
+        "Theme.rounding.small",
+        "Theme.font.size.small",
+        "Theme.spacing.small",
     ):
         assert token in SRC, token
     assert "qs." not in SRC

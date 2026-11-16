@@ -99,7 +99,7 @@ def test_malformed_manifest_and_qml_stay_isolated_per_plugin():
     assert '"manifest.json could not be read"' in HOST
     assert "Loader.Error" in HOST
     for host in ("PluginBarWidgets.qml", "PluginDashboardCards.qml",
-                 "PluginDesktopWidgets.qml"):
+                 "DesktopWidgetFrame.qml"):
         source = (ROOT / "modules" / "plugins" / host).read_text()
         assert "Loader.Error" in source and "Plugins.markFailed" in source, host
 
@@ -136,7 +136,7 @@ def test_polling_budget_is_warning_only_not_validation_failure(tmp_path):
     # A fast-polling but otherwise valid clock example still passes.
     root = _plugin(tmp_path, "import QtQuick\nTimer { interval: 50 }\n")
     manifest = {
-        "schemaVersion": 1,
+        "schemaVersion": 3,
         "id": "plug",
         "name": "Plug",
         "version": "1.0.0",

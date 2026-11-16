@@ -1,23 +1,45 @@
 import QtQuick
 import Hornero.PluginKit
 
+// Minimal desktop widget (PluginKit 3): the host draws the module frame,
+// header and shadow and owns position/size/edit mode; this entrypoint
+// only lays out its content in the host's content box.
 Item {
+    id: root
+
+    // Host context: the desktop host injects the content box.
+    property string hostSurface: "desktop"
+    property int hostAvailableWidth: 280
+    property int hostAvailableHeight: 0
+    // Optional header context eyebrow drawn by the host frame.
+    readonly property string widgetContext: "Note"
+
+    implicitWidth: 280
+    implicitHeight: column.implicitHeight
+
     Settings {
         id: pluginSettings
         pluginId: "example-desktop-note"
     }
 
-    implicitWidth: label.implicitWidth + Theme.spacingSmall * 2
-    implicitHeight: label.implicitHeight
+    Column {
+        id: column
 
-    // Keyboard contract (#376): an actionable label is a UiButton,
-    // not a mouse-only MouseArea over Text.
-    UiButton {
-        id: label
-        anchors.centerIn: parent
-        variant: "ghost"
-        text: pluginSettings.value("note", "El futuro se construye acá.")
-        tooltipText: "Desktop note: activate for details"
-        onClicked: Notifications.toast("Desktop note", `Position: ${Desktop.position("example-desktop-note", Screen.name)}`, "dashboard")
+        width: root.hostAvailableWidth > 0 ? root.hostAvailableWidth : root.implicitWidth
+        spacing: Theme.spacing.smaller
+
+        UiText {
+            width: parent.width
+            role: "subtitle"
+            text: pluginSettings.value("note", "El futuro se construye acá.")
+        }
+
+        // Keyboard contract (#376): an action is a UiButton.
+        UiButton {
+            text: "Where am I?"
+            glyph: "map-pin"
+            tooltipText: "Desktop note: show this widget's anchor"
+            onClicked: Notifications.toast("Desktop note", `Anchor: ${Desktop.anchor("example-desktop-note", Screen.name)}`, "map-pin")
+        }
     }
 }

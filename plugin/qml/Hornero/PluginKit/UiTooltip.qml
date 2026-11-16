@@ -119,7 +119,7 @@ Popup {
                 const pos = target.mapToItem(parent, 0, 0);
                 const tipW = tooltipRect.width > 0 ? tooltipRect.width : tooltipRect.implicitWidth;
                 const tipH = tooltipRect.height > 0 ? tooltipRect.height : tooltipRect.implicitHeight;
-                const placed = placementFor(pos.x, pos.y, target.width, target.height, tipW, tipH, parent.width, parent.height, Theme.spacingSmall, Theme.spacingSmall);
+                const placed = placementFor(pos.x, pos.y, target.width, target.height, tipW, tipH, parent.width, parent.height, Theme.spacing.small, Theme.spacing.smaller);
                 x = placed.x;
                 y = placed.y;
             } catch (e) {
@@ -220,14 +220,17 @@ Popup {
         onActivated: root.dismiss()
     }
 
+    // Tooltips fade with 4 px travel from the anchor, `enter` 90 ms;
+    // exit `exit` 90 ms; no morph (visual language §11.2). Reduced motion
+    // keeps only the ≤ 90 ms opacity fade.
     enter: Transition {
         NumberAnimation {
             property: "opacity"
             from: 0
             to: 1
-            duration: Theme.durationExpressiveFastSpatial
+            duration: Theme.duration("fade")
             easing.type: Easing.BezierSpline
-            easing.bezierCurve: Theme.curveExpressiveFastSpatial
+            easing.bezierCurve: Theme.anim.curves.enter
         }
     }
 
@@ -236,22 +239,24 @@ Popup {
             property: "opacity"
             from: 1
             to: 0
-            duration: Theme.durationExpressiveFastSpatial
+            duration: Theme.duration("fade")
             easing.type: Easing.BezierSpline
-            easing.bezierCurve: Theme.curveExpressiveFastSpatial
+            easing.bezierCurve: Theme.anim.curves.exit
         }
     }
 
+    // Tooltips are the highest elevation: `lifted` fill, 1 px
+    // `ruleStrong` outline (3:1 on lifted), radius 3, Plex Sans 11.
     contentItem: Rectangle {
         id: tooltipRect
 
-        implicitWidth: tooltipText.implicitWidth + Theme.spacing * 2
-        implicitHeight: tooltipText.implicitHeight + Theme.spacingSmall * 2
+        implicitWidth: Math.min(tooltipText.implicitWidth, 360) + Theme.padding.normal * 2
+        implicitHeight: tooltipText.implicitHeight + Theme.padding.small * 2 + 2
 
-        color: Theme.surfaceContainerHighest
-        radius: Theme.roundingSmall
+        color: Theme.palette.lifted
+        radius: Theme.rounding.small
         border.width: 1
-        border.color: Theme.componentBorder
+        border.color: Theme.palette.ruleStrong
         antialiasing: true
 
         Accessible.role: Accessible.ToolTip
@@ -261,11 +266,13 @@ Popup {
             id: tooltipText
 
             anchors.centerIn: parent
+            width: Math.min(implicitWidth, 360)
 
             text: root.text
-            color: Theme.onSurface
-            font.family: Theme.fontFamily
-            font.pointSize: Theme.fontSizeSmall
+            color: Theme.palette.ink
+            wrapMode: Text.WordWrap
+            font.family: Theme.font.family.sans
+            font.pointSize: Theme.font.size.small
         }
     }
 }

@@ -7,7 +7,7 @@ Item {
         pluginId: "example-dashboard-note"
     }
 
-    implicitWidth: label.implicitWidth + Theme.spacingSmall * 2
+    implicitWidth: label.implicitWidth + Theme.spacing.small * 2
     implicitHeight: label.implicitHeight
 
     // Keyboard contract (#376): an actionable label is a UiButton,
@@ -15,7 +15,7 @@ Item {
     UiButton {
         id: label
         anchors.centerIn: parent
-        variant: "ghost"
+        variant: "quiet"
         text: pluginSettings.value("showGreeting", true) ? "El futuro se construye acá." : "HorneroOS"
         tooltipText: "Dashboard note: activate for details"
         onClicked: Notifications.toast("HorneroOS", "Desktop and dashboard extensions share the same public API.", "puzzle")

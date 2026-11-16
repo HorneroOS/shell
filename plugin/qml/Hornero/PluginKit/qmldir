@@ -1,6 +1,7 @@
 module Hornero.PluginKit
 singleton Theme 1.0 Theme.qml
-internal ThemeBase ThemeBase.qml
+singleton ExperienceBridge 1.0 ExperienceBridge.qml
+singleton GlowBudget 1.0 GlowBudget.qml
 singleton Notifications 1.0 Notifications.qml
 singleton Desktop 1.0 Desktop.qml
 Settings 1.0 Settings.qml
@@ -12,11 +13,15 @@ singleton Weather 1.0 Weather.qml
 singleton Time 1.0 Time.qml
 singleton Power 1.0 Power.qml
 singleton Audio 1.0 Audio.qml
+singleton Workspaces 1.0 Workspaces.qml
+singleton Telemetry 1.0 Telemetry.qml
 singleton Providers 1.0 Providers.qml
 Subscription 1.0 Subscription.qml
 UiText 1.0 UiText.qml
+UiEyebrow 1.0 UiEyebrow.qml
 UiIcon 1.0 UiIcon.qml
 UiCard 1.0 UiCard.qml
+UiWell 1.0 UiWell.qml
 UiButton 1.0 UiButton.qml
 UiToggle 1.0 UiToggle.qml
 UiSlider 1.0 UiSlider.qml
@@ -25,8 +30,12 @@ UiDetailRow 1.0 UiDetailRow.qml
 UiActionRow 1.0 UiActionRow.qml
 UiChip 1.0 UiChip.qml
 UiProgress 1.0 UiProgress.qml
+UiSegmentMeter 1.0 UiSegmentMeter.qml
+UiMeterRow 1.0 UiMeterRow.qml
+UiSparkline 1.0 UiSparkline.qml
+UiScope 1.0 UiScope.qml
+UiPartition 1.0 UiPartition.qml
 UiState 1.0 UiState.qml
 UiTooltip 1.0 UiTooltip.qml
 UiPopover 1.0 UiPopover.qml
 UiStack 1.0 UiStack.qml
-UiStateLayer 1.0 UiStateLayer.qml

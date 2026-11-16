@@ -47,7 +47,7 @@ def make_translated_plugin(tmp_path: Path, catalog: dict | None = None) -> Path:
     plugin = tmp_path / "example-clock"
     (plugin / "translations").mkdir(parents=True)
     manifest = {
-        "schemaVersion": 1,
+        "schemaVersion": 3,
         "id": "example-clock",
         "name": "Example Clock",
         "version": "1.0.0",

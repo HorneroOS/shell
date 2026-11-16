@@ -48,7 +48,7 @@ def _plugin(tmp_path: Path, plugin_id: str, marketplace=None, extra_files=True) 
         (root / "previews" / "main.png").write_bytes(PNG)
         files.append("previews/main.png")
     manifest = {
-        "schemaVersion": 1,
+        "schemaVersion": 3,
         "id": plugin_id,
         "name": f"Marketplace {plugin_id}",
         "version": "1.1.0",

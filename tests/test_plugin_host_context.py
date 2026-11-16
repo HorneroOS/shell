@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 BAR_WIDGETS = (ROOT / "modules/plugins/PluginBarWidgets.qml").read_text()
 ISLAND = (ROOT / "modules/bar/components/ExtensionsIsland.qml").read_text()
 CARDS = (ROOT / "modules/plugins/PluginDashboardCards.qml").read_text()
-DESKTOP = (ROOT / "modules/plugins/PluginDesktopWidgets.qml").read_text()
+DESKTOP = (ROOT / "modules/plugins/DesktopWidgetFrame.qml").read_text()
 BAR = (ROOT / "modules/bar/Bar.qml").read_text()
 KIT = ROOT / "plugin/qml/Hornero/PluginKit"
 DOCS = (ROOT / "docs/PLUGINS.md").read_text()
@@ -69,11 +69,15 @@ def test_reported_available_space_equals_enforced_caps():
     assert "value: root.availableWidth" in BAR_WIDGETS
     assert "Layout.maximumHeight: root.availableHeight" in BAR_WIDGETS
     assert "value: root.availableHeight" in BAR_WIDGETS
-    for src in (CARDS, DESKTOP):
-        assert "Layout.maximumWidth: hostAvailableWidth" in src
-        assert "value: pluginLoader.hostAvailableWidth" in src
-        # Scrolling/card surfaces do not cap height; 0 says so.
-        assert "hostAvailableHeight: 0" in src
+    assert "Layout.maximumWidth: hostAvailableWidth" in CARDS
+    assert "value: pluginLoader.hostAvailableWidth" in CARDS
+    # Scrolling dashboard cards do not cap height; 0 says so.
+    assert "hostAvailableHeight: 0" in CARDS
+    # Desktop widgets have a host-owned frame: the Loader is exactly the
+    # reported content box (frame minus header and padding).
+    assert "width: hostAvailableWidth" in DESKTOP and "height: hostAvailableHeight" in DESKTOP
+    assert "value: pluginLoader.hostAvailableWidth" in DESKTOP
+    assert "value: pluginLoader.hostAvailableHeight" in DESKTOP
 
 
 def test_desktop_context_names_its_screen():

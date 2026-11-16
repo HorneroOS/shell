@@ -29,14 +29,14 @@ VALIDATOR = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(VALIDATOR)
 SCHEMA = json.loads((ROOT / "schemas/plugin-manifest.schema.json").read_text())
 
-QML = "import QtQuick\nimport Hornero.PluginKit\nItem { Text { text: Theme.surface } }"
+QML = "import QtQuick\nimport Hornero.PluginKit\nItem { Text { color: Theme.palette.ink } }"
 
 
 def make_v2_plugin(tmp_path: Path, manifest_overrides=None, extra_files=("Dashboard.qml",)) -> Path:
     plugin = tmp_path / "example-two-surface"
     plugin.mkdir(parents=True, exist_ok=True)
     manifest = {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "id": "example-two-surface",
         "name": "Example Two Surface",
         "version": "1.0.0",
@@ -107,7 +107,7 @@ def test_v2_without_surfaces_passes(tmp_path):
 def test_shipped_multi_surface_example_passes():
     plugin = ROOT / "examples/plugins/example-multi-surface"
     manifest = manifest_of(plugin)
-    assert manifest["schemaVersion"] == 2
+    assert manifest["schemaVersion"] == 3
     Draft202012Validator(SCHEMA).validate(manifest)
     VALIDATOR.validate_plugin(plugin)
     assert VALIDATOR.effective_surfaces(manifest) == {
@@ -122,11 +122,11 @@ def test_shipped_multi_surface_example_passes():
 
 
 def test_effective_surfaces_v1_derives_single_primary_surface():
-    v1 = {"schemaVersion": 1, "entrypoint": "Main.qml", "placement": "dashboard"}
+    v1 = {"schemaVersion": 3, "entrypoint": "Main.qml", "placement": "dashboard"}
     assert VALIDATOR.effective_surfaces(v1) == {
         "dashboard": {"entrypoint": "Main.qml", "enabled": True}
     }
-    v1_default = {"schemaVersion": 1, "entrypoint": "Main.qml"}
+    v1_default = {"schemaVersion": 3, "entrypoint": "Main.qml"}
     assert VALIDATOR.effective_surfaces(v1_default) == {
         "background": {"entrypoint": "Main.qml", "enabled": True}
     }
@@ -134,7 +134,7 @@ def test_effective_surfaces_v1_derives_single_primary_surface():
 
 def test_effective_surfaces_v2_merges_and_honours_enabled():
     manifest = {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "entrypoint": "Main.qml",
         "placement": "bar",
         "surfaces": {
@@ -164,7 +164,8 @@ def test_all_v1_shipped_examples_still_validate():
 @pytest.mark.parametrize(
     "overrides",
     [
-        {"schemaVersion": 3},
+        {"schemaVersion": 4},
+        {"schemaVersion": 2},
         {"schemaVersion": 0},
         {"schemaVersion": "2"},
         {"schemaVersion": True},
@@ -189,10 +190,10 @@ def test_schema_and_validator_reject_invalid_v2(tmp_path, overrides):
         VALIDATOR.validate_plugin(plugin)
 
 
-def test_surfaces_under_v1_is_rejected_by_schema_and_validator(tmp_path):
-    plugin = make_v2_plugin(tmp_path, {"schemaVersion": 1})
+def test_material_era_versions_are_rejected_with_migration_hint(tmp_path):
+    plugin = make_v2_plugin(tmp_path, {"schemaVersion": 2})
     assert list(Draft202012Validator(SCHEMA).iter_errors(manifest_of(plugin)))
-    with pytest.raises(VALIDATOR.ValidationError, match="surfaces requires schemaVersion 2"):
+    with pytest.raises(VALIDATOR.ValidationError, match="Migrating to PluginKit 3"):
         VALIDATOR.validate_plugin(plugin)
 
 
@@ -220,7 +221,7 @@ def test_primary_surface_conflict_is_rejected_by_validator(tmp_path):
 
 def test_unknown_version_error_is_actionable(tmp_path):
     plugin = make_v2_plugin(tmp_path, {"schemaVersion": 99})
-    with pytest.raises(VALIDATOR.ValidationError, match="schemaVersion must be 1 or 2"):
+    with pytest.raises(VALIDATOR.ValidationError, match="schemaVersion must be 3"):
         VALIDATOR.validate_plugin(plugin)
 
 
@@ -233,7 +234,9 @@ def test_schema_stays_strict_about_unknown_fields():
     # shell#378 adds the dashboard-only size/category card hints; the
     # set stays exact — anything else is still an unknown field.
     # shell#439 adds the bar-only section hint (native island to join).
-    assert set(surface_def["properties"]) == {"entrypoint", "enabled", "size", "category", "section"}
+    # PluginKit 3 adds the desktop-only widget geometry hints.
+    assert set(surface_def["properties"]) == {"entrypoint", "enabled", "size", "category", "section",
+                                              "width", "height", "minWidth", "minHeight", "resizable", "anchor"}
     assert set(SCHEMA["properties"]["surfaces"]["properties"]) == {
         "background", "bar", "dashboard", "desktop", "launcher", "settings"
     }
@@ -249,9 +252,10 @@ DOCS = (ROOT / "docs/PLUGINS.md").read_text()
 
 def test_host_runtime_gate_mirrors_validator():
     for needle in (
-        "manifest.schemaVersion !== 1 && manifest.schemaVersion !== 2",
-        "schemaVersion must be 1 or 2",
-        "manifest surfaces requires schemaVersion 2",
+        "manifest.schemaVersion === 1 || manifest.schemaVersion === 2",
+        "manifest schemaVersion must be 3",
+        "Migrating to PluginKit 3",
+        "is a desktop widget hint and is only allowed on the desktop surface",
         '"background", "bar", "dashboard", "desktop", "launcher", "settings"',
         "contains unknown surface",
         "contains unknown fields",
@@ -296,17 +300,19 @@ def test_visible_hosts_need_no_surface_changes():
     for rel, call in (
         ("modules/plugins/PluginBarWidgets.qml", "Plugins.barPlugins()"),
         ("modules/plugins/PluginDashboardCards.qml", "Plugins.dashboardPlugins()"),
-        ("modules/plugins/PluginDesktopWidgets.qml", "Plugins.desktopPlugins()"),
     ):
         src = (ROOT / rel).read_text()
         assert call in src, rel
         assert "modelData.entrypoint" in src, rel
+    # Desktop widgets: the host lists them, each frame loads its entry's file.
+    assert "Plugins.desktopPlugins()" in (ROOT / "modules/plugins/PluginDesktopWidgets.qml").read_text()
+    assert "root.entry.entrypoint" in (ROOT / "modules/plugins/DesktopWidgetFrame.qml").read_text()
 
 
 def test_docs_state_v2_defaults_and_honest_limits():
     for needle in (
         "Manifest v2",
-        '"schemaVersion": 2',
+        '"schemaVersion": 3',
         "`surfaces`",
         "schemaVersion 1",
         "launcher",

@@ -16,7 +16,7 @@ GridLayout {
     property string orientation: "horizontal"
     // Narrow-surface flag (hostCompact): stacks even when horizontal.
     property bool compact: false
-    property int spacing: Theme.spacingSmall
+    property int spacing: Theme.spacing.smaller
 
     readonly property bool stacked: orientation === "vertical" || compact
 

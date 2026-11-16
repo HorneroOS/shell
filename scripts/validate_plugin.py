@@ -61,7 +61,34 @@ SURFACES = PLACEMENTS + ("launcher", "settings")
 # dashboard surface may hint; the user's persisted layout wins.
 DASHBOARD_CARD_SIZES = ("compact", "standard", "wide")
 BAR_SECTIONS = ("status", "actions", "clock", "end")
-SCHEMA_VERSIONS = (1, 2)
+SCHEMA_VERSIONS = (3,)
+# Material-era manifests (PluginKit 1/2) are refused with a migration hint.
+LEGACY_SCHEMA_VERSIONS = (1, 2)
+DESKTOP_ANCHORS = (
+    "top-left", "top-center", "top-right",
+    "middle-left", "middle-center", "middle-right",
+    "bottom-left", "bottom-center", "bottom-right",
+)
+DESKTOP_SIZE_KEYS = ("width", "height", "minWidth", "minHeight")
+DESKTOP_KEYS = DESKTOP_SIZE_KEYS + ("resizable", "anchor")
+# Shared provider domains (RFC 0001 §5b) an extension may read; declared
+# in capabilities.providers and cross-checked against the QML.
+PROVIDER_DOMAINS = (
+    "system", "network", "spectrum", "media", "audio", "power", "weather",
+    "time", "workspaces",
+)
+FACADE_DOMAINS = {
+    "System": ("system",),
+    "Telemetry": ("system", "network"),
+    "Network": ("network",),
+    "Media": ("media",),
+    "Audio": ("audio",),
+    "Power": ("power",),
+    "Weather": ("weather",),
+    "Time": ("time",),
+    "Workspaces": ("workspaces",),
+}
+GLYPH_NAMES_FILE = Path(__file__).resolve().parent.parent / "assets" / "fonts" / "hornero-glyphs.names"
 ALLOWED_IMPORTS = (
     "QtQuick",
     "QtQuick.Controls",
@@ -125,12 +152,6 @@ def _validate_surfaces(
 ) -> None:
     if "surfaces" not in manifest:
         return
-    if schema_version != 2:
-        raise ValidationError(
-            "surfaces requires schemaVersion 2 (set \"schemaVersion\": 2 to declare "
-            "multiple surfaces; schemaVersion 1 supports only the single "
-            "placement/entrypoint surface)"
-        )
     surfaces = _object(manifest["surfaces"], "surfaces")
     if not surfaces:
         raise ValidationError(
@@ -146,13 +167,39 @@ def _validate_surfaces(
                 "bar surface with PluginKit UiPopover, not a separate surface)"
             )
         surface = _object(raw_surface, where)
-        extra = set(surface) - {"entrypoint", "enabled", "size", "category", "section"}
+        extra = set(surface) - {"entrypoint", "enabled", "size", "category", "section", *DESKTOP_KEYS}
         if extra:
             raise ValidationError(
                 f"{where} contains unknown fields: {', '.join(sorted(extra))} "
                 "(a surface declares only entrypoint, optional enabled, and — "
                 "dashboard only — optional size/category card hints; bar only — "
-                "optional section)"
+                "optional section; desktop only — optional width/height/"
+                "minWidth/minHeight/resizable/anchor widget hints)"
+            )
+        # Desktop widget hints (PluginKit 3): default and minimum logical
+        # size, resizability and the default anchor; the person's saved
+        # geometry always wins.
+        desktop_hints = [key for key in DESKTOP_KEYS if key in surface]
+        if desktop_hints and name != "desktop":
+            raise ValidationError(
+                f"{where}.{desktop_hints[0]} is a desktop widget hint and is only "
+                "allowed on the desktop surface"
+            )
+        for key in DESKTOP_SIZE_KEYS:
+            if key in surface:
+                value = surface[key]
+                if type(value) is not int or not 80 <= value <= 1600:
+                    raise ValidationError(
+                        f"{where}.{key} must be an integer between 80 and 1600 (logical pixels)"
+                    )
+        for low, high in (("minWidth", "width"), ("minHeight", "height")):
+            if low in surface and high in surface and surface[low] > surface[high]:
+                raise ValidationError(f"{where}.{low} must not exceed {where}.{high}")
+        if "resizable" in surface and not isinstance(surface["resizable"], bool):
+            raise ValidationError(f"{where}.resizable must be a boolean")
+        if "anchor" in surface and surface["anchor"] not in DESKTOP_ANCHORS:
+            raise ValidationError(
+                f"{where}.anchor must be one of {', '.join(DESKTOP_ANCHORS)}"
             )
         # Bar section hint (shell#439): which native bar island the
         # indicator joins instead of a separate block after the end group.
@@ -723,9 +770,17 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
         )
     if missing:
         raise ValidationError(f"missing manifest fields: {', '.join(sorted(missing))}")
+    if type(manifest["schemaVersion"]) is int and manifest["schemaVersion"] in LEGACY_SCHEMA_VERSIONS:
+        raise ValidationError(
+            f"schemaVersion {manifest['schemaVersion']} targets the Material-era "
+            "PluginKit, which Hornero Signal removed; port the extension to "
+            "PluginKit 3 (Theme.palette roles, Hornero Glyph names, glyph/name "
+            "icon properties) and set \"schemaVersion\": 3 — see "
+            "docs/PLUGINS.md \"Migrating to PluginKit 3\""
+        )
     if type(manifest["schemaVersion"]) is not int or manifest["schemaVersion"] not in SCHEMA_VERSIONS:
         raise ValidationError(
-            f"schemaVersion must be 1 or 2 (got {manifest['schemaVersion']!r}); "
+            f"schemaVersion must be 3 (got {manifest['schemaVersion']!r}); "
             "unknown manifest versions are rejected"
         )
     schema_version = manifest["schemaVersion"]
@@ -784,11 +839,25 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
     # call time, so an unknown name here is inert metadata, while a
     # malformed one fails validation everywhere.
     if not {"processCommands", "networkHosts", "settings"} <= capabilities.keys() <= {
-        "processCommands", "networkHosts", "settings", "actions"
+        "processCommands", "networkHosts", "settings", "actions", "providers"
     }:
         raise ValidationError(
-            "capabilities must contain processCommands, networkHosts, and settings, plus optional actions"
+            "capabilities must contain processCommands, networkHosts, and settings, "
+            "plus optional actions and providers"
         )
+    declared_providers: set[str] = set()
+    if "providers" in capabilities:
+        raw_providers = capabilities["providers"]
+        if (
+            not isinstance(raw_providers, list)
+            or any(item not in PROVIDER_DOMAINS for item in raw_providers)
+            or len(set(raw_providers)) != len(raw_providers)
+        ):
+            raise ValidationError(
+                "capabilities.providers must list unique provider domains from: "
+                + ", ".join(PROVIDER_DOMAINS)
+            )
+        declared_providers = set(raw_providers)
     if "actions" in capabilities:
         declared_actions = _string_list(capabilities["actions"], "capabilities.actions", SAFE_ACTION)
         if len(declared_actions) > 32:
@@ -860,10 +929,215 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
                 "(the shell installs no QTranslator for extension catalogs); use PluginKit "
                 "Translations { pluginId: ... } and tr() instead — see docs/PLUGINS.md"
             )
+        _check_signal_contract(path.relative_to(root), source)
+        _check_providers(path.relative_to(root), source, declared_providers)
         for host in URL_LITERAL.findall(source):
             hostname = host.split(":", 1)[0].lower()
             if hostname not in {item.lower() for item in hosts}:
                 raise ValidationError(f"{path.relative_to(root)} contains an undeclared network host {hostname}")
+
+
+# PluginKit 3 (Hornero Signal) source contract. Material-era names fail
+# with the replacement spelled out, so a port is mechanical.
+LEGACY_THEME = {
+    "primary": "Theme.palette.signal",
+    "onPrimary": "Theme.palette.onSignal",
+    "primaryContainer": "Theme.palette.signalWell",
+    "onPrimaryContainer": "Theme.palette.onSignalWell",
+    "secondary": "Theme.palette.cue",
+    "onSecondary": "Theme.palette.onCue",
+    "secondaryContainer": "Theme.palette.cueWell",
+    "onSecondaryContainer": "Theme.palette.onCueWell",
+    "tertiary": "Theme.palette.phosphor",
+    "onTertiary": "Theme.palette.onPhosphor",
+    "tertiaryContainer": "Theme.palette.phosphorWell",
+    "onTertiaryContainer": "Theme.palette.onPhosphorWell",
+    "success": "Theme.palette.phosphor",
+    "error": "Theme.palette.alert",
+    "onError": "Theme.palette.onAlert",
+    "errorContainer": "Theme.palette.alertWell",
+    "onErrorContainer": "Theme.palette.onAlertWell",
+    "background": "Theme.palette.ground",
+    "onBackground": "Theme.palette.ink",
+    "surface": "Theme.palette.base",
+    "surfaceDim": "Theme.palette.ground",
+    "surfaceBright": "Theme.palette.lifted",
+    "surfaceVariant": "Theme.palette.raised",
+    "surfaceContainerLowest": "Theme.palette.ground",
+    "surfaceContainerLow": "Theme.palette.sunken",
+    "surfaceContainer": "Theme.palette.panel",
+    "surfaceContainerHigh": "Theme.palette.raised",
+    "surfaceContainerHighest": "Theme.palette.lifted",
+    "onSurface": "Theme.palette.ink",
+    "onSurfaceVariant": "Theme.palette.inkMuted",
+    "outline": "Theme.palette.ruleStrong",
+    "outlineVariant": "Theme.palette.rule",
+    "componentBorder": "Theme.palette.ruleStrong",
+    "focusRing": "Theme.palette.focus",
+    "fontFamily": "Theme.font.family.sans",
+    "monoFontFamily": "Theme.font.family.mono",
+    "iconFontFamily": "UiIcon",
+    "fontSize": "Theme.font.size.normal",
+    "fontSizeSmall": "Theme.font.size.small",
+    "fontSizeBody": "Theme.font.size.smaller",
+    "fontSizeTitle": "Theme.font.size.larger",
+    "fontSizeLarge": "Theme.font.size.large",
+    "fontSizeDisplay": "Theme.font.size.extraLarge",
+    "iconSize": "Theme.font.size.larger",
+    "iconSizeLarge": "Theme.font.size.large",
+    "spacingSmall": "Theme.spacing.small",
+    "spacingLarge": "Theme.spacing.large",
+    "paddingLarge": "Theme.padding.large",
+    "roundingSmall": "Theme.rounding.small",
+    "roundingLarge": "Theme.rounding.large",
+    "durationSmall": "Theme.duration(\"short\")",
+    "durationNormal": "Theme.duration(\"medium\")",
+    "durationExpressiveFastSpatial": "Theme.duration(\"settleFast\")",
+    "curveStandard": "Theme.anim.curves.standard",
+    "curveStandardDecel": "Theme.anim.curves.enter",
+    "curveExpressiveFastSpatial": "Theme.anim.curves.settleFast",
+    "animationScale": "Theme.duration(name)",
+    "motionDuration": "Theme.duration(name)",
+    "stateHoverOpacity": "the Signal hover fill (Theme.palette.raised)",
+    "statePressedOpacity": "the Signal pressed fill (Theme.palette.lifted)",
+}
+# Flat tokens that became groups: Theme.spacing → Theme.spacing.normal.
+LEGACY_FLAT = {
+    "spacing": "Theme.spacing.<small|smaller|normal|larger|large>",
+    "padding": "Theme.padding.<small|smaller|normal|larger|large>",
+    "rounding": "Theme.rounding.<small|normal|large>",
+}
+LEGACY_THEME_RE = re.compile(r"\bTheme\.([A-Za-z]+)\b(?!\s*\.)")
+LEGACY_PROPERTIES = {
+    "iconName": "glyph",
+    "trailingIconName": "trailingGlyph",
+    "iconFill": None,
+}
+LEGACY_PROPERTY_RE = re.compile(r"\b(iconName|trailingIconName|iconFill)\s*:")
+ICON_FILL_RE = re.compile(r"(?<![.\w])fill\s*:\s*(?:[01](?:\.0)?\s*(?:$|;|\n)|[^\n;]*\?\s*1\s*:\s*0)")
+UI_ICON_BLOCK = re.compile(r"\bUiIcon\s*\{([^{}]*)\}")
+UI_ICON_LEGACY_ICON = re.compile(r"(?<![.\w])icon\s*:")
+GLYPH_ASSIGNMENT = re.compile(r"\b(?:glyph|trailingGlyph)\s*:\s*([^\n]+)")
+UI_ICON_NAME = re.compile(r"(?<![.\w])name\s*:\s*([^\n]+)")
+STRING_LITERAL = re.compile(r'"([^"\\]*)"')
+SUBSCRIPTION_DOMAIN = re.compile(r"\bSubscription\s*\{[^{}]*?\bdomain\s*:\s*\"([a-z]+)\"", re.DOTALL)
+FACADE_USE = re.compile(r"(?<![.\w])(System|Telemetry|Network|Media|Audio|Power|Weather|Time|Workspaces)\.[a-zA-Z]")
+SPECTRUM_USE = re.compile(r"(?<![.\w])Audio\.spectrum\b")
+_GLYPH_NAMES: set[str] | None = None
+
+
+def glyph_names() -> set[str]:
+    """Hornero Glyph names (the shell's assets/fonts/hornero-glyphs.names)."""
+    global _GLYPH_NAMES
+    if _GLYPH_NAMES is None:
+        names: set[str] = set()
+        if GLYPH_NAMES_FILE.is_file():
+            for line in GLYPH_NAMES_FILE.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if line and not line.startswith("#"):
+                    names.add(line)
+        _GLYPH_NAMES = names
+    return _GLYPH_NAMES
+
+
+def _strip_comments(source: str) -> str:
+    source = re.sub(r"/\*.*?\*/", "", source, flags=re.DOTALL)
+    return re.sub(r"//[^\n]*", "", source)
+
+
+def _check_glyph_literal(where: PurePosixPath | Path, value: str) -> None:
+    if not value:
+        return
+    names = glyph_names()
+    if "_" in value or (names and value not in names):
+        hint = (
+            "it looks like a Material-era icon ligature; Hornero Glyphs use Tabler "
+            "outline names with hyphens (e.g. \"player-play\", \"alert-triangle\")"
+            if "_" in value
+            else "it is not a Hornero Glyph"
+        )
+        raise ValidationError(
+            f"{where} uses glyph {value!r}: {hint} — pick a name from the shell's "
+            "assets/fonts/hornero-glyphs.names (docs/PLUGINS.md, glyphs)"
+        )
+
+
+def _check_signal_contract(where: PurePosixPath | Path, raw_source: str) -> None:
+    """Reject Material-era PluginKit API with the PluginKit 3 replacement."""
+    source = _strip_comments(raw_source)
+    for match in LEGACY_THEME_RE.finditer(source):
+        name = match.group(1)
+        if name in LEGACY_THEME:
+            raise ValidationError(
+                f"{where} uses Theme.{name}, a Material-era token removed in "
+                f"PluginKit 3; use {LEGACY_THEME[name]} (docs/PLUGINS.md "
+                "\"Migrating to PluginKit 3\")"
+            )
+        if name in LEGACY_FLAT:
+            raise ValidationError(
+                f"{where} uses Theme.{name} as a number; PluginKit 3 tokens are "
+                f"groups: {LEGACY_FLAT[name]}"
+            )
+    for match in LEGACY_PROPERTY_RE.finditer(source):
+        name = match.group(1)
+        replacement = LEGACY_PROPERTIES[name]
+        if replacement is None:
+            raise ValidationError(
+                f"{where} sets {name}: Hornero Glyphs are outline-only and have "
+                "no fill axis; remove it (state belongs in colour or an on-air "
+                "chip, docs/PLUGINS.md)"
+            )
+        raise ValidationError(
+            f"{where} sets {name}: PluginKit 3 renamed it to {replacement} "
+            "and it takes a Hornero Glyph name"
+        )
+    if re.search(r"(?m)^\s*icon\s*:", source):
+        raise ValidationError(
+            f"{where} sets an icon property: PluginKit 3 renamed it (UiIcon.name; glyph on "
+            "UiCard, UiButton, UiChip, UiDetailRow and UiActionRow)"
+        )
+    if ICON_FILL_RE.search(source):
+        raise ValidationError(
+            f"{where} sets a Material icon fill axis (fill: 0/1); Hornero Glyphs "
+            "are outline-only — remove it"
+        )
+    for block in UI_ICON_BLOCK.finditer(source):
+        body = block.group(1)
+        if UI_ICON_LEGACY_ICON.search(body):
+            raise ValidationError(
+                f"{where} sets UiIcon.icon: PluginKit 3 renamed it to name "
+                "(UiIcon { name: \"clock\" }, like the shell's Glyph)"
+            )
+        for value in UI_ICON_NAME.findall(body):
+            for literal in STRING_LITERAL.findall(value):
+                _check_glyph_literal(where, literal)
+    for value in GLYPH_ASSIGNMENT.findall(source):
+        for literal in STRING_LITERAL.findall(value):
+            _check_glyph_literal(where, literal)
+
+
+def _check_providers(where: PurePosixPath | Path, raw_source: str, declared: set[str]) -> None:
+    """Every shared provider domain the QML reads must be declared."""
+    source = _strip_comments(raw_source)
+    for domain in SUBSCRIPTION_DOMAIN.findall(source):
+        if domain not in PROVIDER_DOMAINS:
+            raise ValidationError(f"{where} subscribes to unknown provider domain {domain!r}")
+        if domain not in declared:
+            raise ValidationError(
+                f"{where} subscribes to provider {domain!r} but capabilities.providers "
+                "does not declare it"
+            )
+    for facade in set(FACADE_USE.findall(source)):
+        needed = FACADE_DOMAINS[facade]
+        if not declared.intersection(needed):
+            raise ValidationError(
+                f"{where} reads the {facade} facade but capabilities.providers declares "
+                f"none of: {', '.join(needed)}"
+            )
+    if SPECTRUM_USE.search(source) and "spectrum" not in declared:
+        raise ValidationError(
+            f"{where} reads Audio.spectrum but capabilities.providers does not declare \"spectrum\""
+        )
 
 
 MOUSE_CLICK = re.compile(r"\bMouseArea\b")

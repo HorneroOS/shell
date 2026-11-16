@@ -1,37 +1,58 @@
 import QtQuick
 
-// Native popout detail row (shell modules/bar/popouts): a body-size label
-// on the left and its value right-aligned on the same line, the row shape
-// every native popout (Network, Audio, Battery) uses for facts. Popovers
-// compose these under a UiText "subtitle" header instead of hero metrics
-// and chips, so extension popovers read like the shell's own.
-Row {
+// Popout fact row (visual language §7.1): a label on the left and its
+// value right-aligned in Plex Mono with tabular figures, 32 px tall.
+// An unavailable value shows an em dash in `inkMuted`.
+Item {
     id: root
 
     property string label: ""
     property string value: ""
+    property bool available: true
+    property string glyph: ""
 
-    spacing: Theme.spacingSmall
+    readonly property bool _shown: root.available && root.value.length > 0
 
-    UiText {
-        id: labelItem
+    implicitWidth: (root.glyph.length > 0 ? 20 + Theme.spacing.smaller : 0) + labelItem.implicitWidth + Theme.spacing.normal + valueItem.implicitWidth
+    implicitHeight: Math.max(24, labelItem.implicitHeight)
 
-        role: "body"
-        text: root.label
-    }
+    Accessible.role: Accessible.StaticText
+    Accessible.name: `${root.label}: ${root._shown ? root.value : "unavailable"}`
 
-    // Fill only what label and value leave: sizing the filler from the
-    // row width alone pushes the value past the row's right edge.
-    Item {
-        width: Math.max(0, root.width - labelItem.implicitWidth - valueItem.implicitWidth - root.spacing * 2)
-        height: 1
+    Row {
+        id: row
+
+        anchors.left: parent.left
+        anchors.verticalCenter: parent.verticalCenter
+        spacing: Theme.spacing.smaller
+
+        UiIcon {
+            visible: root.glyph.length > 0
+            anchors.verticalCenter: parent.verticalCenter
+            name: root.glyph
+            size: Theme.font.size.normal
+            color: Theme.palette.inkMuted
+        }
+
+        UiText {
+            id: labelItem
+
+            anchors.verticalCenter: parent.verticalCenter
+            width: Math.min(implicitWidth, root.width - valueItem.implicitWidth - Theme.spacing.normal - (root.glyph.length > 0 ? 20 : 0))
+            role: "body"
+            text: root.label
+            elide: Text.ElideRight
+            wrapMode: Text.NoWrap
+        }
     }
 
     UiText {
         id: valueItem
 
-        role: "body"
-        horizontalAlignment: Text.AlignRight
-        text: root.value
+        anchors.right: parent.right
+        anchors.verticalCenter: parent.verticalCenter
+        role: "value"
+        color: root._shown ? Theme.palette.ink : Theme.palette.inkMuted
+        text: root._shown ? root.value : "—"
     }
 }

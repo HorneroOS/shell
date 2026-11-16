@@ -6,17 +6,20 @@ import qs.services
 import qs.config
 import qs.modules.plugins
 import QtQuick
-import QtQuick.Layouts
 
-// Bar island for extension indicators (shell#441): the same chip, spacing,
-// appear/move transitions and compact behaviour as the system tray island,
-// configurable the same way (bar.extensions.background / .compact). Holds
-// every bar extension without a native section, plus those whose native
-// island is absent from this layout.
+// Bar island for extension indicators (shell#441): a structural copy of the
+// system tray island (Tray.qml). Same chip and padding, the same Column/Row
+// with scale-in add and animated move transitions, the same compact chevron
+// whose expansion the bar drives (opens over the chevron, stays open while
+// the pointer is in the island or its popout, closes on another entry), and
+// the same expressive size animation. Configured like the tray
+// (bar.extensions.background / compact / recolour / hiddenIcons).
 StyledRect {
     id: root
 
     required property ShellScreen screen
+    readonly property alias layout: layout
+    readonly property alias expandIcon: expandIcon
     property bool vertical: Config.bar.isVerticalFor(screen.name)
     // Clear bars draw no chips, as for the tray.
     property bool clear: false
@@ -25,9 +28,7 @@ StyledRect {
     // this island as the end-group fallback in layouts without an
     // "extensions" entry, gated to the end group).
     property bool surfaceActive: true
-    // Responsive host context forwarded to the plugin hosts (#372), set
-    // by Bar.qml's fallback instance; the layout-entry instance leaves
-    // the defaults, which reproduce the historic island context.
+    // Responsive host context forwarded to the plugin hosts (#372).
     property string hostEdge: ""
     property bool hostCompact: false
     property int hostThickness: 0
@@ -36,86 +37,192 @@ StyledRect {
     readonly property bool chip: Config.bar.extensions.background && !clear
     readonly property bool compact: Config.bar.extensions.compact
     readonly property int padding: root.chip ? Appearance.padding.normal : Appearance.padding.small
-    readonly property int count: hosts.count
-    // Compact islands collapse to a chevron and open while hovered, like
-    // the compact tray.
-    readonly property bool expanded: !root.compact || hover.hovered
+    readonly property int spacing: root.chip ? Appearance.spacing.small : 0
+    readonly property int count: layout.item?.hostCount ?? 0
 
-    readonly property real contentMain: root.vertical ? grid.implicitHeight : grid.implicitWidth
-    readonly property real chevronMain: root.compact ? (root.vertical ? chevron.implicitHeight : chevron.implicitWidth) : 0
+    // Driven by the bar exactly like Tray.expanded (Bar.closeTray resets it).
+    property bool expanded
 
-    visible: root.surfaceActive && root.count > 0
+    readonly property real nonAnimHeight: {
+        if (!root.compact)
+            return layout.implicitHeight + root.padding * 2;
+        return (root.expanded ? expandIcon.implicitHeight + layout.implicitHeight + root.spacing : expandIcon.implicitHeight) + root.padding * 2;
+    }
+    readonly property real nonAnimWidth: {
+        if (!root.compact)
+            return layout.implicitWidth + root.padding * 2;
+        return (root.expanded ? expandIcon.implicitWidth + layout.implicitWidth + root.spacing : expandIcon.implicitWidth) + root.padding * 2;
+    }
+
     clip: true
-    implicitWidth: root.vertical ? Config.bar.sizes.innerWidth : (root.expanded ? grid.implicitWidth : 0) + root.chevronMain + root.padding * 2
-    implicitHeight: root.vertical ? (root.expanded ? grid.implicitHeight : 0) + root.chevronMain + root.padding * 2 : Config.bar.sizes.innerWidth
-    color: Qt.alpha(Colours.tPalette.m3surfaceContainer, root.chip && root.count > 0 ? Colours.tPalette.m3surfaceContainer.a : 0)
+    visible: root.surfaceActive && root.count > 0 && (root.vertical ? height > 0 : width > 0)
+    implicitWidth: root.vertical ? Config.bar.sizes.innerWidth : root.nonAnimWidth
+    implicitHeight: root.vertical ? root.nonAnimHeight : Config.bar.sizes.innerWidth
+    color: Qt.alpha(Colours.tPalette.m3surfaceContainer, (root.chip && root.count > 0) ? Colours.tPalette.m3surfaceContainer.a : 0)
     radius: Appearance.rounding.full
 
     Accessible.role: Accessible.Grouping
     Accessible.name: qsTr("Extensions")
 
-    HoverHandler {
-        id: hover
-    }
-
-    GridLayout {
-        id: grid
+    Loader {
+        id: layout
 
         anchors.horizontalCenter: root.vertical ? parent.horizontalCenter : undefined
-        anchors.verticalCenter: root.vertical ? undefined : parent.verticalCenter
         anchors.top: root.vertical ? parent.top : undefined
+        anchors.topMargin: root.padding
+        anchors.verticalCenter: root.vertical ? undefined : parent.verticalCenter
         anchors.left: root.vertical ? undefined : parent.left
-        anchors.topMargin: root.vertical ? root.padding : 0
-        anchors.leftMargin: root.vertical ? 0 : root.padding
+        anchors.leftMargin: root.padding
 
-        flow: root.vertical ? GridLayout.TopToBottom : GridLayout.LeftToRight
-        rows: root.vertical ? -1 : 1
-        columns: root.vertical ? 1 : -1
-        rowSpacing: Appearance.spacing.small
-        columnSpacing: Appearance.spacing.small
-        opacity: root.expanded ? 1 : 0
+        opacity: root.expanded || !root.compact ? 1 : 0
+        sourceComponent: root.vertical ? columnComp : rowComp
 
         Behavior on opacity {
             Anim {}
         }
+    }
 
-        PluginBarWidgets {
-            id: hosts
+    Component {
+        id: columnComp
 
-            vertical: root.vertical
-            section: "end"
-            surfaceActive: root.surfaceActive
-            fallbackSections: root.fallbackSections
-            hiddenIds: Config.bar.extensions.hiddenIcons
-            // Recolour mirrors the tray: icons take the secondary tint;
-            // without it the island leaves plugin icon colours alone.
-            iconColour: Config.bar.extensions.recolour ? Colours.palette.m3secondary : "transparent"
-            iconSize: Appearance.font.size.larger
-            textSize: Appearance.font.size.smaller
-            edge: root.hostEdge
-            compact: root.hostCompact
-            thickness: root.hostThickness > 0 ? root.hostThickness : Config.bar.sizes.innerWidth
-            screenName: root.hostScreenName !== "" ? root.hostScreenName : root.screen.name
+        Column {
+            readonly property int hostCount: items.count
+
+            spacing: Appearance.spacing.small
+
+            add: Transition {
+                Anim {
+                    properties: "scale"
+                    from: 0
+                    to: 1
+                    easing.bezierCurve: Appearance.anim.curves.standardDecel
+                }
+            }
+
+            move: Transition {
+                Anim {
+                    properties: "scale"
+                    to: 1
+                    easing.bezierCurve: Appearance.anim.curves.standardDecel
+                }
+                Anim {
+                    properties: "x,y"
+                }
+            }
+
+            PluginBarWidgets {
+                id: items
+
+                vertical: root.vertical
+                section: "end"
+                centerChildren: true
+                surfaceActive: root.surfaceActive
+                fallbackSections: root.fallbackSections
+                hiddenIds: Config.bar.extensions.hiddenIcons
+                // Recolour mirrors the tray: icons take the secondary tint;
+                // without it the island leaves plugin icon colours alone.
+                iconColour: Config.bar.extensions.recolour ? Colours.palette.m3secondary : "transparent"
+                iconSize: Appearance.font.size.larger
+                textSize: Appearance.font.size.smaller
+                edge: root.hostEdge
+                compact: root.hostCompact
+                thickness: root.hostThickness > 0 ? root.hostThickness : Config.bar.sizes.innerWidth
+                screenName: root.hostScreenName !== "" ? root.hostScreenName : root.screen.name
+    
+            }
         }
     }
 
-    MaterialIcon {
-        id: chevron
+    Component {
+        id: rowComp
 
-        visible: root.compact
+        Row {
+            readonly property int hostCount: hItems.count
+
+            spacing: Appearance.spacing.small
+
+            add: Transition {
+                Anim {
+                    properties: "scale"
+                    from: 0
+                    to: 1
+                    easing.bezierCurve: Appearance.anim.curves.standardDecel
+                }
+            }
+
+            move: Transition {
+                Anim {
+                    properties: "scale"
+                    to: 1
+                    easing.bezierCurve: Appearance.anim.curves.standardDecel
+                }
+                Anim {
+                    properties: "x,y"
+                }
+            }
+
+            PluginBarWidgets {
+                id: hItems
+
+                vertical: root.vertical
+                section: "end"
+                centerChildren: true
+                surfaceActive: root.surfaceActive
+                fallbackSections: root.fallbackSections
+                hiddenIds: Config.bar.extensions.hiddenIcons
+                // Recolour mirrors the tray: icons take the secondary tint;
+                // without it the island leaves plugin icon colours alone.
+                iconColour: Config.bar.extensions.recolour ? Colours.palette.m3secondary : "transparent"
+                iconSize: Appearance.font.size.larger
+                textSize: Appearance.font.size.smaller
+                edge: root.hostEdge
+                compact: root.hostCompact
+                thickness: root.hostThickness > 0 ? root.hostThickness : Config.bar.sizes.innerWidth
+                screenName: root.hostScreenName !== "" ? root.hostScreenName : root.screen.name
+    
+            }
+        }
+    }
+
+    Loader {
+        id: expandIcon
+
         anchors.horizontalCenter: root.vertical ? parent.horizontalCenter : undefined
         anchors.bottom: root.vertical ? parent.bottom : undefined
-        anchors.bottomMargin: root.vertical ? root.padding : 0
         anchors.verticalCenter: root.vertical ? undefined : parent.verticalCenter
         anchors.right: root.vertical ? undefined : parent.right
-        anchors.rightMargin: root.vertical ? 0 : root.padding
-        text: root.vertical ? "expand_less" : "chevron_right"
-        font.pointSize: Appearance.font.size.large
-        color: Colours.palette.m3onSurfaceVariant
-        rotation: root.expanded ? 180 : 0
 
-        Behavior on rotation {
-            Anim {}
+        active: root.compact && root.count > 0
+
+        sourceComponent: Item {
+            implicitWidth: root.vertical ? expandIconInner.implicitWidth : expandIconInner.implicitWidth - Appearance.padding.small * 2
+            implicitHeight: root.vertical ? expandIconInner.implicitHeight - Appearance.padding.small * 2 : expandIconInner.implicitHeight
+
+            MaterialIcon {
+                id: expandIconInner
+
+                anchors.horizontalCenter: root.vertical ? parent.horizontalCenter : undefined
+                anchors.bottom: root.vertical ? parent.bottom : undefined
+                anchors.bottomMargin: root.vertical ? (root.chip ? Appearance.padding.small : -Appearance.padding.small) : 0
+                anchors.verticalCenter: root.vertical ? undefined : parent.verticalCenter
+                anchors.right: root.vertical ? undefined : parent.right
+                anchors.rightMargin: root.vertical ? 0 : (root.chip ? Appearance.padding.small : -Appearance.padding.small)
+                text: root.vertical ? "expand_less" : "chevron_right"
+                font.pointSize: Appearance.font.size.large
+                rotation: root.expanded ? 180 : 0
+
+                Behavior on rotation {
+                    Anim {}
+                }
+
+                Behavior on anchors.bottomMargin {
+                    Anim {}
+                }
+
+                Behavior on anchors.rightMargin {
+                    Anim {}
+                }
+            }
         }
     }
 

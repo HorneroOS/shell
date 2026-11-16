@@ -618,6 +618,7 @@ def test_uidetailrow_is_the_native_popout_row():
     assert 'property string label: ""' in src
     assert 'property string value: ""' in src
     assert "Text.AlignRight" in src
+    assert "valueItem.implicitWidth" in src  # filler must leave room for the value
 
 
 def test_uibutton_transparent_island_colour_falls_back_to_bar_colour():

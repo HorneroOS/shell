@@ -62,6 +62,10 @@
               "enabled": true
             },
             {
+              "id": "extensions",
+              "enabled": true
+            },
+            {
               "id": "power",
               "enabled": true
             }

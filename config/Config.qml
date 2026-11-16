@@ -275,6 +275,10 @@ Singleton {
                 iconSubs: bar.tray.iconSubs,
                 hiddenIcons: bar.tray.hiddenIcons
             },
+            extensions: {
+                background: bar.extensions.background,
+                compact: bar.extensions.compact
+            },
             status: {
                 showAudio: bar.status.showAudio,
                 showMicrophone: bar.status.showMicrophone,

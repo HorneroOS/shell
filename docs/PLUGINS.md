@@ -320,6 +320,29 @@ evidence only: live compositor focus grabs and screen-reader
 (AT-SPI) announcements still need a running session to verify, so
 shell#221's live audit remains the owner of those claims.
 
+## Bar islands and sections
+
+Bar indicators do not form a separate block: they live in the bar's
+islands, styled like their native neighbours.
+
+- **Extensions island** — the bar entry `extensions` (in the default
+  layout and the presets, next to `tray`) is an island with the same
+  chip, transitions and compact behaviour as the system tray. Control
+  Center → Taskbar → *Extensions Settings* toggles its background and
+  compact mode (`bar.extensions.background`, `bar.extensions.compact`).
+  Layouts without the entry keep the historic placement after the end
+  group.
+- **Native sections** — a bar surface may declare
+  `"section": "status" | "actions" | "clock" | "end"` (default `end`,
+  i.e. the Extensions island). `status` joins the status icons island,
+  `actions` the quick actions island, `clock` the clock island. The
+  island's host advertises its icon colour and sizes; PluginKit
+  `UiButton`/`UiIcon` adopt them, so an icon-only indicator
+  (`iconName`) matches the native icons around it. If the target island
+  is not in the current layout, the indicator falls back to the
+  Extensions island. `section` is bar-only and enforced by the schema,
+  `scripts/validate_plugin.py` and the runtime host.
+
 ## Host context
 
 The same plugin must render correctly in a horizontal top/bottom

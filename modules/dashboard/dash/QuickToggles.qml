@@ -21,6 +21,7 @@ Item {
         ToggleChip {
             icon: "dark_mode"
             label: qsTr("Night")
+            description: qsTr("Toggle night mode")
             active: false  // No persistent service — just fire the script
             onToggled: Quickshell.execDetached(["horneroctl", "appearance", "night-mode", "toggle", "--yes"])
         }
@@ -29,6 +30,7 @@ Item {
         ToggleChip {
             icon: "sports_esports"
             label: qsTr("Game")
+            description: GameMode.enabled ? qsTr("Turn off game mode") : qsTr("Turn on game mode")
             active: GameMode.enabled
             visible: Compositor.supports("hyprlandTuning")
             onToggled: GameMode.toggle()
@@ -42,6 +44,7 @@ Item {
                     ? "%1:%2".arg(Math.floor(Recorder.elapsed / 60)).arg(String(Math.floor(Recorder.elapsed % 60)).padStart(2, "0"))
                     : qsTr("Rec"))
                 : qsTr("Record")
+            description: Recorder.running ? qsTr("Stop screen recording") : qsTr("Start screen recording")
             active: Recorder.running
             onToggled: {
                 if (Recorder.running)
@@ -59,14 +62,17 @@ Item {
         required property string icon
         required property string label
         required property bool active
+        property string description: chip.label
         signal toggled
 
         radius: Appearance.rounding.full
         Accessible.role: Accessible.Button
-        Accessible.name: chip.label
+        Accessible.name: chip.description
+        // Inactive chips used the card's own layer and read as plain text
+        // (shell#462); a visible container keeps them recognisable as buttons.
         color: chip.active
             ? Colours.palette.m3primaryContainer
-            : Colours.layer(Colours.palette.m3surfaceContainer, 2)
+            : Colours.palette.m3surfaceContainerHighest
         implicitHeight: chipRow.implicitHeight + Appearance.padding.smaller * 2
         implicitWidth: chipRow.implicitWidth + Appearance.padding.normal * 2
 

@@ -70,21 +70,56 @@ Button {
     // the host Loader (which clips at the rail edge).
     implicitWidth: root.railCompact ? Math.min(root.railWidth, contentItem.implicitWidth + root.leftPadding + root.rightPadding) : contentItem.implicitWidth + root.leftPadding + root.rightPadding
 
-    contentItem: Text {
-        text: root.text
-        color: root.labelColor
-        font.family: Theme.fontFamily
-        font.pixelSize: root.railCompact ? Theme.fontSizeSmall : Theme.fontSize
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-        wrapMode: Text.NoWrap
-        // Rail labels shrink to fit the rail rather than losing
-        // characters; elision is only the last resort below the minimum.
-        fontSizeMode: root.railCompact ? Text.Fit : Text.FixedSize
-        minimumPixelSize: 8
-        elide: root.railCompact ? Text.ElideRight : Text.ElideNone
-        maximumLineCount: root.railCompact ? 2 : 0
+    // Optional Material Symbols icon (native bar items are icon buttons).
+    // Icon only: leave text empty; give the button an accessibleName.
+    // (Named iconName: AbstractButton already has a FINAL `icon` group.)
+    property string iconName: ""
+    property real iconFill: 0
+
+    contentItem: Item {
+        implicitWidth: layout.implicitWidth
+        implicitHeight: layout.implicitHeight
         opacity: root.enabled ? 1 : 0.5
+
+        Grid {
+            id: layout
+
+            anchors.centerIn: parent
+            // Side by side normally; stacked on a narrow rail.
+            columns: root.railCompact || root.text.length === 0 || root.iconName.length === 0 ? 1 : 2
+            spacing: root.iconName.length > 0 && root.text.length > 0 ? Theme.spacingSmall / 2 : 0
+            horizontalItemAlignment: Grid.AlignHCenter
+            verticalItemAlignment: Grid.AlignVCenter
+
+            UiIcon {
+                visible: root.iconName.length > 0
+                icon: root.iconName
+                fill: root.iconFill
+                color: root.labelColor
+                // Icon-only bar buttons use the native bar icon size.
+                role: root.inBar && root.text.length === 0 ? "large" : "body"
+            }
+
+            Text {
+                id: label
+
+                visible: root.text.length > 0
+                width: root.railCompact ? Math.min(implicitWidth, root.railWidth - root.leftPadding - root.rightPadding) : implicitWidth
+                text: root.text
+                color: root.labelColor
+                font.family: Theme.fontFamily
+                font.pointSize: root.railCompact ? Theme.fontSizeSmall : Theme.fontSizeBody
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                wrapMode: Text.NoWrap
+                // Rail labels shrink to fit the rail rather than losing
+                // characters; elision is only the last resort below the minimum.
+                fontSizeMode: root.railCompact ? Text.Fit : Text.FixedSize
+                minimumPointSize: 6
+                elide: root.railCompact ? Text.ElideRight : Text.ElideNone
+                maximumLineCount: root.railCompact ? 2 : 0
+            }
+        }
     }
 
     // Native interaction: hover and press show the shell state layer

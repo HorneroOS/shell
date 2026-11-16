@@ -122,7 +122,7 @@ Switch {
         text: root.text
         color: Theme.onSurface
         font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSize
+        font.pointSize: Theme.fontSizeBody
         leftPadding: root.indicator.width + Theme.spacingSmall
         verticalAlignment: Text.AlignVCenter
         opacity: root.enabled ? 1 : 0.5

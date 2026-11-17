@@ -38,8 +38,6 @@ ColumnLayout {
     // field instead of breaking the pane.
     required property var settings
 
-    property bool confirmResetAll: false
-
     readonly property var declarations: Plugins.normalizeSettings(root.settings)
 
     // Keys in display order: ungrouped first, then each group in the
@@ -123,6 +121,24 @@ ColumnLayout {
         return Config.plugins.setSetting(root.storageKey, key, value);
     }
 
+    // Applies at once; Undo writes the earlier values back (no confirm step).
+    function resetAllSettings(): void {
+        const before = [];
+        for (const key of root.settingKeys()) {
+            if (root.hasStored(key))
+                before.push([key, root.storedValues()[key]]);
+        }
+        // Hidden state (timers, markers) is not the person's setting:
+        // Reset all clears only the visible controls.
+        for (const key of root.settingKeys())
+            Config.plugins.resetSetting(root.storageKey, key);
+        Undo.offer("plugin-settings-" + root.storageKey, qsTr("Plugin settings reset"), () => {
+            for (const kv of before)
+                Config.plugins.setSetting(root.storageKey, kv[0], kv[1]);
+            return true;
+        }, qsTr("Undo brings back %n setting(s).", "", before.length));
+    }
+
     function anyStored(): bool {
         return root.settingKeys().some(key => root.hasStored(key));
     }
@@ -141,30 +157,10 @@ ColumnLayout {
         }
 
         TextButton {
-            visible: root.anyStored() && !root.confirmResetAll
-            text: qsTr("Reset all to defaults…")
+            visible: root.anyStored()
+            text: qsTr("Reset all to defaults")
             type: TextButton.Text
-            onClicked: root.confirmResetAll = true
-        }
-
-        TextButton {
-            visible: root.confirmResetAll
-            text: qsTr("Confirm reset all")
-            type: TextButton.Filled
-            onClicked: {
-                // Hidden state (timers, markers) is not the person's
-                // setting: Reset all clears only the visible controls.
-                for (const key of root.settingKeys())
-                    Config.plugins.resetSetting(root.storageKey, key);
-                root.confirmResetAll = false;
-            }
-        }
-
-        TextButton {
-            visible: root.confirmResetAll
-            text: qsTr("Cancel")
-            type: TextButton.Text
-            onClicked: root.confirmResetAll = false
+            onClicked: root.resetAllSettings()
         }
     }
 

@@ -52,7 +52,33 @@ CollapsibleSection {
         return eq(cur.lamp, a.lamp) && eq(cur.warmth, a.warmth) && eq(cur.innerLight, a.innerLight) && eq(cur.vignette, a.vignette) && eq(cur.grain, a.grain) && eq(cur.scanlines, a.scanlines) && eq(cur.plateTracking, a.plateTracking) && cur.mascot === a.mascot && cur.tone === a.tone;
     }
 
-    function apply(look: var): void {
+    // The scalars a look sets, as they are now (what Undo puts back).
+    function currentLook(): var {
+        const p = root.rootPane;
+        return {
+            rounding: p.roundingScale,
+            spacing: p.spacingScale,
+            padding: p.paddingScale,
+            font: p.fontSizeScale,
+            motion: p.animDurationsScale,
+            glow: Config.appearance.glow.intensity,
+            weight: Config.appearance.font.weight.shift,
+            curve: Config.appearance.anim.curveStyle,
+            atmosphere: {
+                lamp: Config.appearance.atmosphere.lamp,
+                warmth: Config.appearance.atmosphere.warmth,
+                innerLight: Config.appearance.atmosphere.innerLight,
+                vignette: Config.appearance.atmosphere.vignette,
+                grain: Config.appearance.atmosphere.grain,
+                scanlines: Config.appearance.atmosphere.scanlines,
+                plateTracking: Config.appearance.atmosphere.plateTracking,
+                mascot: Config.appearance.atmosphere.mascot,
+                tone: Config.appearance.atmosphere.tone
+            }
+        };
+    }
+
+    function writeLook(look: var): bool {
         const p = root.rootPane;
         p.roundingScale = look.rounding;
         p.spacingScale = look.spacing;
@@ -65,6 +91,14 @@ CollapsibleSection {
         for (const k of Object.keys(look.atmosphere))
             Config.appearance.atmosphere[k] = look.atmosphere[k];
         p.saveConfig();
+        return true;
+    }
+
+    // Applies at once and offers Undo with the exact previous values.
+    function apply(look: var): void {
+        const before = root.currentLook();
+        root.writeLook(look);
+        Undo.offer("look", qsTr("Look: %1").arg(look.label), () => root.writeLook(before), qsTr("Undo restores every scale, the glow and the atmosphere knobs."));
     }
 
     title: qsTr("Look")
@@ -179,6 +213,16 @@ CollapsibleSection {
             stepSize: 0.05
             suffix: "×"
             decimals: 2
+        }
+        SizeSlider {
+            target: Config.controlCenter
+            key: "undoSeconds"
+            label: qsTr("How long Undo stays after a change")
+            from: 3
+            to: 60
+            defaultValue: 10
+            stepSize: 1
+            suffix: " s"
         }
     }
 

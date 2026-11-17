@@ -109,6 +109,7 @@ Item {
                     PresetGrid {
                         id: grid
 
+                        offerUndo: true
                         anchors.centerIn: parent
                         availableWidth: parent.width - Appearance.padding.large * 2
                     }

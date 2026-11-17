@@ -54,6 +54,19 @@ ShellRoot {
     }
 
     // "service" scene: ChromaticPreview against the fake helper/horneroctl.
+    property int finishedApplies: 0
+    Connections {
+        target: ChromaticPreview
+
+        function onApplied(): void {
+            root.finishedApplies++;
+        }
+
+        function onApplyFailed(): void {
+            root.finishedApplies++;
+        }
+    }
+
     property int stage: 0
     property int stageTicks: 0
     Timer {
@@ -91,7 +104,14 @@ ShellRoot {
                     o.mode = P.result.scheme.mode;
                 }
                 const action = Quickshell.env("HACTION");
-                if (action === "preview" || action === "apply") {
+                if (action === "auto") {
+                    // The policy: no Apply button. Three quick user changes
+                    // collapse into one apply of the newest request.
+                    P.set("contrast", "boosted");
+                    P.set("contrast", "maximum");
+                    P.set("hueShift", 10);
+                    root.stage = 3;
+                } else if (action === "preview" || action === "apply") {
                     o.themeBefore = Signal.themeId;
                     P.previewLive(true);
                     o.live = P.live;
@@ -110,12 +130,42 @@ ShellRoot {
                     svc.stop();
                     root.emit();
                 }
+            } else if (root.stage === 3 && !P.busy && !P.applying && root.stageTicks > 12 && root.finishedApplies > 0) {
+                o.applyError = P.applyError;
+                o.undoKind = Undo.kind;
+                o.undoKey = Undo.key;
+                o.undoReason = Undo.reason;
+                o.canUndo = Undo.canUndo;
+                o.requestHue = P.request.hueShift;
+                o.requestContrast = P.request.contrast;
+                svc.stop();
+                root.emit();
             } else if (root.stage === 2 && !P.applying) {
                 o.applyError = P.applyError;
                 o.notice = P.notice;
                 o.liveAfterApply = P.live;
                 o.themeAfterApply = Signal.themeId;
                 svc.stop();
+                root.emit();
+            }
+        }
+    }
+
+    Timer {
+        id: undoWait
+
+        property int phase: 0
+
+        interval: 1600
+        repeat: true
+        onTriggered: {
+            if (undoWait.phase === 0) {
+                root.out.pausedStillActive = Undo.active;
+                Undo.paused = false;
+                undoWait.phase = 1;
+            } else {
+                root.out.expired = !Undo.active;
+                undoWait.stop();
                 root.emit();
             }
         }
@@ -239,6 +289,65 @@ ShellRoot {
                 Config.appearance.transparency.elements = {"launcher": 0.99, "bar": 0.0};
                 o.explicit = {"launcher": Signal.elementAlpha("launcher")};
                 root.emit();
+            } else if (root.scene === "undo") {
+                const calls = [];
+                o.defaultSeconds = Config.controlCenter.undoSeconds;
+                Undo.offer("a", "A", () => {
+                    calls.push("a1");
+                    return true;
+                }, "detail");
+                o.offered = [Undo.kind, Undo.key, Undo.canUndo];
+                // Same key: the FIRST restore point is kept.
+                Undo.offer("a", "A2", () => {
+                    calls.push("a2");
+                    return true;
+                }, "");
+                o.coalescedTitle = Undo.title;
+                Undo.undo();
+                o.callsAfterFirst = calls.slice();
+                o.afterUndo = [Undo.kind, Undo.canUndo];
+                // A different key replaces the offer on screen.
+                Undo.offer("b", "B", () => {
+                    calls.push("b");
+                    return true;
+                }, "");
+                Undo.offer("c", "C", () => {
+                    calls.push("c");
+                    return true;
+                }, "");
+                Undo.undo();
+                o.callsAfterReplace = calls.slice();
+                // A restore that fails says why and changes nothing else.
+                Undo.offer("d", "D", () => false, "");
+                Undo.undo();
+                o.failFalse = [Undo.kind, Undo.reason.length > 0, Undo.canUndo];
+                Undo.offer("e", "E", () => "disk full", "");
+                Undo.undo();
+                o.failString = [Undo.kind, Undo.reason];
+                Undo.offer("f", "F", () => {
+                    throw new Error("boom");
+                }, "");
+                Undo.undo();
+                o.failThrow = [Undo.kind, Undo.reason.indexOf("boom") >= 0];
+                Undo.report("g", "G", "because");
+                o.report = [Undo.kind, Undo.reason, Undo.canUndo];
+                Undo.dismiss();
+                o.dismissed = Undo.active;
+                // Plain config values restore exactly.
+                const restore = Undo.restorer([
+                    {
+                        "obj": Config.controlCenter,
+                        "keys": ["undoSeconds"]
+                    }
+                ]);
+                Config.controlCenter.undoSeconds = 42;
+                restore();
+                o.restorer = Config.controlCenter.undoSeconds;
+                // Timing: paused strips wait, free ones expire.
+                Config.controlCenter.undoSeconds = 1;
+                Undo.offer("h", "H", () => true, "");
+                Undo.paused = true;
+                undoWait.start();
             } else if (root.scene === "cost") {
                 const from = Signal._currentFlat();
                 const to = C.flatten(root.candidate());

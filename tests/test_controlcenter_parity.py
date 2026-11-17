@@ -83,13 +83,14 @@ def test_appearance_health_section_registered_and_searchable():
     assert "colors\", \"m3\", \"--\"" not in section  # unsafe argv passthrough stays out
 
 
-def test_input_restore_defaults_are_armed_ctl_calls():
+def test_input_restore_defaults_are_ctl_calls():
     pane = _read(CC / "input" / "InputPane.qml")
     assert 'qsTr("Restore defaults")' in pane
     assert '"hardware", "keyboard", "layout", "--restore", "--yes", "--json"' in pane
     assert '"hypr", "input", "restore", "--yes", "--json"' in pane
     assert '"hypr", "cursor", "restore", "--yes", "--json"' in pane
-    assert "root.armedRestore" in pane  # second click confirms
+    # Re-applying what is already saved needs no second click.
+    assert "armedRestore" not in pane
 
 
 def test_displays_brightness_and_compositor_controls():

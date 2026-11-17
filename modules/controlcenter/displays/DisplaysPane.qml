@@ -114,11 +114,60 @@ Item {
         listProc.running = true;
     }
 
+    // An arrangement can blank a screen, so it offers Undo. The geometry of
+    // every output (including disabled ones) is read first with
+    // `hyprctl monitors all -j`; Undo writes exactly that back, live.
+    property string arrangeMode: ""
+    property string arrangeQueued: ""
+    property var arrangeSnap: []
+
     function applyMode(mode: string): void {
+        if (snapProc.running || setProc.running) {
+            root.arrangeQueued = mode;
+            return;
+        }
+        root.arrangeMode = mode;
         root.actionText = qsTr("Applying %1…").arg(mode);
+        snapProc.out = "";
+        snapProc.running = true;
+        snapGuard.restart();
+    }
+
+    // The arrangement itself never waits on the safety copy: when hyprctl
+    // cannot start (another compositor), apply without Undo after a moment.
+    function proceedArrange(): void {
+        snapGuard.stop();
+        if (setProc.running)
+            return;
         setProc.out = "";
-        setProc.command = ["horneroctl", "hypr", "monitors", "set", mode, "--yes", "--json"];
+        setProc.command = ["horneroctl", "hypr", "monitors", "set", root.arrangeMode, "--yes", "--json"];
         setProc.running = true;
+    }
+
+    Timer {
+        id: snapGuard
+
+        interval: 1500
+        onTriggered: {
+            root.arrangeSnap = [];
+            root.proceedArrange();
+        }
+    }
+
+    function monitorKeyword(m: var): string {
+        if (m.disabled)
+            return `keyword monitor ${m.name},disable`;
+        const refresh = Number(m.refreshRate ?? 60).toFixed(2);
+        const mirror = m.mirrorOf && m.mirrorOf !== "none" ? `,mirror,${m.mirrorOf}` : "";
+        return `keyword monitor ${m.name},${m.width}x${m.height}@${refresh},${m.x}x${m.y},${m.scale}${mirror}`;
+    }
+
+    function restoreArrangement(snap: var): bool {
+        if (snap.length === 0)
+            return false;
+        restoreProc.command = ["hyprctl", "--batch", snap.map(m => root.monitorKeyword(m)).join(" ; ")];
+        restoreProc.running = true;
+        return true;
     }
 
     Component.onCompleted: {
@@ -272,6 +321,42 @@ Item {
     }
 
     Process {
+        id: snapProc
+
+        property string out: ""
+
+        command: ["hyprctl", "monitors", "all", "-j"]
+        stdout: SplitParser {
+            onRead: data => {
+                snapProc.out += data;
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            let snap = [];
+            try {
+                snap = JSON.parse(snapProc.out.trim());
+            } catch (e) {
+                snap = [];
+            }
+            root.arrangeSnap = Array.isArray(snap) ? snap : [];
+            root.proceedArrange();
+        }
+    }
+
+    Process {
+        id: restoreProc
+
+        stderr: StdioCollector {
+            id: restoreErr
+        }
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode !== 0)
+                Undo.report("displays", qsTr("Could not undo the display arrangement"), restoreErr.text.trim().split("\n").slice(-1)[0] || qsTr("hyprctl refused the previous layout."));
+            root.refresh();
+        }
+    }
+
+    Process {
         id: setProc
 
         property string out: ""
@@ -282,13 +367,26 @@ Item {
             }
         }
         onExited: (exitCode, exitStatus) => {
+            let ok = exitCode === 0;
             try {
                 const payload = JSON.parse(setProc.out.trim());
                 root.actionText = payload.message ? payload.message.toString() : "";
+                if (payload.ok === false)
+                    ok = false;
             } catch (e) {
+                ok = false;
                 root.actionText = qsTr("The arrangement command did not answer. Check: horneroctl hypr monitors status");
             }
+            const snap = root.arrangeSnap;
+            if (!ok)
+                Undo.report("displays", qsTr("Display arrangement was not changed"), root.actionText);
+            else if (snap.length > 0)
+                Undo.offer("displays", qsTr("Displays: %1").arg(root.arrangeMode), () => root.restoreArrangement(snap), qsTr("Undo puts every screen back where it was."));
             root.refresh();
+            const next = root.arrangeQueued;
+            root.arrangeQueued = "";
+            if (next !== "")
+                root.applyMode(next);
         }
     }
 

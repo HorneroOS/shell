@@ -11,8 +11,13 @@ SECTION = (ROOT / "modules" / "controlcenter" / "appearance" / "sections" / "Chr
 
 
 def test_service_never_writes_the_scheme_or_shell_json():
-    for forbidden in ("persistScheme", "persistBuiltInTheme", "writeSchemeProc", "scheme.json", "Config.save", "sh\", \"-c"):
+    for forbidden in ("persistScheme", "persistBuiltInTheme", "writeSchemeProc", "scheme.json", "sh\", \"-c"):
         assert forbidden not in SERVICE, forbidden
+    # The one shell-side write: Undo putting the saved preferences back when
+    # Chromatic had been off. Never the scheme, never anywhere else.
+    assert SERVICE.count("Config.save") == 1
+    restore = SERVICE[SERVICE.index("function _restoreSnapshot"):SERVICE.index("// Persist through horneroctl.")]
+    assert "Config.save()" in restore
     # Every Process command is the helper or horneroctl.
     assert "Cli.applyArgs" in SERVICE and "root.helperPath" in SERVICE
 
@@ -20,8 +25,11 @@ def test_service_never_writes_the_scheme_or_shell_json():
 def test_section_only_talks_to_the_service():
     for forbidden in ("Process {", "persistScheme", '"horneroctl"', "Quickshell.execDetached"):
         assert forbidden not in SECTION, forbidden
-    assert "ChromaticPreview.apply(true)" in SECTION
-    assert "Keys.onEscapePressed" in SECTION and "ChromaticPreview.cancel()" in SECTION
+    # No Apply button (docs/CONTROL-CENTER-APPLY.md): choices call the
+    # service, which applies the newest candidate itself.
+    assert "ChromaticPreview.apply(" not in SECTION
+    assert "ChromaticPreview.set(" in SECTION and "ChromaticPreview.setSource(" in SECTION
+    assert "Keys.onEscapePressed" in SECTION and "ChromaticPreview.endHover" in SECTION
 
 
 def _chromatic_calls(tmp_path):

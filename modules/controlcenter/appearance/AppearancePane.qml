@@ -245,7 +245,7 @@ Item {
             return applyStatusMessage;
         if (hasPendingChanges)
             return qsTr("Pending — will apply when the current job finishes");
-        return qsTr("Click a theme or option to apply");
+        return qsTr("Choices apply as you make them");
     }
     property bool previewActive: false
     property string previewSource: ""
@@ -381,6 +381,50 @@ Item {
         previewPalette = {};
     }
 
+    // What Undo puts back for the apply now running (services/Undo.qml).
+    property var undoSnap: null
+    property string undoTitle: ""
+
+    function _captureUndo(kinds: var): void {
+        root.undoSnap = {
+            "theme": Signal.themeId,
+            "wallpaper": Wallpapers.actualCurrent,
+            "gtk": GtkSettings.liveGtkTheme,
+            "icons": GtkSettings.liveIconTheme,
+            "scheme": GtkSettings.liveColorScheme,
+            "kinds": kinds
+        };
+        root.undoTitle = kinds.theme ? (Themes.themeById(root.pendingThemeId)?.name ?? qsTr("Theme")) : kinds.wallpaper ? qsTr("Wallpaper") : kinds.gtk ? qsTr("GTK theme") : kinds.icons ? qsTr("Icon theme") : qsTr("GTK colour scheme");
+    }
+
+    // Put back exactly what was live before the change (theme or wallpaper
+    // through the same pipeline, then GTK/icon/scheme overrides).
+    function _restoreUndo(snap: var): var {
+        if (ThemePipeline.busy)
+            return qsTr("Another appearance change is still running. Try again in a moment.");
+        const k = snap.kinds;
+        if (k.theme && snap.theme === "hornero-chromatic") {
+            // A Chromatic palette is derived, not a catalogue theme: rebuild it.
+            const back = ChromaticPreview._restoreSnapshot({
+                "active": true,
+                "request": ChromaticPreview.request
+            });
+            if (typeof back === "string")
+                return back;
+        } else if (k.theme && snap.theme)
+            ThemePipeline.applyTheme(snap.theme, snap.wallpaper);
+        else if (k.wallpaper && snap.wallpaper)
+            ThemePipeline.setWallpaper(snap.wallpaper);
+        if (k.gtk && snap.gtk)
+            ThemePipeline.setGtk(snap.gtk);
+        if (k.icons && snap.icons)
+            ThemePipeline.setIcons(snap.icons);
+        if (k.scheme && snap.scheme)
+            ThemePipeline.setGtkColorScheme(snap.scheme);
+        root.undoSnap = null;
+        return true;
+    }
+
     function commitSelection(): void {
         // ThemePipeline.applyTheme applies a complete Signal role table
         // (plus the theme's wallpaper/GTK recipe). GTK/icon overrides only
@@ -389,6 +433,13 @@ Item {
         const appliedTheme = themeDirty && pendingThemeId;
         const appliedWallpaper = !appliedTheme && wallpaperDirty && pendingWallpaperPath;
         const pipelineJob = appliedTheme || appliedWallpaper;
+        _captureUndo({
+            "theme": !!appliedTheme,
+            "wallpaper": !!appliedWallpaper,
+            "gtk": gtkDirty && !!pendingGtkTheme,
+            "icons": iconDirty && !!pendingIconTheme,
+            "scheme": gtkColorSchemeDirty && !!pendingGtkColorScheme
+        });
         deferredGtk = "";
         deferredIcon = "";
 
@@ -1008,6 +1059,16 @@ Item {
         target: ThemePipeline
 
         function onApplyFinished(ok: bool): void {
+            // Offer Undo for the change that just finished (one offer per
+            // commit; a replay of an Undo never offers another).
+            if (ok && root.undoSnap) {
+                const snap = root.undoSnap;
+                root.undoSnap = null;
+                Undo.offer("appearance", root.undoTitle, () => root._restoreUndo(snap), "");
+            } else if (!ok && root.undoSnap) {
+                root.undoSnap = null;
+                Undo.report("appearance", qsTr("Appearance was not changed"), ThemePipeline.lastError || qsTr("Appearance apply failed"));
+            }
             if (!ok) {
                 root.deferredGtk = "";
                 root.deferredIcon = "";

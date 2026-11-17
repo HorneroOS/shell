@@ -197,7 +197,7 @@ def test_control_center_exposes_every_reaction_knob():
     assert 'title: qsTr("Reactions")' in pane
     for needle in ("patchReactions(\"enabled\"", "patchReactions(\"bubbles\"", "setKindEnabled(",
                    "setModeBehaviour(", "setQuietHours(\"enabled\"", "setQuietHours(\"start\"",
-                   "setQuietHours(\"end\"", "setReactionSettings({})", "CompanionReactions.catalog",
+                   "setQuietHours(\"end\"", "resetReactions()", "CompanionReactions.catalog",
                    "CompanionReactions.modeIds"):
         assert needle in pane, needle
 

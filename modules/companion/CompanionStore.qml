@@ -218,8 +218,25 @@ Singleton {
     }
 
     function resetModeLook(): void {
+        const before = persist.modeLook;
         persist.modeLook = "";
         root.markDirty();
+        Undo.offer("companion-mode-look", qsTr("Mode looks reset"), () => {
+            persist.modeLook = before;
+            root.markDirty();
+            return true;
+        }, qsTr("Undo brings back your per-mode looks."));
+    }
+
+    // Back to the factory reactions, with Undo for the document it replaces.
+    function resetReactions(): void {
+        const before = persist.reactions;
+        root.setReactionSettings({});
+        Undo.offer("companion-reactions", qsTr("Reactions reset"), () => {
+            persist.reactions = before;
+            root.markDirty();
+            return true;
+        }, qsTr("Undo brings back your reaction settings."));
     }
 
     // Replaces the whole reactions document (validated before storing).
@@ -378,9 +395,17 @@ Singleton {
     }
 
     function resetNest(): void {
+        const stage = persist.nestStage;
+        const progress = persist.nestProgress;
         persist.nestStage = 0;
         persist.nestProgress = 0;
         root.markDirty();
+        Undo.offer("companion-nest", qsTr("Nest reset"), () => {
+            persist.nestStage = stage;
+            persist.nestProgress = progress;
+            root.markDirty();
+            return true;
+        }, qsTr("Undo brings your nest back."));
     }
 
     // One-shot animation (greet/fly/walk/idle). Unknown names fall back
@@ -456,6 +481,19 @@ Singleton {
     }
 
     function resetPosition(): void {
+        const before = {
+            "x": persist.posX,
+            "y": persist.posY,
+            "screen": persist.screenName
+        };
+        Undo.offer("companion-position", qsTr("Companion position reset"), () => {
+            persist.posX = before.x;
+            persist.posY = before.y;
+            persist.screenName = before.screen;
+            root.markActive();
+            root.markDirty();
+            return true;
+        }, qsTr("Undo moves it back."));
         persist.posX = 0.85;
         persist.posY = 0.72;
         persist.screenName = "";

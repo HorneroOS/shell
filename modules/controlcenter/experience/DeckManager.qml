@@ -121,7 +121,16 @@ ColumnLayout {
             visible: root.customised
             text: qsTr("Reset layout")
             type: TextButton.Tonal
-            onClicked: root.report(Experience.resetDeck(root.mode, ""))
+            onClicked: {
+                const before = JSON.parse(JSON.stringify(Config.experience.deck ?? {}));
+                const mode = root.mode;
+                root.report(Experience.resetDeck(mode, ""));
+                Undo.offer("deck-reset", qsTr("Dashboard layout reset"), () => {
+                    Config.experience.deck = before;
+                    Config.save();
+                    return true;
+                }, qsTr("Undo brings back your widget arrangement."));
+            }
         }
 
         Item {

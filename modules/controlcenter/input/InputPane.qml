@@ -34,15 +34,38 @@ Item {
     property string variantField: ""
     property int layoutCount: 0
 
+    // Layout changes can lock you out of typing, so they offer Undo
+    // (docs/CONTROL-CENTER-APPLY.md). The fields commit on Enter or when they
+    // lose focus, never per keystroke. One CLI call runs at a time; a newer
+    // value typed meanwhile is applied right after (newest wins).
+    property bool layoutQueued: false
+    property var layoutUndo: null
+
     function applyLayoutSet(): void {
         if (root.layoutsField.trim() === "")
             return;
+        if (root.layoutsField.trim() === root.curLayout && root.variantField.trim() === root.curVariant)
+            return;
+        if (actionProc.running) {
+            root.layoutQueued = true;
+            return;
+        }
+        root.layoutUndo = {
+            "layout": root.curLayout,
+            "variant": root.curVariant,
+            "title": root.layoutsField.trim()
+        };
+        root.runLayoutSet(root.layoutsField, root.variantField, false);
+    }
+
+    function runLayoutSet(layouts: string, variant: string, restoring: bool): void {
         root.actionText = qsTr("Applying…");
-        const cmd = ["horneroctl", "hardware", "keyboard", "layout", "--set", root.layoutsField];
-        if (root.variantField.trim() !== "")
-            cmd.push("--variant", root.variantField);
+        const cmd = ["horneroctl", "hardware", "keyboard", "layout", "--set", layouts.trim()];
+        if (variant.trim() !== "")
+            cmd.push("--variant", variant.trim());
         cmd.push("--yes", "--json");
         actionProc.out = "";
+        actionProc.restoring = restoring;
         actionProc.command = cmd;
         actionProc.running = true;
     }
@@ -66,14 +89,9 @@ Item {
         inputProc.running = true;
     }
 
-    property string armedRestore: ""
-
+    // Re-applying what is already saved changes nothing you have not chosen,
+    // so it runs at once (no second click); the live state is re-read after.
     function restoreDefaults(kind: string, argv: var): void {
-        if (root.armedRestore !== kind) {
-            root.armedRestore = kind; // first click arms, second confirms
-            return;
-        }
-        root.armedRestore = "";
         root.actionText = qsTr("Restoring…");
         actionProc.out = "";
         actionProc.command = argv;
@@ -168,6 +186,7 @@ Item {
         id: actionProc
 
         property string out: ""
+        property bool restoring: false
 
         stdout: SplitParser {
             onRead: data => {
@@ -175,13 +194,44 @@ Item {
             }
         }
         onExited: (exitCode, exitStatus) => {
+            let message = "";
+            let ok = exitCode === 0;
             try {
                 const payload = JSON.parse(actionProc.out.trim());
-                root.actionText = payload.message ? payload.message.toString() : "";
+                message = payload.message ? payload.message.toString() : "";
+                if (payload.ok === false)
+                    ok = false;
             } catch (e) {
-                root.actionText = "";
+                message = "";
+            }
+            root.actionText = message;
+            const undo = root.layoutUndo;
+            if (undo) {
+                root.layoutUndo = null;
+                if (!ok) {
+                    // The CLI validates before it writes: nothing changed.
+                    Undo.report("input-layout", actionProc.restoring ? qsTr("Could not undo the keyboard layout") : qsTr("Keyboard layout was not changed"), message || qsTr("horneroctl refused the layout list."));
+                    root.layoutsField = undo.layout;
+                    root.variantField = undo.variant;
+                } else if (!actionProc.restoring) {
+                    Undo.offer("input-layout", qsTr("Keyboard layout %1").arg(undo.title), () => {
+                        root.layoutsField = undo.layout;
+                        root.variantField = undo.variant;
+                        root.layoutUndo = {
+                            "layout": undo.layout,
+                            "variant": undo.variant,
+                            "title": undo.layout
+                        };
+                        root.runLayoutSet(undo.layout, undo.variant, true);
+                        return true;
+                    }, qsTr("Undo returns to %1.").arg(undo.layout || qsTr("the previous layout")));
+                }
             }
             root.refresh();
+            if (root.layoutQueued) {
+                root.layoutQueued = false;
+                Qt.callLater(root.applyLayoutSet);
+            }
         }
     }
 
@@ -259,7 +309,7 @@ Item {
 
                     SettingRow {
                         label: qsTr("Layout list")
-                        description: root.layoutCount > 0 ? qsTr("Comma-separated XKB names, e.g. us,latam. %1 layouts are available on this system.").arg(root.layoutCount) : qsTr("Comma-separated XKB names, e.g. us,latam")
+                        description: root.layoutCount > 0 ? qsTr("Comma-separated XKB names, e.g. us,latam. Applies when you press Enter or leave the field. %1 layouts are available on this system.").arg(root.layoutCount) : qsTr("Comma-separated XKB names, e.g. us,latam. Applies when you press Enter or leave the field.")
 
                         below: [
                             RowLayout {
@@ -279,7 +329,7 @@ Item {
                                         placeholderText: qsTr("us,latam")
                                         text: root.layoutsField
                                         onTextChanged: root.layoutsField = text
-                                        onAccepted: root.applyLayoutSet()
+                                        onEditingFinished: root.applyLayoutSet()
                                     }
                                 }
 
@@ -296,15 +346,8 @@ Item {
                                         placeholderText: qsTr("Variant (intl,)")
                                         text: root.variantField
                                         onTextChanged: root.variantField = text
-                                        onAccepted: root.applyLayoutSet()
+                                        onEditingFinished: root.applyLayoutSet()
                                     }
-                                }
-
-                                TextButton {
-                                    text: qsTr("Apply layouts")
-                                    type: TextButton.Filled
-                                    enabled: root.layoutsField.trim() !== ""
-                                    onClicked: root.applyLayoutSet()
                                 }
                             }
                         ]
@@ -421,7 +464,7 @@ Item {
 
                     SettingRow {
                         label: qsTr("Re-apply saved settings")
-                        description: qsTr("Each restore asks for a second click to confirm.")
+                        description: qsTr("Puts the settings you saved back on the running session.")
 
                         below: [
                             Flow {
@@ -429,20 +472,20 @@ Item {
                                 spacing: Appearance.spacing.small
 
                                 TextButton {
-                                    text: root.armedRestore === "keyboard" ? qsTr("Click again to restore layout") : qsTr("Restore keyboard layout")
-                                    type: root.armedRestore === "keyboard" ? TextButton.Filled : TextButton.Tonal
+                                    text: qsTr("Restore keyboard layout")
+                                    type: TextButton.Tonal
                                     onClicked: root.restoreDefaults("keyboard", ["horneroctl", "hardware", "keyboard", "layout", "--restore", "--yes", "--json"])
                                 }
 
                                 TextButton {
-                                    text: root.armedRestore === "input" ? qsTr("Click again to restore tuning") : qsTr("Restore pointer & keyboard")
-                                    type: root.armedRestore === "input" ? TextButton.Filled : TextButton.Tonal
+                                    text: qsTr("Restore pointer & keyboard")
+                                    type: TextButton.Tonal
                                     onClicked: root.restoreDefaults("input", ["horneroctl", "hypr", "input", "restore", "--yes", "--json"])
                                 }
 
                                 TextButton {
-                                    text: root.armedRestore === "cursor" ? qsTr("Click again to restore cursor") : qsTr("Restore cursor")
-                                    type: root.armedRestore === "cursor" ? TextButton.Filled : TextButton.Tonal
+                                    text: qsTr("Restore cursor")
+                                    type: TextButton.Tonal
                                     onClicked: root.restoreDefaults("cursor", ["horneroctl", "hypr", "cursor", "restore", "--yes", "--json"])
                                 }
                             }

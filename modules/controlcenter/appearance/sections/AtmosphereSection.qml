@@ -35,6 +35,12 @@ CollapsibleSection {
     readonly property var atmo: Config.appearance.atmosphere
 
     function resetAll(): void {
+        Undo.offer("atmosphere-reset", qsTr("Atmosphere reset to factory"), Undo.restorer([
+            {
+                "obj": root.atmo,
+                "keys": Object.keys(root.factory)
+            }
+        ]), qsTr("Undo brings back your lamp, warmth, grain and voice."));
         for (const k of Object.keys(root.factory))
             root.atmo[k] = root.factory[k];
         Config.save();

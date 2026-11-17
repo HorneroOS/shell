@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import qs.components
 import qs.services
 import qs.config
+import qs.utils
 import Quickshell
 import Quickshell.Io
 import QtQuick
@@ -24,6 +25,9 @@ Item {
     // Keyboard navigation (arrow keys + Enter). Enable only when the host
     // gives this grid exclusive key focus (e.g. the modal picker).
     property bool keyboardNav: false
+    // Offer "Applied · Undo" (services/Undo.qml) after a preset applies. The
+    // Control Center turns this on; the modal picker has no strip to show it.
+    property bool offerUndo: false
 
     property var presets: []
     property string currentName: ""
@@ -99,13 +103,48 @@ Item {
         listProc.running = true;
     }
 
+    // Preset application is transactional from the user's side: shell.json
+    // and the active-preset pointer are copied aside first, one apply runs
+    // at a time (a newer choice made meanwhile replaces an older queued one),
+    // a failure puts the previous name back and says why, and Undo restores
+    // the copied files atomically (copy to a temp file, then rename).
+    readonly property string undoRoot: `${Paths.state}/shell/undo`
+    property string _target: ""
+    property string _prevName: ""
+    property string _queued: ""
+    property string _snapDir: ""
+    property string _failure: ""
+    readonly property bool applying: snapProc.running || applyProc.running
+
     function apply(name: string): void {
-        if (applyProc.running)
+        if (name === "")
             return;
-        currentName = name; // optimistic; the re-list corrects if it failed
-        applyProc.command = ["horneroctl", "shell", "preset", "apply", name, "--yes"];
-        console.log("[layoutpicker] apply", name, "via", applyProc.command);
+        if (root.applying) {
+            root._queued = name;
+            root.currentName = name;
+            return;
+        }
+        root._begin(name);
+    }
+
+    function _begin(name: string): void {
+        root._target = name;
+        root._prevName = root.currentName;
+        root._failure = "";
+        root.currentName = name; // optimistic; the re-list corrects if it failed
+        root._snapDir = `${root.undoRoot}/${Date.now()}`;
+        snapProc.command = ["sh", "-c", 'set -eu; d="$1"; mkdir -p "$d"; cp -p "$2" "$d/shell.json"; if [ -f "$3" ]; then cp -p "$3" "$d/current-shell-preset"; fi; ls -1dt "$(dirname "$d")"/*/ | tail -n +4 | xargs -r rm -rf', "sh", root._snapDir, `${Paths.config}/shell.json`, `${Paths.state}/current-shell-preset`];
+        snapProc.running = true;
+    }
+
+    function _startApply(): void {
+        applyProc.command = ["horneroctl", "shell", "preset", "apply", root._target, "--yes"];
         applyProc.running = true;
+    }
+
+    function _restore(dir: string): void {
+        restoreProc.command = ["sh", "-c", 'set -eu; d="$1"; cp -p "$d/shell.json" "$2.undo.tmp"; mv -f "$2.undo.tmp" "$2"; if [ -f "$d/current-shell-preset" ]; then cp -p "$d/current-shell-preset" "$3.undo.tmp"; mv -f "$3.undo.tmp" "$3"; fi', "sh", dir, `${Paths.config}/shell.json`, `${Paths.state}/current-shell-preset`];
+        restoreProc.running = true;
     }
 
     function applyFocused(): void {
@@ -173,19 +212,75 @@ Item {
     }
 
     Process {
+        id: snapProc
+
+        stderr: StdioCollector {
+            id: snapErr
+        }
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode !== 0) {
+                // No safety copy means no safe apply: stop before changing anything.
+                root.currentName = root._prevName;
+                Undo.report("layout", qsTr("Layout was not changed"), qsTr("Could not save the current settings first (%1). Nothing was changed.").arg(snapErr.text.trim().split("\n").slice(-1)[0] || qsTr("copy failed")));
+                root._next();
+                return;
+            }
+            root._startApply();
+        }
+    }
+
+    Process {
         id: applyProc
 
         stdout: StdioCollector {
             onStreamFinished: console.log("[layoutpicker] apply stdout:", text)
         }
         stderr: StdioCollector {
+            id: applyErr
+
             onStreamFinished: console.warn("[layoutpicker] apply stderr:", text)
         }
         onExited: (exitCode, exitStatus) => {
             console.log("[layoutpicker] apply exit", exitCode, exitStatus);
+            if (exitCode !== 0) {
+                // horneroctl validates before it writes: the old layout is intact.
+                const why = applyErr.text.trim().split("\n").slice(-1)[0];
+                const target = root.presets.find(p => p.name === root._target);
+                root.currentName = root._prevName;
+                Undo.report("layout", qsTr("Layout %1 was not applied").arg(target ? target.display : root._target), why || qsTr("horneroctl refused the preset. Your previous layout is unchanged."));
+            } else if (root.offerUndo && root._queued === "") {
+                const dir = root._snapDir;
+                const target = root.presets.find(p => p.name === root._target);
+                Undo.offer("layout", qsTr("Layout %1").arg(target ? target.display : root._target), () => {
+                    root._restore(dir);
+                    return true;
+                }, qsTr("Undo brings back the previous layout and its tuning."));
+            }
             // Re-sync the active marker from disk (source of truth)
             root.reload();
+            root._next();
         }
+    }
+
+    Process {
+        id: restoreProc
+
+        stderr: StdioCollector {
+            id: restoreErr
+        }
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode !== 0)
+                Undo.report("layout", qsTr("Could not undo the layout"), restoreErr.text.trim().split("\n").slice(-1)[0] || qsTr("The previous settings could not be restored."));
+            root.reload();
+        }
+    }
+
+    // Newest choice wins: one more apply for what was picked while busy.
+    function _next(): void {
+        const q = root._queued;
+        root._queued = "";
+        if (q !== "")
+            root._begin(q);
     }
 
     focus: root.keyboardNav

@@ -15,8 +15,11 @@ import "../../../../services/chromaticcli.js" as Cli
 
 // Appearance > Chromatic (RFC 0002 §13.3). A candidate palette is built by
 // the helper from the wallpaper (or an image, a colour, the Signal house
-// palette) and shown on a sample desktop; nothing changes until Apply, and
-// Apply goes through `horneroctl appearance chromatic apply` only.
+// palette) and shown on a sample desktop. There is no Apply button
+// (docs/CONTROL-CENTER-APPLY.md): choosing a source, variant or look applies
+// it (once the controls are quiet) with an "Applied · Undo" strip, and
+// hovering or focusing a variant tile only previews it. Applying goes
+// through `horneroctl appearance chromatic apply` only.
 CollapsibleSection {
     id: root
 
@@ -30,7 +33,7 @@ CollapsibleSection {
     readonly property var infer: root.result ? root.result.inference : null
 
     title: qsTr("Chromatic")
-    description: qsTr("Build the desktop palette from your wallpaper, an image or one colour. Preview it, override anything, then apply.")
+    description: qsTr("Build the desktop palette from your wallpaper, an image or one colour. Every choice applies as you make it; point at a variant to preview it, and Undo is one click away.")
     showBackground: true
 
     Component.onCompleted: {
@@ -39,9 +42,11 @@ CollapsibleSection {
     }
     // Leaving the section never leaves a candidate on the live shell.
     Component.onDestruction: ChromaticPreview.previewLive(false)
+    // Escape ends a hover/focus preview and puts the real palette back.
     Keys.onEscapePressed: event => {
-        if (ChromaticPreview.live || ChromaticPreview.dirty) {
-            ChromaticPreview.cancel();
+        if (ChromaticPreview.hoveredVariant !== "" || ChromaticPreview.live) {
+            ChromaticPreview.endHover("");
+            ChromaticPreview.previewLive(false);
             event.accepted = true;
         }
     }
@@ -107,37 +112,14 @@ CollapsibleSection {
         }
     }
 
-    StyledRect {
-        visible: ChromaticPreview.followAsking
-        Layout.fillWidth: true
-        implicitHeight: askRow.implicitHeight + Appearance.padding.normal * 2
-        radius: Appearance.rounding.small
-        color: Signal.palette.signalWell
-
-        RowLayout {
-            id: askRow
-
-            anchors.fill: parent
-            anchors.margins: Appearance.padding.normal
-            spacing: Appearance.spacing.normal
-
-            StyledText {
-                Layout.fillWidth: true
-                wrapMode: Text.WordWrap
-                text: qsTr("The wallpaper changed. Recolour the desktop to match?")
-                color: Signal.palette.onSignalWell
-            }
-
-            TextButton {
-                text: qsTr("Apply")
-                onClicked: ChromaticPreview.applyAsked()
-            }
-
-            TextButton {
-                text: qsTr("Keep current")
-                type: TextButton.Tonal
-                onClicked: ChromaticPreview.keepCurrent()
-            }
+    SwitchRow {
+        label: qsTr("Use Chromatic: colours that follow your wallpaper")
+        checked: root.active
+        onToggled: checked => {
+            if (checked)
+                ChromaticPreview.enable();
+            else
+                ChromaticPreview.turnOff();
         }
     }
 
@@ -146,7 +128,7 @@ CollapsibleSection {
         wrapMode: Text.WordWrap
         font.pointSize: Appearance.font.size.small
         color: Signal.palette.inkMuted
-        text: root.active ? qsTr("Chromatic is active: %1.").arg(Signal.chromatic ? `${Signal.chromatic.variant}, ${Signal.chromatic.mode}` : qsTr("waiting for the palette")) : qsTr("Chromatic is not active. Your theme is %1; applying switches to a dynamic palette (Turn off returns to %2).").arg(Signal.themeId || "-").arg(Config.appearance.chromatic.fallback[Signal.themeMode] ?? "-")
+        text: root.active ? qsTr("Chromatic is active: %1.").arg(Signal.chromatic ? `${Signal.chromatic.variant}, ${Signal.chromatic.mode}` : qsTr("waiting for the palette")) : qsTr("Chromatic is off. Your theme is %1. Choosing anything below, or the switch above, turns Chromatic on; turning it off returns to %2.").arg(Signal.themeId || "-").arg(Config.appearance.chromatic.fallback[Signal.themeMode] ?? "-")
     }
 
     // ---- candidate on a sample desktop --------------------------------
@@ -429,15 +411,6 @@ CollapsibleSection {
         }
 
         SwitchRow {
-            label: qsTr("Ask me first, with a preview and a 10 second Keep current")
-            checked: Config.appearance.chromatic.follow === "ask"
-            onToggled: checked => {
-                Config.appearance.chromatic.follow = checked ? "ask" : "off";
-                Config.save();
-            }
-        }
-
-        SwitchRow {
             label: qsTr("Smooth palette transitions")
             checked: Config.appearance.chromatic.transition === "smooth"
             onToggled: checked => {
@@ -467,41 +440,22 @@ CollapsibleSection {
         Accessible.role: Accessible.StaticText
     }
 
+    StyledText {
+        visible: ChromaticPreview.applying
+        text: qsTr("Applying…")
+        font.pointSize: Appearance.font.size.small
+        color: Signal.palette.inkMuted
+        Accessible.role: Accessible.StaticText
+    }
+
     Flow {
         Layout.fillWidth: true
         spacing: Appearance.spacing.small
 
         TextButton {
-            text: ChromaticPreview.applying ? qsTr("Applying…") : qsTr("Apply")
-            disabled: !root.result || ChromaticPreview.applying
-            onClicked: ChromaticPreview.apply(true)
-        }
-
-        TextButton {
-            text: ChromaticPreview.live ? qsTr("Stop previewing") : qsTr("Preview on desktop")
-            type: TextButton.Tonal
-            disabled: !root.result
-            onClicked: ChromaticPreview.previewLive(!ChromaticPreview.live)
-        }
-
-        TextButton {
-            text: qsTr("Cancel")
-            type: TextButton.Tonal
-            disabled: !ChromaticPreview.live && !ChromaticPreview.dirty && ChromaticPreview.applyError === ""
-            onClicked: ChromaticPreview.cancel()
-        }
-
-        TextButton {
-            text: qsTr("Roll back")
+            text: qsTr("Previous palette")
             type: TextButton.Text
             onClicked: ChromaticPreview.rollback()
-        }
-
-        TextButton {
-            visible: root.active
-            text: qsTr("Turn off Chromatic")
-            type: TextButton.Text
-            onClicked: ChromaticPreview.turnOff()
         }
     }
 

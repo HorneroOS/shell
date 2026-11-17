@@ -14,7 +14,7 @@ def pane_text() -> str:
 
 def test_layout_set_wired() -> None:
     text = pane_text()
-    assert '"layout", "--set", root.layoutsField' in text
+    assert '"layout", "--set", layouts.trim()' in text
     assert '"--yes", "--json"' in text
     assert "root.curLayout" in text
     assert "root.curVariant" in text
@@ -29,4 +29,4 @@ def test_layout_list_count() -> None:
 def test_variant_optional() -> None:
     text = pane_text()
     # --variant is only passed when the field is non-empty.
-    assert 'if (root.variantField.trim() !== "")' in text
+    assert 'if (variant.trim() !== "")' in text

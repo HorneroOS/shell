@@ -27,7 +27,6 @@ Item {
     property var ranges: ({})
     property int revision: 0
     property string query: ""
-    property bool confirmAll: false
     // Re-read on every save so the list follows live edits.
     readonly property var items: {
         const _r = root.revision;
@@ -35,15 +34,28 @@ Item {
     }
     readonly property var shown: Customisation.filter(root.items, root.query)
 
-    function resetPath(path: string): void {
+    function setPath(path: string, value: var): void {
         const parts = path.split(".");
         let obj = Config;
         for (let i = 0; i < parts.length - 1; i++)
             obj = obj[parts[i]];
+        obj[parts[parts.length - 1]] = value;
+    }
+
+    function resetPath(path: string): void {
         let fac = root.factory;
-        for (const p of parts)
+        for (const p of path.split("."))
             fac = fac[p];
-        obj[parts[parts.length - 1]] = fac;
+        root.setPath(path, fac);
+    }
+
+    // Put the exact earlier values back and save once.
+    function restoreValues(snap: var): bool {
+        for (const entry of snap)
+            root.setPath(entry.path, entry.value);
+        Config.save();
+        root.revision++;
+        return true;
     }
 
     property string packText: ""
@@ -60,28 +72,45 @@ Item {
             pack = JSON.parse(root.packText);
         } catch (e) {
             root.packMessage = qsTr("That is not valid JSON.");
+            Undo.report("customisation-import", qsTr("Look was not imported"), root.packMessage);
             return;
         }
         const r = Customisation.validatePack(pack, root.factory, root.ranges);
-        for (const a of r.accepted) {
-            const parts = a.path.split(".");
-            let obj = Config;
-            for (let i = 0; i < parts.length - 1; i++)
-                obj = obj[parts[i]];
-            obj[parts[parts.length - 1]] = a.value;
-        }
-        if (r.accepted.length > 0)
+        const before = r.accepted.map(a => ({
+                    "path": a.path,
+                    "value": JSON.parse(JSON.stringify(root.valueAt(a.path)))
+                }));
+        for (const a of r.accepted)
+            root.setPath(a.path, a.value);
+        if (r.accepted.length > 0) {
             Config.save();
+            Undo.offer("customisation-import", qsTr("Imported look (%n setting(s))", "", r.accepted.length), () => root.restoreValues(before), qsTr("Undo puts every imported setting back."));
+        }
         root.revision++;
         root.packMessage = r.rejected.length > 0 ? qsTr("Applied %1 setting(s); skipped %2 (%3).").arg(r.accepted.length).arg(r.rejected.length).arg(r.rejected[0].reason) : qsTr("Applied %1 setting(s).").arg(r.accepted.length);
     }
 
+    function valueAt(path: string): var {
+        let obj = Config;
+        for (const p of path.split("."))
+            obj = obj[p];
+        return obj;
+    }
+
+    // Reset applies at once and offers Undo with the exact earlier values;
+    // there is no confirm step (docs/CONTROL-CENTER-APPLY.md).
     function resetItems(list: var): void {
+        if (list.length === 0)
+            return;
+        const before = list.map(it => ({
+                    "path": it.path,
+                    "value": JSON.parse(JSON.stringify(it.current))
+                }));
         for (const it of list)
             root.resetPath(it.path);
         Config.save();
-        root.confirmAll = false;
         root.revision++;
+        Undo.offer("customisation-reset", list.length === 1 ? qsTr("Reset %1").arg(list[0].label) : qsTr("Reset %n setting(s)", "", list.length), () => root.restoreValues(before), qsTr("Your apps, files and layouts are not touched."));
     }
 
     anchors.fill: parent
@@ -173,32 +202,16 @@ Item {
                 spacing: Appearance.spacing.small
 
                 TextButton {
-                    visible: !root.confirmAll
                     text: qsTr("Reset all")
                     type: TextButton.Tonal
                     Accessible.name: qsTr("Reset all customised settings to the HorneroOS defaults")
-                    onClicked: root.confirmAll = true
-                }
-
-                StyledText {
-                    visible: root.confirmAll
-                    text: qsTr("Reset %n setting(s)? Your apps, files and layouts are not touched.", "", root.items.length)
-                    color: Signal.palette.alert
-                    font.pointSize: Appearance.font.size.small
-                }
-
-                TextButton {
-                    visible: root.confirmAll
-                    text: qsTr("Yes, reset all")
-                    type: TextButton.Tonal
                     onClicked: root.resetItems(root.items)
                 }
 
-                TextButton {
-                    visible: root.confirmAll
-                    text: qsTr("Cancel")
-                    type: TextButton.Text
-                    onClicked: root.confirmAll = false
+                StyledText {
+                    text: qsTr("Applies at once; Undo stays for a few seconds. Your apps, files and layouts are not touched.")
+                    color: Signal.palette.inkMuted
+                    font.pointSize: Appearance.font.size.small
                 }
             }
 

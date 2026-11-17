@@ -42,19 +42,6 @@ Item {
         return (n < 10 ? "0" : "") + n;
     }
 
-    function setSchedule(): void {
-        root.actionText = qsTr("Applying…");
-        setProc.out = "";
-        setProc.command = ["horneroctl", "appearance", "night-mode", "schedule", "set", "--from", root.pad2(root.onHour) + ":" + root.pad2(root.onMinute), "--to", root.pad2(root.offHour) + ":" + root.pad2(root.offMinute), "--yes", "--json"];
-        setProc.running = true;
-    }
-
-    function clearSchedule(): void {
-        root.actionText = qsTr("Applying…");
-        setProc.out = "";
-        setProc.command = ["horneroctl", "appearance", "night-mode", "schedule", "clear", "--yes", "--json"];
-        setProc.running = true;
-    }
     property string statusText: qsTr("Reading night light…")
     property string actionText: ""
 
@@ -67,18 +54,69 @@ Item {
         backendsProc.running = true;
     }
 
-    function setMode(mode: string): void {
+    // Every change goes through send(): one command at a time, a newer one
+    // issued meanwhile replaces the queued one (newest wins), failures are
+    // reported with the CLI's own message.
+    property var queuedJob: null
+    property var runningJob: null
+
+    function send(cmd: var, undo: var): void {
+        const job = {
+            "cmd": cmd,
+            "undo": undo ?? null
+        };
+        if (setProc.running) {
+            root.queuedJob = job;
+            return;
+        }
+        root.runningJob = job;
         root.actionText = qsTr("Applying…");
         setProc.out = "";
-        setProc.command = ["horneroctl", "appearance", "night-mode", mode, "--yes", "--json"];
+        setProc.command = cmd;
         setProc.running = true;
     }
 
+    function scheduleArgs(from: string, to: string): var {
+        return ["horneroctl", "appearance", "night-mode", "schedule", "set", "--from", from, "--to", to, "--yes", "--json"];
+    }
+
+    // The schedule switch and the time fields apply as you change them (the
+    // times after a short pause, so typing 22:30 is one change, not four).
+    function setSchedule(): void {
+        const prev = root.schedule;
+        const from = root.pad2(root.onHour) + ":" + root.pad2(root.onMinute);
+        const to = root.pad2(root.offHour) + ":" + root.pad2(root.offMinute);
+        if (prev === from + "-" + to)
+            return;
+        root.send(root.scheduleArgs(from, to), {
+            "title": qsTr("Night light schedule %1 to %2").arg(from).arg(to),
+            "restore": prev === "" ? ["horneroctl", "appearance", "night-mode", "schedule", "clear", "--yes", "--json"] : root.scheduleArgs(prev.split("-")[0], prev.split("-")[1]),
+            "detail": prev === "" ? qsTr("Undo removes the schedule.") : qsTr("Undo returns to %1.").arg(prev)
+        });
+    }
+
+    function clearSchedule(): void {
+        const prev = root.schedule;
+        root.send(["horneroctl", "appearance", "night-mode", "schedule", "clear", "--yes", "--json"], prev === "" ? null : {
+            "title": qsTr("Night light schedule removed"),
+            "restore": root.scheduleArgs(prev.split("-")[0], prev.split("-")[1]),
+            "detail": qsTr("Undo brings back %1.").arg(prev)
+        });
+    }
+
+    Timer {
+        id: scheduleTimer
+
+        interval: 700
+        onTriggered: root.setSchedule()
+    }
+
+    function setMode(mode: string): void {
+        root.send(["horneroctl", "appearance", "night-mode", mode, "--yes", "--json"], null);
+    }
+
     function setTemperature(kelvin: int): void {
-        root.actionText = qsTr("Applying…");
-        setProc.out = "";
-        setProc.command = ["horneroctl", "appearance", "night-mode", "set", "--temperature", kelvin.toString(), "--yes", "--json"];
-        setProc.running = true;
+        root.send(["horneroctl", "appearance", "night-mode", "set", "--temperature", kelvin.toString(), "--yes", "--json"], null);
     }
 
     Component.onCompleted: root.refresh()
@@ -150,14 +188,38 @@ Item {
                 setProc.out += data;
             }
         }
+        stderr: StdioCollector {
+            id: setErr
+        }
         onExited: (exitCode, exitStatus) => {
+            const job = root.runningJob;
+            root.runningJob = null;
+            let ok = exitCode === 0;
+            let message = "";
             try {
                 const payload = JSON.parse(setProc.out.trim());
-                root.actionText = payload.message ? payload.message.toString() : "";
+                message = payload.message ? payload.message.toString() : "";
+                if (payload.ok === false)
+                    ok = false;
             } catch (e) {
-                root.actionText = qsTr("The night-mode command did not answer. Check: horneroctl appearance night-mode status");
+                ok = false;
+                message = qsTr("The night-mode command did not answer. Check: horneroctl appearance night-mode status");
+            }
+            root.actionText = message;
+            if (!ok) {
+                Undo.report("night-light", qsTr("Night light was not changed"), message || setErr.text.trim().split("\n").slice(-1)[0]);
+            } else if (job && job.undo) {
+                const u = job.undo;
+                Undo.offer("night-light", u.title, () => {
+                    root.send(u.restore, null);
+                    return true;
+                }, u.detail);
             }
             root.refresh();
+            const next = root.queuedJob;
+            root.queuedJob = null;
+            if (next)
+                root.send(next.cmd, next.undo);
         }
     }
 
@@ -276,6 +338,18 @@ Item {
                                 wrapMode: Text.Wrap
                             }
 
+                            SwitchRow {
+                                label: qsTr("Switch on and off automatically")
+                                checked: root.schedule !== ""
+                                onToggled: checked => {
+                                    scheduleTimer.stop();
+                                    if (checked)
+                                        root.setSchedule();
+                                    else
+                                        root.clearSchedule();
+                                }
+                            }
+
                             SpinBoxRow {
                                 label: qsTr("Turn on — hour")
                                 value: root.onHour
@@ -283,6 +357,8 @@ Item {
                                 max: 23
                                 onValueModified: value => {
                                     root.onHour = Math.round(value);
+                                    if (root.schedule !== "")
+                                        scheduleTimer.restart();
                                 }
                             }
 
@@ -294,6 +370,8 @@ Item {
                                 step: 5
                                 onValueModified: value => {
                                     root.onMinute = Math.round(value);
+                                    if (root.schedule !== "")
+                                        scheduleTimer.restart();
                                 }
                             }
 
@@ -304,6 +382,8 @@ Item {
                                 max: 23
                                 onValueModified: value => {
                                     root.offHour = Math.round(value);
+                                    if (root.schedule !== "")
+                                        scheduleTimer.restart();
                                 }
                             }
 
@@ -315,25 +395,11 @@ Item {
                                 step: 5
                                 onValueModified: value => {
                                     root.offMinute = Math.round(value);
+                                    if (root.schedule !== "")
+                                        scheduleTimer.restart();
                                 }
                             }
 
-                            RowLayout {
-                                spacing: Appearance.spacing.small
-
-                                TextButton {
-                                    text: qsTr("Set schedule")
-                                    type: TextButton.Filled
-                                    onClicked: root.setSchedule()
-                                }
-
-                                TextButton {
-                                    visible: root.schedule !== ""
-                                    text: qsTr("Clear schedule")
-                                    type: TextButton.Tonal
-                                    onClicked: root.clearSchedule()
-                                }
-                            }
                         }
 
                         StyledText {

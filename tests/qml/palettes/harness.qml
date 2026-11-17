@@ -237,7 +237,6 @@ ShellRoot {
             if (root.manageStep === 0) {
                 o.renamed = editor.status;
                 editor.sourceId = "my-dusk";
-                editor.confirmingDelete = true;
                 editor.deleteSaved();
                 root.manageStep = 1;
             } else if (root.manageStep === 1) {

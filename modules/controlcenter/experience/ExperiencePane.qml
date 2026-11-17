@@ -58,9 +58,16 @@ Item {
     }
 
     function activate(id: string): void {
+        const from = Experience.mode;
         const res = Experience.set(id, "user");
         root.actionMessage = res.startsWith("error") ? res : "";
         root.selectedMode = id;
+        if (!res.startsWith("error") && Experience.mode !== from)
+            Undo.offer("experience-mode", qsTr("%1 mode").arg(Experience.label), () => {
+                const back = Experience.revert();
+                root.selectedMode = Experience.mode;
+                return back.startsWith("error") ? back : true;
+            }, qsTr("Undo returns to the previous mode."));
     }
 
     onSelectedModeChanged: {
@@ -691,11 +698,16 @@ Item {
                                     "value": id,
                                     "label": id
                                 }))
-                        onPicked: v => root.customise("layout.preset", v)
+                        onPicked: v => {
+                            root.customise("layout.preset", v);
+                            // With "apply on switch" on, the active mode takes it now.
+                            if (root.selActive && root.field("layout.apply"))
+                                Experience.applyPreferredLayout();
+                        }
                     }
 
                     SwitchRow {
-                        label: qsTr("Apply preferred layout on switch")
+                        label: qsTr("Apply preferred layout whenever this mode starts")
                         checked: root.field("layout.apply")
                         onToggled: checked => root.customise("layout.apply", checked)
                     }
@@ -703,13 +715,6 @@ Item {
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: Appearance.spacing.small
-
-                        TextButton {
-                            visible: root.selActive && String(root.field("layout.preset") ?? "").length > 0
-                            text: qsTr("Apply %1 now").arg(root.field("layout.preset"))
-                            type: TextButton.Text
-                            onClicked: Experience.applyPreferredLayout()
-                        }
 
                         Item {
                             Layout.fillWidth: true

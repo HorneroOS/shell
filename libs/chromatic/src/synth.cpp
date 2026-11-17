@@ -485,13 +485,27 @@ Expected<Generated> synthesise(const Analysis* a, const Request& r, const Infere
     if (seeds.hs)
         cands << *seeds.hs;
     cands << wrapHue(seedH + V.cueRot) << wrapHue(seedH - V.cueRot) << wrapHue(seedH + 180.0)
-          << harmonise(kHouseCueHue, seedH, 15.0) << wrapHue(seedH + 120.0) << wrapHue(seedH - 120.0);
+          << harmonise(kHouseCueHue, seedH, 15.0) << kHouseCueHue << wrapHue(seedH + 120.0) << wrapHue(seedH - 120.0);
     const auto mind = [&](double h) { return std::min(std::abs(hueDiff(h, alertH)), std::abs(hueDiff(h, phosH))); };
+    // Cue preference (algorithm 2). Signal's identity is a warm live signal
+    // and a cool focus cue, so after the image's own second hue a cool cue
+    // (180°–290°) wins whenever the separation rules allow it, and a cue in
+    // the olive band (90°–135°, which reads muddy at the cue lightness) is
+    // taken only when nothing else qualifies. A violet or pink lead used to
+    // get its near-complement, an olive-yellow cue.
+    const auto qualifies = [&](double h) { return mind(h) >= 35.0 && std::abs(hueDiff(h, seedH)) >= 60.0; };
+    const auto olive = [](double h) { return h >= 90.0 && h <= 135.0; };
+    const auto cool = [](double h) { return h >= 180.0 && h <= 290.0; };
     std::optional<double> cue;
-    for (double h : cands) {
-        if (mind(h) >= 35.0 && std::abs(hueDiff(h, seedH)) >= 60.0) {
-            cue = h;
-            break;
+    if (seeds.hs && qualifies(*seeds.hs) && !olive(*seeds.hs))
+        cue = *seeds.hs;
+    for (int pass = 0; pass < 3 && !cue; ++pass) {
+        for (double h : cands) {
+            const bool preferred = pass == 0 ? cool(h) : (pass == 1 ? !olive(h) : true);
+            if (preferred && qualifies(h)) {
+                cue = h;
+                break;
+            }
         }
     }
     if (!cue) {

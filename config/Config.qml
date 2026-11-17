@@ -28,6 +28,7 @@ Singleton {
     property alias paths: adapter.paths
     property alias plugins: adapter.plugins
     property alias experience: adapter.experience
+    property alias layouts: adapter.layouts
 
     property bool editSessionActive: false
     property bool hasPendingChanges: false
@@ -268,7 +269,8 @@ Singleton {
             services: serializeServices(),
             paths: serializePaths(),
             plugins: serializePlugins(),
-            experience: serializeExperience()
+            experience: serializeExperience(),
+            layouts: serializeLayouts()
         };
     }
 
@@ -760,6 +762,12 @@ Singleton {
         };
     }
 
+    function serializeLayouts(): var {
+        return {
+            overrides: layouts.overrides
+        };
+    }
+
     function serializeExperience(): var {
         return {
             modes: experience.modes,
@@ -838,6 +846,7 @@ Singleton {
             property UserPaths paths: UserPaths {}
             property PluginsConfig plugins: PluginsConfig {}
             property ExperienceConfig experience: ExperienceConfig {}
+            property LayoutsConfig layouts: LayoutsConfig {}
         }
     }
 

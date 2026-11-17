@@ -221,6 +221,7 @@ Singleton {
         const res = root.set(Model.DEFAULT_MODE, "reset");
         if (res.startsWith("error"))
             return res;
+        layoutProc.layoutId = Model.FACTORY_LAYOUT;
         layoutProc.exec(["horneroctl", "shell", "preset", "apply", Model.FACTORY_LAYOUT, "--yes"]);
         ThemePipeline.applyTheme(Model.FACTORY_THEME, "");
         return `ok: ${Model.DEFAULT_MODE} + ${Model.FACTORY_LAYOUT} + ${Model.FACTORY_THEME}`;
@@ -376,8 +377,10 @@ Singleton {
     // Applies the mode's preferred layout preset. Always an explicit act
     // (or the per-mode layout.apply opt-in): presets rewrite the bars.
     function applyPreferredLayout(): void {
-        if (root.preferredLayout.length > 0)
+        if (root.preferredLayout.length > 0) {
+            layoutProc.layoutId = root.preferredLayout;
             layoutProc.exec(["horneroctl", "shell", "preset", "apply", root.preferredLayout, "--yes"]);
+        }
     }
 
     function probeStudioAudio(): void {
@@ -577,7 +580,11 @@ Singleton {
     Process {
         id: layoutProc
 
+        property string layoutId: ""
+
         onExited: exitCode => {
+            if (exitCode === 0)
+                Layouts.reapplyAfterPreset(layoutProc.layoutId);
             if (exitCode !== 0)
                 Toaster.toast(qsTr("Layout not applied"), qsTr("horneroctl shell preset apply failed (exit %1).").arg(exitCode), "layout-dashboard", Toast.Warning);
         }

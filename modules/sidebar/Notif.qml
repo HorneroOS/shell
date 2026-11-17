@@ -16,7 +16,8 @@ StyledRect {
     required property var visibilities
 
     readonly property StyledText body: expandedContent.item?.body ?? null
-    readonly property real nonAnimHeight: expanded ? summary.implicitHeight + expandedContent.implicitHeight + expandedContent.anchors.topMargin + Appearance.padding.normal * 2 : summaryHeightMetrics.height
+    readonly property bool hasBody: root.modelData.body.trim() !== ""
+    readonly property real nonAnimHeight: expanded ? summary.implicitHeight + expandedContent.implicitHeight + expandedContent.anchors.topMargin + Appearance.padding.normal * 2 : summaryHeightMetrics.height + (hasBody ? bodyHeightMetrics.height : 0)
 
     // Urgency-driven color roles
     readonly property bool isCritical: root.modelData.urgency === "critical"
@@ -115,6 +116,14 @@ StyledRect {
         text: " " // Use this height to prevent weird characters from changing the line height
     }
 
+    TextMetrics {
+        id: bodyHeightMetrics
+
+        font.pointSize: Appearance.font.size.smaller
+        text: " "
+    }
+
+    // Title on its own line (popup anatomy), body on the next.
     StyledText {
         id: summary
 
@@ -124,6 +133,7 @@ StyledRect {
         width: parent.width
         text: root.modelData.summary
         color: root.textColor
+        font.weight: Font.Medium
         elide: Text.ElideRight
         wrapMode: Text.WordWrap
         maximumLineCount: 1
@@ -143,14 +153,14 @@ StyledRect {
         id: compactBody
 
         shouldBeActive: !root.expanded
-        anchors.top: parent.top
-        anchors.left: dummySummary.right
+        anchors.top: summary.bottom
+        anchors.left: parent.left
         anchors.right: parent.right
-        anchors.leftMargin: Appearance.spacing.small
 
         sourceComponent: StyledText {
             text: root.modelData.body.replace(/\n/g, " ")
             color: root.bodyColor
+            font.pointSize: Appearance.font.size.smaller
             elide: Text.ElideRight
         }
     }

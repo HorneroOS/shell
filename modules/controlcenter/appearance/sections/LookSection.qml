@@ -42,7 +42,6 @@ CollapsibleSection {
         const p = root.rootPane;
         const eq = (a, b) => Math.abs(a - b) < 0.005;
         return eq(p.roundingScale, look.rounding) && eq(p.spacingScale, look.spacing) && eq(p.paddingScale, look.padding) && eq(p.fontSizeScale, look.font) && eq(p.animDurationsScale, look.motion) && eq(Config.appearance.glow.intensity, look.glow) && Config.appearance.font.weight.shift === look.weight && Config.appearance.anim.curveStyle === look.curve && sameAtmosphere(look.atmosphere);
-
     }
 
     // A look also sets the atmosphere knobs (Appearance > Atmosphere); the

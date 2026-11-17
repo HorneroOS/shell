@@ -400,3 +400,27 @@ def test_glow_stays_inside_amendment_2_limits():
     assert "readonly property int limit: 3" in kit
     theme = (ROOT / "plugin" / "qml" / "Hornero" / "PluginKit" / "Theme.qml").read_text()
     assert "glowBlur: 4" in theme and "glowAlpha: 0.4" in theme
+
+
+def test_idle_cpu_script_is_guarded_and_documented():
+    import os
+    script = ROOT / "scripts" / "perf-signal-deck.sh"
+    assert os.access(script, os.X_OK)
+    proc = subprocess.run(["bash", "-n", str(script)], capture_output=True, text=True)
+    assert proc.returncode == 0, proc.stderr
+    env = {k: v for k, v in os.environ.items() if k != "HORNERO_DISPOSABLE_SESSION"}
+    refused = subprocess.run([str(script)], capture_output=True, text=True, env=env)
+    assert refused.returncode == 3 and "HORNERO_DISPOSABLE_SESSION" in refused.stderr
+    body = script.read_text()
+    assert 'qs ipc call experience set' in body and "restore" in body
+    doc = (ROOT / "docs" / "EXPERIENCE.md").read_text()
+    assert "scripts/perf-signal-deck.sh" in doc and "vm.lock" in doc
+    assert "EXPERIENCE.md" in (ROOT / "docs" / "PLUGINS.md").read_text()
+
+
+def test_deck_ipc_is_documented_and_validated():
+    assert "function deck(mode: string)" in EXPERIENCE
+    assert "function resetDeck(mode: string)" in EXPERIENCE
+    ipc = (ROOT / "docs" / "IPC.md").read_text()
+    for fn in ("experience deck", "experience setDeckHidden", "experience resetDeck"):
+        assert f"`{fn}" in ipc

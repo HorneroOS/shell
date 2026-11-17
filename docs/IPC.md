@@ -15,7 +15,7 @@ other HorneroOS components script against; renames must update
 | `notifs` | `services/Notifs.qml` | `clear()`, `isDndEnabled()`, `toggleDnd()` (+ per-file extras) |
 | `idleInhibitor` | `services/IdleInhibitor.qml` | `isEnabled()`, `toggle()`, `enable()` (+ `disable()` per file) |
 | `hypr` | `services/Hypr.qml` | `refreshDevices()`, `cycleSpecialWorkspace(direction)`, `listSpecialWorkspaces()` |
-| `experience` | `services/Experience.qml` | `get()`, `set(mode)`, `toggle(mode)`, `revert()`, `reset()`, `list()`, `profile(mode)`, `status()`, `customise(mode, field, json)`, `resetCustomisations(mode)`, `setAuto(enabled)` — see [Experience modes](#experience-modes) |
+| `experience` | `services/Experience.qml` | `get()`, `set(mode)`, `toggle(mode)`, `revert()`, `reset()`, `list()`, `profile(mode)`, `status()`, `customise(mode, field, json)`, `resetCustomisations(mode)`, `setAuto(enabled)`, `deck(mode)`, `setDeckHidden(mode, widget, hide)`, `resetDeck(mode)` — see [Experience modes](#experience-modes) |
 | `signal` | `services/Signal.qml` | `reload()` (re-read the live scheme), `mode()` (`dark`/`light`), `theme()` (applied theme id) |
 | `brightness` | `services/Brightness.qml` | `get()`, `getFor(query)`, `set(value)` (+ `setFor` per file) |
 
@@ -39,6 +39,9 @@ Hyprland effects hook it toggled is now part of the `gaming` mode
 | `experience status` | JSON `{schemaVersion, mode, previous, source, auto, autoEnabled, changedAt, statePath, fields, customised, effective: {…}, unavailable: [field…]}` |
 | `experience customise <mode> <field> <json>` | `ok` or `error: …`; `<json>` is a JSON literal (`true`, `2`, `"minimal-top"`), `null` clears the override |
 | `experience resetCustomisations <mode>` | `ok` — that mode returns to its factory profile |
+| `experience deck <mode>` | JSON `{mode, instruments, catalogue: [id…], hidden: [id…], customised}`: the Signal instrument deck of that mode ([docs/EXPERIENCE.md](EXPERIENCE.md)) |
+| `experience setDeckHidden <mode> <widget> <true\|false>` | `ok` or `error: …`; turns one curated instrument off (or back on) for that mode |
+| `experience resetDeck <mode>` | `ok` — the mode's deck returns to the factory composition (every display) |
 | `experience setAuto <true\|false>` | toggles automatic fullscreen-game switching (off by default); turning it off reverts an automatic switch |
 
 ### Profile fields

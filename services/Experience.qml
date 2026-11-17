@@ -606,6 +606,29 @@ Singleton {
             return root.resetCustomisations(mode);
         }
 
+        // Signal deck: JSON {mode, instruments, hidden: [id], customised}.
+        function deck(mode: string): string {
+            if (!Model.isMode(mode))
+                return `error: unknown mode: ${mode}`;
+            return JSON.stringify({
+                mode: mode,
+                instruments: root.profileFor(mode).fields["desktopWidgets"] === "instruments",
+                catalogue: root.deckCatalogue,
+                hidden: root.deckHiddenFor(mode),
+                customised: root.deckCustomisedFor(mode)
+            });
+        }
+
+        function setDeckHidden(mode: string, widget: string, hide: bool): string {
+            return root.setDeckHidden(mode, widget, hide);
+        }
+
+        function resetDeck(mode: string): string {
+            if (!Model.isMode(mode))
+                return `error: unknown mode: ${mode}`;
+            return root.resetDeck(mode, "");
+        }
+
         function setAuto(enabled: bool): string {
             root.setAuto(enabled);
             return enabled ? "ok: auto on" : "ok: auto off";

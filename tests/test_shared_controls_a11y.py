@@ -19,7 +19,9 @@ def _src(rel: str) -> str:
 
 def test_toggle_button_is_a_named_toggle():
     src = _src("components/controls/ToggleButton.qml")
-    assert "Accessible.role: Accessible.ToggleButton" in src
+    assert "Accessible.role: Accessible.Button" in src
+    assert "Accessible.checkable: true" in src
+    assert "Accessible.ToggleButton" not in src.replace("no ToggleButton role", "")
     assert "Accessible.checked: root.toggled" in src
 
 

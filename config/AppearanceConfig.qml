@@ -16,6 +16,11 @@ JsonObject {
     property FontStuff font: FontStuff {}
     property Anim anim: Anim {}
     property Transparency transparency: Transparency {}
+    // Hornero Chromatic preferences (RFC 0002 §8.3). Active only while
+    // `theme` is "hornero-chromatic"; horneroctl reads these, the shell
+    // edits them. Never hold a wallpaper path here: the source resolves
+    // from the wallpaper pointer.
+    property ChromaticPrefs chromatic: ChromaticPrefs {}
 
     // Geometry on a 4 px grid (RFC 0001 §3.5). `full` is only for
     // genuinely circular elements (avatars, radio dots).
@@ -79,6 +84,44 @@ JsonObject {
         property real mediaGifSpeedAdjustment: 300
         property real sessionGifSpeed: 0.7
         property AnimDurations durations: AnimDurations {}
+    }
+
+    component ChromaticModeChoice: JsonObject {
+        property string variant: "auto"
+    }
+
+    component ChromaticPerMode: JsonObject {
+        property ChromaticModeChoice dark: ChromaticModeChoice {}
+        property ChromaticModeChoice light: ChromaticModeChoice {}
+    }
+
+    component ChromaticFallback: JsonObject {
+        property string dark: "hornero-signal-night"
+        property string light: "hornero-signal-day"
+    }
+
+    component ChromaticPrefs: JsonObject {
+        // wallpaper | image | seed | house
+        property string source: "wallpaper"
+        // At most two #RRGGBB seeds (source seed, or manual accent).
+        property var seeds: []
+        // auto | balanced | vibrant | expressive | faithful | muted |
+        // monochrome | high-contrast | neon
+        property string variant: "auto"
+        // auto | dark | light
+        property string mode: "auto"
+        // auto | standard | boosted | maximum
+        property string contrast: "standard"
+        // standard | deep
+        property string surfaceDepth: "standard"
+        property real chroma: 1
+        property real hueShift: 0
+        // off | auto | ask
+        property string follow: "auto"
+        property ChromaticPerMode perMode: ChromaticPerMode {}
+        property ChromaticFallback fallback: ChromaticFallback {}
+        // smooth | instant
+        property string transition: "smooth"
     }
 
     component Transparency: JsonObject {

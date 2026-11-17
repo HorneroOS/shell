@@ -140,26 +140,46 @@ function regionStats(grid, rect, screenWidth, screenHeight, pad) {
     return { mean: mean, dev: Math.sqrt(Math.max(0, sumSq / n - mean * mean)), n: n };
 }
 
+// The two polarity role sets. A Chromatic scheme carries its own
+// `clearInk` block ({light, dark}: ink, inkMuted, signal, alert, halo);
+// without one the fixed Night/Day sets apply. Dynamic colour only ever
+// changes these foreground colours: Clear still draws no background.
+function setsFrom(clearInk) {
+    if (!clearInk || !clearInk.light || !clearInk.dark)
+        return { light: LIGHT, dark: DARK };
+    var light = { polarity: "light" };
+    var dark = { polarity: "dark" };
+    var keys = ["ink", "inkMuted", "signal", "alert", "halo"];
+    for (var i = 0; i < keys.length; i++) {
+        light[keys[i]] = clearInk.light[keys[i]] || LIGHT[keys[i]];
+        dark[keys[i]] = clearInk.dark[keys[i]] || DARK[keys[i]];
+    }
+    return { light: light, dark: dark };
+}
+
 // Polarity with the larger contrast against the region mean.
-function polarityFor(mean) {
-    var light = contrast(hexLuminance(LIGHT.ink), mean);
-    var dark = contrast(hexLuminance(DARK.ink), mean);
-    return { set: light >= dark ? LIGHT : DARK, contrast: Math.max(light, dark) };
+function polarityFor(mean, sets) {
+    var s = sets || { light: LIGHT, dark: DARK };
+    var light = contrast(hexLuminance(s.light.ink), mean);
+    var dark = contrast(hexLuminance(s.dark.ink), mean);
+    return { set: light >= dark ? s.light : s.dark, contrast: Math.max(light, dark) };
 }
 
 // The tone for one region. `stats` may be null (no wallpaper grid: video
 // wallpaper, still loading); then polarity follows the theme and both the
 // halo and the soft shadow stay on, since nothing is known about detail.
-// `style` is one of STYLES, `themeLight` the theme's own mode.
-function toneFor(stats, style, themeLight) {
+// `style` is one of STYLES, `themeLight` the theme's own mode, `sets` the
+// optional setsFrom(clearInk) result.
+function toneFor(stats, style, themeLight, sets) {
+    var s = sets || { light: LIGHT, dark: DARK };
     var st = normaliseStyle(style);
     var pick;
     var detailed;
     if (stats) {
-        pick = polarityFor(stats.mean);
+        pick = polarityFor(stats.mean, s);
         detailed = stats.dev > DETAIL_DEVIATION;
     } else {
-        pick = { set: themeLight ? DARK : LIGHT, contrast: 0 };
+        pick = { set: themeLight ? s.dark : s.light, contrast: 0 };
         detailed = true;
     }
     var set = pick.set;

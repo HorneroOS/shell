@@ -16,7 +16,7 @@ other HorneroOS components script against; renames must update
 | `idleInhibitor` | `services/IdleInhibitor.qml` | `isEnabled()`, `toggle()`, `enable()` (+ `disable()` per file) |
 | `hypr` | `services/Hypr.qml` | `refreshDevices()`, `cycleSpecialWorkspace(direction)`, `listSpecialWorkspaces()` |
 | `experience` | `services/Experience.qml` | `get()`, `set(mode)`, `toggle(mode)`, `revert()`, `reset()`, `list()`, `profile(mode)`, `status()`, `customise(mode, field, json)`, `resetCustomisations(mode)`, `setAuto(enabled)`, `deck(mode)`, `setDeckHidden(mode, widget, hide)`, `resetDeck(mode)` — see [Experience modes](#experience-modes) |
-| `signal` | `services/Signal.qml` | `reload()` (re-read the live scheme), `mode()` (`dark`/`light`), `theme()` (applied theme id) |
+| `signal` | `services/Signal.qml` | `reload()` (re-read the live scheme), `mode()` (`dark`/`light`), `theme()` (applied theme id), `previewing()` (true while a Chromatic candidate is shown in memory) |
 | `brightness` | `services/Brightness.qml` | `get()`, `getFor(query)`, `set(value)` (+ `setFor` per file) |
 
 ## Experience modes

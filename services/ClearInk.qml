@@ -15,6 +15,10 @@ Singleton {
     readonly property var styles: Model.STYLES
     // High Contrast always means the Contrast style (§12.3).
     readonly property string style: Config.appearance.highContrast ? "contrast" : Model.normaliseStyle(Config.bar.clearStyle)
+    // Polarity role sets: the scheme's own `clearInk` block when a
+    // Chromatic palette is live, else the fixed Night/Day sets. Only
+    // foreground colours; Cockpit Clear never gains a fill from this.
+    readonly property var sets: Config.appearance.highContrast ? Model.setsFrom(null) : Model.setsFrom(Signal.clearInk)
     readonly property string configuredStyle: Model.normaliseStyle(Config.bar.clearStyle)
 
     // What bar components use when no region tone applies.

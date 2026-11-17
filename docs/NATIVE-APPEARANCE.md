@@ -11,7 +11,7 @@ changing the wallpaper changes only the wallpaper. The optional
 **Hornero Chromatic** theme (`hornero-chromatic`,
 [RFC 0002](https://github.com/HorneroOS/docs/blob/main/development/rfc-0002-hornero-chromatic.md)) builds that table from the wallpaper, an image or a
 chosen colour; it is specified but not implemented yet (see
-[Hornero Chromatic](#hornero-chromatic-planned) below).
+[Hornero Chromatic](#hornero-chromatic) below).
 
 ## Colour roles — `services/Signal.qml`
 
@@ -106,13 +106,14 @@ render under Signal and are not offered.
 - The persisted motion curve table is no longer serialized and disappears
   on the next save.
 
-## Hornero Chromatic (planned)
+## Hornero Chromatic
 
 [RFC 0002](https://github.com/HorneroOS/docs/blob/main/development/rfc-0002-hornero-chromatic.md) adds dynamic colour as an option next to the curated
-themes. Nothing below exists in this repository yet; it is tracked in
+themes. The engine is tracked in
 [shell#525](https://github.com/HorneroOS/shell/issues/525) (engine) and
 [shell#526](https://github.com/HorneroOS/shell/issues/526) (UI and
-PluginKit).
+PluginKit). The Signal side below (preview, transitions, floors, Clear
+ink, preferences) is implemented in this repository.
 
 - One native engine, written once in C++: `libs/chromatic/` (Qt Core/Gui
   only), used in-process by the QML module `Hornero.Chromatic` for previews
@@ -125,6 +126,30 @@ PluginKit).
   `cancelPreview`); cancelling writes nothing. Apply always goes
   through horneroctl's Chromatic apply verb (RFC 0002 §10); horneroctl stays
   the only writer of the live scheme for Chromatic.
+- `Signal` API: `beginPreview(scheme)` validates a complete schema-v2 palette
+  and swaps it in memory (the first call snapshots the live palette,
+  identity and optional blocks); `commitPreview()` ends the preview and
+  keeps the palette until the applied scheme arrives through the live file;
+  `cancelPreview()` restores the snapshot. A live-file change that arrives
+  during a preview becomes the restore point and does not touch the screen.
+  `previewing`, `chromatic` (read-only status, never a path),
+  `minSurfaceAlpha`, `clearInk` and `transitionMode` are readable.
+- Palette changes (live-file reload, preview, cancel) interpolate in OKLab
+  (`services/chromatic.js`): at most 12 steps, one 20 ms tick each, 240 ms
+  at most. The final step assigns the exact target. They are instant under
+  reduced motion, the gaming experience mode, high contrast or
+  `appearance.chromatic.transition = "instant"`. A step's binding work is
+  budgeted at 2 ms (measured by `tests/test_chromatic_ui_transition.py`).
+- `minSurfaceAlpha` raises, never lowers, the translucency of `Signal.layer`
+  and `Signal.surface` per surface role (`bar` follows `base`; every other
+  element follows `panel`). Opaque themes and High Contrast are unaffected.
+- `ClearInk.sets` takes the polarity ink sets from the scheme's `clearInk`
+  block (per key fallback to the fixed Night/Day sets). It never adds a fill.
+- Preferences live in `appearance.chromatic` (see
+  `config/AppearanceConfig.qml` and `config/shell.default.json`): `source`,
+  `seeds`, `variant`, `mode`, `contrast`, `surfaceDepth`, `chroma`,
+  `hueShift`, `follow` (`off`/`auto`/`ask`), `perMode`, `fallback`,
+  `transition`. A missing block takes these defaults.
 - `appearance.highContrast` keeps showing the curated
   `hornero-signal-contrast` table. Cockpit Clear bars stay at zero opacity;
   Chromatic only changes their foreground ink.

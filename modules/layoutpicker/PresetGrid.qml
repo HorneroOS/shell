@@ -103,6 +103,7 @@ Item {
         if (applyProc.running)
             return;
         currentName = name; // optimistic; the re-list corrects if it failed
+        applyProc.layoutId = name;
         applyProc.command = ["horneroctl", "shell", "preset", "apply", name, "--yes"];
         console.log("[layoutpicker] apply", name, "via", applyProc.command);
         applyProc.running = true;
@@ -175,6 +176,8 @@ Item {
     Process {
         id: applyProc
 
+        property string layoutId: ""
+
         stdout: StdioCollector {
             onStreamFinished: console.log("[layoutpicker] apply stdout:", text)
         }
@@ -185,6 +188,9 @@ Item {
             console.log("[layoutpicker] apply exit", exitCode, exitStatus);
             // Re-sync the active marker from disk (source of truth)
             root.reload();
+            // Lay the person's saved tweaks for this layout back on top.
+            if (exitCode === 0)
+                Layouts.reapplyAfterPreset(applyProc.layoutId);
         }
     }
 

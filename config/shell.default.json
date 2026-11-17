@@ -857,5 +857,8 @@
       "fullscreenGaming": false,
       "gamePatterns": []
     }
+  },
+  "layouts": {
+    "overrides": {}
   }
 }

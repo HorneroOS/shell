@@ -112,3 +112,23 @@ def test_offscreen_editor_edits_previews_saves_and_resets(tmp_path):
     assert draft["schemaVersion"] == 2 and draft["id"] == "my-neon-copy" and draft["name"] == "My Neon Copy"
     assert draft["palette"]["signal"] == "#FF00AA" and len(draft["terminal"]) == 16 and draft["terminal"][3] == "#112233"
     assert "appearance chromatic import" in result["_ctl_log"] and "--id my-neon-copy" in result["_ctl_log"] and "--yes" in result["_ctl_log"]
+
+
+@requires_qs
+def test_offscreen_saved_palette_rename_delete_undo(tmp_path):
+    result = run_gallery(tmp_path, HMANAGE=1)
+    assert result["isUser"] is True
+    assert result["renamed"] == "Renamed."
+    assert result["deleted"].startswith("Deleted") and result["trashed"] == "my-dusk" and result["sourceAfterDelete"] == ""
+    assert result["restored"] == "Restored." and result["trashAfter"] is True
+    log = result["_ctl_log"]
+    assert "appearance chromatic rename my-dusk --name My Dusk" in log or "rename my-dusk --name" in log
+    assert "chromatic delete my-dusk --json --yes" in log
+    # undo re-imports the exact deleted theme under its own id
+    assert "--id my-dusk --json --yes" in log
+    assert result["_draft"]["id"] == "my-dusk" and result["_draft"]["name"] == "My Dusk"
+
+
+def test_editor_manages_saved_palettes_with_confirm_and_undo():
+    assert "renameArgs" in EDITOR and "deleteArgs" in EDITOR
+    assert "Really delete?" in EDITOR and "Undo" in EDITOR and "undoTimer" in EDITOR

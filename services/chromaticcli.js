@@ -379,3 +379,13 @@ function themeImportTail(id, force, dryRun) {
         a.push("--force");
     return a;
 }
+
+// Saved palettes (user themes): rename and delete are CLI verbs; the CLI
+// refuses catalogue themes and the one selected in shell.json.
+function renameArgs(id, name) {
+    return ["horneroctl", "appearance", "chromatic", "rename", id, "--name", name, "--json", "--yes"];
+}
+
+function deleteArgs(id) {
+    return ["horneroctl", "appearance", "chromatic", "delete", id, "--json", "--yes"];
+}

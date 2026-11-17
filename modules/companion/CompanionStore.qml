@@ -1,5 +1,8 @@
 pragma Singleton
 
+import "habitat.js" as Habitat
+import "javivoice.js" as Voice
+import "radio.js" as Radio
 import "reactions.js" as Reactions
 import qs.utils
 import Quickshell
@@ -147,6 +150,10 @@ Singleton {
         // Reactions policy as one JSON document (validated by
         // reactions.js sanitizeSettings on every read).
         property string reactions: ""
+        // Voice, habitat and radio preferences as one JSON document, each
+        // section validated by its own pure module on every read
+        // (javivoice.js, habitat.js, radio.js).
+        property string prefs: ""
         property bool nestEnabled: true
         property int nestStage: 0
         property int nestProgress: 0
@@ -180,6 +187,7 @@ Singleton {
     property alias sleepAtNest: persist.sleepAtNest
     property alias nestEnabled: persist.nestEnabled
     property alias reactionsJson: persist.reactions
+    property alias prefsJson: persist.prefs
     property alias nestStage: persist.nestStage
     property alias nestProgress: persist.nestProgress
 
@@ -194,6 +202,65 @@ Singleton {
             raw = {};
         }
         return Reactions.sanitizeSettings(raw);
+    }
+
+    // Voice, habitat and radio preferences: always complete, validated.
+    readonly property var prefs: {
+        let raw = {};
+        try {
+            raw = persist.prefs === "" ? {} : JSON.parse(persist.prefs);
+        } catch (e) {
+            raw = {};
+        }
+        if (raw === null || typeof raw !== "object" || Array.isArray(raw))
+            raw = {};
+        return {
+            "voice": Voice.sanitize(raw.voice),
+            "habitat": Habitat.sanitize(raw.habitat),
+            "radio": Radio.sanitize(raw.radio)
+        };
+    }
+    readonly property var voiceSettings: root.prefs.voice
+    readonly property var habitatSettings: root.prefs.habitat
+    readonly property var radioSettings: root.prefs.radio
+
+    // Edits one preference by dotted path ("habitat.anchor",
+    // "habitat.modeLevel.focus"); the whole document is re-validated, so an
+    // invalid value is dropped back to the previous or default one.
+    function patchPref(section: string, path: string, value: var): void {
+        if (["voice", "habitat", "radio"].indexOf(section) < 0)
+            return;
+        const next = JSON.parse(JSON.stringify(root.prefs));
+        const parts = path.split(".");
+        let node = next[section];
+        for (let i = 0; i < parts.length - 1; i++) {
+            if (node === null || typeof node !== "object")
+                return;
+            node = node[parts[i]];
+        }
+        if (node === null || typeof node !== "object")
+            return;
+        node[parts[parts.length - 1]] = value;
+        persist.prefs = JSON.stringify({
+            "voice": Voice.sanitize(next.voice),
+            "habitat": Habitat.sanitize(next.habitat),
+            "radio": Radio.sanitize(next.radio)
+        });
+        root.markDirty();
+    }
+
+    // Puts one section back to its defaults (the other sections keep theirs).
+    function resetPref(section: string): void {
+        if (["voice", "habitat", "radio"].indexOf(section) < 0)
+            return;
+        const next = JSON.parse(JSON.stringify(root.prefs));
+        next[section] = {};
+        persist.prefs = JSON.stringify({
+            "voice": Voice.sanitize(next.voice),
+            "habitat": Habitat.sanitize(next.habitat),
+            "radio": Radio.sanitize(next.radio)
+        });
+        root.markDirty();
     }
 
     // Replaces the whole reactions document (validated before storing).
@@ -468,7 +535,10 @@ Singleton {
         persist.tipIndex = (persist.tipIndex + 1) % root.tips.length;
         root.markActive();
         root.markDirty();
-        return entry.text;
+        // Spoken in the user's language and tone (javivoice.js); the
+        // catalogue text above is only the source-of-truth fallback.
+        const spoken = JaviVoice.line("tip." + entry.page);
+        return spoken.indexOf("tip.") === 0 ? entry.text : spoken;
     }
 
     function tipPage(): string {
@@ -555,7 +625,8 @@ Singleton {
             nestEnabled: persist.nestEnabled,
             nestStage: persist.nestStage,
             nestProgress: persist.nestProgress,
-            reactions: persist.reactions
+            reactions: persist.reactions,
+            prefs: persist.prefs
         });
     }
 
@@ -640,6 +711,14 @@ Singleton {
                     persist.sleepAtNest = o.sleepAtNest;
                 if (typeof o.reactions === "string")
                     persist.reactions = JSON.stringify(Reactions.sanitizeSettings(root._parseJson(o.reactions)));
+                if (typeof o.prefs === "string") {
+                    const rawPrefs = root._parseJson(o.prefs);
+                    persist.prefs = JSON.stringify({
+                        "voice": Voice.sanitize(rawPrefs.voice),
+                        "habitat": Habitat.sanitize(rawPrefs.habitat),
+                        "radio": Radio.sanitize(rawPrefs.radio)
+                    });
+                }
                 if (typeof o.nestEnabled === "boolean")
                     persist.nestEnabled = o.nestEnabled;
                 if (typeof o.nestStage === "number")

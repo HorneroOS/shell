@@ -184,3 +184,30 @@ Everything is also adjustable over IPC (`qs ipc call companion …`):
 `resetPosition`/`status` — see `docs/IPC.md`. (`summon`, not `show`: an
 IPC function literally named `show` is unreachable through
 `qs ipc call` — the token is swallowed as the `ipc show` subcommand.)
+
+## Voice and personality
+
+Javi's small spoken lines (tips, reaction bubbles, Radio notices, nest
+labels) come from one catalogue, `modules/companion/javivoice.js`, in
+English and Spanish and in two tones. `JaviVoice.line(key)` is the only
+way QML reads it.
+
+- Language: `auto` follows the shell locale (`Qt.locale()`; there is no
+  separate shell language override), or pin `en` / `es`.
+- Tone: `warm` (default, Javi at his workbench) or `plain` (same
+  information, fewer words of character).
+- Rules, enforced by `tests/test_javi_voice.py`: every key exists in all
+  four tables, one line of at most 72 characters, no exclamation marks, no
+  emoji, no pet names, nothing that blames the user. A line decorates a
+  state the UI already shows and never claims Javi thinks or feels.
+- Both settings live in the validated `voice` preference document and are
+  edited under Control Center, Javi, Voice. An unknown key renders as the
+  key itself so a typo is visible.
+- External reaction text (IPC or extensions) is never replaced by the
+  catalogue; only the built-in bubbles are translated.
+
+Preferences for voice, nest and Radio are stored as one JSON document
+(`prefs`) in the companion state snapshot. Each section is re-validated by
+its pure module (`javivoice.js`, `habitat.js`, `radio.js`) on every read
+and on restore, so a corrupt or hand-edited file degrades per key to the
+shipped defaults.

@@ -767,6 +767,8 @@ Item {
                     }
                 }
 
+                VoiceSection {}
+
                 ChannelPanel {
                     title: qsTr("Actions")
 

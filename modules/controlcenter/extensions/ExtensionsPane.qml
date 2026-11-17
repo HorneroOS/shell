@@ -934,6 +934,28 @@ Item {
                                 }
                             }
 
+                            // Signal deck widgets are arranged in Experience; this
+                            // row only installs, enables and configures them.
+                            RowLayout {
+                                Layout.fillWidth: true
+                                visible: root.expandedPluginId === row.entry.id && Experience.deckCatalogue.includes(row.entry.id)
+                                spacing: Appearance.spacing.small
+
+                                StyledText {
+                                    Layout.fillWidth: true
+                                    text: qsTr("Shown on the desktop by the Signal deck. Turn it on or off, place it, resize it and restyle it in Experience.")
+                                    font.pointSize: Appearance.font.size.small
+                                    color: Signal.palette.inkMuted
+                                    wrapMode: Text.Wrap
+                                }
+
+                                TextButton {
+                                    text: qsTr("Managed in Experience")
+                                    type: TextButton.Text
+                                    onClicked: root.session.navigateTo("experience", "")
+                                }
+                            }
+
                             PluginSettingsSection {
                                 Layout.fillWidth: true
                                 visible: root.settingsPluginId === row.entry.id && root.hasPluginSettings(row.entry)

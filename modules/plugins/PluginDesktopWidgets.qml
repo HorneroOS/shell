@@ -92,6 +92,19 @@ Item {
     readonly property var noRoomIds: root.userComposition.dropped.map(d => d.id)
     onNoRoomIdsChanged: Plugins.desktopNoRoom = root.userSet ? root.noRoomIds : []
 
+    // Frame heights the loaded deck widgets need to show all their content
+    // (DesktopWidgetFrame.needMeasured); the deck solver never lays a widget
+    // out shorter than this. Grows only, so a settling widget cannot loop.
+    property var measuredNeed: ({})
+
+    function noteNeed(id: string, need: real): void {
+        if (need <= (root.measuredNeed[id] ?? 0))
+            return;
+        const next = Object.assign({}, root.measuredNeed);
+        next[id] = need;
+        root.measuredNeed = next;
+    }
+
     readonly property var deckEntries: root.deckWanted ? Plugins.deckPlugins() : []
     readonly property var deckComposition: {
         const hints = ({});

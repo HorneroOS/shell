@@ -22,6 +22,35 @@ them.
 `desktopWidgets` is a per-mode field: a person can choose `user` for Signal
 or `instruments` for Studio in the Experience pane and the rest follows.
 
+## What Gaming and Focus guarantee under a fullscreen window
+
+The policy is one pure function (`policy()` in `services/experience.js`)
+that `services/Experience.qml` binds to, so it is tested as behaviour
+(`tests/test_experience.py`) and not as source text.
+
+| Behaviour | Gaming | Focus | Everyday |
+|-----------|--------|-------|----------|
+| Popups held (filed in the notification centre, counted, reported on leaving) | always | always | never |
+| Critical notifications | still shown | still shown | shown |
+| Telemetry polling (SystemUsage, NetworkUsage, PluginKit providers) | paused while a window is fullscreen on the focused output | same | continues |
+| Desktop widgets and clock | none; also hidden under fullscreen | none | the person's own |
+| Idle inhibit | while fullscreen | off | off |
+| Motion, glow, scanlines | off, not overridable | glow/scanlines off | standard |
+
+Fullscreen detection reads the compositor's window state as a bit set
+(`fullscreen & 2`), so a window that is both maximised and fullscreen
+counts. Only Hyprland reports it; on Niri nothing is detected and these
+rules do not trigger. A borderless window that merely fills the output is
+a normal window to the compositor and is not treated as fullscreen.
+
+The Drawers window drops its input regions, closes every drawer and
+disables the bar while a window is fullscreen on that screen
+(`tests/test_gaming_focus_contract.py`), and no surface other than the
+ones the person opens on purpose (area picker, companion chat) requests
+exclusive keyboard focus. Whether a given game also behaves (focus,
+tearing, controller) is a property of the game, Proton and the compositor;
+the live check is the QA scenario `experience/gaming-fullscreen`.
+
 ## The Signal instrument deck
 
 Signal is where the richest telemetry lives, so it composes a deck of

@@ -283,6 +283,44 @@ function clearOverrides(overrides, mode) {
     return next;
 }
 
+// ---- Runtime policy -----------------------------------------------------
+//
+// What a mode means while a window covers the output. This is the single
+// definition: services/Experience.qml binds its public properties to it and
+// tests/test_experience.py exercises it under node, so the Gaming guarantees
+// (queued notifications, paused polling, no desktop layer, idle inhibit)
+// are checked as behaviour, not as source text.
+
+// Hyprland reports a window's fullscreen state as a bit set: 1 maximised,
+// 2 fullscreen, 3 both. Anything with the fullscreen bit covers the output.
+function isFullscreenState(value) {
+    return typeof value === "number" && isFinite(value) && (value & 2) === 2;
+}
+
+// fields: an effective profile's `fields`; ctx: { mode, fullscreen }.
+function policy(fields, ctx) {
+    var fs = !!(ctx && ctx.fullscreen);
+    var gaming = !!(ctx && ctx.mode === "gaming");
+    return {
+        holdPopups: !!fields["notifications.hold"] || (!!fields["notifications.suppressFullscreen"] && fs),
+        telemetryPaused: !!fields["telemetry.pauseWhenHidden"] && fs,
+        desktopWidgetsVisible: fields["desktopWidgets"] !== "none" && !(gaming && fs),
+        idleInhibit: !!fields["idle.inhibitFullscreen"] && fs
+    };
+}
+
+// Notification routing under the hold policy. Critical notifications are
+// never held (a battery-critical or security prompt must reach the person);
+// Do Not Disturb files everything silently; otherwise a held notification
+// is filed without a popup and counted so leaving the mode can report it.
+function notificationDisposition(hold, critical, dnd) {
+    var held = !critical && !dnd && !!hold;
+    return {
+        held: held,
+        popup: !!critical || (!dnd && !held)
+    };
+}
+
 // ---- Persisted state ($XDG_STATE_HOME/hornero/experience.json) --------
 
 function defaultState() {

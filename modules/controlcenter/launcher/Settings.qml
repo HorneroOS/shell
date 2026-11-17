@@ -70,6 +70,37 @@ ColumnLayout {
 
     SectionHeader {
         Layout.topMargin: Appearance.spacing.large
+        title: qsTr("Placement")
+        description: qsTr("Where the launcher opens along the bottom edge")
+    }
+
+    SectionContainer {
+        contentSpacing: Appearance.spacing.small
+
+        ChoiceRow {
+            target: Config.launcher
+            key: "align"
+            label: qsTr("Launcher position")
+            defaultValue: "center"
+            options: [
+                {
+                    id: "left",
+                    label: qsTr("Left")
+                },
+                {
+                    id: "center",
+                    label: qsTr("Centre")
+                },
+                {
+                    id: "right",
+                    label: qsTr("Right")
+                }
+            ]
+        }
+    }
+
+    SectionHeader {
+        Layout.topMargin: Appearance.spacing.large
         title: qsTr("Display")
         description: qsTr("Display and appearance settings")
     }

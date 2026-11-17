@@ -92,3 +92,15 @@ def test_idle_and_battery_defaults_match_factory():
     for n in (20, 10, 5, 3):
         assert f"factory: {n}" in qml
     assert "PowerPane" and "IdleBatteryPanel {}" in (CC / "power" / "PowerPane.qml").read_text()
+
+def test_placement_choices_default_to_factory_and_are_consumed():
+    assert FACTORY["launcher"]["align"] == "center" and FACTORY["osd"]["align"] == "center"
+    panels = (ROOT / "modules" / "drawers" / "Panels.qml").read_text()
+    for needle in ("Config.launcher.align", "Config.osd.align"):
+        assert needle in panels
+    for pane, target, opts in (("launcher/Settings.qml", "Config.launcher", ("left", "center", "right")),
+                               ("osd/OsdPane.qml", "Config.osd", ("top", "center", "bottom"))):
+        qml = (CC / pane).read_text()
+        assert f"target: {target}" in qml and 'key: "align"' in qml and 'defaultValue: "center"' in qml
+        for o in opts:
+            assert f'id: "{o}"' in qml

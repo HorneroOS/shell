@@ -78,6 +78,7 @@ Item {
             Layout.bottomMargin: -Appearance.spacing.small / 2
             text: qsTr("Volume (%1)").arg(Audio.muted ? qsTr("Muted") : `${Math.round(Audio.volume * 100)}%`)
             font.weight: Appearance.font.weight.medium
+            tabular: true
         }
 
         CustomMouseArea {

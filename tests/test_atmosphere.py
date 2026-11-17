@@ -286,3 +286,17 @@ def test_styled_text_exposes_tabular_numerals_and_tracking():
     assert "property bool tabular: false" in src and '"tnum": 1' in src
     assert "letterSpacing" in _read("modules/lock/Center.qml")
     assert "tabular: true" in _read("modules/instruments/Readout.qml")
+
+
+def test_live_numeric_readouts_use_tabular_figures():
+    """R-082: values that change while on screen never shift their
+    neighbours; each reads with OpenType tnum (StyledText.tabular)."""
+    for rel, needle in (
+        ("modules/bar/popouts/BatteryGauge.qml", "tabular: true"),
+        ("modules/bar/popouts/Audio.qml", "tabular: true"),
+        ("modules/controlcenter/components/ReadonlySlider.qml", "tabular: true"),
+        ("modules/dashboard/weather/HourlyChart.qml", "tabular: true"),
+        ("modules/utilities/cards/IdleInhibit.qml", "tabular: true"),
+        ("modules/background/DesktopClock.qml", "tabular: true"),
+    ):
+        assert needle in _read(rel), rel

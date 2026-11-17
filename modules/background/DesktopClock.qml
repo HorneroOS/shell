@@ -153,6 +153,7 @@ Item {
 
                 StyledText {
                     text: Time.format("dd")
+                    tabular: true
                     font.family: Appearance.font.family.display
                     font.pointSize: Appearance.font.size.extraLarge * root.scale
                     font.weight: Font.Medium

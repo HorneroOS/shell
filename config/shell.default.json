@@ -36,6 +36,18 @@
     "glow": {
       "intensity": 1
     },
+    "atmosphere": {
+      "enabled": true,
+      "lamp": 0.8,
+      "warmth": 0.2,
+      "innerLight": 0.8,
+      "vignette": 0.4,
+      "grain": 0.3,
+      "scanlines": 0,
+      "plateTracking": 0.14,
+      "mascot": true,
+      "tone": "cozy"
+    },
     "transparency": {
       "enabled": false,
       "base": 0.85,

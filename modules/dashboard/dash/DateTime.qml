@@ -22,6 +22,7 @@ Item {
                 font.family: Appearance.font.family.display
                 font.weight: Font.Medium
                 font.pointSize: Appearance.font.size.display * 0.85
+                font.letterSpacing: -Appearance.font.size.display * 0.85 * 0.015
                 font.features: {
                     "tnum": 1
                 }
@@ -33,6 +34,7 @@ Item {
                 font.family: Appearance.font.family.display
                 font.weight: Font.Medium
                 font.pointSize: Appearance.font.size.display * 0.85
+                font.letterSpacing: -Appearance.font.size.display * 0.85 * 0.015
             }
 
             StyledText {
@@ -40,6 +42,7 @@ Item {
                 font.family: Appearance.font.family.display
                 font.weight: Font.Medium
                 font.pointSize: Appearance.font.size.display * 0.85
+                font.letterSpacing: -Appearance.font.size.display * 0.85 * 0.015
                 font.features: {
                     "tnum": 1
                 }

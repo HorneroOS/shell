@@ -63,6 +63,10 @@ AnchoredSurface {
     gap: Appearance.spacing.small
     enabled: false
 
+    // Alert-coloured text on this `lifted` fill must use this pairing: some
+    // palettes (Dusk) put plain `alert` under 4.5:1 here.
+    readonly property color alertColor: Atmosphere.alertText
+
     Accessible.role: Accessible.ToolTip
     Accessible.name: text
 

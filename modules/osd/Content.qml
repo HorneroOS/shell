@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import qs.components
+import qs.components.atmosphere
 import qs.components.controls
 import qs.services
 import qs.config
@@ -26,6 +27,8 @@ Item {
 
     implicitWidth: layout.implicitWidth + 16
     implicitHeight: layout.implicitHeight + 16
+
+    AtmosphereTexture {}
 
     // One channel strip: glyph, vertical segmented meter, tabular value.
     // Values above 100 % (boosted volume) turn `signal`.
@@ -195,5 +198,12 @@ Item {
                 }
             }
         }
+    }
+
+    // Atmosphere: warm lamp, soft inner light, vignette, grain (section 17).
+    AtmosphereLayer {
+        lampOrigin: "topRight"
+        lampReach: 0.9
+        cornerRadius: Appearance.rounding.small
     }
 }

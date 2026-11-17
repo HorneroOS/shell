@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import qs.components
+import qs.components.atmosphere
 import qs.components.filedialog
 import qs.config
 import Quickshell
@@ -24,6 +25,8 @@ Item {
     // Drawers.qml) routes physical keys to this surface on explicit
     // opens, and the central cascade handles them (INTERACTION.md).
     focus: true
+
+    AtmosphereTexture {}
 
     Tabs {
         id: tabs
@@ -167,5 +170,12 @@ Item {
             // the panes' implicit sizes (binding loop).
             return Math.abs(pane.index - view.currentIndex) <= 1;
         })
+    }
+
+    // Atmosphere: warm lamp, soft inner light, vignette, grain (section 17).
+    AtmosphereLayer {
+        lampOrigin: "topLeft"
+        lampReach: 0.8
+        cornerRadius: Appearance.rounding.small
     }
 }

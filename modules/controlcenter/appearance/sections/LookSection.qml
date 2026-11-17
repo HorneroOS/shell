@@ -26,20 +26,30 @@ CollapsibleSection {
             id: "hornero",
             label: qsTr("Hornero"),
             blurb: qsTr("The factory look: crisp Signal bezel, reference spacing."),
-            rounding: 1, spacing: 1, padding: 1, font: 1, motion: 1, glow: 1, weight: 0, curve: "smooth"
+            rounding: 1, spacing: 1, padding: 1, font: 1, motion: 1, glow: 1, weight: 0, curve: "smooth",
+            atmosphere: ({ lamp: 0.8, warmth: 0.2, innerLight: 0.8, vignette: 0.4, grain: 0.3, scanlines: 0, plateTracking: 0.14, mascot: true, tone: "cozy" })
         },
         {
             id: "cozy",
             label: qsTr("Cozy"),
-            blurb: qsTr("Softer corners, roomier spacing, a gentler glow and unhurried motion."),
-            rounding: 1.6, spacing: 1.1, padding: 1.15, font: 1.05, motion: 1.2, glow: 1.2, weight: 0, curve: "bouncy"
+            blurb: qsTr("Softer corners, roomier spacing, a gentler glow, a warmer lamp and unhurried motion."),
+            rounding: 1.2, spacing: 1.1, padding: 1.15, font: 1.05, motion: 1.2, glow: 1.2, weight: 0, curve: "bouncy",
+            atmosphere: ({ lamp: 1.2, warmth: 0.45, innerLight: 1.1, vignette: 0.5, grain: 0.4, scanlines: 0, plateTracking: 0.14, mascot: true, tone: "cozy" })
         }
     ]
 
     function sameLook(look: var): bool {
         const p = root.rootPane;
         const eq = (a, b) => Math.abs(a - b) < 0.005;
-        return eq(p.roundingScale, look.rounding) && eq(p.spacingScale, look.spacing) && eq(p.paddingScale, look.padding) && eq(p.fontSizeScale, look.font) && eq(p.animDurationsScale, look.motion) && eq(Config.appearance.glow.intensity, look.glow) && Config.appearance.font.weight.shift === look.weight && Config.appearance.anim.curveStyle === look.curve;
+        return eq(p.roundingScale, look.rounding) && eq(p.spacingScale, look.spacing) && eq(p.paddingScale, look.padding) && eq(p.fontSizeScale, look.font) && eq(p.animDurationsScale, look.motion) && eq(Config.appearance.glow.intensity, look.glow) && Config.appearance.font.weight.shift === look.weight && Config.appearance.anim.curveStyle === look.curve && sameAtmosphere(look.atmosphere);
+    }
+
+    // A look also sets the atmosphere knobs (Appearance > Atmosphere); the
+    // on/off switch stays the user's own choice.
+    function sameAtmosphere(a: var): bool {
+        const cur = Config.appearance.atmosphere;
+        const eq = (x, y) => Math.abs(x - y) < 0.005;
+        return eq(cur.lamp, a.lamp) && eq(cur.warmth, a.warmth) && eq(cur.innerLight, a.innerLight) && eq(cur.vignette, a.vignette) && eq(cur.grain, a.grain) && eq(cur.scanlines, a.scanlines) && eq(cur.plateTracking, a.plateTracking) && cur.mascot === a.mascot && cur.tone === a.tone;
     }
 
     function apply(look: var): void {
@@ -52,6 +62,8 @@ CollapsibleSection {
         Config.appearance.glow.intensity = look.glow;
         Config.appearance.font.weight.shift = look.weight;
         Config.appearance.anim.curveStyle = look.curve;
+        for (const k of Object.keys(look.atmosphere))
+            Config.appearance.atmosphere[k] = look.atmosphere[k];
         p.saveConfig();
     }
 
@@ -63,7 +75,7 @@ CollapsibleSection {
 
         StyledText {
             Layout.fillWidth: true
-            text: qsTr("A look sets corner softness, spacing, text size, motion pace and glow in one step. Fine-tune any of them afterwards, or press Reset to return to the factory look.")
+            text: qsTr("A look sets corner softness, spacing, text size, motion pace, glow and the atmosphere in one step. Fine-tune any of them afterwards, or press Reset to return to the factory look.")
             font.pointSize: Appearance.font.size.small
             color: Signal.palette.inkMuted
             wrapMode: Text.WordWrap

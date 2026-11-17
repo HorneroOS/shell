@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import qs.components
+import qs.components.atmosphere
 import qs.components.controls
 import qs.services
 import qs.config
@@ -122,7 +123,16 @@ Item {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter
 
+        readonly property bool plainSearch: root.state !== "wallpapers" && !root.showThemesList
+
+        HorneroSprite {
+            visible: empty.plainSearch && Atmosphere.mascot
+            pixel: 3
+            anchors.verticalCenter: parent.verticalCenter
+        }
+
         Glyph {
+            visible: !empty.plainSearch || !Atmosphere.mascot
             name: root.state === "wallpapers" ? "slideshow" : (root.showThemesList ? "palette" : "search")
             color: Signal.palette.inkMuted
             font.pointSize: Appearance.font.size.extraLarge
@@ -134,14 +144,14 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
 
             StyledText {
-                text: root.state === "wallpapers" ? qsTr("No wallpapers found") : (root.showThemesList ? qsTr("No themes found") : qsTr("No results found"))
+                text: root.state === "wallpapers" ? qsTr("No wallpapers found") : (root.showThemesList ? qsTr("No themes found") : Microcopy.line("launcher.empty"))
                 color: Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.larger
                 font.weight: Appearance.font.weight.medium
             }
 
             StyledText {
-                text: root.state === "wallpapers" && Wallpapers.list.length === 0 ? qsTr("Try putting some wallpapers in %1").arg(Paths.shortenHome(Paths.wallsdir)) : qsTr("Try searching for something else")
+                text: root.state === "wallpapers" && Wallpapers.list.length === 0 ? qsTr("Try putting some wallpapers in %1").arg(Paths.shortenHome(Paths.wallsdir)) : (empty.plainSearch ? Microcopy.line("launcher.hint") : qsTr("Try searching for something else"))
                 color: Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.normal
             }

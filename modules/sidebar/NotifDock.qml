@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import qs.components
+import qs.components.atmosphere
 import qs.components.controls
 import qs.components.containers
 import qs.modules.instruments as Instruments
@@ -104,8 +105,16 @@ Item {
             sourceComponent: ColumnLayout {
                 spacing: Appearance.spacing.small
 
+                HorneroSprite {
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.bottomMargin: Appearance.spacing.small
+                    visible: Atmosphere.mascot
+                    pose: "sleep"
+                }
+
                 Glyph {
                     Layout.alignment: Qt.AlignHCenter
+                    visible: !Atmosphere.mascot
                     name: "bell-off"
                     color: Signal.palette.inkMuted
                     font.pointSize: Appearance.font.size.extraLarge
@@ -113,7 +122,7 @@ Item {
 
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
-                    text: qsTr("No notifications")
+                    text: Microcopy.line("notifications.empty")
                     color: Signal.palette.inkMuted
                     mono: true
                     font.pointSize: Appearance.font.size.small

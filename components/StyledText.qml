@@ -21,6 +21,15 @@ Text {
     // and other data read mono via `mono: true`.
     property bool mono: false
     font.family: root.mono ? Appearance.font.family.mono : Appearance.font.family.sans
+    // Typography polish (visual language section 17.4): readouts and clocks
+    // set `tabular` for fixed-width figures (OpenType tnum), so changing
+    // digits never shift their neighbours; tracking is tuned per call site
+    // (display sizes read better a hair tighter: set `font.letterSpacing` to
+    // a small negative fraction of the point size at the call site).
+    property bool tabular: false
+    font.features: root.tabular ? ({
+            "tnum": 1
+        }) : ({})
     font.pointSize: Appearance.font.size.smaller
     font.weight: Appearance.font.weight.regular
 

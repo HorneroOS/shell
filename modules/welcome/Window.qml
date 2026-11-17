@@ -1,4 +1,5 @@
 import qs.components
+import qs.components.atmosphere
 import qs.components.controls
 import qs.services
 import qs.config
@@ -127,6 +128,8 @@ FloatingWindow {
             navList.currentIndex = win.pageIndex(Welcome.currentPage);
         }
     }
+
+    AtmosphereTexture {}
 
     ColumnLayout {
         anchors.fill: parent
@@ -385,5 +388,10 @@ FloatingWindow {
                 }
             }
         }
+    }
+
+    AtmosphereLayer {
+        lampOrigin: "topRight"
+        lampReach: 1.0
     }
 }

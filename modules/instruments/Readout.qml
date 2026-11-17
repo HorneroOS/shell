@@ -43,6 +43,8 @@ Column {
                 font.family: Appearance.font.family.display
                 font.weight: Font.Medium
                 font.pointSize: root.valueSize
+                tabular: true
+                font.letterSpacing: -root.valueSize * 0.01
             }
 
             StyledText {

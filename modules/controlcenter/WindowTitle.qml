@@ -1,4 +1,5 @@
 import qs.components
+import qs.components.atmosphere
 import qs.components.controls
 import qs.components.effects
 import qs.services
@@ -15,6 +16,8 @@ StyledRect {
 
     implicitHeight: 30 + Appearance.padding.normal + 1
     color: Signal.tPalette.panel
+
+    AtmosphereTexture {}
 
     // Brand tile (same treatment as Welcome): the graphite logo
     // needs its paper chip to read on the title bar.
@@ -87,5 +90,11 @@ StyledRect {
             anchors.centerIn: parent
             name: "x"
         }
+    }
+
+    AtmosphereLayer {
+        lampOrigin: "top"
+        lampReach: 0.6
+        vignette: false
     }
 }

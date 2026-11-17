@@ -193,7 +193,22 @@ Item {
                 }
             }
 
-            Component.onCompleted: forceActiveFocus()
+            // `companion quick [text]`: open straight into the inline
+            // ask. Only prefills; the user still presses Enter to send.
+            // The content may be created after the launcher became
+            // visible, so this runs at creation and on visibility.
+            function applyPrefill(): void {
+                if (InlineAsk.prefill === "")
+                    return;
+                const q = InlineAsk.prefill === " " ? "" : InlineAsk.prefill;
+                InlineAsk.prefill = "";
+                search.text = `${Config.launcher.actionPrefix}ai ${q}`;
+            }
+
+            Component.onCompleted: {
+                forceActiveFocus();
+                applyPrefill();
+            }
 
             Connections {
                 target: root.visibilities
@@ -205,13 +220,8 @@ Item {
                         // central Escape cascade) cancels any
                         // in-flight inline ask.
                         InlineAsk.cancel();
-                    } else if (InlineAsk.prefill !== "") {
-                        // `companion quick [text]`: open straight into
-                        // the inline ask. Only prefills; the user still
-                        // presses Enter to send.
-                        const q = InlineAsk.prefill === " " ? "" : InlineAsk.prefill;
-                        InlineAsk.prefill = "";
-                        search.text = `${Config.launcher.actionPrefix}ai ${q}`;
+                    } else {
+                        search.applyPrefill();
                     }
                 }
 

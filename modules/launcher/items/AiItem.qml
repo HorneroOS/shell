@@ -67,6 +67,8 @@ Item {
             StyledText {
                 Layout.fillWidth: true
                 elide: Text.ElideRight
+                wrapMode: Text.Wrap
+                maximumLineCount: 2
                 text: {
                     if (InlineAsk.busy)
                         return qsTr("Javi is thinking… (click to stop)");

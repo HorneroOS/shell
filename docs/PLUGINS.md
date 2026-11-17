@@ -1016,7 +1016,7 @@ string on success or a short error (an exception counts as an error). It is
 not the same thing as `capabilities.actions`, which lists broker actions the
 extension may *request*; commands are what the extension *provides*.
 
-- Launcher: type `>do ` (the configured action prefix plus `do`) and a few
+- Launcher: type `>do` followed by a space (the configured action prefix plus `do`) and a few
   letters; rows match the title, keywords and extension name. Enter runs the
   command; a failure is shown as a notification.
 - IPC: `qs ipc call plugincommands list` (JSON) and

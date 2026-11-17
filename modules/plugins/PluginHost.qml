@@ -438,6 +438,7 @@ Scope {
                         Plugins.markMarketplace(slot.modelData.id, manifest.marketplace === undefined ? null : manifest.marketplace);
                         Plugins.markDescription(slot.modelData.id, manifest.description);
                         Plugins.markSchemaVersion(slot.modelData.id, manifest.schemaVersion);
+                        Plugins.markPluginKit(slot.modelData.id, manifest.pluginKit);
                         slot.entrypoint = manifest.entrypoint;
                         const background = effectiveSurfaces.background;
                         slot.backgroundEntrypoint = background && background.enabled !== false ? background.entrypoint : "";
@@ -502,6 +503,7 @@ Scope {
                         const manifest = JSON.parse(previewManifestView.text());
                         if (manifest.id === previewSlot.modelData.id)
                             Plugins.markSchemaVersion(previewSlot.modelData.id, manifest.schemaVersion);
+                        Plugins.markPluginKit(previewSlot.modelData.id, manifest.pluginKit);
                         // Surfaces of an installed-but-not-enabled package. The
                         // Signal instrument deck loads trusted first-party
                         // widgets without a per-widget enable, so it must

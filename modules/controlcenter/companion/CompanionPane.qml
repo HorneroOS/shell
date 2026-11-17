@@ -767,6 +767,8 @@ Item {
                     }
                 }
 
+                HabitatSection {}
+
                 VoiceSection {}
 
                 ChannelPanel {

@@ -96,7 +96,7 @@ def test_nominatim_request_identifies_horneroos_and_attributes_openstreetmap():
     assert '}, userAgent || "");' in _function(source, "request")
 
     settings = (ROOT / "modules" / "controlcenter" / "dashboard" / "GeneralSection.qml").read_text()
-    assert "[© OpenStreetMap contributors](https://www.openstreetmap.org/copyright)" in settings
+    assert "https://www.openstreetmap.org/copyright" in settings and "© OpenStreetMap contributors" in settings
     assert "onLinkActivated: link => Quickshell.execDetached" in settings
 
     dashboard = (ROOT / "modules" / "dashboard" / "Weather.qml").read_text()

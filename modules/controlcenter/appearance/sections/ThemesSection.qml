@@ -179,10 +179,10 @@ CollapsibleSection {
                 StyledRect {
                     Layout.fillWidth: true
 
-                    color: Qt.alpha(Signal.tPalette.panel, themeItem.isStaged ? Signal.tPalette.panel.a : 0)
-                    radius: Appearance.rounding.normal
-                    border.width: themeItem.isStaged ? 1 : 0
-                    border.color: Signal.palette.signal
+                    color: themeItem.isStaged || themeItem.isCurrent ? Signal.layer(Signal.palette.raised, 1) : "transparent"
+                    radius: Appearance.rounding.small
+                    border.width: themeItem.isStaged || themeItem.isCurrent ? 1 : 0
+                    border.color: themeItem.isStaged ? Signal.palette.signal : Signal.palette.ruleStrong
 
                     Interactive {
                         disabled: themeItem.cannotApply
@@ -216,44 +216,9 @@ CollapsibleSection {
                             Layout.fillWidth: true
                             spacing: Appearance.spacing.normal
 
-                            Loader {
-                                active: true
+                            ThemeSwatch {
                                 Layout.alignment: Qt.AlignVCenter
-                                Layout.preferredWidth: 72
-                                Layout.preferredHeight: 40
-                                Layout.minimumWidth: 72
-                                Layout.minimumHeight: 40
-
-                                sourceComponent: StyledClippingRect {
-                                    implicitWidth: 72
-                                    implicitHeight: 40
-                                    radius: Appearance.rounding.small
-                                    color: Signal.tPalette.panel
-                                    Accessible.name: themePreviewImage.status === Image.Ready
-                                        ? qsTr("Theme preview") : themeItem.missingWallpaper || themeItem.missingCurrentWallpaper
-                                            ? themeItem.readinessText : qsTr("Theme preview unavailable")
-
-                                    CachingImage {
-                                        id: themePreviewImage
-                                        anchors.fill: parent
-                                        path: Themes.previewPathFor(themeItem.modelData)
-                                        cache: true
-                                        visible: status === Image.Ready
-                                    }
-
-                                    Column {
-                                        anchors.centerIn: parent
-                                        spacing: 1
-                                        visible: themePreviewImage.status !== Image.Ready
-
-                                        Glyph {
-                                            anchors.horizontalCenter: parent.horizontalCenter
-                                            name: themeItem.modelData.colorOnly ? "palette" : themeItem.hasReadinessNotice ? "wallpaper" : themePreviewImage.status === Image.Loading ? "wallpaper" : "photo-off"
-                                            font.pointSize: Appearance.font.size.small
-                                            color: Signal.palette.ruleStrong
-                                        }
-                                    }
-                                }
+                                palette: sectionRoot.previewController.paletteForTheme(themeItem.modelData)
                             }
 
                             Column {
@@ -270,7 +235,7 @@ CollapsibleSection {
                                     width: parent.width
                                     text: modelData.description ?? ""
                                     font.pointSize: Appearance.font.size.small
-                                    color: Signal.palette.ruleStrong
+                                    color: Signal.palette.inkMuted
                                     elide: Text.ElideRight
                                     maximumLineCount: 2
                                     wrapMode: Text.WordWrap
@@ -290,24 +255,26 @@ CollapsibleSection {
                             }
 
                             StyledRect {
-                                radius: Appearance.rounding.full
-                                color: Qt.alpha(Signal.palette.cueWell, 0.6)
+                                radius: Appearance.rounding.small
+                                color: Signal.palette.cueWell
                                 implicitWidth: modeChip.implicitWidth + Appearance.padding.small * 2
                                 implicitHeight: modeChip.implicitHeight + Appearance.padding.smaller * 2
 
                                 StyledText {
                                     id: modeChip
                                     anchors.centerIn: parent
-                                    text: modelData.darkMode ? qsTr("Dark") : qsTr("Light")
-                                    font.pointSize: Appearance.font.size.smaller
+                                    mono: true
+                                    text: (themeItem.modelData.tags ?? []).indexOf("contrast") >= 0 ? qsTr("Contrast") : themeItem.modelData.darkMode ? qsTr("Night") : qsTr("Day")
+                                    font.pointSize: Appearance.font.size.small
+                                    font.capitalization: Font.AllUppercase
                                     color: Signal.palette.onCueWell
                                 }
                             }
 
                             StyledRect {
                                 visible: themeItem.isCurrent && !themeItem.isStaged
-                                radius: Appearance.rounding.full
-                                color: Qt.alpha(Signal.palette.signalWell, 0.75)
+                                radius: Appearance.rounding.small
+                                color: Signal.palette.signalWell
                                 implicitWidth: currentChip.implicitWidth + Appearance.padding.small * 2
                                 implicitHeight: currentChip.implicitHeight + Appearance.padding.smaller * 2
 
@@ -322,8 +289,8 @@ CollapsibleSection {
 
                             StyledRect {
                                 visible: themeItem.isStaged
-                                radius: Appearance.rounding.full
-                                color: Qt.alpha(Signal.palette.signalWell, 0.85)
+                                radius: Appearance.rounding.small
+                                color: Signal.palette.signalWell
                                 implicitWidth: stagedChip.implicitWidth + Appearance.padding.small * 2
                                 implicitHeight: stagedChip.implicitHeight + Appearance.padding.smaller * 2
 

@@ -40,7 +40,7 @@ Item {
         id: box
 
         anchors.fill: parent
-        radius: 12
+        radius: 3
         color: root.bg
         border.color: root.edge
         border.width: 1

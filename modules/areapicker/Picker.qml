@@ -214,7 +214,7 @@ MouseArea {
         id: overlay
 
         anchors.fill: parent
-        color: Signal.palette.cueWell
+        color: Signal.palette.scrim
         opacity: 0.3
 
         layer.enabled: true
@@ -260,6 +260,27 @@ MouseArea {
 
         Behavior on border.color {
             CAnim {}
+        }
+    }
+
+    // Selection size readout: real pixel values of the live selection, in a
+    // well beside the marquee (signal-visual-language §6.3).
+    Well {
+        id: sizeReadout
+
+        visible: border.visible && root.sw > 0 && root.sh > 0
+        x: Math.min(Math.max(border.x + border.width - width, 0), root.width - width)
+        y: Math.min(border.y + border.height + Appearance.spacing.small, root.height - height)
+        implicitWidth: sizeText.implicitWidth + Appearance.padding.normal * 2
+        implicitHeight: sizeText.implicitHeight + Appearance.padding.small * 2
+
+        StyledText {
+            id: sizeText
+
+            anchors.centerIn: parent
+            mono: true
+            text: `${Math.round(root.sw)} × ${Math.round(root.sh)}`
+            font.pointSize: Appearance.font.size.small
         }
     }
 

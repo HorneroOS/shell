@@ -14,7 +14,7 @@ def test_bar_modules_have_no_pill_radius():
 
 def test_floating_bar_surface_uses_normal_radius():
     src = (ROOT / "modules/bar/Bar.qml").read_text(encoding="utf-8")
-    assert "radius: root.floating ? Appearance.rounding.small : 0" in src
+    assert "root.floating ? Appearance.rounding.small : 0" in src  # style default; spec.radius overrides
 
 
 def test_frame_cutout_radius_is_a_bezel_token():

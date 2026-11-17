@@ -529,7 +529,7 @@ Item {
             visible: !root.clear && (root.floating || !Config.border.frameEnabled)
             anchors.fill: parent
             color: Signal.surface(Signal.layer(Signal.palette.base, 1), "bar")
-            radius: root.floating ? Appearance.rounding.small : 0
+            radius: root.spec.radius >= 0 ? root.spec.radius : root.floating ? Appearance.rounding.small : 0
             border.width: root.floating ? 1 : 0
             border.color: Signal.palette.rule
         }

@@ -154,33 +154,47 @@ ColumnLayout {
     SectionHeader {
         Layout.topMargin: Appearance.spacing.large
         title: qsTr("Sizes")
-        description: qsTr("Size settings for launcher items")
+        description: qsTr("Size of launcher items; each has a Reset to the factory value")
     }
 
     SectionContainer {
-        contentSpacing: Appearance.spacing.small / 2
+        contentSpacing: Appearance.spacing.small
 
-        PropertyRow {
+        SizeSlider {
+            target: Config.launcher.sizes
+            key: "itemWidth"
             label: qsTr("Item width")
-            value: qsTr("%1 px").arg(Config.launcher.sizes.itemWidth)
+            from: 400
+            to: 1000
+            defaultValue: 640
+            stepSize: 10
         }
-
-        PropertyRow {
-            showTopMargin: true
+        SizeSlider {
+            target: Config.launcher.sizes
+            key: "itemHeight"
             label: qsTr("Item height")
-            value: qsTr("%1 px").arg(Config.launcher.sizes.itemHeight)
+            from: 32
+            to: 80
+            defaultValue: 44
+            stepSize: 2
         }
-
-        PropertyRow {
-            showTopMargin: true
+        SizeSlider {
+            target: Config.launcher.sizes
+            key: "wallpaperWidth"
             label: qsTr("Wallpaper width")
-            value: qsTr("%1 px").arg(Config.launcher.sizes.wallpaperWidth)
+            from: 160
+            to: 480
+            defaultValue: 280
+            stepSize: 10
         }
-
-        PropertyRow {
-            showTopMargin: true
+        SizeSlider {
+            target: Config.launcher.sizes
+            key: "wallpaperHeight"
             label: qsTr("Wallpaper height")
-            value: qsTr("%1 px").arg(Config.launcher.sizes.wallpaperHeight)
+            from: 120
+            to: 360
+            defaultValue: 200
+            stepSize: 10
         }
     }
 

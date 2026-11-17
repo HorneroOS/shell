@@ -135,6 +135,26 @@ Item {
                 }
 
                 ChannelPanel {
+                    title: qsTr("Size")
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
+                        spacing: Appearance.spacing.small
+
+                        SizeSlider {
+                            target: Config.lock.sizes
+                            key: "centerWidth"
+                            label: qsTr("Lock panel width")
+                            from: 400
+                            to: 900
+                            defaultValue: 600
+                            stepSize: 10
+                        }
+                    }
+                }
+
+                ChannelPanel {
                     title: qsTr("Idle & locking")
 
                     ColumnLayout {

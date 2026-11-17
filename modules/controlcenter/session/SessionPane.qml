@@ -93,6 +93,16 @@ Item {
                             }
                         }
 
+                        SizeSlider {
+                            target: Config.session.sizes
+                            key: "button"
+                            label: qsTr("Button size")
+                            from: 56
+                            to: 128
+                            defaultValue: 80
+                            stepSize: 4
+                        }
+
                         SliderInput {
                             Layout.fillWidth: true
 

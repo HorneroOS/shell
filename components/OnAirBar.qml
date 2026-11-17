@@ -16,7 +16,22 @@ Rectangle {
     property bool glow: false
     property int thickness: 2
     readonly property bool horizontal: edge === "top" || edge === "bottom"
-    readonly property bool glowAllowed: root.glow && Experience.glow && !Appearance.anim.reduced
+    readonly property bool glowWanted: root.glow && Experience.glow && !Appearance.anim.reduced && root.visible
+    // Shell-wide glow budget (visual language §9).
+    property bool _granted: false
+    readonly property bool glowAllowed: root.glowWanted && root._granted
+    onGlowWantedChanged: root._syncGlow()
+    Component.onCompleted: root._syncGlow()
+    Component.onDestruction: Experience.releaseGlow(root)
+
+    function _syncGlow(): void {
+        if (root.glowWanted)
+            root._granted = Experience.acquireGlow(root, 0);
+        else {
+            Experience.releaseGlow(root);
+            root._granted = false;
+        }
+    }
 
     anchors.top: root.edge === "bottom" ? undefined : parent.top
     anchors.bottom: root.edge === "top" ? undefined : parent.bottom

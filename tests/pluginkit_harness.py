@@ -207,7 +207,17 @@ def build(base: Path, *, experience: str = "everyday") -> Path:
         "    readonly property bool glow: mode === \"signal\" && !Signal.light && Appearance.anim.effectiveLevel !== \"off\"\n"
         "    readonly property bool scanlines: mode === \"signal\" && !Signal.light\n"
         "    readonly property int telemetryIntervalMs: mode === \"signal\" ? 500 : 1000\n"
-        "    readonly property bool telemetryPaused: false\n}\n", encoding="utf-8")
+        "    readonly property bool telemetryPaused: false\n"
+        "    readonly property int glowLimit: 3\n"
+        "    property var holders: []\n"
+        "    readonly property int glowHeld: holders.length\n"
+        "    function acquireGlow(owner, reserve) {\n"
+        "        if (holders.indexOf(owner) >= 0) return true\n"
+        "        if (holders.length >= glowLimit - Math.max(0, reserve)) return false\n"
+        "        holders = holders.concat([owner]); return true }\n"
+        "    function releaseGlow(owner) {\n"
+        "        const i = holders.indexOf(owner); if (i < 0) return\n"
+        "        const n = holders.slice(); n.splice(i, 1); holders = n }\n}\n", encoding="utf-8")
     qmldir = [line for line in (KIT / "qmldir").read_text(encoding="utf-8").splitlines()
               if not line.split()[-1:] or line.split()[-1] in UI_FILES or line.startswith("module")]
     (kit / "qmldir").write_text("\n".join(qmldir) + "\n", encoding="utf-8")

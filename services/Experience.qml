@@ -61,6 +61,32 @@ Singleton {
     // Luminous accents (§9): off in day themes, high contrast and the
     // low motion levels, whatever the profile says.
     readonly property bool glow: fields["glow"] && !Signal.light && !Config.appearance.highContrast && (motionLevel === "full" || motionLevel === "standard")
+    // Glow budget (§9): at most three glowing items on a screen, shared by
+    // every native instrument and every PluginKit trace. Extension traces
+    // leave `reserve` slots to the shell's own (on-air bar, dashboard
+    // scopes), so opening the dashboard never has to take a lease away.
+    readonly property int glowLimit: 3
+    property var _glowHolders: []
+    readonly property int glowHeld: root._glowHolders.length
+
+    function acquireGlow(owner: var, reserve: int): bool {
+        if (root._glowHolders.indexOf(owner) >= 0)
+            return true;
+        if (root._glowHolders.length >= root.glowLimit - Math.max(0, reserve))
+            return false;
+        root._glowHolders = root._glowHolders.concat([owner]);
+        return true;
+    }
+
+    function releaseGlow(owner: var): void {
+        const i = root._glowHolders.indexOf(owner);
+        if (i < 0)
+            return;
+        const next = root._glowHolders.slice();
+        next.splice(i, 1);
+        root._glowHolders = next;
+    }
+
     // Scope scanlines (§10): Signal mode only, never in day themes.
     readonly property bool scanlines: fields["scanlines"] && !Signal.light && !Config.appearance.highContrast
 

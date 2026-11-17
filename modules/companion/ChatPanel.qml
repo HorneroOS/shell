@@ -28,7 +28,7 @@ Item {
     readonly property int cardWidth: 392
     // The conversation yields height to a pending decision so the
     // card is always fully on screen.
-    readonly property int listHeight: AssistantRun.pendingDecision ? 150 : 360
+    readonly property int listHeight: AssistantRun.pendingDecision ? 96 : Math.min(360, Math.max(140, Screen.height - 520))
     readonly property string lang: root.bridge.lang
 
     function t(key: string): string {
@@ -529,57 +529,8 @@ Item {
                 bridge: root.bridge
             }
 
-            ColumnLayout {
-                Layout.fillWidth: true
-                visible: root.bridge.pendingClarify !== null
-                spacing: Appearance.spacing.small
-
-                StyledText {
-                    Layout.fillWidth: true
-                    text: root.t("clarify.title")
-                    font.family: Appearance.font.family.mono
-                    font.pointSize: Appearance.font.size.smaller
-                    color: Signal.palette.alert
-                }
-
-                StyledText {
-                    Layout.fillWidth: true
-                    text: root.bridge.pendingClarify ? root.bridge.pendingClarify.detail : ""
-                    textFormat: Text.PlainText
-                    font.pointSize: Appearance.font.size.small
-                    color: Signal.palette.ink
-                    wrapMode: Text.Wrap
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: Appearance.spacing.small
-
-                    StyledInputField {
-                        id: clarifyInput
-
-                        Layout.fillWidth: true
-                        horizontalAlignment: TextInput.AlignLeft
-                        onEditingFinished: {
-                            if (text.trim() !== "" && root.bridge.pendingClarify) {
-                                root.bridge.clarify(root.bridge.pendingClarify.runId, text);
-                                text = "";
-                            }
-                        }
-                    }
-
-                    TextButton {
-                        text: root.t("clarify.send")
-                        type: TextButton.Filled
-                        enabled: !root.bridge.decisionBusy
-                        onClicked: {
-                            if (root.bridge.pendingClarify) {
-                                root.bridge.clarify(root.bridge.pendingClarify.runId, clarifyInput.text);
-                                clarifyInput.text = "";
-                            }
-                        }
-                    }
-                }
+            ClarifyCard {
+                bridge: root.bridge
             }
 
             // -- Attachment chips ---------------------------------------

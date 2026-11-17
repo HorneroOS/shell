@@ -95,82 +95,15 @@ Rectangle {
             }
         }
 
-        // -- Model + mode (real, explicit) -----------------------------
-        ColumnLayout {
+        // -- Model line (one row) -----------------------------------------
+        StyledText {
             Layout.fillWidth: true
-            spacing: Appearance.spacing.small
-
-            StyledText {
-                Layout.fillWidth: true
-                text: (root.bridge.currentModel !== "" ? root.bridge.currentModel : "—") + (root.bridge.currentProvider !== "" ? "  ·  " + root.bridge.currentProvider : "")
-                textFormat: Text.PlainText
-                font.family: Appearance.font.family.mono
-                font.pointSize: Appearance.font.size.smaller
-                color: Signal.palette.ink
-                elide: Text.ElideRight
-            }
-
-            Flow {
-                Layout.fillWidth: true
-                spacing: Appearance.spacing.small
-                visible: root.bridge.modelChoices.length > 1
-
-                Repeater {
-                    model: root.bridge.modelChoices
-
-                    delegate: TextButton {
-                        required property string modelData
-
-                        text: modelData
-                        type: TextButton.Tonal
-                        toggle: true
-                        checked: root.stagedModel === modelData
-                        onClicked: root.stagedModel = modelData
-                    }
-                }
-            }
-
-            RowLayout {
-                visible: root.stagedModel !== "" && root.stagedModel !== root.bridge.currentModel
-                spacing: Appearance.spacing.small
-
-                TextButton {
-                    text: qsTr("Apply %1 to new sessions").arg(root.stagedModel)
-                    type: TextButton.Filled
-                    onClicked: {
-                        root.bridge.applyModel(root.stagedModel);
-                        root.stagedModel = "";
-                    }
-                }
-            }
-
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Appearance.spacing.small
-
-                Repeater {
-                    model: ["ask", "agent", "chat"]
-
-                    delegate: TextButton {
-                        required property string modelData
-
-                        text: root.t("mode." + modelData)
-                        toggle: true
-                        checked: CompanionStore.chatMode === modelData
-                        type: TextButton.Tonal
-                        enabled: !AssistantRun.active && !AssistantRun.pendingDecision
-                        onClicked: CompanionStore.setChatMode(modelData)
-                    }
-                }
-            }
-
-            StyledText {
-                Layout.fillWidth: true
-                text: root.t("mode." + CompanionStore.chatMode + ".hint")
-                font.pointSize: Appearance.font.size.smaller
-                color: Signal.palette.inkMuted
-                wrapMode: Text.Wrap
-            }
+            text: (root.bridge.currentModel !== "" ? root.bridge.currentModel : "\u2014") + (root.bridge.currentProvider !== "" ? "  \u00B7  " + root.bridge.currentProvider : "") + "  \u00B7  " + root.t("mode." + CompanionStore.chatMode)
+            textFormat: Text.PlainText
+            font.family: Appearance.font.family.mono
+            font.pointSize: Appearance.font.size.smaller
+            color: Signal.palette.ink
+            elide: Text.ElideRight
         }
 
         Rectangle {
@@ -287,6 +220,10 @@ Rectangle {
                     expanded: true
                 }
 
+                ClarifyCard {
+                    bridge: root.bridge
+                }
+
                 StyledText {
                     visible: !AssistantRun.pendingDecision
                     text: root.t("approvals.none")
@@ -376,6 +313,76 @@ Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
             spacing: Appearance.spacing.small
+
+            StyledText {
+                text: root.t("history.model").toUpperCase()
+                font.family: Appearance.font.family.mono
+                font.pointSize: Appearance.font.size.smaller
+                color: Signal.palette.inkMuted
+            }
+
+            Flow {
+                Layout.fillWidth: true
+                spacing: Appearance.spacing.small
+                visible: root.bridge.modelChoices.length > 1
+
+                Repeater {
+                    model: root.bridge.modelChoices
+
+                    delegate: TextButton {
+                        required property string modelData
+
+                        text: modelData
+                        type: TextButton.Tonal
+                        toggle: true
+                        checked: root.stagedModel === modelData
+                        onClicked: root.stagedModel = modelData
+                    }
+                }
+            }
+
+            RowLayout {
+                visible: root.stagedModel !== "" && root.stagedModel !== root.bridge.currentModel
+                spacing: Appearance.spacing.small
+
+                TextButton {
+                    text: qsTr("Apply %1 to new sessions").arg(root.stagedModel)
+                    type: TextButton.Filled
+                    onClicked: {
+                        root.bridge.applyModel(root.stagedModel);
+                        root.stagedModel = "";
+                    }
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Appearance.spacing.small
+
+                Repeater {
+                    model: ["ask", "agent", "chat"]
+
+                    delegate: TextButton {
+                        required property string modelData
+
+                        text: root.t("mode." + modelData)
+                        toggle: true
+                        checked: CompanionStore.chatMode === modelData
+                        type: TextButton.Tonal
+                        enabled: !AssistantRun.active && !AssistantRun.pendingDecision
+                        onClicked: CompanionStore.setChatMode(modelData)
+                    }
+                }
+            }
+
+            StyledText {
+                Layout.fillWidth: true
+                text: root.t("mode." + CompanionStore.chatMode + ".hint")
+                font.pointSize: Appearance.font.size.smaller
+                color: Signal.palette.inkMuted
+                wrapMode: Text.Wrap
+            }
+
 
             StyledText {
                 text: root.t("history.sessions").toUpperCase()

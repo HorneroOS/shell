@@ -194,6 +194,14 @@ Scope {
         askProcess.running = true;
     }
 
+    // The open panel already shows every outcome; a speech bubble would
+    // grow the companion window past the screen. Bubbles are for when
+    // the conversation is closed.
+    function sayIfClosed(text: string, ms: int): void {
+        if (!root.chatOpen)
+            CompanionStore.say(text, ms);
+    }
+
     function noteArtifacts(paths: var): void {
         if (!paths || paths.length === 0)
             return;
@@ -370,9 +378,9 @@ Scope {
         if (id !== "") {
             stopProcess.command = ["horneroctl", "assistant", "stop", id, "--json"];
             stopProcess.running = true;
-            CompanionStore.say(qsTr("Stopped, including the Hermes run."), 5000);
+            root.sayIfClosed(qsTr("Stopped, including the Hermes run."), 5000);
         } else {
-            CompanionStore.say(qsTr("Stopped locally; the run id was not known yet."), 5000);
+            root.sayIfClosed(qsTr("Stopped locally; the run id was not known yet."), 5000);
         }
         if (askProcess.running)
             askProcess.running = false;
@@ -696,6 +704,11 @@ Scope {
                 // keeps it while waiting): then it simply continues.
                 // Only a closed stream needs a follow-up events call.
                 const streamLive = askProcess.running;
+                // The stream may have finished on its own between the
+                // click and this result (the gateway resumed the run
+                // the moment it was decided); following then would
+                // replay the whole answer a second time.
+                const needFollow = !streamLive && AssistantRun.pendingDecision;
                 root.decisions = root.decisions.concat([{
                             "kind": root.decisionKind,
                             "denied": root.decisionDenied,
@@ -703,13 +716,14 @@ Scope {
                             "ts": Date.now()
                         }]).slice(-30);
                 AssistantRun.decided(true, root.decisionDenied, message);
-                CompanionStore.say(message, 9000);
-                // The run continues after a decision; follow its events.
-                if (runId !== "" && !streamLive)
+                root.sayIfClosed(message, 9000);
+                // The run continues after a decision; follow its events
+                // only when its stream is gone and it is still unsettled.
+                if (runId !== "" && needFollow)
                     root.followEvents(runId);
             } else {
                 AssistantRun.decided(false, false, message);
-                CompanionStore.say(message, 9000);
+                root.sayIfClosed(message, 9000);
             }
         }
     }
@@ -757,8 +771,7 @@ Scope {
                 root.pushHistoryTraced("assistant", text, trace);
                 // The panel already shows the answer; the bubble is
                 // only for when the conversation is closed.
-                if (!root.chatOpen)
-                    CompanionStore.say(text, 12000);
+                root.sayIfClosed(text, 12000);
             }
         } else if (run.phase === "awaiting-approval" || run.phase === "awaiting-clarification") {
             if (text !== "")
@@ -767,10 +780,10 @@ Scope {
             root.pushHistory("system", detail !== "" ? detail : AssistantCopy.t(run.phase === "awaiting-approval" ? "status.awaiting-approval" : "status.awaiting-clarification", root.lang));
         } else if (run.phase === "blocked") {
             root.pushHistory("system", run.error !== "" ? run.error : AssistantCopy.t("quick.blocked", root.lang));
-            CompanionStore.say(run.error, 9000);
+            root.sayIfClosed(run.error, 9000);
         } else if (run.phase === "failed") {
             root.pushHistory("system", run.error);
-            CompanionStore.say(run.error, 9000);
+            root.sayIfClosed(run.error, 9000);
         } else if (run.phase === "disconnected") {
             if (text !== "")
                 root.pushHistoryTraced("assistant", text + " ⚠", trace);

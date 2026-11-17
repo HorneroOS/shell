@@ -71,7 +71,7 @@ def test_panel_scrollable_markdown_bubbles():
 def test_panel_input_voice_attach_clarify():
     assert '"microphone"' in PANEL
     assert '"paperclip"' in PANEL
-    assert "pendingClarify" in PANEL
+    assert "ClarifyCard" in PANEL and "pendingClarify" in (COMPANION / "ClarifyCard.qml").read_text()
     assert "ApprovalCard" in PANEL
     assert "sugerencias" not in PANEL  # chips are translatable strings, not hardcoded ES
     assert "Retry last" in PANEL
@@ -206,3 +206,8 @@ def test_javi_radio_ipc_entry_points_are_argument_complete_and_documented():
         assert name in doc
     # The shell writes no keybinding for them.
     assert "GlobalShortcut" not in host and "CustomShortcut" not in host
+
+
+def test_decision_follows_events_only_when_stream_is_gone_and_run_unsettled():
+    assert "needFollow" in BRIDGE
+    assert "!streamLive && AssistantRun.pendingDecision" in BRIDGE

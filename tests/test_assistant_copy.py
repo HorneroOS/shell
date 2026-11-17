@@ -37,3 +37,18 @@ def test_language_resolution():
     src = JS.read_text().replace(".pragma library", "", 1)
     out = subprocess.run([node, "-e", src + "\nconsole.log(JSON.stringify([lang('es_AR'),lang('en_US'),lang(''),t('action.stop','es'),t('nope','en')]));"], capture_output=True, text=True, timeout=30)
     assert json.loads(out.stdout) == ["es", "en", "en", "Detener", "nope"]
+
+
+def test_every_phase_and_status_key_has_copy():
+    node = shutil.which("node")
+    run_src = (ROOT / "services" / "assistantrun.js").read_text().replace(".pragma library", "", 1)
+    out = subprocess.run([node, "-e", run_src + "\nconsole.log(JSON.stringify(PHASES));"], capture_output=True, text=True, timeout=30)
+    phases = json.loads(out.stdout)
+    t = table()
+    for ph in phases:
+        assert f"phase.{ph}" in t, ph
+    for st in ("disabled", "disconnected", "reconnecting", "degraded", "degraded-isolation", "connected", "running",
+               "awaiting-approval", "awaiting-clarification", "blocked", "failed", "unknown"):
+        assert f"status.{st}" in t, st
+    for mode in ("ask", "agent", "chat"):
+        assert f"mode.{mode}" in t and f"mode.{mode}.hint" in t

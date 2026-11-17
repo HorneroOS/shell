@@ -76,7 +76,7 @@ Item {
 
         // Brightness
         Channel {
-            shown: Config.osd.enableBrightness && root.monitor !== null
+            shown: Config.osd.enableBrightness && (root.monitor?.available ?? false)
             label: qsTr("BRI")
             glyph: root.brightness < 0.34 ? "brightness-down" : root.brightness < 0.67 ? "brightness-half" : "brightness-up"
 
@@ -94,7 +94,7 @@ Item {
                 onMoved: v => root.monitor?.setBrightness(v)
             }
 
-            valueText: root.monitor ? Math.round(root.brightness * 100) : "—"
+            valueText: root.monitor?.available ? Math.round(root.brightness * 100) : "—"
         }
     }
 

@@ -59,23 +59,12 @@ Item {
             }
         }
 
-        // Date line (horizontal bars only, above the time)
-        StyledText {
-            Layout.alignment: Qt.AlignCenter
-            visible: root.showDate && !root.vertical
-
-            horizontalAlignment: StyledText.AlignHCenter
-            text: Time.format("ddd d MMM")
-            font.pointSize: Appearance.font.size.smaller
-            font.family: Appearance.font.family.sans
-            color: root.tone.inkMuted
-        }
-
-        // Time: split into two texts with anti-jitter equalisation
-        // (Caelestia Clock.qml pattern — prevents width jitter on "11" vs "10")
+        // Time (signal-visual-language §4.1): IBM Plex Sans Condensed Medium
+        // 18, tabular figures. Hours and minutes sit in fixed-width cells so
+        // the clock never changes width between "11:11" and "10:00".
         RowLayout {
             Layout.alignment: Qt.AlignCenter
-            spacing: Appearance.spacing.small / 2
+            spacing: 1
 
             visible: !root.vertical
 
@@ -83,16 +72,24 @@ Item {
                 id: hourMetrics
 
                 text: "00"
-                font.pointSize: Appearance.font.size.smaller
-                font.family: Appearance.font.family.mono
+                font.pointSize: Appearance.font.size.large
+                font.family: Appearance.font.family.display
+                font.weight: Font.Medium
+                font.features: {
+                    "tnum": 1
+                }
             }
 
             StyledText {
                 Layout.alignment: Qt.AlignVCenter
 
                 text: Time.hourStr
-                font.pointSize: Appearance.font.size.smaller
-                font.family: Appearance.font.family.mono
+                font.pointSize: Appearance.font.size.large
+                font.family: Appearance.font.family.display
+                font.weight: Font.Medium
+                font.features: {
+                    "tnum": 1
+                }
                 color: root.colour
                 Layout.preferredWidth: hourMetrics.width
                 horizontalAlignment: StyledText.AlignRight
@@ -100,8 +97,9 @@ Item {
 
             StyledText {
                 text: ":"
-                font.pointSize: Appearance.font.size.smaller
-                font.family: Appearance.font.family.mono
+                font.pointSize: Appearance.font.size.large
+                font.family: Appearance.font.family.display
+                font.weight: Font.Medium
                 color: root.colour
             }
 
@@ -109,20 +107,38 @@ Item {
                 Layout.alignment: Qt.AlignVCenter
 
                 text: Time.minuteStr
-                font.pointSize: Appearance.font.size.smaller
-                font.family: Appearance.font.family.mono
+                font.pointSize: Appearance.font.size.large
+                font.family: Appearance.font.family.display
+                font.weight: Font.Medium
+                font.features: {
+                    "tnum": 1
+                }
                 color: root.colour
                 Layout.preferredWidth: hourMetrics.width
                 horizontalAlignment: StyledText.AlignLeft
             }
 
             StyledText {
+                Layout.leftMargin: Appearance.spacing.small / 2
                 visible: Config.services.useTwelveHourClock
                 text: Time.amPmStr
                 font.pointSize: Appearance.font.size.smaller
-                font.family: Appearance.font.family.sans
+                font.family: Appearance.font.family.mono
                 color: root.tone.inkMuted
             }
+        }
+
+        // Date: Plex Mono 12, uppercase, `inkMuted`, 8 px after the time
+        // (horizontal bars only).
+        StyledText {
+            Layout.alignment: Qt.AlignCenter
+            Layout.leftMargin: Appearance.spacing.smaller - Appearance.spacing.small
+            visible: root.showDate && !root.vertical
+
+            text: Time.format("ddd d MMM").toUpperCase()
+            font.pointSize: Appearance.font.size.smaller
+            font.family: Appearance.font.family.mono
+            color: root.tone.inkMuted
         }
 
         // Keep a rail clock compact: the meridiem shares the minute row

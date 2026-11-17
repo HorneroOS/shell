@@ -414,6 +414,8 @@ Item {
                 Audio.decrementVolume();
         } else if (Config.bar.scrollActions.brightness) {
             const monitor = Brightness.getMonitorForScreen(screen);
+            if (!monitor?.available)
+                return;
             if (angleDelta.y > 0)
                 monitor.setBrightness(monitor.brightness + Config.services.brightnessIncrement);
             else if (angleDelta.y < 0)
@@ -786,6 +788,7 @@ Item {
 
                             sourceComponent: Resources {
                                 vertical: root.vertical
+                                compact: root.compact
                                 density: Experience.barDensity(root.spec.density)
                                 options: resourcesLoader.options
                             }
@@ -916,7 +919,10 @@ Item {
         Layout.rightMargin: root.vertical ? 0 : wrapped.trailPad
         Layout.topMargin: root.vertical ? wrapped.leadPad : 0
         Layout.bottomMargin: root.vertical ? wrapped.trailPad : 0
-        visible: enabled
+        // Entries that can report there is nothing to show (e.g. a brightness
+        // slider on a monitor without a backlight) leave the bar entirely.
+        readonly property bool contentAvailable: item?.available ?? true
+        visible: enabled && contentAvailable
         active: enabled
 
         // Glyph/text-only halo and shadow (never a box): one silhouette

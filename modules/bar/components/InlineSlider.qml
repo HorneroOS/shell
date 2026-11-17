@@ -27,6 +27,9 @@ RowLayout {
     readonly property bool isAudio: kind === "audio"
     readonly property Brightness.Monitor monitor: Brightness.getMonitorForScreen(screen)
 
+    // A brightness slider without a backlight would show an invented 0%.
+    readonly property bool available: isAudio || (monitor?.available ?? false)
+
     spacing: Appearance.spacing.small
     implicitWidth: icon.implicitWidth + spacing + slider.implicitWidth + (showValue ? spacing + valueText.implicitWidth : 0)
     implicitHeight: Math.max(icon.implicitHeight, slider.implicitHeight)

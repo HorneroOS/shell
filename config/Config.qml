@@ -303,6 +303,9 @@ Singleton {
                     scale: appearance.anim.durations.scale
                 }
             },
+            glow: {
+                intensity: appearance.glow.intensity
+            },
             transparency: {
                 enabled: appearance.transparency.enabled,
                 base: appearance.transparency.base,

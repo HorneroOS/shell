@@ -146,7 +146,7 @@ Well {
         }
 
         ShapePath {
-            strokeColor: root.glowAllowed ? Qt.alpha(Signal.palette.glow, 0.35) : "transparent"
+            strokeColor: root.glowAllowed ? Qt.alpha(Signal.palette.glow, Math.min(1, 0.35 * Signal.glowIntensity)) : "transparent"
             strokeWidth: 5
             fillColor: "transparent"
             joinStyle: ShapePath.RoundJoin

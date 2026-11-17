@@ -29,6 +29,9 @@
         "scale": 1
       }
     },
+    "glow": {
+      "intensity": 1
+    },
     "transparency": {
       "enabled": false,
       "base": 0.85,

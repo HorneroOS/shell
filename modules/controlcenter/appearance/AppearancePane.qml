@@ -46,7 +46,7 @@ Item {
     // Config.controlCenter.appearanceOpenSections (default: Themes).
     // _sectionsReady guards write-back while initial state is restored.
     property bool _sectionsReady: false
-    readonly property var _sectionKeys: ["chromatic", "themes", "gtkTheme", "gtkColorScheme", "iconTheme", "fonts", "animations", "scales", "transparency", "border", "background", "health"]
+    readonly property var _sectionKeys: ["chromatic", "themes", "gtkTheme", "gtkColorScheme", "iconTheme", "look", "fonts", "animations", "scales", "transparency", "border", "background", "health"]
     property var sectionItems: ({})
     property var sectionScroll: null
 
@@ -692,6 +692,7 @@ Item {
                         gtkColorScheme: gtkColorSchemeSection,
                         chromatic: chromaticSection,
                         iconTheme: iconThemeSection,
+                        look: lookSection,
                         fonts: fontsSection,
                         animations: animationsSection,
                         scales: scalesSection,
@@ -701,7 +702,7 @@ Item {
                         health: healthSection
                     })
 
-                    readonly property bool allSectionsExpanded: chromaticSection.expanded && themesSection.expanded && gtkThemeSection.expanded && gtkColorSchemeSection.expanded && iconThemeSection.expanded && fontsSection.expanded && animationsSection.expanded && scalesSection.expanded && transparencySection.expanded && borderSection.expanded && backgroundSection.expanded && healthSection.expanded
+                    readonly property bool allSectionsExpanded: chromaticSection.expanded && themesSection.expanded && gtkThemeSection.expanded && gtkColorSchemeSection.expanded && iconThemeSection.expanded && lookSection.expanded && fontsSection.expanded && animationsSection.expanded && scalesSection.expanded && transparencySection.expanded && borderSection.expanded && backgroundSection.expanded && healthSection.expanded
 
                     Component.onCompleted: {
                         root.sectionItems = sidebarLayout.sections;
@@ -780,6 +781,13 @@ Item {
                         previewController: root
                         Component.onCompleted: expanded = root.isSectionExpanded("iconTheme")
                         onExpandedChanged: root.persistSection("iconTheme", expanded)
+                    }
+
+                    LookSection {
+                        id: lookSection
+                        rootPane: sidebarFlickable.rootPane
+                        Component.onCompleted: expanded = root.isSectionExpanded("look")
+                        onExpandedChanged: root.persistSection("look", expanded)
                     }
 
                     FontsSection {

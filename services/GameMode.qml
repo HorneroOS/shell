@@ -17,7 +17,16 @@ Singleton {
     // read once by Experience's first-run migration.
     readonly property bool legacyEnabled: legacy.enabled
 
+    // The same tuning as a Lua `hl.config` table. Hyprland 0.55+ reads a Lua
+    // config and answers `keyword` with "unknown request" (exit status 0), so
+    // the legacy batch below silently does nothing there; `eval` is the
+    // supported runtime path. The two requests are mutually exclusive in
+    // practice (each is an unknown request on the other config flavour), so
+    // both are sent.
+    readonly property string luaTuning: "hl.config({ animations = { enabled = false }, decoration = { shadow = { enabled = false }, blur = { enabled = false }, rounding = 0 }, general = { gaps_in = 0, gaps_out = 0, border_size = 1, allow_tearing = true } })"
+
     function setDynamicConfs(): void {
+        Hypr.extras.message("eval " + luaTuning);
         Hypr.extras.applyOptions({
             "animations:enabled": 0,
             "decoration:shadow:enabled": 0,

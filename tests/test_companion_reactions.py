@@ -190,3 +190,13 @@ def test_ipc_react_is_governed_and_labelled_ipc():
 def test_bubble_renders_untrusted_text_as_plain_text():
     bubble = (COMP / "Bubble.qml").read_text()
     assert bubble.count("textFormat: Text.PlainText") == 2
+
+
+def test_control_center_exposes_every_reaction_knob():
+    pane = (ROOT / "modules/controlcenter/companion/CompanionPane.qml").read_text()
+    assert 'title: qsTr("Reactions")' in pane
+    for needle in ("patchReactions(\"enabled\"", "patchReactions(\"bubbles\"", "setKindEnabled(",
+                   "setModeBehaviour(", "setQuietHours(\"enabled\"", "setQuietHours(\"start\"",
+                   "setQuietHours(\"end\"", "setReactionSettings({})", "CompanionReactions.catalog",
+                   "CompanionReactions.modeIds"):
+        assert needle in pane, needle

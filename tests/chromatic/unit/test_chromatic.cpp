@@ -5,7 +5,9 @@
 #include "hornero/chromatic/json.hpp"
 
 #include <QFile>
+#include <QFileInfo>
 #include <QPainter>
+#include <QStandardPaths>
 #include <QTemporaryDir>
 #include <QtTest>
 
@@ -191,6 +193,86 @@ private slots:
         junk.write(bytes);
         junk.close();
         QVERIFY(!e.analyse(junk.fileName()).ok());
+    }
+
+    // An animation with many frames is sampled from the frames the decode
+    // budget can reach, deterministically, instead of decoding all of them.
+    void animatedDecodeIsBudgeted() {
+        QTemporaryDir dir;
+        // 8x8 GIF, 40 identical frames (one hand-encoded 27-byte frame, repeated).
+        QByteArray gif = QByteArray::fromHex("47494638396108000800800000000000ffffff21ff0b4e45545343415045322e300301000000");
+        const QByteArray frame = QByteArray::fromHex("21f90400010000002c0000000008000800000206848fa9cbed5d00");
+        for (int i = 0; i < 40; ++i)
+            gif += frame;
+        gif += ';';
+        const QString path = dir.filePath(QStringLiteral("many.gif"));
+        QFile f(path);
+        QVERIFY(f.open(QIODevice::WriteOnly));
+        f.write(gif);
+        f.close();
+
+        DecodeOptions open;
+        const auto all = decode(path, open);
+        QVERIFY(all.ok());
+        QCOMPARE(all->frames.size(), 8);
+        QVERIFY(all->note.contains(u"8 of 40 frames"_s));
+
+        DecodeOptions capped;
+        capped.maxDecodedPixels = 8 * 8 * 10; // ten frames' worth
+        const auto cut = decode(path, capped);
+        QVERIFY(cut.ok());
+        QCOMPARE(cut->frames.size(), 8);
+        QVERIFY2(cut->note.contains(u"first 10 of 40"_s), qPrintable(cut->note));
+        const auto again = decode(path, capped);
+        QVERIFY(again.ok() && again->note == cut->note);
+
+        capped.maxDecodedPixels = 1; // still yields one frame
+        const auto one = decode(path, capped);
+        QVERIFY(one.ok());
+        QCOMPARE(one->frames.size(), 1);
+    }
+
+    // Without a frame cache ffmpeg writes into a private directory, never a
+    // predictable name in the shared temp dir, and may only read local files.
+    void ffmpegScratchIsPrivate() {
+        QTemporaryDir dir;
+        const QString video = dir.filePath(QStringLiteral("clip.mp4"));
+        QFile v(video);
+        QVERIFY(v.open(QIODevice::WriteOnly));
+        v.write("not a real video");
+        v.close();
+        const QString still = dir.filePath(QStringLiteral("frame.png"));
+        QVERIFY(twoColour().save(still));
+        const QString argsFile = dir.filePath(QStringLiteral("args.txt"));
+        const QString fake = dir.filePath(QStringLiteral("fake-ffmpeg"));
+        QFile script(fake);
+        QVERIFY(script.open(QIODevice::WriteOnly));
+        script.write("#!/bin/sh\nprintf '%s\\n' \"$@\" > \"$FAKE_FFMPEG_ARGS\"\nfor a; do last=$a; done\ncp \"$FAKE_FFMPEG_FRAME\" \"$last\"\n");
+        script.close();
+        QVERIFY(script.setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner));
+        qputenv("FAKE_FFMPEG_ARGS", argsFile.toLocal8Bit());
+        qputenv("FAKE_FFMPEG_FRAME", still.toLocal8Bit());
+
+        DecodeOptions opts;
+        opts.ffmpeg = fake;
+        const auto r = decode(video, opts);
+        QVERIFY2(r.ok(), r.ok() ? "" : qPrintable(r.error().message));
+        QCOMPARE(r->kind, SourceKind::Video);
+
+        QFile rec(argsFile);
+        QVERIFY(rec.open(QIODevice::ReadOnly));
+        const QStringList argv = QString::fromLocal8Bit(rec.readAll()).split(u'\n', Qt::SkipEmptyParts);
+        const qsizetype wl = argv.indexOf(u"-protocol_whitelist"_s);
+        QVERIFY(wl >= 0 && wl + 1 < argv.size());
+        QCOMPARE(argv.at(wl + 1), u"file"_s);
+        QVERIFY(wl < argv.indexOf(u"-i"_s));
+        const QFileInfo target(argv.last());
+        QVERIFY2(!target.fileName().startsWith(u"hornero-chromatic-"_s), "frame must not use a predictable temp name");
+        const QFileInfo parent(target.absolutePath());
+        QVERIFY(parent.fileName().startsWith(u"hornero-chromatic-"_s));
+        QVERIFY(parent.absolutePath() == QFileInfo(QStandardPaths::writableLocation(QStandardPaths::TempLocation)).absoluteFilePath());
+        // The scratch directory is gone again once the frame was read.
+        QVERIFY(!parent.exists());
     }
 
     void requestParsing() {

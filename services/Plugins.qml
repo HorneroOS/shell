@@ -735,8 +735,11 @@ Singleton {
     // to read "failed to load (see shell log)". Compiling the same URL
     // synchronously yields the real QML error (missing type, syntax, ...),
     // with the plugin's own directory stripped from the path.
-    function loaderError(errorString: string, source: var): string {
-        let text = errorString || "";
+    function loaderError(errorString: var, source: var): string {
+        // Quickshell/QtQuick Loader has no errorString property, so hosts
+        // pass undefined here; a typed string parameter would turn that
+        // into the literal text "undefined".
+        let text = typeof errorString === "string" ? errorString : "";
         const url = (source ?? "").toString();
         if (text === "" && url !== "") {
             try {

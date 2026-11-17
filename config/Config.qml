@@ -668,6 +668,7 @@ Singleton {
         return {
             modes: experience.modes,
             toasts: experience.toasts,
+            deck: experience.deck,
             auto: {
                 fullscreenGaming: experience.auto.fullscreenGaming,
                 gamePatterns: experience.auto.gamePatterns

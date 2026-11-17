@@ -774,6 +774,7 @@
   },
   "experience": {
     "modes": {},
+    "deck": {},
     "toasts": true,
     "auto": {
       "fullscreenGaming": false,

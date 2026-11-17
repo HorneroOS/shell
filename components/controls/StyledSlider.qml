@@ -21,6 +21,11 @@ Slider {
     Keys.onTabPressed: event => FocusMode.handleTab(root, event, false)
     Keys.onBacktabPressed: event => FocusMode.handleTab(root, event, true)
 
+    // Fill and thumb colours. Settings sliders keep the signal accent; the bar
+    // overrides them with ink so amber only marks a live interaction.
+    property color fillColour: Signal.palette.signal
+    property color thumbColour: Signal.palette.signal
+
     opacity: root.enabled ? 1 : 0.5
 
     background: Item {
@@ -33,7 +38,7 @@ Slider {
 
             implicitWidth: root.handle.x - root.implicitHeight / 6
 
-            color: Signal.palette.signal
+            color: root.fillColour
             radius: Appearance.rounding.small
             topRightRadius: root.implicitHeight / 15
             bottomRightRadius: root.implicitHeight / 15
@@ -61,7 +66,7 @@ Slider {
         implicitWidth: root.implicitHeight / 4.5
         implicitHeight: root.implicitHeight
 
-        color: Signal.palette.signal
+        color: root.thumbColour
         radius: Appearance.rounding.small
 
         MouseArea {

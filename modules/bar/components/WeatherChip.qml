@@ -32,7 +32,7 @@ Item {
         Glyph {
             Layout.alignment: Qt.AlignCenter
             name: Weather.icon
-            color: Signal.palette.cue
+            color: Signal.palette.inkMuted
             font.pointSize: Density.iconPt
         }
 

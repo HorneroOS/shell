@@ -161,6 +161,7 @@
     "persistent": true,
     "showOnHover": true,
     "clearStyle": "auto",
+    "mark": "hornero",
     "dragThreshold": 20,
     "perScreen": [],
     "bars": [
@@ -321,14 +322,14 @@
     },
     "tray": {
       "background": false,
-      "recolour": false,
+      "recolour": true,
       "compact": false,
       "iconSubs": [],
       "hiddenIcons": []
     },
     "extensions": {
       "background": false,
-      "recolour": false,
+      "recolour": true,
       "compact": false,
       "iconSubs": [],
       "hiddenIcons": []

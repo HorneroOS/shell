@@ -174,19 +174,20 @@ DeviceDetails {
                     PropertyRow {
                         showTopMargin: true
                         label: qsTr("Signal strength")
-                        value: root.network ? qsTr("%1%").arg(root.network.strength) : qsTr("N/A")
+                        level: root.network ? root.network.strength / 100 : -1
+                        value: root.network ? qsTr("%1%").arg(root.network.strength) : ""
                     }
 
                     PropertyRow {
                         showTopMargin: true
                         label: qsTr("Frequency")
-                        value: root.network ? qsTr("%1 MHz").arg(root.network.frequency) : qsTr("N/A")
+                        value: root.network ? qsTr("%1 MHz").arg(root.network.frequency) : ""
                     }
 
                     PropertyRow {
                         showTopMargin: true
                         label: qsTr("Security")
-                        value: root.network ? (root.network.isSecure ? root.network.security : qsTr("Open")) : qsTr("N/A")
+                        value: root.network ? (root.network.isSecure ? root.network.security : qsTr("Open")) : ""
                     }
                 }
             }

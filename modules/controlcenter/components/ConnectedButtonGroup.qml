@@ -17,7 +17,9 @@ StyledRect {
     Layout.fillWidth: true
     implicitHeight: layout.implicitHeight + Appearance.padding.large * 2
     radius: Appearance.rounding.small
-    color: Signal.layer(Signal.palette.panel, 2)
+    color: "transparent"
+    border.width: 1
+    border.color: Signal.palette.rule
     clip: true
 
     Behavior on implicitHeight {

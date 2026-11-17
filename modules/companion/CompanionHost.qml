@@ -296,27 +296,28 @@ Scope {
                 }
             }
 
-            // Idle bob: gentle float while resting. Never runs under
-            // reduced motion, while sleeping, or while busy.
-            SequentialAnimation {
-                id: bobAnim
+            // Idle bob: a gentle float in four small steps (about 2 per
+            // second) instead of a continuous 60 fps tween. Measured in
+            // the QA VM: a continuous bob kept the whole shell redrawing
+            // (about 1.6 % of a core extra) whether it moved the surface
+            // margin or the sprite, because the cost is the per-frame
+            // commit. Stepping keeps the motion and drops the work.
+            // Never runs under reduced motion, while sleeping or busy.
+            Timer {
+                id: bobTimer
 
-                loops: Animation.Infinite
+                property int step: 0
+
+                interval: 450
+                repeat: true
                 running: !CompanionStore.reducedMotion && (CompanionStore.state === "idle" || CompanionStore.state === "hovering") && !win.dragging
-
-                NumberAnimation {
-                    target: win
-                    property: "bobY"
-                    to: -4
-                    duration: 1400
-                    easing.type: Easing.InOutSine
+                onTriggered: {
+                    bobTimer.step = (bobTimer.step + 1) % 4;
+                    win.bobY = [0, -3, 0, 3][bobTimer.step];
                 }
-                NumberAnimation {
-                    target: win
-                    property: "bobY"
-                    to: 4
-                    duration: 1400
-                    easing.type: Easing.InOutSine
+                onRunningChanged: {
+                    if (!bobTimer.running)
+                        win.bobY = 0;
                 }
             }
 
@@ -442,7 +443,7 @@ Scope {
             // Keep a breathing margin from every screen edge: the
             // window never sits flush against the border, and the
             // grown chat card never clips off-screen.
-            margins.top: Math.max(16, Math.min(win.py + Math.round(win.bobY), Math.max(16, win.screenH - stack.implicitHeight - 16)))
+            margins.top: Math.max(16, Math.min(win.py, Math.max(16, win.screenH - stack.implicitHeight - 16)))
             margins.left: Math.max(16, Math.min(win.px, Math.max(16, win.screenW - stack.implicitWidth - 16)))
 
             // Explicit surface size from the content column: the layer
@@ -542,7 +543,11 @@ Scope {
                     height: win.sizePx
                     implicitWidth: win.peekMode ? 28 : win.sizePx
                     implicitHeight: win.sizePx
-                    clip: true
+                    // Clipping is only needed for the peek sliver; the idle
+                    // bob moves the sprite inside the surface (its canvas
+                    // has transparent padding), so it never reconfigures
+                    // the layer-shell surface per frame.
+                    clip: win.peekMode
 
                     Player {
                         id: player
@@ -627,6 +632,7 @@ Scope {
                         // portraits stay visible while the edge-facing
                         // slice is transparent padding on most skins.
                         x: win.peekMode ? -Math.round((win.sizePx - 28) / 2) : 0
+                        y: Math.round(win.bobY)
                         // Smart orientation (see updateMirror): frames
                         // face right, so mirror on the right half to face
                         // the screen center. Peek sliver is unaffected.

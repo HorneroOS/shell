@@ -155,3 +155,13 @@ launcher is aligned left or right.
 - Lint: a new numeric `radius:` or `font.pointSize:` literal in `components/` or `modules/` fails the test unless it is a
   token (`Appearance.rounding.*`, `Appearance.font.size.*`) or the line ends in `// fixed: <reason>`. Only growth over
   `tests/fixed_baseline.json` fails, so existing code is unaffected; lower the baseline when converting literals.
+
+their position along it changes. Needs a QA VM check for the concave corner decoration when a launcher is aligned left
+or right.
+
+`notifs.align` (left | centre | right along the top edge, default right) moves the popup stack only. The popup tray was
+the shared top-right anchor of the notification centre (sidebar hangs below it, and the input mask follows its
+geometry); the tray now anchors per `align` and only widens to the sidebar when it is on the right, so the centre stays
+on the right edge. Left placement also flips the dismiss slide. Bottom corners are not offered on purpose: utilities,
+toasts and the launcher own the bottom edge. Centre shares the edge with the dashboard, which draws above popups while
+it is open.

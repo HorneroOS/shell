@@ -40,10 +40,9 @@ ColumnLayout {
             anchors.rightMargin: Appearance.padding.normal
             spacing: Appearance.spacing.normal
 
-            StyledText {
-                text: root.title
-                font.pointSize: Appearance.font.size.larger
-                font.weight: 500
+            Eyebrow {
+                label: root.title
+                color: Signal.palette.ink
             }
 
             Item {

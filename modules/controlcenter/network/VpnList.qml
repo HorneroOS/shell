@@ -98,8 +98,13 @@ ColumnLayout {
 
                 width: ListView.view ? ListView.view.width : undefined
 
-                color: Qt.alpha(Signal.tPalette.panel, (root.session && root.session.vpn && root.session.vpn.active === modelData) ? Signal.tPalette.panel.a : 0)
-                radius: Appearance.rounding.small
+                color: (root.session && root.session.vpn && root.session.vpn.active === modelData) ? Signal.palette.signalWell : "transparent"
+                radius: 0
+
+                OnAirBar {
+                    edge: "left"
+                    active: (root.session && root.session.vpn && root.session.vpn.active === modelData)
+                }
 
                 Accessible.role: Accessible.Button
                 Accessible.name: (modelData.displayName || qsTr("Unknown")) + (modelData.enabled && VPN.connected ? qsTr(", connected") : "")
@@ -127,7 +132,7 @@ ColumnLayout {
                         implicitHeight: icon.implicitHeight + Appearance.padding.normal * 2
 
                         radius: Appearance.rounding.small
-                        color: modelData.enabled && VPN.connected ? Signal.palette.signalWell : Signal.tPalette.raised
+                        color: modelData.enabled && VPN.connected ? Signal.palette.signalWell : "transparent"
 
                         Glyph {
                             id: icon
@@ -167,7 +172,7 @@ ColumnLayout {
                                         return qsTr("Enabled");
                                     return qsTr("Disabled");
                                 }
-                                color: modelData.enabled ? (VPN.connected ? Signal.palette.signal : Signal.palette.ink) : Signal.palette.ruleStrong
+                                color: modelData.enabled ? (VPN.connected ? Signal.palette.signal : Signal.palette.ink) : Signal.palette.inkMuted
                                 font.pointSize: Appearance.font.size.small
                                 font.weight: modelData.enabled && VPN.connected ? 500 : 400
                                 elide: Text.ElideRight
@@ -442,10 +447,9 @@ ColumnLayout {
                     }
                 }
 
-                StyledText {
-                    text: qsTr("Add VPN Provider")
-                    font.pointSize: Appearance.font.size.large
-                    font.weight: 500
+                Eyebrow {
+                    label: qsTr("Add VPN Provider")
+                    color: Signal.palette.ink
                 }
 
                 StyledText {
@@ -460,7 +464,7 @@ ColumnLayout {
                     Layout.topMargin: Appearance.spacing.normal
                     Layout.fillWidth: true
                     text: qsTr("NetBird")
-                    inactiveColour: Signal.tPalette.raised
+                    inactiveColour: "transparent"
                     inactiveOnColour: Signal.palette.ink
                     onClicked: {
                         const providers = [];
@@ -481,7 +485,7 @@ ColumnLayout {
                 TextButton {
                     Layout.fillWidth: true
                     text: qsTr("Tailscale")
-                    inactiveColour: Signal.tPalette.raised
+                    inactiveColour: "transparent"
                     inactiveOnColour: Signal.palette.ink
                     onClicked: {
                         const providers = [];
@@ -502,7 +506,7 @@ ColumnLayout {
                 TextButton {
                     Layout.fillWidth: true
                     text: qsTr("Cloudflare WARP")
-                    inactiveColour: Signal.tPalette.raised
+                    inactiveColour: "transparent"
                     inactiveOnColour: Signal.palette.ink
                     onClicked: {
                         const providers = [];
@@ -523,7 +527,7 @@ ColumnLayout {
                 TextButton {
                     Layout.fillWidth: true
                     text: qsTr("WireGuard (Custom)")
-                    inactiveColour: Signal.tPalette.raised
+                    inactiveColour: "transparent"
                     inactiveOnColour: Signal.palette.ink
                     onClicked: {
                         vpnDialog.showAddForm("wireguard", "WireGuard");
@@ -574,10 +578,10 @@ ColumnLayout {
                     StyledRect {
                         Layout.fillWidth: true
                         implicitHeight: 40
-                        color: displayNameField.activeFocus ? Signal.layer(Signal.palette.panel, 3) : Signal.layer(Signal.palette.panel, 2)
+                        color: Signal.palette.sunken
                         radius: Appearance.rounding.small
                         border.width: 1
-                        border.color: displayNameField.activeFocus ? Signal.palette.signal : Qt.alpha(Signal.palette.ruleStrong, 0.3)
+                        border.color: displayNameField.activeFocus ? Signal.palette.signal : Signal.palette.rule
 
                         Behavior on color {
                             CAnim {}
@@ -610,10 +614,10 @@ ColumnLayout {
                     StyledRect {
                         Layout.fillWidth: true
                         implicitHeight: 40
-                        color: interfaceNameField.activeFocus ? Signal.layer(Signal.palette.panel, 3) : Signal.layer(Signal.palette.panel, 2)
+                        color: Signal.palette.sunken
                         radius: Appearance.rounding.small
                         border.width: 1
-                        border.color: interfaceNameField.activeFocus ? Signal.palette.signal : Qt.alpha(Signal.palette.ruleStrong, 0.3)
+                        border.color: interfaceNameField.activeFocus ? Signal.palette.signal : Signal.palette.rule
 
                         Behavior on color {
                             CAnim {}
@@ -641,7 +645,7 @@ ColumnLayout {
                     TextButton {
                         Layout.fillWidth: true
                         text: qsTr("Cancel")
-                        inactiveColour: Signal.tPalette.raised
+                        inactiveColour: "transparent"
                         inactiveOnColour: Signal.palette.ink
                         onClicked: vpnDialog.closeWithAnimation()
                     }

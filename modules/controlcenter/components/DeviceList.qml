@@ -46,11 +46,13 @@ ColumnLayout {
         spacing: Appearance.spacing.small
         visible: root.title !== "" || root.description !== ""
 
-        StyledText {
+        Eyebrow {
             visible: root.title !== ""
-            text: root.title
-            font.pointSize: Appearance.font.size.large
-            font.weight: 500
+            label: root.title
+            color: Signal.palette.ink
+            Accessible.ignored: false
+            Accessible.role: Accessible.Heading
+            Accessible.name: root.title
         }
 
         Loader {

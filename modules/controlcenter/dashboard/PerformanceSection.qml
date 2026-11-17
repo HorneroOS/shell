@@ -20,9 +20,9 @@ SectionContainer {
     Layout.fillWidth: true
     alignTop: true
 
-    StyledText {
-        text: qsTr("Performance Resources")
-        font.pointSize: Appearance.font.size.normal
+    Eyebrow {
+        label: qsTr("Performance Resources")
+        color: Signal.palette.ink
     }
 
     ConnectedButtonGroup {

@@ -57,11 +57,10 @@ StyledFlickable {
                     ColumnLayout {
                         spacing: Appearance.spacing.normal
 
-                        StyledText {
+                        Eyebrow {
                             Layout.topMargin: Appearance.spacing.large
-                            text: qsTr("Connection status")
-                            font.pointSize: Appearance.font.size.larger
-                            font.weight: 500
+                            label: qsTr("Connection status")
+                            color: Signal.palette.ink
                         }
 
                         StyledText {
@@ -82,7 +81,9 @@ StyledFlickable {
                             implicitHeight: deviceStatus.implicitHeight + Appearance.padding.large * 2
 
                             radius: Appearance.rounding.small
-                            color: Signal.tPalette.panel
+                            color: "transparent"
+                            border.width: 1
+                            border.color: Signal.palette.rule
 
                             ColumnLayout {
                                 id: deviceStatus
@@ -129,11 +130,10 @@ StyledFlickable {
                     ColumnLayout {
                         spacing: Appearance.spacing.normal
 
-                        StyledText {
+                        Eyebrow {
                             Layout.topMargin: Appearance.spacing.large
-                            text: qsTr("Device properties")
-                            font.pointSize: Appearance.font.size.larger
-                            font.weight: 500
+                            label: qsTr("Device properties")
+                            color: Signal.palette.ink
                         }
 
                         StyledText {
@@ -146,7 +146,9 @@ StyledFlickable {
                             implicitHeight: deviceProps.implicitHeight + Appearance.padding.large * 2
 
                             radius: Appearance.rounding.small
-                            color: Signal.tPalette.panel
+                            color: "transparent"
+                            border.width: 1
+                            border.color: Signal.palette.rule
 
                             ColumnLayout {
                                 id: deviceProps
@@ -342,11 +344,10 @@ StyledFlickable {
                     ColumnLayout {
                         spacing: Appearance.spacing.normal
 
-                        StyledText {
+                        Eyebrow {
                             Layout.topMargin: Appearance.spacing.large
-                            text: qsTr("Device information")
-                            font.pointSize: Appearance.font.size.larger
-                            font.weight: 500
+                            label: qsTr("Device information")
+                            color: Signal.palette.ink
                         }
 
                         StyledText {
@@ -359,7 +360,9 @@ StyledFlickable {
                             implicitHeight: deviceInfo.implicitHeight + Appearance.padding.large * 2
 
                             radius: Appearance.rounding.small
-                            color: Signal.tPalette.panel
+                            color: "transparent"
+                            border.width: 1
+                            border.color: Signal.palette.rule
 
                             ColumnLayout {
                                 id: deviceInfo

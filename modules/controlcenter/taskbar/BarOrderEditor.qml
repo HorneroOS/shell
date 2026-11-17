@@ -145,7 +145,9 @@ ColumnLayout {
                 Layout.alignment: Qt.AlignTop
                 implicitHeight: groupColumn.implicitHeight + Appearance.padding.large * 2
                 radius: Appearance.rounding.small
-                color: Signal.tPalette.raised
+                color: "transparent"
+                border.width: 1
+                border.color: Signal.palette.rule
 
                 ColumnLayout {
                     id: groupColumn
@@ -184,7 +186,7 @@ ColumnLayout {
                             Layout.fillWidth: true
                             implicitHeight: entryLayout.implicitHeight + Appearance.padding.small * 2
                             radius: Appearance.rounding.small
-                            color: Signal.tPalette.lifted
+                            color: Signal.palette.sunken
 
                             RowLayout {
                                 id: entryLayout

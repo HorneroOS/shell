@@ -42,11 +42,10 @@ ColumnLayout {
         color: Signal.palette.alert
     }
 
-    StyledText {
+    Eyebrow {
         Layout.topMargin: Appearance.spacing.large
-        text: qsTr("Adapter status")
-        font.pointSize: Appearance.font.size.larger
-        font.weight: 500
+        label: qsTr("Adapter status")
+        color: Signal.palette.ink
     }
 
     StyledText {
@@ -59,7 +58,9 @@ ColumnLayout {
         implicitHeight: adapterStatus.implicitHeight + Appearance.padding.large * 2
 
         radius: Appearance.rounding.small
-        color: Signal.tPalette.panel
+        color: "transparent"
+        border.width: 1
+        border.color: Signal.palette.rule
 
         ColumnLayout {
             id: adapterStatus
@@ -103,11 +104,10 @@ ColumnLayout {
         }
     }
 
-    StyledText {
+    Eyebrow {
         Layout.topMargin: Appearance.spacing.large
-        text: qsTr("Adapter properties")
-        font.pointSize: Appearance.font.size.larger
-        font.weight: 500
+        label: qsTr("Adapter properties")
+        color: Signal.palette.ink
     }
 
     StyledText {
@@ -120,7 +120,9 @@ ColumnLayout {
         implicitHeight: adapterSettings.implicitHeight + Appearance.padding.large * 2
 
         radius: Appearance.rounding.small
-        color: Signal.tPalette.panel
+        color: "transparent"
+        border.width: 1
+        border.color: Signal.palette.rule
 
         ColumnLayout {
             id: adapterSettings
@@ -471,11 +473,10 @@ ColumnLayout {
         }
     }
 
-    StyledText {
+    Eyebrow {
         Layout.topMargin: Appearance.spacing.large
-        text: qsTr("Adapter information")
-        font.pointSize: Appearance.font.size.larger
-        font.weight: 500
+        label: qsTr("Adapter information")
+        color: Signal.palette.ink
     }
 
     StyledText {
@@ -488,7 +489,9 @@ ColumnLayout {
         implicitHeight: adapterInfo.implicitHeight + Appearance.padding.large * 2
 
         radius: Appearance.rounding.small
-        color: Signal.tPalette.panel
+        color: "transparent"
+        border.width: 1
+        border.color: Signal.palette.rule
 
         ColumnLayout {
             id: adapterInfo

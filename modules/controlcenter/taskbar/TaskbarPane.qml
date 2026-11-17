@@ -194,9 +194,9 @@ Item {
                     Layout.fillWidth: true
                     alignTop: true
 
-                    StyledText {
-                        text: qsTr("Status Icons")
-                        font.pointSize: Appearance.font.size.normal
+                    Eyebrow {
+                        label: qsTr("Status Icons")
+                        color: Signal.palette.ink
                     }
 
                     ConnectedButtonGroup {
@@ -286,16 +286,18 @@ Item {
                             Layout.fillWidth: true
                             alignTop: true
 
-                            StyledText {
-                                text: qsTr("Workspaces")
-                                font.pointSize: Appearance.font.size.normal
+                            Eyebrow {
+                                label: qsTr("Workspaces")
+                                color: Signal.palette.ink
                             }
 
                             StyledRect {
                                 Layout.fillWidth: true
                                 implicitHeight: workspacesShownRow.implicitHeight + Appearance.padding.large * 2
                                 radius: Appearance.rounding.small
-                                color: Signal.layer(Signal.palette.panel, 2)
+                                color: "transparent"
+                                border.width: 1
+                                border.color: Signal.palette.rule
 
                                 Behavior on implicitHeight {
                                     Anim {}
@@ -330,7 +332,9 @@ Item {
                                 Layout.fillWidth: true
                                 implicitHeight: workspacesActiveIndicatorRow.implicitHeight + Appearance.padding.large * 2
                                 radius: Appearance.rounding.small
-                                color: Signal.layer(Signal.palette.panel, 2)
+                                color: "transparent"
+                                border.width: 1
+                                border.color: Signal.palette.rule
 
                                 Behavior on implicitHeight {
                                     Anim {}
@@ -363,7 +367,9 @@ Item {
                                 Layout.fillWidth: true
                                 implicitHeight: workspacesOccupiedBgRow.implicitHeight + Appearance.padding.large * 2
                                 radius: Appearance.rounding.small
-                                color: Signal.layer(Signal.palette.panel, 2)
+                                color: "transparent"
+                                border.width: 1
+                                border.color: Signal.palette.rule
 
                                 Behavior on implicitHeight {
                                     Anim {}
@@ -396,7 +402,9 @@ Item {
                                 Layout.fillWidth: true
                                 implicitHeight: workspacesShowWindowsRow.implicitHeight + Appearance.padding.large * 2
                                 radius: Appearance.rounding.small
-                                color: Signal.layer(Signal.palette.panel, 2)
+                                color: "transparent"
+                                border.width: 1
+                                border.color: Signal.palette.rule
 
                                 Behavior on implicitHeight {
                                     Anim {}
@@ -429,7 +437,9 @@ Item {
                                 Layout.fillWidth: true
                                 implicitHeight: workspacesPerMonitorRow.implicitHeight + Appearance.padding.large * 2
                                 radius: Appearance.rounding.small
-                                color: Signal.layer(Signal.palette.panel, 2)
+                                color: "transparent"
+                                border.width: 1
+                                border.color: Signal.palette.rule
 
                                 Behavior on implicitHeight {
                                     Anim {}
@@ -463,9 +473,9 @@ Item {
                             Layout.fillWidth: true
                             alignTop: true
 
-                            StyledText {
-                                text: qsTr("Scroll Actions")
-                                font.pointSize: Appearance.font.size.normal
+                            Eyebrow {
+                                label: qsTr("Scroll Actions")
+                                color: Signal.palette.ink
                             }
 
                             ConnectedButtonGroup {
@@ -511,9 +521,9 @@ Item {
                             Layout.fillWidth: true
                             alignTop: true
 
-                            StyledText {
-                                text: qsTr("Clock")
-                                font.pointSize: Appearance.font.size.normal
+                            Eyebrow {
+                                label: qsTr("Clock")
+                                color: Signal.palette.ink
                             }
 
                             SwitchRow {
@@ -530,9 +540,9 @@ Item {
                             Layout.fillWidth: true
                             alignTop: true
 
-                            StyledText {
-                                text: qsTr("Bar Behavior")
-                                font.pointSize: Appearance.font.size.normal
+                            Eyebrow {
+                                label: qsTr("Bar Behavior")
+                                color: Signal.palette.ink
                             }
 
                             SwitchRow {
@@ -590,9 +600,9 @@ Item {
                             Layout.fillWidth: true
                             alignTop: true
 
-                            StyledText {
-                                text: qsTr("Popouts")
-                                font.pointSize: Appearance.font.size.normal
+                            Eyebrow {
+                                label: qsTr("Popouts")
+                                color: Signal.palette.ink
                             }
 
                             SwitchRow {
@@ -627,9 +637,9 @@ Item {
                             Layout.fillWidth: true
                             alignTop: true
 
-                            StyledText {
-                                text: qsTr("Tray Settings")
-                                font.pointSize: Appearance.font.size.normal
+                            Eyebrow {
+                                label: qsTr("Tray Settings")
+                                color: Signal.palette.ink
                             }
 
                             ConnectedButtonGroup {
@@ -669,9 +679,9 @@ Item {
                             Layout.fillWidth: true
                             alignTop: true
 
-                            StyledText {
-                                text: qsTr("Extensions Settings")
-                                font.pointSize: Appearance.font.size.normal
+                            Eyebrow {
+                                label: qsTr("Extensions Settings")
+                                color: Signal.palette.ink
                             }
 
                             ConnectedButtonGroup {

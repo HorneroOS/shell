@@ -84,7 +84,9 @@ ColumnLayout {
                     required property int index
 
                     width: ListView.view ? ListView.view.width : undefined
-                    color: Signal.tPalette.raised
+                    color: "transparent"
+                    border.width: 1
+                    border.color: Signal.palette.rule
                     radius: Appearance.rounding.small
 
                     RowLayout {

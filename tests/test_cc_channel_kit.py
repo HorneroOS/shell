@@ -95,3 +95,18 @@ def test_kit_rows_go_flat_inside_a_channel_panel():
                 "components/controls/SplitButtonRow.qml", "modules/controlcenter/components/ConnectedButtonGroup.qml"):
         src = _src(ROOT / rel)
         assert "p.isChannelPanel === true" in src and "border.width: root.flat ? 0 : 1" in src, rel
+
+
+def test_network_bluetooth_lists_use_selected_well_and_signal_meter():
+    for rel in ("network/WirelessList.qml", "network/EthernetList.qml", "network/VpnList.qml", "bluetooth/DeviceList.qml"):
+        src = _src(CC / rel)
+        assert "OnAirBar {" in src and "Signal.palette.signalWell" in src, rel
+        assert "tPalette.panel" not in src and "ruleStrong" not in src, rel
+    assert "SegmentMeter {" in _src(CC / "network/WirelessList.qml")
+
+
+def test_detail_headers_are_compact_left_aligned_with_heading_role():
+    for rel in ("components/SettingsHeader.qml",):
+        src = _src(CC / rel)
+        assert "RowLayout {" in src and "Accessible.Heading" in src and "AlignHCenter" not in src
+    assert "AlignHCenter" not in _src(ROOT / "components/ConnectionHeader.qml")

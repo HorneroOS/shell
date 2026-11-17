@@ -35,10 +35,9 @@ DeviceList {
         RowLayout {
             spacing: Appearance.spacing.smaller
 
-            StyledText {
-                text: qsTr("Bluetooth")
-                font.pointSize: Appearance.font.size.large
-                font.weight: 500
+            Eyebrow {
+                label: qsTr("Bluetooth")
+                color: Signal.palette.ink
             }
 
             Item {
@@ -141,8 +140,13 @@ DeviceList {
             width: ListView.view ? ListView.view.width : undefined
             implicitHeight: deviceInner.implicitHeight + Appearance.padding.normal * 2
 
-            color: Qt.alpha(Signal.tPalette.panel, root.activeItem === modelData ? Signal.tPalette.panel.a : 0)
-            radius: Appearance.rounding.small
+            color: root.activeItem === modelData ? Signal.palette.signalWell : "transparent"
+            radius: 0
+
+            OnAirBar {
+                edge: "left"
+                active: root.activeItem === modelData
+            }
 
             Accessible.role: Accessible.Button
             Accessible.name: (modelData ? modelData.name : qsTr("Unknown")) + (device.connected ? qsTr(", connected") : "")
@@ -169,7 +173,7 @@ DeviceList {
                     implicitHeight: icon.implicitHeight + Appearance.padding.normal * 2
 
                     radius: Appearance.rounding.small
-                    color: device.connected ? Signal.palette.signalWell : (device.modelData && device.modelData.bonded) ? Signal.palette.signalWell : Signal.tPalette.raised
+                    color: device.connected ? Signal.palette.signalWell : (device.modelData && device.modelData.bonded) ? Signal.palette.signalWell : "transparent"
 
                     StyledRect {
                         anchors.fill: parent

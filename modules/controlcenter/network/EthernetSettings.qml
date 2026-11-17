@@ -24,11 +24,10 @@ ColumnLayout {
         title: qsTr("Ethernet settings")
     }
 
-    StyledText {
+    Eyebrow {
         Layout.topMargin: Appearance.spacing.large
-        text: qsTr("Ethernet devices")
-        font.pointSize: Appearance.font.size.larger
-        font.weight: 500
+        label: qsTr("Ethernet devices")
+        color: Signal.palette.ink
     }
 
     StyledText {
@@ -41,7 +40,9 @@ ColumnLayout {
         implicitHeight: ethernetInfo.implicitHeight + Appearance.padding.large * 2
 
         radius: Appearance.rounding.small
-        color: Signal.tPalette.panel
+        color: "transparent"
+        border.width: 1
+        border.color: Signal.palette.rule
 
         ColumnLayout {
             id: ethernetInfo

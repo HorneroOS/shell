@@ -50,10 +50,9 @@ Item {
                         Layout.fillWidth: true
                         spacing: Appearance.spacing.smaller
 
-                        StyledText {
-                            text: qsTr("Network")
-                            font.pointSize: Appearance.font.size.large
-                            font.weight: 500
+                        Eyebrow {
+                            label: qsTr("Network")
+                            color: Signal.palette.ink
                         }
 
                         Item {

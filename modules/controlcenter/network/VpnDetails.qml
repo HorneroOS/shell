@@ -269,10 +269,9 @@ DeviceDetails {
         contentItem: ColumnLayout {
             spacing: Appearance.spacing.normal
 
-            StyledText {
-                text: qsTr("Edit VPN Provider")
-                font.pointSize: Appearance.font.size.large
-                font.weight: 500
+            Eyebrow {
+                label: qsTr("Edit VPN Provider")
+                color: Signal.palette.ink
             }
 
             ColumnLayout {
@@ -288,10 +287,10 @@ DeviceDetails {
                 StyledRect {
                     Layout.fillWidth: true
                     implicitHeight: 40
-                    color: displayNameField.activeFocus ? Signal.layer(Signal.palette.panel, 3) : Signal.layer(Signal.palette.panel, 2)
+                    color: Signal.palette.sunken
                     radius: Appearance.rounding.small
                     border.width: 1
-                    border.color: displayNameField.activeFocus ? Signal.palette.signal : Qt.alpha(Signal.palette.ruleStrong, 0.3)
+                    border.color: displayNameField.activeFocus ? Signal.palette.signal : Signal.palette.rule
 
                     Behavior on color {
                         CAnim {}
@@ -324,10 +323,10 @@ DeviceDetails {
                 StyledRect {
                     Layout.fillWidth: true
                     implicitHeight: 40
-                    color: interfaceNameField.activeFocus ? Signal.layer(Signal.palette.panel, 3) : Signal.layer(Signal.palette.panel, 2)
+                    color: Signal.palette.sunken
                     radius: Appearance.rounding.small
                     border.width: 1
-                    border.color: interfaceNameField.activeFocus ? Signal.palette.signal : Qt.alpha(Signal.palette.ruleStrong, 0.3)
+                    border.color: interfaceNameField.activeFocus ? Signal.palette.signal : Signal.palette.rule
 
                     Behavior on color {
                         CAnim {}

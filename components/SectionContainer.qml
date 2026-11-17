@@ -11,6 +11,8 @@ StyledRect {
     default property alias content: contentColumn.data
     property real contentSpacing: Appearance.spacing.larger
     property bool alignTop: false
+    // Kit rows inside a container go flat (see ChannelPanel).
+    readonly property bool isChannelPanel: true
 
     Layout.fillWidth: true
     implicitHeight: contentColumn.implicitHeight + Appearance.padding.large * 2

@@ -16,9 +16,9 @@ SectionContainer {
     Layout.fillWidth: true
     alignTop: true
 
-    StyledText {
-        text: qsTr("General Settings")
-        font.pointSize: Appearance.font.size.normal
+    Eyebrow {
+        label: qsTr("General Settings")
+        color: Signal.palette.ink
     }
 
     SwitchRow {
@@ -96,8 +96,8 @@ SectionContainer {
 
     StyledText {
         Layout.fillWidth: true
-        textFormat: Text.MarkdownText
-        text: qsTr("Weather stays offline until you enter a location. City search and forecasts use Open-Meteo over HTTPS. When you enter coordinates, they are also sent to OpenStreetMap to find the city name. Clear the field to stop requests. [© OpenStreetMap contributors](https://www.openstreetmap.org/copyright)")
+        textFormat: Text.StyledText
+        text: qsTr("Weather stays offline until you enter a location. City search and forecasts use Open-Meteo over HTTPS. When you enter coordinates, they are also sent to OpenStreetMap to find the city name. Clear the field to stop requests. <a href=\"https://www.openstreetmap.org/copyright\">© OpenStreetMap contributors</a>")
         wrapMode: Text.WordWrap
         font.pointSize: Appearance.font.size.small
         color: Signal.palette.inkMuted

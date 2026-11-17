@@ -150,6 +150,59 @@ Item {
                     }
                 }
 
+                // ── Sizes ───────────────────────────────────────────────────
+                ChannelPanel {
+                    title: qsTr("Sizes")
+
+                    ColumnLayout {
+                        id: sizesCol
+
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
+                        spacing: Appearance.spacing.small
+
+                        SizeSlider {
+                            target: Config.notifs.sizes
+                            key: "width"
+                            label: qsTr("Notification width")
+                            from: 280
+                            to: 640
+                            defaultValue: 400
+                            stepSize: 10
+                        }
+
+                        SizeSlider {
+                            target: Config.notifs.sizes
+                            key: "image"
+                            label: qsTr("Notification image")
+                            from: 24
+                            to: 96
+                            defaultValue: 41
+                            stepSize: 1
+                        }
+
+                        SizeSlider {
+                            target: Config.sidebar.sizes
+                            key: "width"
+                            label: qsTr("Notification centre width")
+                            from: 320
+                            to: 720
+                            defaultValue: 430
+                            stepSize: 10
+                        }
+
+                        SizeSlider {
+                            target: Config.utilities.sizes
+                            key: "toastWidth"
+                            label: qsTr("Toast width")
+                            from: 280
+                            to: 640
+                            defaultValue: 430
+                            stepSize: 10
+                        }
+                    }
+                }
+
                 // ── Lock screen ────────────────────────────────────────────
                 ChannelPanel {
                     title: qsTr("Lock screen")

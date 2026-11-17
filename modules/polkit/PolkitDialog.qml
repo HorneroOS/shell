@@ -111,11 +111,22 @@ FloatingWindow {
                 color: Signal.palette.signal
             }
 
-            StyledText {
+            ColumnLayout {
                 Layout.fillWidth: true
-                text: qsTr("Authentication required")
-                font.pointSize: Appearance.font.size.large
-                font.weight: 600
+                spacing: 0
+
+                Eyebrow {
+                    Layout.fillWidth: true
+                    label: qsTr("Administrator")
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
+                    text: qsTr("Authentication required")
+                    font.pointSize: Appearance.font.size.large
+                    font.weight: 600
+                    Accessible.role: Accessible.Heading
+                }
             }
         }
 
@@ -148,15 +159,23 @@ FloatingWindow {
             wrapMode: Text.Wrap
         }
 
+        Well {
+            Layout.fillWidth: true
+            implicitHeight: secretField.implicitHeight + Appearance.padding.small * 2
+            outline: secretField.activeFocus ? Signal.palette.focus : Signal.palette.rule
+
         StyledTextField {
             id: secretField
 
-            Layout.fillWidth: true
+            anchors.fill: parent
+            anchors.leftMargin: Appearance.padding.normal
+            anchors.rightMargin: Appearance.padding.normal
             Accessible.name: qsTr("Password")
             placeholderText: qsTr("Password")
             echoMode: win.flow && win.flow.responseVisible ? TextField.Normal : TextField.Password
             enabled: win.flow !== null && win.flow.isResponseRequired
             onAccepted: win.confirm()
+        }
         }
 
         Item {

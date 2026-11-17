@@ -12,8 +12,7 @@ import QtQuick.Layouts
 // Hosts: layoutpicker modal (drawers), controlcenter layout pane
 // (the dashboard Layout tab was removed by ADR 003).
 // Data comes from `horneroctl shell preset list --full` (enriched JSON:
-// name, display, description, icon, iconMaterial, position, style,
-// active, plus the `bars` topology the previews draw);
+// name, display, description, lineage, position, style, active, plus the `bars` topology the previews draw);
 // applying a preset deep-merges into shell.json and live-reloads
 // (no shell restart needed). When horneroctl is missing or the list fails,
 // the grid falls back to the empty state with the store path hint below;
@@ -35,9 +34,37 @@ Item {
 
     readonly property int cardWidth: 212
     readonly property int count: presets.length
+    // The preset the catalogue marks active (or null when none matches).
+    readonly property var currentPreset: presets.find(p => p.name === currentName) ?? null
     readonly property int columns: {
         const maxCols = availableWidth > 0 ? Math.floor((availableWidth + Appearance.spacing.normal) / (cardWidth + Appearance.spacing.normal)) : (count > 12 ? 5 : 4);
         return Math.max(1, Math.min(maxCols, Math.max(count, 1)));
+    }
+
+    // Glyph per preset id. The shell owns its own iconography: the CLI's
+    // legacy icon fields are ignored, and unknown (user) presets fall back
+    // to the generic layout glyph.
+    readonly property var presetGlyphs: ({
+            "classic-bottom": "layout-bottombar",
+            "classic-top": "layout-navbar",
+            "cockpit": "layout-rows",
+            "cockpit-clear": "blur",
+            "cozy-minimal": "minimize",
+            "dock-bottom": "layout-bottombar",
+            "floating-island": "app-window",
+            "gaming": "device-gamepad-2",
+            "horizon": "layout-rows",
+            "hornero-left": "layout-sidebar",
+            "hornero-right": "layout-sidebar-right",
+            "islands": "app-window",
+            "minimal-left": "layout-sidebar",
+            "minimal-top": "minimize",
+            "productivity": "layout-columns",
+            "studio": "music"
+        })
+
+    function glyphFor(p: var): string {
+        return root.presetGlyphs[p.name] ?? "layout-dashboard";
     }
 
     // Human topology summary for a card ("Two bars · top + bottom").
@@ -193,10 +220,10 @@ Item {
                 readonly property bool isFocused: root.keyboardNav && index === root.focusIndex
 
                 implicitWidth: root.cardWidth
-                implicitHeight: 178
-                radius: Appearance.rounding.normal
-                color: isActive ? Signal.layer(Signal.palette.cueWell, 2) : Signal.layer(Signal.palette.raised, 1)
-                border.color: isFocused ? Signal.palette.signal : isActive ? Signal.palette.cue : Qt.alpha(Signal.palette.ruleStrong, 0.25)
+                implicitHeight: 194
+                radius: Appearance.rounding.small
+                color: isActive ? Signal.palette.signalWell : Signal.layer(Signal.palette.raised, 1)
+                border.color: isFocused ? Signal.palette.focus : isActive ? Signal.palette.signal : Signal.palette.rule
                 border.width: isFocused || isActive ? 2 : 1
 
                 Behavior on color {
@@ -225,7 +252,7 @@ Item {
                             anchors.margins: 4
                             implicitWidth: currentIcon.implicitWidth + 4
                             implicitHeight: currentIcon.implicitHeight + 4
-                            radius: Appearance.rounding.full
+                            radius: Appearance.rounding.small
                             color: Signal.palette.signal
 
                             Glyph {
@@ -244,8 +271,8 @@ Item {
                         spacing: Appearance.spacing.small
 
                         Glyph {
-                            name: card.modelData.iconMaterial || "apps"
-                            color: card.isActive ? Signal.palette.signal : Signal.palette.inkMuted
+                            name: root.glyphFor(card.modelData)
+                            color: card.isActive ? Signal.palette.onSignalWell : Signal.palette.inkMuted
                         }
 
                         ColumnLayout {
@@ -265,7 +292,17 @@ Item {
                                 Layout.fillWidth: true
                                 text: root.topologyLabel(card.modelData)
                                 font.pointSize: Appearance.font.size.smaller
-                                color: Signal.palette.inkMuted
+                                color: card.isActive ? Signal.palette.onSignalWell : Signal.palette.inkMuted
+                                elide: Text.ElideRight
+                            }
+
+                            // Credit for presets derived from other projects.
+                            StyledText {
+                                Layout.fillWidth: true
+                                visible: (card.modelData.lineage ?? "").length > 0
+                                text: qsTr("After %1").arg(card.modelData.lineage ?? "")
+                                font.pointSize: Appearance.font.size.small
+                                color: card.isActive ? Signal.palette.onSignalWell : Signal.palette.inkMuted
                                 elide: Text.ElideRight
                             }
                         }
@@ -278,7 +315,7 @@ Item {
 
                 Accessible.role: Accessible.Button
                 Accessible.name: card.modelData.display
-                Accessible.description: root.topologyLabel(card.modelData) + (card.isActive ? ". " + qsTr("Current layout") : "")
+                Accessible.description: root.topologyLabel(card.modelData) + ((card.modelData.lineage ?? "").length > 0 ? ". " + qsTr("After %1").arg(card.modelData.lineage) : "") + (card.isActive ? ". " + qsTr("Current layout") : "")
 
                 StateLayer {
                     radius: card.radius

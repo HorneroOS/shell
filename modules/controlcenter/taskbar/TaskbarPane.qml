@@ -143,6 +143,44 @@ Item {
                     }
                 }
 
+                // Bars edit the live arrangement. Say which catalogue preset it
+                // came from so a change here is understood as customising it.
+                Well {
+                    Layout.fillWidth: true
+                    implicitHeight: presetRow.implicitHeight + Appearance.padding.normal * 2
+
+                    ActivePreset {
+                        id: activePreset
+                    }
+
+                    RowLayout {
+                        id: presetRow
+
+                        anchors.fill: parent
+                        anchors.margins: Appearance.padding.normal
+                        spacing: Appearance.spacing.normal
+
+                        Eyebrow {
+                            label: qsTr("Layout preset")
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            mono: true
+                            text: !activePreset.available ? qsTr("Catalogue unavailable") : activePreset.preset ? activePreset.preset.display : qsTr("Custom arrangement")
+                            font.pointSize: Appearance.font.size.small
+                            elide: Text.ElideRight
+                        }
+
+                        TextButton {
+                            type: TextButton.Text
+                            text: qsTr("Change layout")
+                            Accessible.name: qsTr("Open Layout settings")
+                            onClicked: root.session.navigateTo("layout", "")
+                        }
+                    }
+                }
+
                 SectionContainer {
                     Layout.fillWidth: true
                     alignTop: true

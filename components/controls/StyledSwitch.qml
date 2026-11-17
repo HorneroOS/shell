@@ -3,7 +3,6 @@ import qs.services
 import qs.config
 import QtQuick
 import QtQuick.Templates
-import QtQuick.Shapes
 
 Switch {
     id: root
@@ -20,119 +19,61 @@ Switch {
     implicitWidth: implicitIndicatorWidth
     implicitHeight: implicitIndicatorHeight
 
-    indicator: StyledRect {
+    // Rocker (signal-visual-language §8): a `sunken` rail with a square
+    // cap that rocks between two fixed positions. ON is the cap in `signal`
+    // with a dark tick; OFF is a `lifted` cap with an `ruleStrong` tick on
+    // the opposite half, so the state never relies on colour alone.
+    indicator: Well {
+        id: rail
+
+        readonly property real half: (implicitWidth - 2) / 2
+
         radius: Appearance.rounding.small
-        color: root.checked ? Signal.palette.signal : Signal.layer(Signal.palette.lifted, root.cLayer)
+        outline: root.activeFocus ? Signal.palette.focus : Signal.layer(Signal.palette.ruleStrong, root.cLayer)
+        color: Signal.layer(Signal.palette.sunken, root.cLayer)
         opacity: root.enabled ? 1 : 0.5
 
-        implicitWidth: implicitHeight * 1.7
+        implicitWidth: Appearance.font.size.normal * 3.2
         implicitHeight: Appearance.font.size.normal + Appearance.padding.smaller * 2
 
+        // Resting marker on the half the cap is not covering.
+        Rectangle {
+            width: 1
+            height: parent.height * 0.4
+            y: (parent.height - height) / 2
+            x: root.checked ? rail.half / 2 : rail.half + rail.half / 2
+            color: Signal.palette.ruleStrong
+        }
+
         StyledRect {
-            readonly property real nonAnimWidth: root.pressed ? implicitHeight * 1.3 : implicitHeight
+            id: cap
 
-            radius: Appearance.rounding.small
-            color: root.checked ? Signal.palette.onSignal : Signal.layer(Signal.palette.ruleStrong, root.cLayer + 1)
+            readonly property real nonAnimWidth: rail.half + (root.pressed ? Appearance.padding.small : 0)
 
-            x: root.checked ? parent.implicitWidth - nonAnimWidth - Appearance.padding.small / 2 : Appearance.padding.small / 2
+            x: 1 + (root.checked ? rail.width - 2 - nonAnimWidth : 0)
+            y: 1
             implicitWidth: nonAnimWidth
-            implicitHeight: parent.implicitHeight - Appearance.padding.small
-            anchors.verticalCenter: parent.verticalCenter
+            implicitHeight: rail.height - 2
+            radius: Appearance.rounding.small - 1
+            color: root.checked ? Signal.palette.signal : Signal.layer(Signal.palette.lifted, root.cLayer + 1)
+            border.width: 1
+            border.color: root.checked ? Signal.palette.signal : Signal.palette.ruleStrong
+
+            Rectangle {
+                anchors.centerIn: parent
+                width: root.checked ? 2 : 6
+                height: parent.height * 0.45
+                color: root.checked ? Signal.palette.onSignal : Signal.palette.inkMuted
+            }
 
             StyledRect {
                 anchors.fill: parent
                 radius: parent.radius
-
-                color: root.checked ? Signal.palette.signal : Signal.palette.ink
-                opacity: root.pressed ? 0.1 : root.hovered ? 0.08 : 0
+                color: root.checked ? Signal.palette.onSignal : Signal.palette.ink
+                opacity: root.pressed ? 0.12 : root.hovered ? 0.08 : 0
 
                 Behavior on opacity {
                     Anim {}
-                }
-            }
-
-            Shape {
-                id: icon
-
-                property point start1: {
-                    if (root.pressed)
-                        return Qt.point(width * 0.2, height / 2);
-                    if (root.checked)
-                        return Qt.point(width * 0.15, height / 2);
-                    return Qt.point(width * 0.15, height * 0.15);
-                }
-                property point end1: {
-                    if (root.pressed) {
-                        if (root.checked)
-                            return Qt.point(width * 0.4, height / 2);
-                        return Qt.point(width * 0.8, height / 2);
-                    }
-                    if (root.checked)
-                        return Qt.point(width * 0.4, height * 0.7);
-                    return Qt.point(width * 0.85, height * 0.85);
-                }
-                property point start2: {
-                    if (root.pressed) {
-                        if (root.checked)
-                            return Qt.point(width * 0.4, height / 2);
-                        return Qt.point(width * 0.2, height / 2);
-                    }
-                    if (root.checked)
-                        return Qt.point(width * 0.4, height * 0.7);
-                    return Qt.point(width * 0.15, height * 0.85);
-                }
-                property point end2: {
-                    if (root.pressed)
-                        return Qt.point(width * 0.8, height / 2);
-                    if (root.checked)
-                        return Qt.point(width * 0.85, height * 0.2);
-                    return Qt.point(width * 0.85, height * 0.15);
-                }
-
-                anchors.centerIn: parent
-                width: height
-                height: parent.implicitHeight - Appearance.padding.small * 2
-                preferredRendererType: Shape.CurveRenderer
-                asynchronous: true
-
-                ShapePath {
-                    strokeWidth: Appearance.font.size.larger * 0.15
-                    strokeColor: root.checked ? Signal.palette.signal : Signal.palette.lifted
-                    fillColor: "transparent"
-                    capStyle: Appearance.rounding.scale === 0 ? ShapePath.SquareCap : ShapePath.RoundCap
-
-                    startX: icon.start1.x
-                    startY: icon.start1.y
-
-                    PathLine {
-                        x: icon.end1.x
-                        y: icon.end1.y
-                    }
-                    PathMove {
-                        x: icon.start2.x
-                        y: icon.start2.y
-                    }
-                    PathLine {
-                        x: icon.end2.x
-                        y: icon.end2.y
-                    }
-
-                    Behavior on strokeColor {
-                        CAnim {}
-                    }
-                }
-
-                Behavior on start1 {
-                    PropAnim {}
-                }
-                Behavior on end1 {
-                    PropAnim {}
-                }
-                Behavior on start2 {
-                    PropAnim {}
-                }
-                Behavior on end2 {
-                    PropAnim {}
                 }
             }
 
@@ -150,12 +91,6 @@ Switch {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
         enabled: false
-    }
-
-    component PropAnim: PropertyAnimation {
-        duration: Appearance.anim.durations.medium
-        easing.type: Easing.BezierSpline
-        easing.bezierCurve: Appearance.anim.curves.standard
     }
 
     FocusRing {

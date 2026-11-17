@@ -13,7 +13,7 @@ import Quickshell
 // Javi's chat panel (shell#234, #239, #240, #241): the native Hermes
 // conversation surface, styled as Hornero 199X retrofuturism —
 // phosphor status light, mono micro-labels, a subtle scanline header —
-// over readable Material bubbles. Presentation only: every action
+// over readable message bubbles. Presentation only: every action
 // goes through AssistantBridge -> `horneroctl assistant ... --json`.
 // Approvals/clarifications are explicit user actions, never
 // auto-answered. Reduced motion disables the shimmer; themes keep

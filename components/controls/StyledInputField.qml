@@ -34,10 +34,12 @@ Item {
         id: container
 
         anchors.fill: parent
-        color: inputHover.containsMouse || inputField.activeFocus ? Signal.layer(Signal.palette.panel, 3) : Signal.layer(Signal.palette.panel, 2)
+        // Sunken readout well (signal-visual-language §4.1): values a person
+        // types live in an inset, never on a raised card.
+        color: inputHover.containsMouse && !inputField.activeFocus ? Signal.layer(Signal.palette.sunken, 2) : Signal.palette.sunken
         radius: Appearance.rounding.small
         border.width: 1
-        border.color: inputField.activeFocus ? Signal.palette.signal : Signal.palette.ruleStrong
+        border.color: inputField.activeFocus ? Signal.palette.focus : Signal.palette.rule
         opacity: root.enabled ? 1 : 0.5
 
         Behavior on color {

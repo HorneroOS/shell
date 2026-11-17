@@ -345,6 +345,7 @@ Item {
                     spacing: Appearance.spacing.normal
 
                     PaneHeader {
+                        paneId: "agents"
                         title: qsTr("Agent Center")
                         icon: "robot"
                         description: qsTr("Coding assistants on this computer and Javi")

@@ -5,6 +5,7 @@ import qs.components.effects
 import qs.services
 import qs.config
 import qs.utils
+import qs.modules.instruments as Instruments
 import Quickshell
 import Quickshell.Services.Notifications
 import QtQuick
@@ -27,7 +28,7 @@ StyledRect {
     readonly property int nonAnimHeight: {
         const headerHeight = header.implicitHeight + (root.expanded ? Math.round(Appearance.spacing.small / 2) : 0);
         const columnHeight = headerHeight + notifList.nonAnimHeight + column.Layout.topMargin + column.Layout.bottomMargin;
-        return Math.round(Math.max(Config.notifs.sizes.image, columnHeight) + Appearance.padding.normal * 2);
+        return Math.round(Math.max(root.image.length > 0 ? Config.notifs.sizes.image : 0, columnHeight) + Appearance.padding.normal * 2);
     }
     readonly property bool expanded: props.expandedNotifs.includes(modelData)
 
@@ -65,87 +66,22 @@ StyledRect {
 
         spacing: Appearance.spacing.normal
 
-        Item {
+        // Only a real notification image earns a thumbnail; app icons are
+        // 20 px in the eyebrow row and there is no generic icon tile.
+        Image {
             Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-            implicitWidth: Config.notifs.sizes.image
-            implicitHeight: Config.notifs.sizes.image
-
-            Component {
-                id: imageComp
-
-                Image {
-                    source: Qt.resolvedUrl(root.image)
-                    fillMode: Image.PreserveAspectCrop
-                    cache: false
-                    asynchronous: true
-                    width: Config.notifs.sizes.image
-                    height: Config.notifs.sizes.image
-                }
-            }
-
-            Component {
-                id: appIconComp
-
-                ColouredIcon {
-                    implicitSize: Math.round(Config.notifs.sizes.image * 0.6)
-                    source: Quickshell.iconPath(root.appIcon)
-                    colour: root.urgency === NotificationUrgency.Critical ? Signal.palette.onAlert : root.urgency === NotificationUrgency.Low ? Signal.palette.ink : Signal.palette.ink
-                    layer.enabled: root.appIcon.endsWith("symbolic")
-                }
-            }
-
-            Component {
-                id: glyphIconComp
-
-                Glyph {
-                    name: Icons.getNotifIcon(root.notifs[0]?.summary, root.urgency)
-                    color: root.urgency === NotificationUrgency.Critical ? Signal.palette.onAlert : root.urgency === NotificationUrgency.Low ? Signal.palette.ink : Signal.palette.ink
-                    font.pointSize: Appearance.font.size.large
-                }
-            }
-
-            Rectangle {
-                anchors.fill: parent
-                clip: true
-                color: root.urgency === NotificationUrgency.Critical ? Signal.palette.alert : Signal.palette.sunken
-                radius: Appearance.rounding.small
-                border.width: 1
-                border.color: root.urgency === NotificationUrgency.Critical ? Signal.palette.alert : Signal.palette.rule
-
-                Loader {
-                    anchors.centerIn: parent
-                    sourceComponent: root.image ? imageComp : root.appIcon ? appIconComp : glyphIconComp
-                }
-            }
-
-            Loader {
-                anchors.right: parent.right
-                anchors.bottom: parent.bottom
-                active: root.appIcon && root.image
-
-                sourceComponent: StyledRect {
-                    implicitWidth: Config.notifs.sizes.badge
-                    implicitHeight: Config.notifs.sizes.badge
-
-                    color: root.urgency === NotificationUrgency.Critical ? Signal.palette.alert : Signal.palette.raised
-                    radius: Appearance.rounding.small
-
-                    ColouredIcon {
-                        anchors.centerIn: parent
-                        implicitSize: Math.round(Config.notifs.sizes.badge * 0.6)
-                        source: Quickshell.iconPath(root.appIcon)
-                        colour: root.urgency === NotificationUrgency.Critical ? Signal.palette.onAlert : root.urgency === NotificationUrgency.Low ? Signal.palette.ink : Signal.palette.ink
-                        layer.enabled: root.appIcon.endsWith("symbolic")
-                    }
-                }
-            }
+            Layout.preferredWidth: Config.notifs.sizes.image
+            Layout.preferredHeight: Config.notifs.sizes.image
+            visible: root.image.length > 0
+            source: root.image.length > 0 ? Qt.resolvedUrl(root.image) : ""
+            fillMode: Image.PreserveAspectCrop
+            cache: false
+            asynchronous: true
         }
 
         ColumnLayout {
             id: column
 
-            Layout.topMargin: -Appearance.padding.small
-            Layout.bottomMargin: -Appearance.padding.small / 2
             Layout.fillWidth: true
             spacing: 0
 
@@ -156,73 +92,74 @@ StyledRect {
                 Layout.fillWidth: true
                 spacing: Appearance.spacing.smaller
 
-                StyledText {
+                // App icon at 20 px, only when the app supplies one.
+                Loader {
+                    active: root.appIcon.length > 0
+                    visible: active
+                    Layout.preferredWidth: 20
+                    Layout.preferredHeight: 20
+
+                    sourceComponent: ColouredIcon {
+                        anchors.fill: parent
+                        source: Quickshell.iconPath(root.appIcon)
+                        colour: Signal.palette.ink
+                        layer.enabled: root.appIcon.endsWith("symbolic")
+                    }
+                }
+
+                // Eyebrow: APP · TIME, plus URGENT in words for critical so
+                // the state never relies on colour alone.
+                Instruments.Eyebrow {
                     Layout.fillWidth: true
-                    text: root.modelData
-                    color: Signal.palette.inkMuted
-                    font.pointSize: Appearance.font.size.small
-                    elide: Text.ElideRight
+                    label: {
+                        const when = root.notifs.find(n => !n.closed)?.timeStr ?? "";
+                        let s = root.modelData + (when !== "" ? ` · ${when}` : "");
+                        if (root.urgency === NotificationUrgency.Critical)
+                            s += ` · ${qsTr("Urgent")}`;
+                        return s;
+                    }
+                    color: root.urgency === NotificationUrgency.Critical ? Signal.palette.alert : Signal.palette.inkMuted
                 }
 
+                // Quiet group count (x2), only when there is a group.
                 StyledText {
+                    visible: root.notifCount > 1
                     animate: true
-                    text: root.notifs.find(n => !n.closed)?.timeStr ?? ""
+                    text: `x${root.notifCount}`
+                    mono: true
                     color: Signal.palette.inkMuted
                     font.pointSize: Appearance.font.size.small
                 }
 
-                StyledRect {
-                    implicitWidth: expandBtn.implicitWidth + Appearance.padding.smaller * 2
-                    implicitHeight: groupCount.implicitHeight + Appearance.padding.small
+                // Expand affordance: a chevron glyph, no box.
+                Item {
+                    id: expandBtn
 
-                    color: root.urgency === NotificationUrgency.Critical ? Signal.palette.alert : Signal.palette.lifted
-                    radius: Appearance.rounding.small
-                    border.width: 1
-                    border.color: root.urgency === NotificationUrgency.Critical ? Signal.palette.alert : Signal.palette.rule
+                    Accessible.role: Accessible.Button
+                    Accessible.name: root.expanded ? qsTr("Collapse group") : qsTr("Expand group")
+
+                    implicitWidth: 24
+                    implicitHeight: 20
 
                     StateLayer {
-                        color: root.urgency === NotificationUrgency.Critical ? Signal.palette.onAlert : Signal.palette.ink
+                        radius: Appearance.rounding.small
+                        color: Signal.palette.ink
 
                         function onClicked(): void {
                             root.toggleExpand(!root.expanded);
                         }
                     }
 
-                    RowLayout {
-                        id: expandBtn
-
+                    Glyph {
                         anchors.centerIn: parent
-                        spacing: Appearance.spacing.small / 2
+                        name: "chevron-down"
+                        color: Signal.palette.inkMuted
+                        rotation: root.expanded ? 180 : 0
 
-                        StyledText {
-                            id: groupCount
-
-                            Layout.leftMargin: Appearance.padding.small / 2
-                            animate: true
-                            text: root.notifCount
-                            color: root.urgency === NotificationUrgency.Critical ? Signal.palette.onAlert : Signal.palette.ink
-                            font.pointSize: Appearance.font.size.small
-                        }
-
-                        Glyph {
-                            Layout.rightMargin: -Appearance.padding.small / 2
-                            name: "chevron-down"
-                            color: root.urgency === NotificationUrgency.Critical ? Signal.palette.onAlert : Signal.palette.ink
-                            rotation: root.expanded ? 180 : 0
-                            Layout.topMargin: root.expanded ? -Math.floor(Appearance.padding.smaller / 2) : 0
-
-                            Behavior on rotation {
-                                Anim {
-                                    duration: Appearance.anim.durations.settle
-                                    easing.bezierCurve: Appearance.anim.curves.settle
-                                }
-                            }
-
-                            Behavior on Layout.topMargin {
-                                Anim {
-                                    duration: Appearance.anim.durations.settle
-                                    easing.bezierCurve: Appearance.anim.curves.settle
-                                }
+                        Behavior on rotation {
+                            Anim {
+                                duration: Appearance.anim.durations.settle
+                                easing.bezierCurve: Appearance.anim.curves.settle
                             }
                         }
                     }

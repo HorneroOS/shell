@@ -42,12 +42,12 @@ Item {
             anchors.right: clearBtn.left
             anchors.rightMargin: Appearance.spacing.small
 
-            channel: root.notifCount > 0 ? String(root.notifCount).padStart(2, "0") : ""
-            label: qsTr("Notifications")
+            channel: "04"
+            label: root.notifCount > 0 ? `${qsTr("Notifications")} · ${root.notifCount}` : qsTr("Notifications")
         }
 
-        // Text-labelled clear action, a square key rather than a round FAB.
-        Rectangle {
+        // Clear all: a text segment in the header, not a filled button.
+        Item {
             id: clearBtn
 
             anchors.verticalCenter: parent.verticalCenter
@@ -55,11 +55,7 @@ Item {
 
             visible: root.notifCount > 0
             implicitWidth: clearLabel.implicitWidth + Appearance.padding.normal * 2
-            implicitHeight: 28
-            radius: Appearance.rounding.small
-            color: Signal.palette.lifted
-            border.width: 1
-            border.color: Signal.palette.rule
+            implicitHeight: 24
 
             property string accessibleName: qsTr("Clear all notifications")
 
@@ -67,7 +63,7 @@ Item {
             Accessible.name: accessibleName
 
             StateLayer {
-                radius: parent.radius
+                radius: Appearance.rounding.small
 
                 function onClicked(): void {
                     clearTimer.start();
@@ -81,7 +77,10 @@ Item {
 
                 mono: true
                 text: qsTr("Clear all")
+                color: Signal.palette.ink
                 font.pointSize: Appearance.font.size.small
+                font.capitalization: Font.AllUppercase
+                font.underline: true
             }
         }
     }

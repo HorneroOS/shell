@@ -445,7 +445,7 @@ Item {
                                 Layout.fillWidth: true
                                 implicitHeight: agentLayout.implicitHeight + Appearance.padding.large * 2
                                 radius: Appearance.rounding.small
-                                color: agentRow.isDefault ? Signal.palette.cueWell : Signal.tPalette.raised
+                                color: agentRow.isDefault ? Signal.palette.signalWell : Signal.tPalette.raised
 
                                 RowLayout {
                                     id: agentLayout
@@ -481,7 +481,7 @@ Item {
                                                 text: agentRow.modelData.name
                                                 font.pointSize: Appearance.font.size.normal
                                                 font.weight: 600
-                                                color: agentRow.isDefault ? Signal.palette.onCueWell : Signal.palette.ink
+                                                color: agentRow.isDefault ? Signal.palette.onSignalWell : Signal.palette.ink
                                             }
 
                                             AgentChip {

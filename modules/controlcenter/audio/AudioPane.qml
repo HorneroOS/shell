@@ -327,7 +327,7 @@ Item {
                                     implicitHeight: muteIcon.implicitHeight + Appearance.padding.normal * 2
 
                                     radius: Appearance.rounding.small
-                                    color: Audio.muted ? Signal.palette.cue : Signal.palette.cueWell
+                                    color: Audio.muted ? Signal.palette.alert : Signal.layer(Signal.palette.raised, 2)
 
                                     Interactive {
                                         function onClicked(): void {
@@ -342,7 +342,7 @@ Item {
 
                                         anchors.centerIn: parent
                                         name: Audio.muted ? "volume-off" : "volume"
-                                        color: Audio.muted ? Signal.palette.onCue : Signal.palette.onCueWell
+                                        color: Audio.muted ? Signal.palette.onAlert : Signal.palette.ink
                                     }
                                 }
                             }
@@ -442,7 +442,7 @@ Item {
                                     implicitHeight: muteInputIcon.implicitHeight + Appearance.padding.normal * 2
 
                                     radius: Appearance.rounding.small
-                                    color: Audio.sourceMuted ? Signal.palette.cue : Signal.palette.cueWell
+                                    color: Audio.sourceMuted ? Signal.palette.alert : Signal.layer(Signal.palette.raised, 2)
 
                                     Interactive {
                                         function onClicked(): void {
@@ -457,7 +457,7 @@ Item {
 
                                         anchors.centerIn: parent
                                         name: "microphone-off"
-                                        color: Audio.sourceMuted ? Signal.palette.onCue : Signal.palette.onCueWell
+                                        color: Audio.sourceMuted ? Signal.palette.onAlert : Signal.palette.ink
                                     }
                                 }
                             }
@@ -573,7 +573,7 @@ Item {
                                             implicitHeight: streamMuteIcon.implicitHeight + Appearance.padding.normal * 2
 
                                             radius: Appearance.rounding.small
-                                            color: Audio.getStreamMuted(modelData) ? Signal.palette.cue : Signal.palette.cueWell
+                                            color: Audio.getStreamMuted(modelData) ? Signal.palette.alert : Signal.layer(Signal.palette.raised, 2)
 
                                             Interactive {
                                                 function onClicked(): void {
@@ -586,7 +586,7 @@ Item {
 
                                                 anchors.centerIn: parent
                                                 name: Audio.getStreamMuted(modelData) ? "volume-off" : "volume"
-                                                color: Audio.getStreamMuted(modelData) ? Signal.palette.onCue : Signal.palette.onCueWell
+                                                color: Audio.getStreamMuted(modelData) ? Signal.palette.onAlert : Signal.palette.ink
                                             }
                                         }
                                     }

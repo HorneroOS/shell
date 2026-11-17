@@ -258,7 +258,7 @@ Popup {
                         anchors.fill: parent
                         implicitHeight: Appearance.padding.larger * 2 + resultIcon.implicitHeight
                         radius: Appearance.rounding.small
-                        color: row.index === root.session.searchSelection ? Signal.palette.cueWell : "transparent"
+                        color: row.index === root.session.searchSelection ? Signal.palette.signalWell : "transparent"
 
                         StateLayer {
                             onClicked: root.selectResult(row.index)
@@ -270,7 +270,7 @@ Popup {
                             anchors.leftMargin: Appearance.padding.normal
                             anchors.verticalCenter: parent.verticalCenter
                             name: row.modelData.icon
-                            color: row.index === root.session.searchSelection ? Signal.palette.onCueWell : Signal.palette.signal
+                            color: row.index === root.session.searchSelection ? Signal.palette.onSignalWell : Signal.palette.signal
                         }
 
                         ColumnLayout {
@@ -284,7 +284,7 @@ Popup {
                             StyledText {
                                 Layout.fillWidth: true
                                 text: row.modelData.title
-                                color: row.index === root.session.searchSelection ? Signal.palette.onCueWell : Signal.palette.ink
+                                color: row.index === root.session.searchSelection ? Signal.palette.onSignalWell : Signal.palette.ink
                                 font.weight: 500
                                 elide: Text.ElideRight
                             }
@@ -292,7 +292,7 @@ Popup {
                             StyledText {
                                 Layout.fillWidth: true
                                 text: row.modelData.detail
-                                color: row.index === root.session.searchSelection ? Signal.palette.onCueWell : Signal.palette.inkMuted
+                                color: row.index === root.session.searchSelection ? Signal.palette.onSignalWell : Signal.palette.inkMuted
                                 font.pointSize: Appearance.font.size.smaller
                                 elide: Text.ElideRight
                             }

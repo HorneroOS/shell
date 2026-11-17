@@ -251,12 +251,12 @@ StyledFlickable {
                                         implicitHeight: cancelEditIcon.implicitHeight + Appearance.padding.smaller * 2
 
                                         radius: Appearance.rounding.small
-                                        color: Signal.palette.cueWell
+                                        color: Signal.palette.signalWell
                                         opacity: root.session.bt.editingDeviceName ? 1 : 0
                                         scale: root.session.bt.editingDeviceName ? 1 : 0.5
 
                                         Interactive {
-                                            color: Signal.palette.onCueWell
+                                            color: Signal.palette.onSignalWell
                                             disabled: !root.session.bt.editingDeviceName
 
                                             function onClicked(): void {
@@ -271,7 +271,7 @@ StyledFlickable {
                                             anchors.centerIn: parent
                                             animate: true
                                             name: "cancel"
-                                            color: Signal.palette.onCueWell
+                                            color: Signal.palette.onSignalWell
                                         }
 
                                         Behavior on opacity {
@@ -386,7 +386,7 @@ StyledFlickable {
                                         Layout.fillWidth: true
                                         Layout.fillHeight: true
                                         radius: Appearance.rounding.small
-                                        color: Signal.palette.cueWell
+                                        color: Signal.palette.signalWell
 
                                         StyledRect {
                                             anchors.left: parent.left

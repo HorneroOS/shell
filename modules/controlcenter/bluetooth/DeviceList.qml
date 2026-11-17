@@ -169,12 +169,12 @@ DeviceList {
                     implicitHeight: icon.implicitHeight + Appearance.padding.normal * 2
 
                     radius: Appearance.rounding.small
-                    color: device.connected ? Signal.palette.signalWell : (device.modelData && device.modelData.bonded) ? Signal.palette.cueWell : Signal.tPalette.raised
+                    color: device.connected ? Signal.palette.signalWell : (device.modelData && device.modelData.bonded) ? Signal.palette.signalWell : Signal.tPalette.raised
 
                     StyledRect {
                         anchors.fill: parent
                         radius: parent.radius
-                        color: Qt.alpha(device.connected ? Signal.palette.onSignalWell : (device.modelData && device.modelData.bonded) ? Signal.palette.onCueWell : Signal.palette.ink, stateLayer.pressed ? 0.1 : stateLayer.containsMouse ? 0.08 : 0)
+                        color: Qt.alpha(device.connected ? Signal.palette.onSignalWell : (device.modelData && device.modelData.bonded) ? Signal.palette.onSignalWell : Signal.palette.ink, stateLayer.pressed ? 0.1 : stateLayer.containsMouse ? 0.08 : 0)
                     }
 
                     Glyph {
@@ -182,7 +182,7 @@ DeviceList {
 
                         anchors.centerIn: parent
                         name: Icons.getBluetoothIcon(device.modelData ? device.modelData.icon : "")
-                        color: device.connected ? Signal.palette.onSignalWell : (device.modelData && device.modelData.bonded) ? Signal.palette.onCueWell : Signal.palette.ink
+                        color: device.connected ? Signal.palette.onSignalWell : (device.modelData && device.modelData.bonded) ? Signal.palette.onSignalWell : Signal.palette.ink
                         font.pointSize: Appearance.font.size.large
                     }
                 }
@@ -265,8 +265,8 @@ DeviceList {
 
     TextButton {
         visible: !root.session.bt.hasAdapter
-        inactiveColour: Signal.palette.cueWell
-        inactiveOnColour: Signal.palette.onCueWell
+        inactiveColour: Signal.palette.signalWell
+        inactiveOnColour: Signal.palette.onSignalWell
         text: qsTr("Restart Bluetooth service")
 
         onClicked: root.session.bt.restartService()
@@ -298,8 +298,8 @@ DeviceList {
 
     TextButton {
         visible: root.session.bt.lastError !== ""
-        inactiveColour: Signal.palette.cueWell
-        inactiveOnColour: Signal.palette.onCueWell
+        inactiveColour: Signal.palette.signalWell
+        inactiveOnColour: Signal.palette.onSignalWell
         text: qsTr("Dismiss")
 
         onClicked: root.session.bt.clearError()

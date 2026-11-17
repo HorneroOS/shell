@@ -132,8 +132,8 @@ DeviceDetails {
                             }
                             return Nmcli.hasSavedProfile(root.network.ssid);
                         }
-                        inactiveColour: Signal.palette.cueWell
-                        inactiveOnColour: Signal.palette.onCueWell
+                        inactiveColour: Signal.palette.signalWell
+                        inactiveOnColour: Signal.palette.onSignalWell
                         text: qsTr("Forget Network")
 
                         onClicked: {

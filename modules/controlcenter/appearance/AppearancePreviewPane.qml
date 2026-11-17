@@ -510,7 +510,7 @@ StyledRect {
                                 delegate: StyledRect {
                                     required property var modelData
                                     radius: Appearance.rounding.small
-                                    color: Qt.alpha(previewColor("cueWell", Signal.palette.cueWell), 0.55)
+                                    color: Qt.alpha(previewColor("signalWell", Signal.palette.signalWell), 0.55)
                                     implicitWidth: tagLabel.implicitWidth + Appearance.padding.small * 2
                                     implicitHeight: tagLabel.implicitHeight + Appearance.padding.smaller
 
@@ -519,7 +519,7 @@ StyledRect {
                                         anchors.centerIn: parent
                                         text: modelData
                                         font.pointSize: Appearance.font.size.smaller
-                                        color: previewColor("onCueWell", Signal.palette.onCueWell)
+                                        color: previewColor("onSignalWell", Signal.palette.onSignalWell)
                                     }
                                 }
                             }

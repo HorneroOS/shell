@@ -348,8 +348,8 @@ Item {
 
                     Layout.fillWidth: true
                     Layout.minimumHeight: Appearance.font.size.normal + Appearance.padding.normal * 2
-                    inactiveColour: Signal.palette.cueWell
-                    inactiveOnColour: Signal.palette.onCueWell
+                    inactiveColour: Signal.palette.signalWell
+                    inactiveOnColour: Signal.palette.onSignalWell
                     text: qsTr("Cancel")
 
                     onClicked: root.closeDialog()

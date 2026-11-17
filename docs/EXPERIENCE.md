@@ -159,3 +159,35 @@ Acceptance: Gaming adds nothing over a bare desktop (`cpu_percent` equal
 within noise, deck widgets unloaded); Signal's idle `cpu_percent` is reported
 next to Everyday so a regression is visible. Numbers are point-in-time
 observations for comparison, never published estimates.
+
+## Mode chrome (shell#511)
+
+Each mode wears its own bar chrome so a mode switch is visible at a glance,
+not only through the mode chip. Fields (all per mode, customisable in
+Control Center > Experience, documented in [IPC.md](IPC.md)):
+`chrome.accent`, `chrome.edge`, `chrome.wash`, plus the existing `scanlines`
+and `glow`. Factory values: Focus ink hairline; Everyday none; Signal amber
+glowing edge, 7 % wash and scanlines; Gaming cue hairline; Studio phosphor
+hairline with a 4 % wash. The glow edge falls back to a hairline when glow
+is gated off (day theme, reduced motion, High Contrast, glow budget); High
+Contrast drops the wash. Clear bars have no slab and skip the chrome.
+
+### Layout and scale QA (offscreen)
+
+`tests/qa_matrix/` renders the real bar for every preset. Run on 2026-11-17
+(144 renders: 16 layouts x 5 viewports in Signal, plus 5 modes at 1920x1080@1.25):
+zero overlapping entries, zero entries off-screen, zero items wider than
+their slot. `tests/placement/matrix.test.mjs` sweeps the anchored-surface
+solver (16 presets x 5 screens x 2 UI scales x triggers x 4 sizes, 5320
+cases): no surface leaves the usable area or covers its trigger.
+Not covered: real multi-monitor mixed scale (one offscreen screen), popups
+rendered in QML, glow halo (layer effects are stubbed offscreen).
+
+### Measured cost (offscreen, software raster, development host)
+
+Cockpit at 1920x1080@1.25, whole 6 s harness run including startup, three
+runs each: Everyday 2.2-2.3 CPU-s, Signal 2.6 CPU-s, Gaming 2.2 CPU-s;
+peak RSS about 230 MB in all modes. Signal's chrome (scanline texture on
+two slabs) costs about 0.4 CPU-s per run in this setup. These are not idle
+CPU or frame-time numbers of a live GPU session; those remain unmeasured
+here (see PERF_BASELINE.md for the existing probes).

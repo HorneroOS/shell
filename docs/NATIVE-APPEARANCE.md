@@ -150,6 +150,28 @@ ink, preferences) is implemented in this repository.
   `seeds`, `variant`, `mode`, `contrast`, `surfaceDepth`, `chroma`,
   `hueShift`, `follow` (`off`/`auto`/`ask`), `perMode`, `fallback`,
   `transition`. A missing block takes these defaults.
+- Control Center, Appearance > Chromatic
+  (`modules/controlcenter/appearance/sections/Chromatic*.qml`,
+  `services/ChromaticPreview.qml`, `services/chromaticcli.js`). The section
+  previews through the `hornero-chromatic` helper (`$HORNERO_CHROMATIC_BIN`,
+  else `/usr/lib/hornero/hornero-chromatic`; `generate` writes nothing) and
+  draws the candidate on a sample desktop (bar, popout, card, launcher
+  row, notification, terminal ANSI strip, telemetry trace) from the
+  candidate's own colours. Source: wallpaper, image, one colour (ranked
+  seed chips, hue/intensity picker, hex), or the Signal house palette.
+  Variant gallery with the eight RFC variants and honest descriptions.
+  The inference readout lists what Hornero chose (mode, variant, contrast,
+  personality, reasons) and every item has a control that overrides it
+  (Auto means follow the image). Mode, contrast, surface depth, intensity
+  and hue shift; per-mode variant preference; recolour policy (off / auto /
+  ask with preview and Keep current); smooth-transition toggle. Apply runs
+  `horneroctl appearance chromatic apply … --json --yes` only; Preview on
+  desktop is in-memory (`Signal.beginPreview`), Cancel or Escape restores
+  the previous palette and writes nothing, and a failed apply restores it
+  too. Save, Export, Import and Roll back are horneroctl verbs. Honest
+  states: helper missing, unreadable image, video without ffmpeg, no
+  wallpaper, gates failing, High Contrast active. Renaming and deleting
+  saved palettes are not available yet (no horneroctl verb).
 - `appearance.highContrast` keeps showing the curated
   `hornero-signal-contrast` table. Cockpit Clear bars stay at zero opacity;
   Chromatic only changes their foreground ink.

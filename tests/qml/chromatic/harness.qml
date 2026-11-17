@@ -53,6 +53,74 @@ ShellRoot {
         }
     }
 
+    // "service" scene: ChromaticPreview against the fake helper/horneroctl.
+    property int stage: 0
+    property int stageTicks: 0
+    Timer {
+        id: svc
+
+        interval: 100
+        repeat: true
+        onTriggered: {
+            root.stageTicks++;
+            const o = root.out;
+            if (root.stageTicks > 150) {
+                o.timeout = root.stage;
+                svc.stop();
+                root.emit();
+                return;
+            }
+            const P = ChromaticPreview;
+            if (root.stage === 0 && P.helperChecked) {
+                o.helper = P.helperAvailable;
+                if (!P.helperAvailable) {
+                    o.errorCode = P.errorCode;
+                    svc.stop();
+                    root.emit();
+                    return;
+                }
+                P.setSource("house", "");
+                root.stage = 1;
+            } else if (root.stage === 1 && !P.busy && (P.result || P.hasError)) {
+                o.errorCode = P.errorCode;
+                o.hasResult = !!P.result;
+                if (P.result) {
+                    o.fingerprint = P.result.fingerprint;
+                    o.rows = P.result.gates.rows.length;
+                    o.personality = P.result.inference.personality;
+                    o.mode = P.result.scheme.mode;
+                }
+                const action = Quickshell.env("HACTION");
+                if (action === "preview" || action === "apply") {
+                    o.themeBefore = Signal.themeId;
+                    P.previewLive(true);
+                    o.live = P.live;
+                    o.themeDuring = Signal.themeId;
+                    if (action === "preview") {
+                        P.cancel();
+                        o.liveAfterCancel = P.live;
+                        o.themeAfter = Signal.themeId;
+                        svc.stop();
+                        root.emit();
+                        return;
+                    }
+                    P.apply(true);
+                    root.stage = 2;
+                } else {
+                    svc.stop();
+                    root.emit();
+                }
+            } else if (root.stage === 2 && !P.applying) {
+                o.applyError = P.applyError;
+                o.notice = P.notice;
+                o.liveAfterApply = P.live;
+                o.themeAfterApply = Signal.themeId;
+                svc.stop();
+                root.emit();
+            }
+        }
+    }
+
     property int settleTicks: 0
     Timer {
         id: settle
@@ -91,6 +159,11 @@ ShellRoot {
         interval: 800
         running: true
         onTriggered: {
+            if (root.scene === "service") {
+                ChromaticPreview.probe();
+                svc.start();
+                return;
+            }
             if (root.scene === "idle") {
                 // Warm-up run: wait until the first-run state files exist.
                 settle.start();

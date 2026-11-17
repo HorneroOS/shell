@@ -95,6 +95,17 @@ def run_scene(tmp_path: Path, scene: str, **env_extra) -> tuple[dict, dict, dict
         "HSCENE": scene,
     }
     env.update({k: str(v) for k, v in env_extra.items()})
+    # Chromatic doubles: helper and horneroctl are fixtures, never the
+    # user's binaries.
+    fx = ROOT / "tests" / "fixtures" / "chromatic"
+    bindir = tmp_path / "bin"
+    bindir.mkdir(exist_ok=True)
+    ctl = bindir / "horneroctl"
+    if not ctl.exists():
+        ctl.symlink_to(fx / "fake-horneroctl.sh")
+    env["PATH"] = f"{bindir}:{env['PATH']}"
+    env.setdefault("HORNERO_CHROMATIC_BIN", str(fx / "fake-helper.sh"))
+    env.setdefault("FAKE_CTL_LOG", str(tmp_path / "ctl.log"))
 
     def launch(name: str) -> str:
         proc = subprocess.run(

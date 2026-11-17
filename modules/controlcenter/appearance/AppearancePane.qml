@@ -46,7 +46,7 @@ Item {
     // Config.controlCenter.appearanceOpenSections (default: Themes).
     // _sectionsReady guards write-back while initial state is restored.
     property bool _sectionsReady: false
-    readonly property var _sectionKeys: ["themes", "gtkTheme", "gtkColorScheme", "iconTheme", "fonts", "animations", "scales", "transparency", "border", "background", "health"]
+    readonly property var _sectionKeys: ["chromatic", "themes", "gtkTheme", "gtkColorScheme", "iconTheme", "fonts", "animations", "scales", "transparency", "border", "background", "health"]
     property var sectionItems: ({})
     property var sectionScroll: null
 
@@ -680,6 +680,7 @@ Item {
                         themes: themesSection,
                         gtkTheme: gtkThemeSection,
                         gtkColorScheme: gtkColorSchemeSection,
+                        chromatic: chromaticSection,
                         iconTheme: iconThemeSection,
                         fonts: fontsSection,
                         animations: animationsSection,
@@ -690,7 +691,7 @@ Item {
                         health: healthSection
                     })
 
-                    readonly property bool allSectionsExpanded: themesSection.expanded && gtkThemeSection.expanded && gtkColorSchemeSection.expanded && iconThemeSection.expanded && fontsSection.expanded && animationsSection.expanded && scalesSection.expanded && transparencySection.expanded && borderSection.expanded && backgroundSection.expanded && healthSection.expanded
+                    readonly property bool allSectionsExpanded: chromaticSection.expanded && themesSection.expanded && gtkThemeSection.expanded && gtkColorSchemeSection.expanded && iconThemeSection.expanded && fontsSection.expanded && animationsSection.expanded && scalesSection.expanded && transparencySection.expanded && borderSection.expanded && backgroundSection.expanded && healthSection.expanded
 
                     Component.onCompleted: {
                         root.sectionItems = sidebarLayout.sections;
@@ -723,6 +724,14 @@ Item {
                                 root.setAllSections(!sidebarLayout.allSectionsExpanded);
                             }
                         }
+                    }
+
+                    ChromaticSection {
+                        id: chromaticSection
+                        session: root.session
+                        previewController: root
+                        Component.onCompleted: expanded = root.isSectionExpanded("chromatic")
+                        onExpandedChanged: root.persistSection("chromatic", expanded)
                     }
 
                     ThemesSection {

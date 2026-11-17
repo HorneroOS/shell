@@ -26,5 +26,9 @@ def test_theme_cards_use_bezel_chips_not_pills():
 def test_no_material_scheme_variants_in_appearance_pane():
     pattern = re.compile(r"tonal-spot|fidelity|expressive|vibrant|schemeType|variant", re.I)
     for path in APPEARANCE.rglob("*.qml"):
+        if path.name.startswith("Chromatic"):
+            # Hornero Chromatic (RFC 0002) has its own Signal variants
+            # (balanced, vibrant, expressive, ...); they are not scheme types.
+            continue
         text = path.read_text()
         assert not pattern.search(text), f"{path.name} mentions a Material scheme variant"

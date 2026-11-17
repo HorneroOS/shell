@@ -132,6 +132,7 @@ def test_offscreen_saved_palette_rename_delete_undo(tmp_path):
 def test_editor_manages_saved_palettes_with_confirm_and_undo():
     assert "renameArgs" in EDITOR and "deleteArgs" in EDITOR
     assert "Really delete?" in EDITOR and "Undo" in EDITOR and "undoTimer" in EDITOR
+@requires_qs
 def test_offscreen_accent_override_resolution_and_reset(tmp_path):
     r = run_gallery(tmp_path, HACCENT=1)
     # global accent: accent, glow follow, readable text on it

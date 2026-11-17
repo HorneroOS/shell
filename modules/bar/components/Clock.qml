@@ -72,7 +72,7 @@ Item {
                 id: hourMetrics
 
                 text: "00"
-                font.pixelSize: 18
+                font.pointSize: Appearance.font.size.large
                 font.family: Appearance.font.family.display
                 font.weight: Font.Medium
                 font.features: {
@@ -84,7 +84,7 @@ Item {
                 Layout.alignment: Qt.AlignVCenter
 
                 text: Time.hourStr
-                font.pixelSize: 18
+                font.pointSize: Appearance.font.size.large
                 font.family: Appearance.font.family.display
                 font.weight: Font.Medium
                 font.features: {
@@ -97,7 +97,7 @@ Item {
 
             StyledText {
                 text: ":"
-                font.pixelSize: 18
+                font.pointSize: Appearance.font.size.large
                 font.family: Appearance.font.family.display
                 font.weight: Font.Medium
                 color: root.colour
@@ -107,7 +107,7 @@ Item {
                 Layout.alignment: Qt.AlignVCenter
 
                 text: Time.minuteStr
-                font.pixelSize: 18
+                font.pointSize: Appearance.font.size.large
                 font.family: Appearance.font.family.display
                 font.weight: Font.Medium
                 font.features: {
@@ -136,7 +136,7 @@ Item {
             visible: root.showDate && !root.vertical
 
             text: Time.format("ddd d MMM").toUpperCase()
-            font.pixelSize: 12
+            font.pointSize: Appearance.font.size.smaller
             font.family: Appearance.font.family.mono
             color: root.tone.inkMuted
         }

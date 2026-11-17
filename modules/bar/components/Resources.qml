@@ -121,7 +121,7 @@ Item {
                     mono: true
                     text: metric.modelData.label
                     color: root.tone.inkMuted
-                    font.pixelSize: 11
+                    font.pointSize: Appearance.font.size.small
                     font.capitalization: Font.AllUppercase
                     font.letterSpacing: 0.88
                 }
@@ -145,11 +145,11 @@ Item {
 
                     visible: root.showText
                     Layout.preferredWidth: valueMetrics.width
-                    horizontalAlignment: Text.AlignRight
+                    horizontalAlignment: Text.AlignLeft
                     mono: true
                     text: metric.modelData.text
                     color: metric.critical ? root.tone.alert : root.tone.ink
-                    font.pixelSize: 12
+                    font.pointSize: Appearance.font.size.smaller
                     font.features: {
                         "tnum": 1
                     }
@@ -160,7 +160,7 @@ Item {
 
                         text: "100%"
                         font.family: Appearance.font.family.mono
-                        font.pixelSize: 12
+                        font.pointSize: Appearance.font.size.smaller
                     }
                 }
             }

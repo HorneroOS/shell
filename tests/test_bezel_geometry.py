@@ -27,6 +27,7 @@ def test_brightness_hides_without_a_backend():
     svc = (ROOT / "services/Brightness.qml").read_text(encoding="utf-8")
     assert "property bool available: false" in svc
     assert "isFinite(value)" in svc
+    assert '"-c", "backlight"' in svc
     slider = (ROOT / "modules/bar/components/InlineSlider.qml").read_text(encoding="utf-8")
     assert "readonly property bool available: isAudio || (monitor?.available ?? false)" in slider
     bar = (ROOT / "modules/bar/Bar.qml").read_text(encoding="utf-8")
@@ -69,5 +70,5 @@ def test_idle_media_transport_leaves_no_segment():
 def test_bar_clock_uses_plex_sans_condensed():
     clock = (ROOT / "modules/bar/components/Clock.qml").read_text(encoding="utf-8")
     assert "font.family: Appearance.font.family.display" in clock
-    assert "font.weight: Font.Medium" in clock and "font.pixelSize: 18" in clock
+    assert "font.weight: Font.Medium" in clock and "font.pointSize: Appearance.font.size.large" in clock
     assert "toUpperCase()" in clock

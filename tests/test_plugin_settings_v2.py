@@ -216,3 +216,10 @@ def test_generated_ui_renders_every_new_type_and_the_preview():
     assert "PluginPreviewFrame" in PANE
     preview = (ROOT / "modules/controlcenter/extensions/PluginPreviewFrame.qml").read_text()
     assert "Plugins.hasSurface" in preview and "asynchronous: true" in preview
+
+
+def test_kit_chip_and_plain_lists():
+    pane = PANE
+    assert 'entry?.pluginKit >= 4 ? qsTr("PluginKit 4")' in pane
+    assert "Plugins.markPluginKit" in HOST
+    assert "function plain(" in SERVICE and "root.plain(stored)" in SERVICE

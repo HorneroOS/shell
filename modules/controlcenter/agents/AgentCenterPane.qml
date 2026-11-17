@@ -365,7 +365,7 @@ Item {
                                     Layout.fillWidth: true
                                     text: qsTr("Your agents")
                                     font.pointSize: Appearance.font.size.large
-                                    font.weight: 600
+                                    font.weight: Appearance.font.weight.strong
                                 }
 
                                 StyledText {
@@ -480,7 +480,7 @@ Item {
                                             StyledText {
                                                 text: agentRow.modelData.name
                                                 font.pointSize: Appearance.font.size.normal
-                                                font.weight: 600
+                                                font.weight: Appearance.font.weight.strong
                                                 color: agentRow.isDefault ? Signal.palette.onSignalWell : Signal.palette.ink
                                             }
 
@@ -570,7 +570,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Javi assistant")
                             font.pointSize: Appearance.font.size.large
-                            font.weight: 600
+                            font.weight: Appearance.font.weight.strong
                         }
 
                         StyledText {
@@ -603,7 +603,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Agent config")
                             font.pointSize: Appearance.font.size.large
-                            font.weight: 600
+                            font.weight: Appearance.font.weight.strong
                         }
 
                         StyledText {
@@ -638,7 +638,7 @@ Item {
             text: chip.label
             color: chip.fg
             font.pointSize: Appearance.font.size.small
-            font.weight: 500
+            font.weight: Appearance.font.weight.medium
         }
     }
 }

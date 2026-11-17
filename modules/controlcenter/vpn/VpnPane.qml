@@ -64,7 +64,7 @@ Item {
                                 text: VPN.connecting ? qsTr("…") : qsTr("On")
                                 color: VPN.connected ? Signal.palette.onSignal : Signal.palette.inkMuted
                                 font.pointSize: Appearance.font.size.smaller
-                                font.weight: 600
+                                font.weight: Appearance.font.weight.strong
                             }
                         }
                     }

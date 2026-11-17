@@ -339,7 +339,7 @@ ColumnLayout {
                     StyledText {
                         text: groupCard.modelData.name
                         font.pointSize: Appearance.font.size.small
-                        font.weight: 600
+                        font.weight: Appearance.font.weight.strong
                         color: Signal.palette.ink
                         clip: true
                     }
@@ -359,7 +359,7 @@ ColumnLayout {
                             mono: true
                             text: groupCard.filteredRows.length
                             font.pointSize: Appearance.font.size.smaller
-                            font.weight: 600
+                            font.weight: Appearance.font.weight.strong
                             color: Signal.palette.ink
                         }
                     }
@@ -441,7 +441,7 @@ ColumnLayout {
             text: parent.text
             mono: true
             font.pointSize: Appearance.font.size.smaller
-            font.weight: 600
+            font.weight: Appearance.font.weight.strong
             color: Signal.palette.ink
         }
     }

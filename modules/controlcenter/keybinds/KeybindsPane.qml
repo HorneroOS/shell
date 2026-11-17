@@ -292,7 +292,7 @@ Item {
                                     StyledText {
                                         text: modelData.name
                                         font.pointSize: Appearance.font.size.small
-                                        font.weight: 600
+                                        font.weight: Appearance.font.weight.strong
                                         color: Signal.palette.ink
                                     }
 
@@ -308,7 +308,7 @@ Item {
                                             anchors.centerIn: parent
                                             text: modelData.rows.length
                                             font.pointSize: Appearance.font.size.smaller
-                                            font.weight: 600
+                                            font.weight: Appearance.font.weight.strong
                                             color: Signal.palette.onSignalWell
                                         }
                                     }
@@ -512,7 +512,7 @@ Item {
             text: parent.text
             mono: true
             font.pointSize: Appearance.font.size.smaller
-            font.weight: 600
+            font.weight: Appearance.font.weight.strong
             color: Signal.palette.ink
         }
     }

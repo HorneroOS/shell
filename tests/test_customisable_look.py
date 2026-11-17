@@ -44,3 +44,15 @@ def test_look_section_is_registered_and_searchable():
     assert "LookSection {" in pane and 'isSectionExpanded("look")' in pane
     assert '"look"' in pane.split("_sectionKeys", 1)[1].split("]", 1)[0]
     assert 'id: "look"' in (ROOT / "modules/controlcenter/PaneRegistry.qml").read_text()
+
+
+def test_factory_look_has_factory_weight_and_curve():
+    a = FACTORY["appearance"]
+    assert a["font"]["weight"]["shift"] == 0 and a["anim"]["curveStyle"] == "smooth"
+    m = re.search(r'id: "hornero".*?weight: (-?\d+), curve: "(\w+)"', LOOK, re.S)
+    assert (int(m.group(1)), m.group(2)) == (0, "smooth")
+
+
+def test_weight_tokens_replace_literals():
+    bad = [str(p) for p in (ROOT / "modules").rglob("*.qml") if re.search(r"font\.weight: (500|600)$", p.read_text(), re.M)]
+    assert not bad, f"use Appearance.font.weight tokens: {bad}"

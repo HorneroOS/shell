@@ -173,7 +173,7 @@ FloatingWindow {
                 StyledText {
                     text: qsTr("Hornero Welcome")
                     font.pointSize: Appearance.font.size.large
-                    font.weight: 600
+                    font.weight: Appearance.font.weight.strong
                 }
 
                 Item {

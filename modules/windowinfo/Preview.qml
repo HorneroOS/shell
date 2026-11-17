@@ -51,7 +51,7 @@ Item {
                     text: qsTr("No active client")
                     color: Signal.palette.ruleStrong
                     font.pointSize: Appearance.font.size.extraLarge
-                    font.weight: 500
+                    font.weight: Appearance.font.weight.medium
                 }
 
                 StyledText {

@@ -88,7 +88,7 @@ Item {
                             ? Signal.palette.ink
                             : Signal.palette.phosphor
                         font.pointSize: Appearance.font.size.small
-                        font.weight: 600
+                        font.weight: Appearance.font.weight.strong
                     }
                 }
             }

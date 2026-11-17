@@ -93,7 +93,7 @@ CollapsibleSection {
 
             StyledText {
                 text: ChromaticPreview.errorTitle
-                font.weight: 600
+                font.weight: Appearance.font.weight.strong
                 color: ChromaticPreview.errorCode === "no-source" ? Signal.palette.onSignalWell : Signal.palette.onAlertWell
             }
 
@@ -229,7 +229,7 @@ CollapsibleSection {
             Layout.fillWidth: true
             visible: !!root.infer
             wrapMode: Text.WordWrap
-            font.weight: 500
+            font.weight: Appearance.font.weight.medium
             text: root.infer ? root.infer.personality : ""
         }
 

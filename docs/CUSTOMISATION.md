@@ -54,3 +54,12 @@ glow off regardless. Plugin-kit glows do not follow it yet (tracked in HorneroOS
 
 Note: `dashboard.sizes.*` are not listed because nothing in the shell reads them today; exposing dead settings would
 mislead, so they are left out until the dashboard consumes them.
+
+## Text weight and motion style (Appearance > Look)
+
+- `appearance.font.weight.shift` (-200..+200 in steps of 100, default 0) moves every text weight token
+  (`Appearance.font.weight.regular|medium|strong`, 400/500/600 at the factory value). Shared StyledText and the
+  call sites that used literal 500/600 now use the tokens; a test forbids new literals.
+- `appearance.anim.curveStyle` = `smooth` (factory) | `snappy` (no overshoot) | `bouncy` (a little more give on
+  spatial motion only). Opacity/colour never overshoot, and reduced motion still wins.
+- The Cozy look uses the bouncy style; the Hornero look restores weight 0 and smooth.

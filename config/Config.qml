@@ -294,11 +294,15 @@ Singleton {
                 },
                 size: {
                     scale: appearance.font.size.scale
+                },
+                weight: {
+                    shift: appearance.font.weight.shift
                 }
             },
             anim: {
                 mediaGifSpeedAdjustment: appearance.anim.mediaGifSpeedAdjustment,
                 sessionGifSpeed: appearance.anim.sessionGifSpeed,
+                curveStyle: appearance.anim.curveStyle,
                 durations: {
                     scale: appearance.anim.durations.scale
                 }

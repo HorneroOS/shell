@@ -117,7 +117,7 @@ Item {
                 StyledText {
                     text: terminalCard.terminalId === "kitty" ? "Kitty" : terminalCard.terminalId === "alacritty" ? "Alacritty" : "Ghostty"
                     font.pointSize: Appearance.font.size.normal
-                    font.weight: 600
+                    font.weight: Appearance.font.weight.strong
                 }
 
                 StyledText {

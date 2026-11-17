@@ -265,7 +265,7 @@ Item {
                             StyledText {
                                 text: qsTr("Schedule")
                                 font.pointSize: Appearance.font.size.normal
-                                font.weight: 500
+                                font.weight: Appearance.font.weight.medium
                             }
 
                             StyledText {

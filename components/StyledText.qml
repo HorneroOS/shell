@@ -22,6 +22,7 @@ Text {
     property bool mono: false
     font.family: root.mono ? Appearance.font.family.mono : Appearance.font.family.sans
     font.pointSize: Appearance.font.size.smaller
+    font.weight: Appearance.font.weight.regular
 
     Behavior on color {
         CAnim {}

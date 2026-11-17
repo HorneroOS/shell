@@ -276,7 +276,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Profiles")
                             font.pointSize: Appearance.font.size.large
-                            font.weight: 600
+                            font.weight: Appearance.font.weight.strong
                         }
 
                         StyledText {
@@ -321,7 +321,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Applications")
                             font.pointSize: Appearance.font.size.large
-                            font.weight: 600
+                            font.weight: Appearance.font.weight.strong
                         }
 
                         Repeater {
@@ -351,7 +351,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Performance mode")
                             font.pointSize: Appearance.font.size.large
-                            font.weight: 600
+                            font.weight: Appearance.font.weight.strong
                         }
 
                         StyledText {
@@ -381,7 +381,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Gaming mode")
                             font.pointSize: Appearance.font.size.large
-                            font.weight: 600
+                            font.weight: Appearance.font.weight.strong
                         }
 
                         StyledText {
@@ -407,7 +407,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Gaming session")
                             font.pointSize: Appearance.font.size.large
-                            font.weight: 600
+                            font.weight: Appearance.font.weight.strong
                         }
 
                         StyledText {

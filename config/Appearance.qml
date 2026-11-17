@@ -15,14 +15,21 @@ Singleton {
     readonly property AppearanceConfig.Transparency transparency: Config.appearance.transparency
 
     component Curves: QtObject {
+        // Unknown values fall back to the factory "smooth" style.
+        readonly property string style: ["smooth", "snappy", "bouncy"].includes(Config.appearance.anim.curveStyle) ? Config.appearance.anim.curveStyle : "smooth"
         readonly property list<real> standard: [0.2, 0, 0, 1, 1, 1]
         readonly property list<real> enter: [0.05, 0.7, 0.1, 1, 1, 1]
         readonly property list<real> exit: [0.3, 0, 1, 1, 1, 1]
         readonly property list<real> sweep: [0.65, 0, 0.35, 1, 1, 1]
         // Small (<= 4 %) overshoot for spatial motion only: position, size,
         // shape. Never for opacity or colour.
-        readonly property list<real> settle: [0.32, 1.24, 0.42, 1, 1, 1]
-        readonly property list<real> settleFast: [0.34, 1.3, 0.5, 1, 1, 1]
+        // Factory ("smooth") spatial curves, plus the snappy/bouncy variants.
+        readonly property list<real> settleSmooth: [0.32, 1.24, 0.42, 1, 1, 1]
+        readonly property list<real> settleFastSmooth: [0.34, 1.3, 0.5, 1, 1, 1]
+        readonly property list<real> settleBouncy: [0.32, 1.5, 0.42, 1, 1, 1]
+        readonly property list<real> settleFastBouncy: [0.34, 1.6, 0.5, 1, 1, 1]
+        readonly property list<real> settle: style === "snappy" ? standard : style === "bouncy" ? settleBouncy : settleSmooth
+        readonly property list<real> settleFast: style === "snappy" ? standard : style === "bouncy" ? settleFastBouncy : settleFastSmooth
     }
 
     component Motion: QtObject {

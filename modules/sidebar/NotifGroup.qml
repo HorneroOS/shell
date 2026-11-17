@@ -95,7 +95,7 @@ StyledRect {
             }
 
             Component {
-                id: materialIconComp
+                id: glyphIconComp
 
                 Glyph {
                     name: Icons.getNotifIcon(root.notifs[0]?.summary, root.urgency)
@@ -114,7 +114,7 @@ StyledRect {
 
                 Loader {
                     anchors.centerIn: parent
-                    sourceComponent: root.image ? imageComp : root.appIcon ? appIconComp : materialIconComp
+                    sourceComponent: root.image ? imageComp : root.appIcon ? appIconComp : glyphIconComp
                 }
             }
 

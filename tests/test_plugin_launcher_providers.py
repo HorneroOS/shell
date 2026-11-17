@@ -52,7 +52,7 @@ def test_host_wired_and_models_enabled_launcher_plugins_only():
     # pluginsForSurface gates: safe mode, enabled, installed,
     # surface-enabled — so disable/safe-mode unload falls out of
     # the Repeater model destroying the delegate.
-    assert "if (root.safeMode)\n            return []" in SERVICE
+    assert "if (root.hostingBlocked)\n            return []" in SERVICE
     assert "if (!entry.enabled || !entry.installed)" in SERVICE
 
 

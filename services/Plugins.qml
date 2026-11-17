@@ -108,6 +108,35 @@ Singleton {
 
     readonly property string pluginsDir: `${Paths.data}/plugins`
 
+    // PluginKit version gate. PluginHost reports the apiLevel of the
+    // Hornero.PluginKit module the shell actually resolved (0 when it
+    // predates the PluginKitInfo marker, -1 until probed). Manifests are
+    // schemaVersion 3, so every extension needs a kit of at least
+    // requiredKitLevel; a stale kit left on the QML import path by a
+    // partial upgrade would otherwise fail each extension with raw QML
+    // noise ("UiTextField is not a type"). While the kit is too old no
+    // extension is hosted and each enabled one says so plainly.
+    readonly property int requiredKitLevel: 3
+    property int kitLevel: -1
+    readonly property bool kitBlocked: root.kitLevel >= 0 && root.kitLevel < root.requiredKitLevel
+    readonly property string kitMessage: root.kitBlocked
+        ? qsTr("The installed PluginKit is too old (API level %1, this Shell needs %2). Update the hornero-shell package or point QML2_IMPORT_PATH at this Shell's plugin/qml. Extensions are not loaded until then.").arg(root.kitLevel).arg(root.requiredKitLevel)
+        : ""
+    // Hosts must not instantiate anything in safe mode or on a stale kit.
+    readonly property bool hostingBlocked: root.safeMode || root.kitBlocked
+
+    onKitBlockedChanged: root.applyKitGate()
+
+    function applyKitGate(): void {
+        if (!root.kitBlocked)
+            return;
+        console.warn(`[plugins] ${root.kitMessage}`);
+        root.entries = root.entries.map(e => e.enabled && e.installed ? Object.assign({}, e, {
+            state: "failed",
+            detail: root.kitMessage
+        }) : e);
+    }
+
     function reload(): void {
         if (listProcess.running)
             return;
@@ -350,7 +379,7 @@ Singleton {
     }
 
     function hasSurface(id: string, surface: string): bool {
-        if (root.safeMode)
+        if (root.hostingBlocked)
             return false;
         const entry = root.entries.find(e => e.id === id);
         const declared = root.surfaceFor(entry, surface);
@@ -364,7 +393,7 @@ Singleton {
     // manifests. A surface with enabled === false is skipped without
     // affecting the package's other surfaces.
     function pluginsForSurface(surface: string): var {
-        if (root.safeMode)
+        if (root.hostingBlocked)
             return [];
         const result = [];
         for (const entry of root.entries) {
@@ -562,7 +591,7 @@ Singleton {
     // untrusted or safe-mode entries are simply absent here and are
     // reported by deckAvailability().
     function deckEligible(entry: var): bool {
-        return !!entry && !root.safeMode && !!entry.installed && ["official", "trusted", "signed"].includes(entry.trust) && !!root.surfaceFor(entry, "desktop");
+        return !!entry && !root.hostingBlocked && !!entry.installed && ["official", "trusted", "signed"].includes(entry.trust) && !!root.surfaceFor(entry, "desktop");
     }
 
     function deckPlugins(): var {
@@ -590,6 +619,8 @@ Singleton {
             const entry = root.entries.find(e => e.id === id);
             if (root.safeMode)
                 out[id] = "safe-mode";
+            else if (root.kitBlocked)
+                out[id] = "kit-too-old";
             else if (!entry || !entry.installed)
                 out[id] = "not-installed";
             else if (!["official", "trusted", "signed"].includes(entry.trust))
@@ -624,7 +655,7 @@ Singleton {
     // disabled (or safe-mode) plugin's custom settings UI is never
     // loaded and an already-loaded one unloads.
     function settingsSurfaceFor(entry: var): var {
-        if (!entry || root.safeMode || !entry.enabled || !entry.installed)
+        if (!entry || root.hostingBlocked || !entry.enabled || !entry.installed)
             return null;
         const declared = root.surfaceFor(entry, "settings");
         if (!declared || declared.enabled === false || typeof declared.entrypoint !== "string" || declared.entrypoint === "")
@@ -707,6 +738,12 @@ Singleton {
             pluginsDir: root.pluginsDir,
             safeMode: root.safeMode,
             safeModeEnv: root.safeModeEnv,
+            kit: {
+                level: root.kitLevel,
+                required: root.requiredKitLevel,
+                compatible: !root.kitBlocked,
+                message: root.kitMessage
+            },
             budgets: {
                 slowLoadMs: root.slowLoadBudgetMs,
                 churnAttempts: root.churnAttemptBudget,
@@ -783,6 +820,7 @@ Singleton {
                 });
             });
             root.discovered = true;
+            root.applyKitGate();
         }
     }
 

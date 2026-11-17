@@ -62,6 +62,9 @@ SURFACES = PLACEMENTS + ("launcher", "settings")
 DASHBOARD_CARD_SIZES = ("compact", "standard", "wide")
 BAR_SECTIONS = ("status", "actions", "clock", "end")
 SCHEMA_VERSIONS = (3,)
+# PluginKit API level this validator targets; must equal
+# plugin/qml/Hornero/PluginKit/PluginKitInfo.qml apiLevel (tested).
+PLUGINKIT_API_LEVEL = 3
 # Material-era manifests (PluginKit 1/2) are refused with a migration hint.
 LEGACY_SCHEMA_VERSIONS = (1, 2)
 DESKTOP_ANCHORS = (
@@ -1253,8 +1256,19 @@ def validate_plugin(root: Path) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("plugin_dir", type=Path, help="directory containing manifest.json and the plugin files")
+    parser.add_argument("plugin_dir", type=Path, nargs="?", help="directory containing manifest.json and the plugin files")
+    parser.add_argument(
+        "--info",
+        action="store_true",
+        help="print this validator's supported manifest schema versions and PluginKit API level as JSON, then exit "
+        "(horneroctl uses it to pick the validator that matches the running shell)",
+    )
     args = parser.parse_args(argv)
+    if args.info:
+        print(json.dumps({"schemaVersions": list(SCHEMA_VERSIONS), "pluginKit": PLUGINKIT_API_LEVEL}))
+        return 0
+    if args.plugin_dir is None:
+        parser.error("plugin_dir is required unless --info is given")
     try:
         validate_plugin(args.plugin_dir.expanduser().resolve())
     except (OSError, UnicodeError, ValidationError) as error:

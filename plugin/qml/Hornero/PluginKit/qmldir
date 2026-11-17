@@ -1,4 +1,5 @@
 module Hornero.PluginKit
+singleton PluginKitInfo 1.0 PluginKitInfo.qml
 singleton Theme 1.0 Theme.qml
 singleton ExperienceBridge 1.0 ExperienceBridge.qml
 singleton GlowBudget 1.0 GlowBudget.qml

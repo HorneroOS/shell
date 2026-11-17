@@ -36,6 +36,7 @@ ShellRoot {
     }
     PluginHost {}
     PluginLauncherHost {}
+    PluginCommandHost {}
     Startup {}
     BatteryMonitor {}
     IdleMonitors {

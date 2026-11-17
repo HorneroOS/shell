@@ -146,7 +146,7 @@ Scope {
                         // be a safe relative .qml listed in files, and
                         // redeclaring the primary placement with a
                         // different file is a conflict, not an override.
-                        const knownSurfaces = ["background", "bar", "dashboard", "desktop", "launcher", "settings"];
+                        const knownSurfaces = ["background", "bar", "dashboard", "desktop", "launcher", "settings", "commands"];
                         const safeEntrypoint = value => typeof value === "string" && !value.includes("..") && !value.includes("\\")
                             && /^(?!\/)(?!\.{1,2}(\/|$))(?!.*\/\.{1,2}(\/|$))(?!.*\/\/)[A-Za-z0-9._\/-]+\.qml$/.test(value);
                         const effectiveSurfaces = ({});
@@ -163,6 +163,10 @@ Scope {
                             for (const name of Object.keys(manifest.surfaces)) {
                                 if (!knownSurfaces.includes(name)) {
                                     Plugins.markFailed(slot.modelData.id, `manifest surfaces contains unknown surface "${name}"`);
+                                    return;
+                                }
+                                if (name === "commands" && !(Number.isInteger(manifest.pluginKit) && manifest.pluginKit >= 4)) {
+                                    Plugins.markFailed(slot.modelData.id, "manifest surfaces.commands is a PluginKit 4 surface and requires pluginKit 4");
                                     return;
                                 }
                                 const surface = manifest.surfaces[name];
@@ -429,6 +433,7 @@ Scope {
                         slot.placement = placement;
                         const settings = manifest.capabilities && manifest.capabilities.settings;
                         Plugins.markPlacement(slot.modelData.id, placement, manifest.entrypoint, settings || ({}), effectiveSurfaces);
+                        Plugins.markContributes(slot.modelData.id, manifest.contributes === undefined ? null : manifest.contributes);
                         Plugins.markTranslations(slot.modelData.id, manifest.translations === undefined ? null : manifest.translations);
                         Plugins.markMarketplace(slot.modelData.id, manifest.marketplace === undefined ? null : manifest.marketplace);
                         Plugins.markDescription(slot.modelData.id, manifest.description);

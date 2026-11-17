@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 3,
+  "pluginKit": 4,
+  "id": "example-commands",
+  "name": "Example Commands",
+  "version": "1.0.0",
+  "description": "Contributes two commands (a greeting and a settings-driven reminder) to the launcher, IPC and key bindings (PluginKit 4).",
+  "author": "HorneroOS contributors",
+  "license": "MIT",
+  "entrypoint": "Main.qml",
+  "files": [
+    "Main.qml",
+    "Commands.qml",
+    "README.md",
+    "LICENSE"
+  ],
+  "capabilities": {
+    "processCommands": [],
+    "networkHosts": [],
+    "settings": {
+      "greeting": {
+        "type": "string",
+        "default": "Hello",
+        "maxLength": 24,
+        "title": "Greeting",
+        "group": "Messages"
+      },
+      "reminder": {
+        "type": "text",
+        "default": "Stand up and stretch.",
+        "rows": 2,
+        "maxLength": 140,
+        "title": "Reminder text",
+        "group": "Messages"
+      }
+    }
+  },
+  "contributes": {
+    "commands": [
+      {
+        "id": "greet",
+        "title": "Say hello",
+        "description": "Shows a greeting; the launcher argument is the name",
+        "glyph": "bolt",
+        "keywords": [
+          "hello",
+          "greeting"
+        ]
+      },
+      {
+        "id": "remind",
+        "title": "Show reminder",
+        "glyph": "bell",
+        "keywords": [
+          "stretch",
+          "break"
+        ]
+      }
+    ]
+  },
+  "surfaces": {
+    "commands": {
+      "entrypoint": "Commands.qml"
+    }
+  },
+  "placement": "bar"
+}

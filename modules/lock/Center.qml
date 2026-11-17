@@ -21,7 +21,9 @@ ColumnLayout {
 
     required property var lock
     readonly property real centerScale: Math.min(1, (lock.screen?.height ?? 1440) / 1440)
-    readonly property int centerWidth: Config.lock.sizes.centerWidth * centerScale
+    // The sign-in module is the interactive centre of the screen: at least
+    // 520 px of column (a 468 px module) even on a 1080p display.
+    readonly property int centerWidth: Math.max(520, Config.lock.sizes.centerWidth * centerScale)
     readonly property real clockSize: Appearance.font.size.display * 2.4 * centerScale
     readonly property string userName: Quickshell.env("USER") ?? ""
 
@@ -137,7 +139,7 @@ ColumnLayout {
     Instruments.Frame {
         Layout.alignment: Qt.AlignHCenter
         Layout.topMargin: Appearance.spacing.large * 2
-        Layout.preferredWidth: root.centerWidth * 0.8
+        Layout.preferredWidth: root.centerWidth * 0.9
         implicitHeight: headerHeight + signIn.implicitHeight + 16
         channel: "01"
         title: qsTr("Locked")
@@ -156,8 +158,8 @@ ColumnLayout {
                 spacing: Appearance.spacing.normal
 
                 Rectangle {
-                    implicitWidth: 44
-                    implicitHeight: 44
+                    implicitWidth: 52
+                    implicitHeight: 52
                     radius: Appearance.rounding.small
                     color: Signal.palette.sunken
                     border.width: 1
@@ -185,7 +187,7 @@ ColumnLayout {
                     id: entry
 
                     Layout.fillWidth: true
-                    implicitHeight: 44
+                    implicitHeight: 52
 
                     focus: true
                     onActiveFocusChanged: {
@@ -273,83 +275,89 @@ ColumnLayout {
             }
 
             // Status lines. Errors are named in words; nothing flashes.
-            StyledText {
-                id: message
-
-                readonly property Pam pam: root.lock.pam
-                readonly property string msg: {
-                    if (pam.fprintState === "error")
-                        return qsTr("FP ERROR: %1").arg(pam.fprint.message);
-                    if (pam.state === "error")
-                        return qsTr("PW ERROR: %1").arg(pam.passwd.message);
-
-                    if (pam.lockMessage)
-                        return pam.lockMessage;
-
-                    if (pam.state === "max" && pam.fprintState === "max")
-                        return qsTr("Maximum password and fingerprint attempts reached.");
-                    if (pam.state === "max") {
-                        if (pam.fprint.available)
-                            return qsTr("Maximum password attempts reached. Please use fingerprint.");
-                        return qsTr("Maximum password attempts reached.");
-                    }
-                    if (pam.fprintState === "max")
-                        return qsTr("Maximum fingerprint attempts reached. Please use password.");
-
-                    if (pam.state === "fail") {
-                        if (pam.fprint.available)
-                            return qsTr("Incorrect password. Please try again or use fingerprint.");
-                        return qsTr("Incorrect password. Please try again.");
-                    }
-                    if (pam.fprintState === "fail")
-                        return qsTr("Fingerprint not recognized (%1/%2). Please try again or use password.").arg(pam.fprint.tries).arg(Config.lock.maxFprintTries);
-
-                    return "";
-                }
+            RowLayout {
+                id: messageRow
 
                 Layout.fillWidth: true
-                visible: msg !== ""
-                text: msg
-                color: Signal.palette.alert
-                mono: true
-                font.pointSize: Appearance.font.size.small
-                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                visible: message.msg !== ""
+                spacing: Appearance.spacing.small
+
+                Accessible.role: Accessible.AlertMessage
+                Accessible.name: message.msg
+
+                Glyph {
+                    Layout.alignment: Qt.AlignTop
+                    name: "alert-triangle"
+                    color: Signal.palette.alert
+                    font.pointSize: Appearance.font.size.normal
+                }
+
+                StyledText {
+                    id: message
+
+                    readonly property Pam pam: root.lock.pam
+                    readonly property string msg: {
+                        if (pam.fprintState === "error")
+                            return qsTr("FP ERROR: %1").arg(pam.fprint.message);
+                        if (pam.state === "error")
+                            return qsTr("PW ERROR: %1").arg(pam.passwd.message);
+
+                        if (pam.lockMessage)
+                            return pam.lockMessage;
+
+                        if (pam.state === "max" && pam.fprintState === "max")
+                            return qsTr("Maximum password and fingerprint attempts reached.");
+                        if (pam.state === "max") {
+                            if (pam.fprint.available)
+                                return qsTr("Maximum password attempts reached. Please use fingerprint.");
+                            return qsTr("Maximum password attempts reached.");
+                        }
+                        if (pam.fprintState === "max")
+                            return qsTr("Maximum fingerprint attempts reached. Please use password.");
+
+                        if (pam.state === "fail") {
+                            if (pam.fprint.available)
+                                return qsTr("Incorrect password. Please try again or use fingerprint.");
+                            return qsTr("Incorrect password. Please try again.");
+                        }
+                        if (pam.fprintState === "fail")
+                            return qsTr("Fingerprint not recognized (%1/%2). Please try again or use password.").arg(pam.fprint.tries).arg(Config.lock.maxFprintTries);
+
+                        return "";
+                    }
+
+                    Layout.fillWidth: true
+                    text: msg
+                    color: Signal.palette.alert
+                    mono: true
+                    font.pointSize: Appearance.font.size.smaller
+                    wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                }
             }
 
             StyledText {
                 id: stateMessage
 
+                // Only unexpected states are worth a line: Caps lock ON and a
+                // non-default keyboard layout. Num lock is never announced.
                 readonly property string msg: {
                     const layoutChanged = Compositor.supports("keyboardLayoutState") && !Compositor.keyboardLayoutIsDefault;
-                    const lockStatus = Compositor.supports("lockStatus");
-                    if (layoutChanged) {
-                        if (lockStatus && Compositor.capsLock && Compositor.numLock)
-                            return qsTr("Caps lock and Num lock are ON.\nKeyboard layout: %1").arg(Compositor.keyboardLayoutName);
-                        if (lockStatus && Compositor.capsLock)
-                            return qsTr("Caps lock is ON. Keyboard layout: %1").arg(Compositor.keyboardLayoutName);
-                        if (lockStatus && Compositor.numLock)
-                            return qsTr("Num lock is ON. Keyboard layout: %1").arg(Compositor.keyboardLayoutName);
+                    const caps = Compositor.supports("lockStatus") && Compositor.capsLock;
+                    if (layoutChanged && caps)
+                        return qsTr("Caps lock is ON. Keyboard layout: %1").arg(Compositor.keyboardLayoutName);
+                    if (layoutChanged)
                         return qsTr("Keyboard layout: %1").arg(Compositor.keyboardLayoutName);
-                    }
-
-                    if (!lockStatus)
-                        return "";
-                    if (Compositor.capsLock && Compositor.numLock)
-                        return qsTr("Caps lock and Num lock are ON.");
-                    if (Compositor.capsLock)
+                    if (caps)
                         return qsTr("Caps lock is ON.");
-                    if (Compositor.numLock)
-                        return qsTr("Num lock is ON.");
-
                     return "";
                 }
 
                 Layout.fillWidth: true
-                visible: msg !== "" && !message.visible
+                visible: msg !== "" && !messageRow.visible
                 text: msg
                 color: Signal.palette.inkMuted
                 mono: true
-                font.pointSize: Appearance.font.size.small
+                font.pointSize: Appearance.font.size.smaller
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
             }
         }

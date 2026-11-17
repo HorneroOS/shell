@@ -24,6 +24,7 @@ Item {
     required property Session session
 
     property var factory: ({})
+    property var ranges: ({})
     property int revision: 0
     property string query: ""
     property bool confirmAll: false
@@ -61,7 +62,7 @@ Item {
             root.packMessage = qsTr("That is not valid JSON.");
             return;
         }
-        const r = Customisation.validatePack(pack, root.factory);
+        const r = Customisation.validatePack(pack, root.factory, root.ranges);
         for (const a of r.accepted) {
             const parts = a.path.split(".");
             let obj = Config;
@@ -93,6 +94,18 @@ Item {
                 root.factory = JSON.parse(text());
             } catch (e) {
                 root.factory = {};
+            }
+        }
+    }
+
+    FileView {
+        path: Quickshell.shellPath("config/ranges.json")
+        blockLoading: true
+        onLoaded: {
+            try {
+                root.ranges = JSON.parse(text()).ranges ?? {};
+            } catch (e) {
+                root.ranges = {};
             }
         }
     }

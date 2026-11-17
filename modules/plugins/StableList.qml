@@ -28,11 +28,12 @@ QtObject {
     // Dropped at any depth before comparing (dashboard sections nest plugin
     // copies). attemptTimesMs is bookkeeping; `attempts`, the reload
     // counter, stays in the signature.
-    readonly property var volatileKeys: ["state", "detail", "loadMs", "loadStartedAtMs", "lastStateAtMs", "attemptTimesMs", "diagnostics", "marketplace", "description", "translations"]
+    readonly property var volatileKeys: ["state", "detail", "loadMs", "loadStartedAtMs", "lastStateAtMs", "attemptTimesMs", "diagnostics", "marketplace", "description", "translations", "hostLoadStartedAtMs", "failedSurfaces"]
 
     function structure(items: var): string {
-        const volatile = root.volatileKeys;
-        return JSON.stringify(items ?? [], (key, value) => volatile.includes(key) ? undefined : value);
+        // `volatile` is a reserved word for older qmllint, so call it ignored.
+        const ignored = root.volatileKeys;
+        return JSON.stringify(items ?? [], (key, value) => ignored.includes(key) ? undefined : value);
     }
 
     function sync(): void {

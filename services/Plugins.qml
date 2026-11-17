@@ -331,6 +331,17 @@ Singleton {
         return text.length > 0 && text.length <= 400 ? text : "";
     }
 
+    // Manifest schemaVersion as the host read it (the Extensions pane
+    // shows the PluginKit chip from it; horneroctl's list JSON omits it).
+    function markSchemaVersion(id: string, version: var): void {
+        const current = root.entries.find(e => e.id === id);
+        if (!current || current.schemaVersion === version || !Number.isInteger(version))
+            return;
+        root.entries = root.entries.map(e => e.id === id ? Object.assign({}, e, {
+            schemaVersion: version
+        }) : e);
+    }
+
     function markDescription(id: string, description: var): void {
         const text = root.normalizeDescription(description);
         const current = root.entries.find(e => e.id === id);

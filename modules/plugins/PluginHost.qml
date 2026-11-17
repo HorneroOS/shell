@@ -416,6 +416,7 @@ Scope {
                         Plugins.markTranslations(slot.modelData.id, manifest.translations === undefined ? null : manifest.translations);
                         Plugins.markMarketplace(slot.modelData.id, manifest.marketplace === undefined ? null : manifest.marketplace);
                         Plugins.markDescription(slot.modelData.id, manifest.description);
+                        Plugins.markSchemaVersion(slot.modelData.id, manifest.schemaVersion);
                         slot.entrypoint = manifest.entrypoint;
                         const background = effectiveSurfaces.background;
                         slot.backgroundEntrypoint = background && background.enabled !== false ? background.entrypoint : "";
@@ -478,6 +479,8 @@ Scope {
                 onLoaded: {
                     try {
                         const manifest = JSON.parse(previewManifestView.text());
+                        if (manifest.id === previewSlot.modelData.id)
+                            Plugins.markSchemaVersion(previewSlot.modelData.id, manifest.schemaVersion);
                         if (manifest.id === previewSlot.modelData.id)
                             Plugins.markMarketplace(previewSlot.modelData.id, manifest.marketplace === undefined ? null : manifest.marketplace);
                     } catch (e) {

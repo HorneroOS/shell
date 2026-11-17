@@ -36,6 +36,16 @@ TestCase {
     stable.source = [entry("a", "loaded", 1), entry("b", "failed", 1)];
     verify(stable.list === first);
   }
+  function test_host_bookkeeping_never_republishes() {
+    const a = entry("a", "pending", 1);
+    stable.source = [a];
+    const first = stable.list;
+    const b = entry("a", "loaded", 1);
+    b.hostLoadStartedAtMs = 123;
+    b.failedSurfaces = { launcher: "boom" };
+    stable.source = [b];
+    verify(stable.list === first, "load clock and per-surface failures are volatile");
+  }
   function test_structure_and_reload_republish() {
     stable.source = [entry("a", "loaded", 1)];
     const first = stable.list;

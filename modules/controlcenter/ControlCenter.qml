@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import qs.components
+import qs.components.atmosphere
 import qs.components.controls
 import qs.services
 import qs.config
@@ -74,12 +75,21 @@ Item {
                 }
             }
 
+            AtmosphereTexture {}
+
             NavRail {
                 id: navRail
 
                 screen: root.screen
                 session: root.session
                 initialOpeningComplete: root.initialOpeningComplete
+            }
+
+            AtmosphereLayer {
+                lampOrigin: "topLeft"
+                lampReach: 1.1
+                vignette: false
+                cornerRadius: root.rounding
             }
         }
 

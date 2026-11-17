@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import qs.components
+import qs.components.atmosphere
 import qs.components.containers
 import qs.services
 import qs.config
@@ -36,8 +37,16 @@ ColumnLayout {
             sourceComponent: ColumnLayout {
                 spacing: Appearance.spacing.small
 
+                HorneroSprite {
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.bottomMargin: Appearance.spacing.small
+                    visible: Atmosphere.mascot && !Config.lock.hideNotifs
+                    pose: "sleep"
+                }
+
                 Glyph {
                     Layout.alignment: Qt.AlignHCenter
+                    visible: Config.lock.hideNotifs || !Atmosphere.mascot
                     name: Config.lock.hideNotifs ? "lock" : "bell-off"
                     color: Signal.palette.inkMuted
                     font.pointSize: Appearance.font.size.extraLarge
@@ -45,7 +54,7 @@ ColumnLayout {
 
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
-                    text: Config.lock.hideNotifs ? qsTr("Unlock to read notifications") : qsTr("No notifications")
+                    text: Config.lock.hideNotifs ? qsTr("Unlock to read notifications") : Microcopy.line("notifications.empty")
                     color: Signal.palette.inkMuted
                     font.family: Appearance.font.family.mono
                     font.pointSize: Appearance.font.size.small

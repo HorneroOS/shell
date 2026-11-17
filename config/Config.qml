@@ -310,6 +310,17 @@ Singleton {
             glow: {
                 intensity: appearance.glow.intensity
             },
+            atmosphere: {
+                enabled: appearance.atmosphere.enabled,
+                lamp: appearance.atmosphere.lamp,
+                warmth: appearance.atmosphere.warmth,
+                innerLight: appearance.atmosphere.innerLight,
+                vignette: appearance.atmosphere.vignette,
+                grain: appearance.atmosphere.grain,
+                scanlines: appearance.atmosphere.scanlines,
+                mascot: appearance.atmosphere.mascot,
+                tone: appearance.atmosphere.tone
+            },
             transparency: {
                 enabled: appearance.transparency.enabled,
                 base: appearance.transparency.base,

@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import "services"
 import qs.components
+import qs.components.atmosphere
 import qs.components.controls
 import qs.modules.instruments as Instruments
 import qs.services
@@ -36,6 +37,8 @@ Item {
 
     implicitWidth: listWrapper.width + padding * 2
     implicitHeight: header.height + listWrapper.height + searchWrapper.height + padding * 2 + 1
+
+    AtmosphereTexture {}
 
     // Header: channel eyebrow left, result count + key cues right.
     Item {
@@ -273,5 +276,12 @@ Item {
                 }
             }
         }
+    }
+
+    // Atmosphere: warm lamp, soft inner light, vignette, grain (section 17).
+    AtmosphereLayer {
+        lampOrigin: "top"
+        lampReach: 0.8
+        cornerRadius: Appearance.rounding.small
     }
 }

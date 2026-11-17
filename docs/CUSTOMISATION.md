@@ -77,3 +77,39 @@ Export turns the changed settings into a JSON text (`hornero/look-pack@1`, value
 entry against the factory file (known customisation path, same type, number clamped to 0..10x the factory value) and
 reports what it skipped. User data and unknown keys are rejected. Logic: `exportPack` / `validatePack` in
 `services/customisation.js`. A file-based `horneroctl config export|import` can reuse the same format later.
+
+## Atmosphere (Appearance > Atmosphere)
+
+The atmosphere is the warm layer over the Signal surfaces: a lamp wash, a soft inner highlight, a gentle vignette,
+film grain and optional scanlines, plus the hornero mascot and the microcopy voice (design language: HorneroOS/docs
+`development/signal-visual-language.md` section 17). It is opt-out and every value is a setting
+(`appearance.atmosphere.*`, validated, clamped to the slider range, with a reset):
+
+| Key | Range | Factory | Control |
+|-----|-------|--------:|---------|
+| `enabled` | on/off | on | Atmosphere switch (turns the whole layer off) |
+| `lamp` | 0 to 1.5 | 0.8 | Lamp light |
+| `warmth` | 0 to 1 | 0.2 | Lamp tint, amber (palette `glow`) to rose (`blush`) |
+| `innerLight` | 0 to 1.5 | 0.8 | Soft inner highlight along the top edge |
+| `vignette` | 0 to 1 | 0.4 | Vignette |
+| `grain` | 0 to 1 | 0.3 | Film grain |
+| `scanlines` | 0 to 1 | 0 | Scanlines (off by default) |
+| `mascot` | on/off | on | Hornero mascot in empty states, greetings and the session menu |
+| `tone` | `cozy` or `plain` | cozy | Microcopy voice |
+
+Guardrails that no setting overrides: the layer is hidden in High Contrast and in the Focus, Gaming and Studio modes
+(a stable, colour-neutral canvas); day themes keep a softer lamp and drop vignette and scanlines; the lamp takes one
+lease from the shared glow budget (`Experience.acquireGlow`, reserving a slot for the on-air bar and scope traces) and is
+left out when the budget is spent; reduced motion stops the mascot's blink and the empty-state settle. Every alpha has a
+hard ceiling in `services/atmosphere.js`, so a hand-edited value cannot exceed the language. Grain and scanlines sit
+under the content (text stays crisp); lamp, highlight and vignette are a veil of at most a few percent.
+
+Two accent chips, `Atmosphere.lamp` and `Atmosphere.blush`, are derived from the active palette (so custom and
+Chromatic palettes get them too) and are pulled toward `ink` until they pass 4.5:1 on all six surfaces. Look > Cozy
+sets the atmosphere knobs too (lamp 1.2, tint 0.45, highlight 1.1, vignette 0.5, grain 0.4); "Reset look to factory"
+restores the factory row. The on/off switch is never changed by a look.
+
+Surfaces carrying the layer: launcher, dashboard, notification cards (inner highlight only), OSD, session menu, lock
+screen, Welcome, and the Control Center navigation rail and title bar. Empty states with the mascot: launcher (no
+results), sidebar and lock notification docks; greetings: dashboard station card and lock screen; session menu footer.
+Typography: `StyledText.tabular` turns on fixed-width figures (readouts, clocks) and display clocks are set a hair tighter.

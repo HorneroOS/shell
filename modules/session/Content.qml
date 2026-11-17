@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import qs.components
+import qs.components.atmosphere
 import qs.services
 import qs.config
 import qs.utils
@@ -124,6 +125,26 @@ Column {
         command: Config.session.commands.reboot
 
         KeyNavigation.up: hibernate
+    }
+
+    // Footer: the hornero dozing beside a quiet hint, in the active voice.
+    Row {
+        topPadding: 8
+        leftPadding: 4
+        spacing: Appearance.spacing.smaller
+
+        HorneroSprite {
+            anchors.verticalCenter: parent.verticalCenter
+            pixel: 2
+            pose: "sleep"
+        }
+
+        StyledText {
+            anchors.verticalCenter: parent.verticalCenter
+            text: Microcopy.line("session.hint")
+            color: Signal.palette.inkMuted
+            font.pointSize: Appearance.font.size.small
+        }
     }
 
     component SessionButton: Column {

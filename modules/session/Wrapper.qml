@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import qs.components
+import qs.components.atmosphere
 import qs.config
 import Quickshell
 import QtQuick
@@ -48,6 +49,8 @@ Item {
         }
     ]
 
+    AtmosphereTexture {}
+
     Loader {
         id: content
 
@@ -59,5 +62,12 @@ Item {
         sourceComponent: Content {
             visibilities: root.visibilities
         }
+    }
+
+    // Atmosphere: warm lamp, soft inner light, vignette, grain (section 17).
+    AtmosphereLayer {
+        lampOrigin: "left"
+        lampReach: 0.9
+        cornerRadius: Appearance.rounding.small
     }
 }

@@ -1,4 +1,5 @@
 import qs.components
+import qs.components.atmosphere
 import qs.components.effects
 import qs.components.images
 import qs.components.filedialog
@@ -19,6 +20,26 @@ Column {
     required property FileDialog facePicker
 
     spacing: Appearance.spacing.normal
+
+    // Greeting: time-of-day line in the active microcopy voice, with the
+    // hornero beside it when the mascot is on.
+    Row {
+        spacing: Appearance.spacing.smaller
+
+        HorneroSprite {
+            anchors.verticalCenter: parent.verticalCenter
+            pixel: 2
+        }
+
+        StyledText {
+            anchors.verticalCenter: parent.verticalCenter
+            width: Math.min(implicitWidth, root.width - (Atmosphere.mascot ? 40 : 0))
+            text: Microcopy.greeting
+            elide: Text.ElideRight
+            color: Signal.palette.inkMuted
+            font.pointSize: Appearance.font.size.small
+        }
+    }
 
     Row {
         spacing: Appearance.spacing.normal

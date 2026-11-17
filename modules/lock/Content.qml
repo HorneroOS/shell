@@ -1,4 +1,5 @@
 import qs.components
+import qs.components.atmosphere
 import qs.services
 import qs.config
 import qs.modules.instruments as Instruments
@@ -16,6 +17,8 @@ Item {
     id: root
 
     required property var lock
+
+    AtmosphereTexture {}
 
     // 45° diagonal hairline. It lives only in the strip left of the centre
     // column, so it can never cross the clock or the sign-in module.
@@ -98,5 +101,10 @@ Item {
             anchors.fill: parent
             lock: root.lock
         }
+    }
+
+    AtmosphereLayer {
+        lampOrigin: "bottomLeft"
+        lampReach: 1.1
     }
 }

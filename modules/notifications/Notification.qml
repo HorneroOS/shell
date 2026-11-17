@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import qs.components
+import qs.components.atmosphere
 import qs.components.effects
 import qs.services
 import qs.config
@@ -338,5 +339,14 @@ StyledRect {
             font.capitalization: Font.AllUppercase
             elide: Text.ElideRight
         }
+    }
+
+    // Quiet atmosphere for calm cards only: no lamp (it would spend the
+    // glow budget per card) and nothing on a critical one.
+    AtmosphereLayer {
+        lamp: false
+        vignette: false
+        innerLight: !root.critical
+        cornerRadius: root.radius
     }
 }

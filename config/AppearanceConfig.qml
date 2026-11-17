@@ -17,6 +17,7 @@ JsonObject {
     property Anim anim: Anim {}
     property Transparency transparency: Transparency {}
     property Glow glow: Glow {}
+    property Atmosphere atmosphere: Atmosphere {}
     // Hornero Chromatic preferences (RFC 0002 §8.3). Active only while
     // `theme` is "hornero-chromatic"; horneroctl reads these, the shell
     // edits them. Never hold a wallpaper path here: the source resolves
@@ -146,6 +147,31 @@ JsonObject {
     // the alpha of the glows that are allowed.
     component Glow: JsonObject {
         property real intensity: 1
+    }
+
+    // Atmosphere (visual language section 17): the warm, cosy layer on top of
+    // the Signal surfaces. Every value is a user setting; `enabled: false`
+    // removes the whole layer. The shell additionally keeps it off in Focus,
+    // Gaming and Studio modes and in High Contrast, and drops the dark-only
+    // parts (vignette, scanlines) in day themes.
+    //   lamp        warm light wash, 0 = none .. 1.5 (1 = reference)
+    //   warmth      lamp tint: 0 = palette amber .. 1 = rose
+    //   innerLight  soft inner top highlight, 0 .. 1.5
+    //   vignette    gentle edge darkening, 0 .. 1
+    //   grain       fine film grain, 0 .. 1
+    //   scanlines   faint horizontal lines, 0 .. 1 (off by default)
+    //   mascot      show the hornero in empty states and greetings
+    //   tone        microcopy voice: "cozy" or "plain"
+    component Atmosphere: JsonObject {
+        property bool enabled: true
+        property real lamp: 0.8
+        property real warmth: 0.2
+        property real innerLight: 0.8
+        property real vignette: 0.4
+        property real grain: 0.3
+        property real scanlines: 0
+        property bool mascot: true
+        property string tone: "cozy"
     }
 
     component Transparency: JsonObject {

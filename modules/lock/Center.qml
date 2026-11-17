@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import qs.components
+import qs.components.atmosphere
 import qs.components.controls
 import qs.components.images
 import qs.services
@@ -76,6 +77,7 @@ ColumnLayout {
                     font.family: Appearance.font.family.display
                     font.weight: Font.Medium
                     font.pointSize: root.clockSize
+                    font.letterSpacing: -root.clockSize * 0.015
                     font.features: {
                         "tnum": 1
                     }
@@ -87,6 +89,7 @@ ColumnLayout {
                     font.family: Appearance.font.family.display
                     font.weight: Font.Medium
                     font.pointSize: root.clockSize
+                    font.letterSpacing: -root.clockSize * 0.015
                 }
 
                 StyledText {
@@ -94,6 +97,7 @@ ColumnLayout {
                     font.family: Appearance.font.family.display
                     font.weight: Font.Medium
                     font.pointSize: root.clockSize
+                    font.letterSpacing: -root.clockSize * 0.015
                     font.features: {
                         "tnum": 1
                     }
@@ -133,6 +137,23 @@ ColumnLayout {
         font.pointSize: Math.max(Appearance.font.size.normal, Math.floor(Appearance.font.size.larger * root.centerScale))
         font.capitalization: Font.AllUppercase
         font.letterSpacing: Appearance.font.size.larger * 0.08
+    }
+
+    // Welcome line in the active microcopy voice, hornero beside it.
+    RowLayout {
+        Layout.alignment: Qt.AlignHCenter
+        Layout.topMargin: Appearance.spacing.small
+        spacing: Appearance.spacing.smaller
+
+        HorneroSprite {
+            pixel: 2
+        }
+
+        StyledText {
+            text: Microcopy.line("lock.welcome")
+            color: Signal.palette.inkMuted
+            font.pointSize: Appearance.font.size.normal
+        }
     }
 
     // Sign-in module.

@@ -8,6 +8,7 @@ import QtQuick
 import QtTest
 import Hornero.PluginKit
 import qs.config
+import qs.services
 
 Item {
     id: win
@@ -144,6 +145,22 @@ Item {
             tryCompare(pop, "opened", false)
             wait(450)
             verify(trigger.activeFocus, "closing from inside returns focus to the trigger")
+        }
+
+        function test_theme_chromatic_api() {
+            Signal.chromatic = null
+            compare(Theme.chromatic, null, "curated themes report no chromatic status")
+            Signal.chromatic = {"active": true, "variant": "balanced", "mode": "dark", "seeds": ["#D98A3A"], "fingerprint": "sha256:x"}
+            compare(Theme.chromatic.variant, "balanced")
+            verify(!("path" in Theme.chromatic), "status never carries a path")
+            const r = Theme.revision
+            Signal.paletteRevision = r + 1
+            compare(Theme.revision, r + 1, "revision follows settled palette changes")
+            verify(Theme.contrast("#000000", "#FFFFFF") > 20.9)
+            compare(Theme.contrast("#808080", "#808080"), 1)
+            const fixed = Theme.ensureContrast("#777777", "#808080", 4.5)
+            verify(Theme.contrast(fixed, "#808080") >= 4.5, "ensureContrast reaches the floor")
+            compare(String(Theme.ensureContrast("#FFFFFF", "#000000", 4.5)).toLowerCase(), "#ffffff", "passing colours are untouched")
         }
 
         function test_reduced_motion_inheritance() {

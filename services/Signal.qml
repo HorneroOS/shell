@@ -57,6 +57,10 @@ Singleton {
     // Number of palette steps applied by the last transition (test hook).
     property int transitionSteps: 0
     readonly property bool transitionActive: _tween.active
+    // Increments once per settled palette change (after the last tween
+    // step, never per step) and on the High Contrast switch; PluginKit
+    // exposes it as Theme.revision so canvases know when to repaint.
+    property int paletteRevision: 0
 
     signal builtInThemePersisted(string id, bool ok, string error)
 
@@ -286,6 +290,7 @@ Singleton {
         if (steps === 0) {
             transitionSteps = 0;
             _assign(target);
+            paletteRevision++;
             return;
         }
         _tween.start(from, target, steps);
@@ -533,6 +538,14 @@ Singleton {
         }
     }
 
+    Connections {
+        target: Config.appearance
+
+        function onHighContrastChanged(): void {
+            root.paletteRevision++;
+        }
+    }
+
     // OKLab palette tween: at most 12 steps, one Timer tick (20 ms) each.
     // Every tick assigns one interpolated frame to `current`; the final
     // tick assigns the exact target, so a tween can never leave the
@@ -555,8 +568,10 @@ Singleton {
             tweenState.step++;
             root._assign(Chromatic.frame(tweenState.from, tweenState.to, tweenState.step, tweenState.steps));
             root.transitionSteps = tweenState.step;
-            if (tweenState.step >= tweenState.steps)
+            if (tweenState.step >= tweenState.steps) {
                 tweenTimer.stop();
+                root.paletteRevision++;
+            }
         }
     }
 

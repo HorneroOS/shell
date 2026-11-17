@@ -33,6 +33,8 @@ UI_FILES = [
     "UiStack.qml",
     # Shared anchored-surface solver imported by UiTooltip/UiPopover.
     "Placement.js",
+    # Byte-identical copy of services/chromatic.js (Theme.contrast).
+    "Colour.js",
 ]
 
 
@@ -69,6 +71,8 @@ import QtQuick
 QtObject {{
     id: stub
     property bool light: false
+    property var chromatic: null
+    property int paletteRevision: 0
     readonly property QtObject palette: Palette {{}}
     component OnRoles: QtObject {{
 {on_props}

@@ -315,3 +315,8 @@ def test_specimen_renders_offscreen(tmp_path, experience, light):
     assert ", 0 failed" in text, text
     expected_glow = experience == "signal" and not light
     assert f"glow {experience} {str(expected_glow).lower()}" in text, text
+
+
+def test_pluginkit_colour_js_is_a_byte_copy_of_the_shell_model():
+    shell = (ROOT / "services/chromatic.js").read_bytes()
+    assert (KIT / "Colour.js").read_bytes() == shell, "re-copy services/chromatic.js to PluginKit/Colour.js"

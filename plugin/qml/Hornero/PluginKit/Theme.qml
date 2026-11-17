@@ -3,6 +3,7 @@ pragma Singleton
 import qs.config
 import qs.services
 import QtQuick
+import "Colour.js" as Colour
 
 // PluginKit 3 design tokens: Hornero Signal (RFC 0001 §3), exactly the
 // names the shell itself uses, so an extension is styled with the same
@@ -12,6 +13,16 @@ import QtQuick
 //                              panel raised lifted ink inkMuted inkFaint
 //                              rule ruleStrong focus signal onSignal
 //                              signalWell onSignalWell cue … glow
+//   Theme.chromatic            read-only status of the dynamic palette
+//                              ({active, variant, mode, seeds, fingerprint})
+//                              or null; never a wallpaper path
+//   Theme.revision             integer that increments once per settled
+//                              palette change (after a transition, not per
+//                              step); repaint canvases when it changes
+//   Theme.contrast(a, b)       WCAG contrast ratio of two colours
+//   Theme.ensureContrast(fg, bg, min)
+//                              fg moved in lightness only until it reaches
+//                              `min`:1 on bg (data-driven colours)
 //   Theme.font.family.<f>      sans | mono | display (IBM Plex)
 //   Theme.font.size.<s>        small 11 · smaller 12 · normal 13 ·
 //                              larger 15 · large 18 · extraLarge 28 ·
@@ -37,6 +48,19 @@ QtObject {
     readonly property var palette: Signal.palette
     readonly property bool light: Signal.light
     readonly property bool highContrast: Config.appearance.highContrast
+
+    // Hornero Chromatic (RFC 0002 §13.4). Null for curated themes and
+    // while High Contrast shows the protected table.
+    readonly property var chromatic: root.highContrast ? null : Signal.chromatic
+    readonly property int revision: Signal.paletteRevision
+
+    function contrast(a: color, b: color): real {
+        return Colour.contrast(Colour.toHex(a), Colour.toHex(b));
+    }
+
+    function ensureContrast(fg: color, bg: color, min: real): color {
+        return Colour.ensureContrast(Colour.toHex(fg), Colour.toHex(bg), min);
+    }
 
     readonly property var font: Appearance.font
     readonly property var rounding: Appearance.rounding

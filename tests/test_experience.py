@@ -579,3 +579,28 @@ def test_compositor_uses_the_bit_test_for_fullscreen_windows():
     comp = (ROOT / "services" / "Compositor.qml").read_text()
     assert "lastIpcObject.fullscreen === 2" not in comp
     assert comp.count("ExperienceModel.isFullscreenState(window.lastIpcObject.fullscreen)") == 2
+
+
+def test_hyprland_tuning_reaches_lua_only_hyprland_and_mirrors_the_legacy_keywords():
+    """Hyprland 0.55+ answers `keyword` with "unknown request"; the tuning must
+    also go through `eval hl.config(...)` and carry exactly the same values."""
+    game = (ROOT / "services" / "GameMode.qml").read_text()
+    lua = re.search(r'luaTuning: "(hl\.config\(.*\))"', game).group(1)
+    legacy = dict(re.findall(r'"([a-z_:]+)": (\d)', game))
+    assert 'Hypr.extras.message("eval " + luaTuning);' in game
+    assert "Hypr.extras.applyOptions({" in game  # pre-Lua Hyprland still works
+    expected = {
+        "animations:enabled": ("animations", "enabled", "false"),
+        "decoration:shadow:enabled": ("shadow", "enabled", "false"),
+        "decoration:blur:enabled": ("blur", "enabled", "false"),
+        "general:gaps_in": ("general", "gaps_in", "0"),
+        "general:gaps_out": ("general", "gaps_out", "0"),
+        "general:border_size": ("general", "border_size", "1"),
+        "decoration:rounding": ("decoration", "rounding", "0"),
+        "general:allow_tearing": ("general", "allow_tearing", "true"),
+    }
+    assert set(legacy) == set(expected)
+    for _key, (_group, name, value) in expected.items():
+        assert f"{name} = {value}" in lua, name
+    # Leaving gaming reloads the user's own config, which restores everything.
+    assert 'Hypr.extras.message("reload");' in game

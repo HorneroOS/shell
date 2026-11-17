@@ -16,8 +16,8 @@ PRESETS = sorted((ROOT / "presets").glob("*.json"))
 CALIBRATION = {
     "classic-top": {"top": ("attached", 36, 6)},
     "classic-bottom": {"bottom": ("attached", 36, 6)},
-    "cockpit": {"top": ("inset", 34, 6), "bottom": ("inset", 26, 6)},
-    "cockpit-clear": {"top": ("inset", 34, 6), "bottom": ("inset", 26, 6)},
+    "cockpit": {"top": ("inset", 42, 18), "bottom": ("attached", 28, 0)},
+    "cockpit-clear": {"top": ("attached", 46, 0), "bottom": ("attached", 30, 0)},
     "horizon": {"top": ("inset", 34, 6), "bottom": ("inset", 26, 6)},
     "islands": {"top": ("islands", 36, 8)},
     "floating-island": {"top": ("floating", 34, 10)},
@@ -49,8 +49,9 @@ def test_every_preset_matches_its_calibration(path):
         elif bar["edge"] in ("left", "right"):
             assert 44 <= bar["thickness"] <= 64
         else:
-            assert 26 <= bar["thickness"] <= 36, (path.stem, bar["edge"])
-        assert bar["margin"] <= 10
+            assert 26 <= bar["thickness"] <= 46, (path.stem, bar["edge"])
+        assert bar["margin"] <= 18
+        assert bar.get("radius", 0) <= 12
     assert 22 <= data["bar"]["sizes"]["innerWidth"] <= 46
     assert 1.0 <= data["bar"]["sizes"].get("contentScale", 1.0) <= 1.3
     if "border" in data:
@@ -69,7 +70,9 @@ def test_hornero_rails_are_generous_but_other_bars_stay_slim():
         assert sizes["innerWidth"] >= 40 and sizes["contentScale"] >= 1.2
     horizontals = [v[1] for n, bars in CALIBRATION.items() for e, v in bars.items()
                    if e in ("top", "bottom") and v[0] != "dock"]
-    assert max(horizontals) <= 36 and min(horizontals) >= 26
+    cockpit = {"cockpit", "cockpit-clear"}
+    others = [v[1] for n, bars in CALIBRATION.items() if n not in cockpit for e, v in bars.items() if e in ("top", "bottom") and v[0] != "dock"]
+    assert max(others) <= 36 and min(others) >= 26
 
 
 def test_bar_body_has_no_extra_padding():

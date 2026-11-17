@@ -11,7 +11,7 @@
       {
         "edge": "top",
         "style": "inset",
-        "margin": 6,
+        "margin": 18,
         "groups": {
           "start": [
             {
@@ -81,14 +81,15 @@
           ]
         },
         "reserve": true,
-        "thickness": 34,
+        "thickness": 42,
         "density": "values",
-        "backdrop": "solid"
+        "backdrop": "solid",
+        "radius": 11
       },
       {
         "edge": "bottom",
-        "style": "inset",
-        "thickness": 26,
+        "style": "attached",
+        "thickness": 28,
         "groups": {
           "start": [
             {
@@ -118,7 +119,7 @@
           ]
         },
         "reserve": true,
-        "margin": 6,
+        "margin": 0,
         "density": "values",
         "backdrop": "solid"
       }

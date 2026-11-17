@@ -176,6 +176,15 @@ ColumnLayout {
             onValueModified: value => root.setField("margin", value)
         }
 
+        SpinBoxRow {
+            label: qsTr("Corner radius (px, -1 = style default)")
+            value: root.bar?.radius ?? Geo.LIMITS.radius.fallback
+            min: Geo.LIMITS.radius.min
+            max: Geo.LIMITS.radius.max
+            step: Geo.LIMITS.radius.step
+            onValueModified: value => root.setField("radius", value)
+        }
+
         StyledText {
             text: qsTr("Style")
             color: Signal.palette.inkMuted

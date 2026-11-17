@@ -169,8 +169,8 @@
         "edge": "top",
         "style": "inset",
         "reserve": true,
-        "margin": 6,
-        "thickness": 34,
+        "margin": 18,
+        "thickness": 42,
         "density": "values",
         "backdrop": "solid",
         "groups": {
@@ -247,14 +247,15 @@
               "options": {}
             }
           ]
-        }
+        },
+        "radius": 11
       },
       {
         "edge": "bottom",
-        "style": "inset",
+        "style": "attached",
         "reserve": true,
-        "margin": 6,
-        "thickness": 26,
+        "margin": 0,
+        "thickness": 28,
         "density": "values",
         "backdrop": "solid",
         "groups": {

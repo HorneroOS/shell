@@ -41,7 +41,9 @@ StyledRect {
     radius: Appearance.rounding.small
     color: Signal.palette.panel
     border.width: 1
-    border.color: root.modelData.type === Toast.Error ? root.tone : Signal.palette.rule
+    // Every severity shares the same 1 px rule edge and 2 px status bar;
+    // an error differs by tone and the `Error` word, never a heavier frame.
+    border.color: Signal.palette.rule
 
     Accessible.role: Accessible.AlertMessage
     Accessible.name: `${root.word}: ${root.modelData.title}`
@@ -115,7 +117,4 @@ StyledRect {
         }
     }
 
-    Behavior on border.color {
-        CAnim {}
-    }
 }

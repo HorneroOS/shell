@@ -743,17 +743,18 @@
       "toastWidth": 430
     },
     "toasts": {
-      "configLoaded": true,
+      "configLoaded": false,
       "chargingChanged": true,
       "dndChanged": true,
       "audioOutputChanged": true,
       "audioInputChanged": true,
       "capsLockChanged": true,
-      "numLockChanged": true,
+      "numLockChanged": false,
       "kbLayoutChanged": true,
       "kbLimit": true,
       "vpnChanged": true,
-      "nowPlaying": false
+      "nowPlaying": false,
+      "routineQuiet": true
     },
     "vpn": {
       "enabled": false,

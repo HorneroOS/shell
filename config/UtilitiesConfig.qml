@@ -14,17 +14,22 @@ JsonObject {
     }
 
     component Toasts: JsonObject {
-        property bool configLoaded: true
+        // Routine notices stay out of the way unless the user opts in:
+        // errors still toast regardless.
+        property bool configLoaded: false
         property bool chargingChanged: true
         property bool dndChanged: true
         property bool audioOutputChanged: true
         property bool audioInputChanged: true
         property bool capsLockChanged: true
-        property bool numLockChanged: true
+        property bool numLockChanged: false
         property bool kbLayoutChanged: true
         property bool kbLimit: true
         property bool vpnChanged: true
         property bool nowPlaying: false
+        // Set once the one-shot quiet-routine migration has run, so a
+        // later opt-in to a routine toast is never reset.
+        property bool routineQuiet: false
     }
 
     component Vpn: JsonObject {

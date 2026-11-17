@@ -20,12 +20,15 @@ Item {
     required property real sourceVolume
     required property bool sourceMuted
     required property real brightness
+    // The one channel that just changed: "out", "mic" or "bri". Only that
+    // strip is drawn, so a volume change never shows brightness.
+    property string channel: "out"
 
-    implicitWidth: layout.implicitWidth + 24
-    implicitHeight: layout.implicitHeight + 24
+    implicitWidth: layout.implicitWidth + 16
+    implicitHeight: layout.implicitHeight + 16
 
-    // Channel strips side by side: glyph, vertical segmented meter,
-    // tabular value. Values above 100 % (boosted volume) turn `signal`.
+    // One channel strip: glyph, vertical segmented meter, tabular value.
+    // Values above 100 % (boosted volume) turn `signal`.
     Row {
         id: layout
 
@@ -34,7 +37,7 @@ Item {
 
         // Speaker volume
         Channel {
-            shown: true
+            shown: root.channel === "out"
             label: qsTr("OUT")
             glyph: Icons.getVolumeIcon(root.volume, root.muted)
             muted: root.muted
@@ -47,6 +50,7 @@ Item {
                 value: root.volume
                 to: Config.services.maxVolume
                 threshold: 1 / Config.services.maxVolume
+                count: 20
                 onMoved: v => Audio.setVolume(v)
             }
 
@@ -55,7 +59,7 @@ Item {
 
         // Microphone volume
         Channel {
-            shown: Config.osd.enableMicrophone && (!Config.osd.enableBrightness || !root.visibilities.session)
+            shown: root.channel === "mic" && Config.osd.enableMicrophone
             label: qsTr("MIC")
             glyph: Icons.getMicVolumeIcon(root.sourceVolume, root.sourceMuted)
             muted: root.sourceMuted
@@ -68,6 +72,7 @@ Item {
                 value: root.sourceVolume
                 to: Config.services.maxVolume
                 threshold: 1 / Config.services.maxVolume
+                count: 20
                 onMoved: v => Audio.setSourceVolume(v)
             }
 
@@ -76,7 +81,7 @@ Item {
 
         // Brightness
         Channel {
-            shown: Config.osd.enableBrightness && (root.monitor?.available ?? false)
+            shown: root.channel === "bri" && Config.osd.enableBrightness && (root.monitor?.available ?? false)
             label: qsTr("BRI")
             glyph: root.brightness < 0.34 ? "brightness-down" : root.brightness < 0.67 ? "brightness-half" : "brightness-up"
 
@@ -90,6 +95,7 @@ Item {
             Instruments.SegmentSlider {
                 anchors.fill: parent
                 accessibleName: qsTr("Brightness")
+                count: 20
                 value: root.brightness
                 onMoved: v => root.monitor?.setBrightness(v)
             }
@@ -111,7 +117,7 @@ Item {
 
         visible: shown || opacity > 0
         opacity: shown ? 1 : 0
-        implicitWidth: shown ? 52 : 0
+        implicitWidth: shown ? 40 : 0
         implicitHeight: col.implicitHeight
         clip: true
 
@@ -165,7 +171,7 @@ Item {
 
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: 12
-                height: Config.osd.sizes.sliderHeight - 30
+                height: Config.osd.sizes.sliderHeight - 50
             }
 
             Glyph {

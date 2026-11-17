@@ -28,3 +28,15 @@ def test_section_controls_are_keyboard_reachable_and_named():
     assert "activeFocusOnTab" in gallery and "Qt.Key_Space" in gallery and "Accessible.checked" in gallery
     assert section.count("accessibleName:") >= 4
     assert "Component.onDestruction: ChromaticPreview.previewLive(false)" in section
+
+
+def test_chromatic_theme_is_never_reported_as_a_missing_saved_theme():
+    text = (APP / "sections" / "ThemesSection.qml").read_text()
+    assert 'Signal.themeId !== "hornero-chromatic" && !Themes.themeById(Signal.themeId)' in text
+    assert 'Signal.themeId !== "hornero-chromatic" && (!Signal.themeId || savedThemeMissing)' in text
+
+
+def test_chromatic_section_opens_by_default_when_active_and_remembers_collapse():
+    pane = (APP / "AppearancePane.qml").read_text()
+    assert 'Config.appearance.theme === "hornero-chromatic" && !root.isSectionExpanded("chromatic:closed")' in pane
+    assert 'root.persistSection("chromatic:closed", !expanded)' in pane

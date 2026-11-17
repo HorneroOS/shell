@@ -198,9 +198,46 @@ function isVideoPath(path) {
     return !!m && VIDEO_EXT.indexOf(m[1].toLowerCase()) >= 0;
 }
 
-// Parse the helper's `generate` document. Returns {ok, result} or
-// {ok: false, error}. Unknown fields are ignored; a missing or incomplete
-// scheme is an error (nothing is ever previewed from a partial document).
+// Request object for the in-process engine (Hornero.Chromatic
+// ChromaticEngine.generate): the RFC §8.3 keys plus `path` and
+// `currentMode`. Null when the request has no usable source.
+function engineRequest(req, wallpaper, perMode) {
+    var variant = effectiveVariant(req, perMode);
+    var path = "";
+    if (req.source === "wallpaper") {
+        if (!wallpaper)
+            return null;
+        path = wallpaper;
+    } else if (req.source === "image") {
+        if (!req.path)
+            return null;
+        path = req.path;
+    } else if (req.source === "seed") {
+        if (req.seeds.length === 0)
+            return null;
+    } else if (wallpaper) {
+        path = wallpaper;
+    }
+    return {
+        source: req.source,
+        path: path,
+        seeds: req.seeds,
+        variant: variant,
+        mode: req.mode,
+        contrast: req.contrast,
+        surfaceDepth: req.surfaceDepth,
+        chroma: req.chroma,
+        hueShift: req.hueShift,
+        currentMode: req.currentMode
+    };
+}
+
+// In-process engine failure code to the helper exit code it stands for.
+function engineFailureExit(code) {
+    return code === "source-unreadable" ? 3 : code === "usage" ? 2 : 5;
+}
+
+// Parse the helper's `generate` document (JSON text).
 function parseGenerate(text) {
     var doc = null;
     try {
@@ -208,6 +245,14 @@ function parseGenerate(text) {
     } catch (e) {
         return { ok: false, error: "helper printed invalid JSON" };
     }
+    return parseDocument(doc);
+}
+
+// Normalise a generate document (helper stdout or in-process result).
+// Returns {ok, result} or {ok: false, error}. Unknown fields are ignored;
+// a missing or incomplete scheme is an error (nothing is ever previewed
+// from a partial document).
+function parseDocument(doc) {
     if (!doc || doc.schemaVersion !== 1 || !doc.scheme || !doc.scheme.palette)
         return { ok: false, error: "helper document has no scheme" };
     var rows = [];

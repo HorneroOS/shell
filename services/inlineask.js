@@ -22,13 +22,23 @@ function parseLine(line) {
     } catch (e) {
         obj = null;
     }
-    if (!obj)
+    if (!obj || typeof obj !== "object")
         return { kind: "ignore" };
     if (obj.type === "delta")
         return obj.text ? { kind: "delta", text: obj.text.toString() } : { kind: "ignore" };
     if (obj.type === "thinking" || obj.type === "tool" || obj.type === "commentary")
         return { kind: "trace" };
-    return { kind: "final", payload: obj };
+    // Typed run-control frames (horneroctl): the run id as soon as
+    // it exists, and the moment the gateway asks for a decision.
+    if (obj.type === "run")
+        return obj.text ? { kind: "run", runId: obj.text.toString() } : { kind: "ignore" };
+    if (obj.type === "approval" || obj.type === "clarify")
+        return { kind: "pending", pending: obj.type };
+    // The final CommandResult always carries a boolean `ok`; any
+    // other typed frame is forward-compat noise, never a result.
+    if (typeof obj.ok === "boolean")
+        return { kind: "final", payload: obj };
+    return { kind: "ignore" };
 }
 
 // Applies one streamed line to { text, finalPayload } and returns
@@ -37,12 +47,29 @@ function applyLine(state, line, cap) {
     var limit = (typeof cap === "number" && cap > 0) ? cap : TEXT_CAP;
     var text = state && state.text ? state.text.toString() : "";
     var finalPayload = state && state.finalPayload !== undefined ? state.finalPayload : null;
+    var runId = state && state.runId ? state.runId.toString() : "";
+    var pending = state && state.pending ? state.pending.toString() : "";
     var parsed = parseLine(line);
     if (parsed.kind === "delta")
         text = (text + parsed.text).slice(-limit);
     else if (parsed.kind === "final")
         finalPayload = parsed.payload;
-    return { text: text, finalPayload: finalPayload };
+    else if (parsed.kind === "run")
+        runId = parsed.runId;
+    else if (parsed.kind === "pending" && pending === "")
+        pending = parsed.pending;
+    return { text: text, finalPayload: finalPayload, runId: runId, pending: pending };
+}
+
+// A quick (Level A) question never acts. When the gateway asks for a
+// decision, or the mode blocks a tool, the quick surface does not
+// answer: it offers an explicit hand-off to the Workbench.
+function needsWorkbench(pending, finalPayload) {
+    if (pending === "approval" || pending === "clarify")
+        return true;
+    var d = finalPayload && finalPayload.data ? finalPayload.data : null;
+    var p = d && d.pending ? d.pending.toString() : "";
+    return p === "approval" || p === "clarify" || p === "denied-by-mode";
 }
 
 // Classifies a finished run. failed=true means the inline ask

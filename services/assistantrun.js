@@ -422,7 +422,7 @@ function intentToState(intent) {
 // the run state to combine with (or null). Never reports "sandboxed"
 // unless the backend said bubblewrap.
 function gatewayView(payload) {
-    var view = { connection: "unknown", enabled: false, reachable: false, compatible: false, isolation: "unknown", sandboxed: false, detail: "" };
+    var view = { connection: "unknown", enabled: false, reachable: false, compatible: false, isolation: "unknown", sandboxed: false, workspace: "", detail: "" };
     if (!payload || typeof payload !== "object")
         return Object.assign(view, { connection: "disconnected", detail: "horneroctl assistant unavailable" });
     var d = payload.data || {};
@@ -433,6 +433,7 @@ function gatewayView(payload) {
         return view;
     }
     view.reachable = d.gateway === "reachable";
+    view.workspace = d.workspace ? d.workspace.toString() : "";
     view.compatible = d.protocol === "compatible";
     if (d.isolation) {
         view.isolation = d.isolation.toString();

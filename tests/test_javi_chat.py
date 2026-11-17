@@ -10,6 +10,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 COMPANION = ROOT / "modules" / "companion"
 BRIDGE = (COMPANION / "AssistantBridge.qml").read_text()
+RUNJS = (ROOT / "services" / "assistantrun.js").read_text()
+CARD = (COMPANION / "ApprovalCard.qml").read_text()
 PANEL = (COMPANION / "ChatPanel.qml").read_text()
 STORE = (COMPANION / "CompanionStore.qml").read_text()
 PANE = (ROOT / "modules" / "controlcenter" / "companion" / "CompanionPane.qml").read_text()
@@ -18,12 +20,12 @@ REGISTRY = (ROOT / "modules" / "controlcenter" / "PaneRegistry.qml").read_text()
 
 def test_bridge_streams_ndjson_deltas():
     assert '"--stream"' in BRIDGE
-    assert 'obj.type === "delta"' in BRIDGE
+    assert 'type === "delta"' in RUNJS
     assert "streamText" in BRIDGE
 
 
 def test_bridge_uses_structured_pending_not_prose():
-    assert 'data.pending' in BRIDGE or '(payload.data.pending' in BRIDGE or 'payload.data && (payload.data.pending' in BRIDGE
+    assert "d.pending" in RUNJS and "d.runId" in RUNJS
     assert "pendingClarify" in BRIDGE
 
 
@@ -53,7 +55,8 @@ def test_bridge_never_talks_to_gateway_directly():
 def test_panel_is_javi_retrofuturist():
     assert "JAVI · EL HORNERO" in PANEL
     assert "199X" in PANEL
-    assert "scanline" in PANEL.lower()
+    assert "scanline" in PANEL.lower()  # header accent only
+    assert "Repeater {\n                    model: 160" not in PANEL  # no constant full-card scanlines
     assert 'Companion.frameSource(CompanionStore.skin, "idle")' in PANEL  # avatar follows skin
     assert "Appearance.font.family.mono" in PANEL  # mono micro-labels
     assert "reducedMotion" in PANEL  # scanline/pulse honors reduced motion
@@ -69,7 +72,7 @@ def test_panel_input_voice_attach_clarify():
     assert '"microphone"' in PANEL
     assert '"paperclip"' in PANEL
     assert "pendingClarify" in PANEL
-    assert "pendingApproval" in PANEL
+    assert "ApprovalCard" in PANEL
     assert "sugerencias" not in PANEL  # chips are translatable strings, not hardcoded ES
     assert "Retry last" in PANEL
 
@@ -93,8 +96,8 @@ def test_bridge_sessions_and_panel_bar():
 def test_chat_activity_trace_ui_and_bridge():
     bridge = (ROOT / "modules/companion/AssistantBridge.qml").read_text()
     assert "traceText" in bridge
-    assert 'obj.type === "thinking"' in bridge
-    assert 'obj.type === "tool"' in bridge
+    assert 'type === "thinking"' in RUNJS
+    assert 'type === "tool"' in RUNJS
     assert "pushHistoryTraced" in bridge
     panel = (ROOT / "modules/companion/ChatPanel.qml").read_text()
     assert "ACTIVITY TRACE · LIVE" in panel

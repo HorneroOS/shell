@@ -36,11 +36,19 @@ Singleton {
 
     signal intent(string name, string companionState, string runId)
 
+    // Last companion state emitted: identical consecutive states
+    // (one `speaking` per streamed delta) are not re-announced.
+    property string lastEmittedState: ""
+
     function apply(result: var): void {
         root.run = result.state;
         for (let i = 0; i < result.intents.length; i++) {
             const name = result.intents[i].intent;
-            root.intent(name, Run.intentToState(name), result.state.runId);
+            const st = Run.intentToState(name);
+            if (st === root.lastEmittedState)
+                continue;
+            root.lastEmittedState = st;
+            root.intent(name, st, result.state.runId);
         }
     }
 

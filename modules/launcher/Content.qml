@@ -205,6 +205,13 @@ Item {
                         // central Escape cascade) cancels any
                         // in-flight inline ask.
                         InlineAsk.cancel();
+                    } else if (InlineAsk.prefill !== "") {
+                        // `companion quick [text]`: open straight into
+                        // the inline ask. Only prefills; the user still
+                        // presses Enter to send.
+                        const q = InlineAsk.prefill === " " ? "" : InlineAsk.prefill;
+                        InlineAsk.prefill = "";
+                        search.text = `${Config.launcher.actionPrefix}ai ${q}`;
                     }
                 }
 

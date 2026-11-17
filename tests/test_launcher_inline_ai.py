@@ -119,8 +119,12 @@ def test_inline_ask_uses_only_existing_horneroctl_stream_contract():
     assert '"assistant", "approve"' not in INLINE_QML
     assert '"assistant", "clarify"' not in INLINE_QML
     assert '"--attach"' not in INLINE_QML
-    # Documented gap: horneroctl has no --mode flag to invent here.
-    assert '"--mode"' not in INLINE_QML
+    # Read-only by contract: the quick ask always runs in Ask mode
+    # (fails closed on a horneroctl too old to know the flag).
+    assert '"--mode", "ask"' in INLINE_QML
+    # Quick never escalates: a pending request ends the run and
+    # hands off explicitly to the Workbench.
+    assert "needsWorkbench" in INLINE_QML and "openInWorkbench" in INLINE_QML
 
 
 def test_inline_ask_cancel_and_new_query_semantics():
@@ -187,3 +191,21 @@ def test_ai_row_shows_thinking_and_streamed_text():
     assert "InlineAsk.errorText" in AI_ITEM
     assert "InlineAsk.ask(root.question)" in AI_ITEM
     assert "InlineAsk.stop()" in AI_ITEM
+
+
+# --- Quick surface never escalates (typed frames) ---------------------
+
+def test_run_frame_is_tracked_and_never_mistaken_for_the_final_result():
+    out = _apply(['{"type":"run","text":"run_q"}', '{"type":"delta","text":"x"}'])
+    assert out["runId"] == "run_q" and out["finalPayload"] is None
+
+
+def test_unknown_typed_frames_are_not_a_final_payload():
+    out = _apply(['{"type":"future.thing","text":"x"}'])
+    assert out["finalPayload"] is None
+
+
+def test_pending_frames_mark_the_run_and_need_the_workbench():
+    out = _apply(['{"type":"run","text":"r"}', '{"type":"approval","text":"rm x"}'])
+    assert out["pending"] == "approval"
+    assert _run_js("console.log(JSON.stringify([needsWorkbench('approval',null),needsWorkbench('clarify',null),needsWorkbench('',{data:{pending:'denied-by-mode'}}),needsWorkbench('',{ok:true,data:{}})]))") == [True, True, True, False]

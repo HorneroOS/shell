@@ -25,8 +25,17 @@ Item {
 
     property int dotPhase: 0
 
+    readonly property int cardWidth: 392
+    readonly property string lang: root.bridge.lang
+
+    function t(key: string): string {
+        return AssistantCopy.t(key, root.lang);
+    }
+
     visible: root.bridge.chatOpen
-    implicitWidth: 392
+    // Level C expands the same panel to the right; the layer surface
+    // is remapped by the host when `workbenchOpen` changes.
+    implicitWidth: root.cardWidth + (root.bridge.workbenchOpen ? bench.implicitWidth + Appearance.spacing.normal : 0)
     implicitHeight: card.implicitHeight
 
     Behavior on opacity {
@@ -45,6 +54,15 @@ Item {
         onTriggered: root.dotPhase = (root.dotPhase + 1) % 4
     }
 
+    function statusColor(): color {
+        const st = AssistantRun.status;
+        if (st === "connected")
+            return Signal.palette.signal;
+        if (st === "running")
+            return Signal.palette.phosphor;
+        return st === "unknown" ? Signal.palette.inkMuted : Signal.palette.alert;
+    }
+
     function focusInput(): void {
         input.focusInput();
     }
@@ -60,35 +78,13 @@ Item {
     StyledRect {
         id: card
 
-        width: root.implicitWidth
+        width: root.cardWidth
         implicitHeight: layout.implicitHeight + Appearance.padding.large * 2
         radius: Appearance.rounding.small
         color: Signal.palette.panel
         // Hornero 199X frame: a phosphor accent edge around the card.
         border.width: 1
         border.color: Qt.alpha(Signal.palette.phosphor, 0.55)
-
-        // Static CRT scanlines over the whole card (texture only —
-        // no animation, so reduced-motion is honored by construction).
-        Item {
-            anchors.fill: parent
-            clip: true
-
-            Column {
-                anchors.fill: parent
-                spacing: 3
-
-                Repeater {
-                    model: 160
-
-                    Rectangle {
-                        width: card.width
-                        height: 1
-                        color: Qt.alpha(Signal.palette.ink, 0.035)
-                    }
-                }
-            }
-        }
 
         ColumnLayout {
             id: layout
@@ -154,10 +150,14 @@ Item {
                     }
 
                     StyledText {
-                        text: root.bridge.busy ? qsTr("pensando") + ".".repeat(root.dotPhase) : (root.bridge.gatewayReachable ? qsTr("Hermes conectado") : qsTr("Hermes no disponible"))
+                        // One honest status from the canonical state
+                        // (connected / disconnected / running / blocked /
+                        // awaiting approval / failed / degraded).
+                        text: root.t("status." + (AssistantRun.probing && AssistantRun.status === "disconnected" ? "reconnecting" : AssistantRun.status)) + (root.bridge.busy ? ".".repeat(root.dotPhase) : "")
                         font.family: Appearance.font.family.mono
                         font.pointSize: Appearance.font.size.smaller
-                        color: root.bridge.gatewayReachable ? Signal.palette.signal : Signal.palette.alert
+                        color: root.statusColor()
+                        elide: Text.ElideRight
                     }
                 }
 
@@ -170,8 +170,16 @@ Item {
                     implicitWidth: 9
                     implicitHeight: 9
                     radius: 5
-                    color: root.bridge.busy ? Signal.palette.phosphor : root.bridge.gatewayReachable ? Signal.palette.signal : Signal.palette.alert
+                    color: root.statusColor()
                     opacity: root.bridge.busy && !CompanionStore.reducedMotion ? (root.dotPhase % 2 === 0 ? 1 : 0.35) : 1
+                }
+
+                IconButton {
+                    icon: root.bridge.workbenchOpen ? "arrows-minimize" : "layout-sidebar-right"
+                    accessibleName: root.t(root.bridge.workbenchOpen ? "workbench.collapse" : "workbench.expand")
+                    type: IconButton.Text
+                    checked: root.bridge.workbenchOpen
+                    onClicked: root.bridge.workbenchOpen = !root.bridge.workbenchOpen
                 }
 
                 IconButton {
@@ -196,6 +204,31 @@ Item {
                 implicitHeight: 2
                 color: Qt.alpha(Signal.palette.signal, CompanionStore.reducedMotion ? 0.25 : 0.45)
                 radius: 1
+            }
+
+            // -- Connection banner: only when something needs attention
+            RowLayout {
+                Layout.fillWidth: true
+                visible: AssistantRun.status === "disconnected" || AssistantRun.status === "degraded" || AssistantRun.status === "disabled" || AssistantRun.status === "degraded-isolation"
+                spacing: Appearance.spacing.small
+
+                StyledText {
+                    Layout.fillWidth: true
+                    Layout.minimumWidth: 0
+                    text: AssistantRun.status === "disabled" ? root.t("error.disabled") : AssistantRun.status === "degraded-isolation" ? qsTr("The gateway is not sandboxed. Approvals matter more.") : root.bridge.statusMessage
+                    textFormat: Text.PlainText
+                    font.family: Appearance.font.family.mono
+                    font.pointSize: Appearance.font.size.smaller
+                    color: Signal.palette.alert
+                    wrapMode: Text.Wrap
+                }
+
+                TextButton {
+                    visible: AssistantRun.status === "disconnected"
+                    text: root.t("action.reconnect")
+                    type: TextButton.Tonal
+                    onClicked: root.bridge.refreshStatus()
+                }
             }
 
             // -- Session bar (hornero#189): named chats + model -----
@@ -481,46 +514,11 @@ Item {
                 }
             }
 
-            // -- Pending approval card ---------------------------------
-            ColumnLayout {
-                Layout.fillWidth: true
-                visible: root.bridge.pendingApproval !== null
-                spacing: Appearance.spacing.small
-
-                StyledText {
-                    Layout.fillWidth: true
-                    text: qsTr("Javi necesita tu OK:")
-                    font.family: Appearance.font.family.mono
-                    font.pointSize: Appearance.font.size.smaller
-                    color: Signal.palette.alert
-                }
-
-                StyledText {
-                    Layout.fillWidth: true
-                    text: root.bridge.pendingApproval ? root.bridge.pendingApproval.detail : ""
-                    font.pointSize: Appearance.font.size.small
-                    color: Signal.palette.ink
-                    wrapMode: Text.Wrap
-                }
-
-                RowLayout {
-                    spacing: Appearance.spacing.small
-
-                    TextButton {
-                        text: qsTr("Approve")
-                        type: TextButton.Filled
-                        onClicked: root.bridge.approve(root.bridge.pendingApproval.runId, "approve")
-                    }
-
-                    TextButton {
-                        text: qsTr("Deny")
-                        type: TextButton.Tonal
-                        onClicked: root.bridge.approve(root.bridge.pendingApproval.runId, "deny")
-                    }
-                }
+            // -- Pending approval / clarification --------------------
+            ApprovalCard {
+                bridge: root.bridge
             }
 
-            // -- Pending clarification card ----------------------------
             ColumnLayout {
                 Layout.fillWidth: true
                 visible: root.bridge.pendingClarify !== null
@@ -528,7 +526,16 @@ Item {
 
                 StyledText {
                     Layout.fillWidth: true
+                    text: root.t("clarify.title")
+                    font.family: Appearance.font.family.mono
+                    font.pointSize: Appearance.font.size.smaller
+                    color: Signal.palette.alert
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
                     text: root.bridge.pendingClarify ? root.bridge.pendingClarify.detail : ""
+                    textFormat: Text.PlainText
                     font.pointSize: Appearance.font.size.small
                     color: Signal.palette.ink
                     wrapMode: Text.Wrap
@@ -552,8 +559,9 @@ Item {
                     }
 
                     TextButton {
-                        text: qsTr("Answer")
+                        text: root.t("clarify.send")
                         type: TextButton.Filled
+                        enabled: !root.bridge.decisionBusy
                         onClicked: {
                             if (root.bridge.pendingClarify) {
                                 root.bridge.clarify(root.bridge.pendingClarify.runId, clarifyInput.text);
@@ -646,15 +654,51 @@ Item {
                     onClicked: root.bridge.copyLastAnswer()
                 }
 
+            }
+
+            // -- Microphone status: explicit, cancellable ---------------
+            RowLayout {
+                Layout.fillWidth: true
+                visible: root.bridge.recording
+                spacing: Appearance.spacing.small
+
+                Rectangle {
+                    implicitWidth: 9
+                    implicitHeight: 9
+                    radius: 5
+                    color: Signal.palette.alert
+                }
+
                 StyledText {
-                    visible: root.bridge.recording
-                    text: qsTr("● Grabando… tocá el mic para enviar")
+                    Layout.fillWidth: true
+                    text: root.t("mic.recording") + "  " + Math.floor(root.bridge.recordSeconds / 60) + ":" + ("0" + (root.bridge.recordSeconds % 60)).slice(-2) + " / 2:00"
                     font.family: Appearance.font.family.mono
                     font.pointSize: Appearance.font.size.smaller
                     color: Signal.palette.alert
                 }
+
+                TextButton {
+                    text: root.t("mic.cancel")
+                    type: TextButton.Tonal
+                    onClicked: root.bridge.stopRecording(false)
+                }
+
+                TextButton {
+                    text: root.t("mic.send")
+                    type: TextButton.Filled
+                    onClicked: root.bridge.stopRecording(true)
+                }
             }
         }
+    }
+
+    WorkbenchPane {
+        id: bench
+
+        visible: root.bridge.workbenchOpen
+        bridge: root.bridge
+        x: root.cardWidth + Appearance.spacing.normal
+        height: card.implicitHeight
     }
 
     // File picker: kdialog is the Hornero-standard picker backend on

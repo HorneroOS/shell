@@ -13,15 +13,13 @@ import QtQuick
 // clarifications are NOT answered here -- the final payload says so and
 // the user continues in the Javi chat panel.
 //
-// Ask-mode contract and its documented gap: the inline ask is
-// read-only by construction (it never approves, clarifies, attaches
-// or executes anything itself, and pending gateway requests surface
-// as the Javi-chat fallback). horneroctl exposes no `--mode` flag in
-// its assistant contract (parse_assistant rejects unknown flags), so
-// the shell cannot ask the gateway to suppress tool use for this
-// consumer; gateway runs that would need a decision simply return a
-// pending payload, which this surface never answers. See
-// docs/LAUNCHER.md, "Inline AI".
+// Ask-mode contract: the inline ask is read-only by construction. It
+// runs `--mode ask` (horneroctl auto-denies approvals and stops any
+// run that tries a tool in that mode), never approves, clarifies,
+// attaches or executes anything itself, and a pending gateway request
+// ends the quick run and offers an EXPLICIT hand-off to the Workbench
+// (`needsWorkbench`). A quick question never silently escalates to
+// agent operations. See docs/LAUNCHER.md, "Inline AI".
 //
 // Privacy: the question and answer are never logged (no console
 // output anywhere on this path), no network endpoint is added, and
@@ -39,6 +37,14 @@ Singleton {
     // True when a run ended without an answer: the row offers the
     // previous summon-Javi behaviour instead of a dead end.
     property bool failed: false
+    // Quick questions never act: when the gateway asks for a decision
+    // (or the read-only mode blocks a tool) the run is stopped and the
+    // row offers an explicit hand-off to the Workbench instead.
+    property bool needsWorkbench: false
+    property string runId: ""
+    property string pending: ""
+    // Set by `companion quick`: the launcher opens with this query.
+    property string prefill: ""
 
     readonly property int textCap: InlineAskLogic.TEXT_CAP
 
@@ -53,8 +59,14 @@ Singleton {
         root.errorText = "";
         root.finalPayload = null;
         root.failed = false;
+        root.needsWorkbench = false;
+        root.runId = "";
+        root.pending = "";
         root.busy = true;
-        proc.command = ["horneroctl", "assistant", "ask", q, "--json", "--stream"];
+        // `--mode ask` is the read-only contract (hornero#414/#415):
+        // fail closed rather than fall back to the agent default when
+        // horneroctl is too old to know the flag.
+        proc.command = ["horneroctl", "assistant", "ask", q, "--json", "--stream", "--mode", "ask"];
         proc.running = true;
     }
 
@@ -84,15 +96,45 @@ Singleton {
             list.visibilities.launcher = false;
     }
 
+    // Explicit user hand-off (click on the row): same question in the
+    // Workbench, where approvals/attachments/long runs belong.
+    function openInWorkbench(list: var): void {
+        const q = root.askedPrompt.trim();
+        if (q === "")
+            return;
+        Quickshell.execDetached(["quickshell", "ipc", "call", "companion", "workbench", q]);
+        if (list)
+            list.visibilities.launcher = false;
+    }
+
     function consume(line: string): void {
         if (!root.busy)
             return;
         const next = InlineAskLogic.applyLine({
             "text": root.text,
-            "finalPayload": root.finalPayload
+            "finalPayload": root.finalPayload,
+            "runId": root.runId,
+            "pending": root.pending
         }, line, root.textCap);
         root.text = next.text;
         root.finalPayload = next.finalPayload;
+        root.runId = next.runId;
+        if (next.pending !== "" && root.pending === "") {
+            root.pending = next.pending;
+            root.needsWorkbench = true;
+            // Do not leave a blocked run waiting: stop it server-side
+            // (this is a stop, never an approval) and end the stream.
+            if (root.runId !== "")
+                stopProc.running = true;
+            proc.running = false;
+            root.busy = false;
+        }
+    }
+
+    Process {
+        id: stopProc
+
+        command: ["horneroctl", "assistant", "stop", root.runId, "--json"]
     }
 
     Process {
@@ -108,6 +150,7 @@ Singleton {
             if (!root.busy)
                 return;
             root.busy = false;
+            root.needsWorkbench = InlineAskLogic.needsWorkbench(root.pending, root.finalPayload);
             const outcome = InlineAskLogic.finishOutcome(root.text, root.finalPayload, root.textCap);
             root.text = outcome.text;
             root.failed = outcome.failed;

@@ -451,6 +451,16 @@ Scope {
                     if (assistantBridge.chatOpen)
                         focusTimer.restart();
                 }
+
+                // Level C expands the same panel: the layer surface
+                // takes its size at map time, so remap on change.
+                function onWorkbenchOpenChanged(): void {
+                    if (!assistantBridge.chatOpen)
+                        return;
+                    win.surfaceOn = false;
+                    remapTimer.restart();
+                    focusTimer.restart();
+                }
             }
 
             Timer {
@@ -889,6 +899,35 @@ Scope {
             CompanionStore.forceVisible = true;
             assistantBridge.chatOpen = true;
             assistantBridge.ask((text ?? "").toString());
+        }
+
+        // Javi Radio quick assistant: opens the launcher straight into
+        // the inline Ask (read-only, never acts). Bind it yourself, e.g.
+        // `bind = SUPER, J, exec, qs ipc call companion quick`; the shell
+        // writes no keybinding. The optional text is only prefilled.
+        function quick(text: string): void {
+            const t = (text ?? "").toString().trim();
+            InlineAsk.prefill = t === "" ? " " : t;
+            const v = Visibilities.getForActive();
+            if (!v)
+                return;
+            if (v.launcher)
+                InlineAsk.prefill = "";
+            else
+                v.launcher = true;
+        }
+
+        // Level C: the conversation panel expanded into the Workbench
+        // (same engine). With text, asks in the current mode; the
+        // user chose the escalation by calling this.
+        function workbench(text: string): void {
+            CompanionStore.summon();
+            CompanionStore.forceVisible = true;
+            assistantBridge.chatOpen = true;
+            assistantBridge.workbenchOpen = true;
+            const t = (text ?? "").toString().trim();
+            if (t !== "")
+                assistantBridge.ask(t);
         }
 
         function chat(): void {

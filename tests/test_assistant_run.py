@@ -245,3 +245,57 @@ def test_gateway_view_and_status_priority():
         "inc": "degraded", "run": "running", "appr": "awaiting-approval", "blocked": "blocked",
         "failed": "failed", "nullp": "disconnected", "sandboxed": True, "notSandboxed": False,
     }
+
+
+# --- fake-backend harness: real process, real NDJSON, real exit codes -----
+
+import os
+import sys
+import tempfile
+
+FAKE = ROOT / "tests" / "fixtures" / "fake-horneroctl.py"
+
+
+def run_fake(scenario, tmp_path, *extra):
+    env = dict(os.environ, FAKE_HORNEROCTL_DIR=str(tmp_path))
+    (tmp_path / "scenario").write_text(scenario)
+    proc = subprocess.run([sys.executable, str(FAKE), "assistant", "ask", "hi", "--json", "--stream", "--mode", "agent", *extra], capture_output=True, text=True, timeout=30, env=env)
+    return [line for line in proc.stdout.splitlines() if line.strip()], proc.returncode
+
+
+def test_fake_stream_scenario_completes(tmp_path):
+    lines, code = run_fake("stream", tmp_path)
+    out = replay(lines, code=code)
+    st = out["state"]
+    assert st["phase"] == "completed" and "3 updates" in st["text"]
+    assert [e["name"] for e in st["timeline"] if e["kind"] == "tool"] == ["system_info"]
+    assert st["runId"].startswith("run_fake_")
+
+
+def test_fake_approval_closed_scenario_stays_answerable(tmp_path):
+    lines, code = run_fake("approval-closed", tmp_path)
+    st = replay(lines, code=code)["state"]
+    assert st["phase"] == "awaiting-approval"
+    assert st["pending"]["detail"] == "rm -r ./build" and st["pending"]["runId"] == st["runId"]
+    assert st["pending"]["live"] is False
+
+
+def test_fake_clarify_blocked_fail_death_scenarios(tmp_path):
+    assert replay(*[run_fake("clarify", tmp_path)[0]], code=1)["state"]["phase"] == "awaiting-clarification"
+    assert replay(run_fake("blocked", tmp_path)[0], code=1)["state"]["phase"] == "blocked"
+    assert replay(run_fake("fail", tmp_path)[0], code=1)["state"]["phase"] == "failed"
+    lines, code = run_fake("death", tmp_path)
+    assert code != 0
+    st = replay(lines, code=code)["state"]
+    assert st["phase"] == "disconnected" and st["activeTools"] == 0 and st["text"].endswith("ans")
+
+
+def test_fake_status_views(tmp_path):
+    env = dict(os.environ, FAKE_HORNEROCTL_DIR=str(tmp_path))
+    seen = {}
+    for g in ("connected", "disconnected", "disabled", "unsandboxed", "incompatible"):
+        (tmp_path / "gateway").write_text(g)
+        proc = subprocess.run([sys.executable, str(FAKE), "assistant", "status", "--json"], capture_output=True, text=True, timeout=30, env=env)
+        payload = json.loads(proc.stdout)
+        seen[g] = run_js(f"console.log(JSON.stringify(statusKey(gatewayView({json.dumps(payload)}), {{phase:'idle'}})));")
+    assert seen == {"connected": "connected", "disconnected": "disconnected", "disabled": "disabled", "unsandboxed": "degraded-isolation", "incompatible": "degraded"}

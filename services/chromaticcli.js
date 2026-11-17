@@ -289,3 +289,93 @@ function inferenceRows(inference, req) {
     row("contrast", "Contrast", inference.contrast, req.contrast);
     return rows;
 }
+
+// ---- custom theme editor (Appearance > Edit palette) ------------------
+
+var EDIT_ROLES = ["ground", "panel", "ink", "inkMuted", "signal", "cue", "phosphor", "alert", "focus"];
+var EDIT_TERMINAL = [1, 2, 3, 4, 5, 6];
+// Accent roles and the role whose text sits on them.
+var ON_ROLE = { signal: "onSignal", cue: "onCue", phosphor: "onPhosphor", alert: "onAlert" };
+
+function _lin(c) {
+    c = c / 255;
+    return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+}
+
+function luminance(hex) {
+    var h = String(hex);
+    return 0.2126 * _lin(parseInt(h.substr(1, 2), 16)) + 0.7152 * _lin(parseInt(h.substr(3, 2), 16)) + 0.0722 * _lin(parseInt(h.substr(5, 2), 16));
+}
+
+function contrast(a, b) {
+    var la = luminance(a), lb = luminance(b);
+    return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+}
+
+// The more readable of two candidate inks on `bg`.
+function readableOn(bg, a, b) {
+    return contrast(bg, a) >= contrast(bg, b) ? a : b;
+}
+
+function safeName(v, fallback) {
+    return /^[A-Za-z0-9][A-Za-z0-9 ._+-]{0,63}$/.test(String(v || "")) ? String(v) : fallback;
+}
+
+// Working scheme: the source's palette and terminal with the user's
+// per-role overrides ({role: "#RRGGBB", term3: "#RRGGBB"}) on top.
+// Invalid hex values are ignored. An accent override also re-derives the
+// text colour on it unless the user set that one too.
+function editedScheme(source, overrides) {
+    var palette = {};
+    var k;
+    for (k in source.palette)
+        palette[k] = source.palette[k];
+    var terminal = (source.terminal || []).slice();
+    var o = overrides || {};
+    for (k in o) {
+        if (!isHex(o[k]))
+            continue;
+        var v = String(o[k]).toUpperCase();
+        if (/^term\d+$/.test(k))
+            terminal[parseInt(k.substr(4), 10)] = v;
+        else
+            palette[k] = v;
+    }
+    for (var accent in ON_ROLE) {
+        if (o[accent] && isHex(o[accent]) && !(o[ON_ROLE[accent]] && isHex(o[ON_ROLE[accent]])))
+            palette[ON_ROLE[accent]] = readableOn(palette[accent], palette.ground, palette.ink);
+    }
+    // The glow follows the accent unless the user set it.
+    if (o.signal && isHex(o.signal) && !(o.glow && isHex(o.glow)))
+        palette.glow = palette.signal;
+    return { palette: palette, terminal: terminal, mode: source.mode === "light" ? "light" : "dark" };
+}
+
+// Schema v2 theme document for `horneroctl appearance chromatic import`.
+function themeDocument(source, overrides, id, name) {
+    var s = editedScheme(source, overrides);
+    return {
+        schemaVersion: 2,
+        id: id,
+        name: name,
+        mode: s.mode,
+        palette: s.palette,
+        terminal: s.terminal,
+        gtkTheme: safeName(source.gtkTheme, "auto"),
+        iconTheme: safeName(source.iconTheme, "Papirus-Dark"),
+        defaultWallpaper: "none",
+        wallpaperDir: id
+    };
+}
+
+// import FILE; the same structural and contrast gates as any theme.
+function themeImportTail(id, force, dryRun) {
+    var a = ["--id", id, "--json"];
+    if (dryRun)
+        a.push("--dry-run");
+    else
+        a.push("--yes");
+    if (force)
+        a.push("--force");
+    return a;
+}

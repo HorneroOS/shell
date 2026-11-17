@@ -1,0 +1,23 @@
+{
+ "components/controls/StyledProgressBar.qml": 2,
+ "modules/background/Wallpaper.qml": 1,
+ "modules/bar/components/workspaces/Workspaces.qml": 1,
+ "modules/companion/Bubble.qml": 1,
+ "modules/companion/ChatPanel.qml": 4,
+ "modules/companion/CompanionHost.qml": 1,
+ "modules/controlcenter/WindowTitle.qml": 1,
+ "modules/controlcenter/appearance/ThemeSwatch.qml": 2,
+ "modules/controlcenter/appearance/sections/ChromaticSpecimenBoard.qml": 9,
+ "modules/controlcenter/bluetooth/DeviceList.qml": 1,
+ "modules/controlcenter/components/WallpaperGrid.qml": 1,
+ "modules/controlcenter/experience/DeckMiniature.qml": 1,
+ "modules/controlcenter/experience/ExperiencePane.qml": 1,
+ "modules/controlcenter/network/EthernetList.qml": 1,
+ "modules/controlcenter/network/VpnList.qml": 1,
+ "modules/controlcenter/network/WirelessList.qml": 1,
+ "modules/dashboard/weather/HourlyChart.qml": 1,
+ "modules/instruments/Partition.qml": 1,
+ "modules/layoutpicker/LayoutPreview.qml": 8,
+ "modules/lock/InputField.qml": 1,
+ "modules/sidebar/Notif.qml": 1
+}

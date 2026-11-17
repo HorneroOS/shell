@@ -20,6 +20,10 @@ Well {
     property color traceColor: Signal.palette.phosphor
     property bool glow: false
     property bool scanlines: false
+    // Seconds one sample covers; when set (> 0) a trace with fewer samples
+    // than the window says `COLLECTING 12 / 60 S` instead of looking broken.
+    property real secondsPerSample: 0
+    readonly property bool collecting: secondsPerSample > 0 && samples.length < window
     readonly property bool glowWanted: glow && !Signal.light && !Config.appearance.highContrast && root.visible && samples.length > 1
     // Glow is rationed shell-wide (visual language §9): a trace without a
     // lease renders the same line without the halo.
@@ -164,5 +168,14 @@ Well {
                 path: root.points(root.samples, shape.width, shape.height)
             }
         }
+    }
+
+    Eyebrow {
+        visible: root.collecting
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.margins: 6
+        label: qsTr("Collecting %1 / %2 s").arg(Math.round(root.samples.length * root.secondsPerSample)).arg(Math.round(root.window * root.secondsPerSample))
+        Accessible.ignored: true
     }
 }

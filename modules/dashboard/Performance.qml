@@ -74,6 +74,13 @@ Item {
         }
     }
 
+    // Hardware names are long: drop the vendor, trademark marks and the
+    // trailing core-count/"Processor" words so the model stays readable.
+    function shortName(name: string): string {
+        const s = String(name).replace(/\((R|TM|tm|r)\)/g, "").replace(/\s+\d+-(Core Processor)?$/i, "").replace(/\s+Processor$/i, "").replace(/^(AMD|Intel|NVIDIA)\s+/i, "").replace(/\s+/g, " ").trim();
+        return s === "" ? String(name) : s;
+    }
+
     Instruments.Frame {
         id: placeholder
 
@@ -114,7 +121,7 @@ Item {
             Layout.minimumWidth: 560
             Layout.preferredWidth: 560
             Layout.maximumWidth: 560
-            Layout.alignment: Qt.AlignTop
+            Layout.fillHeight: true
             visible: root.hasLeft
             spacing: Appearance.spacing.small
 
@@ -123,9 +130,12 @@ Item {
                 Layout.fillWidth: true
 
                 visible: root.anyCpu
+                // The last frame of each column absorbs spare height so both
+                // columns end on the same line.
+                Layout.fillHeight: !root.anyGpu
                 implicitHeight: headerHeight + cpuBody.implicitHeight + 16
                 channel: "01"
-                title: SystemUsage.cpuName ? qsTr("CPU · %1").arg(SystemUsage.cpuName) : qsTr("CPU")
+                title: SystemUsage.cpuName ? qsTr("CPU · %1").arg(root.shortName(SystemUsage.cpuName)) : qsTr("CPU")
                 context: qsTr("%1 s window").arg(root.windowSeconds)
 
                 ColumnLayout {
@@ -154,6 +164,7 @@ Item {
                                 samples: cpuBuffer.samples
                                 persistence: cpuBuffer.persistence
                                 window: cpuBuffer.length
+                                secondsPerSample: Experience.telemetryIntervalMs / 1000
                                 glow: Experience.glow
                                 scanlines: Experience.scanlines
 
@@ -242,9 +253,10 @@ Item {
                 Layout.fillWidth: true
 
                 visible: root.anyGpu
+                Layout.fillHeight: true
                 implicitHeight: headerHeight + gpuBody.implicitHeight + 16
                 channel: "02"
-                title: SystemUsage.gpuName ? qsTr("GPU · %1").arg(SystemUsage.gpuName) : qsTr("GPU")
+                title: SystemUsage.gpuName ? qsTr("GPU · %1").arg(root.shortName(SystemUsage.gpuName)) : qsTr("GPU")
                 context: qsTr("%1 s window").arg(root.windowSeconds)
 
                 RowLayout {
@@ -269,6 +281,7 @@ Item {
                             samples: gpuBuffer.samples
                             persistence: gpuBuffer.persistence
                             window: gpuBuffer.length
+                            secondsPerSample: Experience.telemetryIntervalMs / 1000
                             traceColor: Signal.palette.cue
                             scanlines: Experience.scanlines
 
@@ -306,7 +319,7 @@ Item {
 
         ColumnLayout {
             Layout.fillWidth: true
-            Layout.alignment: Qt.AlignTop
+            Layout.fillHeight: true
             visible: root.hasRight
             spacing: Appearance.spacing.small
 
@@ -315,6 +328,7 @@ Item {
                 Layout.fillWidth: true
 
                 visible: root.anyMem
+                Layout.fillHeight: !root.anyStorage && !root.anyNet && !root.anyBattery
                 implicitHeight: headerHeight + memBody.implicitHeight + 16
                 channel: "03"
                 title: qsTr("Memory")
@@ -352,6 +366,7 @@ Item {
                 Layout.fillWidth: true
 
                 visible: root.anyStorage
+                Layout.fillHeight: !root.anyNet && !root.anyBattery
                 implicitHeight: headerHeight + diskBody.implicitHeight + 16
                 channel: "04"
                 title: qsTr("Storage")
@@ -407,6 +422,7 @@ Item {
                 Layout.fillWidth: true
 
                 visible: root.anyNet
+                Layout.fillHeight: !root.anyBattery
                 implicitHeight: headerHeight + netBody.implicitHeight + 16
                 channel: "05"
                 title: qsTr("Network")
@@ -438,6 +454,7 @@ Item {
                 Layout.fillWidth: true
 
                 visible: root.anyBattery
+                Layout.fillHeight: true
                 implicitHeight: headerHeight + batteryBody.implicitHeight + 16
                 channel: "06"
                 title: qsTr("Battery")

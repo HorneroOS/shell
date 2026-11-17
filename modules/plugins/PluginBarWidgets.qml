@@ -71,7 +71,19 @@ Repeater {
     readonly property string hostEdge: edge !== "" ? edge : "none"
     readonly property bool hostCompact: vertical || compact
 
-    model: surfaceActive ? Plugins.barPlugins().filter(p => !root.hiddenIds.includes(p.id) && ((p.barSection || "end") === root.section || root.fallbackSections.includes(p.barSection || "end"))) : []
+    // Structurally stable (StableList.qml): a plugin reporting loaded or
+    // failed must not rebuild every other indicator's Loader.
+    // Repeater's default property is its delegate, so the helper goes in
+    // `data` explicitly.
+    data: [
+        StableList {
+            id: stable
+
+            source: root.surfaceActive ? Plugins.barPlugins().filter(p => !root.hiddenIds.includes(p.id) && ((p.barSection || "end") === root.section || root.fallbackSections.includes(p.barSection || "end"))) : []
+        }
+    ]
+
+    model: stable.list
 
     delegate: Loader {
         id: pluginLoader
@@ -142,10 +154,12 @@ Repeater {
         asynchronous: true
 
         onStatusChanged: {
-            if (status === Loader.Ready)
-                Plugins.markLoaded(modelData.id);
+            if (status === Loader.Loading)
+                Plugins.markLoading(modelData.id);
+            else if (status === Loader.Ready)
+                Plugins.markLoaded(modelData.id, "bar");
             else if (status === Loader.Error)
-                Plugins.markFailed(modelData.id, pluginLoader.errorString || "bar entrypoint failed to load (see shell log)");
+                Plugins.markFailed(modelData.id, Plugins.loaderError(pluginLoader.errorString, pluginLoader.source) || "bar entrypoint failed to load (see shell log)", "bar");
         }
 
         // Host-context injection (#372): live bindings, so an edge,

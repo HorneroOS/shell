@@ -354,7 +354,7 @@ def test_gaming_and_focus_instantiate_nothing():
     # `none` profiles: neither the user set nor the deck is wanted, the
     # model is empty once the (<=90 ms at motion off) fade ends, and the
     # frame keeps its Loader inactive so no widget draws or holds a lease.
-    assert "readonly property var widgets: root.userSet ? Plugins.desktopPlugins() : []" in HOST
+    assert "source: root.userSet ? Plugins.desktopPlugins() : []" in HOST
     assert "root.deckWanted ? Plugins.deckPlugins() : []" in HOST
     assert "root.deckWanted || deckLayer.opacity > 0 ? root._deckLast : []" in HOST
     assert 'readonly property bool suspended: Experience.desktopWidgets === "none"' in FRAME

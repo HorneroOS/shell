@@ -63,7 +63,7 @@ def test_surface_host_fault_isolation_like_other_hosts():
     # through the service and shows inline text, never a crash path.
     assert "Loader {" in HOST_CC and "asynchronous: true" in HOST_CC
     assert "status === Loader.Error" in HOST_CC
-    assert 'Plugins.markFailed(root.pluginId, pluginLoader.errorString || "settings entrypoint failed to load (see shell log)")' in HOST_CC
+    assert 'Plugins.markFailed(root.pluginId, Plugins.loaderError(pluginLoader.errorString, pluginLoader.source) || "settings entrypoint failed to load (see shell log)", "settings")' in HOST_CC
     assert "markFailed" in SERVICE and "logDiagnostic" in SERVICE and "sanitizeDetail" in SERVICE
     assert "This plugin's custom settings failed to load." in HOST_CC
     assert "pluginLoader.status === Loader.Error" in HOST_CC

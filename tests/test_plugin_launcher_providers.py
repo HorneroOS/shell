@@ -180,7 +180,7 @@ def test_activation_copies_result_text_wl_copy_like_calc():
 
 def test_loader_error_marks_only_that_plugin_failed():
     assert "status === Loader.Error" in HOST
-    assert "Plugins.markFailed(slot.pluginId, pluginLoader.errorString" in HOST
+    assert "Plugins.markFailed(slot.pluginId, Plugins.loaderError(pluginLoader.errorString" in HOST
     assert "slot.unregister();" in HOST
 
 

@@ -66,9 +66,9 @@ ColumnLayout {
 
         onStatusChanged: {
             if (status === Loader.Ready)
-                Plugins.logDiagnostic(root.pluginId, "settings-loaded", "");
+                Plugins.markLoaded(root.pluginId, "settings");
             else if (status === Loader.Error)
-                Plugins.markFailed(root.pluginId, pluginLoader.errorString || "settings entrypoint failed to load (see shell log)");
+                Plugins.markFailed(root.pluginId, Plugins.loaderError(pluginLoader.errorString, pluginLoader.source) || "settings entrypoint failed to load (see shell log)", "settings");
         }
 
         Binding {

@@ -40,7 +40,10 @@ Item {
     // mutated on delegate create/destroy).
     property var cardItems: ({})
 
-    readonly property var layoutSections: layoutHelper.sectionsFor(Plugins.dashboardPlugins(), Config.plugins.dashboardLayout)
+    // Structurally stable: card delegates (and their async Loaders) are
+    // only rebuilt when the layout actually changes, not on every plugin
+    // state update (see StableList.qml).
+    readonly property var layoutSections: layoutStable.list
     readonly property var visibleIds: root.layoutSections.reduce((ids, section) => ids.concat(section.plugins.map(p => p.id)), [])
     readonly property bool hasPlugins: root.visibleIds.length > 0
     readonly property real availableWidth: width > 0 ? width : 840
@@ -98,6 +101,12 @@ Item {
 
     DashboardLayout {
         id: layoutHelper
+    }
+
+    StableList {
+        id: layoutStable
+
+        source: layoutHelper.sectionsFor(Plugins.dashboardPlugins(), Config.plugins.dashboardLayout)
     }
 
     StyledText {
@@ -181,7 +190,10 @@ Item {
                                 id: card
 
                                 required property var modelData
-                                readonly property bool contentReady: card.modelData.state === "loaded" && pluginLoader.status === Loader.Ready
+                                // Volatile fields (load state, trust) come from the live entry:
+                                // modelData is structurally stable and not refreshed per state.
+                                readonly property var live: Plugins.entryFor(card.modelData.id) ?? card.modelData
+                                readonly property bool contentReady: card.live.state === "loaded" && pluginLoader.status === Loader.Ready
                                 readonly property int cardContentWidth: Math.min(layoutHelper.contentWidth(card.modelData.sizeClass), Math.max(160, root.availableWidth - Appearance.padding.large * 2))
 
                                 Layout.alignment: Qt.AlignTop
@@ -279,10 +291,12 @@ Item {
                                         asynchronous: true
 
                                         onStatusChanged: {
-                                            if (status === Loader.Ready)
-                                                Plugins.markLoaded(card.modelData.id);
+                                            if (status === Loader.Loading)
+                                                Plugins.markLoading(card.modelData.id);
+                                            else if (status === Loader.Ready)
+                                                Plugins.markLoaded(card.modelData.id, "dashboard");
                                             else if (status === Loader.Error)
-                                                Plugins.markFailed(card.modelData.id, pluginLoader.errorString || "dashboard entrypoint failed to load (see shell log)");
+                                                Plugins.markFailed(card.modelData.id, Plugins.loaderError(pluginLoader.errorString, pluginLoader.source) || "dashboard entrypoint failed to load (see shell log)", "dashboard");
                                         }
 
                                         Binding {
@@ -353,16 +367,16 @@ Item {
                                             Layout.preferredHeight: stateLabel.implicitHeight + 6
                                             Layout.preferredWidth: stateLabel.implicitWidth + 14
                                             radius: Appearance.rounding.full
-                                            color: card.modelData.state === "failed" || card.modelData.state === "blocked" ? Signal.palette.alertWell : card.modelData.state === "loaded" ? Signal.palette.signalWell : Signal.palette.raised
+                                            color: card.live.state === "failed" || card.live.state === "blocked" ? Signal.palette.alertWell : card.live.state === "loaded" ? Signal.palette.signalWell : Signal.palette.raised
 
                                             StyledText {
                                                 id: stateLabel
 
                                                 anchors.centerIn: parent
-                                                text: card.modelData.state === "loaded" ? qsTr("Loaded") : card.modelData.state === "failed" ? qsTr("Failed") : card.modelData.state === "blocked" ? qsTr("Blocked") : qsTr("Pending")
+                                                text: card.live.state === "loaded" ? qsTr("Loaded") : card.live.state === "failed" ? qsTr("Failed") : card.live.state === "blocked" ? qsTr("Blocked") : qsTr("Pending")
                                                 font.pointSize: Appearance.font.size.smaller
                                                 font.weight: 600
-                                                color: card.modelData.state === "failed" || card.modelData.state === "blocked" ? Signal.palette.onAlertWell : card.modelData.state === "loaded" ? Signal.palette.onSignalWell : Signal.palette.inkMuted
+                                                color: card.live.state === "failed" || card.live.state === "blocked" ? Signal.palette.onAlertWell : card.live.state === "loaded" ? Signal.palette.onSignalWell : Signal.palette.inkMuted
                                             }
                                         }
 
@@ -374,8 +388,8 @@ Item {
                                         }
 
                                         StyledText {
-                                            visible: !!card.modelData.trust
-                                            text: card.modelData.trust || ""
+                                            visible: !!card.live.trust
+                                            text: card.live.trust || ""
                                             font.pointSize: Appearance.font.size.smaller
                                             color: Signal.palette.inkMuted
                                         }

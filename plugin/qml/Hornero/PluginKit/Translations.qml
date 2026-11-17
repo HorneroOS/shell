@@ -1,3 +1,4 @@
+import "Format.js" as Format
 import qs.services
 import Quickshell.Io
 import QtQuick
@@ -97,8 +98,10 @@ QtObject {
         return date.toLocaleString(Qt.locale(root._effectiveLocale), format);
     }
 
-    function formatNumber(value: real): string {
-        return Number(value).toLocaleString(Qt.locale(root._effectiveLocale));
+    // Locale-aware number: whole numbers without a fraction, others with up
+    // to `maxDecimals` (default 2), see Format.js.
+    function formatNumber(value: real, maxDecimals: var): string {
+        return Format.number(Qt.locale(root._effectiveLocale), value, maxDecimals);
     }
 
     function _tryCandidate(index: int): void {

@@ -37,6 +37,9 @@ Item {
     // Deck geometry is persisted per experience mode (Experience.
     // setDeckGeometry), never in the user's everyday widget layout.
     property var deckPlacement: null
+    // Collision-free first-run slot chosen by PluginDesktopWidgets; used
+    // when the person has not picked an anchor (never overrides one).
+    property string defaultSlot: ""
     readonly property bool deck: root.deckPlacement !== null
 
     readonly property string pluginId: entry.id
@@ -51,7 +54,7 @@ Item {
         const slots = Config.plugins.desktopWidgetSlots;
         const perScreen = slots && typeof slots === "object" ? slots[root.screenName || "default"] : null;
         const explicit = perScreen && typeof perScreen === "object" ? perScreen[root.pluginId] : undefined;
-        return Config.plugins.allowedDesktopSlots.includes(explicit) ? explicit : (Config.plugins.allowedDesktopSlots.includes(root.hint.anchor) ? root.hint.anchor : "bottom-right");
+        return Config.plugins.allowedDesktopSlots.includes(explicit) ? explicit : (Config.plugins.allowedDesktopSlots.includes(root.defaultSlot) ? root.defaultSlot : (Config.plugins.allowedDesktopSlots.includes(root.hint.anchor) ? root.hint.anchor : "bottom-right"));
     }
     readonly property bool editing: Plugins.desktopEditing
     readonly property bool resizable: root.hint.resizable !== false
@@ -203,10 +206,12 @@ Item {
             enabled: !root.editing
 
             onStatusChanged: {
-                if (status === Loader.Ready)
-                    Plugins.markLoaded(root.pluginId);
+                if (status === Loader.Loading)
+                    Plugins.markLoading(root.pluginId);
+                else if (status === Loader.Ready)
+                    Plugins.markLoaded(root.pluginId, "desktop");
                 else if (status === Loader.Error)
-                    Plugins.markFailed(root.pluginId, pluginLoader.errorString || "desktop entrypoint failed to load (see shell log)");
+                    Plugins.markFailed(root.pluginId, Plugins.loaderError(pluginLoader.errorString, pluginLoader.source) || "desktop entrypoint failed to load (see shell log)", "desktop");
             }
 
             Binding {

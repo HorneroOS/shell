@@ -27,7 +27,9 @@ Text {
     font.pointSize: root.role === "display" ? Theme.font.size.extraLarge : root.role === "readout" ? 22 : root.role === "title" ? Theme.font.size.larger : root.role === "subtitle" ? Theme.font.size.normal : root.role === "caption" || root.role === "eyebrow" ? Theme.font.size.small : Theme.font.size.smaller
     font.weight: root.role === "title" ? Font.DemiBold : root.role === "subtitle" || root._display ? Font.Medium : Font.Normal
     font.capitalization: root.role === "eyebrow" ? Font.AllUppercase : Font.MixedCase
-    font.letterSpacing: root.role === "eyebrow" ? font.pointSize * 0.08 : 0
+    // Derived from the token, not from font.pointSize: reading the sibling font
+    // property inside a font group binding is a binding loop.
+    font.letterSpacing: root.role === "eyebrow" ? Theme.font.size.small * 0.08 : 0
     font.features: ({
             "tnum": 1
         })

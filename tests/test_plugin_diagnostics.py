@@ -37,7 +37,7 @@ def test_safe_mode_sources_env_and_persisted_config():
 
 def test_safe_mode_gates_every_host_before_manifest_or_qml():
     # Headless host: no delegate at all, so manifest.json is not read.
-    assert "Plugins.hostingBlocked ? []" in HOST
+    assert "source: Plugins.hostingBlocked ? []" in HOST
     # Visible hosts all consume pluginsForSurface/hasSurface.
     assert "if (root.hostingBlocked)\n            return []" in SERVICE
     assert "if (root.hostingBlocked)\n            return false" in SERVICE
@@ -79,7 +79,7 @@ def test_diagnostic_details_are_redacted_before_log_store_or_console():
     for needle in ("token", "password", "secret", "api[_-]?key", "Bearer", "<redacted>"):
         assert needle in SERVICE
     # markFailed must log the sanitized copy, never the raw detail.
-    assert "console.warn(`[plugins] ${id} failed to load: ${clean}`)" in SERVICE
+    assert "failed to load${named ? ` (${surface})` : \"\"}: ${clean}`" in SERVICE
     assert "failed to load: ${detail}`" not in SERVICE
 
 

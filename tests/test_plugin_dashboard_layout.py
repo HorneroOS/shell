@@ -199,7 +199,7 @@ def test_card_chrome_is_quiet_for_healthy_extensions():
     showing content (or while configuring it by keyboard); keyboard help and
     the focus ring are keyboard-only; raw Qt Controls get the shell palette.
     """
-    assert 'readonly property bool contentReady: card.modelData.state === "loaded"' in CARDS
+    assert 'readonly property bool contentReady: card.live.state === "loaded"' in CARDS
     assert "visible: !card.contentReady" in CARDS
     assert "visible: !card.contentReady || (card.activeFocus && FocusMode.keyboard)" in CARDS
     assert "visible: root.hasPlugins && FocusMode.keyboard" in CARDS

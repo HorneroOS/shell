@@ -116,7 +116,7 @@ Item {
                 Layout.alignment: Qt.AlignHCenter
                 text: qsTr("Enter password")
                 font.pointSize: Appearance.font.size.large
-                font.weight: 500
+                font.weight: Appearance.font.weight.medium
             }
 
             StyledText {

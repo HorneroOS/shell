@@ -65,7 +65,7 @@ Item {
             name: "photo"
             color: Signal.tPalette.ruleStrong
             font.pointSize: Appearance.font.size.extraLarge * 2
-            font.weight: 600
+            font.weight: Appearance.font.weight.strong
         }
 
         CachingImage {

@@ -562,7 +562,7 @@ ColumnLayout {
                 StyledText {
                     text: vpnDialog.editIndex >= 0 ? qsTr("Edit VPN Provider") : qsTr("Add %1 VPN").arg(vpnDialog.displayName)
                     font.pointSize: Appearance.font.size.large
-                    font.weight: 500
+                    font.weight: Appearance.font.weight.medium
                 }
 
                 ColumnLayout {

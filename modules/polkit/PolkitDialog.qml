@@ -124,7 +124,7 @@ FloatingWindow {
                     Layout.fillWidth: true
                     text: qsTr("Authentication required")
                     font.pointSize: Appearance.font.size.large
-                    font.weight: 600
+                    font.weight: Appearance.font.weight.strong
                     Accessible.role: Accessible.Heading
                 }
             }

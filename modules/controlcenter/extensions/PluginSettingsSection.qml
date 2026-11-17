@@ -85,7 +85,7 @@ ColumnLayout {
         StyledText {
             Layout.fillWidth: true
             text: qsTr("Settings")
-            font.weight: 500
+            font.weight: Appearance.font.weight.medium
         }
 
         TextButton {

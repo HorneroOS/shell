@@ -41,7 +41,7 @@ ColumnLayout {
         Layout.topMargin: Appearance.padding.normal
         Layout.rightMargin: Appearance.padding.small
         text: qsTr("Bluetooth")
-        font.weight: 500
+        font.weight: Appearance.font.weight.medium
     }
 
     Toggle {

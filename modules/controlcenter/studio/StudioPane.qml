@@ -422,7 +422,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Readiness")
                             font.pointSize: Appearance.font.size.large
-                            font.weight: 600
+                            font.weight: Appearance.font.weight.strong
                         }
 
                         // First-run checklist derived only from recorded
@@ -443,7 +443,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Selection")
                             font.pointSize: Appearance.font.size.large
-                            font.weight: 600
+                            font.weight: Appearance.font.weight.strong
                         }
 
                         StyledText {
@@ -475,7 +475,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Specializations")
                             font.pointSize: Appearance.font.size.large
-                            font.weight: 600
+                            font.weight: Appearance.font.weight.strong
                         }
 
                         Repeater {
@@ -497,7 +497,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Applications")
                             font.pointSize: Appearance.font.size.large
-                            font.weight: 600
+                            font.weight: Appearance.font.weight.strong
                         }
 
                         Repeater {
@@ -527,7 +527,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("ArtCraft Launcher")
                             font.pointSize: Appearance.font.size.large
-                            font.weight: 600
+                            font.weight: Appearance.font.weight.strong
                         }
 
                         StyledText {
@@ -550,7 +550,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Audio routing & health")
                             font.pointSize: Appearance.font.size.large
-                            font.weight: 600
+                            font.weight: Appearance.font.weight.strong
                         }
 
                         // Read-only view over the existing Audio service
@@ -597,7 +597,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Performance")
                             font.pointSize: Appearance.font.size.large
-                            font.weight: 600
+                            font.weight: Appearance.font.weight.strong
                         }
 
                         // Presentation over `horneroctl studio mode`
@@ -663,7 +663,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Render jobs (experimental)")
                             font.pointSize: Appearance.font.size.large
-                            font.weight: 600
+                            font.weight: Appearance.font.weight.strong
                         }
 
                         // Typed job state from horneroctl

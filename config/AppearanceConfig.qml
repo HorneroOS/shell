@@ -70,9 +70,20 @@ JsonObject {
         property int display: 56 * scale
     }
 
+    // Text weight. `shift` moves every weight token up or down in steps of
+    // 100 (-200..+200): lighter and airier, or sturdier for readability.
+    // Call sites use these tokens instead of literal 400/500/600.
+    component FontWeight: JsonObject {
+        property int shift: 0
+        readonly property int regular: Math.max(100, Math.min(900, 400 + shift))
+        readonly property int medium: Math.max(100, Math.min(900, 500 + shift))
+        readonly property int strong: Math.max(100, Math.min(900, 600 + shift))
+    }
+
     component FontStuff: JsonObject {
         property FontFamily family: FontFamily {}
         property FontSize size: FontSize {}
+        property FontWeight weight: FontWeight {}
     }
 
     // Motion knobs only; the curve and duration tokens are derived in
@@ -84,6 +95,10 @@ JsonObject {
     component Anim: JsonObject {
         property real mediaGifSpeedAdjustment: 300
         property real sessionGifSpeed: 0.7
+        // Spatial easing personality: "smooth" (factory), "snappy" (no
+        // overshoot, quicker settle) or "bouncy" (a little more give).
+        // Opacity and colour never overshoot in any style.
+        property string curveStyle: "smooth"
         property AnimDurations durations: AnimDurations {}
     }
 

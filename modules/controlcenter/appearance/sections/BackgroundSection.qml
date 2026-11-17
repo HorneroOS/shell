@@ -40,7 +40,7 @@ CollapsibleSection {
         Layout.topMargin: Appearance.spacing.normal
         text: qsTr("Desktop Clock")
         font.pointSize: Appearance.font.size.larger
-        font.weight: 500
+        font.weight: Appearance.font.weight.medium
     }
 
     SwitchRow {
@@ -70,7 +70,7 @@ CollapsibleSection {
         StyledText {
             text: qsTr("Positioning")
             font.pointSize: Appearance.font.size.larger
-            font.weight: 500
+            font.weight: Appearance.font.weight.medium
         }
 
         SplitButtonRow {
@@ -155,7 +155,7 @@ CollapsibleSection {
         StyledText {
             text: qsTr("Shadow")
             font.pointSize: Appearance.font.size.larger
-            font.weight: 500
+            font.weight: Appearance.font.weight.medium
         }
 
         SwitchRow {
@@ -224,7 +224,7 @@ CollapsibleSection {
         StyledText {
             text: qsTr("Background")
             font.pointSize: Appearance.font.size.larger
-            font.weight: 500
+            font.weight: Appearance.font.weight.medium
         }
 
         SwitchRow {
@@ -275,7 +275,7 @@ CollapsibleSection {
         Layout.topMargin: Appearance.spacing.normal
         text: qsTr("Visualiser")
         font.pointSize: Appearance.font.size.larger
-        font.weight: 500
+        font.weight: Appearance.font.weight.medium
     }
 
     SwitchRow {

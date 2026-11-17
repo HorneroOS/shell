@@ -69,7 +69,7 @@ Item {
                 Layout.alignment: Qt.AlignHCenter
                 text: root.session.bt.pairingKind === "confirmation" ? qsTr("Confirm passkey") : qsTr("Enter pairing code")
                 font.pointSize: Appearance.font.size.large
-                font.weight: 500
+                font.weight: Appearance.font.weight.medium
             }
 
             StyledText {
@@ -87,7 +87,7 @@ Item {
                 text: root.session.bt.pairingPasskey
                 font.pointSize: Appearance.font.size.extraLarge
                 font.family: Appearance.font.family.mono
-                font.weight: 600
+                font.weight: Appearance.font.weight.strong
             }
 
             StyledText {

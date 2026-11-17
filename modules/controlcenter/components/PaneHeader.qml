@@ -55,7 +55,7 @@ ColumnLayout {
             Layout.fillWidth: true
             text: root.title
             font.pointSize: Appearance.font.size.extraLarge
-            font.weight: 600
+            font.weight: Appearance.font.weight.strong
             elide: Text.ElideRight
             Accessible.role: Accessible.Heading
         }

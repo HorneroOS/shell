@@ -69,7 +69,7 @@ CollapsibleSection {
                             ? qsTr("Saved theme is unavailable")
                             : qsTr("Custom appearance")
                         font.pointSize: Appearance.font.size.normal
-                        font.weight: 500
+                        font.weight: Appearance.font.weight.medium
                     }
 
                     StyledText {
@@ -166,7 +166,7 @@ CollapsibleSection {
                         StyledText {
                             text: themeItem.collectionId === "hornero-originals" ? qsTr("Hornero Originals") : qsTr("Other looks")
                             font.pointSize: Appearance.font.size.normal
-                            font.weight: 600
+                            font.weight: Appearance.font.weight.strong
                         }
 
                         StyledText {
@@ -239,7 +239,7 @@ CollapsibleSection {
                                     width: parent.width
                                     text: modelData.name ?? modelData.id ?? ""
                                     font.pointSize: Appearance.font.size.normal
-                                    font.weight: 500
+                                    font.weight: Appearance.font.weight.medium
                                     elide: Text.ElideRight
                                     wrapMode: Text.WordWrap
                                     maximumLineCount: 2
@@ -467,7 +467,7 @@ CollapsibleSection {
                     StyledText {
                         text: qsTr("Hornero Chromatic")
                         font.pointSize: Appearance.font.size.normal
-                        font.weight: 500
+                        font.weight: Appearance.font.weight.medium
                     }
 
                     StyledText {

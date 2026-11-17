@@ -150,6 +150,38 @@ Item {
                     }
                 }
 
+                // ── Placement ───────────────────────────────────────────────
+                ChannelPanel {
+                    title: qsTr("Placement")
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
+                        spacing: Appearance.spacing.small
+
+                        ChoiceRow {
+                            target: Config.notifs
+                            key: "align"
+                            label: qsTr("Popup position on the top edge")
+                            defaultValue: "right"
+                            options: [
+                                {
+                                    id: "left",
+                                    label: qsTr("Left")
+                                },
+                                {
+                                    id: "center",
+                                    label: qsTr("Centre")
+                                },
+                                {
+                                    id: "right",
+                                    label: qsTr("Right")
+                                }
+                            ]
+                        }
+                    }
+                }
+
                 // ── Sizes ───────────────────────────────────────────────────
                 ChannelPanel {
                     title: qsTr("Sizes")

@@ -109,7 +109,7 @@ Item {
                     Anim {
                         target: notif
                         property: "x"
-                        to: (notif.x >= 0 ? Config.notifs.sizes.width : -Config.notifs.sizes.width) * 2
+                        to: (notif.x >= 0 ? Config.notifs.sizes.width : -Config.notifs.sizes.width) * 2 * (Config.notifs.align === "left" ? -1 : 1)
                         duration: Appearance.anim.durations.medium
                         easing.bezierCurve: Appearance.anim.curves.standard
                     }

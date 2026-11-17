@@ -327,3 +327,9 @@ def test_detail_row_value_elides_instead_of_overprinting_the_label():
     assert "elide: Text.ElideMiddle" in source
     assert "root.width * 0.6" in source
     assert "root.width - valueItem.width" in source
+
+
+def test_metric_label_elides_inside_a_narrow_tile():
+    source = (KIT / "UiMetric.qml").read_text(encoding="utf-8")
+    assert "elide: Text.ElideRight" in source
+    assert "root.width - (root.well" in source

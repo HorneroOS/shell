@@ -37,8 +37,12 @@ Rectangle {
 
         x: root.well ? Theme.padding.larger : 0
         y: root.well ? Theme.padding.normal : 0
+        // Inside a tile narrower than its label ("TOTAL TOKENS" in a
+        // three-column row) the label elides instead of running out of it.
+        width: root.width > 0 ? Math.min(implicitWidth, Math.max(0, root.width - (root.well ? Theme.padding.larger * 2 : 0))) : implicitWidth
         role: "eyebrow"
         text: root.label
+        elide: Text.ElideRight
     }
 
     Row {

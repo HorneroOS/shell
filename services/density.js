@@ -38,21 +38,30 @@ function inner(base, f) {
     return Math.max(MIN_INNER, Math.round(base * f));
 }
 
-function icon(f) {
-    return clamp(Math.round(16 * f), 15, 18);
+// `cs` is the bar's content scale (`bar.sizes.contentScale`, 0.75..1.5,
+// default 1). The chunky Hornero rails raise it so icons and labels grow
+// with the wider cells instead of floating in them; the density factor
+// still applies on top, so small screens lose a little first.
+function contentScale(cs) {
+    return clamp(cs > 0 ? cs : 1, 0.75, 1.5);
 }
 
-function text(f) {
-    return clamp(Math.round(12 * f), MIN_TEXT, 13);
+function icon(f, cs) {
+    return Math.round(clamp(Math.round(16 * f), 15, 18) * contentScale(cs));
 }
 
-// Eyebrows and meter captions (signal-visual-language §4.1): 11 px caps.
-function micro(f) {
-    return 11;
+function text(f, cs) {
+    return Math.round(clamp(Math.round(12 * f), MIN_TEXT, 13) * contentScale(cs));
 }
 
-function clock(f) {
-    return Math.max(14, Math.round(16 * f));
+// Eyebrows and meter captions (signal-visual-language §4.1): 11 px caps,
+// 12 px once the content scale reaches 1.15.
+function micro(f, cs) {
+    return Math.round(11 * Math.sqrt(contentScale(cs)));
+}
+
+function clock(f, cs) {
+    return Math.round(Math.max(14, Math.round(16 * f)) * contentScale(cs));
 }
 
 function segmentPadding(f, vertical) {

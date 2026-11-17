@@ -360,7 +360,8 @@
       "networkWidth": 320,
       "kbLayoutWidth": 320,
       "autoDensity": true,
-      "densityScale": 1
+      "densityScale": 1,
+      "contentScale": 1
     },
     "excludedScreens": []
   },

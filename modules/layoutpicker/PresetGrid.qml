@@ -220,11 +220,25 @@ Item {
                 readonly property bool isFocused: root.keyboardNav && index === root.focusIndex
 
                 implicitWidth: root.cardWidth
-                implicitHeight: 194
+                implicitHeight: 226
                 radius: Appearance.rounding.small
                 color: isActive ? Signal.palette.signalWell : Signal.layer(Signal.palette.raised, 1)
                 border.color: isFocused ? Signal.palette.focus : isActive ? Signal.palette.signal : Signal.palette.rule
                 border.width: isFocused || isActive ? 2 : 1
+
+                FileView {
+                    id: specFile
+
+                    readonly property var spec: {
+                        try {
+                            return JSON.parse(text()).bar.bars;
+                        } catch (e) {
+                            return [];
+                        }
+                    }
+
+                    path: Qt.resolvedUrl(`${Quickshell.shellDir}/presets/${card.modelData.name}.json`)
+                }
 
                 Behavior on color {
                     CAnim {}
@@ -242,6 +256,9 @@ Item {
                     LayoutPreview {
                         Layout.alignment: Qt.AlignHCenter
                         bars: card.modelData.bars ?? []
+                        // Real geometry and components from the shipped preset
+                        // JSON; user presets fall back to the CLI's counts.
+                        specs: specFile.spec
                         highlighted: card.isActive || card.isFocused
 
                         // Current layout badge on the preview corner
@@ -303,7 +320,8 @@ Item {
                                 text: qsTr("After %1").arg(card.modelData.lineage ?? "")
                                 font.pointSize: Appearance.font.size.small
                                 color: card.isActive ? Signal.palette.onSignalWell : Signal.palette.inkMuted
-                                elide: Text.ElideRight
+                                wrapMode: Text.WordWrap
+                                maximumLineCount: 2
                             }
                         }
                     }

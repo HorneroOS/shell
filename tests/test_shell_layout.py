@@ -202,6 +202,8 @@ def test_layout_picker_topology_contract():
     for needle in ("property var bars", '"islands"', '"dock"', '"clear"', "Array.from(bars ?? [])"):
         assert needle in preview, f"LayoutPreview lacks {needle}"
     assert "visible: root.topology.length === 0" in preview
+    # Thumbnails are drawn from the real preset geometry and component ids.
+    assert "property var specs" in preview and "function shapeOf" in preview
     assert 'text: qsTr("Preview unavailable")' in preview
     grid = (ROOT / "modules/layoutpicker/PresetGrid.qml").read_text()
     assert "bars: card.modelData.bars" in grid

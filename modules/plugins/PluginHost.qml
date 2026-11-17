@@ -481,6 +481,38 @@ Scope {
                         const manifest = JSON.parse(previewManifestView.text());
                         if (manifest.id === previewSlot.modelData.id)
                             Plugins.markSchemaVersion(previewSlot.modelData.id, manifest.schemaVersion);
+                        // Surfaces of an installed-but-not-enabled package. The
+                        // Signal instrument deck loads trusted first-party
+                        // widgets without a per-widget enable, so it must
+                        // know their desktop surface even though the
+                        // headless host above never visits a disabled
+                        // package (the deck stayed empty with the six
+                        // widgets "disabled"). Only safe relative .qml
+                        // entrypoints listed in `files` are recorded; the
+                        // full strict gate still runs when a package is
+                        // enabled.
+                        if (manifest.id === previewSlot.modelData.id && manifest.schemaVersion === 3 && Array.isArray(manifest.files)) {
+                            const safe = value => typeof value === "string" && !value.includes("..") && !value.includes("\\")
+                                && /^(?!\/)(?!\.{1,2}(\/|$))(?!.*\/\.{1,2}(\/|$))(?!.*\/\/)[A-Za-z0-9._\/-]+\.qml$/.test(value) && manifest.files.includes(value);
+                            const placement = typeof manifest.placement === "string" ? manifest.placement : "background";
+                            if (safe(manifest.entrypoint) && ["background", "bar", "dashboard", "desktop"].includes(placement)) {
+                                const effective = ({});
+                                effective[placement] = {
+                                    entrypoint: manifest.entrypoint,
+                                    enabled: true
+                                };
+                                if (manifest.surfaces && typeof manifest.surfaces === "object" && !Array.isArray(manifest.surfaces)) {
+                                    for (const name of Object.keys(manifest.surfaces)) {
+                                        const surface = manifest.surfaces[name];
+                                        if (["background", "bar", "dashboard", "desktop", "launcher", "settings"].includes(name) && surface && typeof surface === "object" && safe(surface.entrypoint))
+                                            effective[name] = Object.assign({}, surface, {
+                                                enabled: surface.enabled !== false
+                                            });
+                                    }
+                                }
+                                Plugins.markPlacement(previewSlot.modelData.id, placement, manifest.entrypoint, manifest.capabilities && manifest.capabilities.settings || ({}), effective);
+                            }
+                        }
                         if (manifest.id === previewSlot.modelData.id)
                             Plugins.markMarketplace(previewSlot.modelData.id, manifest.marketplace === undefined ? null : manifest.marketplace);
                     } catch (e) {

@@ -48,7 +48,7 @@ def test_palette_tile_is_keyboard_and_assistive_tech_ready():
     assert "Accessible.checked: selected" in OPTION and "Accessible.name: title" in OPTION
     assert "Accessible.description" in OPTION and "Accessible.onPressAction" in OPTION
     # focus is a visible ring, selection is spelled out (glyph), no animation
-    assert "Signal.palette.focus" in OPTION and 'name: "check"' in OPTION
+    assert "Signal.palette.focus" in OPTION and '"heart" : "check"' in OPTION
     assert "Behavior" not in OPTION and "Anim" not in OPTION
     assert not re.search(r"\bMaterial\b|\bm3[A-Z]", OPTION + SWATCH)
 
@@ -64,7 +64,7 @@ def test_variant_previews_are_engine_results_computed_on_demand():
     assert "variantPreviewsWanted" in svc and "variantSchemes" in svc and "variantFailed" in svc
     gallery = (SECTIONS / "ChromaticVariantGallery.qml").read_text()
     assert "ChromaticPreview.variantPreviewsWanted = true" in gallery
-    assert "Component.onDestruction: ChromaticPreview.variantPreviewsWanted = false" in gallery
+    assert "ChromaticPreview.variantPreviewsWanted = false" in gallery and "ChromaticPreview.endHover(\"\")" in gallery
 
 
 @requires_qs
@@ -132,3 +132,56 @@ def test_offscreen_saved_palette_rename_delete_undo(tmp_path):
 def test_editor_manages_saved_palettes_with_confirm_and_undo():
     assert "renameArgs" in EDITOR and "deleteArgs" in EDITOR
     assert "Really delete?" in EDITOR and "Undo" in EDITOR and "undoTimer" in EDITOR
+@requires_qs
+def test_offscreen_accent_override_resolution_and_reset(tmp_path):
+    r = run_gallery(tmp_path, HACCENT=1)
+    # global accent: accent, glow follow, readable text on it
+    assert r["global"][0].lower() == "#ffb5d2" and r["global"][1].lower() == "#ffb5d2"
+    assert r["global"][2].lower() in (r["ground"].lower(), r["ink"].lower())
+    # per-colour-mode beats global; per-experience-mode beats per-colour-mode
+    assert r["perModeBeatsGlobal"].lower() == "#a6d6ff"
+    assert r["perExperienceBeatsMode"].lower() == "#b9e5a0" and r["ctxMode"] == "everyday"
+    # invalid values are ignored and clearing returns the theme's own accent
+    assert r["invalidIgnored"] is True and r["resetToTheme"] is True
+
+
+def test_accent_is_in_config_schema_defaults_and_ui():
+    import json
+
+    defaults = json.loads((ROOT / "config" / "shell.default.json").read_text())["appearance"]["accent"]
+    assert defaults == {"color": "", "perMode": {"dark": "", "light": ""}, "perExperience": {}}
+    config = (ROOT / "config" / "Config.qml").read_text()
+    assert "perExperience: appearance.accent.perExperience" in config
+    section = (SECTIONS / "AccentSection.qml").read_text()
+    assert "Reset" in section and "Low contrast on this theme" in section and "Accessible.name" in section
+    # presets are an opt-in data file, with a dark and a light twin each
+    presets = (ROOT / "services" / "accents.js").read_text()
+    assert presets.count("group: \"kawaii\"") >= 6 and presets.count("light:") >= 6
+def test_variant_tiles_preview_on_hover_and_focus_transiently():
+    gallery = (SECTIONS / "ChromaticVariantGallery.qml").read_text()
+    assert "onPreviewStarted: ChromaticPreview.hoverVariant" in gallery and "onPreviewEnded: ChromaticPreview.endHover(" in gallery
+    svc = (ROOT / "services" / "ChromaticPreview.qml").read_text()
+    assert "function hoverVariant" in svc and "function endHover(id: string)" in svc and "_resumeLive" in svc
+    # the shared 30 s idle timer also ends a forgotten hover
+    assert 'root.hoveredVariant = "";' in svc
+
+
+@requires_qs
+def test_offscreen_hover_preview_is_transient_and_restores(tmp_path):
+    r = run_gallery(tmp_path, HHOVER=1)
+    assert r["before"] != r["during"] and r["duringPreviewing"] is True
+    assert r["staleExitKept"] is True
+    assert r["after"] == r["before"] and r["afterPreviewing"] is False
+    # an existing candidate preview is resumed, not dropped
+    assert r["resumed"] == r["candidate"] and r["resumedPreviewing"] is True
+    assert r["afterResume"] == r["before"] and r["hoverClearedOnEnd"] is True
+def test_cozy_chips_is_a_persisted_default_on_setting_with_a_switch():
+    import json
+
+    assert json.loads((ROOT / "config" / "shell.default.json").read_text())["appearance"]["cozyChips"] is True
+    assert "cozyChips: appearance.cozyChips" in (ROOT / "config" / "Config.qml").read_text()
+    themes = (SECTIONS / "ThemesSection.qml").read_text()
+    assert "Config.appearance.cozyChips = checked" in themes
+    # soft shapes only change radius and the selected glyph; the sharp Bezel stays one switch away
+    assert "Config.appearance.cozyChips ? Appearance.rounding.large" in OPTION
+    assert "Config.appearance.cozyChips ? Appearance.rounding.normal" in SWATCH

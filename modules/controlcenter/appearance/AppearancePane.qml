@@ -46,7 +46,7 @@ Item {
     // Config.controlCenter.appearanceOpenSections (default: Themes).
     // _sectionsReady guards write-back while initial state is restored.
     property bool _sectionsReady: false
-    readonly property var _sectionKeys: ["chromatic", "themes", "themeEditor", "gtkTheme", "gtkColorScheme", "iconTheme", "look", "atmosphere", "fonts", "animations", "scales", "transparency", "border", "background", "health"]
+    readonly property var _sectionKeys: ["chromatic", "themes", "themeEditor", "accent", "gtkTheme", "gtkColorScheme", "iconTheme", "look", "atmosphere", "fonts", "animations", "scales", "transparency", "border", "background", "health"]
     property var sectionItems: ({})
     property var sectionScroll: null
 
@@ -689,6 +689,7 @@ Item {
                     readonly property var sections: ({
                         themes: themesSection,
                         themeEditor: themeEditorSection,
+                        accent: accentSection,
                         gtkTheme: gtkThemeSection,
                         gtkColorScheme: gtkColorSchemeSection,
                         chromatic: chromaticSection,
@@ -704,7 +705,7 @@ Item {
                         health: healthSection
                     })
 
-                    readonly property bool allSectionsExpanded: chromaticSection.expanded && themesSection.expanded && themeEditorSection.expanded && gtkThemeSection.expanded && gtkColorSchemeSection.expanded && iconThemeSection.expanded && lookSection.expanded && atmosphereSection.expanded && fontsSection.expanded && animationsSection.expanded && scalesSection.expanded && transparencySection.expanded && borderSection.expanded && backgroundSection.expanded && healthSection.expanded
+                    readonly property bool allSectionsExpanded: chromaticSection.expanded && themesSection.expanded && themeEditorSection.expanded && accentSection.expanded && gtkThemeSection.expanded && gtkColorSchemeSection.expanded && iconThemeSection.expanded && lookSection.expanded && atmosphereSection.expanded && fontsSection.expanded && animationsSection.expanded && scalesSection.expanded && transparencySection.expanded && borderSection.expanded && backgroundSection.expanded && healthSection.expanded
 
                     Component.onCompleted: {
                         root.sectionItems = sidebarLayout.sections;
@@ -775,6 +776,14 @@ Item {
                         previewController: root
                         Component.onCompleted: expanded = root.isSectionExpanded("themeEditor")
                         onExpandedChanged: root.persistSection("themeEditor", expanded)
+                    }
+
+                    AccentSection {
+                        id: accentSection
+                        session: root.session
+                        previewController: root
+                        Component.onCompleted: expanded = root.isSectionExpanded("accent")
+                        onExpandedChanged: root.persistSection("accent", expanded)
                     }
 
                     GtkColorSchemeSection {

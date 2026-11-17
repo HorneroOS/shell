@@ -245,9 +245,11 @@ Singleton {
             console.warn("Signal: ignoring scheme without a complete schema-v2 palette");
             return false;
         }
+        // Mode first: the accent override depends on it.
+        _baseScheme = scheme;
+        themeMode = scheme.mode === "light" ? "light" : "dark";
         _paint(scheme, animate === true && themeStateReady);
         themeId = scheme.id || "";
-        themeMode = scheme.mode === "light" ? "light" : "dark";
         _chromaticSource = scheme.chromatic ?? null;
         chromatic = Chromatic.status(scheme);
         minSurfaceAlpha = Chromatic.cleanMinSurfaceAlpha(scheme.minSurfaceAlpha);
@@ -277,8 +279,19 @@ Singleton {
 
     // Paint `scheme` into the live palette: instantly, or through the
     // OKLab tween when `animate` and allowed.
+    // The user's accent for the current colour mode and experience mode
+    // ("" = the theme's own). Laid over every palette in _paint.
+    readonly property string accentOverride: Chromatic.resolveAccent(Config.appearance.accent, Experience.mode, themeMode)
+    property var _baseScheme: null
+
+    onAccentOverrideChanged: {
+        if (_baseScheme && themeStateReady)
+            _paint(_baseScheme, true);
+    }
+
     function _paint(scheme: var, animate: bool): void {
-        const target = Chromatic.flatten(scheme);
+        _baseScheme = scheme;
+        const target = Chromatic.withAccent(Chromatic.flatten(scheme), accentOverride);
         const steps = (animate && transitionAllowed) ? Chromatic.stepsFor(240) : 0;
         _tween.stop();
         const from = _currentFlat();

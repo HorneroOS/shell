@@ -119,6 +119,15 @@ ShellRoot {
                     expanded: true
                 }
 
+                AccentSection {
+                    id: accent
+
+                    Layout.fillWidth: true
+                    previewController: controller
+                    session: session
+                    expanded: true
+                }
+
                 ThemesSection {
                     id: themes
 
@@ -160,6 +169,14 @@ ShellRoot {
                 root.out.dbg = [ChromaticPreview.helperAvailable, ChromaticPreview.helperChecked, ChromaticPreview.busy, ChromaticPreview.variantPreviewsWanted, ChromaticPreview.errorCode, ChromaticPreview._variantSig.length, ChromaticPreview._variantCurrent];
                 if (Quickshell.env("HMANAGE") === "1") {
                     root.manageScenario();
+                    return;
+                }
+                if (Quickshell.env("HACCENT") === "1") {
+                    root.accentScenario();
+                    return;
+                }
+                if (Quickshell.env("HHOVER") === "1") {
+                    root.hoverScenario();
                     return;
                 }
                 if (Quickshell.env("HEDIT") === "1") {
@@ -237,6 +254,60 @@ ShellRoot {
                 root.finish();
             }
         }
+    }
+
+    function accentScenario(): void {
+        const o = root.out;
+        Config.appearance.chromatic.transition = "instant";
+        const base = String(Signal.palette.signal);
+        o.base = base;
+        Config.appearance.accent.color = "#FFB5D2";
+        o.global = [String(Signal.palette.signal), String(Signal.palette.glow), String(Signal.palette.onSignal)];
+        Config.appearance.accent.perMode.dark = "#A6D6FF";
+        o.perModeBeatsGlobal = String(Signal.palette.signal);
+        Config.appearance.accent.perExperience = ({"everyday": "#B9E5A0"});
+        o.perExperienceBeatsMode = String(Signal.palette.signal);
+        o.ground = String(Signal.palette.ground);
+        o.ink = String(Signal.palette.ink);
+        Config.appearance.accent.perExperience = ({});
+        Config.appearance.accent.perMode.dark = "";
+        Config.appearance.accent.color = "not-a-colour";
+        o.invalidIgnored = String(Signal.palette.signal) === base;
+        Config.appearance.accent.color = "";
+        o.resetToTheme = String(Signal.palette.signal) === base;
+        o.ctxMode = Experience.mode;
+        root.finish();
+    }
+
+    function hoverScenario(): void {
+        const o = root.out;
+        Config.appearance.chromatic.transition = "instant";
+        const sig = () => String(Signal.palette.signal);
+        const P = ChromaticPreview;
+        o.before = sig();
+        P.hoverVariant("neon");
+        o.during = sig();
+        o.duringPreviewing = Signal.previewing;
+        // a stale exit from a tile left after another was entered must not
+        // cancel the new tile's preview (seen in the QA VM)
+        P.hoverVariant("muted");
+        P.endHover("neon");
+        o.staleExitKept = Signal.previewing && P.hoveredVariant === "muted";
+        P.endHover("muted");
+        P.endHover("");
+        o.after = sig();
+        o.afterPreviewing = Signal.previewing;
+        // with a candidate already previewed, leaving the tile resumes it
+        P.previewLive(true);
+        o.candidate = sig();
+        P.hoverVariant("muted");
+        P.endHover("");
+        o.resumed = sig();
+        o.resumedPreviewing = Signal.previewing;
+        P.previewLive(false);
+        o.afterResume = sig();
+        o.hoverClearedOnEnd = P.hoveredVariant === "";
+        root.finish();
     }
 
     Timer {

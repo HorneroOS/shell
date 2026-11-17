@@ -20,7 +20,7 @@ subset, MIT) and instrument-like motion. See
 ![Concept render, not a screenshot: the Hornero Signal Night direction for the Cockpit desktop](https://raw.githubusercontent.com/HorneroOS/docs/main/development/assets/signal-visual-language/concept-final-night.png)
 
 *Concept render, not a screenshot: the Hornero Signal direction for the Cockpit
-desktop. The previous hero capture predated Signal and has been removed; real
+desktop. The previous hero capture predated Signal (the file stays only as the VM test wallpaper seed); real
 captures from the graphical test VM replace this once the surfaces are
 validated.*
 

@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SECTIONS = ROOT / "modules" / "controlcenter" / "appearance" / "sections"
 
 FILES = [
-    SECTIONS / "GtkColorSchemeSection.qml",
+    # GtkColorSchemeSection uses PaletteOption (tests/test_appearance_palettes.py)
     SECTIONS / "GtkThemeSection.qml",
     SECTIONS / "IconThemeSection.qml",
     SECTIONS / "FontsSection.qml",

@@ -223,6 +223,8 @@ CollapsibleSection {
                             ThemeSwatch {
                                 Layout.alignment: Qt.AlignVCenter
                                 palette: sectionRoot.previewController.paletteForTheme(themeItem.modelData)
+                                terminal: sectionRoot.previewController.terminalForTheme(themeItem.modelData)
+                                showTerminal: true
                             }
 
                             Column {
@@ -455,6 +457,7 @@ CollapsibleSection {
                 ThemeSwatch {
                     Layout.alignment: Qt.AlignVCenter
                     palette: chromaticCard.isCurrent ? ({}) : chromaticCard.swatch
+                    showTerminal: !chromaticCard.isCurrent
                 }
 
                 ColumnLayout {

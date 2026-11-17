@@ -24,22 +24,26 @@ CollapsibleSection {
         {
             id: "follow",
             icon: "refresh",
-            name: qsTr("Follow theme mode")
+            name: qsTr("Follow theme mode"),
+            note: qsTr("Light or dark with the theme")
         },
         {
             id: "default",
             icon: "contrast",
-            name: qsTr("Auto (apps decide)")
+            name: qsTr("Auto (apps decide)"),
+            note: qsTr("No preference sent")
         },
         {
             id: "prefer-light",
             icon: "sun",
-            name: qsTr("Prefer light")
+            name: qsTr("Prefer light"),
+            note: qsTr("Signal Day colours")
         },
         {
             id: "prefer-dark",
             icon: "moon",
-            name: qsTr("Prefer dark")
+            name: qsTr("Prefer dark"),
+            note: qsTr("Signal Night colours")
         }
     ]
 
@@ -62,66 +66,30 @@ CollapsibleSection {
         Repeater {
             model: root.schemeOptions
 
-            delegate: StyledRect {
+            delegate: PaletteOption {
+                id: option
+
                 required property var modelData
+                // Light and dark show the real Signal Day and Night tables;
+                // Follow and Auto have no palette of their own, so they show
+                // the live roles (an empty table falls back to Signal.palette).
+                readonly property var scheme: modelData.id === "prefer-light" ? Signal.builtInThemes["hornero-signal-day"] : modelData.id === "prefer-dark" ? Signal.builtInThemes["hornero-signal-night"] : null
 
                 Layout.fillWidth: true
-
-                readonly property bool isCurrent: modelData.id === previewController.pendingGtkColorScheme
-
-                color: Qt.alpha(Signal.tPalette.panel, isCurrent ? Signal.tPalette.panel.a : 0)
-                radius: Appearance.rounding.small
-                border.width: isCurrent ? 1 : 0
-                border.color: Signal.palette.signal
-
-                Accessible.role: Accessible.Button
-                Accessible.name: isCurrent ? qsTr("%1, current").arg(modelData.name) : modelData.name
-
-                Interactive {
-                    function onClicked(): void {
-                        previewController.startGtkColorSchemePreview(modelData.id);
-                        previewController.stageGtkColorScheme(modelData.id);
-                        previewController.commitPending();
-                    }
+                horizontal: true
+                title: modelData.name
+                note: modelData.note
+                selected: modelData.id === previewController.pendingGtkColorScheme
+                kind: "button"
+                palette: scheme ? scheme.palette : ({})
+                terminal: scheme ? scheme.terminal : []
+                paletteLabel: scheme ? qsTr("Palette preview: %1").arg(modelData.name) : qsTr("Palette preview: your current theme")
+                onActivated: {
+                    previewController.startGtkColorSchemePreview(modelData.id);
+                    previewController.stageGtkColorScheme(modelData.id);
+                    previewController.commitPending();
                 }
-
-                MouseArea {
-                    anchors.fill: parent
-                    acceptedButtons: Qt.NoButton
-                    hoverEnabled: true
-                    onEntered: previewController.startGtkColorSchemePreview(modelData.id)
-                }
-
-                RowLayout {
-                    id: schemeRow
-
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.margins: Appearance.padding.normal
-
-                    spacing: Appearance.spacing.normal
-
-                    Glyph {
-                        name: modelData.icon
-                        font.pointSize: Appearance.font.size.large
-                    }
-
-                    StyledText {
-                        Layout.fillWidth: true
-                        text: modelData.name
-                        font.weight: isCurrent ? 500 : 400
-                    }
-
-                    Glyph {
-                        visible: isCurrent
-                        name: "check"
-                        color: Signal.palette.signal
-                        font.pointSize: Appearance.font.size.large
-                    }
-                }
-
-                implicitHeight: schemeRow.implicitHeight + Appearance.padding.normal * 2
+                onPreviewStarted: previewController.startGtkColorSchemePreview(modelData.id)
             }
         }
 

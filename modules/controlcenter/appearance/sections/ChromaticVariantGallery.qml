@@ -7,6 +7,8 @@ import qs.config
 import QtQuick
 import QtQuick.Layouts
 import "../../../../services/chromaticcli.js" as Cli
+import "../../../../services/chromatic.js" as Colour
+import ".."
 
 // Variant chooser (RFC 0002 §6): Auto plus the eight variants, each with
 // an honest one-line description. A tile is a radio: arrows move, Space or
@@ -24,11 +26,30 @@ ColumnLayout {
     Accessible.role: Accessible.RadioButton
     Accessible.name: qsTr("Variant")
 
+    // Palettes are only computed while the gallery exists.
+    Component.onCompleted: {
+        ChromaticPreview.variantPreviewsWanted = true;
+    }
+    Component.onDestruction: ChromaticPreview.variantPreviewsWanted = false
+
     readonly property var tiles: [{
             "id": "auto",
             "label": qsTr("Auto"),
             "description": qsTr("Let Hornero pick from the image: Balanced, Vibrant, Expressive or Muted. Never Neon, Faithful, Monochrome or High contrast.")
         }].concat(Cli.VARIANTS)
+
+    // The scheme a tile shows: the variant's own engine result for the
+    // current source, or (Auto) the one Hornero actually resolved to.
+    function schemeFor(id: string): var {
+        const key = id === "auto" ? resolved : id;
+        if (key && ChromaticPreview.variantSchemes[key])
+            return ChromaticPreview.variantSchemes[key];
+        return id === "auto" && ChromaticPreview.result ? ChromaticPreview.result.scheme : null;
+    }
+
+    function failedFor(id: string): bool {
+        return id !== "auto" && ChromaticPreview.variantFailed[id] === true;
+    }
 
     GridLayout {
         Layout.fillWidth: true
@@ -39,88 +60,28 @@ ColumnLayout {
         Repeater {
             model: root.tiles
 
-            StyledRect {
+            PaletteOption {
                 id: tile
 
                 required property var modelData
                 required property int index
 
-                readonly property bool selected: root.current === modelData.id
-                readonly property bool inUse: root.resolved === modelData.id
+                readonly property var scheme: root.schemeFor(modelData.id)
+                readonly property bool unavailable: root.failedFor(modelData.id)
+                readonly property var flat: scheme ? Colour.flatten(scheme) : ({})
 
                 Layout.fillWidth: true
-                Layout.preferredHeight: 124
-                Layout.alignment: Qt.AlignTop
-                radius: Appearance.rounding.small
-                color: selected ? Signal.palette.signalWell : Signal.layer(Signal.palette.raised, 1)
-                border.width: 1
-                border.color: activeFocus ? Signal.palette.focus : selected ? Signal.palette.signal : Signal.palette.rule
-
-                activeFocusOnTab: index === 0 || selected
-                Accessible.role: Accessible.RadioButton
-                Accessible.name: modelData.label
-                Accessible.description: modelData.description
-                Accessible.checked: selected
-                Accessible.onPressAction: root.chosen(modelData.id)
-
-                Keys.onPressed: event => {
-                    if (event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                        root.chosen(modelData.id);
-                        event.accepted = true;
-                    } else if (event.key === Qt.Key_Right || event.key === Qt.Key_Down || event.key === Qt.Key_Left || event.key === Qt.Key_Up) {
-                        const step = (event.key === Qt.Key_Right || event.key === Qt.Key_Down) ? 1 : -1;
-                        const next = (index + step + root.tiles.length) % root.tiles.length;
-                        root.chosen(root.tiles[next].id);
-                        event.accepted = true;
-                    }
-                }
-
-                ColumnLayout {
-                    id: tileCol
-
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.top: parent.top
-                    anchors.margins: Appearance.padding.normal
-                    spacing: 2
-
-                    RowLayout {
-                        Layout.fillWidth: true
-
-                        StyledText {
-                            text: tile.modelData.label
-                            font.pointSize: Appearance.font.size.normal
-                            font.weight: 600
-                            color: tile.selected ? Signal.palette.onSignalWell : Signal.palette.ink
-                            Layout.fillWidth: true
-                        }
-
-                        StyledText {
-                            visible: tile.inUse && !tile.selected
-                            text: qsTr("in use")
-                            mono: true
-                            font.pointSize: Appearance.font.size.smaller
-                            color: Signal.palette.inkMuted
-                        }
-                    }
-
-                    StyledText {
-                        Layout.fillWidth: true
-                        text: tile.modelData.description
-                        wrapMode: Text.WordWrap
-                        font.pointSize: Appearance.font.size.small
-                        color: tile.selected ? Signal.palette.onSignalWell : Signal.palette.inkMuted
-                    }
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        tile.forceActiveFocus();
-                        root.chosen(tile.modelData.id);
-                    }
-                }
+                Layout.fillHeight: true
+                title: modelData.label
+                note: unavailable ? qsTr("No preview: this variant is not available for the current source and mode.") : modelData.description
+                badge: root.resolved === modelData.id ? qsTr("in use") : ""
+                selected: root.current === modelData.id
+                tabStop: index === 0 || selected
+                pending: !scheme && !unavailable
+                palette: flat
+                paletteLabel: scheme ? qsTr("Palette preview: ground %1, accent %2").arg(flat.ground ?? "").arg(flat.signal ?? "") : ""
+                onActivated: root.chosen(modelData.id)
+                onStep: direction => root.chosen(root.tiles[(index + direction + root.tiles.length) % root.tiles.length].id)
             }
         }
     }

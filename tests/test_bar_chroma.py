@@ -43,3 +43,11 @@ def test_tray_and_extension_icons_are_monochrome_by_default():
     cfg = json.loads((ROOT / "config/shell.default.json").read_text(encoding="utf-8"))
     assert cfg["bar"]["tray"]["recolour"] is True
     assert cfg["bar"]["extensions"]["recolour"] is True
+
+
+def test_clear_sliders_use_a_rule_track_not_capsules():
+    slider = (ROOT / "components/controls/StyledSlider.qml").read_text(encoding="utf-8")
+    assert "property bool ruleTrack: false" in slider
+    assert slider.count("root.ruleTrack ? 0") >= 4
+    inline = (COMPONENTS / "InlineSlider.qml").read_text(encoding="utf-8")
+    assert "ruleTrack: root.tone.active" in inline

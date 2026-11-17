@@ -25,6 +25,9 @@ Slider {
     // overrides them with ink so amber only marks a live interaction.
     property color fillColour: Signal.palette.signal
     property color thumbColour: Signal.palette.signal
+    // Rule track (Cockpit Clear): a 1 px line with square ends and a
+    // slim thumb instead of the capsule track, so the glyph halo stays light.
+    property bool ruleTrack: false
 
     opacity: root.enabled ? 1 : 0.5
 
@@ -33,37 +36,37 @@ Slider {
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             anchors.left: parent.left
-            anchors.topMargin: root.implicitHeight / 3
-            anchors.bottomMargin: root.implicitHeight / 3
+            anchors.topMargin: root.ruleTrack ? (root.implicitHeight - 1) / 2 : root.implicitHeight / 3
+            anchors.bottomMargin: root.ruleTrack ? (root.implicitHeight - 1) / 2 : root.implicitHeight / 3
 
             implicitWidth: root.handle.x - root.implicitHeight / 6
 
             color: root.fillColour
-            radius: Appearance.rounding.small
-            topRightRadius: root.implicitHeight / 15
-            bottomRightRadius: root.implicitHeight / 15
+            radius: root.ruleTrack ? 0 : Appearance.rounding.small
+            topRightRadius: root.ruleTrack ? 0 : root.implicitHeight / 15
+            bottomRightRadius: root.ruleTrack ? 0 : root.implicitHeight / 15
         }
 
         StyledRect {
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             anchors.right: parent.right
-            anchors.topMargin: root.implicitHeight / 3
-            anchors.bottomMargin: root.implicitHeight / 3
+            anchors.topMargin: root.ruleTrack ? (root.implicitHeight - 1) / 2 : root.implicitHeight / 3
+            anchors.bottomMargin: root.ruleTrack ? (root.implicitHeight - 1) / 2 : root.implicitHeight / 3
 
             implicitWidth: parent.width - root.handle.x - root.handle.implicitWidth - root.implicitHeight / 6
 
             color: Signal.palette.lifted
-            radius: Appearance.rounding.small
-            topLeftRadius: root.implicitHeight / 15
-            bottomLeftRadius: root.implicitHeight / 15
+            radius: root.ruleTrack ? 0 : Appearance.rounding.small
+            topLeftRadius: root.ruleTrack ? 0 : root.implicitHeight / 15
+            bottomLeftRadius: root.ruleTrack ? 0 : root.implicitHeight / 15
         }
     }
 
     handle: StyledRect {
         x: root.visualPosition * root.availableWidth - implicitWidth / 2
 
-        implicitWidth: root.implicitHeight / 4.5
+        implicitWidth: root.ruleTrack ? 2 : root.implicitHeight / 4.5
         implicitHeight: root.implicitHeight
 
         color: root.thumbColour

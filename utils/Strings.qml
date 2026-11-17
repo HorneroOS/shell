@@ -15,6 +15,11 @@ Singleton {
         s = s.replace(/\.[A-Za-z0-9]+$/, "");
         s = s.replace(/[_-]\d+x\d+$/, "");
         s = s.replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
+        // Strip a stock-site prefix; a bare site id (`73v179`) is not a
+        // name, so it becomes `Untitled 73v1` (file stem stays on hover).
+        const bare = s.replace(/^(wallhaven|unsplash|pexels|pixabay|wallpaperflare|wallpaperaccess|wp|photo|image|img) /i, "");
+        if (bare !== s && /^[A-Za-z0-9]{4,12}$/.test(bare))
+            return qsTr("Untitled %1").arg(bare.slice(0, 4));
         return s === "" ? String(name ?? "") : s;
     }
 

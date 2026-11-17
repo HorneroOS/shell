@@ -17,18 +17,22 @@ Item {
 
     required property var lock
 
-    // 45° diagonal hairline.
+    // 45° diagonal hairline. It lives only in the strip left of the centre
+    // column, so it can never cross the clock or the sign-in module.
     Item {
-        anchors.fill: parent
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        width: Math.max(0, (root.width - center.implicitWidth) / 2 - Appearance.padding.large * 2)
         clip: true
 
         Rectangle {
-            width: Math.hypot(parent.width, parent.height)
+            width: Math.hypot(root.width, root.height)
             height: 1
             color: Signal.palette.ruleStrong
             opacity: 0.45
-            x: -width / 2 + parent.height * 0.18
-            y: parent.height * 0.82
+            x: -width / 2 + root.height * 0.18
+            y: root.height * 0.82
             transformOrigin: Item.Center
             rotation: -45
             antialiasing: true
@@ -36,6 +40,8 @@ Item {
     }
 
     Center {
+        id: center
+
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
         anchors.bottom: parent.bottom

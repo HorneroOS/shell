@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 
 import qs.config
 import qs.services
+import qs.utils
 import Quickshell
 import Quickshell.Io
 import QtQuick
@@ -219,11 +220,13 @@ Singleton {
     }
 
     function keepCurrent(): void {
+        askTimer.stop();
         followAsking = false;
         cancel();
     }
 
     function applyAsked(): void {
+        askTimer.stop();
         followAsking = false;
         apply(true);
     }
@@ -233,6 +236,14 @@ Singleton {
 
         interval: 60
         onTriggered: root._start()
+    }
+
+    // `ask` policy: Keep current on timeout.
+    Timer {
+        id: askTimer
+
+        interval: 10000
+        onTriggered: root.keepCurrent()
     }
 
     // A forgotten preview never outlives 30 s of inactivity.
@@ -307,6 +318,13 @@ Singleton {
             }
             root.errorCode = "";
             root.result = parsed.result;
+            // `ask` policy: show the new palette and give the user 10 s.
+            if (root.followAsking && !Signal.previewing) {
+                Signal.beginPreview(parsed.result.scheme);
+                askTimer.restart();
+                Toaster.toast(qsTr("Wallpaper changed"), qsTr("Previewing the matching Chromatic palette. Open Appearance, Chromatic to apply it; it reverts in 10 seconds."), "palette");
+                return;
+            }
             // Keep a live preview in step with the candidate.
             if (Signal.previewing) {
                 Signal.beginPreview(parsed.result.scheme);

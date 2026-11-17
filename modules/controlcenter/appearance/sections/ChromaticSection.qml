@@ -1,0 +1,607 @@
+pragma ComponentBehavior: Bound
+
+import "../../components"
+import "../../../launcher/services"
+import qs.components
+import qs.components.controls
+import qs.components.containers
+import qs.services
+import qs.config
+import QtQuick
+import QtQuick.Layouts
+import "../../../../services/chromatic.js" as Colour
+import "../../../../services/chromaticcli.js" as Cli
+
+// Appearance > Chromatic (RFC 0002 §13.3). A candidate palette is built by
+// the helper from the wallpaper (or an image, a colour, the Signal house
+// palette) and shown on a sample desktop; nothing changes until Apply, and
+// Apply goes through `horneroctl appearance chromatic apply` only.
+CollapsibleSection {
+    id: root
+
+    required property var previewController
+    required property var session
+
+    readonly property var req: ChromaticPreview.request
+    readonly property var result: ChromaticPreview.result
+    readonly property var flat: root.result ? Colour.flatten(root.result.scheme) : ({})
+    readonly property bool active: Config.appearance.theme === "hornero-chromatic"
+    readonly property var infer: root.result ? root.result.inference : null
+
+    title: qsTr("Chromatic")
+    description: qsTr("Build the desktop palette from your wallpaper, an image or one colour. Preview it, override anything, then apply.")
+    showBackground: true
+
+    Component.onCompleted: {
+        ChromaticPreview.probe();
+        ChromaticPreview.reset();
+    }
+    // Leaving the section never leaves a candidate on the live shell.
+    Component.onDestruction: ChromaticPreview.previewLive(false)
+    Keys.onEscapePressed: event => {
+        if (ChromaticPreview.live || ChromaticPreview.dirty) {
+            ChromaticPreview.cancel();
+            event.accepted = true;
+        }
+    }
+
+    function labelFor(list: var, id: string): string {
+        for (const e of list) {
+            if (e.id === id)
+                return e.label;
+        }
+        return id;
+    }
+
+    // ---- honest states ------------------------------------------------
+    StyledRect {
+        visible: Config.appearance.highContrast
+        Layout.fillWidth: true
+        implicitHeight: hcText.implicitHeight + Appearance.padding.normal * 2
+        radius: Appearance.rounding.small
+        color: Signal.palette.cueWell
+
+        StyledText {
+            id: hcText
+
+            anchors.fill: parent
+            anchors.margins: Appearance.padding.normal
+            wrapMode: Text.WordWrap
+            text: qsTr("High contrast is on, so the protected high-contrast palette is shown. You can still prepare a Chromatic palette; it shows once High contrast is off.")
+            font.pointSize: Appearance.font.size.small
+            color: Signal.palette.onCueWell
+        }
+    }
+
+    StyledRect {
+        visible: ChromaticPreview.hasError
+        Layout.fillWidth: true
+        implicitHeight: errCol.implicitHeight + Appearance.padding.normal * 2
+        radius: Appearance.rounding.small
+        color: ChromaticPreview.errorCode === "no-source" ? Signal.palette.signalWell : Signal.palette.alertWell
+        Accessible.role: Accessible.AlertMessage
+        Accessible.name: ChromaticPreview.errorTitle
+        Accessible.description: ChromaticPreview.errorDetail
+
+        ColumnLayout {
+            id: errCol
+
+            anchors.fill: parent
+            anchors.margins: Appearance.padding.normal
+            spacing: 2
+
+            StyledText {
+                text: ChromaticPreview.errorTitle
+                font.weight: 600
+                color: ChromaticPreview.errorCode === "no-source" ? Signal.palette.onSignalWell : Signal.palette.onAlertWell
+            }
+
+            StyledText {
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                text: ChromaticPreview.errorDetail
+                font.pointSize: Appearance.font.size.small
+                color: ChromaticPreview.errorCode === "no-source" ? Signal.palette.onSignalWell : Signal.palette.onAlertWell
+            }
+        }
+    }
+
+    StyledRect {
+        visible: ChromaticPreview.followAsking
+        Layout.fillWidth: true
+        implicitHeight: askRow.implicitHeight + Appearance.padding.normal * 2
+        radius: Appearance.rounding.small
+        color: Signal.palette.signalWell
+
+        RowLayout {
+            id: askRow
+
+            anchors.fill: parent
+            anchors.margins: Appearance.padding.normal
+            spacing: Appearance.spacing.normal
+
+            StyledText {
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                text: qsTr("The wallpaper changed. Recolour the desktop to match?")
+                color: Signal.palette.onSignalWell
+            }
+
+            TextButton {
+                text: qsTr("Apply")
+                onClicked: ChromaticPreview.applyAsked()
+            }
+
+            TextButton {
+                text: qsTr("Keep current")
+                type: TextButton.Tonal
+                onClicked: ChromaticPreview.keepCurrent()
+            }
+        }
+    }
+
+    StyledText {
+        Layout.fillWidth: true
+        wrapMode: Text.WordWrap
+        font.pointSize: Appearance.font.size.small
+        color: Signal.palette.inkMuted
+        text: root.active ? qsTr("Chromatic is active: %1.").arg(Signal.chromatic ? `${Signal.chromatic.variant}, ${Signal.chromatic.mode}` : qsTr("waiting for the palette")) : qsTr("Chromatic is not active. Your theme is %1; applying switches to a dynamic palette (Turn off returns to %2).").arg(Signal.themeId || "-").arg(Config.appearance.chromatic.fallback[Signal.themeMode] ?? "-")
+    }
+
+    // ---- candidate on a sample desktop --------------------------------
+    ChromaticSpecimenBoard {
+        visible: !!root.result
+        Layout.fillWidth: true
+        Layout.preferredHeight: 330
+        palette: root.flat
+        light: root.result ? root.result.scheme.mode === "light" : false
+        wallpaper: root.req.source === "image" ? root.req.path : (root.req.source === "wallpaper" ? ChromaticPreview.wallpaper : "")
+        minSurfaceAlpha: root.result ? (root.result.scheme.minSurfaceAlpha ?? ({})) : ({})
+        opacity: ChromaticPreview.busy ? 0.6 : 1
+    }
+
+    StyledText {
+        visible: ChromaticPreview.busy
+        text: qsTr("Building palette…")
+        font.pointSize: Appearance.font.size.small
+        color: Signal.palette.inkMuted
+    }
+
+    ChromaticGateReport {
+        Layout.fillWidth: true
+        gates: root.result ? root.result.gates : null
+        adjustments: root.result ? root.result.adjustments : []
+    }
+
+    // ---- source -------------------------------------------------------
+    SectionContainer {
+        contentSpacing: Appearance.spacing.normal
+
+        Eyebrow {
+            label: qsTr("Source")
+        }
+
+        ChromaticSourceRow {
+            Layout.fillWidth: true
+            request: root.req
+            wallpaper: ChromaticPreview.wallpaper
+            seeds: root.result?.analysis?.seeds ?? []
+            onSourceChosen: (kind, value) => ChromaticPreview.setSource(kind, value)
+            onSeedChosen: hex => ChromaticPreview.setSource("seed", [hex])
+        }
+    }
+
+    // ---- variant ------------------------------------------------------
+    SectionContainer {
+        contentSpacing: Appearance.spacing.normal
+
+        Eyebrow {
+            label: qsTr("Variant")
+        }
+
+        ChromaticVariantGallery {
+            Layout.fillWidth: true
+            current: root.req.variant
+            resolved: root.infer?.variant ?? ""
+            onChosen: v => ChromaticPreview.set("variant", v)
+        }
+    }
+
+    // ---- smart inference ----------------------------------------------
+    SectionContainer {
+        contentSpacing: Appearance.spacing.small
+
+        Eyebrow {
+            label: qsTr("What Hornero inferred")
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+            visible: !root.infer
+            wrapMode: Text.WordWrap
+            font.pointSize: Appearance.font.size.small
+            color: Signal.palette.inkMuted
+            text: qsTr("Nothing to infer yet.")
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+            visible: !!root.infer
+            wrapMode: Text.WordWrap
+            font.weight: 500
+            text: root.infer ? root.infer.personality : ""
+        }
+
+        Repeater {
+            model: Cli.inferenceRows(root.infer, root.req)
+
+            RowLayout {
+                id: infRow
+
+                required property var modelData
+
+                Layout.fillWidth: true
+                spacing: Appearance.spacing.normal
+                Accessible.role: Accessible.StaticText
+                Accessible.name: modelData.overridden ? qsTr("%1: you chose %2; Hornero would pick %3").arg(modelData.label).arg(modelData.chosen).arg(modelData.inferred) : qsTr("%1: %2").arg(modelData.label).arg(modelData.inferred)
+
+                StyledText {
+                    Layout.preferredWidth: 80
+                    text: infRow.modelData.label
+                    font.pointSize: Appearance.font.size.small
+                    color: Signal.palette.inkMuted
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
+                    mono: true
+                    text: infRow.modelData.overridden ? qsTr("%1 (you chose %2)").arg(infRow.modelData.inferred).arg(infRow.modelData.chosen) : infRow.modelData.inferred
+                    font.pointSize: Appearance.font.size.smaller
+                }
+            }
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+            visible: !!root.infer && (root.infer.reasons?.length ?? 0) > 0
+            wrapMode: Text.WordWrap
+            font.pointSize: Appearance.font.size.small
+            color: Signal.palette.inkMuted
+            text: root.infer ? root.infer.reasons.join(" · ") : ""
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+            visible: !!root.infer?.suggestion
+            wrapMode: Text.WordWrap
+            font.pointSize: Appearance.font.size.small
+            color: Signal.palette.signal
+            text: qsTr("Suggestion: %1 suits this image. It is never applied automatically.").arg(root.infer?.suggestion ?? "")
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+            wrapMode: Text.WordWrap
+            font.pointSize: Appearance.font.size.small
+            color: Signal.palette.inkMuted
+            text: qsTr("Every choice below overrides what was inferred. Leave a setting on Auto to follow the image.")
+        }
+    }
+
+    // ---- look ---------------------------------------------------------
+    SectionContainer {
+        contentSpacing: Appearance.spacing.normal
+
+        Eyebrow {
+            label: qsTr("Look")
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Appearance.spacing.normal
+
+            StyledText {
+                Layout.preferredWidth: 90
+                text: qsTr("Mode")
+            }
+
+            SegmentedControl {
+                accessibleName: qsTr("Mode")
+                model: [qsTr("Auto"), qsTr("Dark"), qsTr("Light")]
+                currentIndex: Math.max(0, Cli.MODES.indexOf(root.req.mode))
+                onActivated: i => ChromaticPreview.set("mode", Cli.MODES[i])
+            }
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Appearance.spacing.normal
+
+            StyledText {
+                Layout.preferredWidth: 90
+                text: qsTr("Contrast")
+            }
+
+            SegmentedControl {
+                accessibleName: qsTr("Contrast")
+                model: [qsTr("Auto"), qsTr("Standard"), qsTr("Boosted"), qsTr("Maximum")]
+                currentIndex: Math.max(0, Cli.CONTRASTS.indexOf(root.req.contrast))
+                onActivated: i => ChromaticPreview.set("contrast", Cli.CONTRASTS[i])
+            }
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Appearance.spacing.normal
+
+            StyledText {
+                Layout.preferredWidth: 90
+                text: qsTr("Surfaces")
+            }
+
+            SegmentedControl {
+                accessibleName: qsTr("Surface depth")
+                model: [qsTr("Standard"), qsTr("Deep")]
+                currentIndex: Math.max(0, Cli.DEPTHS.indexOf(root.req.surfaceDepth))
+                onActivated: i => ChromaticPreview.set("surfaceDepth", Cli.DEPTHS[i])
+            }
+        }
+
+        SliderInput {
+            Layout.fillWidth: true
+            label: qsTr("Colour intensity")
+            value: root.req.chroma * 100
+            from: 50
+            to: 150
+            suffix: "%"
+            validator: IntValidator {
+                bottom: 50
+                top: 150
+            }
+            formatValueFunction: val => Math.round(val).toString()
+            parseValueFunction: text => parseInt(text)
+            onValueModified: v => ChromaticPreview.set("chroma", v / 100)
+        }
+
+        SliderInput {
+            Layout.fillWidth: true
+            label: qsTr("Hue shift")
+            value: root.req.hueShift
+            from: -180
+            to: 180
+            suffix: "°"
+            validator: IntValidator {
+                bottom: -180
+                top: 180
+            }
+            formatValueFunction: val => Math.round(val).toString()
+            parseValueFunction: text => parseInt(text)
+            onValueModified: v => ChromaticPreview.set("hueShift", Math.round(v))
+        }
+    }
+
+    // ---- per-mode and follow -------------------------------------------
+    SectionContainer {
+        contentSpacing: Appearance.spacing.normal
+
+        Eyebrow {
+            label: qsTr("Per mode and wallpaper changes")
+        }
+
+        Repeater {
+            model: [{"mode": "dark", "label": qsTr("Dark mode prefers")}, {"mode": "light", "label": qsTr("Light mode prefers")}]
+
+            RowLayout {
+                id: pm
+
+                required property var modelData
+                readonly property var ids: ["auto", "balanced", "vibrant", "expressive", "muted"]
+
+                Layout.fillWidth: true
+                spacing: Appearance.spacing.normal
+
+                StyledText {
+                    Layout.preferredWidth: 130
+                    text: pm.modelData.label
+                }
+
+                SegmentedControl {
+                    accessibleName: pm.modelData.label
+                    model: [qsTr("Auto"), qsTr("Balanced"), qsTr("Vibrant"), qsTr("Expressive"), qsTr("Muted")]
+                    currentIndex: Math.max(0, pm.ids.indexOf(Config.appearance.chromatic.perMode[pm.modelData.mode].variant))
+                    onActivated: i => {
+                        Config.appearance.chromatic.perMode[pm.modelData.mode].variant = pm.ids[i];
+                        Config.save();
+                        ChromaticPreview.regenerate();
+                    }
+                }
+            }
+        }
+
+        SwitchRow {
+            label: qsTr("Recolour automatically when the wallpaper changes")
+            checked: Config.appearance.chromatic.follow === "auto"
+            onToggled: checked => {
+                Config.appearance.chromatic.follow = checked ? "auto" : "off";
+                Config.save();
+            }
+        }
+
+        SwitchRow {
+            label: qsTr("Ask me first, with a preview and a 10 second Keep current")
+            checked: Config.appearance.chromatic.follow === "ask"
+            onToggled: checked => {
+                Config.appearance.chromatic.follow = checked ? "ask" : "off";
+                Config.save();
+            }
+        }
+
+        SwitchRow {
+            label: qsTr("Smooth palette transitions")
+            checked: Config.appearance.chromatic.transition === "smooth"
+            onToggled: checked => {
+                Config.appearance.chromatic.transition = checked ? "smooth" : "instant";
+                Config.save();
+            }
+        }
+    }
+
+    // ---- actions ------------------------------------------------------
+    StyledText {
+        visible: ChromaticPreview.applyError !== ""
+        Layout.fillWidth: true
+        wrapMode: Text.WordWrap
+        color: Signal.palette.alert
+        text: qsTr("Could not apply: %1").arg(ChromaticPreview.applyError)
+        Accessible.role: Accessible.AlertMessage
+    }
+
+    StyledText {
+        visible: ChromaticPreview.notice !== ""
+        Layout.fillWidth: true
+        wrapMode: Text.WordWrap
+        font.pointSize: Appearance.font.size.small
+        color: Signal.palette.inkMuted
+        text: ChromaticPreview.notice
+        Accessible.role: Accessible.StaticText
+    }
+
+    Flow {
+        Layout.fillWidth: true
+        spacing: Appearance.spacing.small
+
+        TextButton {
+            text: ChromaticPreview.applying ? qsTr("Applying…") : qsTr("Apply")
+            disabled: !root.result || ChromaticPreview.applying
+            onClicked: ChromaticPreview.apply(true)
+        }
+
+        TextButton {
+            text: ChromaticPreview.live ? qsTr("Stop previewing") : qsTr("Preview on desktop")
+            type: TextButton.Tonal
+            disabled: !root.result
+            onClicked: ChromaticPreview.previewLive(!ChromaticPreview.live)
+        }
+
+        TextButton {
+            text: qsTr("Cancel")
+            type: TextButton.Tonal
+            disabled: !ChromaticPreview.live && !ChromaticPreview.dirty && ChromaticPreview.applyError === ""
+            onClicked: ChromaticPreview.cancel()
+        }
+
+        TextButton {
+            text: qsTr("Roll back")
+            type: TextButton.Text
+            onClicked: ChromaticPreview.rollback()
+        }
+
+        TextButton {
+            visible: root.active
+            text: qsTr("Turn off Chromatic")
+            type: TextButton.Text
+            onClicked: ChromaticPreview.turnOff()
+        }
+    }
+
+    // ---- saved palettes -----------------------------------------------
+    SectionContainer {
+        contentSpacing: Appearance.spacing.normal
+
+        Eyebrow {
+            label: qsTr("Saved palettes")
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Appearance.spacing.small
+
+            StyledTextField {
+                id: saveName
+
+                Layout.fillWidth: true
+                placeholderText: qsTr("Name this palette")
+                Accessible.name: qsTr("Palette name")
+                onAccepted: saveBtn.clicked()
+            }
+
+            TextButton {
+                id: saveBtn
+
+                text: qsTr("Save")
+                type: TextButton.Tonal
+                disabled: !root.result
+                onClicked: {
+                    ChromaticPreview.saveAs("", saveName.text);
+                    saveName.text = "";
+                }
+            }
+        }
+
+        Repeater {
+            model: Themes.list.filter(t => t.collection === "user")
+
+            RowLayout {
+                id: savedRow
+
+                required property var modelData
+
+                Layout.fillWidth: true
+                spacing: Appearance.spacing.small
+
+                StyledText {
+                    Layout.fillWidth: true
+                    text: savedRow.modelData.name ?? savedRow.modelData.id
+                    elide: Text.ElideRight
+                }
+
+                TextButton {
+                    text: qsTr("Apply")
+                    type: TextButton.Tonal
+                    onClicked: ThemePipeline.applyTheme(savedRow.modelData.id, "")
+                }
+            }
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+            wrapMode: Text.WordWrap
+            font.pointSize: Appearance.font.size.small
+            color: Signal.palette.inkMuted
+            text: qsTr("Saved palettes are ordinary themes: they also appear under Themes. Renaming and deleting are not available yet; remove the folder under hornero/themes in your data directory.")
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Appearance.spacing.small
+
+            StyledTextField {
+                id: ioPath
+
+                Layout.fillWidth: true
+                placeholderText: qsTr("/path/to/palette.json")
+                Accessible.name: qsTr("Palette file path")
+            }
+
+            TextButton {
+                text: qsTr("Export")
+                type: TextButton.Tonal
+                onClicked: ChromaticPreview.exportTo(ioPath.text)
+            }
+
+            TextButton {
+                text: qsTr("Import")
+                type: TextButton.Tonal
+                onClicked: ChromaticPreview.importFrom(ioPath.text)
+            }
+        }
+    }
+
+    Connections {
+        target: ChromaticPreview
+
+        function onSavedPalettesChanged(): void {
+            Themes.reload();
+        }
+    }
+}

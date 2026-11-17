@@ -325,6 +325,7 @@ QtObject {
     // labels and aliases here beside the pane routes; search never scrapes
     // QML or exposes implementation-only control names.
     readonly property list<QtObject> searchTargets: [
+        QtObject { readonly property string id: "chromatic"; readonly property string title: qsTr("Chromatic dynamic colour"); readonly property string pane: "appearance"; readonly property string section: "chromatic"; readonly property string icon: "palette"; readonly property string keywords: "chromatic dynamic wallpaper colour color palette accent variant auto recolor follow" },
         QtObject { readonly property string id: "themes"; readonly property string title: qsTr("Themes"); readonly property string pane: "appearance"; readonly property string section: "themes"; readonly property string icon: "palette"; readonly property string keywords: "theme look style hornero pampa catppuccin" },
         QtObject { readonly property string id: "dark-mode"; readonly property string title: qsTr("Signal Day and Night themes"); readonly property string pane: "appearance"; readonly property string section: "themes"; readonly property string icon: "moon"; readonly property string keywords: "dark light mode brightness" },
         QtObject { readonly property string id: "gtk"; readonly property string title: qsTr("GTK apps"); readonly property string pane: "appearance"; readonly property string section: "gtkTheme"; readonly property string icon: "app-window"; readonly property string keywords: "gtk theme applications manual override" },

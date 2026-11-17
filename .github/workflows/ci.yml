@@ -51,7 +51,9 @@ jobs:
           sudo ldconfig
           pkg-config --modversion libcava
       - name: Configure
-        run: cmake -S . -B build -D DISTRIBUTOR="ci"
+        # RelWithDebInfo like the AUR/nix packages: the Chromatic perf gate
+        # measures optimised code.
+        run: cmake -S . -B build -D DISTRIBUTOR="ci" -D CMAKE_BUILD_TYPE=RelWithDebInfo
       - name: Build
         run: cmake --build build
       - name: Chromatic unit tests (ctest)

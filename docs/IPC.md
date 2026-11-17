@@ -64,7 +64,7 @@ Every profile has the same fields (factory values in
 | `idle.inhibitFullscreen` | bool | inhibit idle while a fullscreen window is focused |
 | `power.suggest` | `""` `performance` `power-saver` | shown as a suggestion; never applied automatically |
 | `hooks.hyprlandTuning` | bool | Hyprland animations/blur/gaps/shadows off while active (Hyprland only) |
-| `hooks.studioAudio` | bool | on entry runs `horneroctl --json studio mode audio low-latency --yes` and restores the previous audio mode on leave |
+| `hooks.studioAudio` | bool | on a deliberate switch into the mode (person or `horneroctl mode set`, never auto/startup/reset) runs `horneroctl --json studio audio apply --yes`; leaving the mode, turning the hook off or a reset runs `studio audio revert --yes`. On by default for Studio only. A shell that exits while applied reverts at its next start |
 
 Locked fields ignore overrides: `focus` keeps `glow`/`scanlines` off;
 `gaming` keeps `glow`/`scanlines` off and `motion` at `off`.

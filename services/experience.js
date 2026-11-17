@@ -135,7 +135,7 @@ var FACTORY = {
             "hooks.studioAudio": false
         }),
     "studio": _profile("studio", "Studio", "wave-square",
-        "Audio first: stable canvas, standard motion, no glow, low-latency audio hint.", {
+        "Audio first: stable canvas, standard motion, no glow; a deliberate switch in applies the reversible PipeWire Low Latency profile.", {
             "motion": "standard",
             "density": "values",
             "glow": false,
@@ -150,7 +150,7 @@ var FACTORY = {
             "idle.inhibitFullscreen": false,
             "power.suggest": "",
             "hooks.hyprlandTuning": false,
-            "hooks.studioAudio": false
+            "hooks.studioAudio": true
         })
 };
 
@@ -307,6 +307,40 @@ function policy(fields, ctx) {
         desktopWidgetsVisible: fields["desktopWidgets"] !== "none" && !(gaming && fs),
         idleInhibit: !!fields["idle.inhibitFullscreen"] && fs
     };
+}
+
+// Studio audio hook (hooks.studioAudio). Applying the PipeWire Low Latency
+// profile changes live audio, so only a deliberate switch consents to it
+// (the person or `horneroctl mode set`, sources "user"/"cli"). Reconciling at
+// shell start, an automatic switch, a reset or a migration never applies;
+// leaving the mode (or turning the hook off) always reverts what was applied.
+// wanted: the hook is on for the active mode; applied: the shell applied it.
+function studioAudioAction(wanted, applied, source) {
+    if (wanted && !applied)
+        return (source === "user" || source === "cli") ? "apply" : "none";
+    if (!wanted && applied)
+        return "revert";
+    return "none";
+}
+
+// Reads `horneroctl --json studio audio status` into what the pane shows.
+// Anything unreadable is "unavailable"; nothing is guessed.
+function parseStudioAudioStatus(text) {
+    var res = null;
+    try {
+        res = JSON.parse(text);
+    } catch (e) {
+        return { available: false, summary: "unavailable: horneroctl studio audio is not available (update horneroctl)" };
+    }
+    if (!res || res.ok !== true || !res.data)
+        return { available: false, summary: "unavailable: " + ((res && res.message) ? String(res.message).split("\n")[0] : "no answer from horneroctl") };
+    var d = res.data;
+    var parts = [];
+    parts.push(d["runtime"] === "readable" ? "quantum " + d["clock.quantum"] + " at " + d["clock.rate"] + " Hz" : "PipeWire runtime unavailable");
+    parts.push(d["xruns"] === "unavailable" ? "xruns unavailable" : d["xruns"] + " xruns");
+    parts.push(d["dsp_load_max_b_q"] === "unavailable" ? "DSP load unavailable" : "DSP load " + Math.round(parseFloat(d["dsp_load_max_b_q"]) * 100) + "%");
+    parts.push("drop-in " + (d["dropin"] || "unknown"));
+    return { available: true, summary: parts.join(", "), data: d };
 }
 
 // Notification routing under the hold policy. Critical notifications are

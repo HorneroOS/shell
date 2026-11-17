@@ -97,7 +97,8 @@ def test_factory_profiles_follow_the_visual_language():
     assert all(p[m]["layout.apply"] is False for m in MODES)
     # Only gaming touches Hyprland; nobody changes studio audio unasked.
     assert [m for m in MODES if p[m]["hooks.hyprlandTuning"]] == ["gaming"]
-    assert not any(p[m]["hooks.studioAudio"] for m in MODES)
+    # Only a deliberate switch into studio applies the audio profile.
+    assert [m for m in MODES if p[m]["hooks.studioAudio"]] == ["studio"]
 
 
 def test_signal_is_strictly_richer_than_everyday():
@@ -468,11 +469,59 @@ def test_gaming_hides_the_desktop_layer_under_fullscreen():
     assert "opacity: Experience.desktopWidgetsVisible ? 1 : 0" in background
 
 
-def test_studio_audio_hint_uses_horneroctl_and_restores_only_its_own_change():
-    assert '["horneroctl", "--json", "studio", "mode", "show"]' in QML
-    assert '["horneroctl", "--json", "studio", "mode", "audio", "low-latency", "--yes"]' in QML
-    assert 'String(res.message).includes("already")' in QML
-    assert "studioAudioRestore !== \"\"" in QML
+def test_studio_audio_hook_uses_the_reversible_horneroctl_profile():
+    assert '["horneroctl", "--json", "studio", "audio", "apply", "--yes"]' in QML
+    assert '["horneroctl", "--json", "studio", "audio", "revert", "--yes"]' in QML
+    assert '["horneroctl", "--json", "studio", "audio", "status"]' in QML
+    assert "Model.studioAudioAction(root.studioAudioWanted, root.studioAudioRestore !== \"\", src)" in QML
+    # Reconciling at start is never an apply.
+    assert 'root._syncStudioAudio("startup")' in QML
+    # The old intent-only path is gone.
+    assert '"studio", "mode", "audio"' not in QML
+
+
+@pytest.mark.parametrize("wanted,applied,source,expected", [
+    (True, False, "user", "apply"),
+    (True, False, "cli", "apply"),
+    (True, False, "auto", "none"),
+    (True, False, "startup", "none"),
+    (True, False, "reset", "none"),
+    (True, False, "migration", "none"),
+    (True, True, "user", "none"),
+    (False, True, "user", "revert"),
+    (False, True, "auto", "revert"),
+    (False, True, "reset", "revert"),
+    (False, True, "startup", "revert"),
+    (False, False, "user", "none"),
+])
+def test_studio_audio_action_table(wanted, applied, source, expected):
+    out = run_js(f"return studioAudioAction({json.dumps(wanted)}, {json.dumps(applied)}, {json.dumps(source)});")
+    assert out == expected
+
+
+def test_studio_profile_applies_audio_but_no_other_mode_does():
+    assert policy_fields("studio")["hooks.studioAudio"] is True
+    for mode in ("focus", "everyday", "signal", "gaming"):
+        assert policy_fields(mode)["hooks.studioAudio"] is False
+
+
+def policy_fields(mode):
+    return run_js(f"return resolve({json.dumps(mode)}, {{}}).fields;")
+
+
+def test_studio_audio_status_is_parsed_honestly():
+    ok = json.dumps({"ok": True, "data": {"runtime": "readable", "clock.quantum": "128", "clock.rate": "48000",
+                                            "xruns": "3", "dsp_load_max_b_q": "0.04", "dropin": "applied"}})
+    out = run_js(f"return parseStudioAudioStatus({json.dumps(ok)});")
+    assert out["available"] is True
+    assert out["summary"] == "quantum 128 at 48000 Hz, 3 xruns, DSP load 4%, drop-in applied"
+    down = json.dumps({"ok": True, "data": {"runtime": "unavailable", "xruns": "unavailable",
+                                              "dsp_load_max_b_q": "unavailable", "dropin": "absent"}})
+    out = run_js(f"return parseStudioAudioStatus({json.dumps(down)});")
+    assert out["summary"] == "PipeWire runtime unavailable, xruns unavailable, DSP load unavailable, drop-in absent"
+    for bad in ("", "not json", json.dumps({"ok": False, "message": "unknown studio subcommand: audio\nExample"})):
+        out = run_js(f"return parseStudioAudioStatus({json.dumps(bad)});")
+        assert out["available"] is False and out["summary"].startswith("unavailable")
 
 
 def test_launcher_exposes_every_mode_and_revert():

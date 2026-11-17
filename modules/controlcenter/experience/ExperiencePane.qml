@@ -668,7 +668,7 @@ Item {
                     }
 
                     SwitchRow {
-                        label: qsTr("Studio low-latency audio hint")
+                        label: qsTr("Apply PipeWire Low Latency when switching into this mode")
                         checked: root.field("hooks.studioAudio")
                         onToggled: checked => root.customise("hooks.studioAudio", checked)
                     }
@@ -676,7 +676,7 @@ Item {
                     StyledText {
                         Layout.fillWidth: true
                         visible: root.selectedMode === "studio"
-                        text: !Experience.studioAudioProbed ? qsTr("Reading studio audio…") : Experience.studioAudioAvailable ? qsTr("Studio audio: %1 (via horneroctl).").arg(Experience.studioAudioMode || qsTr("available")) : (Experience.studioAudioMessage || qsTr("Studio audio is not available on this system."))
+                        text: !Experience.studioAudioProbed ? qsTr("Reading studio audio…") : Experience.studioAudioAvailable ? qsTr("Studio audio: %1 (via horneroctl). PipeWire now: %2.").arg(Experience.studioAudioMode || qsTr("available")).arg(Experience.studioAudioStatus || qsTr("unavailable")) : qsTr("%1 PipeWire now: %2.").arg(Experience.studioAudioMessage || qsTr("Studio audio is not available on this system.")).arg(Experience.studioAudioStatus || qsTr("unavailable"))
                         font.pointSize: Appearance.font.size.small
                         color: Signal.palette.inkMuted
                         wrapMode: Text.WordWrap

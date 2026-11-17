@@ -127,6 +127,8 @@ Singleton {
     property bool studioAudioProbed: false
     property string studioAudioMode: ""
     property string studioAudioMessage: ""
+    // Result of `horneroctl studio audio status` (quantum, xruns, DSP load).
+    property string studioAudioStatus: ""
 
     // Automatic switching (off by default, local-only).
     readonly property bool autoEnabled: Config.experience.auto.fullscreenGaming
@@ -317,6 +319,8 @@ Singleton {
     function probeStudioAudio(): void {
         if (!studioShowProc.running)
             studioShowProc.running = true;
+        if (!studioStatusProc.running)
+            studioStatusProc.running = true;
     }
 
     function noteHeld(): void {
@@ -328,20 +332,22 @@ Singleton {
             Toaster.toast(qsTr("%1 mode").arg(root.label), src === "auto" ? qsTr("Switched automatically. Run \"Revert mode\" or open Settings › Experience to go back.") : root.profile.description, root.glyph);
         if (root.fields["layout.apply"])
             root.applyPreferredLayout();
-        root._syncStudioAudio(leaving);
+        root._syncStudioAudio(src);
         root.modeApplied(root.mode, src);
     }
 
-    // Studio low-latency hint through horneroctl (records intent; PipeWire
-    // drop-ins are owned by HorneroOS/config). Restores what it changed.
-    function _syncStudioAudio(leaving: string): void {
-        if (root.studioAudioWanted && root.studioAudioRestore === "") {
-            studioSetProc.restoreAfter = true;
-            studioSetProc.exec(["horneroctl", "--json", "studio", "mode", "audio", "low-latency", "--yes"]);
-        } else if (!root.studioAudioWanted && root.studioAudioRestore !== "") {
-            const target = root.studioAudioRestore;
-            studioSetProc.restoreAfter = false;
-            studioSetProc.exec(["horneroctl", "--json", "studio", "mode", "audio", target, "--yes"]);
+    // Studio low-latency profile through horneroctl: applied on a deliberate
+    // switch into a mode whose hook is on, reverted when that stops being
+    // true. horneroctl owns the PipeWire drop-in and never overwrites a
+    // personal file; a failure is shown in the Experience pane, not hidden.
+    function _syncStudioAudio(src: string): void {
+        const action = Model.studioAudioAction(root.studioAudioWanted, root.studioAudioRestore !== "", src);
+        if (action === "apply") {
+            studioSetProc.applying = true;
+            studioSetProc.exec(["horneroctl", "--json", "studio", "audio", "apply", "--yes"]);
+        } else if (action === "revert") {
+            studioSetProc.applying = false;
+            studioSetProc.exec(["horneroctl", "--json", "studio", "audio", "revert", "--yes"]);
         }
     }
 
@@ -453,7 +459,7 @@ Singleton {
             root._adopt(st);
             root.stateReady = true;
             if (first) {
-                root._syncStudioAudio("");
+                root._syncStudioAudio("startup");
                 root._autoEvaluate();
             }
         }
@@ -542,10 +548,23 @@ Singleton {
     }
 
     Process {
+        id: studioStatusProc
+
+        command: ["horneroctl", "--json", "studio", "audio", "status"]
+        stdout: StdioCollector {
+            onStreamFinished: root.studioAudioStatus = Model.parseStudioAudioStatus(text).summary
+        }
+        onExited: exitCode => {
+            if (exitCode !== 0 && root.studioAudioStatus.length === 0)
+                root.studioAudioStatus = qsTr("unavailable: horneroctl studio audio is not available (update horneroctl)");
+        }
+    }
+
+    Process {
         id: studioSetProc
 
-        // true: this call applies low-latency and records what to restore.
-        property bool restoreAfter: false
+        // true: this call applies the profile; false: it reverts it.
+        property bool applying: false
 
         stdout: StdioCollector {
             onStreamFinished: {
@@ -555,19 +574,21 @@ Singleton {
                 } catch (e) {
                     res = null;
                 }
+                root.studioAudioProbed = true;
                 if (!res || res.ok !== true) {
                     root.studioAudioAvailable = false;
-                    root.studioAudioProbed = true;
-                    root.studioAudioMessage = res?.message ?? qsTr("horneroctl studio mode is not available on this system.");
+                    root.studioAudioMessage = res?.message ?? qsTr("horneroctl studio audio is not available on this system (update horneroctl).");
+                    if (studioSetProc.applying)
+                        Toaster.toast(qsTr("Studio audio not applied"), String(root.studioAudioMessage).split("\n")[0], "wave-square", Toast.Warning);
                     return;
                 }
                 root.studioAudioAvailable = true;
-                root.studioAudioProbed = true;
-                root.studioAudioMode = res.data?.audio_mode ?? "";
-                const prev = res.data?.previous_audio_mode ?? "";
-                // "already low-latency": the user chose it; nothing to restore.
-                root.studioAudioRestore = studioSetProc.restoreAfter && prev.length > 0 && prev !== "low-latency" && !String(res.message).includes("already") ? prev : "";
+                root.studioAudioMessage = "";
+                // "applied" is only remembered so a later revert is possible;
+                // the previous mode itself is horneroctl's record.
+                root.studioAudioRestore = studioSetProc.applying ? "balanced" : "";
                 root._persist();
+                root.probeStudioAudio();
             }
         }
     }

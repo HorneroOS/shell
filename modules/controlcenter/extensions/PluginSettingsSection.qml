@@ -46,7 +46,7 @@ ColumnLayout {
     // order its first member was declared (alphabetical by key within a
     // group, like before).
     function settingKeys(): var {
-        const keys = Object.keys(root.declarations).sort();
+        const keys = Object.keys(root.declarations).filter(key => root.declarations[key].hidden !== true).sort();
         const groups = [];
         for (const key of keys) {
             const group = root.groupOf(key);
@@ -152,7 +152,10 @@ ColumnLayout {
             text: qsTr("Confirm reset all")
             type: TextButton.Filled
             onClicked: {
-                Config.plugins.resetSettings(root.storageKey);
+                // Hidden state (timers, markers) is not the person's
+                // setting: Reset all clears only the visible controls.
+                for (const key of root.settingKeys())
+                    Config.plugins.resetSetting(root.storageKey, key);
                 root.confirmResetAll = false;
             }
         }
@@ -537,6 +540,42 @@ ColumnLayout {
                                 field.fieldError = qsTr("Text does not satisfy the declared length limits.");
                                 text = String(root.effectiveValue(field.key));
                             }
+                        }
+                    }
+                }
+            }
+
+            // strings: one entry per line.
+            StyledRect {
+                visible: field.decl && field.decl.type === "strings"
+                Layout.fillWidth: true
+                implicitHeight: Appearance.font.size.normal * 2 * 4 + Appearance.padding.normal * 2
+                radius: Appearance.rounding.small
+                color: Signal.tPalette.raised
+
+                TextArea {
+                    anchors.fill: parent
+                    anchors.margins: Appearance.padding.small
+                    wrapMode: TextEdit.NoWrap
+                    color: Signal.palette.ink
+                    font.family: Appearance.font.family.sans
+                    font.pointSize: Appearance.font.size.normal
+                    selectionColor: Signal.palette.signal
+                    placeholderText: qsTr("One entry per line")
+                    Accessible.name: field.title
+                    Accessible.description: field.description
+                    text: field.decl && field.decl.type === "strings" ? (root.effectiveValue(field.key) ?? []).join("\n") : ""
+                    onActiveFocusChanged: {
+                        if (activeFocus)
+                            return;
+                        const lines = text.split("\n").map(line => line.trim()).filter(line => line.length > 0);
+                        if (JSON.stringify(lines) === JSON.stringify(root.effectiveValue(field.key)))
+                            return;
+                        if (root.setValue(field.key, lines)) {
+                            field.fieldError = "";
+                        } else {
+                            field.fieldError = qsTr("Entries must be non-empty and within the declared count and length limits.");
+                            text = (root.effectiveValue(field.key) ?? []).join("\n");
                         }
                     }
                 }

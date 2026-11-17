@@ -243,12 +243,13 @@ Singleton {
             colour: ["alpha"],
             list: ["options", "minItems", "maxItems"],
             text: ["minLength", "maxLength", "rows"],
-            path: ["kind", "mustExist"]
+            path: ["kind", "mustExist"],
+            strings: ["minItems", "maxItems", "maxLength"]
         };
         if (!Object.prototype.hasOwnProperty.call(allowed, declaration.type))
             return false;
         const keys = Object.keys(declaration);
-        const known = ["type", "default", "description", "title", "group", "visibleWhen"].concat(allowed[declaration.type]);
+        const known = ["type", "default", "description", "title", "group", "visibleWhen", "hidden"].concat(allowed[declaration.type]);
         if (!keys.every(key => known.includes(key)) || !keys.includes("default"))
             return false;
         if (declaration.description !== undefined
@@ -259,6 +260,18 @@ Singleton {
             if (declaration[field] !== undefined
                     && (typeof declaration[field] !== "string" || declaration[field].length > limit
                         || !/\S/.test(declaration[field])))
+                return false;
+        }
+        if (declaration.hidden !== undefined && (typeof declaration.hidden !== "boolean" || declaration.visibleWhen !== undefined))
+            return false;
+        if (declaration.type === "strings") {
+            for (const [bound, ceiling] of [["minItems", 32], ["maxItems", 32], ["maxLength", 128]]) {
+                const limit = declaration[bound];
+                if (limit !== undefined && (!Number.isInteger(limit) || limit < 0 || limit > ceiling))
+                    return false;
+            }
+            if (declaration.minItems !== undefined && declaration.maxItems !== undefined
+                    && declaration.minItems > declaration.maxItems)
                 return false;
         }
         if (declaration.visibleWhen !== undefined) {
@@ -378,6 +391,14 @@ Singleton {
             const most = typeof declaration.maxItems === "number" ? declaration.maxItems : options.length;
             const least = typeof declaration.minItems === "number" ? declaration.minItems : 0;
             return value.length >= least && value.length <= most;
+        } else if (declaration.type === "strings") {
+            if (!Array.isArray(value))
+                return false;
+            const most = typeof declaration.maxItems === "number" ? declaration.maxItems : 32;
+            const least = typeof declaration.minItems === "number" ? declaration.minItems : 0;
+            const longest = typeof declaration.maxLength === "number" ? declaration.maxLength : 128;
+            return value.length >= least && value.length <= most
+                && value.every(item => typeof item === "string" && item.length > 0 && item.length <= longest);
         } else if (declaration.type === "path") {
             return typeof value === "string" && value.length <= 1024 && !/[\u0000-\u001f\u007f]/.test(value);
         } else {
@@ -561,31 +582,83 @@ Singleton {
     // entry simply does not exist.
     function normalizeContributes(contributes: var): var {
         const normalized = ({
-                commands: []
+                commands: [],
+                quickSettings: [],
+                panels: []
             });
-        const list = contributes && typeof contributes === "object" && !Array.isArray(contributes) ? contributes.commands : null;
-        if (!Array.isArray(list))
+        if (!contributes || typeof contributes !== "object" || Array.isArray(contributes))
             return normalized;
         const glyph = /^[a-z0-9-]+$/;
-        const seen = new Set();
-        for (const item of list) {
-            if (normalized.commands.length >= 16)
-                break;
-            if (!item || typeof item !== "object" || Array.isArray(item)
-                    || typeof item.id !== "string" || !/^[a-z][a-zA-Z0-9]{0,31}$/.test(item.id) || seen.has(item.id)
-                    || typeof item.title !== "string" || !/\S/.test(item.title) || item.title.length > 48)
+        const limits = {
+            commands: 16,
+            quickSettings: 4,
+            panels: 4
+        };
+        for (const kind of Object.keys(limits)) {
+            const list = contributes[kind];
+            if (!Array.isArray(list))
                 continue;
-            seen.add(item.id);
-            const command = {
-                id: item.id,
-                title: item.title,
-                description: typeof item.description === "string" && /\S/.test(item.description) && item.description.length <= 120 ? item.description : "",
-                glyph: typeof item.glyph === "string" && glyph.test(item.glyph) ? item.glyph : "command",
-                keywords: Array.isArray(item.keywords) ? item.keywords.filter(k => typeof k === "string" && /\S/.test(k) && k.length <= 24).slice(0, 8) : []
-            };
-            normalized.commands.push(command);
+            const seen = new Set();
+            for (const item of list) {
+                if (normalized[kind].length >= limits[kind])
+                    break;
+                if (!item || typeof item !== "object" || Array.isArray(item)
+                        || typeof item.id !== "string" || !/^[a-z][a-zA-Z0-9]{0,31}$/.test(item.id) || seen.has(item.id)
+                        || typeof item.title !== "string" || !/\S/.test(item.title) || item.title.length > 48)
+                    continue;
+                seen.add(item.id);
+                const entry = {
+                    id: item.id,
+                    title: item.title,
+                    glyph: typeof item.glyph === "string" && glyph.test(item.glyph) ? item.glyph : (kind === "commands" ? "command" : kind === "panels" ? "layout-sidebar" : "bolt")
+                };
+                if (kind === "commands") {
+                    entry.description = typeof item.description === "string" && /\S/.test(item.description) && item.description.length <= 120 ? item.description : "";
+                    entry.keywords = Array.isArray(item.keywords) ? item.keywords.filter(k => typeof k === "string" && /\S/.test(k) && k.length <= 24).slice(0, 8) : [];
+                }
+                if (kind === "quickSettings")
+                    entry.kind = item.kind === "button" ? "button" : "toggle";
+                normalized[kind].push(entry);
+            }
         }
         return normalized;
+    }
+
+    // Quick-setting tiles of enabled extensions (manifest data only).
+    function tileList(): var {
+        const result = [];
+        for (const entry of root.pluginsForSurface("quickSetting")) {
+            const tiles = entry.contributes && Array.isArray(entry.contributes.quickSettings) ? entry.contributes.quickSettings : [];
+            for (const tile of tiles)
+                result.push(Object.assign({}, tile, {
+                    pluginId: entry.id,
+                    pluginName: entry.name || entry.id,
+                    entrypoint: entry.entrypoint,
+                    key: `${entry.id}:${tile.id}`
+                }));
+        }
+        return result;
+    }
+
+    // Tiles the person placed (plugins.quickTiles), in their order, that
+    // still exist; stale keys are ignored, never shown.
+    function placedTiles(): var {
+        const wanted = Config.plugins.quickTilesList();
+        const all = root.tileList();
+        return wanted.map(key => all.find(t => t.key === key)).filter(t => !!t);
+    }
+
+    function panelList(): var {
+        const result = [];
+        for (const entry of root.pluginsForSurface("panel")) {
+            const panels = entry.contributes && Array.isArray(entry.contributes.panels) ? entry.contributes.panels : [];
+            for (const panel of panels)
+                result.push(Object.assign({}, panel, {
+                    pluginId: entry.id,
+                    entrypoint: entry.entrypoint
+                }));
+        }
+        return result;
     }
 
     function markContributes(id: string, contributes: var): void {

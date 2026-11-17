@@ -81,7 +81,7 @@ JsonObject {
             return typeof value === "string" && value.length <= 9;
         if (type === "path")
             return typeof value === "string" && value.length <= 1024;
-        if (type === "list")
+        if (type === "list" || type === "strings")
             return Array.isArray(value) && value.length <= 32;
         return false;
     }

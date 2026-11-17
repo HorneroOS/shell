@@ -740,6 +740,7 @@ Singleton {
         return {
             settings: plugins.settings,
             instances: plugins.instances,
+            quickTiles: plugins.quickTiles,
             desktopWidgetSlots: plugins.desktopWidgetSlots,
             desktopWidgets: plugins.desktopWidgets,
             dashboardLayout: plugins.dashboardLayout,

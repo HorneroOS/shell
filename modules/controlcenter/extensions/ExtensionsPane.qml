@@ -440,7 +440,44 @@ Item {
         }
     }
 
-    Component.onCompleted: root.refreshCatalog()
+    // Deep link from Control Center › Experience › Desktop widgets: the
+    // section "plugin:<id>" opens that installed extension's details with
+    // its generated settings already visible.
+    function openRequestedPlugin(): void {
+        const request = root.session.requestedSection;
+        if (!request.startsWith("plugin:"))
+            return;
+        const id = request.slice(7);
+        if (!root.installedEntry(id))
+            return;
+        root.pluginSearch = id;
+        root.expandedPluginId = id;
+        root.settingsPluginId = id;
+        root.session.requestedSection = "";
+    }
+
+    Connections {
+        target: root.session
+
+        function onRequestedSectionChanged(): void {
+            if (root.session.active === "extensions")
+                root.openRequestedPlugin();
+        }
+    }
+
+    Connections {
+        target: Plugins
+
+        function onEntriesChanged(): void {
+            if (root.session.active === "extensions")
+                root.openRequestedPlugin();
+        }
+    }
+
+    Component.onCompleted: {
+        root.refreshCatalog();
+        root.openRequestedPlugin();
+    }
 
     anchors.fill: parent
 

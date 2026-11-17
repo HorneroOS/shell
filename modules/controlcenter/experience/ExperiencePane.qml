@@ -738,61 +738,15 @@ Item {
                 SectionCard {
                     id: deckCard
 
-                    readonly property var availability: Plugins.deckAvailability()
-                    readonly property var hidden: {
-                        const _deck = Config.experience.deck;
-                        return Experience.deckHiddenFor(root.selectedMode);
-                    }
-
                     visible: root.field("desktopWidgets") === "instruments"
-                    title: qsTr("Signal deck")
+                    title: qsTr("Desktop widgets")
 
-                    StyledText {
+                    DeckManager {
                         Layout.fillWidth: true
-                        text: qsTr("Desktop instruments shown in %1 mode. They load from the installed first-party extensions, sit on the flanks of each display, and never cover the bar or the desktop clock. Move or resize them with “Edit widgets”.").arg(root.selProfile.label)
-                        font.pointSize: Appearance.font.size.small
-                        color: Signal.palette.inkMuted
-                        wrapMode: Text.WordWrap
-                    }
-
-                    Repeater {
-                        model: Experience.deckCatalogue
-
-                        delegate: SwitchRow {
-                            id: deckRow
-
-                            required property string modelData
-                            readonly property string avail: deckCard.availability[deckRow.modelData] ?? "not-installed"
-
-                            readonly property string name: deckRow.modelData.replace(/^hornero-/, "").replace(/-/g, " ")
-                            readonly property string note: deckRow.avail === "ready" ? "" : deckRow.avail === "not-installed" ? qsTr("not installed") : deckRow.avail === "untrusted" ? qsTr("not trusted") : deckRow.avail === "safe-mode" ? qsTr("safe mode") : qsTr("failed to load")
-
-                            label: deckRow.note === "" ? deckRow.name : qsTr("%1 (%2)").arg(deckRow.name).arg(deckRow.note)
-                            enabled: deckRow.avail === "ready"
-                            checked: deckRow.avail === "ready" && !deckCard.hidden.includes(deckRow.modelData)
-                            onToggled: checked => {
-                                const res = Experience.setDeckHidden(root.selectedMode, deckRow.modelData, !checked);
-                                root.actionMessage = res.startsWith("error") ? res : "";
-                            }
-                        }
-                    }
-
-                    RowLayout {
-                        Layout.fillWidth: true
-
-                        Item {
-                            Layout.fillWidth: true
-                        }
-
-                        TextButton {
-                            visible: Experience.deckCustomisedFor(root.selectedMode)
-                            text: qsTr("Reset deck")
-                            type: TextButton.Text
-                            onClicked: {
-                                const res = Experience.resetDeck(root.selectedMode, "");
-                                root.actionMessage = res.startsWith("error") ? res : "";
-                            }
-                        }
+                        mode: root.selectedMode
+                        modeLabel: root.selProfile.label
+                        session: root.session
+                        onFailed: message => root.actionMessage = message
                     }
                 }
 

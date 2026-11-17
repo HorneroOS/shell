@@ -483,7 +483,23 @@ Geometry hints live on the desktop surface:
   `gaming`) instantiates no widget at all, so nothing draws and every
   provider lease is released and nothing polls for the desktop.
   Deck geometry is stored per mode in `experience.deck`, not in
-  `plugins.desktopWidgets`.
+  `plugins.desktopWidgets`. The deck is managed in Control Center ›
+  Experience › Desktop widgets ([EXPERIENCE.md](EXPERIENCE.md)): switches,
+  Edit desktop, anchors, order, size/opacity/accent/density, presets, and a
+  **Settings** button per widget that deep-links to the extension's generated
+  settings in Extensions (`session.navigateTo("extensions", "plugin:<id>")`).
+  Per-widget *options* (which metrics, units, formats) are the extension's
+  own `capabilities.settings`, validated by the host settings UI and stored in
+  the shell config, never in the package; the deck's frame look is host-owned
+  and extensions cannot read or override it. Shipped options: System Insight
+  (`showCores`, `showTemperatures`, `showGpu`, `showDisk`, `temperatureUnit`,
+  `warnPercent`), Network Scope (`scale`, `showSessionTotals`,
+  `showNetworkName`), Audio Deck (`bandCount`, `showSpectrum`, `showArtist`),
+  Calendar (`weekStart`, `dateStyle`, ...), Agenda (`showIsoWeek`,
+  `showDayOfYear`, `showYearProgress`), Moon Phase (`hemisphere`,
+  `dataDensity`, ...). Not offered because the shared providers cannot back
+  them honestly: network interface choice, telemetry sample window, a
+  calendar events source.
 - Desktop widgets live on the desktop layer, below windows; they never
   take keyboard focus from applications.
 

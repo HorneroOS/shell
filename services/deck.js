@@ -33,12 +33,12 @@ function minCentre(areaWidth) {
 // sizes match each extension's manifest hint (HorneroOS/plugins); when the
 // installed manifest declares a hint the host passes it and wins.
 var CATALOGUE = [
-    { id: "hornero-system-insight", label: "System Insight", side: "right", edge: "top", width: 520, height: 360, minWidth: 380, minHeight: 240 },
-    { id: "hornero-network-scope", label: "Network Scope", side: "left", edge: "top", width: 440, height: 340, minWidth: 320, minHeight: 240 },
-    { id: "hornero-audio-deck", label: "Audio Deck", side: "left", edge: "bottom", width: 420, height: 300, minWidth: 320, minHeight: 220 },
-    { id: "hornero-calendar", label: "Calendar", side: "right", edge: "top", width: 320, height: 420, minWidth: 260, minHeight: 340 },
-    { id: "hornero-agenda", label: "Agenda", side: "right", edge: "bottom", width: 320, height: 340, minWidth: 260, minHeight: 280 },
-    { id: "hornero-moon-phase", label: "Moon Phase", side: "left", edge: "bottom", width: 320, height: 300, minWidth: 260, minHeight: 240 }
+    { id: "hornero-system-insight", glyph: "cpu", label: "System Insight", side: "right", edge: "top", width: 520, height: 360, minWidth: 380, minHeight: 240 },
+    { id: "hornero-network-scope", glyph: "wifi", label: "Network Scope", side: "left", edge: "top", width: 440, height: 340, minWidth: 320, minHeight: 240 },
+    { id: "hornero-audio-deck", glyph: "volume", label: "Audio Deck", side: "left", edge: "bottom", width: 420, height: 300, minWidth: 320, minHeight: 220 },
+    { id: "hornero-calendar", glyph: "calendar", label: "Calendar", side: "right", edge: "top", width: 320, height: 420, minWidth: 260, minHeight: 340 },
+    { id: "hornero-agenda", glyph: "list", label: "Agenda", side: "right", edge: "bottom", width: 320, height: 340, minWidth: 260, minHeight: 280 },
+    { id: "hornero-moon-phase", glyph: "moon", label: "Moon Phase", side: "left", edge: "bottom", width: 320, height: 300, minWidth: 260, minHeight: 240 }
 ];
 
 function ids() {
@@ -65,23 +65,39 @@ function _snapDown(v) {
 
 // Catalogue entries with the installed manifest's size hints applied.
 // `hints` is {id: {width, height, minWidth, minHeight}} (all optional).
-function items(hints) {
+// `prefs` is the person's per-mode choice {anchors: {id: "left-top"...},
+// order: [id]} (see anchorsFor/orderFor); it changes the preferred rail,
+// the end of the rail a widget stacks from, and the priority order, and
+// nothing else. Without prefs the factory composition is returned.
+function items(hints, prefs) {
+    var anchors = prefs && _isObject(prefs.anchors) ? prefs.anchors : {};
+    var order = effectiveOrder(prefs && prefs.order);
     var out = [];
     for (var i = 0; i < CATALOGUE.length; i++) {
         var base = CATALOGUE[i];
         var hint = hints && hints[base.id] ? hints[base.id] : {};
         var minW = Math.max(80, Math.round(_num(hint.minWidth, base.minWidth)));
         var minH = Math.max(80, Math.round(_num(hint.minHeight, base.minHeight)));
+        var side = base.side;
+        var edge = base.edge;
+        var st = prefs && _isObject(prefs.style) && _isObject(prefs.style[base.id]) ? prefs.style[base.id] : {};
+        var factor = SIZE_FACTOR[st.size] || 1;
+        if (ANCHORS.indexOf(anchors[base.id]) >= 0) {
+            var parts = anchors[base.id].split("-");
+            side = parts[0];
+            edge = parts[1];
+        }
         out.push({
             id: base.id,
             label: base.label,
-            side: base.side,
-            edge: base.edge,
-            priority: i,
+            glyph: base.glyph,
+            side: side,
+            edge: edge,
+            priority: order.indexOf(base.id),
             minWidth: minW,
             minHeight: minH,
-            width: Math.max(minW, Math.round(_num(hint.width, base.width))),
-            height: Math.max(minH, Math.round(_num(hint.height, base.height)))
+            width: Math.max(minW, Math.round(_num(hint.width, base.width) * factor)),
+            height: Math.max(minH, Math.round(_num(hint.height, base.height) * factor))
         });
     }
     return out;
@@ -293,13 +309,25 @@ function _tryRail(item, geo, side, rails, area, reserved, placed) {
 
 // ---- Per-mode overrides ------------------------------------------------
 //
-// Stored in shell.json under experience.deck:
-//   hidden:   { "<mode>": ["<pluginId>", ...] }
-//   geometry: { "<mode>": { "<screen>": { "<pluginId>": {fx, fy, width, height} } } }
-// Both are written only when the person changes something and are cleared
-// by a deck reset (one screen or the whole mode).
-
 var MODES = ["focus", "everyday", "signal", "gaming", "studio"];
+// Where a widget may be anchored: preferred rail, then the end of the rail
+// it stacks from. The solver still moves it to the other rail when the
+// preferred one is full, and never covers the bar or a reserved zone.
+var ANCHORS = ["left-top", "left-bottom", "right-top", "right-bottom"];
+// Per-widget appearance (all optional; the default is the factory look):
+//   opacity 0.3-1   frame background opacity (content stays opaque)
+//   size    small | normal | large   scales the default frame
+//   accent  default | signal | cue   header tick and frame outline colour
+//   density compact | cozy | roomy   inner padding
+var STYLE_ENUMS = {
+    size: ["small", "normal", "large"],
+    accent: ["default", "signal", "cue"],
+    density: ["compact", "cozy", "roomy"]
+};
+var STYLE_FACTORY = { opacity: 1, size: "normal", accent: "default", density: "cozy" };
+var SIZE_FACTOR = { small: 0.85, normal: 1, large: 1.2 };
+var MAX_PRESETS = 5;
+var PRESET_NAME = /^[A-Za-z0-9][A-Za-z0-9 _-]{0,23}$/;
 
 function _isObject(v) {
     return v && typeof v === "object" && !Array.isArray(v);
@@ -309,56 +337,230 @@ function _validId(id) {
     return typeof id === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id);
 }
 
+function _has(o, k) {
+    return Object.prototype.hasOwnProperty.call(o, k);
+}
+
+function _cleanIds(list) {
+    var seen = [];
+    if (!Array.isArray(list))
+        return seen;
+    for (var i = 0; i < list.length; i++)
+        if (_validId(list[i]) && seen.indexOf(list[i]) < 0)
+            seen.push(list[i]);
+    return seen;
+}
+
+function _cleanGeometryMap(screens) {
+    var cleanScreens = {};
+    if (!_isObject(screens))
+        return cleanScreens;
+    for (var screen in screens) {
+        if (!_has(screens, screen) || !_isObject(screens[screen]))
+            continue;
+        var cleanEntries = {};
+        for (var pid in screens[screen]) {
+            if (!_has(screens[screen], pid) || !_validId(pid))
+                continue;
+            var g = screens[screen][pid];
+            if (!_isObject(g))
+                continue;
+            var e = {};
+            if (typeof g.fx === "number" && isFinite(g.fx) && typeof g.fy === "number" && isFinite(g.fy)) {
+                e.fx = Math.max(0, Math.min(1, Math.round(g.fx * 10000) / 10000));
+                e.fy = Math.max(0, Math.min(1, Math.round(g.fy * 10000) / 10000));
+            }
+            if (Number.isInteger(g.width) && Number.isInteger(g.height) && g.width >= 80 && g.width <= 4000 && g.height >= 80 && g.height <= 4000) {
+                e.width = g.width;
+                e.height = g.height;
+            }
+            if (Object.keys(e).length > 0)
+                cleanEntries[pid] = e;
+        }
+        if (Object.keys(cleanEntries).length > 0)
+            cleanScreens[screen] = cleanEntries;
+    }
+    return cleanScreens;
+}
+
+function _cleanAnchors(raw) {
+    var out = {};
+    if (!_isObject(raw))
+        return out;
+    for (var id in raw)
+        if (_has(raw, id) && _validId(id) && ANCHORS.indexOf(raw[id]) >= 0)
+            out[id] = raw[id];
+    return out;
+}
+
+function _cleanStyleEntry(raw) {
+    var out = {};
+    if (!_isObject(raw))
+        return out;
+    if (typeof raw.opacity === "number" && isFinite(raw.opacity)) {
+        var o = Math.max(0.3, Math.min(1, Math.round(raw.opacity * 100) / 100));
+        if (o !== 1)
+            out.opacity = o;
+    }
+    for (var key in STYLE_ENUMS)
+        if (STYLE_ENUMS[key].indexOf(raw[key]) >= 0 && raw[key] !== STYLE_FACTORY[key])
+            out[key] = raw[key];
+    return out;
+}
+
+function _cleanStyle(raw) {
+    var out = {};
+    if (!_isObject(raw))
+        return out;
+    for (var id in raw) {
+        if (!_has(raw, id) || !_validId(id))
+            continue;
+        var e = _cleanStyleEntry(raw[id]);
+        if (Object.keys(e).length > 0)
+            out[id] = e;
+    }
+    return out;
+}
+
+// One mode's overrides: {hidden: [id], geometry: {screen: {id: geo}},
+// anchors: {id: anchor}, order: [id]}. Empty parts are omitted, so the
+// factory deck is {}.
+function _cleanState(raw) {
+    var out = {};
+    if (!_isObject(raw))
+        return out;
+    var hidden = _cleanIds(raw.hidden);
+    if (hidden.length > 0)
+        out.hidden = hidden;
+    var geometry = _cleanGeometryMap(raw.geometry);
+    if (Object.keys(geometry).length > 0)
+        out.geometry = geometry;
+    var anchors = _cleanAnchors(raw.anchors);
+    if (Object.keys(anchors).length > 0)
+        out.anchors = anchors;
+    var order = _cleanIds(raw.order);
+    if (order.length > 0 && !_isDefaultOrder(order))
+        out.order = order;
+    var style = _cleanStyle(raw.style);
+    if (Object.keys(style).length > 0)
+        out.style = style;
+    return out;
+}
+
+function _isDefaultOrder(order) {
+    var def = ids();
+    var eff = effectiveOrder(order);
+    for (var i = 0; i < def.length; i++)
+        if (def[i] !== eff[i])
+            return false;
+    return true;
+}
+
+// The catalogue order with the person's preferred order first; ids they
+// never ordered keep their factory place after it.
+function effectiveOrder(order) {
+    var out = _cleanIds(order).filter(function (id) {
+        return entryFor(id) !== null;
+    });
+    var def = ids();
+    for (var i = 0; i < def.length; i++)
+        if (out.indexOf(def[i]) < 0)
+            out.push(def[i]);
+    return out;
+}
+
+function _stateOf(deck, mode) {
+    var d = _isObject(deck) ? deck : {};
+    return _cleanState({
+        hidden: _isObject(d.hidden) ? d.hidden[mode] : null,
+        geometry: _isObject(d.geometry) ? d.geometry[mode] : null,
+        anchors: _isObject(d.anchors) ? d.anchors[mode] : null,
+        order: _isObject(d.order) ? d.order[mode] : null,
+        style: _isObject(d.style) ? d.style[mode] : null
+    });
+}
+
+// Stored in shell.json under experience.deck, per mode:
+//   hidden:   { "<mode>": ["<pluginId>", ...] }
+//   geometry: { "<mode>": { "<screen>": { "<pluginId>": {fx, fy, width, height} } } }
+//   anchors:  { "<mode>": { "<pluginId>": "left-top" | ... } }
+//   order:    { "<mode>": ["<pluginId>", ...] }   (priority, first wins)
+//   style:    { "<mode>": { "<pluginId>": {opacity, size, accent, density} } }
+//   presets:  { "<mode>": { "<name>": <one mode's state, as above> } }
+// Everything is written only when the person changes something and is
+// cleared by a deck reset (presets are kept: they are saved on purpose).
 function sanitizeDeck(raw) {
     var out = { hidden: {}, geometry: {} };
     if (!_isObject(raw))
         return out;
-    var mi;
-    for (mi = 0; mi < MODES.length; mi++) {
+    for (var mi = 0; mi < MODES.length; mi++) {
         var mode = MODES[mi];
-        if (_isObject(raw.hidden) && Array.isArray(raw.hidden[mode])) {
-            var seen = [];
-            for (var i = 0; i < raw.hidden[mode].length; i++) {
-                var id = raw.hidden[mode][i];
-                if (_validId(id) && seen.indexOf(id) < 0)
-                    seen.push(id);
-            }
-            if (seen.length > 0)
-                out.hidden[mode] = seen;
+        var st = _stateOf(raw, mode);
+        if (st.hidden)
+            out.hidden[mode] = st.hidden;
+        if (st.geometry)
+            out.geometry[mode] = st.geometry;
+        if (st.anchors) {
+            out.anchors = out.anchors || {};
+            out.anchors[mode] = st.anchors;
         }
-        var screens = _isObject(raw.geometry) ? raw.geometry[mode] : null;
-        if (!_isObject(screens))
-            continue;
-        var cleanScreens = {};
-        for (var screen in screens) {
-            if (!Object.prototype.hasOwnProperty.call(screens, screen) || !_isObject(screens[screen]))
-                continue;
-            var cleanEntries = {};
-            for (var pid in screens[screen]) {
-                if (!Object.prototype.hasOwnProperty.call(screens[screen], pid) || !_validId(pid))
-                    continue;
-                var g = screens[screen][pid];
-                if (!_isObject(g))
-                    continue;
-                var e = {};
-                if (typeof g.fx === "number" && isFinite(g.fx) && typeof g.fy === "number" && isFinite(g.fy)) {
-                    e.fx = Math.max(0, Math.min(1, Math.round(g.fx * 10000) / 10000));
-                    e.fy = Math.max(0, Math.min(1, Math.round(g.fy * 10000) / 10000));
-                }
-                if (Number.isInteger(g.width) && Number.isInteger(g.height) && g.width >= 80 && g.width <= 4000 && g.height >= 80 && g.height <= 4000) {
-                    e.width = g.width;
-                    e.height = g.height;
-                }
-                if (Object.keys(e).length > 0)
-                    cleanEntries[pid] = e;
-            }
-            if (Object.keys(cleanEntries).length > 0)
-                cleanScreens[screen] = cleanEntries;
+        if (st.order) {
+            out.order = out.order || {};
+            out.order[mode] = st.order;
         }
-        if (Object.keys(cleanScreens).length > 0)
-            out.geometry[mode] = cleanScreens;
+        if (st.style) {
+            out.style = out.style || {};
+            out.style[mode] = st.style;
+        }
+        var presets = _isObject(raw.presets) ? raw.presets[mode] : null;
+        if (_isObject(presets)) {
+            var names = Object.keys(presets).filter(function (n) {
+                return PRESET_NAME.test(n);
+            }).slice(0, MAX_PRESETS);
+            for (var ni = 0; ni < names.length; ni++) {
+                out.presets = out.presets || {};
+                out.presets[mode] = out.presets[mode] || {};
+                out.presets[mode][names[ni]] = _cleanState(presets[names[ni]]);
+            }
+        }
     }
     return out;
+}
+
+function _withState(deck, mode, st) {
+    var next = sanitizeDeck(deck);
+    delete next.hidden[mode];
+    delete next.geometry[mode];
+    if (next.anchors)
+        delete next.anchors[mode];
+    if (next.order)
+        delete next.order[mode];
+    if (next.style)
+        delete next.style[mode];
+    var clean = _cleanState(st);
+    if (clean.hidden)
+        next.hidden[mode] = clean.hidden;
+    if (clean.geometry)
+        next.geometry[mode] = clean.geometry;
+    if (clean.anchors) {
+        next.anchors = next.anchors || {};
+        next.anchors[mode] = clean.anchors;
+    }
+    if (clean.order) {
+        next.order = next.order || {};
+        next.order[mode] = clean.order;
+    }
+    if (clean.style) {
+        next.style = next.style || {};
+        next.style[mode] = clean.style;
+    }
+    if (next.style && Object.keys(next.style).length === 0)
+        delete next.style;
+    if (next.anchors && Object.keys(next.anchors).length === 0)
+        delete next.anchors;
+    if (next.order && Object.keys(next.order).length === 0)
+        delete next.order;
+    return next;
 }
 
 function hiddenFor(deck, mode) {
@@ -370,42 +572,118 @@ function savedFor(deck, mode, screen) {
     return g && g[screen || "default"] ? g[screen || "default"] : {};
 }
 
+function anchorsFor(deck, mode) {
+    var a = sanitizeDeck(deck).anchors;
+    return a && a[mode] ? a[mode] : {};
+}
+
+function orderFor(deck, mode) {
+    var o = sanitizeDeck(deck).order;
+    return effectiveOrder(o && o[mode] ? o[mode] : []);
+}
+
+function styleFor(deck, mode) {
+    var s = sanitizeDeck(deck).style;
+    return s && s[mode] ? s[mode] : {};
+}
+
+// One widget's effective appearance: factory values under the overrides.
+function styleOf(deck, mode, id) {
+    return Object.assign({}, STYLE_FACTORY, styleFor(deck, mode)[id] || {});
+}
+
+// The person's per-mode layout preferences, as items() takes them.
+function prefsFor(deck, mode) {
+    return { anchors: anchorsFor(deck, mode), order: orderFor(deck, mode), style: styleFor(deck, mode) };
+}
+
+// key: opacity | size | accent | density; value "" (or null) restores the
+// factory value of that key.
+function setStyle(deck, mode, id, key, value) {
+    if (MODES.indexOf(mode) < 0 || !_validId(id) || entryFor(id) === null)
+        return { ok: false, deck: sanitizeDeck(deck), error: "invalid mode or widget id" };
+    if (key !== "opacity" && !_has(STYLE_ENUMS, key))
+        return { ok: false, deck: sanitizeDeck(deck), error: "invalid style key: " + key };
+    var st = _stateOf(deck, mode);
+    var entry = Object.assign({}, (st.style || {})[id] || {});
+    if (value === "" || value === null || value === undefined) {
+        delete entry[key];
+    } else if (key === "opacity") {
+        if (typeof value !== "number" || !isFinite(value) || value < 0.3 || value > 1)
+            return { ok: false, deck: sanitizeDeck(deck), error: "opacity must be between 0.3 and 1" };
+        entry.opacity = value;
+    } else {
+        if (STYLE_ENUMS[key].indexOf(value) < 0)
+            return { ok: false, deck: sanitizeDeck(deck), error: "invalid " + key + ": " + value };
+        entry[key] = value;
+    }
+    st.style = Object.assign({}, st.style || {});
+    st.style[id] = entry;
+    return { ok: true, deck: _withState(deck, mode, st), error: "" };
+}
+
 function setHidden(deck, mode, id, hide) {
     if (MODES.indexOf(mode) < 0 || !_validId(id))
         return { ok: false, deck: sanitizeDeck(deck), error: "invalid mode or widget id" };
-    var next = sanitizeDeck(deck);
-    var list = (next.hidden[mode] || []).filter(function (x) {
+    var st = _stateOf(deck, mode);
+    var list = (st.hidden || []).filter(function (x) {
         return x !== id;
     });
     if (hide)
         list.push(id);
-    if (list.length > 0)
-        next.hidden[mode] = list;
-    else
-        delete next.hidden[mode];
-    return { ok: true, deck: next, error: "" };
+    st.hidden = list;
+    return { ok: true, deck: _withState(deck, mode, st), error: "" };
 }
 
 function setGeometry(deck, mode, screen, id, geometry) {
     if (MODES.indexOf(mode) < 0 || !_validId(id))
         return { ok: false, deck: sanitizeDeck(deck), error: "invalid mode or widget id" };
-    var next = sanitizeDeck(deck);
-    var probe = { hidden: {}, geometry: {} };
-    probe.geometry[mode] = {};
-    probe.geometry[mode][screen || "default"] = {};
-    probe.geometry[mode][screen || "default"][id] = geometry;
-    var clean = sanitizeDeck(probe).geometry[mode];
-    if (!clean)
-        return { ok: false, deck: next, error: "invalid geometry" };
-    if (!next.geometry[mode])
-        next.geometry[mode] = {};
+    var probe = {};
+    probe[screen || "default"] = {};
+    probe[screen || "default"][id] = geometry;
+    var clean = _cleanGeometryMap(probe);
+    if (!clean[screen || "default"])
+        return { ok: false, deck: sanitizeDeck(deck), error: "invalid geometry" };
+    var st = _stateOf(deck, mode);
     var key = screen || "default";
-    next.geometry[mode][key] = Object.assign({}, next.geometry[mode][key] || {}, clean[key]);
-    return { ok: true, deck: next, error: "" };
+    st.geometry = st.geometry || {};
+    st.geometry[key] = Object.assign({}, st.geometry[key] || {}, clean[key]);
+    return { ok: true, deck: _withState(deck, mode, st), error: "" };
+}
+
+// anchor "" removes the preference (back to the factory rail).
+function setAnchor(deck, mode, id, anchor) {
+    if (MODES.indexOf(mode) < 0 || !_validId(id) || entryFor(id) === null)
+        return { ok: false, deck: sanitizeDeck(deck), error: "invalid mode or widget id" };
+    if (anchor !== "" && ANCHORS.indexOf(anchor) < 0)
+        return { ok: false, deck: sanitizeDeck(deck), error: "invalid anchor: " + anchor };
+    var st = _stateOf(deck, mode);
+    st.anchors = Object.assign({}, st.anchors || {});
+    if (anchor === "")
+        delete st.anchors[id];
+    else
+        st.anchors[id] = anchor;
+    return { ok: true, deck: _withState(deck, mode, st), error: "" };
+}
+
+// Moves one widget up (delta -1: earlier = higher priority, placed first)
+// or down the priority order.
+function moveWidget(deck, mode, id, delta) {
+    if (MODES.indexOf(mode) < 0 || entryFor(id) === null)
+        return { ok: false, deck: sanitizeDeck(deck), error: "invalid mode or widget id" };
+    var order = orderFor(deck, mode);
+    var at = order.indexOf(id);
+    var to = Math.max(0, Math.min(order.length - 1, at + (delta < 0 ? -1 : 1)));
+    order.splice(at, 1);
+    order.splice(to, 0, id);
+    var st = _stateOf(deck, mode);
+    st.order = order;
+    return { ok: true, deck: _withState(deck, mode, st), error: "" };
 }
 
 // Restores the factory deck: for one screen, or (screen omitted) the whole
-// mode, including which widgets were turned off.
+// mode, including which widgets were turned off, their anchors and order.
+// Saved presets are kept.
 function reset(deck, mode, screen) {
     var next = sanitizeDeck(deck);
     if (screen) {
@@ -416,14 +694,91 @@ function reset(deck, mode, screen) {
         }
         return next;
     }
-    delete next.hidden[mode];
-    delete next.geometry[mode];
-    return next;
+    return _withState(next, mode, {});
 }
 
 function isCustomised(deck, mode) {
-    var d = sanitizeDeck(deck);
-    return !!d.hidden[mode] || !!d.geometry[mode];
+    return Object.keys(_stateOf(deck, mode)).length > 0;
+}
+
+// ---- Presets -----------------------------------------------------------
+//
+// Built-in presets choose which instruments are on and, for the cozy ones,
+// a soft look (the rest of the mode's overrides return to factory). Saved presets snapshot everything
+// the person customised in that mode and are stored per mode.
+
+var BUILTIN_PRESETS = [
+    { id: "all", label: "Everything", show: null },
+    { id: "cozy", label: "Cozy corner", show: ["hornero-calendar", "hornero-agenda", "hornero-moon-phase"], style: { opacity: 0.82, size: "large", accent: "cue", density: "roomy" } },
+    { id: "kawaii-night", label: "Kawaii night", show: null, style: { opacity: 0.7, accent: "signal", density: "roomy" } },
+    { id: "monitor", label: "System monitor", show: ["hornero-system-insight", "hornero-network-scope", "hornero-audio-deck"] },
+    { id: "time", label: "Time and sky", show: ["hornero-calendar", "hornero-agenda", "hornero-moon-phase"] },
+    { id: "minimal", label: "System Insight only", show: ["hornero-system-insight"] }
+];
+
+function builtinPresets() {
+    return BUILTIN_PRESETS.map(function (p) {
+        return { id: p.id, label: p.label, show: p.show ? p.show.slice() : ids(), style: p.style ? Object.assign({}, p.style) : null };
+    });
+}
+
+function applyBuiltin(deck, mode, presetId) {
+    if (MODES.indexOf(mode) < 0)
+        return { ok: false, deck: sanitizeDeck(deck), error: "invalid mode" };
+    for (var i = 0; i < BUILTIN_PRESETS.length; i++) {
+        if (BUILTIN_PRESETS[i].id !== presetId)
+            continue;
+        var show = BUILTIN_PRESETS[i].show;
+        var hidden = show ? ids().filter(function (id) {
+            return show.indexOf(id) < 0;
+        }) : [];
+        var style = {};
+        if (BUILTIN_PRESETS[i].style)
+            ids().forEach(function (id) {
+                style[id] = BUILTIN_PRESETS[i].style;
+            });
+        return { ok: true, deck: _withState(deck, mode, { hidden: hidden, style: style }), error: "" };
+    }
+    return { ok: false, deck: sanitizeDeck(deck), error: "unknown preset: " + presetId };
+}
+
+function presetNames(deck, mode) {
+    var p = sanitizeDeck(deck).presets;
+    return p && p[mode] ? Object.keys(p[mode]) : [];
+}
+
+function savePreset(deck, mode, name) {
+    if (MODES.indexOf(mode) < 0)
+        return { ok: false, deck: sanitizeDeck(deck), error: "invalid mode" };
+    if (typeof name !== "string" || !PRESET_NAME.test(name))
+        return { ok: false, deck: sanitizeDeck(deck), error: "invalid preset name (letters, digits, space, - and _, up to 24)" };
+    var names = presetNames(deck, mode);
+    if (names.indexOf(name) < 0 && names.length >= MAX_PRESETS)
+        return { ok: false, deck: sanitizeDeck(deck), error: "at most " + MAX_PRESETS + " saved presets per mode" };
+    var next = sanitizeDeck(deck);
+    next.presets = next.presets || {};
+    next.presets[mode] = next.presets[mode] || {};
+    next.presets[mode][name] = _stateOf(deck, mode);
+    return { ok: true, deck: next, error: "" };
+}
+
+function applyPreset(deck, mode, name) {
+    var p = sanitizeDeck(deck).presets;
+    if (!p || !p[mode] || !_has(p[mode], name))
+        return { ok: false, deck: sanitizeDeck(deck), error: "unknown preset: " + name };
+    return { ok: true, deck: _withState(deck, mode, p[mode][name]), error: "" };
+}
+
+function deletePreset(deck, mode, name) {
+    var next = sanitizeDeck(deck);
+    if (!next.presets || !next.presets[mode] || !_has(next.presets[mode], name))
+        return { ok: false, deck: next, error: "unknown preset: " + name };
+    delete next.presets[mode][name];
+    if (Object.keys(next.presets[mode]).length === 0)
+        delete next.presets[mode];
+    if (Object.keys(next.presets).length === 0)
+        delete next.presets;
+    return { ok: true, deck: next, error: "" };
 }
 
 // Honest per-widget status for the Experience pane and the deck host.

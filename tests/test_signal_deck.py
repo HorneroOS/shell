@@ -401,8 +401,9 @@ def test_user_widgets_use_the_deck_solver_and_never_overlap():
 def test_missing_extensions_degrade_honestly():
     for state in ("not-installed", "untrusted", "failed", "safe-mode"):
         assert f'"{state}"' in PLUGINS
-    assert "Plugins.deckAvailability()" in PANE
-    assert "not installed" in PANE and "failed to load" in PANE
+    manager = (ROOT / "modules" / "controlcenter" / "experience" / "DeckManager.qml").read_text()
+    assert "Plugins.deckAvailability()" in manager
+    assert "not installed" in manager and "failed to load" in manager
 
 
 def test_deck_never_writes_extension_lifecycle_state():
@@ -500,3 +501,122 @@ def test_a_floating_reserved_zone_shrinks_a_widget_instead_of_dropping_the_rail(
     assert placed["hornero-calendar"]["y"] + placed["hornero-calendar"]["height"] <= mascot["y"]
     res = compose(area, reserved=[mascot])
     assert_sane(res, area, reserved=[mascot])
+
+
+# ---- Desktop widgets manager (anchors, order, presets, appearance) -------
+
+def test_anchor_and_order_prefs_change_the_composition_and_validate():
+    out = run_js("""
+        let d = setAnchor({}, "signal", "hornero-moon-phase", "right-top").deck;
+        d = moveWidget(d, "signal", "hornero-moon-phase", -1).deck;
+        const it = items({}, prefsFor(d, "signal")).find(i => i.id === "hornero-moon-phase");
+        return {
+            side: it.side, edge: it.edge, prio: it.priority,
+            bad: setAnchor({}, "signal", "hornero-moon-phase", "middle").ok,
+            unknown: setAnchor({}, "signal", "hornero-nope", "left-top").ok,
+            factory: items({}).map(i => i.id) .join() === ids().join(),
+            cleared: isCustomised(setAnchor(d, "signal", "hornero-moon-phase", "").deck, "signal"),
+        };
+    """)
+    assert out["side"] == "right" and out["edge"] == "top"
+    assert out["prio"] == 4
+    assert out["bad"] is False and out["unknown"] is False and out["factory"] is True
+
+
+def test_moving_to_the_factory_order_stores_nothing():
+    out = run_js("""
+        let d = moveWidget({}, "signal", "hornero-agenda", -1).deck;
+        d = moveWidget(d, "signal", "hornero-agenda", 1).deck;
+        return {d: d, custom: isCustomised(d, "signal")};
+    """)
+    assert out["custom"] is False and out["d"] == {"hidden": {}, "geometry": {}}
+
+
+def test_presets_save_apply_delete_and_survive_reset():
+    out = run_js("""
+        let d = setHidden({}, "signal", "hornero-agenda", true).deck;
+        d = setStyle(d, "signal", "hornero-calendar", "opacity", 0.7).deck;
+        d = savePreset(d, "signal", "My desk").deck;
+        const reset1 = reset(d, "signal", "");
+        const back = applyPreset(reset1, "signal", "My desk").deck;
+        return {
+            names: presetNames(reset1, "signal"),
+            resetCustom: isCustomised(reset1, "signal"),
+            hidden: hiddenFor(back, "signal"),
+            opacity: styleOf(back, "signal", "hornero-calendar").opacity,
+            badName: savePreset({}, "signal", "../x").ok,
+            other: presetNames(reset1, "studio"),
+            deleted: presetNames(deletePreset(back, "signal", "My desk").deck, "signal"),
+            unknown: applyPreset({}, "signal", "nope").ok,
+        };
+    """)
+    assert out["names"] == ["My desk"] and out["resetCustom"] is False
+    assert out["hidden"] == ["hornero-agenda"] and out["opacity"] == 0.7
+    assert out["badName"] is False and out["other"] == [] and out["deleted"] == [] and out["unknown"] is False
+
+
+def test_preset_count_is_bounded():
+    out = run_js("""
+        let d = {};
+        for (let i = 0; i < 7; i++) { const r = savePreset(d, "signal", "p" + i); if (r.ok) d = r.deck; }
+        return {n: presetNames(d, "signal").length, overwrite: savePreset(d, "signal", "p0").ok};
+    """)
+    assert out["n"] == 5 and out["overwrite"] is True
+
+
+def test_builtin_presets_choose_widgets_and_cozy_looks():
+    out = run_js("""
+        const mon = applyBuiltin({}, "signal", "monitor").deck;
+        const cozy = applyBuiltin({}, "signal", "cozy").deck;
+        return {
+            monHidden: hiddenFor(mon, "signal"),
+            cozyShown: ids().filter(id => hiddenFor(cozy, "signal").indexOf(id) < 0),
+            look: styleOf(cozy, "signal", "hornero-calendar"),
+            unknown: applyBuiltin({}, "signal", "x").ok,
+            sized: items({}, prefsFor(cozy, "signal")).find(i => i.id === "hornero-calendar").width,
+        };
+    """)
+    assert out["monHidden"] == ["hornero-calendar", "hornero-agenda", "hornero-moon-phase"]
+    assert out["cozyShown"] == ["hornero-calendar", "hornero-agenda", "hornero-moon-phase"]
+    assert out["look"] == {"opacity": 0.82, "size": "large", "accent": "cue", "density": "roomy"}
+    assert out["unknown"] is False and out["sized"] == 384
+
+
+def test_style_is_validated_and_factory_values_are_not_stored():
+    out = run_js("""
+        const bad = [setStyle({}, "signal", "hornero-agenda", "opacity", 0.1).ok,
+                     setStyle({}, "signal", "hornero-agenda", "size", "huge").ok,
+                     setStyle({}, "signal", "hornero-agenda", "colour", "red").ok];
+        const same = setStyle({}, "signal", "hornero-agenda", "density", "cozy").deck;
+        const dirty = sanitizeDeck({style: {signal: {"hornero-agenda": {opacity: 9, size: "x", accent: "cue"}, "../x": {accent: "cue"}}}});
+        return {bad, same, dirty};
+    """)
+    assert out["bad"] == [False, False, False]
+    assert out["same"] == {"hidden": {}, "geometry": {}}
+    assert out["dirty"]["style"] == {"signal": {"hornero-agenda": {"accent": "cue"}}}
+
+
+def test_frame_applies_deck_style_and_high_contrast_stays_opaque():
+    frame = (ROOT / "modules" / "plugins" / "DesktopWidgetFrame.qml").read_text()
+    assert "Experience.deckStyleOf(" in frame
+    assert "Config.appearance.highContrast ? 1 : root.look.opacity" in frame
+    assert "deckStyleOf" in EXPERIENCE and "deckItems" in EXPERIENCE
+
+
+def test_manager_lives_in_the_experience_pane_and_links_to_extension_settings():
+    manager = (ROOT / "modules" / "controlcenter" / "experience" / "DeckManager.qml").read_text()
+    pane = (ROOT / "modules" / "controlcenter" / "experience" / "ExperiencePane.qml").read_text()
+    ext = (ROOT / "modules" / "controlcenter" / "extensions" / "ExtensionsPane.qml").read_text()
+    assert "DeckManager {" in pane
+    assert "Plugins.setDesktopEditing(" in manager and "Experience.resetDeck(" in manager
+    assert 'navigateTo("extensions", `plugin:${card.modelData}`)' in manager
+    assert 'startsWith("plugin:")' in ext and "settingsPluginId = id" in ext
+    # Never writes extension lifecycle state or loads a widget for the map.
+    assert "Plugins.setEnabled" not in manager and "horneroctl" not in manager and "Loader" not in manager
+    assert "Experience.setDeckStyle(" in manager and "Experience.saveDeckPreset(" in manager
+
+
+def test_deck_manager_ipc_is_documented():
+    ipc = (ROOT / "docs" / "IPC.md").read_text()
+    for name in ("setDeckAnchor", "moveDeckWidget", "setDeckStyle", "applyDeckBuiltin", "saveDeckPreset", "applyDeckPreset", "deleteDeckPreset", "deckPresets"):
+        assert name in EXPERIENCE and name in ipc, name

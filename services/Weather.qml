@@ -16,6 +16,11 @@ Singleton {
     property list<var> hourlyForecast
     property string lastError: ""
     property bool loading: false
+    // Wall-clock ms of the last successful forecast. Opening a dashboard view
+    // must not wipe a good forecast and refetch it (3 sequential HTTPS calls):
+    // refreshIfStale() keeps the data on screen and refreshes in the background.
+    property double lastFetchMs: 0
+    readonly property int freshMs: 15 * 60 * 1000
 
     readonly property bool locationConfigured: !!(Config.services.weatherLocation || "").trim()
     property int _requestGeneration: 0
@@ -53,6 +58,7 @@ Singleton {
     // refreshing it must never infer consent to send an IP/location.
     function reload(): void {
         _requestGeneration++;
+        lastFetchMs = 0;
         const configLocation = (Config.services.weatherLocation || "").trim();
         lastError = "";
         cc = null;
@@ -155,6 +161,22 @@ Singleton {
         });
     }
 
+    // Open-view entry point: no-op while the forecast is fresh; background
+    // refresh (data stays visible) when stale; full reload only when there is
+    // nothing to show yet.
+    function refreshIfStale(): void {
+        if (!locationConfigured)
+            return;
+        if (ready && lastFetchMs > 0 && Date.now() - lastFetchMs < freshMs)
+            return;
+        if (ready && loc) {
+            fetchWeatherData();
+            return;
+        }
+        if (!loading)
+            reload();
+    }
+
     function fetchWeatherData(): void {
         const url = getWeatherUrl();
         if (url === "") {
@@ -217,6 +239,7 @@ Singleton {
                 }
                 hourlyForecast = hourlyList;
                 lastError = "";
+                lastFetchMs = Date.now();
                 loading = false;
             } catch (e) {
                 loading = false;
@@ -293,7 +316,7 @@ Singleton {
         interval: 3600000
         running: root.locationConfigured
         repeat: true
-        onTriggered: root.reload()
+        onTriggered: root.refreshIfStale()
     }
 
     Component.onCompleted: reload()

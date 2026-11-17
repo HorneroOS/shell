@@ -17,10 +17,11 @@ Item {
     implicitWidth: 968
     implicitHeight: Weather.ready ? layout.implicitHeight : notice.implicitHeight
 
-    readonly property bool isLoading: Weather.locationConfigured && (Weather.loading || (!Weather.ready && !Weather.lastError))
+    // Stale data stays on screen while a background refresh runs.
+    readonly property bool isLoading: Weather.locationConfigured && !Weather.ready && (Weather.loading || !Weather.lastError)
     readonly property bool isError: Weather.locationConfigured && !Weather.loading && !!Weather.lastError && !Weather.ready
 
-    Component.onCompleted: Weather.reload()
+    Component.onCompleted: Weather.refreshIfStale()
 
     // Not-ready states share one frame.
     Instruments.Frame {

@@ -64,7 +64,7 @@ Item {
                 StyledText {
                     Layout.fillWidth: true
                     text: qsTr("Javi, el Hornero: your sidekick. Idles, greets, shows tips — and, with Hermes enabled, chats, reads the system and always asks before changing anything.")
-                    font.pointSize: Appearance.font.size.small
+                    font.pointSize: Appearance.font.size.smaller
                     color: Signal.palette.inkMuted
                     wrapMode: Text.Wrap
                 }
@@ -105,7 +105,7 @@ Item {
 
                         StyledText {
                             text: qsTr("Activity")
-                            font.pointSize: Appearance.font.size.small
+                            font.pointSize: Appearance.font.size.smaller
                             color: Signal.palette.inkMuted
                         }
 
@@ -139,7 +139,7 @@ Item {
                         StyledText {
                             Layout.fillWidth: true
                             text: qsTr("Occasionally flies to another corner. Off: stays where you put it.")
-                            font.pointSize: Appearance.font.size.small
+                            font.pointSize: Appearance.font.size.smaller
                             color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
@@ -164,7 +164,7 @@ Item {
                             StyledText {
                                 Layout.fillWidth: true
                                 text: qsTr("Nest stage: %1 / 4").arg(CompanionStore.nestStage)
-                                font.pointSize: Appearance.font.size.small
+                                font.pointSize: Appearance.font.size.smaller
                                 color: Signal.palette.inkMuted
                             }
 
@@ -223,7 +223,7 @@ Item {
                         StyledText {
                             Layout.fillWidth: true
                             text: assistantStatus.text
-                            font.pointSize: Appearance.font.size.small
+                            font.pointSize: Appearance.font.size.smaller
                             color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
@@ -231,7 +231,7 @@ Item {
                         StyledText {
                             Layout.fillWidth: true
                             text: qsTr("Optional and local: Hermes runs as your user on loopback, Javi talks to it only through horneroctl, and nothing changes the system without your approval. Keys never enter this panel.")
-                            font.pointSize: Appearance.font.size.small
+                            font.pointSize: Appearance.font.size.smaller
                             color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
@@ -297,7 +297,7 @@ Item {
                         StyledText {
                             Layout.fillWidth: true
                             text: qsTr("Live state from horneroctl. Model, provider, API keys and token usage are managed in the Hermes dashboard — keys never enter this panel.")
-                            font.pointSize: Appearance.font.size.small
+                            font.pointSize: Appearance.font.size.smaller
                             color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
@@ -391,7 +391,7 @@ Item {
                         StyledText {
                             Layout.fillWidth: true
                             text: qsTr("Switching workspace rebinds the gateway on its next start; chats keep the workspace they were created in.")
-                            font.pointSize: Appearance.font.size.small
+                            font.pointSize: Appearance.font.size.smaller
                             color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
@@ -461,7 +461,7 @@ Item {
                         StyledText {
                             Layout.fillWidth: true
                             text: qsTr("Applies to new chats (same as hermes model); running chats keep their model.")
-                            font.pointSize: Appearance.font.size.small
+                            font.pointSize: Appearance.font.size.smaller
                             color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
@@ -540,7 +540,7 @@ Item {
                         StyledText {
                             Layout.fillWidth: true
                             text: qsTr("Enforced by horneroctl, outside the agent. Deny always wins; screenshots, clipboard and shell stay off or approval-gated unless a preset allows them. The agent cannot edit its own policy.")
-                            font.pointSize: Appearance.font.size.small
+                            font.pointSize: Appearance.font.size.smaller
                             color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
@@ -548,7 +548,7 @@ Item {
                         StyledText {
                             Layout.fillWidth: true
                             text: assistantPolicy.text
-                            font.pointSize: Appearance.font.size.small
+                            font.pointSize: Appearance.font.size.smaller
                             wrapMode: Text.Wrap
                         }
 
@@ -621,7 +621,7 @@ Item {
                         StyledText {
                             Layout.fillWidth: true
                             text: qsTr("This is Javi's full user-configurable system prompt (Hermes SOUL.md). Saving snapshots the previous version for rollback. Behaviour only: it can never widen permissions or the sandbox.")
-                            font.pointSize: Appearance.font.size.small
+                            font.pointSize: Appearance.font.size.smaller
                             color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
@@ -641,7 +641,7 @@ Item {
                                 anchors.margins: Appearance.padding.small
                                 color: Signal.palette.ink
                                 font.family: Appearance.font.family.mono
-                                font.pointSize: Appearance.font.size.small
+                                font.pointSize: Appearance.font.size.smaller
                                 wrapMode: TextEdit.Wrap
                                 selectByMouse: true
                                 text: assistantPrompt.text
@@ -667,7 +667,7 @@ Item {
                             StyledText {
                                 Layout.fillWidth: true
                                 text: assistantPromptHistory.text
-                                font.pointSize: Appearance.font.size.small
+                                font.pointSize: Appearance.font.size.smaller
                                 color: Signal.palette.inkMuted
                                 elide: Text.ElideRight
                             }
@@ -687,7 +687,7 @@ Item {
 
                         StyledText {
                             text: qsTr("Skin")
-                            font.pointSize: Appearance.font.size.small
+                            font.pointSize: Appearance.font.size.smaller
                             color: Signal.palette.inkMuted
                         }
 
@@ -713,7 +713,7 @@ Item {
 
                         StyledText {
                             text: qsTr("Summon edge")
-                            font.pointSize: Appearance.font.size.small
+                            font.pointSize: Appearance.font.size.smaller
                             color: Signal.palette.inkMuted
                         }
 
@@ -741,7 +741,7 @@ Item {
 
                         StyledText {
                             text: qsTr("Speech bubble theme")
-                            font.pointSize: Appearance.font.size.small
+                            font.pointSize: Appearance.font.size.smaller
                             color: Signal.palette.inkMuted
                         }
 
@@ -1192,14 +1192,14 @@ Item {
         StyledText {
             Layout.preferredWidth: 130
             text: label
-            font.pointSize: Appearance.font.size.small
+            font.pointSize: Appearance.font.size.smaller
             color: Signal.palette.inkMuted
         }
 
         StyledText {
             Layout.fillWidth: true
             text: value
-            font.pointSize: Appearance.font.size.small
+            font.pointSize: Appearance.font.size.smaller
             color: Signal.palette.ink
             wrapMode: Text.Wrap
         }

@@ -215,7 +215,7 @@ Item {
                 StyledText {
                     Layout.fillWidth: true
                     text: root.statusText
-                    font.pointSize: Appearance.font.size.small
+                    font.pointSize: Appearance.font.size.smaller
                     color: Signal.palette.inkMuted
                     wrapMode: Text.Wrap
                 }
@@ -315,7 +315,7 @@ Item {
                             Layout.fillWidth: true
                             visible: root.actionText !== ""
                             text: root.actionText
-                            font.pointSize: Appearance.font.size.small
+                            font.pointSize: Appearance.font.size.smaller
                             color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
@@ -374,7 +374,7 @@ Item {
                                     Layout.fillWidth: true
                                     text: modelData
                                     font.family: Appearance.font.family.mono
-                                    font.pointSize: Appearance.font.size.small
+                                    font.pointSize: Appearance.font.size.smaller
                                     color: Signal.palette.ink
                                     wrapMode: Text.Wrap
                                 }
@@ -391,7 +391,7 @@ Item {
                             Layout.fillWidth: true
                             visible: root.rules.length === 0
                             text: qsTr("No user window rules.")
-                            font.pointSize: Appearance.font.size.small
+                            font.pointSize: Appearance.font.size.smaller
                             color: Signal.palette.inkMuted
                         }
 
@@ -431,7 +431,7 @@ Item {
                             Layout.fillWidth: true
                             visible: root.rulesText !== ""
                             text: root.rulesText
-                            font.pointSize: Appearance.font.size.small
+                            font.pointSize: Appearance.font.size.smaller
                             color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
@@ -439,7 +439,7 @@ Item {
                         StyledText {
                             Layout.fillWidth: true
                             text: qsTr("Rules are stored in your window-rules overlay and take effect on Hyprland config reload (Super+Shift+R) or restart; already-open windows are unaffected. Geometry and focus apply live and are restored at login.")
-                            font.pointSize: Appearance.font.size.small
+                            font.pointSize: Appearance.font.size.smaller
                             color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }

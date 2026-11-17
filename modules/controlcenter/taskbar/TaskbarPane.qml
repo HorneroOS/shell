@@ -168,7 +168,7 @@ Item {
                             Layout.fillWidth: true
                             mono: true
                             text: !activePreset.available ? qsTr("Catalogue unavailable") : activePreset.preset ? activePreset.preset.display : qsTr("Custom arrangement")
-                            font.pointSize: Appearance.font.size.small
+                            font.pointSize: Appearance.font.size.smaller
                             elide: Text.ElideRight
                         }
 

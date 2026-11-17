@@ -17,14 +17,14 @@ gateway key and never decides policy.
 | --- | --- | --- | --- |
 | Streaming answer | `ask --json --stream` NDJSON `delta` frames + final CommandResult | `AssistantBridge` -> `AssistantRun` | live text, capped |
 | Activity trace | `thinking`/`tool`/`commentary` frames from `assistant_event_trace` | timeline in Workbench, trace toggle in panel | gateway-emitted activity, not raw reasoning |
-| Sessions | `sessions`/`sessions new|use`, continuity key per session and workspace | session bar, History tab | Hermes owns conversations; shell keeps a capped presentation cache |
+| Sessions | `sessions`/`sessions new\|use`, continuity key per session and workspace | session bar, History tab | Hermes owns conversations; shell keeps a capped presentation cache |
 | Modes Ask/Agent/Chat | `ask --mode` + session mode; Ask read-only and auto-denies approvals, Chat no authority; escalation guard | mode buttons (panel + Workbench), inline ask uses `--mode ask` | gateway has no per-run tool suppression: horneroctl stops a run that runs tools in Ask/Chat (documented residual) |
 | Attachments | `--attach` (allowlist, caps, secret-path refusal) | paperclip, chips, Artifacts tab | the backend lists no agent-created files |
 | Voice notes | audio attachment, Hermes transcribes | explicit mic, elapsed time, discard, 2 min cap, file removed after the run | no ambient mic, no wake word, no TTS (not backed) |
-| Approvals | `approval.request` -> `approve <run> approve|deny` (maps to gateway `once`, never session/always); policy ABAC, capability broker, audit log | `ApprovalCard` | one decision, one action |
+| Approvals | `approval.request` -> `approve <run-id> approve\|deny` (maps to gateway `once`, never session/always); policy ABAC, capability broker, audit log | `ApprovalCard` | one decision, one action |
 | Clarifications | `clarify.request` -> `clarify <run> <text>` | clarify card | |
 | Stop | `stop <run>` | Stop button, IPC `askStop` | server-side |
-| Model | `model show|list|set` | model/provider line, explicit Apply (Workbench) | Control Center keeps the full picker |
+| Model | `model show\|list\|set` | model/provider line, explicit Apply (Workbench) | Control Center keeps the full picker |
 | Isolation | `gateway status` reports `bubblewrap` vs `systemd-only (not sandboxed)` | shown on the approval card, Control Center, banner | never claimed when not reported |
 | Policy, workspaces, prompt, audit log | `policy`, `workspace`, `prompt`, `log` | Control Center Javi pane | unchanged |
 | Quick ask | same `ask` | launcher `>ai` | |
@@ -65,7 +65,7 @@ gateway key and never decides policy.
 
 ### 2.1 Wire frames (horneroctl -> shell)
 
-`horneroctl assistant ask|events <...> --json --stream` writes one JSON object
+`horneroctl assistant ask` or `events` with `--json --stream` writes one JSON object
 per line. A frame with a string `type` is typed; the final CommandResult has a
 boolean `ok` and no stream `type`.
 

@@ -136,7 +136,7 @@ CollapsibleSection {
                     anchors.leftMargin: Appearance.padding.small
                     anchors.rightMargin: Appearance.padding.small
                     verticalAlignment: TextInput.AlignVCenter
-                    placeholderText: qsTr("Theme default")
+                    placeholderText: qsTr("Default")
                     text: row.value
                     maximumLength: 7
                     color: row.valid || text === "" ? Signal.palette.ink : Signal.palette.alert

@@ -1252,6 +1252,32 @@ def validate_plugin(root: Path) -> None:
     except (OSError, json.JSONDecodeError) as error:
         raise ValidationError(f"cannot read manifest.json: {error}") from error
     _validate_manifest(_object(manifest, "manifest"), root.resolve())
+    _validate_payload_size(root.resolve())
+
+
+# Payload size budget. In-process QML cannot be preempted, so an oversized
+# source file is a start-up cost for every session that enables it; the
+# largest official extension source is about 12 KiB.
+MAX_SOURCE_FILE_BYTES = 256 * 1024
+MAX_PAYLOAD_BYTES = 8 * 1024 * 1024
+
+
+def _validate_payload_size(root: Path) -> None:
+    total = 0
+    for path in sorted(root.rglob("*")):
+        if not path.is_file() or path.is_symlink():
+            continue
+        size = path.stat().st_size
+        total += size
+        if path.suffix in (".qml", ".js", ".json") and size > MAX_SOURCE_FILE_BYTES:
+            raise ValidationError(
+                f"{path.relative_to(root)} is {size // 1024} KiB; source files are limited to "
+                f"{MAX_SOURCE_FILE_BYTES // 1024} KiB (split or trim it)"
+            )
+    if total > MAX_PAYLOAD_BYTES:
+        raise ValidationError(
+            f"package is {total // (1024 * 1024)} MiB; extensions are limited to {MAX_PAYLOAD_BYTES // (1024 * 1024)} MiB"
+        )
 
 
 def main(argv: list[str] | None = None) -> int:

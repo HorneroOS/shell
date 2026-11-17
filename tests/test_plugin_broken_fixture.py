@@ -65,7 +65,7 @@ def test_host_marks_broken_failed_and_healthy_neighbour_loaded():
     # Background fixture: PluginHost Loader.Error -> markFailed with
     # the loader's (sanitized, bounded) diagnostic.
     assert "status === Loader.Error" in HOST
-    assert 'Plugins.markFailed(slot.modelData.id, pluginLoader.errorString' in HOST
+    assert "Plugins.markFailed(slot.modelData.id, Plugins.loaderError(pluginLoader.errorString, pluginLoader.source)" in HOST
     assert "status === Loader.Ready" in HOST and "Plugins.markLoaded" in HOST
     # Each plugin gets its own delegate/Loader, so one failure cannot
     # take down neighbours sharing the host.
@@ -77,11 +77,11 @@ def test_host_marks_broken_failed_and_healthy_neighbour_loaded():
     )
     assert clock["placement"] == "bar"
     assert "status === Loader.Ready" in BAR_HOST
-    assert "Plugins.markLoaded(modelData.id)" in BAR_HOST
+    assert "Plugins.markLoaded(modelData.id, \"bar\")" in BAR_HOST
     assert "Plugins.markFailed(modelData.id" in BAR_HOST
     # markFailed records state + a bounded, redacted diagnostic entry.
     assert 'root.setState(id, "failed", clean)' in SERVICE
-    assert 'root.logDiagnostic(id, "failed", clean)' in SERVICE
+    assert 'root.logDiagnostic(id, "failed", surface ? `${surface}: ${clean}` : clean)' in SERVICE
     assert "slice(-50)" in SERVICE and "sanitizeDetail" in SERVICE
     assert "diagnosticsLog: root.diagnosticsLog" in SERVICE
 
@@ -97,7 +97,7 @@ def test_broken_fixture_never_ships_enabled_by_default():
 def test_safe_mode_unaffected_by_broken_fixture():
     # Safe mode empties the host model before any manifest/QML load,
     # so the broken fixture cannot block recovery.
-    assert "Plugins.hostingBlocked ? []" in HOST
+    assert "source: Plugins.hostingBlocked ? []" in HOST
     assert "readonly property bool hostingBlocked: root.safeMode ||" in SERVICE
     assert 'state: enabled && root.safeMode ? "safe-mode"' in SERVICE or '"safe-mode"' in SERVICE
     assert "if (root.safeMode)" in SERVICE

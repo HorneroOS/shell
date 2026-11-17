@@ -44,8 +44,14 @@ Item {
 
     visible: false
 
+    StableList {
+        id: stable
+
+        source: Plugins.launcherPlugins()
+    }
+
     Repeater {
-        model: Plugins.launcherPlugins()
+        model: stable.list
 
         delegate: Item {
             id: slot
@@ -127,11 +133,14 @@ Item {
                 asynchronous: true
 
                 onStatusChanged: {
-                    if (status === Loader.Ready)
+                    if (status === Loader.Loading) {
+                        Plugins.markLoading(slot.pluginId);
+                    } else if (status === Loader.Ready) {
                         slot.tryRegister();
-                    else if (status === Loader.Error) {
+                        Plugins.markLoaded(slot.pluginId, "launcher");
+                    } else if (status === Loader.Error) {
                         slot.unregister();
-                        Plugins.markFailed(slot.pluginId, pluginLoader.errorString || "launcher entrypoint failed to load (see shell log)");
+                        Plugins.markFailed(slot.pluginId, Plugins.loaderError(pluginLoader.errorString, pluginLoader.source) || "launcher entrypoint failed to load (see shell log)", "launcher");
                     }
                 }
             }

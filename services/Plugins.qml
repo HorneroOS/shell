@@ -358,6 +358,12 @@ Singleton {
         root.entries = next;
     }
 
+    // Live entry for one id (state, detail, trust, ...). Delegates built
+    // from a StableList read volatile fields here, never from modelData.
+    function entryFor(id: string): var {
+        return root.entries.find(e => e.id === id) ?? null;
+    }
+
     function surfaceFor(entry: var, surface: string): var {
         if (!entry)
             return null;
@@ -677,16 +683,71 @@ Singleton {
             root.popoutRequested(loader, open);
     }
 
-    function markLoaded(id: string): void {
-        root.setState(id, "loaded", "");
-        root.logDiagnostic(id, "loaded", "");
+    // Load outcomes are tracked per surface: a package with several entry
+    // points is `failed` while ANY of them failed (the last host to report
+    // used to win, so a healthy bar indicator hid a broken launcher surface).
+    // `surface` is "" for the primary/background entrypoint.
+    function markLoading(id: string): void {
+        const current = root.entries.find(e => e.id === id);
+        if (!current || current.hostLoadStartedAtMs > 0 && current.hostLoadStartedAtMs >= (current.loadStartedAtMs || 0))
+            return;
+        // Honest timing: measured from the moment a host starts
+        // instantiating the entrypoint, not from discovery (a dashboard
+        // card that is only built when its tab opens is not "slow").
+        const now = Date.now();
+        root.entries = root.entries.map(e => e.id === id ? Object.assign({}, e, {
+            hostLoadStartedAtMs: now
+        }) : e);
     }
 
-    function markFailed(id: string, detail: string): void {
+    function markLoaded(id: string, surface: string): void {
+        const key = surface || "main";
+        const current = root.entries.find(e => e.id === id);
+        const failed = Object.assign({}, current ? current.failedSurfaces : null);
+        delete failed[key];
+        root.entries = root.entries.map(e => e.id === id ? Object.assign({}, e, {
+            failedSurfaces: failed
+        }) : e);
+        const remaining = Object.keys(failed);
+        if (remaining.length > 0) {
+            root.setState(id, "failed", failed[remaining[0]]);
+            return;
+        }
+        root.setState(id, "loaded", "");
+        root.logDiagnostic(id, "loaded", surface || "");
+    }
+
+    function markFailed(id: string, detail: string, surface: string): void {
         const clean = root.sanitizeDetail(detail);
+        const key = surface || "main";
+        const current = root.entries.find(e => e.id === id);
+        const failed = Object.assign({}, current ? current.failedSurfaces : null);
+        failed[key] = clean;
+        root.entries = root.entries.map(e => e.id === id ? Object.assign({}, e, {
+            failedSurfaces: failed
+        }) : e);
         root.setState(id, "failed", clean);
-        root.logDiagnostic(id, "failed", clean);
-        console.warn(`[plugins] ${id} failed to load: ${clean}`);
+        root.logDiagnostic(id, "failed", surface ? `${surface}: ${clean}` : clean);
+        console.warn(`[plugins] ${id} failed to load${surface ? ` (${surface})` : ""}: ${clean}`);
+    }
+
+    // Loader.errorString is empty for asynchronous loads, so failures used
+    // to read "failed to load (see shell log)". Compiling the same URL
+    // synchronously yields the real QML error (missing type, syntax, ...),
+    // with the plugin's own directory stripped from the path.
+    function loaderError(errorString: string, source: var): string {
+        let text = errorString || "";
+        const url = (source ?? "").toString();
+        if (text === "" && url !== "") {
+            try {
+                const component = Qt.createComponent(url, Component.PreferSynchronous);
+                text = component.errorString();
+                component.destroy();
+            } catch (e) {
+                text = "";
+            }
+        }
+        return text.split(`file://${root.pluginsDir}/`).join("").replace(/\s+/g, " ").trim();
     }
 
     // Per-extension reload (shell#380): reset one entry to pending
@@ -701,6 +762,7 @@ Singleton {
         root.entries = root.entries.map(e => e.id === id ? Object.assign({}, e, {
             state: "pending",
             detail: "",
+            failedSurfaces: ({}),
             loadMs: -1,
             loadStartedAtMs: now,
             attempts: (e.attempts || 0) + 1,
@@ -718,7 +780,8 @@ Singleton {
         const next = root.entries.map(e => {
             if (e.id !== id)
                 return e;
-            const loadMs = Math.max(0, Math.round(now - (e.loadStartedAtMs || root.startedAtMs)));
+            const startedAt = (e.hostLoadStartedAtMs || 0) >= (e.loadStartedAtMs || 0) && (e.hostLoadStartedAtMs || 0) > 0 ? e.hostLoadStartedAtMs : (e.loadStartedAtMs || root.startedAtMs);
+            const loadMs = Math.max(0, Math.round(now - startedAt));
             return Object.assign({}, e, {
                 state: state,
                 detail: detail,

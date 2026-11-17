@@ -517,3 +517,24 @@ def test_in_tree_examples_have_no_accessibility_warnings():
     examples = ROOT / "examples" / "plugins"
     for plugin in sorted(p for p in examples.iterdir() if p.is_dir()):
         assert VALIDATOR.accessibility_warnings(plugin) == [], plugin.name
+
+
+def test_oversized_source_and_payload_are_refused(tmp_path):
+    """A 5 MiB QML file or a >8 MiB package is a start-up cost for every session."""
+    import shutil
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("validate_plugin_size", ROOT / "scripts" / "validate_plugin.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    source = ROOT / "examples" / "plugins" / "example-clock"
+    package = tmp_path / "example-clock"
+    shutil.copytree(source, package)
+    module.validate_plugin(package)
+    (package / "Main.qml").write_text("import QtQuick\nItem {}\n" + "// x\n" * 80000, encoding="utf-8")
+    try:
+        module.validate_plugin(package)
+    except module.ValidationError as error:
+        assert "source files are limited" in str(error)
+    else:
+        raise AssertionError("oversized QML accepted")

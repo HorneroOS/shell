@@ -31,7 +31,48 @@ Item {
     // no widget holds a provider lease.
     readonly property bool userSet: Experience.desktopWidgets === "user" && Experience.desktopWidgetsVisible
     readonly property bool deckWanted: Experience.instruments && Experience.desktopWidgetsVisible
-    readonly property var widgets: root.userSet ? Plugins.desktopPlugins() : []
+    readonly property var widgets: userStable.list
+
+    StableList {
+        id: userStable
+
+        source: root.userSet ? Plugins.desktopPlugins() : []
+    }
+
+    // First-run placement: widgets that have no saved geometry or chosen
+    // anchor start at their manifest anchor, but two widgets never start in
+    // the same slot (they used to stack on top of each other until the person
+    // dragged one away). The next free slot, corners first, is used instead.
+    // Saved positions and explicit anchors always win and reserve their slot.
+    readonly property var slotOrder: ["top-left", "top-right", "bottom-right", "bottom-left", "top-center", "bottom-center", "middle-left", "middle-right", "middle-center"]
+    readonly property var defaultSlots: {
+        const taken = ({});
+        const resolved = ({});
+        const slots = Config.plugins.desktopWidgetSlots;
+        const perScreen = slots && typeof slots === "object" ? slots[root.screenName || "default"] : null;
+        const pending = [];
+        for (const entry of root.widgets) {
+            const saved = Config.plugins.desktopWidgetGeometry(entry.id, root.screenName);
+            const explicit = perScreen && typeof perScreen === "object" ? perScreen[entry.id] : undefined;
+            if (saved && saved.fx !== undefined && saved.fy !== undefined) {
+                const col = saved.fx < 0.34 ? "left" : saved.fx > 0.66 ? "right" : "center";
+                const row = saved.fy < 0.34 ? "top" : saved.fy > 0.66 ? "bottom" : "middle";
+                taken[`${row}-${col}`] = true;
+            } else if (Config.plugins.allowedDesktopSlots.includes(explicit)) {
+                taken[explicit] = true;
+            } else {
+                pending.push(entry);
+            }
+        }
+        for (const entry of pending) {
+            const hint = Plugins.surfaceFor(entry, "desktop") ?? ({});
+            const preferred = Config.plugins.allowedDesktopSlots.includes(hint.anchor) ? hint.anchor : "bottom-right";
+            const slot = !taken[preferred] ? preferred : (root.slotOrder.find(candidate => !taken[candidate]) ?? preferred);
+            taken[slot] = true;
+            resolved[entry.id] = slot;
+        }
+        return resolved;
+    }
 
     readonly property var deckEntries: root.deckWanted ? Plugins.deckPlugins() : []
     readonly property var deckComposition: {
@@ -79,6 +120,7 @@ Item {
             entry: modelData
             screenName: root.screenName
             area: root
+            defaultSlot: root.defaultSlots[modelData.id] ?? ""
             // Channel numbers count from 01 in manifest order.
             channel: index + 1
         }

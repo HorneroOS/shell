@@ -49,13 +49,25 @@ Scope {
     // plugin stayed "pending" forever. The invisible Item root gives the
     // delegates a real parent so they instantiate; `background`
     // entrypoints load under it, still invisible by design.
+    StableList {
+        id: enabledStable
+
+        source: Plugins.hostingBlocked ? [] : Plugins.entries.filter(e => e.enabled && e.installed)
+    }
+
+    StableList {
+        id: previewStable
+
+        source: Plugins.entries.filter(e => e.installed && !e.enabled)
+    }
+
     Item {
         visible: false
 
     Repeater {
         // Safe mode (shell#380): no delegate, so no manifest is even
         // read — a malformed plugin cannot block recovery access.
-        model: Plugins.hostingBlocked ? [] : Plugins.entries.filter(e => e.enabled && e.installed)
+        model: enabledStable.list
 
         delegate: Item {
             id: slot
@@ -430,10 +442,12 @@ Scope {
                 asynchronous: true
 
                 onStatusChanged: {
-                    if (status === Loader.Ready)
-                        Plugins.markLoaded(slot.modelData.id);
+                    if (status === Loader.Loading)
+                        Plugins.markLoading(slot.modelData.id);
+                    else if (status === Loader.Ready)
+                        Plugins.markLoaded(slot.modelData.id, "background");
                     else if (status === Loader.Error)
-                        Plugins.markFailed(slot.modelData.id, pluginLoader.errorString || "entrypoint failed to load (see shell log)");
+                        Plugins.markFailed(slot.modelData.id, Plugins.loaderError(pluginLoader.errorString, pluginLoader.source) || "entrypoint failed to load (see shell log)", "background");
                 }
             }
         }
@@ -448,7 +462,7 @@ Scope {
     // A malformed declaration degrades to no preview; it never
     // fails a disabled plugin that is not being loaded.
     Repeater {
-        model: Plugins.entries.filter(e => e.installed && !e.enabled)
+        model: previewStable.list
 
         delegate: Item {
             id: previewSlot

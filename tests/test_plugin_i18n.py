@@ -220,7 +220,7 @@ def test_pluginkit_translations_runtime_wiring():
     assert "root._resolvedLocale = root._sourceLocale" in component
     # Locale-aware date/number formatting rides the resolved locale.
     assert "date.toLocaleString(Qt.locale(root._effectiveLocale), format)" in component
-    assert "toLocaleString(Qt.locale(root._effectiveLocale))" in component
+    assert "Format.number(Qt.locale(root._effectiveLocale), value, maxDecimals)" in component
 
     service = (ROOT / "services/Plugins.qml").read_text()
     assert "function markTranslations" in service

@@ -64,6 +64,7 @@ RowLayout {
         implicitWidth: root.compact ? 64 : 110
         implicitHeight: Density.iconPx * 1.2
         // Ink at rest; amber only while the person is dragging it.
+        ruleTrack: root.tone.active
         fillColour: slider.pressed ? root.tone.signal : root.tone.inkMuted
         thumbColour: slider.pressed ? root.tone.signal : root.tone.ink
         from: 0

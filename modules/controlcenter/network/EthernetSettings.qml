@@ -33,7 +33,7 @@ ColumnLayout {
 
     StyledText {
         text: qsTr("Available ethernet devices")
-        color: Signal.palette.ruleStrong
+        color: Signal.palette.inkMuted
     }
 
     StyledRect {
@@ -59,7 +59,7 @@ ColumnLayout {
 
             StyledText {
                 text: qsTr("%1").arg(Nmcli.ethernetDevices.length)
-                color: Signal.palette.ruleStrong
+                color: Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.small
             }
 
@@ -70,7 +70,7 @@ ColumnLayout {
 
             StyledText {
                 text: qsTr("%1").arg(Nmcli.ethernetDevices.filter(d => d.connected).length)
-                color: Signal.palette.ruleStrong
+                color: Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.small
             }
         }

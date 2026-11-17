@@ -128,7 +128,7 @@ CollapsibleSection {
         StyledText {
             visible: root.schemeDivergesFromTheme
             text: qsTr("Differs from theme default (%1)").arg(root.themeDefaultScheme)
-            color: Signal.palette.ruleStrong
+            color: Signal.palette.inkMuted
             font.pointSize: Appearance.font.size.small
         }
     }

@@ -465,7 +465,7 @@ Item {
                             visible: root.shown.length === 0
                             text: qsTr("No keybindings match.")
                             font.pointSize: Appearance.font.size.small
-                            color: Signal.palette.ruleStrong
+                            color: Signal.palette.inkMuted
                         }
 
                         StyledText {
@@ -473,7 +473,7 @@ Item {
                             visible: root.managed
                             text: qsTr("Rebinds are stored as user overrides and apply live; factory keybindings are never edited. This list always shows what the session actually runs.")
                             font.pointSize: Appearance.font.size.small
-                            color: Signal.palette.ruleStrong
+                            color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
 
@@ -482,7 +482,7 @@ Item {
                             visible: !root.managed
                             text: qsTr("This session's keybindings are read-only here (Lua configuration); the list shows what the session actually runs.")
                             font.pointSize: Appearance.font.size.small
-                            color: Signal.palette.ruleStrong
+                            color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
                     }

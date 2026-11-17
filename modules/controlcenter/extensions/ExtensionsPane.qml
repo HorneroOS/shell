@@ -531,7 +531,7 @@ Item {
                     visible: Plugins.discovered && Plugins.entries.length === 0 && Plugins.discoveryError.length === 0
                     text: qsTr("No plugins installed. Add one with: horneroctl plugin install <path>")
                     font.pointSize: Appearance.font.size.small
-                    color: Signal.palette.ruleStrong
+                    color: Signal.palette.inkMuted
                     wrapMode: Text.Wrap
                 }
 
@@ -591,7 +591,7 @@ Item {
                     visible: Plugins.entries.length > 0 && root.filteredPlugins().length === 0
                     text: qsTr("No installed plugins match this search or filter.")
                     font.pointSize: Appearance.font.size.small
-                    color: Signal.palette.ruleStrong
+                    color: Signal.palette.inkMuted
                     wrapMode: Text.Wrap
                 }
 
@@ -656,7 +656,7 @@ Item {
                                             Layout.fillWidth: true
                                             text: row.modelData.version ? `v${row.modelData.version}` : ""
                                             font.pointSize: Appearance.font.size.small
-                                            color: Signal.palette.ruleStrong
+                                            color: Signal.palette.inkMuted
                                         }
                                     }
 
@@ -720,7 +720,7 @@ Item {
                                     .arg(row.modelData.catalog_sha256 || qsTr("Not recorded"))
                                 font.pointSize: Appearance.font.size.smaller
                                 font.family: Appearance.font.family.mono
-                                color: Signal.palette.ruleStrong
+                                color: Signal.palette.inkMuted
                                 wrapMode: Text.WrapAnywhere
                             }
 
@@ -983,7 +983,7 @@ Item {
                     Layout.fillWidth: true
                     text: qsTr("Official extensions from HorneroOS/plugins. Installing copies hash-verified, pinned data but does not run it. Enabling is a separate confirmed step. Capability lists describe plugin declarations; they do not restrict what QML can do.")
                     font.pointSize: Appearance.font.size.small
-                    color: Signal.palette.ruleStrong
+                    color: Signal.palette.inkMuted
                     wrapMode: Text.Wrap
                 }
 
@@ -992,7 +992,7 @@ Item {
                     visible: root.catalogRevision.length > 0
                     text: qsTr("Catalogue revision: %1").arg(root.catalogRevision)
                     font.pointSize: Appearance.font.size.small
-                    color: Signal.palette.ruleStrong
+                    color: Signal.palette.inkMuted
                     wrapMode: Text.Wrap
                 }
 
@@ -1025,7 +1025,7 @@ Item {
                     visible: root.catalogEntries.length > 0 && root.filteredCatalogEntries().length === 0
                     text: qsTr("No official extensions match this search.")
                     font.pointSize: Appearance.font.size.small
-                    color: Signal.palette.ruleStrong
+                    color: Signal.palette.inkMuted
                     wrapMode: Text.Wrap
                 }
 
@@ -1089,7 +1089,7 @@ Item {
                                     .arg(catRow.modelData.category || qsTr("Uncategorized"))
                                     .arg(catRow.modelData.placement || qsTr("Placement not listed"))
                                 font.pointSize: Appearance.font.size.small
-                                color: Signal.palette.ruleStrong
+                                color: Signal.palette.inkMuted
                                 wrapMode: Text.Wrap
                             }
 
@@ -1097,7 +1097,7 @@ Item {
                                 Layout.fillWidth: true
                                 text: root.declaredCapabilities(catRow.modelData.capabilities)
                                 font.pointSize: Appearance.font.size.small
-                                color: Signal.palette.ruleStrong
+                                color: Signal.palette.inkMuted
                                 wrapMode: Text.Wrap
                             }
 
@@ -1137,7 +1137,7 @@ Item {
                                 visible: root.screenshotSources(catRow.modelData).length === 0 && root.screenshotCaptions(catRow.modelData).length > 0
                                 text: root.screenshotCaptions(catRow.modelData)
                                 font.pointSize: Appearance.font.size.small
-                                color: Signal.palette.ruleStrong
+                                color: Signal.palette.inkMuted
                                 wrapMode: Text.Wrap
                             }
 
@@ -1146,7 +1146,7 @@ Item {
                                 visible: root.compatibilityText(catRow.modelData).length > 0
                                 text: root.compatibilityText(catRow.modelData)
                                 font.pointSize: Appearance.font.size.small
-                                color: Signal.palette.ruleStrong
+                                color: Signal.palette.inkMuted
                                 wrapMode: Text.Wrap
                             }
 
@@ -1155,7 +1155,7 @@ Item {
                                 visible: root.changelogText(catRow.modelData).length > 0
                                 text: root.changelogText(catRow.modelData)
                                 font.pointSize: Appearance.font.size.small
-                                color: Signal.palette.ruleStrong
+                                color: Signal.palette.inkMuted
                                 wrapMode: Text.Wrap
                             }
 
@@ -1163,7 +1163,7 @@ Item {
                                 Layout.fillWidth: true
                                 text: root.permissionExplanations(catRow.modelData)
                                 font.pointSize: Appearance.font.size.small
-                                color: Signal.palette.ruleStrong
+                                color: Signal.palette.inkMuted
                                 wrapMode: Text.Wrap
                             }
 
@@ -1195,7 +1195,7 @@ Item {
                                     .arg(catRow.modelData.sha256 || qsTr("Not listed"))
                                     .arg(catRow.modelData.generatedFrom || qsTr("Not listed"))
                                 font.pointSize: Appearance.font.size.smaller
-                                color: Signal.palette.ruleStrong
+                                color: Signal.palette.inkMuted
                                 wrapMode: Text.Wrap
                             }
 
@@ -1203,7 +1203,7 @@ Item {
                                 Layout.fillWidth: true
                                 text: qsTr("%1 · %2 · %3").arg(catRow.modelData.category || "").arg(catRow.modelData.placement || "").arg(catRow.modelData.state || "")
                                 font.pointSize: Appearance.font.size.small
-                                color: Signal.palette.ruleStrong
+                                color: Signal.palette.inkMuted
                                 wrapMode: Text.Wrap
                             }
 
@@ -1280,7 +1280,7 @@ Item {
                                     visible: catRow.modelData.state === "installed"
                                     text: qsTr("Installed — enable it in the list above")
                                     font.pointSize: Appearance.font.size.small
-                                    color: Signal.palette.ruleStrong
+                                    color: Signal.palette.inkMuted
                                 }
                             }
                         }

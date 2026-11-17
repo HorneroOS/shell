@@ -46,7 +46,7 @@ ColumnLayout {
         Layout.fillWidth: true
         text: qsTr("This plugin's own settings UI runs in-process as your user, without a sandbox — the same trust as its other surfaces. Review its source before use.")
         font.pointSize: Appearance.font.size.small
-        color: Signal.palette.ruleStrong
+        color: Signal.palette.inkMuted
         wrapMode: Text.Wrap
     }
 

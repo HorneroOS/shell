@@ -26,7 +26,17 @@ Item {
     signal levelMoved(real value)
     signal muteToggled(bool muted)
 
-    readonly property bool isFirst: root.parent && root.parent.children.length > 0 && root.parent.children[0] === root
+    // First visible sibling draws no top hairline.
+    readonly property bool isFirst: {
+        const siblings = root.parent ? root.parent.children : [];
+        for (let i = 0; i < siblings.length; i++) {
+            if (siblings[i] === root)
+                return true;
+            if (siblings[i].visible && siblings[i].implicitHeight > 0)
+                return false;
+        }
+        return true;
+    }
     readonly property int percent: Math.round(root.level * 100)
 
     Layout.fillWidth: true

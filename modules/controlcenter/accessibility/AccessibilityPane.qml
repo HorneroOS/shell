@@ -263,7 +263,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Javi's chat also honors reduced motion: no pulse or scanline shimmer while it is on.")
                             font.pointSize: Appearance.font.size.small
-                            color: Signal.palette.ruleStrong
+                            color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
                     }
@@ -330,7 +330,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Applies to the Hyprland cursor immediately and is restored at login; other apps pick up the size when they start.")
                             font.pointSize: Appearance.font.size.small
-                            color: Signal.palette.ruleStrong
+                            color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
                     }

@@ -45,7 +45,7 @@ SectionContainer {
         StyledText {
             text: qsTr("Temperature Units")
             font.pointSize: Appearance.font.size.small
-            color: Signal.palette.ruleStrong
+            color: Signal.palette.inkMuted
         }
 
         SwitchRow {

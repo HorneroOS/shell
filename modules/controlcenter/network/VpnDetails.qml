@@ -165,7 +165,7 @@ DeviceDetails {
                     PropertyRow {
                         showTopMargin: true
                         label: qsTr("Interface")
-                        value: root.vpnProvider?.interface || qsTr("N/A")
+                        value: root.vpnProvider?.interface || ""
                     }
 
                     PropertyRow {

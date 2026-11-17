@@ -25,8 +25,10 @@ StyledRect {
 
     Layout.fillWidth: true
     implicitHeight: row.implicitHeight + Appearance.padding.large * 2
-    radius: Appearance.rounding.normal
-    color: Signal.layer(Signal.palette.panel, 2)
+    radius: Appearance.rounding.small
+    color: "transparent"
+    border.width: 1
+    border.color: Signal.palette.rule
 
     clip: false
     z: splitButton.menu.implicitHeight > 0 ? expandedZ : 1

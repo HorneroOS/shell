@@ -220,7 +220,7 @@ Item {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
-                spacing: Appearance.spacing.normal
+                spacing: Appearance.spacing.large
 
                 PaneHeader {
                     paneId: "updates"
@@ -228,256 +228,166 @@ Item {
                     description: qsTr("Review available system updates and restore earlier config snapshots")
                 }
 
-                // ── Status card ──────────────────────────────────────────
-                StyledRect {
-                    Layout.fillWidth: true
-                    radius: Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.raised, 1)
+                ChannelPanel {
+                    title: qsTr("System updates")
+                    readoutAvailable: root.pendingCount >= 0 && root.updatesError.length === 0
+                    readout: root.pendingCount === 0 ? qsTr("up to date") : qsTr("%1 pending").arg(root.pendingCount)
+                    readoutColor: root.pendingCount > 0 ? Signal.palette.signal : Signal.palette.phosphor
 
-                    implicitHeight: statusRow.implicitHeight + Appearance.padding.normal * 2
+                    SettingRow {
+                        label: root.pendingCount < 0 ? qsTr("Checking for updates…") : root.pendingCount === 0 ? qsTr("System up to date") : qsTr("%n update(s) pending", "", root.pendingCount)
+                        description: root.updatesError
 
-                    RowLayout {
-                        id: statusRow
+                        TextButton {
+                            text: qsTr("Refresh")
+                            type: TextButton.Text
+                            enabled: !updatesProc.running
+                            onClicked: root.refresh()
+                        }
+                    }
 
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.normal
-                        spacing: Appearance.spacing.normal
+                    // Informational only: restarting stays a session action
+                    // the user takes from the power menu; this pane never
+                    // reboots anything itself.
+                    SettingRow {
+                        visible: root.rebootRequired
+                        label: qsTr("Reboot required to finish updating")
+                        description: (root.rebootReason.length > 0 ? root.rebootReason + " " : "") + qsTr("Save your work and restart from the power menu when ready. Nothing restarts automatically.")
 
                         Glyph {
-                            name: root.pendingCount > 0 ? "clock-up" : "circle-check"
-                            color: root.pendingCount > 0 ? Signal.palette.phosphor : Signal.palette.signal
-                            font.pointSize: Appearance.font.size.extraLarge
+                            name: "reload"
+                            color: Signal.palette.signal
                         }
+                    }
 
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            spacing: 2
+                    SettingRow {
+                        visible: root.horneroPendingCount >= 0
+                        label: root.horneroPendingCount > 0 ? qsTr("%n Hornero package(s) behind: %1", "", root.horneroPendingCount).arg(root.horneroPending.join(", ")) : qsTr("Hornero packages up to date")
+                        description: root.snapshotStatus.length > 0 ? qsTr("Snapshots: %1").arg(root.snapshotStatus) : ""
+                    }
 
-                            StyledText {
-                                text: root.pendingCount < 0 ? qsTr("Checking for updates…") : root.pendingCount === 0 ? qsTr("System up to date") : qsTr("%n update(s) pending", "", root.pendingCount)
-                                font.pointSize: Appearance.font.size.normal
-                                font.weight: 600
-                            }
+                    // Mutating: armed, second click confirms.
+                    SettingRow {
+                        label: qsTr("Upgrade")
+                        description: qsTr("Installs every pending package. Asks for a second click.")
 
-                            StyledText {
-                                visible: root.updatesError.length > 0
-                                text: root.updatesError
-                                color: Signal.palette.alert
-                                font.pointSize: Appearance.font.size.smaller
-                                wrapMode: Text.Wrap
-                                Layout.fillWidth: true
-                            }
+                        TextButton {
+                            text: root.armedAction === "upgrade" ? qsTr("Click again to upgrade now") : qsTr("Upgrade system now")
+                            type: root.armedAction === "upgrade" ? TextButton.Filled : TextButton.Tonal
+                            enabled: !root.busy && root.pendingCount > 0
+                            onClicked: root.runMutating("upgrade", ["horneroctl", "package", "upgrade", "--yes"])
+                        }
+                    }
+                }
+
+                ChannelPanel {
+                    visible: root.pendingList.length > 0
+                    title: qsTr("Pending packages")
+                    readout: qsTr("%1").arg(root.pendingList.length)
+
+                    Repeater {
+                        model: root.pendingList
+
+                        delegate: SettingRow {
+                            required property string modelData
+
+                            label: modelData
+                            labelMono: true
+                        }
+                    }
+                }
+
+                ChannelPanel {
+                    title: qsTr("Backups")
+                    readoutAvailable: root.backupsError.length === 0
+                    readout: qsTr("%1 saved").arg(root.backupList.length)
+
+                    SettingRow {
+                        visible: root.backupList.length === 0 && root.backupsError.length === 0
+                        label: qsTr("No backups yet")
+                        description: qsTr("Create one before big changes; restore brings it back.")
+                    }
+
+                    SettingRow {
+                        visible: root.backupsError.length > 0
+                        label: root.backupsError
+                    }
+
+                    Repeater {
+                        model: root.backupList
+
+                        delegate: SettingRow {
+                            required property string modelData
+
+                            label: modelData
+                            labelMono: true
+                        }
+                    }
+
+                    SettingRow {
+                        label: qsTr("Create backup")
+
+                        TextButton {
+                            text: root.armedAction === "backup" ? qsTr("Click again to back up") : qsTr("Create backup")
+                            type: TextButton.Tonal
+                            enabled: !root.busy
+                            onClicked: root.runMutating("backup", ["horneroctl", "backup", "create", "--yes"])
                         }
 
                         TextButton {
                             text: qsTr("Refresh")
-                            type: TextButton.Tonal
-                            enabled: !updatesProc.running
+                            type: TextButton.Text
+                            enabled: !backupsProc.running
                             onClicked: root.refresh()
                         }
                     }
                 }
 
-                // ── Reboot required ──────────────────────────────────────
-                // Informational only: restarting stays a session action
-                // the user takes from the power menu; this pane never
-                // reboots anything itself.
-                StyledRect {
-                    visible: root.rebootRequired
-                    Layout.fillWidth: true
-                    radius: Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.phosphorWell, 1)
-                    implicitHeight: rebootRow.implicitHeight + Appearance.padding.normal * 2
+                ChannelPanel {
+                    title: qsTr("Dependencies & recovery")
+                    readoutAvailable: root.snapshotBackend !== "none"
+                    readout: root.snapshotBackend === "none" ? "" : root.snapshotBackend
 
-                    RowLayout {
-                        id: rebootRow
+                    SettingRow {
+                        visible: root.snapshotBackend === "none"
+                        label: qsTr("Update rollback is unavailable")
+                        description: qsTr("No snapshot backend is recorded for this system.")
+                    }
 
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.normal
-                        spacing: Appearance.spacing.normal
+                    SettingRow {
+                        label: qsTr("Restore a config snapshot")
+                        description: qsTr("Restoring first creates a safety snapshot.")
 
-                        Glyph {
-                            name: "reload"
-                            color: Signal.palette.onPhosphorWell
-                            font.pointSize: Appearance.font.size.extraLarge
-                        }
-
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            spacing: 2
-
-                            StyledText {
-                                text: qsTr("Reboot required to finish updating")
-                                color: Signal.palette.onPhosphorWell
-                                font.pointSize: Appearance.font.size.normal
-                                font.weight: 600
-                                wrapMode: Text.Wrap
+                        below: [
+                            RowLayout {
                                 Layout.fillWidth: true
+                                spacing: Appearance.spacing.small
+
+                                Well {
+                                    Layout.fillWidth: true
+                                    implicitHeight: snapshotInput.implicitHeight + Appearance.padding.small * 2
+                                    outline: snapshotInput.activeFocus ? Signal.palette.focus : Signal.palette.rule
+
+                                    StyledTextField {
+                                        id: snapshotInput
+
+                                        anchors.fill: parent
+                                        anchors.margins: Appearance.padding.small
+                                        placeholderText: qsTr("Snapshot id to restore")
+                                        text: root.snapshotIdField
+                                        onTextChanged: root.snapshotIdField = text
+                                    }
+                                }
+
+                                TextButton {
+                                    text: root.armedAction === "snapshot-restore" ? qsTr("Click again to restore") : qsTr("Restore snapshot")
+                                    type: root.armedAction === "snapshot-restore" ? TextButton.Filled : TextButton.Tonal
+                                    enabled: !root.busy && root.snapshotIdField.trim() !== ""
+                                    onClicked: root.runMutating("snapshot-restore", ["horneroctl", "config", "snapshot", "restore", root.snapshotIdField.trim(), "--yes"])
+                                }
                             }
-
-                            StyledText {
-                                visible: root.rebootReason.length > 0
-                                text: root.rebootReason
-                                color: Signal.palette.onPhosphorWell
-                                font.pointSize: Appearance.font.size.smaller
-                                wrapMode: Text.Wrap
-                                Layout.fillWidth: true
-                            }
-
-                            StyledText {
-                                text: qsTr("Save your work and restart from the power menu when ready. Nothing restarts automatically.")
-                                color: Signal.palette.onPhosphorWell
-                                font.pointSize: Appearance.font.size.smaller
-                                wrapMode: Text.Wrap
-                                Layout.fillWidth: true
-                            }
-                        }
+                        ]
                     }
-                }
-
-                // ── Hornero lane ─────────────────────────────────────────
-                StyledRect {
-                    visible: root.horneroPendingCount >= 0
-                    Layout.fillWidth: true
-                    radius: Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.raised, 1)
-                    implicitHeight: horneroLane.implicitHeight + Appearance.padding.normal * 2
-
-                    ColumnLayout {
-                        id: horneroLane
-
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.normal
-                        spacing: 2
-
-                        StyledText {
-                            text: root.horneroPendingCount > 0 ? qsTr("%n Hornero package(s) behind: %1", "", root.horneroPendingCount).arg(root.horneroPending.join(", ")) : qsTr("Hornero packages up to date")
-                            font.pointSize: Appearance.font.size.normal
-                            font.weight: 600
-                            wrapMode: Text.Wrap
-                            Layout.fillWidth: true
-                        }
-
-                        StyledText {
-                            visible: root.snapshotStatus.length > 0
-                            text: qsTr("Snapshots: %1").arg(root.snapshotStatus)
-                            color: Signal.palette.inkMuted
-                            font.pointSize: Appearance.font.size.smaller
-                            wrapMode: Text.Wrap
-                            Layout.fillWidth: true
-                        }
-                    }
-                }
-
-                // ── Pending list ─────────────────────────────────────────
-                CollapsibleSection {
-                    visible: root.pendingList.length > 0
-                    title: qsTr("Pending packages (%1)").arg(root.pendingList.length)
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 2
-
-                        Repeater {
-                            model: root.pendingList
-
-                            StyledText {
-                                required property string modelData
-
-                                Layout.fillWidth: true
-                                text: modelData
-                                font.pointSize: Appearance.font.size.smaller
-                                font.family: Appearance.font.family.mono
-                                color: Signal.palette.inkMuted
-                                elide: Text.ElideRight
-                            }
-                        }
-                    }
-                }
-
-                // ── Upgrade (armed, mutating) ────────────────────────────
-                TextButton {
-                    Layout.fillWidth: true
-                    text: root.armedAction === "upgrade" ? qsTr("Click again to upgrade now") : qsTr("Upgrade system now")
-                    type: root.armedAction === "upgrade" ? TextButton.Filled : TextButton.Tonal
-                    enabled: !root.busy && root.pendingCount > 0
-                    onClicked: root.runMutating("upgrade", ["horneroctl", "package", "upgrade", "--yes"])
-                }
-
-                // ── Backups ──────────────────────────────────────────────
-                StyledText {
-                    text: qsTr("Backups")
-                    font.pointSize: Appearance.font.size.normal
-                    font.weight: 600
-                }
-
-                StyledText {
-                    visible: root.backupList.length === 0 && root.backupsError.length === 0
-                    text: qsTr("No backups yet. Create one before big changes — restore brings it back.")
-                    color: Signal.palette.inkMuted
-                    font.pointSize: Appearance.font.size.smaller
-                    wrapMode: Text.Wrap
-                    Layout.fillWidth: true
-                }
-
-                StyledText {
-                    visible: root.backupsError.length > 0
-                    text: root.backupsError
-                    color: Signal.palette.alert
-                    font.pointSize: Appearance.font.size.smaller
-                    wrapMode: Text.Wrap
-                    Layout.fillWidth: true
-                }
-
-                Repeater {
-                    model: root.backupList
-
-                    StyledText {
-                        required property string modelData
-
-                        Layout.fillWidth: true
-                        text: modelData
-                        font.pointSize: Appearance.font.size.smaller
-                        font.family: Appearance.font.family.mono
-                        color: Signal.palette.inkMuted
-                        elide: Text.ElideRight
-                    }
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: Appearance.spacing.small
-
-                    TextButton {
-                        Layout.fillWidth: true
-                        text: root.armedAction === "backup" ? qsTr("Click again to back up") : qsTr("Create backup")
-                        type: TextButton.Tonal
-                        enabled: !root.busy
-                        onClicked: root.runMutating("backup", ["horneroctl", "backup", "create", "--yes"])
-                    }
-
-                    TextButton {
-                        text: qsTr("Refresh")
-                        type: TextButton.Text
-                        enabled: !backupsProc.running
-                        onClicked: root.refresh()
-                    }
-                }
-
-                // ── Dependencies & recovery ──────────────────────────────
-                StyledText {
-                    text: qsTr("Dependencies & recovery")
-                    font.pointSize: Appearance.font.size.normal
-                    font.weight: 600
-                }
-
-                StyledText {
-                    Layout.fillWidth: true
-                    visible: root.snapshotBackend === "none"
-                    text: qsTr("Update rollback is unavailable: no snapshot backend is recorded for this system.")
-                    color: Signal.palette.phosphor
-                    font.pointSize: Appearance.font.size.smaller
-                    wrapMode: Text.Wrap
                 }
 
                 CtlCard {
@@ -494,25 +404,6 @@ Item {
                     probeArgv: ["horneroctl", "--json", "config", "snapshot", "list"]
                     actionLabel: qsTr("Create snapshot")
                     actionArgv: ["horneroctl", "--json", "config", "snapshot", "create", "--yes"]
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: Appearance.spacing.small
-
-                    StyledTextField {
-                        Layout.fillWidth: true
-                        placeholderText: qsTr("Snapshot id to restore")
-                        text: root.snapshotIdField
-                        onTextChanged: root.snapshotIdField = text
-                    }
-
-                    TextButton {
-                        text: root.armedAction === "snapshot-restore" ? qsTr("Click again to restore") : qsTr("Restore snapshot")
-                        type: root.armedAction === "snapshot-restore" ? TextButton.Filled : TextButton.Tonal
-                        enabled: !root.busy && root.snapshotIdField.trim() !== ""
-                        onClicked: root.runMutating("snapshot-restore", ["horneroctl", "config", "snapshot", "restore", root.snapshotIdField.trim(), "--yes"])
-                    }
                 }
 
                 CtlCard {

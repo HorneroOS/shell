@@ -352,7 +352,7 @@ Item {
                         StyledText {
                             visible: Notifs.notClosed.length === 0
                             text: qsTr("No pending notifications")
-                            color: Signal.palette.ruleStrong
+                            color: Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.small
                         }
 

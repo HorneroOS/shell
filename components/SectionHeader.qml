@@ -4,6 +4,8 @@ import qs.config
 import QtQuick
 import QtQuick.Layouts
 
+// Section header inside a settings column: hairline, eyebrow title and an
+// optional one-line description. The eyebrow carries the Heading role.
 ColumnLayout {
     id: root
 
@@ -17,17 +19,22 @@ ColumnLayout {
         Layout.topMargin: Appearance.spacing.large
     }
 
-    StyledText {
+    Eyebrow {
+        Layout.fillWidth: true
         Layout.topMargin: Appearance.spacing.small
-        text: root.title
-        font.pointSize: Appearance.font.size.larger
-        font.weight: 600
+        label: root.title
+        color: Signal.palette.ink
+        Accessible.ignored: false
         Accessible.role: Accessible.Heading
+        Accessible.name: root.title
     }
 
     StyledText {
         visible: root.description !== ""
+        Layout.fillWidth: true
         text: root.description
         color: Signal.palette.inkMuted
+        font.pointSize: Appearance.font.size.small
+        wrapMode: Text.WordWrap
     }
 }

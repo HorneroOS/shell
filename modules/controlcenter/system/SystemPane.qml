@@ -43,7 +43,7 @@ Item {
     }
 
     // ── Reusable tile ────────────────────────────────────────────────────────
-    component ActionTile: StyledRect {
+    component ActionTile: Item {
         id: tile
 
         required property string icon
@@ -51,50 +51,52 @@ Item {
         required property string description
         required property var action
 
+        readonly property bool isFirst: tile.parent && tile.parent.children.length > 0 && tile.parent.children[0] === tile
+
         Layout.fillWidth: true
-        radius: Appearance.rounding.small
-        color: Signal.layer(Signal.palette.raised, 2)
         implicitHeight: row.implicitHeight + Appearance.padding.normal * 2
+
+        Hairline {
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            visible: !tile.isFirst
+        }
 
         RowLayout {
             id: row
 
-            anchors.fill: parent
-            anchors.margins: Appearance.padding.normal
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.leftMargin: Appearance.padding.large
+            anchors.rightMargin: Appearance.padding.large
             spacing: Appearance.spacing.normal
 
-            StyledRect {
+            Glyph {
                 Layout.minimumWidth: Appearance.font.size.extraLarge * 1.5
                 Layout.preferredWidth: Appearance.font.size.extraLarge * 1.5
                 Layout.maximumWidth: Appearance.font.size.extraLarge * 1.5
                 Layout.alignment: Qt.AlignVCenter
-                radius: Appearance.rounding.small
-                color: Signal.layer(Signal.palette.signalWell, 2)
-                implicitHeight: 36
-
-                Glyph {
-                    anchors.centerIn: parent
-                    name: tile.icon
-                    color: Signal.palette.onSignalWell
-                    font.pointSize: Appearance.font.size.large
-                }
+                name: tile.icon
+                color: Signal.palette.inkMuted
+                font.pointSize: Appearance.font.size.large
+                horizontalAlignment: Text.AlignHCenter
             }
 
             ColumnLayout {
                 Layout.fillWidth: true
-                spacing: 2
+                spacing: 0
 
                 StyledText {
                     text: tile.label
-                    font.pointSize: Appearance.font.size.normal
-                    font.weight: 600
                 }
 
                 StyledText {
                     Layout.fillWidth: true
                     text: tile.description
                     color: Signal.palette.inkMuted
-                    font.pointSize: Appearance.font.size.smaller
+                    font.pointSize: Appearance.font.size.small
                     elide: Text.ElideRight
                 }
             }
@@ -108,55 +110,61 @@ Item {
     }
 
     // ── Stat row ─────────────────────────────────────────────────────────────
-    component StatBar: ColumnLayout {
+    component StatBar: Item {
         id: bar
 
         required property string label
         required property real value  // 0–1
         required property string detail
 
+        readonly property bool isFirst: bar.parent && bar.parent.children.length > 0 && bar.parent.children[0] === bar
+
         Layout.fillWidth: true
-        spacing: 4
+        implicitHeight: barColumn.implicitHeight + Appearance.padding.normal * 2
 
-        RowLayout {
-            Layout.fillWidth: true
-
-            StyledText {
-                text: bar.label
-                font.pointSize: Appearance.font.size.smaller
-                color: Signal.palette.inkMuted
-            }
-
-            Item {
-                Layout.fillWidth: true
-            }
-
-            StyledText {
-                text: bar.detail
-                font.pointSize: Appearance.font.size.smaller
-                color: Signal.palette.inkMuted
-            }
+        Hairline {
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            visible: !bar.isFirst
         }
 
-        StyledRect {
-            Layout.fillWidth: true
-            implicitHeight: 6
-            radius: Appearance.rounding.small
-            color: Signal.layer(Signal.palette.lifted, 1)
+        ColumnLayout {
+            id: barColumn
 
-            StyledRect {
-                anchors.left: parent.left
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                width: parent.width * Math.min(bar.value, 1)
-                radius: parent.radius
-                color: bar.value > 0.85 ? Signal.palette.alert : bar.value > 0.6 ? Signal.palette.phosphor : Signal.palette.signal
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.leftMargin: Appearance.padding.large
+            anchors.rightMargin: Appearance.padding.large
+            spacing: Appearance.spacing.small
 
-                Behavior on width {
-                    Anim {
-                        duration: Appearance.anim.durations.long
-                    }
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Appearance.spacing.normal
+
+                StyledText {
+                    Layout.fillWidth: true
+                    text: bar.label
+                    elide: Text.ElideRight
                 }
+
+                StyledText {
+                    mono: true
+                    text: bar.detail
+                    font.pointSize: Appearance.font.size.small
+                }
+            }
+
+            SegmentMeter {
+                Layout.fillWidth: true
+                implicitWidth: 0
+                count: Math.max(8, Math.floor((width + gap) / (segmentThickness + gap)))
+                segmentThickness: 6
+                segmentLength: 10
+                value: bar.value
+                critical: -1
+                accessibleName: bar.label
             }
         }
     }
@@ -192,31 +200,21 @@ Item {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
-                spacing: Appearance.spacing.normal
+                spacing: Appearance.spacing.large
 
                 PaneHeader {
                     paneId: "system"
                 }
 
                 // ── Live stats ───────────────────────────────────────────────
-                StyledRect {
-                    Layout.fillWidth: true
-                    radius: Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.panel, 1)
-                    implicitHeight: statsCol.implicitHeight + Appearance.padding.large * 2
+                ChannelPanel {
+                    title: qsTr("Resources")
 
                     ColumnLayout {
                         id: statsCol
 
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.large
-                        spacing: Appearance.spacing.normal
-
-                        StyledText {
-                            text: qsTr("Resources")
-                            font.pointSize: Appearance.font.size.normal
-                            font.weight: 500
-                        }
+                        Layout.fillWidth: true
+                        spacing: 0
 
                         StatBar {
                             label: SystemUsage.cpuName !== "" ? `CPU — ${SystemUsage.cpuName}` : qsTr("CPU")
@@ -293,24 +291,14 @@ Item {
                 }
 
                 // ── Actions ──────────────────────────────────────────────────
-                StyledRect {
-                    Layout.fillWidth: true
-                    radius: Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.panel, 2)
-                    implicitHeight: actionsCol.implicitHeight + Appearance.padding.large * 2
+                ChannelPanel {
+                    title: qsTr("Quick actions")
 
                     ColumnLayout {
                         id: actionsCol
 
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.large
-                        spacing: Appearance.spacing.small
-
-                        StyledText {
-                            text: qsTr("Quick actions")
-                            font.pointSize: Appearance.font.size.normal
-                            font.weight: 500
-                        }
+                        Layout.fillWidth: true
+                        spacing: 0
 
                         ActionTile {
                             Layout.fillWidth: true
@@ -371,24 +359,14 @@ Item {
                 }
 
                 // ── Tools ────────────────────────────────────────────────────
-                StyledRect {
-                    Layout.fillWidth: true
-                    radius: Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.panel, 2)
-                    implicitHeight: toolsCol.implicitHeight + Appearance.padding.large * 2
+                ChannelPanel {
+                    title: qsTr("Tools")
 
                     ColumnLayout {
                         id: toolsCol
 
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.large
-                        spacing: Appearance.spacing.small
-
-                        StyledText {
-                            text: qsTr("Tools")
-                            font.pointSize: Appearance.font.size.normal
-                            font.weight: 500
-                        }
+                        Layout.fillWidth: true
+                        spacing: 0
 
                         ActionTile {
                             Layout.fillWidth: true
@@ -425,18 +403,14 @@ Item {
                 }
 
                 // ── Diagnostics (read-only horneroctl probes) ────────────
-                StyledText {
-                    text: qsTr("Diagnostics")
-                    font.pointSize: Appearance.font.size.normal
-                    font.weight: 600
-                }
+                ChannelPanel {
+                    title: qsTr("Diagnostics")
+                    readout: qsTr("read-only")
 
-                StyledText {
-                    Layout.fillWidth: true
-                    text: qsTr("Run on demand. All checks are read-only; nothing is changed or fixed from here.")
-                    color: Signal.palette.inkMuted
-                    font.pointSize: Appearance.font.size.smaller
-                    wrapMode: Text.Wrap
+                    SettingRow {
+                        label: qsTr("Run on demand")
+                        description: qsTr("All checks are read-only; nothing is changed or fixed from here.")
+                    }
                 }
 
                 CtlCard {

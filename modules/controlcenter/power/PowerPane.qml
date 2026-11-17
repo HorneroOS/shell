@@ -106,25 +106,40 @@ Item {
         }
     }
 
-    component PowerTile: StyledRect {
+    component PowerTile: Item {
         id: tile
 
         required property string icon
         required property string label
         required property string action
 
+        readonly property bool armed: root.armedAction === tile.action
+        readonly property bool isFirst: tile.parent && tile.parent.children.length > 0 && tile.parent.children[0] === tile
+
         Layout.fillWidth: true
-        radius: Appearance.rounding.small
-        color: tile.armed ? Signal.layer(Signal.palette.alertWell, 2) : Signal.layer(Signal.palette.raised, 2)
         implicitHeight: row.implicitHeight + Appearance.padding.normal * 2
 
-        readonly property bool armed: root.armedAction === tile.action
+        Rectangle {
+            anchors.fill: parent
+            anchors.topMargin: tile.isFirst ? 0 : 1
+            color: tile.armed ? Signal.palette.alertWell : "transparent"
+        }
+
+        Hairline {
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            visible: !tile.isFirst
+        }
 
         RowLayout {
             id: row
 
-            anchors.fill: parent
-            anchors.margins: Appearance.padding.normal
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.leftMargin: Appearance.padding.large
+            anchors.rightMargin: Appearance.padding.large
             spacing: Appearance.spacing.normal
 
             Glyph {
@@ -141,7 +156,7 @@ Item {
             StyledText {
                 Layout.fillWidth: true
                 text: tile.armed ? qsTr("Click again to %1").arg(tile.label.toLowerCase()) : tile.label
-                font.pointSize: Appearance.font.size.normal
+                color: tile.armed ? Signal.palette.onAlertWell : Signal.palette.ink
                 font.weight: tile.armed ? 600 : 400
             }
 
@@ -182,19 +197,10 @@ Item {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
-                spacing: Appearance.spacing.normal
+                spacing: Appearance.spacing.large
 
                 PaneHeader {
                     paneId: "power"
-                }
-
-                // ── Backend state ────────────────────────────────────
-                StyledText {
-                    visible: root.compositor.length > 0 || root.lockBackend.length > 0
-                    text: [root.compositor.length > 0 ? qsTr("Compositor: %1").arg(root.compositor) : "", root.lockBackend.length > 0 ? qsTr("Lock via %1").arg(root.lockBackend) : ""].filter(s => s.length > 0).join(" · ")
-                    color: Signal.palette.inkMuted
-                    font.pointSize: Appearance.font.size.smaller
-                    Layout.fillWidth: true
                 }
 
                 StyledText {
@@ -206,39 +212,51 @@ Item {
                     Layout.fillWidth: true
                 }
 
-                PowerTile {
-                    Layout.fillWidth: true
-                    icon: "lock"
-                    label: qsTr("Lock screen")
-                    action: "lock"
+                ChannelPanel {
+                    title: qsTr("Session")
+                    readoutAvailable: root.lockBackend.length > 0
+                    readout: root.lockBackend.length > 0 ? qsTr("lock via %1").arg(root.lockBackend) : ""
+
+                    PowerTile {
+                        Layout.fillWidth: true
+                        icon: "lock"
+                        label: qsTr("Lock screen")
+                        action: "lock"
+                    }
+
+                    PowerTile {
+                        Layout.fillWidth: true
+                        icon: "logout"
+                        label: qsTr("Log out")
+                        action: "logout"
+                    }
                 }
 
-                PowerTile {
-                    Layout.fillWidth: true
-                    icon: "logout"
-                    label: qsTr("Log out")
-                    action: "logout"
-                }
+                ChannelPanel {
+                    title: qsTr("Power")
+                    readoutAvailable: root.compositor.length > 0
+                    readout: root.compositor
 
-                PowerTile {
-                    Layout.fillWidth: true
-                    icon: "moon-stars"
-                    label: qsTr("Suspend")
-                    action: "suspend"
-                }
+                    PowerTile {
+                        Layout.fillWidth: true
+                        icon: "moon-stars"
+                        label: qsTr("Suspend")
+                        action: "suspend"
+                    }
 
-                PowerTile {
-                    Layout.fillWidth: true
-                    icon: "reload"
-                    label: qsTr("Reboot")
-                    action: "reboot"
-                }
+                    PowerTile {
+                        Layout.fillWidth: true
+                        icon: "reload"
+                        label: qsTr("Reboot")
+                        action: "reboot"
+                    }
 
-                PowerTile {
-                    Layout.fillWidth: true
-                    icon: "power"
-                    label: qsTr("Shut down")
-                    action: "shutdown"
+                    PowerTile {
+                        Layout.fillWidth: true
+                        icon: "power"
+                        label: qsTr("Shut down")
+                        action: "shutdown"
+                    }
                 }
 
                 // ── Last action result ───────────────────────────────

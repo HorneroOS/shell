@@ -57,19 +57,20 @@ ColumnLayout {
         PropertyRow {
             showTopMargin: true
             label: qsTr("Signal strength")
-            value: Nmcli.active ? qsTr("%1%").arg(Nmcli.active.strength) : qsTr("N/A")
+            level: Nmcli.active ? Nmcli.active.strength / 100 : -1
+            value: Nmcli.active ? qsTr("%1%").arg(Nmcli.active.strength) : ""
         }
 
         PropertyRow {
             showTopMargin: true
             label: qsTr("Security")
-            value: Nmcli.active ? (Nmcli.active.isSecure ? qsTr("Secured") : qsTr("Open")) : qsTr("N/A")
+            value: Nmcli.active ? (Nmcli.active.isSecure ? qsTr("Secured") : qsTr("Open")) : ""
         }
 
         PropertyRow {
             showTopMargin: true
             label: qsTr("Frequency")
-            value: Nmcli.active ? qsTr("%1 MHz").arg(Nmcli.active.frequency) : qsTr("N/A")
+            value: Nmcli.active ? qsTr("%1 MHz").arg(Nmcli.active.frequency) : ""
         }
     }
 }

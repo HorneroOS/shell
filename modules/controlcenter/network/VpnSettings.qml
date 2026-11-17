@@ -112,7 +112,7 @@ ColumnLayout {
                             StyledText {
                                 text: qsTr("%1 • %2").arg(modelData.name).arg(modelData.interface || qsTr("No interface"))
                                 font.pointSize: Appearance.font.size.small
-                                color: Signal.palette.ruleStrong
+                                color: Signal.palette.inkMuted
                             }
                         }
 

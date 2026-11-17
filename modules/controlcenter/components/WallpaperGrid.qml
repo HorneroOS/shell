@@ -72,7 +72,7 @@ Item {
                     ? qsTr("All wallpapers")
                     : qsTr("Theme wallpapers: %1").arg(wallpaperScopeDir)
                 font.pointSize: Appearance.font.size.small
-                color: Signal.palette.ruleStrong
+                color: Signal.palette.inkMuted
             }
 
             TextButton {
@@ -106,7 +106,7 @@ Item {
                     : root.wallpaperScopeDir && !root.showAllWallpapers
                         ? qsTr("No wallpapers found for this theme")
                         : qsTr("No wallpapers found")
-                color: Signal.palette.ruleStrong
+                color: Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.normal
             }
 

@@ -15,10 +15,21 @@ Item {
 
     property string label: ""
     property string description: ""
+    property bool labelMono: false
     default property alias trailing: trailingRow.data
     property alias below: belowColumn.data
 
-    readonly property bool isFirst: root.parent && root.parent.children.length > 0 && root.parent.children[0] === root
+    // First visible sibling draws no top hairline.
+    readonly property bool isFirst: {
+        const siblings = root.parent ? root.parent.children : [];
+        for (let i = 0; i < siblings.length; i++) {
+            if (siblings[i] === root)
+                return true;
+            if (siblings[i].visible && siblings[i].implicitHeight > 0)
+                return false;
+        }
+        return true;
+    }
 
     Layout.fillWidth: true
     implicitHeight: column.implicitHeight + Appearance.padding.normal * 2
@@ -52,6 +63,8 @@ Item {
                     Layout.fillWidth: true
                     visible: root.label.length > 0
                     text: root.label
+                    mono: root.labelMono
+                    font.pointSize: root.labelMono ? Appearance.font.size.small : Appearance.font.size.normal
                     elide: Text.ElideRight
                 }
 

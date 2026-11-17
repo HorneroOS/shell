@@ -15,8 +15,10 @@ StyledRect {
     Layout.fillWidth: true
     implicitHeight: contentColumn.implicitHeight + Appearance.padding.large * 2
 
-    radius: Appearance.rounding.normal
-    color: Signal.transparency.enabled ? Signal.layer(Signal.palette.panel, 2) : Signal.palette.raised
+    radius: Appearance.rounding.small
+    color: "transparent"
+    border.width: 1
+    border.color: Signal.palette.rule
 
     ColumnLayout {
         id: contentColumn

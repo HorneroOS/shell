@@ -188,7 +188,7 @@ Item {
                         visible: root.session.navExpanded && firstInCategory
                         opacity: root.session.navExpanded ? 1 : 0
                         text: firstInCategory ? PaneRegistry.categoryTitle(pane.category) : ""
-                        color: Signal.palette.ruleStrong
+                        color: Signal.palette.inkMuted
                         font.pointSize: Appearance.font.size.small
                         font.capitalization: Font.Capitalize
                     }

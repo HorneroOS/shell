@@ -201,7 +201,7 @@ DeviceList {
                     StyledText {
                         Layout.fillWidth: true
                         text: (device.modelData ? device.modelData.address : "") + (device.connected ? qsTr(" (Connected)") : (device.modelData && device.modelData.bonded) ? qsTr(" (Paired)") : "")
-                        color: Signal.palette.ruleStrong
+                        color: Signal.palette.inkMuted
                         font.pointSize: Appearance.font.size.small
                         elide: Text.ElideRight
                     }
@@ -260,7 +260,7 @@ DeviceList {
         visible: !root.session.bt.hasAdapter
         wrapMode: Text.WordWrap
         text: qsTr("No Bluetooth adapter found. The Bluetooth service may be stopped, or this machine has no Bluetooth hardware.")
-        color: Signal.palette.ruleStrong
+        color: Signal.palette.inkMuted
     }
 
     TextButton {
@@ -277,7 +277,7 @@ DeviceList {
         visible: root.session.bt.hasAdapter && !root.session.bt.adapterPowered
         wrapMode: Text.WordWrap
         text: qsTr("Bluetooth is off. Turn it on to find nearby devices.")
-        color: Signal.palette.ruleStrong
+        color: Signal.palette.inkMuted
     }
 
     StyledText {
@@ -285,7 +285,7 @@ DeviceList {
         visible: root.session.bt.hasAdapter && root.session.bt.adapterPowered && Bluetooth.devices.values.length === 0
         wrapMode: Text.WordWrap
         text: qsTr("No devices found. Use Scan to look for nearby devices.")
-        color: Signal.palette.ruleStrong
+        color: Signal.palette.inkMuted
     }
 
     StyledText {

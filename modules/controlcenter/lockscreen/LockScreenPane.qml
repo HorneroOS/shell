@@ -184,7 +184,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Idle timeouts and battery warnings live in Control Center › Power.")
                             font.pointSize: Appearance.font.size.small
-                            color: Signal.palette.ruleStrong
+                            color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
                     }

@@ -30,7 +30,9 @@ StyledRect {
 
     Layout.fillWidth: true
     radius: Appearance.rounding.small
-    color: Signal.layer(Signal.palette.panel, 1)
+    color: "transparent"
+    border.width: 1
+    border.color: Signal.palette.rule
     implicitHeight: col.implicitHeight + Appearance.padding.large * 2
 
     function envelope(text: string): var {
@@ -236,7 +238,7 @@ StyledRect {
             Layout.fillWidth: true
             text: qsTr("Not run yet.")
             font.pointSize: Appearance.font.size.small
-            color: Signal.palette.ruleStrong
+            color: Signal.palette.inkMuted
         }
     }
 }

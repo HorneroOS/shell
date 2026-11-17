@@ -380,7 +380,7 @@ Item {
                             visible: root.rules.length === 0
                             text: qsTr("No user window rules.")
                             font.pointSize: Appearance.font.size.small
-                            color: Signal.palette.ruleStrong
+                            color: Signal.palette.inkMuted
                         }
 
                         RowLayout {
@@ -428,7 +428,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Rules are stored in your window-rules overlay and take effect on Hyprland config reload (Super+Shift+R) or restart; already-open windows are unaffected. Geometry and focus apply live and are restored at login.")
                             font.pointSize: Appearance.font.size.small
-                            color: Signal.palette.ruleStrong
+                            color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
                     }

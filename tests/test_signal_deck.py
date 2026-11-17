@@ -419,7 +419,7 @@ def test_glow_stays_inside_amendment_2_limits():
     kit = (ROOT / "plugin" / "qml" / "Hornero" / "PluginKit" / "GlowBudget.qml").read_text()
     assert "readonly property int limit: 3" in kit
     theme = (ROOT / "plugin" / "qml" / "Hornero" / "PluginKit" / "Theme.qml").read_text()
-    assert "glowBlur: 4" in theme and "glowAlpha: 0.4" in theme
+    assert "glowBlur: 4" in theme and "glowAlpha: Math.min(1, 0.4 * ExperienceBridge.glowIntensity)" in theme
 
 
 def test_idle_cpu_script_is_guarded_and_documented():

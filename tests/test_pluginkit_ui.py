@@ -94,7 +94,7 @@ def test_theme_exposes_signal_tokens():
     assert "readonly property bool scanlines: ExperienceBridge.scanlines" in src
     assert "readonly property int telemetryIntervalMs: ExperienceBridge.telemetryIntervalMs" in src
     assert "readonly property real glowBlur: 4" in src
-    assert "readonly property real glowAlpha: 0.4" in src
+    assert "readonly property real glowAlpha: Math.min(1, 0.4 * ExperienceBridge.glowIntensity)" in src
     bridge = _src("ExperienceBridge")
     for token in ("Experience.mode", "Experience.glow", "Experience.scanlines",
                   "Experience.telemetryIntervalMs", "Experience.density"):

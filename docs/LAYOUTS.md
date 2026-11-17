@@ -102,6 +102,34 @@ the Layout Picker. `horneroctl shell preset apply <name> --yes` applies a
 preset to the user-owned Shell settings file; installed system presets are
 read-only and are never changed.
 
+## Cockpit Clear
+
+`backdrop: "clear"` bars have a genuinely absent background (RFC 0001 §5.1):
+no fill, tint, slab, blur, edge scrim or backdrop shadow, in every mode
+including High Contrast. Legibility comes only from the foreground:
+
+- **Adaptive ink.** `components/clearink/ClearInkField.qml` draws the
+  wallpaper once (on wallpaper or screen change, never per frame) into a
+  192-column luminance grid. Each bar entry owns a `ClearInkTone`: the
+  mean and deviation of the wallpaper under it (padded 2 px) pick the
+  polarity with the larger contrast, between the theme's Night ink
+  (`#ECE6DA`, halo `#0C0F13`) and Day ink (`#1B1E22`, halo `#FFFFFF`).
+  Wallpapers never recolour the UI. Video or unreadable wallpapers follow
+  the theme polarity and keep every cue on. The model is
+  `services/clearink.js`.
+- **Glyph-only halo and shadow.** Each entry gets one silhouette shadow in
+  the halo colour (88 % alpha), never a box. Bar components read their
+  colours from `tone` (`ink`, `inkMuted`, `signal`, `alert`); outside a
+  clear bar `tone` is the plain Signal palette.
+- **Styles** (`bar.clearStyle`, Layout Picker and Settings > Layout):
+  Auto (1 px halo, plus a 4 px soft shadow on detailed regions), Outline,
+  Shadow (2 px, falls back to Outline under 3:1) and Contrast (2 px halo,
+  SemiBold). High Contrast forces Contrast.
+- **Popouts** opened from a clear bar are ordinary opaque Signal panels.
+
+The halo is an approximation of the spec's text outline: a MultiEffect
+silhouette shadow, so it also rings meter segments and glyph icons.
+
 ## Ownership and persistence
 
 The Shell owns live bar state and serializes it through `Config.qml`. Factory

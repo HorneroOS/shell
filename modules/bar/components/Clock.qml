@@ -11,6 +11,9 @@ import QtQuick.Layouts
 Item {
     id: root
 
+    // Region tone: the plain Signal palette, or per-region ink on Cockpit Clear.
+    property var tone: ClearInk.neutral
+
     required property ShellScreen screen
 
     property color colour: Signal.palette.phosphor
@@ -26,7 +29,7 @@ Item {
     implicitHeight: layout.implicitHeight
 
     StyledRect {
-        visible: Config.bar.clock.background && !root.vertical
+        visible: Config.bar.clock.background && !root.vertical && !root.tone.active
         anchors.fill: parent
         anchors.margins: -Appearance.padding.normal
         color: Signal.tPalette.panel
@@ -65,7 +68,7 @@ Item {
             text: Time.format("ddd d MMM")
             font.pointSize: Appearance.font.size.smaller
             font.family: Appearance.font.family.sans
-            color: Signal.palette.inkMuted
+            color: root.tone.inkMuted
         }
 
         // Time: split into two texts with anti-jitter equalisation
@@ -118,7 +121,7 @@ Item {
                 text: Time.amPmStr
                 font.pointSize: Appearance.font.size.smaller
                 font.family: Appearance.font.family.sans
-                color: Signal.palette.inkMuted
+                color: root.tone.inkMuted
             }
         }
 
@@ -153,7 +156,7 @@ Item {
                     text: Time.amPmStr
                     font.pointSize: Appearance.font.size.small
                     font.family: Appearance.font.family.sans
-                    color: Signal.palette.inkMuted
+                    color: root.tone.inkMuted
                 }
             }
         }

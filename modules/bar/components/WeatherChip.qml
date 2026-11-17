@@ -9,6 +9,9 @@ import QtQuick.Layouts
 Item {
     id: root
 
+    // Region tone: the plain Signal palette, or per-region ink on Cockpit Clear.
+    property var tone: ClearInk.neutral
+
     property bool vertical
     property string density: "values"
 
@@ -37,7 +40,7 @@ Item {
             Layout.alignment: Qt.AlignCenter
             visible: root.density === "values" || root.vertical
             text: Weather.temp
-            color: Signal.palette.ink
+            color: root.tone.ink
             font.pointSize: Appearance.font.size.smaller
         }
     }

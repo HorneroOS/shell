@@ -98,6 +98,10 @@ Item {
                 keyboardNav: true
             }
 
+            ClearStyleRow {
+                Layout.alignment: Qt.AlignHCenter
+            }
+
             // Footer hint
             StyledText {
                 Layout.alignment: Qt.AlignHCenter

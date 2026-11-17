@@ -70,11 +70,14 @@ def test_high_contrast_disclosure_limits_scope_to_shell() -> None:
     assert "Other applications keep their current theme." in pane
 
 
-def test_high_contrast_keeps_clear_bars_opaque() -> None:
+def test_high_contrast_keeps_clear_bars_legible_without_a_background() -> None:
+    # RFC 0001 section 5.1: Cockpit Clear never paints a scrim, not even in
+    # High Contrast. Legibility there comes from the forced Contrast style
+    # (2 px halo, SemiBold) on the foreground only.
     bar = BAR.read_text(encoding="utf-8")
-    assert 'opacity: Config.appearance.highContrast ? 1 :' in bar
-    assert 'Config.appearance.highContrast || scrim.fromStart ? Signal.palette.base : "transparent"' in bar
-    assert 'Config.appearance.highContrast || !scrim.fromStart ? Signal.palette.base : "transparent"' in bar
+    assert "scrim" not in bar.lower().replace("no scrim", "")
+    ink = (ROOT / "services" / "ClearInk.qml").read_text(encoding="utf-8")
+    assert 'Config.appearance.highContrast ? "contrast"' in ink
     pane = PANE.read_text(encoding="utf-8")
     assert "enabled: !Config.appearance.highContrast" in pane
     assert "Transparency is disabled while high contrast is on." in pane

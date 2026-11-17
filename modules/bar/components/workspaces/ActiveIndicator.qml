@@ -8,6 +8,11 @@ import QtQuick
 StyledRect {
     id: root
 
+    // Region tone: the plain Signal palette, or per-region ink on Cockpit Clear.
+    property var tone: ClearInk.neutral
+    // Cockpit Clear: no fill, the on-air bar and the ink numeral carry it.
+    property bool clear: false
+
     required property ShellScreen screen
 
     required property int activeWsId
@@ -57,7 +62,7 @@ StyledRect {
     // Signal Bezel §5: fixed rectangular cells, never pills. The active
     // cell is a raised fill with the numeral in ink — not a signal slab.
     radius: Appearance.rounding.small
-    color: Signal.palette.raised
+    color: root.clear ? "transparent" : Signal.palette.raised
 
     // §5 on-air bar: 2 px signal across the full cell on the edge facing
     // the content (top edge for a bottom strip, bottom for a top rail,
@@ -67,13 +72,13 @@ StyledRect {
         height: root.vertical ? root.height : 2
         x: root.vertical ? (root.edge === "right" ? 0 : root.width - 2) : 0
         y: root.vertical ? 0 : (root.edge === "bottom" ? 0 : root.height - 2)
-        color: Signal.palette.signal
+        color: root.tone.signal
     }
 
     Colouriser {
         source: root.mask
-        sourceColor: Signal.palette.ink
-        colorizationColor: Signal.palette.ink
+        sourceColor: root.tone.ink
+        colorizationColor: root.tone.ink
 
         x: root.vertical ? 0 : -parent.offset
         y: root.vertical ? -parent.offset : 0

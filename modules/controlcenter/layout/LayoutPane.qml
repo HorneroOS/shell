@@ -114,6 +114,10 @@ Item {
                     }
                 }
 
+                ClearStyleRow {
+                    Layout.fillWidth: true
+                }
+
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
                     text: qsTr("Tip: Super+Shift+B opens the quick layout picker")

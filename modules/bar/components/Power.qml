@@ -7,6 +7,9 @@ import QtQuick
 Item {
     id: root
 
+    // Region tone: the plain Signal palette, or per-region ink on Cockpit Clear.
+    property var tone: ClearInk.neutral
+
     required property PersistentProperties visibilities
 
     implicitWidth: icon.implicitHeight + Appearance.padding.small * 2
@@ -33,7 +36,7 @@ Item {
         anchors.horizontalCenterOffset: -1
 
         name: "power"
-        color: Signal.palette.alert
+        color: root.tone.alert
         font.bold: true
         font.pointSize: Appearance.font.size.normal
     }

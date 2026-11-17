@@ -13,6 +13,9 @@ import QtQuick.Layouts
 RowLayout {
     id: root
 
+    // Region tone: the plain Signal palette, or per-region ink on Cockpit Clear.
+    property var tone: ClearInk.neutral
+
     required property ShellScreen screen
     required property string kind // "audio" | "brightness"
     // Per-entry options: showValue prints the level ("72%") after the slider.
@@ -39,7 +42,7 @@ RowLayout {
                 return "volume-off";
             return "volume";
         }
-        color: Signal.palette.inkMuted
+        color: root.tone.inkMuted
 
         Behavior on text {
             Anim {}
@@ -107,7 +110,7 @@ RowLayout {
         text: `${Math.round(slider.value * 100)}%`
         font.pointSize: Appearance.font.size.smaller
         font.family: Appearance.font.family.mono
-        color: Signal.palette.inkMuted
+        color: root.tone.inkMuted
 
         TextMetrics {
             id: valueMetrics

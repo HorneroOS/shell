@@ -9,6 +9,9 @@ import QtQuick.Layouts
 Item {
     id: root
 
+    // Region tone: the plain Signal palette, or per-region ink on Cockpit Clear.
+    property var tone: ClearInk.neutral
+
     property bool vertical
     property var options: ({})
     readonly property var player: Players.active
@@ -44,7 +47,7 @@ Item {
         BarButton {
             icon: root.player?.isPlaying ? "player-pause" : "player-play"
             label: root.player?.isPlaying ? qsTr("Pause") : qsTr("Play")
-            colour: Signal.palette.signal
+            colour: root.tone.signal
             filled: true
             onActivated: root.player?.togglePlaying()
         }
@@ -63,7 +66,7 @@ Item {
             Layout.maximumWidth: root.maxTitleWidth
             text: root.title
             elide: Text.ElideRight
-            color: Signal.palette.inkMuted
+            color: root.tone.inkMuted
             font.pointSize: Appearance.font.size.smaller
         }
     }

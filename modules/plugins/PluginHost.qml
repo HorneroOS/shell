@@ -37,6 +37,12 @@ import QtQuick
 Scope {
     id: root
 
+    // Report which PluginKit the shell really resolved so a stale kit on
+    // the import path is refused plainly (Plugins.kitBlocked) instead of
+    // surfacing as per-extension QML type errors. A kit that predates the
+    // PluginKitInfo marker reads as level 0.
+    Component.onCompleted: Plugins.kitLevel = Kit.PluginKitInfo ? Kit.PluginKitInfo.apiLevel : 0
+
     // A Repeater placed directly under a Scope (a non-visual QObject)
     // never materialises its delegates: they are counted but their
     // components never complete, so manifests were never read and every
@@ -49,7 +55,7 @@ Scope {
     Repeater {
         // Safe mode (shell#380): no delegate, so no manifest is even
         // read — a malformed plugin cannot block recovery access.
-        model: Plugins.safeMode ? [] : Plugins.entries.filter(e => e.enabled && e.installed)
+        model: Plugins.hostingBlocked ? [] : Plugins.entries.filter(e => e.enabled && e.installed)
 
         delegate: Item {
             id: slot

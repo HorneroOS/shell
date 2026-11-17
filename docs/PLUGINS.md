@@ -1111,11 +1111,32 @@ QML compile or instantiation errors, which each host already confines
 to that plugin's own Loader); it does not sandbox a running plugin,
 which still executes with the logged-in user's permissions.
 
+**PluginKit version gate.** The shell resolves `Hornero.PluginKit` from
+the QML import path (`/usr/lib/qt6/qml` for the package, or
+`QML2_IMPORT_PATH`). A partial upgrade can leave the previous kit there,
+which fails every extension with raw errors such as `UiTextField is not
+a type`. `plugin/qml/Hornero/PluginKit/PluginKitInfo.qml` carries the
+kit's `apiLevel` (3 for schemaVersion 3); `PluginHost` reads it at start
+and, when the resolved kit is older than the Shell needs (a kit without
+the marker reads as 0), hosts nothing and says so plainly: every enabled
+extension is marked `failed` with the message, the Extensions pane shows
+it as a banner, and `qs ipc call plugins status` reports
+`kit: {level, required, compatible, message}`. Fix it by updating the
+`hornero-shell` package or by starting the shell with
+`QML2_IMPORT_PATH=<checkout>/plugin/qml`.
+
 ## Validate a package
 
 ```sh
 python3 scripts/validate_plugin.py path/to/example-clock
+python3 scripts/validate_plugin.py --info   # {"schemaVersions": [3], "pluginKit": 3}
 ```
+
+`horneroctl plugin ...` runs the validator that matches the running Shell:
+it prefers `scripts/validate_plugin.py` of the Shell tree being run, then
+the packaged `/usr/lib/hornero/hornero-shell-plugin-validate`, and uses
+only one whose `--info` lists schemaVersion 3
+(`HORNERO_PLUGIN_VALIDATOR` overrides).
 
 The checker is also covered by `tests/test_plugin_contract.py`. Registry
 discovery does not enable plugins or bypass the receipt and consent checks in

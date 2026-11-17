@@ -510,6 +510,15 @@ Item {
 
                 StyledText {
                     Layout.fillWidth: true
+                    visible: Plugins.kitBlocked
+                    text: Plugins.kitMessage
+                    font.pointSize: Appearance.font.size.small
+                    color: Signal.palette.alert
+                    wrapMode: Text.Wrap
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
                     visible: root.actionError.length > 0
                     text: root.actionError
                     font.pointSize: Appearance.font.size.small

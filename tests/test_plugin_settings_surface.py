@@ -38,7 +38,7 @@ def test_service_exposes_settings_surface_only_for_enabled_installed():
     body = SERVICE[SERVICE.index("function settingsSurfaceFor"):]
     body = body[: body.index("function hasSettingsSurface")]
     # Gate: safe mode, enabled and installed are all required.
-    assert "root.safeMode" in body and "!entry.enabled" in body and "!entry.installed" in body
+    assert "root.hostingBlocked" in body and "!entry.enabled" in body and "!entry.installed" in body
     assert 'root.surfaceFor(entry, "settings")' in body
     assert "declared.enabled === false" in body
 
@@ -77,7 +77,7 @@ def test_disable_and_safe_mode_unload_surface():
     assert 'source: active ? `file://${Plugins.pluginsDir}/${root.pluginId}/${root.entrypoint}` : ""' in HOST_CC
     # Service side: pluginsForSurface/hasSurface return nothing in
     # safe mode and skip disabled/uninstalled entries.
-    assert "if (root.safeMode)\n            return []" in SERVICE
+    assert "if (root.hostingBlocked)\n            return []" in SERVICE
     assert "if (!entry.enabled || !entry.installed)" in SERVICE
 
 

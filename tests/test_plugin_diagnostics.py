@@ -37,10 +37,10 @@ def test_safe_mode_sources_env_and_persisted_config():
 
 def test_safe_mode_gates_every_host_before_manifest_or_qml():
     # Headless host: no delegate at all, so manifest.json is not read.
-    assert "Plugins.safeMode ? []" in HOST
+    assert "Plugins.hostingBlocked ? []" in HOST
     # Visible hosts all consume pluginsForSurface/hasSurface.
-    assert "if (root.safeMode)\n            return []" in SERVICE
-    assert "if (root.safeMode)\n            return false" in SERVICE
+    assert "if (root.hostingBlocked)\n            return []" in SERVICE
+    assert "if (root.hostingBlocked)\n            return false" in SERVICE
     for host in ("PluginBarWidgets.qml", "PluginDashboardCards.qml",
                  "PluginDesktopWidgets.qml"):
         source = (ROOT / "modules" / "plugins" / host).read_text()

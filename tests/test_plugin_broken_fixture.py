@@ -97,6 +97,7 @@ def test_broken_fixture_never_ships_enabled_by_default():
 def test_safe_mode_unaffected_by_broken_fixture():
     # Safe mode empties the host model before any manifest/QML load,
     # so the broken fixture cannot block recovery.
-    assert "Plugins.safeMode ? []" in HOST
+    assert "Plugins.hostingBlocked ? []" in HOST
+    assert "readonly property bool hostingBlocked: root.safeMode ||" in SERVICE
     assert 'state: enabled && root.safeMode ? "safe-mode"' in SERVICE or '"safe-mode"' in SERVICE
     assert "if (root.safeMode)" in SERVICE

@@ -33,6 +33,10 @@ Item {
     property string eyebrow: ""
     property string context: ""
     readonly property real headerHeight: eyebrow.length > 0 ? header.implicitHeight + 8 : 0
+    // Natural width of the header line (eyebrow, gap, context). The surface
+    // is never narrower than this, so the context is not elided to "OUT…"
+    // next to a short body (shell#582).
+    readonly property real headerWidth: eyebrow.length > 0 ? eyebrowText.implicitWidth + (context.length > 0 ? 12 + contextText.implicitWidth : 0) : 0
     // Unload the content once hidden (default) or keep it alive.
     property bool keepLoaded: false
 
@@ -43,7 +47,7 @@ Item {
     // Content size the host feeds into the surface's preferred size.
     readonly property real contentWidth: loader.implicitWidth
     readonly property real contentHeight: loader.implicitHeight
-    readonly property real preferredWidth: contentWidth + hPadding * 2
+    readonly property real preferredWidth: Math.max(contentWidth, headerWidth) + hPadding * 2
     readonly property real preferredHeight: contentHeight + headerHeight + vPadding * 2
 
     property rect pin: Qt.rect(0, 0, 0, 0)
@@ -206,6 +210,8 @@ Item {
         }
 
         StyledText {
+            id: contextText
+
             anchors.right: parent.right
             anchors.left: eyebrowText.right
             anchors.leftMargin: 12

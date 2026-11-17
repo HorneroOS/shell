@@ -19,6 +19,11 @@ Item {
     implicitWidth: layout.implicitWidth + Appearance.padding.normal * 2
     implicitHeight: layout.implicitHeight + Appearance.padding.normal * 2
 
+    // A device's own name: PipeWire nodes sometimes carry no description.
+    function deviceName(node: PwNode): string {
+        return node.description || node.nickname || node.name || qsTr("Unnamed device");
+    }
+
     ButtonGroup {
         id: sinks
     }
@@ -50,8 +55,15 @@ Item {
                 ButtonGroup.group: sinks
                 checked: Audio.sink?.id === modelData.id
                 onClicked: Audio.setAudioSink(modelData)
-                text: modelData.description
+                text: root.deviceName(modelData)
             }
+        }
+
+        // Empty state (shell#582): a heading is never followed by nothing.
+        StyledText {
+            visible: Audio.sinks.length === 0
+            text: qsTr("No output device")
+            color: Signal.palette.inkMuted
         }
 
         StyledText {
@@ -69,11 +81,18 @@ Item {
                 ButtonGroup.group: sources
                 checked: Audio.source?.id === modelData.id
                 onClicked: Audio.setAudioSource(modelData)
-                text: modelData.description
+                text: root.deviceName(modelData)
             }
         }
 
         StyledText {
+            visible: Audio.sources.length === 0
+            text: qsTr("No input device")
+            color: Signal.palette.inkMuted
+        }
+
+        StyledText {
+            visible: Audio.sink !== null
             Layout.topMargin: Appearance.spacing.smaller
             Layout.bottomMargin: -Appearance.spacing.small / 2
             text: qsTr("Volume (%1)").arg(Audio.muted ? qsTr("Muted") : `${Math.round(Audio.volume * 100)}%`)
@@ -82,6 +101,7 @@ Item {
         }
 
         CustomMouseArea {
+            visible: Audio.sink !== null
             Layout.fillWidth: true
             implicitHeight: Appearance.padding.normal * 3
 

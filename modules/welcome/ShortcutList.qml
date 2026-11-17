@@ -242,6 +242,9 @@ ColumnLayout {
     RowLayout {
         id: chipRow
 
+        // A single group needs no filter: the chip row would only offer
+        // "All" and that one group.
+        visible: root.groupNames.length > 1
         Layout.fillWidth: true
         spacing: Appearance.spacing.small
 
@@ -278,15 +281,18 @@ ColumnLayout {
         spacing: Appearance.spacing.small
 
         Glyph {
-            Layout.alignment: Qt.AlignHCenter
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
             name: "keyboard"
             font.pointSize: Appearance.font.size.large * 2
             color: Signal.palette.inkMuted
         }
 
         StyledText {
-            Layout.alignment: Qt.AlignHCenter
-            text: qsTr("No keybindings found. Regenerate the shortcuts manifest.")
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
+            wrapMode: Text.WordWrap
+            text: qsTr("Shortcuts load with your session. Open this page again after signing in to the desktop.")
             color: Signal.palette.inkMuted
             font.pointSize: Appearance.font.size.smaller
         }

@@ -308,4 +308,35 @@ Singleton {
         }
         onExited: (exitCode, exitStatus) => root.focusMatchingHyprlandClient(exitCode)
     }
+
+    // Raw `hyprctl binds -j` output for the Welcome Shortcuts fallback
+    // (packaged manifest missing on a clean profile). Empty string until
+    // loaded or when the compositor is not Hyprland.
+    property string hyprlandBindsJson: ""
+    property bool hyprlandBindsLoaded: false
+
+    function refreshHyprlandBinds(): void {
+        if (!isHyprland) {
+            hyprlandBindsJson = "";
+            hyprlandBindsLoaded = true;
+            return;
+        }
+        hyprlandBindsProcess.running = true;
+    }
+
+    Process {
+        id: hyprlandBindsProcess
+        running: false
+        command: ["hyprctl", "binds", "-j"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.hyprlandBindsJson = text;
+                root.hyprlandBindsLoaded = true;
+            }
+        }
+        onExited: exitCode => {
+            if (exitCode !== 0)
+                root.hyprlandBindsLoaded = true;
+        }
+    }
 }

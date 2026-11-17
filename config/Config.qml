@@ -598,6 +598,7 @@ Singleton {
     function serializeNotifs(): var {
         return {
             expire: notifs.expire,
+            align: notifs.align,
             defaultExpireTimeout: notifs.defaultExpireTimeout,
             clearThreshold: notifs.clearThreshold,
             expandThreshold: notifs.expandThreshold,

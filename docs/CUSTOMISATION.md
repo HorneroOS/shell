@@ -143,6 +143,12 @@ animated and video wallpapers (video has no pad mode, so centre plays as fit).
 
 `launcher.align` (left | centre | right along the bottom edge) and `osd.align` (top | centre | bottom along the right
 edge); both default to centre. The panels keep their edge (hover regions and slide animations depend on it), only
-their position along it changes. Notification corner/edge is not offered yet: the popups, toasts and the notification
-centre share the top-right anchor with the sidebar. Needs a QA VM check for the concave corner decoration when a
-launcher is aligned left or right.
+their position along it changes. Needs a QA VM check for the concave corner decoration when a launcher is aligned left
+or right.
+
+`notifs.align` (left | centre | right along the top edge, default right) moves the popup stack only. The popup tray was
+the shared top-right anchor of the notification centre (sidebar hangs below it, and the input mask follows its
+geometry); the tray now anchors per `align` and only widens to the sidebar when it is on the right, so the centre stays
+on the right edge. Left placement also flips the dismiss slide. Bottom corners are not offered on purpose: utilities,
+toasts and the launcher own the bottom edge. Centre shares the edge with the dashboard, which draws above popups while
+it is open.

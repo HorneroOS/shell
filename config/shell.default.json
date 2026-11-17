@@ -698,6 +698,7 @@
   },
   "notifs": {
     "expire": true,
+    "align": "right",
     "defaultExpireTimeout": 5000,
     "clearThreshold": 0.3,
     "expandThreshold": 20,

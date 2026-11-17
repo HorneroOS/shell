@@ -48,7 +48,7 @@ Rectangle {
     layer.enabled: root.glowAllowed
     layer.effect: MultiEffect {
         shadowEnabled: true
-        shadowColor: Qt.alpha(Signal.palette.glow, 0.4)
+        shadowColor: Qt.alpha(Signal.palette.glow, Math.min(1, 0.4 * Signal.glowIntensity))
         shadowBlur: 0.25
         shadowHorizontalOffset: 0
         shadowVerticalOffset: 0

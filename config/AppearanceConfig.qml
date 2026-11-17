@@ -16,6 +16,7 @@ JsonObject {
     property FontStuff font: FontStuff {}
     property Anim anim: Anim {}
     property Transparency transparency: Transparency {}
+    property Glow glow: Glow {}
     // Hornero Chromatic preferences (RFC 0002 §8.3). Active only while
     // `theme` is "hornero-chromatic"; horneroctl reads these, the shell
     // edits them. Never hold a wallpaper path here: the source resolves
@@ -122,6 +123,14 @@ JsonObject {
         property ChromaticFallback fallback: ChromaticFallback {}
         // smooth | instant
         property string transition: "smooth"
+    }
+
+    // Glow strength multiplier (0 = no glow, 1 = Signal reference, up to
+    // 1.5). Whether glow appears at all is still decided by the experience
+    // mode and the glow budget (visual language section 9); this only scales
+    // the alpha of the glows that are allowed.
+    component Glow: JsonObject {
+        property real intensity: 1
     }
 
     component Transparency: JsonObject {

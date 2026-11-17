@@ -66,6 +66,10 @@ Singleton {
 
     // High contrast is a shell-wide accessibility override: it swaps in
     // the contrast table without changing the persisted theme identity.
+    // Glow alpha multiplier (user setting `appearance.glow.intensity`),
+    // clamped to 0..1.5 so a hand-edited value cannot exceed the visual
+    // language limits. Whether a glow exists at all is Experience.glow.
+    readonly property real glowIntensity: Math.max(0, Math.min(1.5, Config.appearance.glow.intensity))
     readonly property bool light: Config.appearance.highContrast ? false : themeMode === "light"
     readonly property SignalPalette palette: Config.appearance.highContrast ? contrastPalette : current
     readonly property SignalPalette current: SignalPalette {}

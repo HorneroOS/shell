@@ -20,13 +20,16 @@ RowLayout {
     required property real defaultValue
     property real stepSize: 1
     property string suffix: "px"
+    // Fraction digits; > 0 for ratios and multipliers.
+    property int decimals: 0
 
     readonly property real current: root.target[root.key]
     readonly property bool isDefault: Math.abs(root.current - root.defaultValue) < 1e-9
 
     function commit(val: real): void {
-        const clamped = Math.max(root.from, Math.min(root.to, Math.round(val / root.stepSize) * root.stepSize));
-        root.target[root.key] = clamped;
+        const stepped = Math.round(val / root.stepSize) * root.stepSize;
+        const clamped = Math.max(root.from, Math.min(root.to, stepped));
+        root.target[root.key] = Number(clamped.toFixed(root.decimals));
         Config.save();
     }
 
@@ -42,12 +45,14 @@ RowLayout {
         to: root.to
         stepSize: root.stepSize
         suffix: root.suffix
-        validator: IntValidator {
+        decimals: root.decimals
+        validator: DoubleValidator {
             bottom: root.from
             top: root.to
+            decimals: root.decimals
         }
-        formatValueFunction: val => Math.round(val).toString()
-        parseValueFunction: text => parseInt(text)
+        formatValueFunction: val => root.decimals > 0 ? val.toFixed(root.decimals) : Math.round(val).toString()
+        parseValueFunction: text => parseFloat(text)
         onValueModified: val => root.commit(val)
     }
 

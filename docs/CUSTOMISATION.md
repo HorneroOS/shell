@@ -24,3 +24,20 @@ default equals the factory file. Settings search finds them ("launcher size", "t
 Already customisable elsewhere: rounding/spacing/padding/font/animation scales and transparency (Appearance), OSD slider
 size and hide delay (OSD), border frame (Appearance), bar thickness and density (Bars). See the mission inventory for the
 remaining backlog.
+
+## Looks and glow (Appearance > Look)
+
+A look is a named bundle of the scalar tokens: rounding, spacing and padding scale, font size scale, animation
+duration scale and glow intensity. Applying one writes only those scalars, so each stays individually adjustable
+(Scales, Fonts, Animations, Glow intensity), and colours remain a separate choice (Themes, Chromatic).
+
+| Look | rounding | spacing | padding | font | motion | glow |
+|------|---------:|--------:|--------:|-----:|-------:|-----:|
+| Hornero (factory) | 1.0 | 1.0 | 1.0 | 1.0 | 1.0 | 1.0 |
+| Cozy | 1.6 | 1.1 | 1.15 | 1.05 | 1.2 | 1.2 |
+
+Cozy is opt-in; the factory default is unchanged. "Reset look to factory" writes the Hornero row.
+
+`appearance.glow.intensity` (0 to 1.5, default 1) multiplies the alpha of glows that the experience mode and the
+glow budget already allow (`Signal.glowIntensity`; consumers: `OnAirBar`, `ScopeTrace`). Gaming and Focus keep
+glow off regardless. Plugin-kit glows do not follow it yet (tracked in HorneroOS/.github#32).

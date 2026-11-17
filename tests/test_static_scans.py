@@ -84,7 +84,7 @@ def test_appearance_sections_disclosure_wired():
     pane = (ROOT / "modules" / "controlcenter" / "appearance"
             / "AppearancePane.qml").read_text()
     keys = re.findall(r"persistSection\(\"([a-zA-Z]+)\"", pane)
-    assert len(keys) == 12, f"expected 12 wired sections, got {len(keys)}: {keys}"
+    assert len(keys) == 13, f"expected 13 wired sections, got {len(keys)}: {keys}"
     m = re.search(r"_sectionKeys:\s*\[(.*?)\]", pane, re.S)
     assert m, "pane must declare canonical _sectionKeys"
     canonical = re.findall(r"\"([a-zA-Z]+)\"", m.group(1))

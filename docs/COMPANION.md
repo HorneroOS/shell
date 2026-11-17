@@ -208,7 +208,7 @@ review), a sound pack, and extra art (see the PR description).
 
 Control Center › Companion › "Look per Experience mode" lets each mode
 show or hide Javi, scale him (a multiplier on the global size, 0.5-2.0)
-and pick its own character; "Default character" follows the global skin.
+and pick its own character; "Main character" follows the global skin.
 Gaming mode still hides him regardless (game-mode suppression), and an
 explicit request (chat, summon) outranks a mode that hides him.
 

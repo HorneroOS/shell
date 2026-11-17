@@ -453,7 +453,7 @@ Item {
                                     enabled: lookRow.look.visible
 
                                     TextButton {
-                                        text: qsTr("Default character")
+                                        text: qsTr("Main character")
                                         toggle: true
                                         checked: lookRow.look.skin === ""
                                         type: TextButton.Tonal

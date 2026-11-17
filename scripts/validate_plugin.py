@@ -73,7 +73,7 @@ DESKTOP_ANCHORS = (
     "bottom-left", "bottom-center", "bottom-right",
 )
 DESKTOP_SIZE_KEYS = ("width", "height", "minWidth", "minHeight")
-DESKTOP_KEYS = DESKTOP_SIZE_KEYS + ("resizable", "anchor")
+DESKTOP_KEYS = DESKTOP_SIZE_KEYS + ("resizable", "anchor", "instances")
 # Shared provider domains (RFC 0001 §5b) an extension may read; declared
 # in capabilities.providers and cross-checked against the QML.
 PROVIDER_DOMAINS = (
@@ -200,6 +200,17 @@ def _validate_surfaces(
                 raise ValidationError(f"{where}.{low} must not exceed {where}.{high}")
         if "resizable" in surface and not isinstance(surface["resizable"], bool):
             raise ValidationError(f"{where}.resizable must be a boolean")
+        # RFC 0003 section 6: the extension reads its settings per
+        # instance (hostInstanceId + Settings.instanceId), so Control
+        # Center may add extra instances of its desktop widget. A level-4
+        # feature: declaring it needs "pluginKit": 4.
+        if "instances" in surface:
+            if not isinstance(surface["instances"], bool):
+                raise ValidationError(f"{where}.instances must be a boolean")
+            if surface["instances"] and manifest.get("pluginKit", 3) < 4:
+                raise ValidationError(
+                    f'{where}.instances needs PluginKit 4; declare "pluginKit": 4 in the manifest'
+                )
         if "anchor" in surface and surface["anchor"] not in DESKTOP_ANCHORS:
             raise ValidationError(
                 f"{where}.anchor must be one of {', '.join(DESKTOP_ANCHORS)}"
@@ -1160,6 +1171,20 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
     _validate_translation_catalogs(root, translations_declaration, qml_files)
     for entry in theme_templates:
         _check_theme_template(entry["template"], (root / entry["template"]).read_text(encoding="utf-8"))
+
+    desktop_surface = (manifest.get("surfaces") or {}).get("desktop") or {}
+    if desktop_surface.get("instances") is True:
+        # An extension that claims per-instance settings must actually
+        # read them: its desktop entrypoint declares hostInstanceId and
+        # passes it to Settings.instanceId, otherwise a second instance
+        # would silently share the first one's state.
+        entry_source = (root / desktop_surface["entrypoint"]).read_text(encoding="utf-8")
+        if "hostInstanceId" not in entry_source or not re.search(r"\binstanceId\s*:", entry_source):
+            raise ValidationError(
+                "surfaces.desktop.instances is true but the desktop entrypoint does not "
+                "read its instance: declare `property string hostInstanceId: \"\"` on the "
+                "root and bind `Settings { pluginId: ...; instanceId: root.hostInstanceId }`"
+            )
 
     for path in qml_files:
         source = path.read_text(encoding="utf-8")

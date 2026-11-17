@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 3,
+  "pluginKit": 4,
+  "id": "example-instance-clock",
+  "name": "Example Instance Clock",
+  "version": "1.0.0",
+  "description": "A desktop clock you can place more than once, each with its own label, accent colour and format (PluginKit 4).",
+  "author": "HorneroOS contributors",
+  "license": "MIT",
+  "entrypoint": "Main.qml",
+  "files": [
+    "Main.qml",
+    "README.md",
+    "LICENSE"
+  ],
+  "capabilities": {
+    "processCommands": [],
+    "networkHosts": [],
+    "providers": [
+      "time"
+    ],
+    "settings": {
+      "label": {
+        "type": "string",
+        "default": "Local",
+        "maxLength": 24,
+        "title": "Label",
+        "group": "Content"
+      },
+      "format": {
+        "type": "enum",
+        "default": "24h",
+        "options": ["24h", "12h"],
+        "title": "Time format",
+        "group": "Content"
+      },
+      "showSeconds": {
+        "type": "boolean",
+        "default": false,
+        "title": "Show seconds",
+        "group": "Content"
+      },
+      "accent": {
+        "type": "colour",
+        "default": "#33ccff",
+        "title": "Accent colour",
+        "group": "Look"
+      },
+      "size": {
+        "type": "integer",
+        "default": 32,
+        "minimum": 18,
+        "maximum": 72,
+        "step": 2,
+        "unit": "pt",
+        "title": "Digit size",
+        "group": "Look"
+      },
+      "note": {
+        "type": "text",
+        "default": "",
+        "rows": 2,
+        "maxLength": 140,
+        "title": "Note",
+        "group": "Look",
+        "visibleWhen": {
+          "key": "showNote",
+          "equals": true
+        }
+      },
+      "showNote": {
+        "type": "boolean",
+        "default": false,
+        "title": "Show a note",
+        "group": "Look"
+      }
+    }
+  },
+  "placement": "desktop",
+  "surfaces": {
+    "desktop": {
+      "entrypoint": "Main.qml",
+      "width": 280,
+      "height": 150,
+      "minWidth": 200,
+      "minHeight": 110,
+      "anchor": "top-right",
+      "instances": true
+    }
+  }
+}

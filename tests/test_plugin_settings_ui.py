@@ -221,7 +221,7 @@ def test_facade_reads_through_migration_and_writes_through_constraints():
     assert "Plugins.migratedSettingValue(declaration, stored)" in FACADE
     assert "Plugins.settingConstraintsSatisfied(value, declaration)" in FACADE
     assert 'if (type === "enum")' in FACADE
-    assert "Config.plugins.setSetting(pluginId, key, value)" in FACADE
+    assert "Config.plugins.setSetting(namespaceKey, key, value)" in FACADE
 
 
 def test_reset_removes_stored_values_and_saves():
@@ -233,9 +233,9 @@ def test_reset_removes_stored_values_and_saves():
     assert "saveRequested()" in reset_body
     # Facade reset goes through the same Shell-owned storage.
     assert "function resetValue(key: string): bool" in FACADE
-    assert "Config.plugins.resetSetting(pluginId, key)" in FACADE
+    assert "Config.plugins.resetSetting(namespaceKey, key)" in FACADE
     assert "function resetAll(): bool" in FACADE
-    assert "Config.plugins.resetSettings(pluginId)" in FACADE
+    assert "Config.plugins.resetSettings(namespaceKey)" in FACADE
     # Generated UI reset (per-field and confirmed reset-all).
     assert "Config.plugins.resetSetting(root.storageKey, field.key)" in SECTION
     assert "Config.plugins.resetSettings(root.storageKey)" in SECTION

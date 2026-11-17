@@ -197,8 +197,8 @@ def test_desktop_widget_slots_persist_per_display_and_fallback_safely():
     # validated on read, reset when the person picks an anchor.
     assert "function desktopWidgetGeometry" in plugin_config
     assert "function setDesktopWidgetGeometry" in plugin_config
-    assert "Config.plugins.desktopWidgetGeometry(root.pluginId, root.screenName)" in desktop_widgets
-    assert "Config.plugins.setDesktopWidgetGeometry(root.pluginId, root.screenName" in desktop_widgets
+    assert "Config.plugins.desktopWidgetGeometry(root.instanceKey, root.screenName)" in desktop_widgets
+    assert "Config.plugins.setDesktopWidgetGeometry(root.instanceKey, root.screenName" in desktop_widgets
     assert "desktopWidgets: plugins.desktopWidgets" in (ROOT / "config/Config.qml").read_text()
     assert "Quickshell.screens" in extensions and "DesktopWidgetPosition" in extensions
     assert "Config.plugins.setDesktopWidgetSlot" in position_picker

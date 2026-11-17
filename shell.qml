@@ -34,6 +34,7 @@ ShellRoot {
     CompanionHost {
         lock: lock.lock
     }
+    RadioPanel {}
     PluginHost {}
     PluginLauncherHost {}
     PluginCommandHost {}

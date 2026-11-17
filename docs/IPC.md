@@ -199,3 +199,9 @@ The shell also *spawns* processes; the stable outbound contracts are:
   `notify-send …`, `systemctl …`, and the configured terminal from
   `Config.general.apps.terminal` (Kitty by default) through `app2unit` when
   available, with a direct-launch fallback.
+
+`javiradio` (`modules/companion/RadioPanel.qml`): `open()`, `toggle()`,
+`openFrom(entry)`, `ask(entry, text)`, `close()`, `status()`. Entries are
+`shortcut`, `launcher`, `javi`, `bar`, `plugin`, `menu`; a disabled or
+unknown entry returns `refused`. Every call only opens Radio or submits one
+quick read-only question (see `docs/JAVI_RADIO.md`).

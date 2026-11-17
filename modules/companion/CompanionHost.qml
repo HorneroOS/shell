@@ -93,6 +93,20 @@ Scope {
         }
     }
 
+    // Radio hands a question that needs more than a quick answer (for
+    // example an approval) to the one conversation surface. The user asked
+    // for this by pressing "Open the Workbench"; nothing is answered or
+    // approved on the way.
+    Connections {
+        target: JaviRadio
+
+        function onHandoffRequested(): void {
+            CompanionStore.summon();
+            CompanionStore.forceVisible = true;
+            assistantBridge.chatOpen = true;
+        }
+    }
+
     // Restart durability for the store (snapshot file I/O lives here,
     // never in the store itself).
     CompanionPersist {}
@@ -715,8 +729,20 @@ Scope {
                                 menu.open();
                                 return;
                             }
-                            // Plain click (no drag): excited + a tip.
+                            // Plain click (no drag): the user's chosen
+                            // action (Javi Radio by default; falls back to
+                            // a tip when Radio is switched off).
                             if (!win.dragging && !mouse.moved && CompanionStore.state !== "peeking") {
+                                const action = CompanionStore.radioSettings.clickOnJavi;
+                                if (action === "radio" && JaviRadio.openFrom("javi"))
+                                    return;
+                                if (action === "chat") {
+                                    assistantBridge.chatOpen = !assistantBridge.chatOpen;
+                                    CompanionStore.forceVisible = assistantBridge.chatOpen;
+                                    return;
+                                }
+                                if (action === "none")
+                                    return;
                                 CompanionStore.requestState("excited");
                                 const t = CompanionStore.tip();
                                 if (t !== "")
@@ -824,6 +850,15 @@ Scope {
                             onChosen: {
                                 menu.close();
                                 CompanionStore.resetPosition();
+                            }
+                        }
+                        Entry {
+                            visible: JaviRadio.allowed("menu")
+                            height: visible ? implicitHeight : 0
+                            label: qsTr("Javi Radio")
+                            onChosen: {
+                                menu.close();
+                                JaviRadio.openFrom("menu");
                             }
                         }
                         Entry {

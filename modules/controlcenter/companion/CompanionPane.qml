@@ -769,6 +769,8 @@ Item {
 
                 VoiceSection {}
 
+                RadioSection {}
+
                 ChannelPanel {
                     title: qsTr("Actions")
 

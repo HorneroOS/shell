@@ -40,13 +40,26 @@ def test_question_is_one_bounded_line():
 
 
 @NODE
+def test_extension_requests_never_open_radio_in_quiet_modes():
+    def may(entry, mode):
+        return run_js(M, f"console.log(JSON.stringify(mayOpen(defaults(), {json.dumps(entry)}, {{mode: {json.dumps(mode)}}})));")
+    assert may("plugin", "everyday") is True and may("plugin", "signal") is True
+    assert may("plugin", "focus") is False and may("plugin", "gaming") is False
+    # the user's own gestures work in every mode
+    for mode in ("focus", "gaming", "studio"):
+        assert may("shortcut", mode) is True and may("javi", mode) is True
+
+
+@NODE
 def test_escalation_never_answers_for_the_user():
-    def c(p):
-        return run_js(M, f"console.log(JSON.stringify(classify({json.dumps(p)})));")["kind"]
-    assert c({"text": "42"}) == "answer"
-    assert c({"answer": "42"}) == "answer"
-    assert c({"pendingApproval": {"id": "r1"}, "text": "hi"}) == "handoff"
-    assert c({"status": "awaiting_approval"}) == "handoff"
-    assert c({"pendingClarify": {}}) == "handoff"
-    assert c({"status": "blocked", "text": "x"}) == "handoff"
-    assert c({"ok": False}) == "failed" and c({}) == "failed" and c(None) == "failed"
+    def c(p, streamed="null"):
+        return run_js(M, f"console.log(JSON.stringify(classify({json.dumps(p)}, {streamed})));")
+    assert c({"ok": True, "data": {"text": "42"}})["kind"] == "answer"
+    assert c({"ok": True, "data": {}}, '"streamed 42"') == {"kind": "answer", "text": "streamed 42"}
+    for pending in ("approval", "clarify", "anything"):
+        got = c({"ok": True, "data": {"pending": pending, "runId": "r1", "text": "hi"}}, '"partial"')
+        assert got == {"kind": "handoff", "text": ""}, pending
+    assert c({"status": "blocked", "data": {"text": "x"}})["kind"] == "handoff"
+    assert c({"ok": False, "message": "x"})["kind"] == "failed"
+    assert c({}) ["kind"] == "failed" and c(None)["kind"] == "failed"
+    assert len(c({"data": {"text": "x" * 9000}})["text"]) == 4000

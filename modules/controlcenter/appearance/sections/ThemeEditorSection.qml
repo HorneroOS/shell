@@ -269,7 +269,7 @@ CollapsibleSection {
 
         StyledText {
             text: qsTr("Start from")
-            font.weight: 600
+            font.weight: Appearance.font.weight.strong
         }
 
         GridLayout {
@@ -317,7 +317,7 @@ CollapsibleSection {
 
             StyledText {
                 text: qsTr("Colours")
-                font.weight: 600
+                font.weight: Appearance.font.weight.strong
             }
 
             Repeater {
@@ -370,7 +370,7 @@ CollapsibleSection {
 
             StyledText {
                 text: qsTr("Terminal colours")
-                font.weight: 600
+                font.weight: Appearance.font.weight.strong
             }
 
             Repeater {
@@ -386,7 +386,7 @@ CollapsibleSection {
 
             StyledText {
                 text: qsTr("Accent from this palette")
-                font.weight: 600
+                font.weight: Appearance.font.weight.strong
             }
 
             Row {

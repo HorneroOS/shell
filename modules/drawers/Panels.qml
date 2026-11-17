@@ -49,7 +49,13 @@ Item {
         screen: root.screen
         visibilities: root.visibilities
 
-        anchors.verticalCenter: parent.verticalCenter
+        // User placement along the edge (Config.osd.align), centred by default.
+        readonly property string align: ["top", "bottom"].includes(Config.osd.align) ? Config.osd.align : "center"
+        anchors.verticalCenter: align === "center" ? parent.verticalCenter : undefined
+        anchors.top: align === "top" ? parent.top : undefined
+        anchors.bottom: align === "bottom" ? parent.bottom : undefined
+        anchors.topMargin: align === "top" ? Appearance.spacing.large : 0
+        anchors.bottomMargin: align === "bottom" ? Appearance.spacing.large : 0
         anchors.right: parent.right
         anchors.rightMargin: session.width + sidebar.width
     }
@@ -86,7 +92,13 @@ Item {
         visibilities: root.visibilities
         panels: root
 
-        anchors.horizontalCenter: parent.horizontalCenter
+        // User placement along the edge (Config.launcher.align), centred by default.
+        readonly property string align: ["left", "right"].includes(Config.launcher.align) ? Config.launcher.align : "center"
+        anchors.horizontalCenter: align === "center" ? parent.horizontalCenter : undefined
+        anchors.left: align === "left" ? parent.left : undefined
+        anchors.right: align === "right" ? parent.right : undefined
+        anchors.leftMargin: align === "left" ? Appearance.spacing.large : 0
+        anchors.rightMargin: align === "right" ? Appearance.spacing.large : 0
         anchors.bottom: parent.bottom
     }
 

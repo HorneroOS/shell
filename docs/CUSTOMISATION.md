@@ -138,3 +138,11 @@ glow shows. `appearance.anim.mediaGifSpeedAdjustment` and `sessionGifSpeed` are 
 
 `background.wallpaperFit`: `crop` (factory, fill and crop), `fit` (whole image), `stretch`, `center`. Applies to still,
 animated and video wallpapers (video has no pad mode, so centre plays as fit).
+
+## Placement (Launcher, OSD)
+
+`launcher.align` (left | centre | right along the bottom edge) and `osd.align` (top | centre | bottom along the right
+edge); both default to centre. The panels keep their edge (hover regions and slide animations depend on it), only
+their position along it changes. Notification corner/edge is not offered yet: the popups, toasts and the notification
+centre share the top-right anchor with the sidebar. Needs a QA VM check for the concave corner decoration when a
+launcher is aligned left or right.

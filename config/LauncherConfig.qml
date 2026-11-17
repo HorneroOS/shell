@@ -3,6 +3,8 @@ import Quickshell.Io
 JsonObject {
     property bool enabled: true
     property bool showOnHover: false
+    // Where the launcher sits along the bottom edge: "left", "center" or "right".
+    property string align: "center"
     property int maxShown: 8
     property int maxWallpapers: 9 // Warning: even numbers look bad
     property string specialPrefix: "@"

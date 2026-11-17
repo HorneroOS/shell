@@ -4,52 +4,40 @@ import qs.config
 import QtQuick
 import QtQuick.Shapes
 
+// Utilities drawer (Signal Bezel §7.1): a bottom-right `panel` sheet with a
+// 1 px `rule` border on its two free edges (left, top) and radius `small`
+// on the top-left corner. The bottom and right edges sit on the screen
+// edge and are not stroked. No concave wings. `sidebar` stays a required
+// property: the drawer still takes the sidebar's width while it is open.
 ShapePath {
     id: root
 
     required property Wrapper wrapper
     required property var sidebar
-    readonly property real rounding: Config.border.rounding
-    readonly property bool flatten: wrapper.height < rounding * 2
-    readonly property real roundingY: flatten ? wrapper.height / 2 : rounding
+    readonly property real r: Math.min(Appearance.rounding.small, wrapper.width / 2, wrapper.height / 2)
+    readonly property bool open: wrapper.width > 0 && wrapper.height > 0
 
-    strokeWidth: -1
-    // Paint nothing while the panel is closed: the concave corner arcs
-    // live outside the wrapper and would otherwise linger as stray wings
-    // on screens without the frame (frameEnabled false, clear bars).
-    fillColor: wrapper.width > 0 && wrapper.height > 0 ? Signal.surface(Signal.palette.base, "utilities") : "transparent"
+    strokeWidth: open ? 1 : -1
+    strokeColor: Signal.palette.rule
+    fillColor: open ? Signal.surface(Signal.palette.panel, "utilities") : "transparent"
 
-    PathLine {
-        relativeX: -(root.wrapper.width + root.rounding)
+    PathMove {
+        relativeX: -root.wrapper.width
         relativeY: 0
-    }
-    PathArc {
-        relativeX: root.rounding
-        relativeY: -root.roundingY
-        radiusX: root.rounding
-        radiusY: Math.min(root.rounding, root.wrapper.height)
-        direction: PathArc.Counterclockwise
     }
     PathLine {
         relativeX: 0
-        relativeY: -(root.wrapper.height - root.roundingY * 2)
+        relativeY: -(root.wrapper.height - root.r)
     }
     PathArc {
-        relativeX: root.sidebar.utilsRoundingX
-        relativeY: -root.roundingY
-        radiusX: root.sidebar.utilsRoundingX
-        radiusY: Math.min(root.rounding, root.wrapper.height)
+        relativeX: root.r
+        relativeY: -root.r
+        radiusX: root.r
+        radiusY: root.r
     }
     PathLine {
-        relativeX: root.wrapper.height > 0 ? root.wrapper.width - root.rounding - root.sidebar.utilsRoundingX : root.wrapper.width
+        relativeX: root.wrapper.width - root.r
         relativeY: 0
-    }
-    PathArc {
-        relativeX: root.rounding
-        relativeY: -root.rounding
-        radiusX: root.rounding
-        radiusY: root.rounding
-        direction: PathArc.Counterclockwise
     }
 
     Behavior on fillColor {

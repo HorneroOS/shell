@@ -17,8 +17,10 @@ StyledRect {
     Layout.fillWidth: true
     implicitHeight: layout.implicitHeight + Appearance.padding.large * 2
 
-    radius: Appearance.rounding.normal
-    color: Signal.tPalette.panel
+    radius: Appearance.rounding.small
+    color: Signal.palette.panel
+    border.width: 1
+    border.color: Signal.palette.rule
 
     ColumnLayout {
         id: layout
@@ -28,8 +30,12 @@ StyledRect {
         spacing: Appearance.spacing.normal
 
         StyledText {
-            text: qsTr("Quick Toggles")
-            font.pointSize: Appearance.font.size.normal
+            text: qsTr("Quick toggles")
+            font.family: Appearance.font.family.mono
+            font.capitalization: Font.AllUppercase
+            font.letterSpacing: Appearance.font.size.small * 0.08
+            color: Signal.palette.inkMuted
+            font.pointSize: Appearance.font.size.small
         }
 
         RowLayout {
@@ -103,18 +109,9 @@ StyledRect {
 
     component Toggle: IconButton {
         Layout.fillWidth: true
-        Layout.preferredWidth: implicitWidth + (stateLayer.pressed ? Appearance.padding.large : internalChecked ? Appearance.padding.smaller : 0)
-        radius: stateLayer.pressed ? Appearance.rounding.small / 2 : internalChecked ? Appearance.rounding.small : Appearance.rounding.normal
-        inactiveColour: Signal.layer(Signal.palette.lifted, 2)
+        // Fixed cell: pressed and checked change fill, never size or radius.
+        radius: Appearance.rounding.small
+        inactiveColour: Signal.palette.lifted
         toggle: true
-        radiusAnim.duration: Appearance.anim.durations.settleFast
-        radiusAnim.easing.bezierCurve: Appearance.anim.curves.settleFast
-
-        Behavior on Layout.preferredWidth {
-            Anim {
-                duration: Appearance.anim.durations.settleFast
-                easing.bezierCurve: Appearance.anim.curves.settleFast
-            }
-        }
     }
 }

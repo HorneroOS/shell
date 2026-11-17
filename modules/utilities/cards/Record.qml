@@ -16,8 +16,10 @@ StyledRect {
     Layout.fillWidth: true
     implicitHeight: layout.implicitHeight + layout.anchors.margins * 2
 
-    radius: Appearance.rounding.normal
-    color: Signal.tPalette.panel
+    radius: Appearance.rounding.small
+    color: Signal.palette.panel
+    border.width: 1
+    border.color: Signal.palette.rule
 
     ColumnLayout {
         id: layout
@@ -37,8 +39,10 @@ StyledRect {
                     return h - (h % 2);
                 }
 
-                radius: Appearance.rounding.full
-                color: Recorder.running ? Signal.palette.cue : Signal.palette.cueWell
+                radius: Appearance.rounding.small
+                color: Recorder.running ? Signal.palette.signalWell : Signal.palette.sunken
+                border.width: 1
+                border.color: Recorder.running ? Signal.palette.signal : Signal.palette.rule
 
                 Glyph {
                     id: icon
@@ -47,7 +51,7 @@ StyledRect {
                     anchors.horizontalCenterOffset: -0.5
                     anchors.verticalCenterOffset: 1.5
                     name: "video"
-                    color: Recorder.running ? Signal.palette.onCue : Signal.palette.onCueWell
+                    color: Recorder.running ? Signal.palette.onSignalWell : Signal.palette.inkMuted
                     font.pointSize: Appearance.font.size.large
                 }
             }
@@ -58,7 +62,7 @@ StyledRect {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: qsTr("Screen Recorder")
+                    text: qsTr("Screen recorder")
                     font.pointSize: Appearance.font.size.normal
                     elide: Text.ElideRight
                 }
@@ -189,7 +193,7 @@ StyledRect {
             spacing: Appearance.spacing.normal
 
             StyledRect {
-                radius: Appearance.rounding.full
+                radius: Appearance.rounding.small
                 color: Recorder.paused ? Signal.palette.phosphor : Signal.palette.alert
 
                 implicitWidth: recText.implicitWidth + Appearance.padding.normal * 2

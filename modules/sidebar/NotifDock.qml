@@ -3,11 +3,10 @@ pragma ComponentBehavior: Bound
 import qs.components
 import qs.components.controls
 import qs.components.containers
-import qs.components.effects
+import qs.modules.instruments as Instruments
 import qs.services
 import qs.config
 import Quickshell
-import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
 
@@ -23,6 +22,8 @@ Item {
 
     Component.onCompleted: Notifs.list.forEach(n => n.popup = false)
 
+    // Header: eyebrow with the live count; the count shows only when there
+    // is one.
     Item {
         id: title
 
@@ -31,49 +32,61 @@ Item {
         anchors.right: parent.right
         anchors.margins: Appearance.padding.small
 
-        implicitHeight: Math.max(count.implicitHeight, titleText.implicitHeight)
+        implicitHeight: Math.max(titleText.implicitHeight, clearBtn.implicitHeight)
 
-        StyledText {
-            id: count
-
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.left: parent.left
-            anchors.leftMargin: root.notifCount > 0 ? 0 : -width - titleText.anchors.leftMargin
-            opacity: root.notifCount > 0 ? 1 : 0
-
-            text: root.notifCount
-            color: Signal.palette.ruleStrong
-            font.pointSize: Appearance.font.size.normal
-            font.family: Appearance.font.family.mono
-            font.weight: 500
-
-            Behavior on anchors.leftMargin {
-                Anim {}
-            }
-
-            Behavior on opacity {
-                Anim {}
-            }
-        }
-
-        StyledText {
+        Instruments.Eyebrow {
             id: titleText
 
             anchors.verticalCenter: parent.verticalCenter
-            anchors.left: count.right
-            anchors.right: parent.right
-            anchors.leftMargin: Appearance.spacing.small
+            anchors.left: parent.left
+            anchors.right: clearBtn.left
+            anchors.rightMargin: Appearance.spacing.small
 
-            text: root.notifCount > 0 ? qsTr("notification%1").arg(root.notifCount === 1 ? "" : "s") : qsTr("Notifications")
-            color: Signal.palette.ruleStrong
-            font.pointSize: Appearance.font.size.normal
-            font.family: Appearance.font.family.mono
-            font.weight: 500
-            elide: Text.ElideRight
+            channel: root.notifCount > 0 ? String(root.notifCount).padStart(2, "0") : ""
+            label: qsTr("Notifications")
+        }
+
+        // Text-labelled clear action, a square key rather than a round FAB.
+        Rectangle {
+            id: clearBtn
+
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.right: parent.right
+
+            visible: root.notifCount > 0
+            implicitWidth: clearLabel.implicitWidth + Appearance.padding.normal * 2
+            implicitHeight: 28
+            radius: Appearance.rounding.small
+            color: Signal.palette.lifted
+            border.width: 1
+            border.color: Signal.palette.rule
+
+            property string accessibleName: qsTr("Clear all notifications")
+
+            Accessible.role: Accessible.Button
+            Accessible.name: accessibleName
+
+            StateLayer {
+                radius: parent.radius
+
+                function onClicked(): void {
+                    clearTimer.start();
+                }
+            }
+
+            StyledText {
+                id: clearLabel
+
+                anchors.centerIn: parent
+
+                mono: true
+                text: qsTr("Clear all")
+                font.pointSize: Appearance.font.size.small
+            }
         }
     }
 
-    ClippingRectangle {
+    Item {
         id: clipRect
 
         anchors.left: parent.left
@@ -82,8 +95,7 @@ Item {
         anchors.bottom: parent.bottom
         anchors.topMargin: Appearance.spacing.smaller
 
-        radius: Appearance.rounding.small
-        color: "transparent"
+        clip: true
 
         Loader {
             anchors.centerIn: parent
@@ -91,28 +103,21 @@ Item {
             opacity: root.notifCount > 0 ? 0 : 1
 
             sourceComponent: ColumnLayout {
-                spacing: Appearance.spacing.large
+                spacing: Appearance.spacing.small
 
-                Image {
-                    asynchronous: true
-                    source: Qt.resolvedUrl(`${Quickshell.shellDir}/assets/dino.png`)
-                    fillMode: Image.PreserveAspectFit
-                    sourceSize.width: clipRect.width * 0.8
-
-                    layer.enabled: true
-                    layer.effect: Colouriser {
-                        colorizationColor: Signal.palette.rule
-                        brightness: 1
-                    }
+                Glyph {
+                    Layout.alignment: Qt.AlignHCenter
+                    name: "bell-off"
+                    color: Signal.palette.inkMuted
+                    font.pointSize: Appearance.font.size.extraLarge
                 }
 
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
-                    text: qsTr("No Notifications")
-                    color: Signal.palette.rule
-                    font.pointSize: Appearance.font.size.large
-                    font.family: Appearance.font.family.mono
-                    font.weight: 500
+                    text: qsTr("No notifications")
+                    color: Signal.palette.inkMuted
+                    mono: true
+                    font.pointSize: Appearance.font.size.small
                 }
             }
 
@@ -162,47 +167,6 @@ Item {
                 next.closeAll();
             else
                 stop();
-        }
-    }
-
-    Loader {
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        anchors.margins: Appearance.padding.normal
-
-        scale: root.notifCount > 0 ? 1 : 0.5
-        opacity: root.notifCount > 0 ? 1 : 0
-        active: opacity > 0
-
-        sourceComponent: IconButton {
-            id: clearBtn
-
-            icon: "clear-all"
-            accessibleName: qsTr("Clear all notifications")
-            radius: Appearance.rounding.normal
-            padding: Appearance.padding.normal
-            font.pointSize: Math.round(Appearance.font.size.large * 1.2)
-            onClicked: clearTimer.start()
-
-            Elevation {
-                anchors.fill: parent
-                radius: parent.radius
-                z: -1
-                level: clearBtn.stateLayer.containsMouse ? 4 : 3
-            }
-        }
-
-        Behavior on scale {
-            Anim {
-                duration: Appearance.anim.durations.settleFast
-                easing.bezierCurve: Appearance.anim.curves.settleFast
-            }
-        }
-
-        Behavior on opacity {
-            Anim {
-                duration: Appearance.anim.durations.settleFast
-            }
         }
     }
 }

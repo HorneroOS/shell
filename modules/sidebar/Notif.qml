@@ -25,8 +25,8 @@ StyledRect {
         if (isCritical)
             return Signal.palette.alertWell;
         if (isLow)
-            return Signal.layer(Signal.palette.sunken, 2);
-        return Signal.layer(Signal.palette.raised, 2);
+            return Signal.palette.sunken;
+        return Signal.palette.raised;
     }
     readonly property color accentColor: {
         if (isCritical)
@@ -43,9 +43,7 @@ StyledRect {
     readonly property color bodyColor: {
         if (isCritical)
             return Signal.palette.onAlertWell;
-        if (isLow)
-            return Qt.alpha(Signal.palette.ruleStrong, 0.7);
-        return Signal.palette.ruleStrong;
+        return Signal.palette.inkMuted;
     }
 
     implicitHeight: nonAnimHeight
@@ -62,7 +60,7 @@ StyledRect {
         anchors.left: parent.left
 
         width: 3
-        radius: Appearance.rounding.full
+        radius: 0
         color: root.accentColor
         opacity: root.expanded ? 1 : 0
         visible: opacity > 0
@@ -167,7 +165,7 @@ StyledRect {
         sourceComponent: StyledText {
             animate: true
             text: root.modelData.timeStr
-            color: Signal.palette.ruleStrong
+            color: Signal.palette.inkMuted
             font.pointSize: Appearance.font.size.small
         }
     }

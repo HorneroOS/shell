@@ -11,8 +11,10 @@ StyledRect {
     Layout.fillWidth: true
     implicitHeight: layout.implicitHeight + (IdleInhibitor.enabled ? activeChip.implicitHeight + activeChip.anchors.topMargin : 0) + Appearance.padding.large * 2
 
-    radius: Appearance.rounding.normal
-    color: Signal.tPalette.panel
+    radius: Appearance.rounding.small
+    color: Signal.palette.panel
+    border.width: 1
+    border.color: Signal.palette.rule
     clip: true
 
     RowLayout {
@@ -28,15 +30,17 @@ StyledRect {
             implicitWidth: implicitHeight
             implicitHeight: icon.implicitHeight + Appearance.padding.smaller * 2
 
-            radius: Appearance.rounding.full
-            color: IdleInhibitor.enabled ? Signal.palette.cue : Signal.palette.cueWell
+            radius: Appearance.rounding.small
+            color: IdleInhibitor.enabled ? Signal.palette.signalWell : Signal.palette.sunken
+            border.width: 1
+            border.color: IdleInhibitor.enabled ? Signal.palette.signal : Signal.palette.rule
 
             Glyph {
                 id: icon
 
                 anchors.centerIn: parent
                 name: "coffee"
-                color: IdleInhibitor.enabled ? Signal.palette.onCue : Signal.palette.onCueWell
+                color: IdleInhibitor.enabled ? Signal.palette.onSignalWell : Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.large
             }
         }
@@ -47,7 +51,7 @@ StyledRect {
 
             StyledText {
                 Layout.fillWidth: true
-                text: qsTr("Keep Awake")
+                text: qsTr("Keep awake")
                 font.pointSize: Appearance.font.size.normal
                 elide: Text.ElideRight
             }
@@ -85,7 +89,7 @@ StyledRect {
             implicitWidth: activeText.implicitWidth + Appearance.padding.normal * 2
             implicitHeight: activeText.implicitHeight + Appearance.padding.small * 2
 
-            radius: Appearance.rounding.full
+            radius: Appearance.rounding.small
             color: Signal.palette.signal
 
             StyledText {

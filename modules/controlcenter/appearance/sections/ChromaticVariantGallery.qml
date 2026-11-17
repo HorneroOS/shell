@@ -30,7 +30,10 @@ ColumnLayout {
     Component.onCompleted: {
         ChromaticPreview.variantPreviewsWanted = true;
     }
-    Component.onDestruction: ChromaticPreview.variantPreviewsWanted = false
+    Component.onDestruction: {
+        ChromaticPreview.endHover();
+        ChromaticPreview.variantPreviewsWanted = false;
+    }
 
     readonly property var tiles: [{
             "id": "auto",
@@ -80,6 +83,8 @@ ColumnLayout {
                 pending: !scheme && !unavailable
                 palette: flat
                 paletteLabel: scheme ? qsTr("Palette preview: ground %1, accent %2").arg(flat.ground ?? "").arg(flat.signal ?? "") : ""
+                onPreviewStarted: ChromaticPreview.hoverVariant(modelData.id === "auto" ? root.resolved : modelData.id)
+                onPreviewEnded: ChromaticPreview.endHover()
                 onActivated: root.chosen(modelData.id)
                 onStep: direction => root.chosen(root.tiles[(index + direction + root.tiles.length) % root.tiles.length].id)
             }

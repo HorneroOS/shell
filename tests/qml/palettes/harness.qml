@@ -158,6 +158,10 @@ ShellRoot {
                 root.out.variantFailed = Object.keys(ChromaticPreview.variantFailed).sort();
                 root.out.themeId = Signal.themeId;
                 root.out.dbg = [ChromaticPreview.helperAvailable, ChromaticPreview.helperChecked, ChromaticPreview.busy, ChromaticPreview.variantPreviewsWanted, ChromaticPreview.errorCode, ChromaticPreview._variantSig.length, ChromaticPreview._variantCurrent];
+                if (Quickshell.env("HHOVER") === "1") {
+                    root.hoverScenario();
+                    return;
+                }
                 if (Quickshell.env("HEDIT") === "1") {
                     root.editScenario();
                     return;
@@ -181,6 +185,31 @@ ShellRoot {
         editor.nameText = "My Neon Copy";
         editor.run("new");
         editWait.start();
+    }
+
+    function hoverScenario(): void {
+        const o = root.out;
+        Config.appearance.chromatic.transition = "instant";
+        const sig = () => String(Signal.palette.signal);
+        const P = ChromaticPreview;
+        o.before = sig();
+        P.hoverVariant("neon");
+        o.during = sig();
+        o.duringPreviewing = Signal.previewing;
+        P.endHover();
+        o.after = sig();
+        o.afterPreviewing = Signal.previewing;
+        // with a candidate already previewed, leaving the tile resumes it
+        P.previewLive(true);
+        o.candidate = sig();
+        P.hoverVariant("muted");
+        P.endHover();
+        o.resumed = sig();
+        o.resumedPreviewing = Signal.previewing;
+        P.previewLive(false);
+        o.afterResume = sig();
+        o.hoverClearedOnEnd = P.hoveredVariant === "";
+        root.finish();
     }
 
     Timer {

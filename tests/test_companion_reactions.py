@@ -200,3 +200,22 @@ def test_control_center_exposes_every_reaction_knob():
                    "setQuietHours(\"end\"", "setReactionSettings({})", "CompanionReactions.catalog",
                    "CompanionReactions.modeIds"):
         assert needle in pane, needle
+
+
+def test_pluginkit_hook_is_governed():
+    api = (ROOT / "plugin/qml/Hornero/PluginKit/Companion.qml").read_text()
+    assert '"plugin:" + id' in api and "CompanionReactions.react(" in api
+    assert "singleton Companion 1.0 Companion.qml" in (ROOT / "plugin/qml/Hornero/PluginKit/qmldir").read_text()
+    # Same kinds the policy marks external; native kinds never listed.
+    ext = run_js("console.log(JSON.stringify(Object.keys(KINDS).filter(function (k) { return KINDS[k].external; })))") if shutil.which("node") else None
+    if ext is not None:
+        for kind in ext:
+            assert f'"{kind}"' in api
+        for native in ("battery.low", "battery.critical", "notification", "charger.plugged", "mode.changed"):
+            assert f'"{native}"' not in api
+
+
+def test_sources_can_be_muted_from_control_center():
+    pane = (ROOT / "modules/controlcenter/companion/CompanionPane.qml").read_text()
+    assert 'patchReactions("mutedSources"' in pane and "CompanionReactions.seenSources" in pane
+    assert "seenSources" in BUS

@@ -18,6 +18,9 @@ Singleton {
     property var history: Reactions.emptyHistory()
     // Last decision for diagnostics (`qs ipc call companion reactStatus`).
     property var lastDecision: ({ ok: false, reason: "none" })
+    // Extension/IPC sources that asked this session (plus any already
+    // muted), so Control Center can list them for muting.
+    property var seenSources: []
     property int shown: 0
     property int dropped: 0
 
@@ -40,6 +43,9 @@ Singleton {
             hasAnimation: name => Companion.hasAnimation(CompanionStore.skin, name)
         });
         root.lastDecision = decision;
+        const src = Reactions.sourceKey(source);
+        if (src !== "" && src !== "shell" && root.seenSources.indexOf(src) < 0 && root.seenSources.length < 64)
+            root.seenSources = root.seenSources.concat([src]);
         if (!decision.ok) {
             root.dropped += 1;
             return false;

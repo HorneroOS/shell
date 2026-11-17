@@ -41,7 +41,7 @@ CollapsibleSection {
             visible: ThemeCatalogue.loaded && Signal.themeStateReady && (!Signal.themeId || savedThemeMissing)
             Layout.fillWidth: true
             implicitHeight: customLookRow.implicitHeight + Appearance.padding.normal * 2
-            radius: Appearance.rounding.normal
+            radius: Appearance.rounding.small
             color: Qt.alpha(Signal.tPalette.cueWell, 0.38)
 
             RowLayout {

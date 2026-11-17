@@ -41,6 +41,8 @@ struct FrameSet {
 
 [[nodiscard]] bool isVideoPath(const QString& path);
 [[nodiscard]] Expected<FrameSet> decode(const QString& path, const DecodeOptions& = {});
+// Same, reusing a key the caller already computed (avoids hashing twice).
+[[nodiscard]] Expected<FrameSet> decode(const QString& path, const DecodeOptions&, const SourceKey& key);
 // Converts any QImage (any format / colour space) into a FrameSet frame.
 [[nodiscard]] QImage normaliseFrame(QImage);
 // Resolves an ffmpeg executable name/path; empty when unavailable.

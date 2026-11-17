@@ -34,7 +34,7 @@ Expected<Analysis> Engine::analyse(const QString& path) {
         opts.maxFrames = m_options.maxFrames;
         opts.ffmpeg = m_options.ffmpeg;
         opts.frameCacheDir = m_cache.frameDir();
-        auto frames = decode(path, opts);
+        auto frames = decode(path, opts, key.value());
         if (!frames)
             return frames.error();
         if (frames->frames.isEmpty())

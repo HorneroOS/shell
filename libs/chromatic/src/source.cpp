@@ -161,9 +161,13 @@ Expected<FrameSet> decode(const QString& path, const DecodeOptions& opts) {
     const auto key = sourceKey(path);
     if (!key)
         return key.error();
+    return decode(path, opts, key.value());
+}
+
+Expected<FrameSet> decode(const QString& path, const DecodeOptions& opts, const SourceKey& key) {
     FrameSet set;
     if (isVideoPath(path)) {
-        auto frame = extractVideoFrame(path, key.value(), opts);
+        auto frame = extractVideoFrame(path, key, opts);
         if (!frame)
             return frame.error();
         set.kind = SourceKind::Video;

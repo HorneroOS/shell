@@ -987,6 +987,37 @@ or enabling a schemaVersion 3 package also requires a `horneroctl` build
 that accepts schemaVersion 3; the shell-side contract here does not change
 the CLI's own validation.
 
+## Theme templates
+
+An extension that must hand the palette to something outside the shell (a
+stylesheet, a config snippet, a data file) declares templates. `horneroctl`
+renders them from the live palette every time it changes; the extension never
+runs a command on a palette change.
+
+```json
+"theme": {
+  "templates": [
+    { "template": "palette.css.tmpl", "output": "palette.css" }
+  ]
+}
+```
+
+- `template` is a `.tmpl` file listed in `files` (safe relative path, at most
+  64 KiB). `output` is a plain file name (letters, digits, `.`, `-`, `_`; no
+  directory, no `..`). The host writes it to
+  `${XDG_CACHE_HOME}/hornero/themes/ext/<plugin id>/<output>`; nothing else is
+  writable. At most 8 templates, unique outputs.
+- Grammar (anything else fails validation with `file:line`): `{{ ROLE }}`,
+  `{{ ROLE.hex }}`, `.bare`, `.rgb`, `.r`, `.g`, `.b`, `{{ ROLE.rgba 0.8 }}`
+  (alpha 0 to 1), `{{ termN }}` (0 to 15, same filters), `{{ mode }}`,
+  `{{ id }}`, and `{{#dark}}…{{/dark}}` / `{{#light}}…{{/light}}` sections.
+  `ROLE` is any `Theme.palette` role including `glow`.
+- Inside QML, react to a recolour with `Theme.revision` (it changes once per
+  settled palette change, after any transition) and read the dynamic palette's
+  status from `Theme.chromatic` (`null` for curated themes). Use
+  `Theme.ensureContrast(fg, bg, min)` for data-driven colours. Extensions
+  cannot run the Chromatic engine on images.
+
 ## Marketplace metadata: previews, compatibility, history, deprecation
 
 A package may declare optional `marketplace` metadata (shell#379, any

@@ -584,6 +584,111 @@ def _semver_key(version: str) -> tuple:
     return (numbers, (0,) + parts)
 
 
+# Theme templates (RFC 0002 §12.2, HorneroOS/plugins#70): optional in every
+# schema version. An extension may ship plain-text templates that
+# horneroctl renders from the live palette whenever it changes. The
+# extension never runs anything on a palette change: output paths are fixed
+# by the host to ${XDG_CACHE_HOME}/hornero/themes/ext/<id>/<output>, so
+# `output` is only a file name (no directory, no dots-only, no hidden file).
+THEME_MAX_TEMPLATES = 8
+THEME_OUTPUT = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
+THEME_ROLES = (
+    "ground", "sunken", "base", "panel", "raised", "lifted", "ink", "inkMuted",
+    "inkFaint", "rule", "ruleStrong", "focus", "signal", "glow", "onSignal",
+    "signalWell", "onSignalWell", "cue", "onCue", "cueWell", "onCueWell",
+    "phosphor", "onPhosphor", "phosphorWell", "onPhosphorWell", "alert",
+    "onAlert", "alertWell", "onAlertWell", "inverse", "onInverse",
+    "inverseSignal", "scrim", "shadow",
+) + tuple(f"term{i}" for i in range(16))
+THEME_FILTERS = ("hex", "bare", "rgb", "r", "g", "b")
+THEME_TAG = re.compile(r"\{\{(.*?)\}\}", re.DOTALL)
+THEME_VALUE = re.compile(
+    r"^(?P<name>[A-Za-z][A-Za-z0-9]*)(?:\.(?P<filter>[a-z]+)(?:\s+(?P<alpha>[0-9]*\.?[0-9]+))?)?$"
+)
+THEME_MAX_TEMPLATE_BYTES = 64 * 1024
+
+
+def _validate_theme(manifest: dict, safe_files: set[str]) -> list[dict]:
+    if "theme" not in manifest:
+        return []
+    theme = _object(manifest["theme"], "theme")
+    extra = set(theme) - {"templates"}
+    if extra:
+        raise ValidationError(f"theme contains unknown fields: {', '.join(sorted(extra))} (theme names only templates)")
+    templates = theme.get("templates")
+    if not isinstance(templates, list) or not templates or len(templates) > THEME_MAX_TEMPLATES:
+        raise ValidationError(f"theme.templates must be a list of 1 to {THEME_MAX_TEMPLATES} entries")
+    seen_outputs: set[str] = set()
+    seen_templates: set[str] = set()
+    result = []
+    for index, raw in enumerate(templates):
+        where = f"theme.templates[{index}]"
+        entry = _object(raw, where)
+        if set(entry) != {"template", "output"}:
+            raise ValidationError(f"{where} must have exactly template and output")
+        template = _safe_relative(entry["template"], f"{where}.template")
+        if not template.endswith(".tmpl"):
+            raise ValidationError(f"{where}.template must be a .tmpl file")
+        if template not in safe_files:
+            raise ValidationError(f"{where}.template must be listed in files")
+        output = entry["output"]
+        if not isinstance(output, str) or not THEME_OUTPUT.match(output) or ".." in output:
+            raise ValidationError(
+                f"{where}.output must be a plain file name (letters, digits, dot, dash, underscore; "
+                "no directory, absolute path or '..'): the host writes it under the extension's own "
+                "cache directory"
+            )
+        if output in seen_outputs:
+            raise ValidationError(f"{where}.output duplicates another template output: {output}")
+        if template in seen_templates:
+            raise ValidationError(f"{where}.template is declared twice: {template}")
+        seen_outputs.add(output)
+        seen_templates.add(template)
+        result.append({"template": template, "output": output})
+    return result
+
+
+def _check_theme_template(relative: str, text: str) -> None:
+    """Strict grammar of contract §6.4; anything else is rejected with its line."""
+    if len(text.encode("utf-8")) > THEME_MAX_TEMPLATE_BYTES:
+        raise ValidationError(f"{relative} exceeds {THEME_MAX_TEMPLATE_BYTES} bytes")
+    stack: list[str] = []
+    for match in THEME_TAG.finditer(text):
+        line = text.count("\n", 0, match.start()) + 1
+        body = match.group(1).strip()
+        where = f"{relative}:{line}"
+        if body in ("#dark", "#light"):
+            stack.append(body[1:])
+            continue
+        if body in ("/dark", "/light"):
+            if not stack or stack.pop() != body[1:]:
+                raise ValidationError(f"{where}: unbalanced section {{{{{body}}}}}")
+            continue
+        value = THEME_VALUE.match(body)
+        if not value:
+            raise ValidationError(f"{where}: unsupported template expression {{{{{body}}}}}")
+        name, flt, alpha = value.group("name", "filter", "alpha")
+        if name in ("mode", "id"):
+            if flt:
+                raise ValidationError(f"{where}: {name} takes no filter")
+            continue
+        if name not in THEME_ROLES:
+            raise ValidationError(f"{where}: unknown palette role {name!r}")
+        if flt is None:
+            continue
+        if flt == "rgba":
+            if alpha is None or not 0 <= float(alpha) <= 1:
+                raise ValidationError(f"{where}: rgba needs an alpha between 0 and 1")
+        elif flt not in THEME_FILTERS or alpha is not None:
+            raise ValidationError(f"{where}: unsupported filter {flt!r}")
+    if stack:
+        raise ValidationError(f"{relative}: section {{{{#{stack[-1]}}}}} is never closed")
+    leftover = THEME_TAG.sub("", text)
+    if "{{" in leftover or "}}" in leftover:
+        line = leftover[: leftover.index("{{" if "{{" in leftover else "}}")].count("\n") + 1
+        raise ValidationError(f"{relative}:{line}: stray template delimiter")
+
+
 def _validate_marketplace(manifest: dict, safe_files: set[str], plugin_id: str) -> None:
     if "marketplace" not in manifest:
         return
@@ -759,7 +864,7 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
     allowed = {
         "schemaVersion", "id", "name", "version", "description", "author",
         "license", "homepage", "entrypoint", "files", "capabilities", "placement",
-        "signing", "surfaces", "translations", "marketplace",
+        "signing", "surfaces", "translations", "marketplace", "theme",
     }
     unknown = manifest.keys() - allowed
     missing = {
@@ -834,6 +939,10 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
     # version; pre-#379 manifests without the field stay valid.
     _validate_marketplace(manifest, set(safe_files), plugin_id)
 
+    # Theme templates (RFC 0002, plugins#70): optional in every schema
+    # version; rendered by horneroctl only.
+    theme_templates = _validate_theme(manifest, set(safe_files))
+
     capabilities = _object(manifest["capabilities"], "capabilities")
     # `actions` is the optional horneroctl plugin-broker declaration
     # (HorneroOS/hornero#408): snake_case action names the plugin may
@@ -907,6 +1016,8 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
         raise ValidationError("manifest files must exactly match package contents (excluding manifest.json): " + "; ".join(detail))
 
     _validate_translation_catalogs(root, translations_declaration, qml_files)
+    for entry in theme_templates:
+        _check_theme_template(entry["template"], (root / entry["template"]).read_text(encoding="utf-8"))
 
     for path in qml_files:
         source = path.read_text(encoding="utf-8")

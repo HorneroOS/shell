@@ -150,7 +150,7 @@ Repeater {
         palette.mid: Signal.palette.ruleStrong
         palette.dark: Signal.palette.ruleStrong
         palette.light: Signal.palette.lifted
-        source: modelData.entrypoint ? `file://${Plugins.pluginsDir}/${modelData.id}/${modelData.entrypoint}` : ""
+        source: modelData.entrypoint ? Plugins.entrypointUrl(modelData.id, modelData.entrypoint) : ""
         asynchronous: true
 
         onStatusChanged: {

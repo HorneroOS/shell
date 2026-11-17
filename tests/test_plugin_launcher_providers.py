@@ -60,7 +60,7 @@ def test_host_loads_hidden_per_plugin_loader():
     assert "visible: false" in HOST
     assert "Repeater" in HOST and "Loader {" in HOST
     assert "asynchronous: true" in HOST
-    assert "`file://${Plugins.pluginsDir}/${slot.pluginId}/${slot.modelData.entrypoint}`" in HOST
+    assert "Plugins.entrypointUrl(slot.pluginId, slot.modelData.entrypoint)" in HOST
 
 
 def test_disable_unloads_and_unregisters():

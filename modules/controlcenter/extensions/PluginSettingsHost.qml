@@ -61,7 +61,7 @@ ColumnLayout {
         clip: true
         palette.windowText: Signal.palette.ink
         active: root.surfaceAvailable && root.visible
-        source: active ? `file://${Plugins.pluginsDir}/${root.pluginId}/${root.entrypoint}` : ""
+        source: active ? Plugins.entrypointUrl(root.pluginId, root.entrypoint) : ""
         asynchronous: true
 
         onStatusChanged: {

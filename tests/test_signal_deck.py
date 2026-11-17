@@ -382,8 +382,20 @@ def test_deck_geometry_never_touches_the_everyday_widget_layout():
 
 
 def test_host_keeps_the_desktop_clock_clear():
-    assert "reserved: clockLoader.item" in BACKGROUND
+    assert "reserved: (clockLoader.item" in BACKGROUND
     assert "desktopWidgets.hasContent" in BACKGROUND
+
+
+def test_host_keeps_the_companion_perch_clear():
+    assert "CompanionStore.posX * win.width" in BACKGROUND
+    assert "mascotHere" in BACKGROUND
+
+
+def test_user_widgets_use_the_deck_solver_and_never_overlap():
+    assert "Experience.deckCompose({" in HOST
+    assert "userPlacements" in HOST and "noRoomIds" in HOST
+    assert "Plugins.desktopNoRoom" in HOST
+    assert "autoPlacement" in FRAME
 
 
 def test_missing_extensions_degrade_honestly():

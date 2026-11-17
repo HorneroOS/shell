@@ -31,61 +31,66 @@ Item {
     // no widget holds a provider lease.
     readonly property bool userSet: Experience.desktopWidgets === "user" && Experience.desktopWidgetsVisible
     readonly property bool deckWanted: Experience.instruments && Experience.desktopWidgetsVisible
-    readonly property var widgets: userStable.list
-
     StableList {
         id: userStable
 
         source: root.userSet ? Plugins.desktopPlugins() : []
     }
 
-    // First-run placement: widgets that have no saved geometry or chosen
-    // anchor start at their manifest anchor, but two widgets never start in
-    // the same slot (they used to stack on top of each other until the person
-    // dragged one away). The next free slot, corners first, is used instead.
-    // Saved positions and explicit anchors always win and reserve their slot.
-    readonly property var slotOrder: ["top-left", "top-right", "bottom-right", "bottom-left", "top-center", "bottom-center", "middle-left", "middle-right", "middle-center"]
-    readonly property var defaultSlots: {
-        const taken = ({});
-        const resolved = ({});
+    // Placement of the person's own widgets. The same solver as the Signal
+    // deck (services/deck.js) lays them out: saved positions are honoured
+    // first, the rest flow down the left and right rails by priority
+    // (enable order), around the reserved zones (desktop clock, Companion).
+    // A widget that does not fit is not drawn rather than drawn on top of
+    // another; it is listed in Plugins.desktopNoRoom (plugins status) and
+    // comes back when there is room or it is moved in edit mode.
+    readonly property var userComposition: {
+        const hints = ({});
+        const items = [];
+        const saved = ({});
         const slots = Config.plugins.desktopWidgetSlots;
         const perScreen = slots && typeof slots === "object" ? slots[root.screenName || "default"] : null;
-        const pending = [];
-        for (const entry of root.widgets) {
-            const saved = Config.plugins.desktopWidgetGeometry(entry.id, root.screenName);
-            const explicit = perScreen && typeof perScreen === "object" ? perScreen[entry.id] : undefined;
-            if (saved && saved.fx !== undefined && saved.fy !== undefined) {
-                const col = saved.fx < 0.34 ? "left" : saved.fx > 0.66 ? "right" : "center";
-                const row = saved.fy < 0.34 ? "top" : saved.fy > 0.66 ? "bottom" : "middle";
-                taken[`${row}-${col}`] = true;
-            } else if (Config.plugins.allowedDesktopSlots.includes(explicit)) {
-                taken[explicit] = true;
-            } else {
-                pending.push(entry);
-            }
-        }
-        for (const entry of pending) {
+        let priority = 0;
+        for (const entry of userStable.list) {
             const hint = Plugins.surfaceFor(entry, "desktop") ?? ({});
-            const preferred = Config.plugins.allowedDesktopSlots.includes(hint.anchor) ? hint.anchor : "bottom-right";
-            const slot = !taken[preferred] ? preferred : (root.slotOrder.find(candidate => !taken[candidate]) ?? preferred);
-            taken[slot] = true;
-            resolved[entry.id] = slot;
+            const explicit = perScreen && typeof perScreen === "object" ? perScreen[entry.id] : undefined;
+            const slot = Config.plugins.allowedDesktopSlots.includes(explicit) ? explicit : (Config.plugins.allowedDesktopSlots.includes(hint.anchor) ? hint.anchor : "bottom-right");
+            const minWidth = hint.minWidth ?? 160;
+            const minHeight = hint.minHeight ?? 96;
+            items.push({
+                id: entry.id,
+                priority: priority++,
+                side: slot.endsWith("left") ? "left" : "right",
+                edge: slot.startsWith("bottom") ? "bottom" : "top",
+                minWidth: minWidth,
+                minHeight: minHeight,
+                width: Math.max(minWidth, hint.width ?? 320),
+                height: Math.max(minHeight, hint.height ?? 300)
+            });
+            const geometry = Config.plugins.desktopWidgetGeometry(entry.id, root.screenName);
+            if (geometry)
+                saved[entry.id] = geometry;
         }
-        return resolved;
+        return Experience.deckCompose({
+            area: {
+                width: root.width,
+                height: root.height
+            },
+            items: items,
+            hidden: [],
+            reserved: root.reserved,
+            saved: saved
+        });
     }
-
-    // Frame heights the loaded deck widgets need to show all their
-    // content (reported by each frame). Only ever grows, so composition
-    // converges; the solver uses it as a minimum height.
-    property var measuredNeed: ({})
-
-    function noteNeed(id: string, need: real): void {
-        if (need <= (root.measuredNeed[id] ?? 0))
-            return;
-        const next = Object.assign({}, root.measuredNeed);
-        next[id] = need;
-        root.measuredNeed = next;
+    readonly property var userPlacements: {
+        const byId = ({});
+        for (const placement of root.userComposition.placements)
+            byId[placement.id] = placement;
+        return byId;
     }
+    readonly property var widgets: root.userSet ? userStable.list.filter(e => root.userPlacements[e.id] !== undefined) : []
+    readonly property var noRoomIds: root.userComposition.dropped.map(d => d.id)
+    onNoRoomIdsChanged: Plugins.desktopNoRoom = root.userSet ? root.noRoomIds : []
 
     readonly property var deckEntries: root.deckWanted ? Plugins.deckPlugins() : []
     readonly property var deckComposition: {
@@ -133,7 +138,7 @@ Item {
             entry: modelData
             screenName: root.screenName
             area: root
-            defaultSlot: root.defaultSlots[modelData.id] ?? ""
+            autoPlacement: root.userPlacements[modelData.id] ?? null
             // Channel numbers count from 01 in manifest order.
             channel: index + 1
         }

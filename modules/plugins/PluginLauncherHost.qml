@@ -129,7 +129,7 @@ Item {
                 id: pluginLoader
 
                 active: true
-                source: `file://${Plugins.pluginsDir}/${slot.pluginId}/${slot.modelData.entrypoint}`
+                source: Plugins.entrypointUrl(slot.pluginId, slot.modelData.entrypoint)
                 asynchronous: true
 
                 onStatusChanged: {

@@ -74,7 +74,7 @@ def test_surface_host_fault_isolation_like_other_hosts():
 def test_disable_and_safe_mode_unload_surface():
     assert "Plugins.hasSurface(root.pluginId, \"settings\")" in HOST_CC
     assert "active: root.surfaceAvailable && root.visible" in HOST_CC
-    assert 'source: active ? `file://${Plugins.pluginsDir}/${root.pluginId}/${root.entrypoint}` : ""' in HOST_CC
+    assert 'source: active ? Plugins.entrypointUrl(root.pluginId, root.entrypoint) : ""' in HOST_CC
     # Service side: pluginsForSurface/hasSurface return nothing in
     # safe mode and skip disabled/uninstalled entries.
     assert "if (root.hostingBlocked)\n            return []" in SERVICE

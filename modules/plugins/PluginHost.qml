@@ -439,7 +439,7 @@ Scope {
                 // manifests, which have one only when placement is
                 // background) load nothing here.
                 active: slot.backgroundEntrypoint !== ""
-                source: active ? `file://${slot.pluginDir}/${slot.backgroundEntrypoint}` : ""
+                source: active ? Plugins.entrypointUrl(slot.modelData.id, slot.backgroundEntrypoint) : ""
                 asynchronous: true
 
                 onStatusChanged: {

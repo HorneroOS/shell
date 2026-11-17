@@ -35,7 +35,7 @@ var DEFAULT_STYLE = "auto";
 // §12.1 step 4: peak halo alpha and the deviation above which detailed
 // wallpapers get the soft shadow too. The ring is near opaque: a thinner
 // alpha lets a vivid wallpaper through and drops the foreground below 4.5:1.
-var HALO_ALPHA = 0.94;
+var HALO_ALPHA = 0.96;
 var DETAIL_DEVIATION = 0.12;
 // §12.1 step 5: off meter segments are the polarity's ink at 30 %.
 var OFF_SEGMENT_ALPHA = 0.3;
@@ -166,13 +166,13 @@ function toneFor(stats, style, themeLight) {
     // Outline radius and soft-shadow radius in logical px. Every style keeps
     // a solid ring around the glyph silhouette: legibility never depends on
     // the wallpaper, only on the foreground (RFC 0001 §5.1).
-    var haloPx = 2;
+    var haloPx = 3;
     var shadowPx = 0;
     var weight = 400;
     if (st === "auto") {
         shadowPx = detailed ? 5 : 0;
     } else if (st === "outline") {
-        haloPx = 2;
+        haloPx = 3;
     } else if (st === "shadow") {
         haloPx = 1;
         shadowPx = 4;

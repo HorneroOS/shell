@@ -76,6 +76,10 @@ void main()
         lum = dot(gathered.rgb, vec3(0.2126, 0.7152, 0.0722)) / gatheredA;
     vec4 halo = pow(lum, 2.2) > 0.2 ? haloOnLight : haloOnDark;
 
+    // Anti-aliased thin strokes only reach ~0.5 coverage in the dilation;
+    // lift it so the ring is solid next to the glyph (RFC 0001 §5.1 needs
+    // the foreground, not the wallpaper, to carry the contrast).
+    ring = clamp(ring * 2.6, 0.0, 1.0);
     float a = clamp(max(ring, soft), 0.0, 1.0) * haloAlpha;
     fragColor = vec4(halo.rgb * a, a) * qt_Opacity;
 }

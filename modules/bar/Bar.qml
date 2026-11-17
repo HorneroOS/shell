@@ -11,7 +11,6 @@ import "components/workspaces"
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Effects
 
 // One bar of the layout (docs/LAYOUTS.md): an edge, a style and three
 // component groups. Strip styles (attached, inset) span the edge with the

@@ -65,10 +65,15 @@ function sanitize(raw) {
 }
 
 // Whether `entry` may open the radio now. The master switch wins, then the
-// per-entry switch; an unknown entry is always refused.
-function mayOpen(settings, entry) {
+// per-entry switch; an unknown entry is always refused. Extension requests
+// are not a user gesture, so they never open Radio in the quiet modes
+// (Focus, Gaming); the user's own shortcut, click or launcher always can.
+// ctx: { mode } (the active Experience mode).
+function mayOpen(settings, entry, ctx) {
     var s = sanitize(settings);
     if (ENTRY_POINTS.indexOf(entry) < 0)
+        return false;
+    if (entry === "plugin" && ctx && (ctx.mode === "focus" || ctx.mode === "gaming"))
         return false;
     return s.enabled && s.entryPoints[entry] === true;
 }
@@ -79,16 +84,22 @@ function cleanQuestion(text) {
     return t.length > QUESTION_MAX ? t.slice(0, QUESTION_MAX) : t;
 }
 
-// Classifies the assistant's final payload for Radio.
+// Classifies a finished quick ask for Radio.
+// payload: the final CommandResult (`{ ok, message, data: { pending, text } }`
+// as horneroctl emits it); streamed: the live text InlineAsk accumulated.
 // -> { kind: "answer" | "handoff" | "failed", text }
-// "handoff" is the escalation rule: pending approval/clarification (or a
-// blocked tool call) is never answered here.
-function classify(payload) {
+// "handoff" is the escalation rule: a pending approval or clarification (or
+// a blocked run) is never answered here, whatever text came with it.
+function classify(payload, streamed) {
     var p = (payload && typeof payload === "object") ? payload : {};
-    if (p.pendingApproval || p.pending_approval || p.pendingClarify || p.pending_clarification || p.status === "pending" || p.status === "awaiting_approval" || p.status === "blocked")
+    var d = (p.data && typeof p.data === "object") ? p.data : {};
+    var pending = String(d.pending === undefined || d.pending === null ? "" : d.pending);
+    if (pending === "approval" || pending === "clarify" || pending !== "" || d.blocked === true || p.status === "blocked" || p.status === "awaiting_approval")
         return { kind: "handoff", text: "" };
-    if (p.ok === false || p.status === "failed" || p.status === "error")
+    if (p.ok === false)
         return { kind: "failed", text: "" };
-    var text = typeof p.text === "string" ? p.text : (typeof p.answer === "string" ? p.answer : "");
-    return text === "" ? { kind: "failed", text: "" } : { kind: "answer", text: text.length > ANSWER_MAX ? text.slice(0, ANSWER_MAX) : text };
+    var text = (typeof streamed === "string" && streamed !== "") ? streamed : (typeof d.text === "string" ? d.text : "");
+    if (text === "")
+        return { kind: "failed", text: "" };
+    return { kind: "answer", text: text.length > ANSWER_MAX ? text.slice(0, ANSWER_MAX) : text };
 }

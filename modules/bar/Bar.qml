@@ -847,6 +847,14 @@ Item {
                         }
                     }
                     DelegateChoice {
+                        roleValue: "javiRadio"
+                        delegate: WrappedLoader {
+                            sourceComponent: RadioButton {
+                                vertical: root.vertical
+                            }
+                        }
+                    }
+                    DelegateChoice {
                         roleValue: "weather"
                         delegate: WrappedLoader {
                             sourceComponent: WeatherChip {

@@ -23,6 +23,7 @@ var ENTRIES = {
     resources: { label: "Resources", icon: "chart-line" },
     kbLayout: { label: "Keyboard layout", icon: "keyboard" },
     modeIndicator: { label: "Mode indicator", icon: "adjustments-horizontal" },
+    javiRadio: { label: "Javi Radio", icon: "feather" },
     weather: { label: "Weather", icon: "sun-low" },
     pinnedApps: { label: "Pinned apps", icon: "pin" },
     quickActions: { label: "Quick actions", icon: "bolt" },

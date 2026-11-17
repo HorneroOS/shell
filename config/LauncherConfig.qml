@@ -42,6 +42,14 @@ JsonObject {
             dangerous: false
         },
         {
+            name: "Javi Radio",
+            icon: "feather",
+            description: "Ask Javi a quick question (read-only, nothing runs without you)",
+            command: ["quickshell", "ipc", "call", "javiradio", "openFrom", "launcher"],
+            enabled: true,
+            dangerous: false
+        },
+        {
             name: "Ask Hornero",
             icon: "feather",
             description: "Ask the Hornero assistant (needs horneroctl assistant enable)",

@@ -462,3 +462,14 @@ def test_hosts_feed_measured_content_height_back_to_the_solver():
     assert "pluginLoader.item.implicitHeight + root.headerHeight" in frame
     assert "onNeedMeasured: (id, need) => root.noteNeed(id, need)" in host
     assert "Experience.deckItems(hints, root.measuredNeed)" in host
+
+def test_deck_sees_surfaces_of_installed_but_not_enabled_packages():
+    """`catalog install` leaves packages installed and disabled; the deck loads
+    trusted first-party widgets without a per-widget enable, so the preview
+    reader of disabled packages must record their desktop surface, otherwise
+    deckEligible() is false and the deck stays empty ("disabled" in status)."""
+    host = (ROOT / "modules" / "plugins" / "PluginHost.qml").read_text()
+    reader = host[host.index("id: previewManifestView"):]
+    assert "Plugins.markPlacement(previewSlot.modelData.id" in reader
+    assert "manifest.files.includes(value)" in reader
+    assert "Plugins.markFailed" not in reader

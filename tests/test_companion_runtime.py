@@ -408,3 +408,5 @@ def test_idle_bob_does_not_reconfigure_the_layer_surface():
     # the sprite inside the surface instead.
     assert "win.py + Math.round(win.bobY)" not in HOST
     assert "y: Math.round(win.bobY)" in HOST
+    # ... and it steps (a few commits per second) instead of tweening at 60 fps.
+    assert "id: bobTimer" in HOST and "bobAnim" not in HOST

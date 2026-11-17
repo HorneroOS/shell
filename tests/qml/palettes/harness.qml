@@ -158,6 +158,10 @@ ShellRoot {
                 root.out.variantFailed = Object.keys(ChromaticPreview.variantFailed).sort();
                 root.out.themeId = Signal.themeId;
                 root.out.dbg = [ChromaticPreview.helperAvailable, ChromaticPreview.helperChecked, ChromaticPreview.busy, ChromaticPreview.variantPreviewsWanted, ChromaticPreview.errorCode, ChromaticPreview._variantSig.length, ChromaticPreview._variantCurrent];
+                if (Quickshell.env("HMANAGE") === "1") {
+                    root.manageScenario();
+                    return;
+                }
                 if (Quickshell.env("HEDIT") === "1") {
                     root.editScenario();
                     return;
@@ -181,6 +185,58 @@ ShellRoot {
         editor.nameText = "My Neon Copy";
         editor.run("new");
         editWait.start();
+    }
+
+    property int manageStep: 0
+
+    // The fake horneroctl cannot list themes, so every reload drops the
+    // user theme; put it back (the real CLI keeps it on disk).
+    function injectUserTheme(): void {
+        if (ThemeCatalogue.themeById("my-dusk"))
+            return;
+        const night = Signal.builtInThemes["hornero-signal-night"];
+        ThemeCatalogue.themes = ThemeCatalogue.themes.concat([{"id": "my-dusk", "name": "My Dusk", "collection": "user", "mode": "dark", "palette": night.palette, "terminal": night.terminal}]);
+    }
+
+    function manageScenario(): void {
+        injectUserTheme();
+        editor.sourceId = "";
+        editor.chooseSource("my-dusk");
+        root.out.isUser = editor.sourceIsUser;
+        editor.renameSaved();
+        manageWait.start();
+    }
+
+    Timer {
+        id: manageWait
+
+        interval: 200
+        repeat: true
+        onTriggered: {
+            if (editor.busy)
+                return;
+            const o = root.out;
+            root.injectUserTheme();
+            if (root.manageStep === 0) {
+                o.renamed = editor.status;
+                editor.sourceId = "my-dusk";
+                editor.confirmingDelete = true;
+                editor.deleteSaved();
+                root.manageStep = 1;
+            } else if (root.manageStep === 1) {
+                o.deleted = editor.status;
+                o.trashed = editor.trash ? editor.trash.id : "";
+                o.sourceAfterDelete = editor.sourceId;
+                root.injectUserTheme();
+                editor.undoDelete();
+                root.manageStep = 2;
+            } else {
+                manageWait.stop();
+                o.restored = editor.status;
+                o.trashAfter = editor.trash === null;
+                root.finish();
+            }
+        }
     }
 
     Timer {

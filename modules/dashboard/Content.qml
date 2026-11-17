@@ -4,7 +4,6 @@ import qs.components
 import qs.components.filedialog
 import qs.config
 import Quickshell
-import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
 
@@ -39,7 +38,7 @@ Item {
         state: root.state
     }
 
-    ClippingRectangle {
+    Item {
         id: viewWrapper
 
         anchors.top: tabs.bottom
@@ -48,8 +47,7 @@ Item {
         anchors.bottom: parent.bottom
         anchors.margins: Appearance.padding.large
 
-        radius: Appearance.rounding.normal
-        color: "transparent"
+        clip: true
 
         Flickable {
             id: view

@@ -7,7 +7,7 @@ DASH = Path(__file__).resolve().parents[1] / "modules/dashboard/dash"
 
 def test_resource_bars_show_and_announce_their_value():
     src = (DASH / "Resources.qml").read_text(encoding="utf-8")
-    assert 'text: Math.round(res.value * 100) + "%"' in src
+    assert 'Math.round(res.value * 100) + "%"' in src
     assert "Accessible.role: Accessible.ProgressBar" in src
     for label in ("CPU", "Memory", "Storage"):
         assert f'label: qsTr("{label}")' in src

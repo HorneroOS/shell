@@ -5,7 +5,6 @@ import qs.components.controls
 import qs.services
 import qs.config
 import Quickshell
-import Quickshell.Widgets
 import QtQuick
 import QtQuick.Controls
 
@@ -16,7 +15,7 @@ Item {
     required property PersistentProperties state
     readonly property alias count: bar.count
 
-    implicitHeight: bar.implicitHeight + indicator.implicitHeight + indicator.anchors.topMargin + separator.implicitHeight
+    implicitHeight: bar.implicitHeight + separator.implicitHeight
 
     TabBar {
         id: bar
@@ -64,46 +63,38 @@ Item {
         }
     }
 
-    Item {
+    // On-air bar (Signal Bezel §5): a 2 px `signal` bar on the edge facing
+    // the content, sliding to the selected cell with settleFast.
+    Rectangle {
         id: indicator
 
         anchors.top: bar.bottom
-        anchors.topMargin: 5
+        anchors.topMargin: -height
 
-        implicitWidth: bar.currentItem.implicitWidth
-        implicitHeight: 3
-
-        x: {
-            const tab = bar.currentItem;
-            const width = (root.nonAnimWidth - bar.spacing * (bar.count - 1)) / bar.count;
-            return width * tab.TabBar.index + (width - tab.implicitWidth) / 2;
-        }
-
-        clip: true
-
-        StyledRect {
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-            implicitHeight: parent.implicitHeight * 2
-
-            color: Signal.palette.signal
-            radius: Appearance.rounding.full
-        }
+        x: bar.currentItem ? bar.currentItem.x : 0
+        implicitWidth: bar.currentItem ? bar.currentItem.width : 0
+        implicitHeight: 2
+        color: Signal.palette.signal
 
         Behavior on x {
-            Anim {}
+            Anim {
+                duration: Appearance.anim.durations.settleFast
+                easing.bezierCurve: Appearance.anim.curves.settleFast
+            }
         }
 
         Behavior on implicitWidth {
-            Anim {}
+            Anim {
+                duration: Appearance.anim.durations.settleFast
+                easing.bezierCurve: Appearance.anim.curves.settleFast
+            }
         }
     }
 
-    StyledRect {
+    Rectangle {
         id: separator
 
-        anchors.top: indicator.bottom
+        anchors.top: bar.bottom
         anchors.left: parent.left
         anchors.right: parent.right
 
@@ -159,30 +150,26 @@ Item {
             radius: Appearance.rounding.small + 2
         }
 
+        // Cells share the strip evenly; the selected one takes the `raised`
+        // fill, a signal-coloured label and the on-air bar above.
+        implicitWidth: (root.nonAnimWidth - bar.spacing * (bar.count - 1)) / bar.count
+        implicitHeight: 48
+
         contentItem: CustomMouseArea {
             id: mouse
 
-            implicitWidth: Math.max(icon.width, label.width)
-            implicitHeight: icon.height + label.height
+            implicitWidth: tab.implicitWidth
+            implicitHeight: tab.implicitHeight
 
             cursorShape: Qt.PointingHandCursor
 
-            onPressed: event => {
+            onPressed: {
                 // Mouse arrival must clear keyboard focus mode: this
                 // TabButton never becomes pressed for pointer input
                 // (mouse is delegated here), so reportFocus would
                 // otherwise leave a stale keyboard ring after a click.
                 FocusMode.reportPointer();
                 root.state.currentTab = tab.TabBar.index;
-
-                const stateY = stateWrapper.y;
-                rippleAnim.x = event.x;
-                rippleAnim.y = event.y - stateY;
-
-                const dist = (ox, oy) => ox * ox + oy * oy;
-                rippleAnim.radius = Math.sqrt(Math.max(dist(event.x, event.y + stateY), dist(event.x, stateWrapper.height - event.y), dist(width - event.x, event.y + stateY), dist(width - event.x, stateWrapper.height - event.y)));
-
-                rippleAnim.restart();
             }
 
             function onWheel(event: WheelEvent): void {
@@ -192,103 +179,33 @@ Item {
                     root.state.currentTab = Math.max(root.state.currentTab - 1, 0);
             }
 
-            SequentialAnimation {
-                id: rippleAnim
+            Rectangle {
+                anchors.fill: parent
 
-                property real x
-                property real y
-                property real radius
-
-                PropertyAction {
-                    target: ripple
-                    property: "x"
-                    value: rippleAnim.x
-                }
-                PropertyAction {
-                    target: ripple
-                    property: "y"
-                    value: rippleAnim.y
-                }
-                PropertyAction {
-                    target: ripple
-                    property: "opacity"
-                    value: 0.08
-                }
-                Anim {
-                    target: ripple
-                    properties: "implicitWidth,implicitHeight"
-                    from: 0
-                    to: rippleAnim.radius * 2
-                    duration: Appearance.anim.durations.medium
-                    easing.bezierCurve: Appearance.anim.curves.enter
-                }
-                Anim {
-                    target: ripple
-                    property: "opacity"
-                    to: 0
-                    duration: Appearance.anim.durations.medium
-                    easing.type: Easing.BezierSpline
-                    easing.bezierCurve: Appearance.anim.curves.standard
-                }
-            }
-
-            ClippingRectangle {
-                id: stateWrapper
-
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                implicitHeight: parent.height + Config.dashboard.sizes.tabIndicatorSpacing * 2
-
-                color: "transparent"
                 radius: Appearance.rounding.small
-
-                StyledRect {
-                    id: stateLayer
-
-                    anchors.fill: parent
-
-                    color: tab.current ? Signal.palette.signal : Signal.palette.ink
-                    opacity: mouse.pressed ? 0.1 : tab.hovered ? 0.08 : 0
-
-                    Behavior on opacity {
-                        Anim {}
-                    }
-                }
-
-                StyledRect {
-                    id: ripple
-
-                    radius: Appearance.rounding.full
-                    color: tab.current ? Signal.palette.signal : Signal.palette.ink
-                    opacity: 0
-
-                    transform: Translate {
-                        x: -ripple.width / 2
-                        y: -ripple.height / 2
-                    }
-                }
+                color: tab.current ? Signal.palette.raised : Qt.alpha(Signal.palette.raised, tab.hovered || mouse.pressed ? (mouse.pressed ? 1 : 0.6) : 0)
             }
 
-            Glyph {
-                id: icon
+            Column {
+                anchors.centerIn: parent
+                spacing: 2
 
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.bottom: label.top
+                Glyph {
+                    anchors.horizontalCenter: parent.horizontalCenter
 
-                name: tab.iconName
-                color: tab.current ? Signal.palette.signal : Signal.palette.inkMuted
-                font.pointSize: Appearance.font.size.large
-            }
+                    name: tab.iconName
+                    color: tab.current ? Signal.palette.ink : Signal.palette.inkMuted
+                    font.pointSize: Appearance.font.size.large
+                }
 
-            StyledText {
-                id: label
+                StyledText {
+                    anchors.horizontalCenter: parent.horizontalCenter
 
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.bottom: parent.bottom
-
-                text: tab.text
-                color: tab.current ? Signal.palette.signal : Signal.palette.inkMuted
+                    text: tab.text
+                    color: tab.current ? Signal.palette.ink : Signal.palette.inkMuted
+                    font.pointSize: Appearance.font.size.small
+                    font.weight: tab.current ? Font.Medium : Font.Normal
+                }
             }
         }
     }

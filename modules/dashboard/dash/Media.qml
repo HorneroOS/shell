@@ -1,256 +1,231 @@
+pragma ComponentBehavior: Bound
+
 import qs.components
 import qs.services
 import qs.config
-import qs.utils
-import Hornero.Services
+import qs.modules.instruments as Instruments
+import Quickshell
 import QtQuick
-import QtQuick.Shapes
+import QtQuick.Layouts
 
+// Playback strip: cover well, track identity, transport and a segmented
+// position meter with timecode. Reads the active MPRIS player only; with
+// none it says so and offers nothing to press (no bundled animation, no
+// idle motion).
 Item {
     id: root
 
-    property real playerProgress: {
-        const active = Players.active;
-        return active?.length ? active.position / active.length : 0;
-    }
+    required property PersistentProperties visibilities
 
-    anchors.top: parent.top
-    anchors.bottom: parent.bottom
-    implicitWidth: Config.dashboard.sizes.mediaWidth
+    readonly property var player: Players.active
+    readonly property bool hasPlayer: !!player
+    readonly property bool timed: hasPlayer && (player.length ?? -1) > 0
+    readonly property real progress: timed ? Math.max(0, Math.min(1, player.position / player.length)) : 0
 
-    Behavior on playerProgress {
-        Anim {
-            duration: Appearance.anim.durations.long
-        }
+    function timecode(seconds: real): string {
+        if (!(seconds >= 0))
+            return "—:——";
+        const hours = Math.floor(seconds / 3600);
+        const mins = Math.floor((seconds % 3600) / 60);
+        const secs = Math.floor(seconds % 60).toString().padStart(2, "0");
+        return hours > 0 ? `${hours}:${mins.toString().padStart(2, "0")}:${secs}` : `${mins}:${secs}`;
     }
 
     Timer {
-        running: Players.active?.isPlaying ?? false
+        running: root.hasPlayer && (root.player.isPlaying ?? false) && root.visibilities.dashboard
         interval: Config.dashboard.mediaUpdateInterval
         triggeredOnStart: true
         repeat: true
-        onTriggered: Players.active?.positionChanged()
+        onTriggered: root.player?.positionChanged()
     }
 
-    ServiceRef {
-        service: Audio.beatTracker
-    }
+    RowLayout {
+        anchors.fill: parent
+        spacing: Appearance.spacing.normal
 
-    Shape {
-        preferredRendererType: Shape.CurveRenderer
+        Instruments.Well {
+            Layout.preferredWidth: 56
+            Layout.preferredHeight: 56
+            Layout.alignment: Qt.AlignVCenter
+            clip: true
 
-        ShapePath {
-            fillColor: "transparent"
-            strokeColor: Signal.layer(Signal.palette.raised, 2)
-            strokeWidth: Config.dashboard.sizes.mediaProgressThickness
-            capStyle: Appearance.rounding.scale === 0 ? ShapePath.SquareCap : ShapePath.RoundCap
+            Glyph {
+                anchors.centerIn: parent
 
-            PathAngleArc {
-                centerX: cover.x + cover.width / 2
-                centerY: cover.y + cover.height / 2
-                radiusX: (cover.width + Config.dashboard.sizes.mediaProgressThickness) / 2 + Appearance.spacing.small
-                radiusY: (cover.height + Config.dashboard.sizes.mediaProgressThickness) / 2 + Appearance.spacing.small
-                startAngle: -90 - Config.dashboard.sizes.mediaProgressSweep / 2
-                sweepAngle: Config.dashboard.sizes.mediaProgressSweep
+                name: root.hasPlayer ? "playlist" : "music-off"
+                color: Signal.palette.inkMuted
+                font.pointSize: Appearance.font.size.large
             }
 
-            Behavior on strokeColor {
-                CAnim {}
-            }
-        }
+            Image {
+                anchors.fill: parent
+                anchors.margins: 1
 
-        ShapePath {
-            fillColor: "transparent"
-            strokeColor: Signal.palette.signal
-            strokeWidth: Config.dashboard.sizes.mediaProgressThickness
-            capStyle: Appearance.rounding.scale === 0 ? ShapePath.SquareCap : ShapePath.RoundCap
-
-            PathAngleArc {
-                centerX: cover.x + cover.width / 2
-                centerY: cover.y + cover.height / 2
-                radiusX: (cover.width + Config.dashboard.sizes.mediaProgressThickness) / 2 + Appearance.spacing.small
-                radiusY: (cover.height + Config.dashboard.sizes.mediaProgressThickness) / 2 + Appearance.spacing.small
-                startAngle: -90 - Config.dashboard.sizes.mediaProgressSweep / 2
-                sweepAngle: Config.dashboard.sizes.mediaProgressSweep * root.playerProgress
-            }
-
-            Behavior on strokeColor {
-                CAnim {}
-            }
-        }
-    }
-
-    StyledClippingRect {
-        id: cover
-
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.margins: Appearance.padding.large + Config.dashboard.sizes.mediaProgressThickness + Appearance.spacing.small
-
-        implicitHeight: width
-        color: Signal.tPalette.raised
-        radius: Infinity
-
-        Glyph {
-            anchors.centerIn: parent
-
-            name: "playlist"
-            color: Signal.palette.inkMuted
-            font.pointSize: (parent.width * 0.4) || 1
-        }
-
-        Image {
-            id: image
-
-            anchors.fill: parent
-
-            source: Players.active?.trackArtUrl ?? "" // qmllint disable incompatible-type
-            asynchronous: true
-            fillMode: Image.PreserveAspectCrop
-            sourceSize.width: width
-            sourceSize.height: height
-        }
-    }
-
-    StyledText {
-        id: title
-
-        anchors.top: cover.bottom
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.topMargin: Appearance.spacing.normal
-
-        animate: true
-        horizontalAlignment: Text.AlignHCenter
-        text: (Players.active?.trackTitle ?? qsTr("No media")) || qsTr("Unknown title")
-        color: Signal.palette.signal
-        font.pointSize: Appearance.font.size.normal
-
-        width: parent.implicitWidth - Appearance.padding.large * 2
-        elide: Text.ElideRight
-    }
-
-    StyledText {
-        id: album
-
-        anchors.top: title.bottom
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.topMargin: Appearance.spacing.small
-
-        animate: true
-        horizontalAlignment: Text.AlignHCenter
-        visible: !!Players.active
-        text: Players.active?.trackAlbum || qsTr("Unknown album")
-        color: Signal.palette.ruleStrong
-        font.pointSize: Appearance.font.size.small
-
-        width: parent.implicitWidth - Appearance.padding.large * 2
-        elide: Text.ElideRight
-    }
-
-    StyledText {
-        id: artist
-
-        // Collapse the gap left by the hidden album line when no player
-        // is active (manual anchors, unlike the Media tab's layouts).
-        anchors.top: album.visible ? album.bottom : title.bottom
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.topMargin: Appearance.spacing.small
-
-        animate: true
-        horizontalAlignment: Text.AlignHCenter
-        text: (Players.active?.trackArtist ?? qsTr("Play some music for stuff to show up here!")) || qsTr("Unknown artist")
-        wrapMode: Players.active ? Text.NoWrap : Text.WordWrap
-        color: Signal.palette.cue
-
-        width: parent.implicitWidth - Appearance.padding.large * 2
-        elide: Text.ElideRight
-    }
-
-    Row {
-        id: controls
-
-        anchors.top: artist.bottom
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.topMargin: Appearance.spacing.smaller
-
-        spacing: Appearance.spacing.small
-
-        Control {
-            icon: "player-skip-back"
-            canUse: Players.active?.canGoPrevious ?? false
-
-            function onClicked(): void {
-                Players.active?.previous();
+                source: root.player?.trackArtUrl ?? "" // qmllint disable incompatible-type
+                asynchronous: true
+                fillMode: Image.PreserveAspectCrop
+                sourceSize.width: width
+                sourceSize.height: height
             }
         }
 
-        Control {
-            icon: Players.active?.isPlaying ? "player-pause" : "player-play"
-            canUse: Players.active?.canTogglePlaying ?? false
+        ColumnLayout {
+            Layout.preferredWidth: 280
+            Layout.alignment: Qt.AlignVCenter
+            spacing: 2
 
-            function onClicked(): void {
-                Players.active?.togglePlaying();
+            StyledText {
+                Layout.fillWidth: true
+
+                text: root.hasPlayer ? ((root.player.trackTitle ?? "") || qsTr("Unknown title")) : qsTr("Nothing playing")
+                color: Signal.palette.ink
+                font.pointSize: Appearance.font.size.normal
+                font.weight: Font.Medium
+                elide: Text.ElideRight
+            }
+
+            StyledText {
+                Layout.fillWidth: true
+
+                text: root.hasPlayer ? ((root.player.trackArtist ?? "") || qsTr("Unknown artist")) : qsTr("Start playback in any media app to control it here.")
+                color: Signal.palette.inkMuted
+                font.pointSize: Appearance.font.size.small
+                elide: Text.ElideRight
+            }
+
+            Instruments.Eyebrow {
+                Layout.fillWidth: true
+
+                visible: root.hasPlayer
+                label: root.hasPlayer ? Players.getIdentity(root.player) + (root.player.isPlaying ? "" : " \u00b7 " + qsTr("paused")) : ""
             }
         }
 
-        Control {
-            icon: "player-skip-forward"
-            canUse: Players.active?.canGoNext ?? false
+        RowLayout {
+            Layout.alignment: Qt.AlignVCenter
+            spacing: 4
 
-            function onClicked(): void {
-                Players.active?.next();
+            Transport {
+                glyph: "player-skip-back"
+                name: qsTr("Previous track")
+                usable: root.player?.canGoPrevious ?? false
+
+                function onClicked(): void {
+                    root.player?.previous();
+                }
+            }
+
+            Transport {
+                glyph: root.player?.isPlaying ? "player-pause" : "player-play"
+                name: root.player?.isPlaying ? qsTr("Pause") : qsTr("Play")
+                usable: root.player?.canTogglePlaying ?? false
+                lit: root.player?.isPlaying ?? false
+
+                function onClicked(): void {
+                    root.player?.togglePlaying();
+                }
+            }
+
+            Transport {
+                glyph: "player-skip-forward"
+                name: qsTr("Next track")
+                usable: root.player?.canGoNext ?? false
+
+                function onClicked(): void {
+                    root.player?.next();
+                }
+            }
+        }
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignVCenter
+            spacing: 6
+
+            Item {
+                id: meterBox
+
+                Layout.fillWidth: true
+                implicitHeight: 12
+
+                Instruments.SegmentMeter {
+                    count: Math.max(8, Math.floor((meterBox.width + 2) / 5))
+                    segmentWidth: 3
+                    segmentLength: 12
+                    gap: 2
+                    value: root.progress
+                    available: root.timed
+                    threshold: 2
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+
+                StyledText {
+                    mono: true
+                    text: root.timecode(root.timed ? root.player.position : -1)
+                    color: Signal.palette.ink
+                    font.pointSize: Appearance.font.size.small
+                    font.features: {
+                        "tnum": 1
+                    }
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                }
+
+                StyledText {
+                    mono: true
+                    text: root.timecode(root.timed ? root.player.length : -1)
+                    color: Signal.palette.inkMuted
+                    font.pointSize: Appearance.font.size.small
+                    font.features: {
+                        "tnum": 1
+                    }
+                }
             }
         }
     }
 
-    AnimatedImage {
-        id: bongocat
+    component Transport: Rectangle {
+        id: btn
 
-        anchors.top: controls.bottom
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.topMargin: Appearance.spacing.small
-        anchors.bottomMargin: Appearance.padding.large
-        anchors.margins: Appearance.padding.large * 2
+        required property string glyph
+        required property string name
+        required property bool usable
+        property bool lit: false
 
-        playing: Players.active?.isPlaying ?? false
-        speed: Audio.beatTracker.bpm / Appearance.anim.mediaGifSpeedAdjustment
-        source: Paths.absolutePath(Config.paths.mediaGif)
-        asynchronous: true
-        fillMode: AnimatedImage.PreserveAspectFit
-    }
-
-    component Control: StyledRect {
-        id: control
-
-        required property string icon
-        required property bool canUse
         function onClicked(): void {
         }
 
-        implicitWidth: Math.max(icon.implicitHeight, icon.implicitHeight) + Appearance.padding.small
-        implicitHeight: implicitWidth
+        implicitWidth: 36
+        implicitHeight: 36
+        radius: Appearance.rounding.small
+        color: btn.lit ? Signal.palette.signalWell : Signal.palette.lifted
+        border.width: 1
+        border.color: btn.lit ? Signal.palette.signal : Signal.palette.rule
+        opacity: btn.usable ? 1 : 0.5
+
+        Accessible.role: Accessible.Button
+        Accessible.name: btn.name
 
         StateLayer {
-            disabled: !control.canUse
-            radius: Appearance.rounding.full
+            disabled: !btn.usable
+            radius: parent.radius
+            color: btn.lit ? Signal.palette.onSignalWell : Signal.palette.ink
 
             function onClicked(): void {
-                control.onClicked();
+                btn.onClicked();
             }
         }
 
         Glyph {
-            id: icon
-
             anchors.centerIn: parent
-            anchors.verticalCenterOffset: font.pointSize * 0.05
 
-            animate: true
-            name: control.icon
-            color: control.canUse ? Signal.palette.ink : Signal.palette.ruleStrong
+            name: btn.glyph
+            color: btn.lit ? Signal.palette.onSignalWell : btn.usable ? Signal.palette.ink : Signal.palette.inkMuted
             font.pointSize: Appearance.font.size.large
         }
     }

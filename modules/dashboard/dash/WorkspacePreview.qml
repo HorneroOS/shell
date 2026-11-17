@@ -29,7 +29,7 @@ Item {
         id: preview
 
         anchors.fill: parent
-        radius: Appearance.rounding.normal
+        radius: Appearance.rounding.small
         color: Signal.tPalette.raised
 
         ScreencopyView {

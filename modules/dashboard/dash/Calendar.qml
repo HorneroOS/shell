@@ -1,7 +1,6 @@
 pragma ComponentBehavior: Bound
 
 import qs.components
-import qs.components.effects
 import qs.components.controls
 import qs.services
 import qs.config
@@ -9,6 +8,10 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+// Month sheet: rectangular day cells on a fixed grid. Today is a filled
+// `signal` cell (plus its numeral turns `onSignal`), weekends use `cue`,
+// days from neighbouring months are dimmed. Wheel pages months, a middle
+// click returns to today.
 CustomMouseArea {
     id: root
 
@@ -16,10 +19,9 @@ CustomMouseArea {
 
     readonly property int currMonth: state.currentDate.getMonth()
     readonly property int currYear: state.currentDate.getFullYear()
+    readonly property alias title: grid.title
 
-    anchors.left: parent.left
-    anchors.right: parent.right
-    implicitHeight: inner.implicitHeight + inner.anchors.margins * 2
+    implicitHeight: inner.implicitHeight
 
     acceptedButtons: Qt.MiddleButton
     onClicked: root.state.currentDate = new Date()
@@ -34,57 +36,32 @@ CustomMouseArea {
     ColumnLayout {
         id: inner
 
-        anchors.fill: parent
-        anchors.margins: Appearance.padding.large
+        anchors.left: parent.left
+        anchors.right: parent.right
         spacing: Appearance.spacing.small
 
         RowLayout {
-            id: monthNavigationRow
-
             Layout.fillWidth: true
-            spacing: Appearance.spacing.small
+            spacing: 0
 
-            Item {
-                implicitWidth: implicitHeight
-                implicitHeight: prevMonthText.implicitHeight + Appearance.padding.small * 2
+            NavCell {
+                glyph: "chevron-left"
+                name: qsTr("Previous month")
 
-                StateLayer {
-                    id: prevMonthStateLayer
-
-                    radius: Appearance.rounding.full
-
-                    Accessible.role: Accessible.Button
-                    Accessible.name: qsTr("Previous month")
-
-                    function onClicked(): void {
-                        root.state.currentDate = new Date(root.currYear, root.currMonth - 1, 1);
-                    }
-                }
-
-                Glyph {
-                    id: prevMonthText
-
-                    anchors.centerIn: parent
-                    name: "chevron-left"
-                    color: Signal.palette.phosphor
-                    font.pointSize: Appearance.font.size.normal
-                    font.weight: 700
+                function onClicked(): void {
+                    root.state.currentDate = new Date(root.currYear, root.currMonth - 1, 1);
                 }
             }
 
             Item {
                 Layout.fillWidth: true
-
-                implicitWidth: monthYearDisplay.implicitWidth + Appearance.padding.small * 2
-                implicitHeight: monthYearDisplay.implicitHeight + Appearance.padding.small * 2
+                implicitHeight: 28
 
                 StateLayer {
-                    anchors.fill: monthYearDisplay
-                    anchors.margins: -Appearance.padding.small
-                    anchors.leftMargin: -Appearance.padding.normal
-                    anchors.rightMargin: -Appearance.padding.normal
-
-                    radius: Appearance.rounding.full
+                    anchors.centerIn: parent
+                    width: monthYearDisplay.implicitWidth + 24
+                    height: parent.height
+                    radius: Appearance.rounding.small
                     disabled: {
                         const now = new Date();
                         return root.currMonth === now.getMonth() && root.currYear === now.getFullYear();
@@ -102,161 +79,116 @@ CustomMouseArea {
                     id: monthYearDisplay
 
                     anchors.centerIn: parent
+                    mono: true
                     text: grid.title
-                    color: Signal.palette.signal
-                    font.pointSize: Appearance.font.size.normal
-                    font.weight: 500
-                    font.capitalization: Font.Capitalize
+                    color: Signal.palette.ink
+                    font.pointSize: Appearance.font.size.small
+                    font.weight: Font.Medium
+                    font.capitalization: Font.AllUppercase
+                    font.letterSpacing: Appearance.font.size.small * 0.08
                 }
             }
 
-            Item {
-                implicitWidth: implicitHeight
-                implicitHeight: nextMonthText.implicitHeight + Appearance.padding.small * 2
+            NavCell {
+                glyph: "chevron-right"
+                name: qsTr("Next month")
 
-                StateLayer {
-                    id: nextMonthStateLayer
-
-                    radius: Appearance.rounding.full
-
-                    Accessible.role: Accessible.Button
-                    Accessible.name: qsTr("Next month")
-
-                    function onClicked(): void {
-                        root.state.currentDate = new Date(root.currYear, root.currMonth + 1, 1);
-                    }
-                }
-
-                Glyph {
-                    id: nextMonthText
-
-                    anchors.centerIn: parent
-                    name: "chevron-right"
-                    color: Signal.palette.phosphor
-                    font.pointSize: Appearance.font.size.normal
-                    font.weight: 700
+                function onClicked(): void {
+                    root.state.currentDate = new Date(root.currYear, root.currMonth + 1, 1);
                 }
             }
         }
 
         DayOfWeekRow {
-            id: daysRow
-
             Layout.fillWidth: true
             locale: grid.locale
+            spacing: 2
 
             delegate: StyledText {
                 required property var model
 
                 horizontalAlignment: Text.AlignHCenter
-                text: model.shortName
-                font.weight: 500
+                mono: true
+                text: model.shortName.slice(0, 2)
+                font.pointSize: Appearance.font.size.small
                 color: (model.day === 0 || model.day === 6) ? Signal.palette.cue : Signal.palette.inkMuted
             }
         }
 
-        Item {
+        Rectangle {
             Layout.fillWidth: true
-            implicitHeight: grid.implicitHeight
+            implicitHeight: 1
+            color: Signal.palette.rule
+        }
 
-            MonthGrid {
-                id: grid
+        MonthGrid {
+            id: grid
 
-                month: root.currMonth
-                year: root.currYear
+            Layout.fillWidth: true
 
-                anchors.fill: parent
+            month: root.currMonth
+            year: root.currYear
+            spacing: 2
+            locale: Qt.locale()
 
-                spacing: 3
-                locale: Qt.locale()
+            delegate: Rectangle {
+                id: day
 
-                delegate: Item {
-                    id: dayItem
+                required property var model
+                readonly property bool inMonth: model.month === grid.month
+                readonly property bool weekend: model.date.getUTCDay() === 0 || model.date.getUTCDay() === 6
 
-                    required property var model
+                implicitWidth: 32
+                implicitHeight: 28
+                radius: Appearance.rounding.small
+                color: model.today ? Signal.palette.signal : "transparent"
 
-                    implicitWidth: implicitHeight
-                    implicitHeight: text.implicitHeight + Appearance.padding.small * 2
+                Accessible.role: Accessible.StaticText
+                Accessible.name: day.model.date.toLocaleDateString(grid.locale, "dddd d MMMM") + (day.model.today ? ", " + qsTr("today") : "")
 
-                    StyledText {
-                        id: text
+                StyledText {
+                    anchors.centerIn: parent
 
-                        anchors.centerIn: parent
-
-                        horizontalAlignment: Text.AlignHCenter
-                        text: grid.locale.toString(dayItem.model.day)
-                        color: {
-                            const dayOfWeek = dayItem.model.date.getUTCDay();
-                            if (dayOfWeek === 0 || dayOfWeek === 6)
-                                return Signal.palette.cue;
-
-                            return Signal.palette.inkMuted;
-                        }
-                        opacity: 1
-                        font.pointSize: Appearance.font.size.normal
-                        font.weight: 500
-                    }
+                    mono: true
+                    text: grid.locale.toString(day.model.day)
+                    color: day.model.today ? Signal.palette.onSignal : !day.inMonth ? Qt.alpha(Signal.palette.inkMuted, 0.55) : day.weekend ? Signal.palette.cue : Signal.palette.ink
+                    font.pointSize: Appearance.font.size.small
+                    font.weight: day.model.today ? Font.DemiBold : Font.Normal
+                    Accessible.ignored: true
                 }
             }
+        }
+    }
 
-            StyledRect {
-                id: todayIndicator
+    component NavCell: Item {
+        id: nav
 
-                readonly property Item todayItem: grid.contentItem.children.find(c => c.model.today) ?? null
-                property Item today
+        required property string glyph
+        required property string name
 
-                onTodayItemChanged: {
-                    if (todayItem)
-                        today = todayItem;
-                }
+        function onClicked(): void {
+        }
 
-                x: today ? today.x + (today.width - implicitWidth) / 2 : 0
-                y: today?.y ?? 0
+        implicitWidth: 32
+        implicitHeight: 28
 
-                implicitWidth: today?.implicitWidth ?? 0
-                implicitHeight: today?.implicitHeight ?? 0
+        StateLayer {
+            radius: Appearance.rounding.small
 
-                clip: true
-                radius: Appearance.rounding.full
-                color: Signal.palette.signal
+            Accessible.role: Accessible.Button
+            Accessible.name: nav.name
 
-                opacity: todayItem ? 1 : 0
-                scale: todayItem ? 1 : 0.7
-
-                Colouriser {
-                    x: -todayIndicator.x
-                    y: -todayIndicator.y
-
-                    implicitWidth: grid.width
-                    implicitHeight: grid.height
-
-                    source: grid
-                    sourceColor: Signal.palette.ink
-                    colorizationColor: Signal.palette.onSignal
-                }
-
-                Behavior on opacity {
-                    Anim {}
-                }
-
-                Behavior on scale {
-                    Anim {}
-                }
-
-                Behavior on x {
-                    Anim {
-                        duration: Appearance.anim.durations.settle
-                        easing.bezierCurve: Appearance.anim.curves.settle
-                    }
-                }
-
-                Behavior on y {
-                    Anim {
-                        duration: Appearance.anim.durations.settle
-                        easing.bezierCurve: Appearance.anim.curves.settle
-                    }
-                }
+            function onClicked(): void {
+                nav.onClicked();
             }
+        }
+
+        Glyph {
+            anchors.centerIn: parent
+
+            name: nav.glyph
+            color: Signal.palette.inkMuted
+            font.pointSize: Appearance.font.size.normal
         }
     }
 }

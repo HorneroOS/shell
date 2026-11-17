@@ -1,65 +1,68 @@
-pragma ComponentBehavior: Bound
-
 import qs.components
 import qs.services
 import qs.config
 import QtQuick
-import QtQuick.Layouts
 
+// Clock module: Plex Sans Condensed Medium numerals (the lock-screen
+// face, signal-visual-language §4.1), date in Plex Mono. The separator is
+// a static colon — nothing blinks.
 Item {
     id: root
 
-    anchors.top: parent.top
-    anchors.bottom: parent.bottom
-    implicitWidth: Config.dashboard.sizes.dateTimeWidth
-
-    ColumnLayout {
+    Column {
         anchors.left: parent.left
-        anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
-        spacing: 0
+        spacing: Appearance.spacing.small
 
-        StyledText {
-            Layout.bottomMargin: -(font.pointSize * 0.4)
-            Layout.alignment: Qt.AlignHCenter
-            text: Time.hourStr
-            color: Signal.palette.cue
-            font.pointSize: Appearance.font.size.extraLarge
-            font.family: Appearance.font.family.display
-            font.weight: 600
-        }
+        Row {
+            spacing: 2
 
-        StyledText {
-            Layout.alignment: Qt.AlignHCenter
-            text: "•••"
-            color: Signal.palette.signal
-            font.pointSize: Appearance.font.size.extraLarge * 0.9
-            font.family: Appearance.font.family.display
-        }
-
-        StyledText {
-            Layout.topMargin: -(font.pointSize * 0.4)
-            Layout.alignment: Qt.AlignHCenter
-            text: Time.minuteStr
-            color: Signal.palette.cue
-            font.pointSize: Appearance.font.size.extraLarge
-            font.family: Appearance.font.family.display
-            font.weight: 600
-        }
-
-        Loader {
-            Layout.alignment: Qt.AlignHCenter
-
-            active: Config.services.useTwelveHourClock
-            visible: active
-
-            sourceComponent: StyledText {
-                text: Time.amPmStr
-                color: Signal.palette.signal
-                font.pointSize: Appearance.font.size.large
+            StyledText {
+                text: Time.hourStr
                 font.family: Appearance.font.family.display
-                font.weight: 600
+                font.weight: Font.Medium
+                font.pointSize: Appearance.font.size.display * 0.85
+                font.features: {
+                    "tnum": 1
+                }
             }
+
+            StyledText {
+                text: ":"
+                color: Signal.palette.inkMuted
+                font.family: Appearance.font.family.display
+                font.weight: Font.Medium
+                font.pointSize: Appearance.font.size.display * 0.85
+            }
+
+            StyledText {
+                text: Time.minuteStr
+                font.family: Appearance.font.family.display
+                font.weight: Font.Medium
+                font.pointSize: Appearance.font.size.display * 0.85
+                font.features: {
+                    "tnum": 1
+                }
+            }
+
+            StyledText {
+                anchors.baseline: parent.children[0].baseline
+                visible: Config.services.useTwelveHourClock
+                leftPadding: Appearance.spacing.small
+                mono: true
+                text: Time.amPmStr
+                color: Signal.palette.inkMuted
+                font.pointSize: Appearance.font.size.normal
+            }
+        }
+
+        StyledText {
+            mono: true
+            text: Time.format("dddd d MMMM yyyy")
+            color: Signal.palette.inkMuted
+            font.pointSize: Appearance.font.size.small
+            font.capitalization: Font.AllUppercase
+            font.letterSpacing: Appearance.font.size.small * 0.08
         }
     }
 }

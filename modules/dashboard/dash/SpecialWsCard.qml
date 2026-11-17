@@ -31,10 +31,10 @@ Item {
     StyledRect {
         id: chip
 
-        radius: Appearance.rounding.full
-        color: root.isActive
-            ? Signal.tPalette.phosphorWell
-            : Signal.tPalette.raised
+        radius: Appearance.rounding.small
+        color: root.isActive ? Signal.palette.raised : "transparent"
+        border.width: 1
+        border.color: root.isActive ? Signal.palette.phosphor : Signal.palette.rule
 
         implicitWidth: content.implicitWidth + Appearance.padding.normal * 2
         implicitHeight: content.implicitHeight + Appearance.padding.small
@@ -47,7 +47,7 @@ Item {
 
         StateLayer {
             color: root.isActive
-                ? Signal.palette.onPhosphorWell
+                ? Signal.palette.ink
                 : Signal.palette.ink
 
             function onClicked(): void {
@@ -73,7 +73,7 @@ Item {
                     Glyph {
                         name: root.iconName
                         color: root.isActive
-                            ? Signal.palette.onPhosphorWell
+                            ? Signal.palette.ink
                             : Signal.palette.phosphor
                         font.pointSize: Appearance.font.size.normal
                     }
@@ -85,7 +85,7 @@ Item {
                     StyledText {
                         text: root.iconName
                         color: root.isActive
-                            ? Signal.palette.onPhosphorWell
+                            ? Signal.palette.ink
                             : Signal.palette.phosphor
                         font.pointSize: Appearance.font.size.small
                         font.weight: 600
@@ -99,15 +99,15 @@ Item {
                 font.pointSize: Appearance.font.size.small
                 font.weight: root.isActive ? 600 : 400
                 color: root.isActive
-                    ? Signal.palette.onPhosphorWell
+                    ? Signal.palette.ink
                     : Signal.palette.inkMuted
             }
 
             // Window count
             StyledRect {
                 visible: root.windowCount > 0
-                radius: Appearance.rounding.full
-                color: Qt.alpha(Signal.palette.onPhosphorWell, 0.2)
+                radius: Appearance.rounding.small
+                color: Qt.alpha(Signal.palette.ink, 0.12)
                 implicitWidth: wcText.implicitWidth + 6
                 implicitHeight: wcText.implicitHeight + 2
 
@@ -117,7 +117,7 @@ Item {
                     text: root.windowCount
                     font.pointSize: Appearance.font.size.smaller
                     color: root.isActive
-                        ? Signal.palette.onPhosphorWell
+                        ? Signal.palette.ink
                         : Signal.palette.inkMuted
                 }
             }

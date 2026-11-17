@@ -12,7 +12,7 @@ def test_hourly_section_is_a_chart():
     assert 'import "weather"' in TAB
     assert "HourlyChart {" in TAB
     assert "hourlyRow" not in TAB
-    for needle in ("Shape.CurveRenderer", "LinearGradient", "PathSvg", "useFahrenheit", "useTwelveHourClock", 'qsTr("Now")'):
+    for needle in ("Shape.CurveRenderer", "PathSvg", "useFahrenheit", "useTwelveHourClock", 'qsTr("Now")'):
         assert needle in CHART, needle
 
 

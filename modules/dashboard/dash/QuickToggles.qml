@@ -1,33 +1,37 @@
 import qs.components
-import qs.components.controls
 import qs.services
 import qs.config
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
 
+// Three channel cells (night mode, gaming mode, screen recording). Cells
+// are fixed rectangles in a shared well: a selected cell takes the
+// `signalWell` fill plus an on-air bar, so state is never colour alone.
 Item {
     id: root
 
-    implicitWidth: row.implicitWidth + Appearance.padding.large * 2
-    implicitHeight: row.implicitHeight + Appearance.padding.normal * 2
+    implicitWidth: row.implicitWidth
+    implicitHeight: 32
 
     RowLayout {
         id: row
-        anchors.centerIn: parent
-        spacing: Appearance.spacing.small
 
-        // Night mode toggle
+        anchors.fill: parent
+        spacing: 4
+
         ToggleChip {
+            Layout.fillWidth: true
             icon: "moon"
             label: qsTr("Night")
             description: qsTr("Toggle night mode")
-            active: false  // No persistent service — just fire the script
+            // No persistent service: the action only fires the script.
+            active: false
             onToggled: Quickshell.execDetached(["horneroctl", "appearance", "night-mode", "toggle", "--yes"])
         }
 
-        // Game mode toggle
         ToggleChip {
+            Layout.fillWidth: true
             icon: "device-gamepad-2"
             label: qsTr("Game")
             description: Experience.gaming ? qsTr("Leave gaming mode") : qsTr("Switch to gaming mode")
@@ -35,14 +39,10 @@ Item {
             onToggled: Experience.toggle("gaming")
         }
 
-        // Screen recorder toggle
         ToggleChip {
+            Layout.fillWidth: true
             icon: Recorder.running ? "player-stop" : "point"
-            label: Recorder.running
-                ? (Recorder.elapsed > 0
-                    ? "%1:%2".arg(Math.floor(Recorder.elapsed / 60)).arg(String(Math.floor(Recorder.elapsed % 60)).padStart(2, "0"))
-                    : qsTr("Rec"))
-                : qsTr("Record")
+            label: Recorder.running ? (Recorder.elapsed > 0 ? "%1:%2".arg(Math.floor(Recorder.elapsed / 60)).arg(String(Math.floor(Recorder.elapsed % 60)).padStart(2, "0")) : qsTr("Rec")) : qsTr("Record")
             description: Recorder.running ? qsTr("Stop screen recording") : qsTr("Start screen recording")
             active: Recorder.running
             onToggled: {
@@ -54,8 +54,7 @@ Item {
         }
     }
 
-    // ── Reusable pill toggle ──────────────────────────────────────────────────
-    component ToggleChip: StyledRect {
+    component ToggleChip: Rectangle {
         id: chip
 
         required property string icon
@@ -64,45 +63,54 @@ Item {
         property string description: chip.label
         signal toggled
 
-        radius: Appearance.rounding.full
+        implicitHeight: 32
+        implicitWidth: chipRow.implicitWidth + 20
+        radius: Appearance.rounding.small
+        border.width: 1
+        border.color: chip.active ? Signal.palette.signal : Signal.palette.rule
+        // Inactive cells keep a visible container (shell#462).
+        color: chip.active ? Signal.palette.signalWell : Signal.palette.lifted
+
         Accessible.role: Accessible.Button
         Accessible.name: chip.description
-        // Inactive chips used the card's own layer and read as plain text
-        // (shell#462); a visible container keeps them recognisable as buttons.
-        color: chip.active
-            ? Signal.palette.signalWell
-            : Signal.palette.lifted
-        implicitHeight: chipRow.implicitHeight + Appearance.padding.smaller * 2
-        implicitWidth: chipRow.implicitWidth + Appearance.padding.normal * 2
 
         StateLayer {
             radius: parent.radius
             color: chip.active ? Signal.palette.onSignalWell : Signal.palette.ink
-            function onClicked() { chip.toggled(); }
+
+            function onClicked(): void {
+                chip.toggled();
+            }
         }
 
-        RowLayout {
+        Row {
             id: chipRow
+
             anchors.centerIn: parent
             spacing: Appearance.spacing.small
 
             Glyph {
+                anchors.verticalCenter: parent.verticalCenter
+
                 name: chip.icon
-                color: chip.active
-                    ? Signal.palette.onSignalWell
-                    : Signal.palette.inkMuted
+                color: chip.active ? Signal.palette.onSignalWell : Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.normal
-                animate: true
             }
 
             StyledText {
+                anchors.verticalCenter: parent.verticalCenter
+
+                mono: true
                 text: chip.label
-                color: chip.active
-                    ? Signal.palette.onSignalWell
-                    : Signal.palette.inkMuted
-                font.pointSize: Appearance.font.size.smaller
-                font.weight: chip.active ? 600 : 400
+                color: chip.active ? Signal.palette.onSignalWell : Signal.palette.inkMuted
+                font.pointSize: Appearance.font.size.small
+                font.weight: chip.active ? Font.DemiBold : Font.Normal
             }
+        }
+
+        OnAirBar {
+            edge: "bottom"
+            active: chip.active
         }
     }
 }

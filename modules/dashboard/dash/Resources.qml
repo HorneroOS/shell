@@ -1,107 +1,196 @@
+pragma ComponentBehavior: Bound
+
 import qs.components
 import qs.components.misc
 import qs.services
 import qs.config
+import qs.modules.instruments as Instruments
 import QtQuick
+import QtQuick.Layouts
 
-Row {
+// Resources module (Signal Bezel §6): the CPU oscilloscope, one segmented
+// meter per channel with its value beside it, and used/total partitions
+// with dimension lines for memory and storage. Everything is bound to
+// SystemUsage; a source that reports nothing shows an em dash and lit-off
+// segments. The scope plots one real sample per telemetry tick.
+ColumnLayout {
     id: root
 
-    anchors.top: parent.top
-    anchors.bottom: parent.bottom
+    readonly property int windowSeconds: Math.round(scopeBuffer.length * Experience.telemetryIntervalMs / 1000)
+    readonly property string windowLabel: qsTr("%1 s window").arg(windowSeconds)
+    readonly property real storageUsed: SystemUsage.disks.reduce((acc, d) => acc + d.used, 0)
+    readonly property real storageTotal: SystemUsage.disks.reduce((acc, d) => acc + d.total, 0)
 
-    padding: Appearance.padding.large
+    function fmt(kib: real): string {
+        const f = SystemUsage.formatKib(kib);
+        return `${f.value.toFixed(f.value >= 100 ? 0 : 1)} ${f.unit}`;
+    }
+
     spacing: Appearance.spacing.normal
 
     Ref {
         service: SystemUsage
     }
 
-    Resource {
-        icon: "memory"
-        label: qsTr("CPU")
-        value: SystemUsage.cpuPerc
-        colour: Signal.palette.signal
+    Instruments.TraceBuffer {
+        id: scopeBuffer
+
+        length: 60
     }
 
-    Resource {
-        icon: "cpu-2"
-        label: qsTr("Memory")
-        value: SystemUsage.memPerc
-        colour: Signal.palette.cue
-    }
+    Connections {
+        target: SystemUsage
 
-    Resource {
-        icon: "device-sd-card"
-        label: qsTr("Storage")
-        value: SystemUsage.storagePerc
-        colour: Signal.palette.phosphor
-    }
-
-    component Resource: Item {
-        id: res
-
-        required property string icon
-        required property real value
-        required property color colour
-        required property string label
-
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        anchors.margins: Appearance.padding.large
-        implicitWidth: Math.max(icon.implicitWidth, valueText.implicitWidth)
-
-        Accessible.role: Accessible.ProgressBar
-        Accessible.name: qsTr("%1 %2%").arg(res.label).arg(Math.round(res.value * 100))
-
-        // The bar alone said nothing (shell#462): the value sits on top of
-        // it, in the bar's colour.
-        StyledText {
-            id: valueText
-
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: parent.top
-            text: Math.round(res.value * 100) + "%"
-            color: res.colour
-            font.pointSize: Appearance.font.size.small
-            font.weight: 600
+        function onSampled(): void {
+            scopeBuffer.sample(SystemUsage.cpuPerc);
         }
+    }
 
-        StyledRect {
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: valueText.bottom
-            anchors.topMargin: Appearance.spacing.small
-            anchors.bottom: icon.top
-            anchors.bottomMargin: Appearance.spacing.small
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: Appearance.spacing.normal
 
-            implicitWidth: Config.dashboard.sizes.resourceProgessThickness
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 6
 
-            color: Signal.layer(Signal.palette.raised, 2)
-            radius: Appearance.rounding.full
+            Instruments.Eyebrow {
+                label: qsTr("CPU · 25 %/div")
+            }
 
-            StyledRect {
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.bottom: parent.bottom
-                implicitHeight: res.value * parent.height
+            Instruments.ScopeTrace {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 96
 
-                color: res.colour
-                radius: Appearance.rounding.full
+                samples: scopeBuffer.samples
+                persistence: scopeBuffer.persistence
+                window: scopeBuffer.length
+                maxValue: 1
+                glow: Experience.glow
+                scanlines: Experience.scanlines
+
+                Accessible.role: Accessible.StaticText
+                Accessible.name: qsTr("CPU load trace, %1 seconds, now %2%").arg(root.windowSeconds).arg(Math.round(SystemUsage.cpuPerc * 100))
             }
         }
 
-        Glyph {
-            id: icon
+        Instruments.Readout {
+            Layout.alignment: Qt.AlignTop
+            Layout.preferredWidth: 112
 
-            anchors.bottom: parent.bottom
+            label: qsTr("CPU temp")
+            value: SystemUsage.cpuTempAvailable ? String(Math.round(Config.services.useFahrenheitPerformance ? SystemUsage.cpuTemp * 1.8 + 32 : SystemUsage.cpuTemp)) : ""
+            unit: Config.services.useFahrenheitPerformance ? "°F" : "°C"
+        }
+    }
 
-            name: res.icon
-            color: res.colour
+    ColumnLayout {
+        Layout.fillWidth: true
+        spacing: 6
+
+        Resource {
+            label: qsTr("CPU")
+            value: SystemUsage.cpuPerc
         }
 
-        Behavior on value {
-            Anim {
-                duration: Appearance.anim.durations.long
+        Resource {
+            label: qsTr("Memory")
+            value: SystemUsage.memPerc
+            available: SystemUsage.memTotal > 0
+        }
+
+        Resource {
+            label: qsTr("Storage")
+            value: SystemUsage.storagePerc
+            available: root.storageTotal > 0
+        }
+    }
+
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: Appearance.spacing.large
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignTop
+            spacing: 6
+
+            Instruments.Eyebrow {
+                label: qsTr("Memory \u00b7 %1").arg(SystemUsage.memTotal > 0 ? root.fmt(SystemUsage.memTotal) : "\u2014")
+            }
+
+            Instruments.Partition {
+                Layout.fillWidth: true
+
+                total: SystemUsage.memTotal
+                used: SystemUsage.memUsed
+                usedLabel: qsTr("%1 used").arg(root.fmt(SystemUsage.memUsed))
+            }
+        }
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignTop
+            spacing: 6
+
+            Instruments.Eyebrow {
+                label: qsTr("Storage \u00b7 %1").arg(root.storageTotal > 0 ? root.fmt(root.storageTotal) : "\u2014")
+            }
+
+            Instruments.Partition {
+                Layout.fillWidth: true
+
+                total: root.storageTotal
+                used: root.storageUsed
+                usedLabel: qsTr("%1 used").arg(root.fmt(root.storageUsed))
+            }
+        }
+    }
+
+    component Resource: RowLayout {
+        id: res
+
+        required property string label
+        required property real value
+        property bool available: true
+
+        Layout.fillWidth: true
+        spacing: Appearance.spacing.normal
+
+        Accessible.role: Accessible.ProgressBar
+        Accessible.name: res.available ? qsTr("%1 %2%").arg(res.label).arg(Math.round(res.value * 100)) : qsTr("%1 unavailable").arg(res.label)
+
+        Instruments.Eyebrow {
+            Layout.preferredWidth: 80
+
+            label: res.label
+        }
+
+        Item {
+            Layout.fillWidth: true
+            implicitHeight: 10
+
+            Instruments.SegmentMeter {
+                // Fit whole 3 px segments with 2 px gaps to the row.
+                count: Math.max(8, Math.floor((parent.width + 2) / 5))
+                segmentWidth: 3
+                segmentLength: 10
+                gap: 2
+                value: res.value
+                available: res.available
+            }
+        }
+
+        StyledText {
+            Layout.preferredWidth: 40
+
+            horizontalAlignment: Text.AlignRight
+            mono: true
+            text: res.available ? Math.round(res.value * 100) + "%" : "—"
+            color: res.available ? Signal.palette.ink : Signal.palette.inkMuted
+            font.pointSize: Appearance.font.size.small
+            font.features: {
+                "tnum": 1
             }
         }
     }

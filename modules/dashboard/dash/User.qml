@@ -8,188 +8,167 @@ import qs.utils
 import Quickshell
 import QtQuick
 
-Row {
+// Station module: who and what is running this session. Square portrait
+// (radius `small`), three labelled facts from SysInfo, then the quick
+// toggles. Facts that the system cannot report are left out, not faked.
+Column {
     id: root
 
     required property PersistentProperties visibilities
     required property PersistentProperties state
     required property FileDialog facePicker
 
-    padding: Appearance.padding.large
     spacing: Appearance.spacing.normal
 
-    StyledClippingRect {
-        implicitWidth: info.implicitHeight
-        implicitHeight: info.implicitHeight
-
-        radius: Appearance.rounding.large
-        color: Signal.layer(Signal.palette.raised, 2)
-
-        Glyph {
-            anchors.centerIn: parent
-
-            name: "user"
-            font.pointSize: Math.floor(info.implicitHeight / 2) || 1
-        }
-
-        CachingImage {
-            id: pfp
-
-            anchors.fill: parent
-            path: `${Paths.home}/.face`
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            hoverEnabled: true
-
-            StyledRect {
-                anchors.fill: parent
-
-                color: Qt.alpha(Signal.palette.scrim, 0.5)
-                opacity: parent.containsMouse ? 1 : 0
-
-                Behavior on opacity {
-                    Anim {
-                        duration: Appearance.anim.durations.settleFast
-                    }
-                }
-            }
-
-            StyledRect {
-                anchors.centerIn: parent
-
-                implicitWidth: selectIcon.implicitHeight + Appearance.padding.small * 2
-                implicitHeight: selectIcon.implicitHeight + Appearance.padding.small * 2
-
-                radius: Appearance.rounding.normal
-                color: Signal.palette.signal
-                scale: parent.containsMouse ? 1 : 0.5
-                opacity: parent.containsMouse ? 1 : 0
-
-                StateLayer {
-                    color: Signal.palette.onSignal
-
-                    Accessible.role: Accessible.Button
-                    Accessible.name: qsTr("Change profile picture")
-
-                    function onClicked(): void {
-                        root.visibilities.launcher = false;
-                        root.facePicker.open();
-                    }
-                }
-
-                Glyph {
-                    id: selectIcon
-
-                    anchors.centerIn: parent
-                    anchors.horizontalCenterOffset: -font.pointSize * 0.02
-
-                    name: "user-square"
-                    color: Signal.palette.onSignal
-                    font.pointSize: Appearance.font.size.extraLarge
-                }
-
-                Behavior on scale {
-                    Anim {
-                        duration: Appearance.anim.durations.settleFast
-                        easing.bezierCurve: Appearance.anim.curves.settleFast
-                    }
-                }
-
-                Behavior on opacity {
-                    Anim {
-                        duration: Appearance.anim.durations.settleFast
-                    }
-                }
-            }
-        }
-    }
-
-    Column {
-        id: info
-
-        anchors.verticalCenter: parent.verticalCenter
+    Row {
         spacing: Appearance.spacing.normal
 
-        Item {
-            id: line
+        Rectangle {
+            id: portrait
 
-            implicitWidth: icon.implicitWidth + text.width + text.anchors.leftMargin
-            implicitHeight: Math.max(icon.implicitHeight, text.implicitHeight)
+            implicitWidth: 64
+            implicitHeight: 64
 
-            ColouredIcon {
-                id: icon
+            radius: Appearance.rounding.small
+            color: Signal.palette.sunken
+            border.width: 1
+            border.color: Signal.palette.rule
+            clip: true
 
-                anchors.left: parent.left
-                anchors.leftMargin: (Config.dashboard.sizes.infoIconSize - implicitWidth) / 2
+            Glyph {
+                anchors.centerIn: parent
 
-                source: SysInfo.osLogo
-                implicitSize: Math.floor(Appearance.font.size.normal * 1.34)
-                colour: Signal.palette.signal
+                name: "user"
+                color: Signal.palette.inkMuted
+                font.pointSize: Appearance.font.size.extraLarge
             }
 
-            StyledText {
-                id: text
+            CachingImage {
+                anchors.fill: parent
+                anchors.margins: 1
 
-                anchors.verticalCenter: icon.verticalCenter
-                anchors.left: icon.right
-                anchors.leftMargin: icon.anchors.leftMargin
-                text: `:  ${SysInfo.osPrettyName || SysInfo.osName}`
-                font.pointSize: Appearance.font.size.normal
+                path: `${Paths.home}/.face`
+            }
 
-                width: Config.dashboard.sizes.infoWidth
-                elide: Text.ElideRight
+            // Hover scrim names the action; the keyboard path is the
+            // button role on the MouseArea itself.
+            MouseArea {
+                id: change
+
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                activeFocusOnTab: true
+
+                Accessible.role: Accessible.Button
+                Accessible.name: qsTr("Change profile picture")
+                Accessible.onPressAction: change.clicked(null)
+                Keys.onReturnPressed: change.clicked(null)
+                Keys.onSpacePressed: change.clicked(null)
+
+                onClicked: {
+                    root.visibilities.launcher = false;
+                    root.facePicker.open();
+                }
+
+                Rectangle {
+                    anchors.fill: parent
+
+                    color: Qt.alpha(Signal.palette.scrim, 0.6)
+                    opacity: change.containsMouse || change.activeFocus ? 1 : 0
+
+                    StyledText {
+                        anchors.centerIn: parent
+
+                        text: qsTr("Change")
+                        color: Signal.palette.ink
+                        font.pointSize: Appearance.font.size.small
+                    }
+                }
+
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.margins: -2
+
+                    visible: change.activeFocus
+                    color: "transparent"
+                    radius: Appearance.rounding.small + 2
+                    border.width: 2
+                    border.color: Signal.palette.focus
+                }
             }
         }
 
-        InfoLine {
-            icon: "app-window"
-            text: SysInfo.wm
-            colour: Signal.palette.cue
-        }
+        Column {
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: Appearance.spacing.small
 
-        InfoLine {
-            id: uptime
+            Row {
+                spacing: Appearance.spacing.small
 
-            icon: "clock-hour-4"
-            text: qsTr("up %1").arg(SysInfo.uptime)
-            colour: Signal.palette.phosphor
+                ColouredIcon {
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    visible: SysInfo.osLogo !== ""
+
+                    source: SysInfo.osLogo
+                    implicitSize: Math.floor(Appearance.font.size.normal * 1.34)
+                    colour: Signal.palette.signal
+                }
+
+                StyledText {
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    text: SysInfo.osPrettyName || SysInfo.osName
+                    elide: Text.ElideRight
+                    width: Math.min(implicitWidth, 176)
+                    font.pointSize: Appearance.font.size.smaller
+                }
+            }
+
+            Fact {
+                glyph: "app-window"
+                text: SysInfo.wm
+            }
+
+            Fact {
+                glyph: "clock-hour-4"
+                text: qsTr("up %1").arg(SysInfo.uptime)
+            }
         }
     }
 
-    component InfoLine: Item {
-        id: line
+    QuickToggles {
+        width: parent.width
+    }
 
-        required property string icon
+    component Fact: Row {
+        id: fact
+
+        required property string glyph
         required property string text
-        required property color colour
+        property color tint: Signal.palette.inkMuted
 
-        implicitWidth: icon.implicitWidth + text.width + text.anchors.leftMargin
-        implicitHeight: Math.max(icon.implicitHeight, text.implicitHeight)
+        visible: text !== ""
+        spacing: Appearance.spacing.small
 
         Glyph {
-            id: icon
+            anchors.verticalCenter: parent.verticalCenter
 
-            anchors.left: parent.left
-            anchors.leftMargin: (Config.dashboard.sizes.infoIconSize - implicitWidth) / 2
-
-            name: line.icon
-            color: line.colour
+            name: fact.glyph
+            color: fact.tint
             font.pointSize: Appearance.font.size.normal
         }
 
         StyledText {
-            id: text
+            anchors.verticalCenter: parent.verticalCenter
 
-            anchors.verticalCenter: icon.verticalCenter
-            anchors.left: icon.right
-            anchors.leftMargin: icon.anchors.leftMargin
-            text: `:  ${line.text}`
-            font.pointSize: Appearance.font.size.normal
-
-            width: Config.dashboard.sizes.infoWidth
+            text: fact.text
+            wrapMode: Text.WordWrap
+            maximumLineCount: 2
             elide: Text.ElideRight
+            width: Math.min(implicitWidth, 156)
+            font.pointSize: Appearance.font.size.smaller
         }
     }
 }

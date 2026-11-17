@@ -62,11 +62,11 @@ def test_dash_media_empty_state_says_no_media_once():
     # Mirrors the Media tab pattern: title keeps the single fallback,
     # album hides when inactive, artist shows the friendly hint.
     text = (DASH / "dash" / "Media.qml").read_text()
-    assert text.count("No media") == 1, \
-        "dash media must fall back to 'No media' exactly once"
-    assert "visible: !!Players.active" in text, \
-        "dash media album line must hide when no player is active"
-    assert "Play some music for stuff to show up here!" in text, \
+    assert text.count("Nothing playing") == 1, \
+        "dash media must fall back to 'Nothing playing' exactly once"
+    assert "visible: root.hasPlayer" in text, \
+        "dash media player line must hide when no player is active"
+    assert "Start playback in any media app to control it here." in text, \
         "dash media artist line must show the friendly empty hint"
 
 

@@ -25,9 +25,6 @@ ALLOWLIST = {
         "named NavRail buttons",
     "modules/controlcenter/Panes.qml":
         "focus guard: onPressed re-focuses the pane and is not accepted",
-    "modules/dashboard/Performance.qml":
-        "wheel-only disk cycling on the storage gauge; the gauge data "
-        "is also rendered as text",
     "modules/dashboard/Tabs.qml":
         "CustomMouseArea is the contentItem of a TabButton whose text "
         "names it (verified as AT-SPI page tabs)",

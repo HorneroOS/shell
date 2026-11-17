@@ -5,13 +5,14 @@ import qs.components.containers
 import qs.components.controls
 import qs.services
 import qs.config
+import qs.modules.instruments as Instruments
 import "dash"
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
 
-// Dashboard Workspaces tab — matches the visual language of Dash.qml
-// and Performance.qml (GridLayout, surfaceContainer cards, rounding.large).
+// Dashboard Workspaces tab (Signal Bezel): framed modules like the rest of
+// the dashboard; workspace cells are fixed rectangles, never pills.
 //
 // Top row: active workspace preview card (left) + window list card (right).
 // Bottom row: workspace selector cards in a flow + special workspaces.
@@ -44,7 +45,7 @@ Item {
 
     Component.onCompleted: root.selectedWsId = Compositor.activeWorkspaceIdForScreen({ name: Compositor.focusedOutputName }) ?? nativeWorkspaces[0]?.id ?? 1
 
-    implicitWidth: Math.max(800, content.implicitWidth)
+    implicitWidth: 968
     implicitHeight: content.implicitHeight
 
     ColumnLayout {
@@ -63,51 +64,25 @@ Item {
             spacing: Appearance.spacing.normal
 
             // Left: active/selected workspace preview + actions
-            StyledRect {
+            Instruments.Frame {
                 Layout.fillWidth: true
                 Layout.minimumWidth: 400
-                Layout.preferredHeight: previewCol.implicitHeight + Appearance.padding.large * 2
+                Layout.preferredHeight: headerHeight + previewCol.implicitHeight + 16
 
-                radius: Appearance.rounding.large
-                color: Signal.tPalette.panel
+                channel: "01"
+                title: root.selectedWorkspace ? Compositor.workspaceLabel(root.selectedWorkspace, root.selectedWsId) : qsTr("Workspace %1").arg(root.selectedWsId ?? "\u2014")
+                context: {
+                    const n = Compositor.windowsForWorkspace(root.selectedWsId).length;
+                    return n === 0 ? qsTr("Empty") : (n === 1 ? qsTr("1 window") : qsTr("%1 windows").arg(n));
+                }
 
                 ColumnLayout {
                     id: previewCol
 
-                    anchors.fill: parent
-                    anchors.margins: Appearance.padding.large
+                    anchors.left: parent.left
+                    anchors.right: parent.right
 
                     spacing: Appearance.spacing.normal
-
-                    // Header
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: Appearance.spacing.small
-
-                        Glyph {
-                            name: "layout-grid"
-                            color: Signal.palette.signal
-                            font.pointSize: Appearance.font.size.large
-                        }
-
-                        StyledText {
-                            text: root.selectedWorkspace ? Compositor.workspaceLabel(root.selectedWorkspace, root.selectedWsId) : qsTr("Workspace %1").arg(root.selectedWsId ?? "—")
-                            font.pointSize: Appearance.font.size.larger
-                            font.weight: 600
-                            color: Signal.palette.ink
-                            Layout.fillWidth: true
-                            elide: Text.ElideRight
-                        }
-
-                        StyledText {
-                            text: {
-                                const n = Compositor.windowsForWorkspace(root.selectedWsId).length;
-                                return n === 0 ? qsTr("Empty") : qsTr("%1 windows").arg(n);
-                            }
-                            font.pointSize: Appearance.font.size.small
-                            color: Signal.palette.inkMuted
-                        }
-                    }
 
                     // Live preview
                     Loader {
@@ -130,13 +105,14 @@ Item {
             }
 
             // Right: window list
-            StyledRect {
+            Instruments.Frame {
                 Layout.fillWidth: true
                 Layout.minimumWidth: 300
-                Layout.preferredHeight: previewCol.implicitHeight + Appearance.padding.large * 2
+                Layout.preferredHeight: headerHeight + previewCol.implicitHeight + 16
 
-                radius: Appearance.rounding.large
-                color: Signal.tPalette.panel
+                channel: "02"
+                title: qsTr("Windows")
+                context: Compositor.windowsForWorkspace(root.selectedWsId).length > 0 ? String(Compositor.windowsForWorkspace(root.selectedWsId).length) : ""
 
                 WorkspaceDetail {
                     anchors.fill: parent
@@ -147,48 +123,34 @@ Item {
         }
 
         // ── Bottom: workspace selector cards ──────────────────────────
-        StyledRect {
+        Instruments.Frame {
             Layout.fillWidth: true
-            Layout.preferredHeight: wsFlowCol.implicitHeight + Appearance.padding.large * 2
+            Layout.preferredHeight: headerHeight + wsFlowCol.implicitHeight + 16
 
-            radius: Appearance.rounding.large
-            color: Signal.tPalette.panel
+            channel: "03"
+            title: qsTr("Workspaces")
 
             ColumnLayout {
                 id: wsFlowCol
 
-                anchors.fill: parent
-                anchors.margins: Appearance.padding.large
+                anchors.left: parent.left
+                anchors.right: parent.right
 
                 spacing: Appearance.spacing.normal
 
-                // Section header
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: Appearance.spacing.small
+                // Special workspace chips
+                Row {
+                    visible: Config.dashboard.workspaces.showSpecialWorkspaces && root.specialWorkspaces.length > 0
+                    spacing: Appearance.spacing.small / 2
 
-                    StyledText {
-                        text: qsTr("Workspaces")
-                        font.pointSize: Appearance.font.size.normal
-                        font.weight: 600
-                        color: Signal.palette.ink
-                        Layout.fillWidth: true
-                    }
+                    Repeater {
+                        model: root.specialWorkspaces
 
-                    // Special workspace chips
-                    Row {
-                        visible: Config.dashboard.workspaces.showSpecialWorkspaces && root.specialWorkspaces.length > 0
-                        spacing: Appearance.spacing.small / 2
+                        delegate: SpecialWsCard {
+                            isActive: modelData.name === root.activeSpecialName
 
-                        Repeater {
-                            model: root.specialWorkspaces
-
-                            delegate: SpecialWsCard {
-                                isActive: modelData.name === root.activeSpecialName
-
-                                onClicked: {
+                            onClicked: {
                                 Hypr.dispatch(`togglespecialworkspace ${modelData.name.slice("special:".length)}`);
-                                }
                             }
                         }
                     }

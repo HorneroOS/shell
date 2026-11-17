@@ -32,11 +32,11 @@ StyledRect {
     signal popoutRequested(string name, Item anchor)
 
     color: clear ? "transparent" : Signal.tPalette.panel
-    radius: Appearance.rounding.normal
+    radius: Appearance.rounding.small
 
     clip: true
-    implicitWidth: vertical ? Config.bar.sizes.innerWidth : iconGrid.implicitWidth + Appearance.padding.normal * 2
-    implicitHeight: vertical ? iconGrid.implicitHeight + Appearance.padding.normal * 2 - (Config.bar.status.showLockStatus && Compositor.supports("lockStatus") && !Compositor.capsLock && !Compositor.numLock ? iconGrid.rowSpacing : 0) : Config.bar.sizes.innerWidth
+    implicitWidth: vertical ? Density.inner : iconGrid.implicitWidth + Appearance.padding.smaller * 2
+    implicitHeight: vertical ? iconGrid.implicitHeight + Appearance.padding.smaller * 2 - (Config.bar.status.showLockStatus && Compositor.supports("lockStatus") && !Compositor.capsLock && !Compositor.numLock ? iconGrid.rowSpacing : 0) : Density.inner
 
     GridLayout {
         id: iconGrid
@@ -71,6 +71,7 @@ StyledRect {
                     implicitHeight: root.vertical ? (Compositor.capsLock ? capslockIcon.implicitHeight : 0) : capslockIcon.implicitHeight
 
                     Glyph {
+                        size: Density.iconPt
                         id: capslockIcon
 
                         anchors.centerIn: parent
@@ -103,6 +104,7 @@ StyledRect {
                     implicitHeight: root.vertical ? (Compositor.numLock ? numlockIcon.implicitHeight : 0) : numlockIcon.implicitHeight
 
                     Glyph {
+                        size: Density.iconPt
                         id: numlockIcon
 
                         anchors.centerIn: parent
@@ -146,6 +148,7 @@ StyledRect {
                 : qsTr("Screen capture session is paused")
 
             Glyph {
+                size: Density.iconPt
                 id: icon
 
                 anchors.centerIn: parent
@@ -171,6 +174,7 @@ StyledRect {
             active: Config.bar.status.showAudio
 
             sourceComponent: Glyph {
+                size: Density.iconPt
                 animate: true
                 name: Icons.getVolumeIcon(Audio.volume, Audio.muted)
                 color: root.colour
@@ -184,6 +188,7 @@ StyledRect {
             active: Config.bar.status.showMicrophone
 
             sourceComponent: Glyph {
+                size: Density.iconPt
                 animate: true
                 name: Icons.getMicVolumeIcon(Audio.sourceVolume, Audio.sourceMuted)
                 color: root.colour
@@ -197,6 +202,7 @@ StyledRect {
             active: Config.bar.status.showKbLayout && Compositor.supports("keyboardLayoutSwitch")
 
             sourceComponent: StyledText {
+                font.pointSize: Density.textPt
                 animate: true
                 text: Compositor.keyboardLayoutShort
                 color: root.colour
@@ -211,6 +217,7 @@ StyledRect {
             active: Config.bar.status.showNetwork && (!Nmcli.activeEthernet || Config.bar.status.showWifi)
 
             sourceComponent: Glyph {
+                size: Density.iconPt
                 animate: true
                 name: Nmcli.active ? Icons.getNetworkIcon(Nmcli.active.strength ?? 0) : "wifi-off"
                 color: root.colour
@@ -224,6 +231,7 @@ StyledRect {
             active: Config.bar.status.showNetwork && Nmcli.activeEthernet
 
             sourceComponent: Glyph {
+                size: Density.iconPt
                 animate: true
                 name: "plug-connected"
                 color: root.colour
@@ -248,6 +256,7 @@ StyledRect {
 
                 // Bluetooth icon
                 Glyph {
+                    size: Density.iconPt
                     animate: true
                     name: {
                         if (!Bluetooth.defaultAdapter?.enabled)
@@ -266,6 +275,7 @@ StyledRect {
                     }
 
                     Glyph {
+                        size: Density.iconPt
                         id: device
 
                         required property BluetoothDevice modelData
@@ -308,6 +318,7 @@ StyledRect {
             active: Config.bar.status.showBattery
 
             sourceComponent: Glyph {
+                size: Density.iconPt
                 animate: true
                 name: {
                     if (!UPower.displayDevice.isLaptopBattery) {
@@ -336,9 +347,9 @@ StyledRect {
             vertical: root.vertical
             section: "status"
             iconColour: root.colour
-            iconSize: Appearance.font.size.larger
-            textSize: Appearance.font.size.smaller
-            thickness: Config.bar.sizes.innerWidth
+            iconSize: Density.iconPt
+            textSize: Density.textPt
+            thickness: Density.inner
             screenName: root.screen.name
         }
     }

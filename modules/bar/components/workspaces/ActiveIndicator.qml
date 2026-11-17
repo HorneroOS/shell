@@ -57,8 +57,8 @@ StyledRect {
     clip: true
     x: vertical ? 0 : offset + mask.x
     y: vertical ? offset + mask.y : 0
-    implicitWidth: vertical ? Config.bar.sizes.innerWidth - Appearance.padding.small * 2 : size
-    implicitHeight: vertical ? size : Config.bar.sizes.innerWidth - Appearance.padding.small * 2
+    implicitWidth: vertical ? Density.inner - Appearance.padding.small * 2 : size
+    implicitHeight: vertical ? size : Density.inner - Appearance.padding.small * 2
     // Signal Bezel §5: fixed rectangular cells, never pills. The active
     // cell is a raised fill with the numeral in ink — not a signal slab.
     radius: Appearance.rounding.small

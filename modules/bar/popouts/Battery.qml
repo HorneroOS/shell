@@ -36,7 +36,7 @@ Column {
             implicitHeight: child.implicitHeight + Appearance.padding.smaller * 2
 
             color: Signal.palette.alert
-            radius: Appearance.rounding.normal
+            radius: Appearance.rounding.small
 
             Column {
                 id: child
@@ -100,7 +100,7 @@ Column {
         implicitHeight: Math.max(saver.implicitHeight, balance.implicitHeight, perf.implicitHeight) + Appearance.padding.small * 2
 
         color: Signal.tPalette.panel
-        radius: Appearance.rounding.normal
+        radius: Appearance.rounding.small
 
         StyledRect {
             id: indicator

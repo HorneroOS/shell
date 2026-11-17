@@ -36,6 +36,6 @@ def test_idle_media_transport_leaves_no_segment():
 def test_bar_clock_uses_plex_sans_condensed():
     clock = (ROOT / "modules/bar/components/Clock.qml").read_text(encoding="utf-8")
     assert "font.family: Appearance.font.family.display" in clock
-    assert "font.weight: Font.Medium" in clock and "font.pointSize: Appearance.font.size.large" in clock
+    assert "font.weight: Font.Medium" in clock and "font.pointSize: Density.clockPt" in clock
     assert "toUpperCase()" in clock
 

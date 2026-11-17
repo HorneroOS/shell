@@ -38,14 +38,14 @@ Item {
     // and live preview. Keep titles inline on horizontal bars.
     implicitWidth: {
         if (root.compactRail)
-            return Config.bar.sizes.innerWidth;
+            return Density.inner;
         if (root.vertical)
             return Math.max(icon.implicitWidth, current.implicitHeight);
         return icon.implicitWidth + current.implicitWidth + current.anchors.leftMargin;
     }
     implicitHeight: {
         if (root.compactRail)
-            return Config.bar.sizes.innerWidth;
+            return Density.inner;
         if (root.vertical)
             return icon.implicitHeight + current.implicitWidth + current.anchors.topMargin;
         return Math.max(icon.implicitHeight, current.implicitHeight);
@@ -54,14 +54,15 @@ Item {
     Item {
         id: icon
 
-        implicitWidth: root.compactRail ? Config.bar.sizes.innerWidth : glyph.implicitWidth
-        implicitHeight: root.compactRail ? Config.bar.sizes.innerWidth : glyph.implicitHeight
+        implicitWidth: root.compactRail ? Density.inner : glyph.implicitWidth
+        implicitHeight: root.compactRail ? Density.inner : glyph.implicitHeight
         width: implicitWidth
         height: implicitHeight
         anchors.horizontalCenter: root.vertical ? parent.horizontalCenter : undefined
         anchors.verticalCenter: root.vertical ? (root.compactRail ? parent.verticalCenter : undefined) : parent.verticalCenter
 
         Glyph {
+            size: Density.iconPt
             id: glyph
 
             anchors.centerIn: parent
@@ -88,7 +89,7 @@ Item {
             return idx > 0 ? rawTitle.slice(idx + 3).trim() : rawTitle;
         }
         text: Config.bar.activeWindow.compact ? compactTitle : rawTitle
-        font.pointSize: Appearance.font.size.smaller
+        font.pointSize: Density.textPt
         font.family: Appearance.font.family.mono
         elide: Qt.ElideRight
         elideWidth: root.maxLength - (root.vertical ? icon.height : icon.width + Appearance.spacing.small)

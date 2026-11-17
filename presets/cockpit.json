@@ -11,7 +11,7 @@
       {
         "edge": "top",
         "style": "inset",
-        "margin": 6,
+        "margin": 4,
         "groups": {
           "start": [
             {
@@ -81,14 +81,14 @@
           ]
         },
         "reserve": true,
-        "thickness": 36,
+        "thickness": 28,
         "density": "values",
         "backdrop": "solid"
       },
       {
         "edge": "bottom",
         "style": "attached",
-        "thickness": 30,
+        "thickness": 24,
         "groups": {
           "start": [
             {
@@ -118,13 +118,13 @@
           ]
         },
         "reserve": true,
-        "margin": 8,
+        "margin": 6,
         "density": "values",
         "backdrop": "solid"
       }
     ],
     "sizes": {
-      "innerWidth": 32
+      "innerWidth": 22
     },
     "status": {
       "showAudio": true,

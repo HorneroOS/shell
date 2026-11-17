@@ -64,8 +64,8 @@ StyledClippingRect {
 
     property real blur: onSpecial ? 1 : 0
 
-    implicitWidth: vertical ? Config.bar.sizes.innerWidth : layout.implicitWidth + Appearance.padding.small * 2
-    implicitHeight: vertical ? layout.implicitHeight + Appearance.padding.small * 2 : Config.bar.sizes.innerWidth
+    implicitWidth: vertical ? Density.inner : layout.implicitWidth + Appearance.padding.small * 2
+    implicitHeight: vertical ? layout.implicitHeight + Appearance.padding.small * 2 : Density.inner
 
     // Cockpit Clear draws no fill behind any foreground group.
     color: labels || clear ? "transparent" : Signal.tPalette.panel

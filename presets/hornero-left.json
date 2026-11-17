@@ -7,7 +7,7 @@
     "persistent": true,
     "showOnHover": true,
     "sizes": {
-      "innerWidth": 40
+      "innerWidth": 24
     },
     "status": {
       "showAudio": true,
@@ -26,8 +26,8 @@
         "edge": "left",
         "style": "attached",
         "reserve": true,
-        "margin": 8,
-        "thickness": 40,
+        "margin": 6,
+        "thickness": 32,
         "density": "values",
         "backdrop": "solid",
         "groups": {
@@ -81,7 +81,8 @@
     ]
   },
   "border": {
-    "frameEnabled": true
+    "frameEnabled": true,
+    "thickness": 6
   },
   "appearance": {
     "rounding": {

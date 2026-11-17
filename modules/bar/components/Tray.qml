@@ -44,11 +44,11 @@ StyledRect {
     clip: true
     visible: vertical ? height > 0 : width > 0
 
-    implicitWidth: vertical ? Config.bar.sizes.innerWidth : nonAnimWidth
-    implicitHeight: vertical ? nonAnimHeight : Config.bar.sizes.innerWidth
+    implicitWidth: vertical ? Density.inner : nonAnimWidth
+    implicitHeight: vertical ? nonAnimHeight : Density.inner
 
     color: Qt.alpha(Signal.tPalette.panel, (root.chip && items.count > 0) ? Signal.tPalette.panel.a : 0)
-    radius: Appearance.rounding.normal
+    radius: Appearance.rounding.small
 
     Loader {
         id: layout
@@ -169,7 +169,7 @@ StyledRect {
                 anchors.right: root.vertical ? undefined : parent.right
                 anchors.rightMargin: root.vertical ? 0 : (root.chip ? Appearance.padding.small : -Appearance.padding.small)
                 name: root.vertical ? "chevron-up" : "chevron-right"
-                font.pointSize: Appearance.font.size.large
+                font.pointSize: Density.iconPt
                 rotation: root.expanded ? 180 : 0
 
                 Behavior on rotation {

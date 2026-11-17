@@ -13,7 +13,7 @@ Item {
     property string iconSource
     property color colour: Signal.palette.ink
     property string label
-    property real iconSize: Appearance.font.size.large
+    property real iconSize: Density.iconPt
     property bool filled
     readonly property bool hovered: interaction.containsMouse
 
@@ -50,10 +50,10 @@ Item {
         visible: root.iconSource !== ""
         anchors.centerIn: parent
         source: root.iconSource
-        sourceSize.width: root.iconSize * 1.9
-        sourceSize.height: root.iconSize * 1.9
-        width: root.iconSize * 1.9
-        height: root.iconSize * 1.9
+        sourceSize.width: root.iconSize * 1.33
+        sourceSize.height: root.iconSize * 1.33
+        width: root.iconSize * 1.33
+        height: root.iconSize * 1.33
         asynchronous: true
         smooth: true
     }

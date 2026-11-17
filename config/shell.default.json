@@ -144,8 +144,8 @@
         "edge": "top",
         "style": "inset",
         "reserve": true,
-        "margin": 6,
-        "thickness": 36,
+        "margin": 4,
+        "thickness": 28,
         "density": "values",
         "backdrop": "solid",
         "groups": {
@@ -228,8 +228,8 @@
         "edge": "bottom",
         "style": "attached",
         "reserve": true,
-        "margin": 8,
-        "thickness": 30,
+        "margin": 6,
+        "thickness": 24,
         "density": "values",
         "backdrop": "solid",
         "groups": {
@@ -325,12 +325,14 @@
       "background": false
     },
     "sizes": {
-      "innerWidth": 32,
+      "innerWidth": 22,
       "windowPreviewSize": 400,
       "trayMenuWidth": 300,
       "batteryWidth": 250,
       "networkWidth": 320,
-      "kbLayoutWidth": 320
+      "kbLayoutWidth": 320,
+      "autoDensity": true,
+      "densityScale": 1
     },
     "excludedScreens": []
   },

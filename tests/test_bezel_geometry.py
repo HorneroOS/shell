@@ -14,10 +14,10 @@ def test_bar_modules_have_no_pill_radius():
 
 def test_floating_bar_surface_uses_normal_radius():
     src = (ROOT / "modules/bar/Bar.qml").read_text(encoding="utf-8")
-    assert "radius: root.floating ? Appearance.rounding.normal : 0" in src
+    assert "radius: root.floating ? Appearance.rounding.small : 0" in src
 
 
 def test_frame_cutout_radius_is_a_bezel_token():
     src = (ROOT / "config/BorderConfig.qml").read_text(encoding="utf-8")
     m = re.search(r"property int rounding: Appearance\.rounding\.(\w+)", src)
-    assert m and m.group(1) in ("small", "normal")
+    assert m and m.group(1) == "small"

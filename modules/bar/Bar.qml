@@ -37,19 +37,20 @@ Item {
     // components instead of letting groups collide. A width breakpoint, not
     // a content measurement, so compacting can never feed back into itself.
     readonly property bool compact: !vertical && width > 0 && width < 1500
-    readonly property int edgePadding: Appearance.padding.large
-    readonly property int barPadding: Math.max(Appearance.padding.smaller, Config.border.thickness)
+    readonly property int edgePadding: Density.segmentPad
+    // The bar body is exactly `spec.thickness` (density-scaled): no extra frame padding.
+    readonly property int barPadding: 0
     // Cross-axis thickness of a pill (excludes the float gap)
-    readonly property int pillThickness: spec.thickness + barPadding * 2
-    readonly property int pillPadding: floating ? Appearance.padding.normal : 0
+    readonly property int pillThickness: Density.thickness(spec.thickness) + barPadding * 2
+    readonly property int pillPadding: floating ? Appearance.padding.small : 0
     readonly property real floatGap: floating ? spec.margin : 0
     // Main-axis inset of strips: inset bars keep the float gap at both ends
     readonly property real stripInset: style === "inset" ? spec.margin : 0
-    readonly property int groupSpacing: Appearance.spacing.large
+    readonly property int groupSpacing: Appearance.spacing.normal
     // Segment anatomy (signal-visual-language §4.1/§4.2): 12 px horizontal
     // padding (8 px vertical in rails), rules inset 8 px from the edges.
-    readonly property int segmentPadding: vertical ? 8 : 12
-    readonly property int segmentInset: 8
+    readonly property int segmentPadding: vertical ? Density.segmentPadRail : Density.segmentPad
+    readonly property int segmentInset: 6
     // Adjacent icon-only entries share one segment with a 12 px gap.
     readonly property var clusterIds: ["quickActions", "statusIcons", "tray", "extensions"]
     // Kept for ActiveWindow compat (main-axis end padding)
@@ -526,7 +527,7 @@ Item {
             visible: !root.clear && (root.floating || !Config.border.frameEnabled)
             anchors.fill: parent
             color: Signal.surface(Signal.layer(Signal.palette.base, 1), "bar")
-            radius: root.floating ? Appearance.rounding.normal : 0
+            radius: root.floating ? Appearance.rounding.small : 0
         }
 
         BarGroup {

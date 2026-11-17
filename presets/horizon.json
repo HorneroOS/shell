@@ -10,7 +10,7 @@
       {
         "edge": "top",
         "style": "inset",
-        "margin": 8,
+        "margin": 4,
         "groups": {
           "start": [
             {
@@ -76,7 +76,7 @@
           ]
         },
         "reserve": true,
-        "thickness": 36,
+        "thickness": 26,
         "density": "values",
         "backdrop": "solid"
       },
@@ -104,12 +104,12 @@
           ]
         },
         "reserve": true,
-        "margin": 8,
+        "margin": 6,
         "density": "values"
       }
     ],
     "sizes": {
-      "innerWidth": 32
+      "innerWidth": 22
     },
     "status": {
       "showAudio": true,

@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import qs.components
 import qs.config
+import qs.services
 import "popouts" as BarPopouts
 import Quickshell
 import QtQuick
@@ -26,12 +27,13 @@ Item {
     readonly property bool clear: spec.backdrop === "clear"
     readonly property bool reserves: spec.reserve
     readonly property int frameInset: frameVisible ? Config.border.thickness : 0
-    readonly property int padding: Math.max(Appearance.padding.smaller, Config.border.thickness)
+    // Body padding is gone: the bar is exactly its density-scaled thickness.
+    readonly property int padding: 0
     // Gap between a floating pill and the screen edge; part of the strip so
     // the reservation and panel insets include it.
     readonly property int gap: floating ? spec.margin : 0
     // Size of the bar across its screen edge (including the float gap)
-    readonly property int thickness: spec.thickness + padding * 2 + gap
+    readonly property int thickness: Density.thickness(spec.thickness) + padding * 2 + gap
     readonly property int contentWidth: thickness // kept for external references
     readonly property int exclusiveZone: reserves && !disabled && (Config.bar.persistent || visibilities.bar) ? thickness : frameInset
     readonly property bool shouldBeVisible: !disabled && (Config.bar.persistent || visibilities.bar || isHovered)

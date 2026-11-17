@@ -80,15 +80,15 @@
           ]
         },
         "reserve": true,
-        "margin": 8,
-        "thickness": 36,
+        "margin": 4,
+        "thickness": 28,
         "density": "values"
       },
       {
         "edge": "bottom",
         "style": "attached",
         "backdrop": "clear",
-        "thickness": 30,
+        "thickness": 24,
         "groups": {
           "start": [
             {
@@ -117,12 +117,12 @@
           ]
         },
         "reserve": true,
-        "margin": 8,
+        "margin": 6,
         "density": "values"
       }
     ],
     "sizes": {
-      "innerWidth": 32
+      "innerWidth": 22
     },
     "status": {
       "showAudio": true,

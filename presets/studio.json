@@ -7,7 +7,7 @@
     "persistent": true,
     "showOnHover": true,
     "sizes": {
-      "innerWidth": 32
+      "innerWidth": 22
     },
     "status": {
       "showAudio": true,
@@ -25,8 +25,8 @@
         "edge": "top",
         "style": "attached",
         "reserve": true,
-        "margin": 8,
-        "thickness": 36,
+        "margin": 6,
+        "thickness": 28,
         "density": "values",
         "backdrop": "solid",
         "groups": {

@@ -38,6 +38,6 @@ Item {
         name: "power"
         color: root.tone.alert
         font.bold: true
-        font.pointSize: Appearance.font.size.normal
+        font.pointSize: Density.iconPt
     }
 }

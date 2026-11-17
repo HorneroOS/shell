@@ -417,6 +417,8 @@ Singleton {
             },
             sizes: {
                 innerWidth: bar.sizes.innerWidth,
+                autoDensity: bar.sizes.autoDensity,
+                densityScale: bar.sizes.densityScale,
                 windowPreviewSize: bar.sizes.windowPreviewSize,
                 trayMenuWidth: bar.sizes.trayMenuWidth,
                 batteryWidth: bar.sizes.batteryWidth,

@@ -56,10 +56,10 @@ StyledRect {
 
     clip: true
     visible: root.surfaceActive && root.count > 0 && (root.vertical ? height > 0 : width > 0)
-    implicitWidth: root.vertical ? Config.bar.sizes.innerWidth : root.nonAnimWidth
-    implicitHeight: root.vertical ? root.nonAnimHeight : Config.bar.sizes.innerWidth
+    implicitWidth: root.vertical ? Density.inner : root.nonAnimWidth
+    implicitHeight: root.vertical ? root.nonAnimHeight : Density.inner
     color: Qt.alpha(Signal.tPalette.panel, (root.chip && root.count > 0) ? Signal.tPalette.panel.a : 0)
-    radius: Appearance.rounding.normal
+    radius: Appearance.rounding.small
 
     Accessible.role: Accessible.Grouping
     Accessible.name: qsTr("Extensions")
@@ -122,11 +122,11 @@ StyledRect {
                 // Recolour mirrors the tray: icons take the secondary tint;
                 // without it the island leaves plugin icon colours alone.
                 iconColour: Config.bar.extensions.recolour ? Signal.palette.cue : "transparent"
-                iconSize: Appearance.font.size.larger
-                textSize: Appearance.font.size.smaller
+                iconSize: Density.iconPt
+                textSize: Density.textPt
                 edge: root.hostEdge
                 compact: root.hostCompact
-                thickness: root.hostThickness > 0 ? root.hostThickness : Config.bar.sizes.innerWidth
+                thickness: root.hostThickness > 0 ? root.hostThickness : Density.inner
                 screenName: root.hostScreenName !== "" ? root.hostScreenName : root.screen.name
             }
         }
@@ -172,11 +172,11 @@ StyledRect {
                 // Recolour mirrors the tray: icons take the secondary tint;
                 // without it the island leaves plugin icon colours alone.
                 iconColour: Config.bar.extensions.recolour ? Signal.palette.cue : "transparent"
-                iconSize: Appearance.font.size.larger
-                textSize: Appearance.font.size.smaller
+                iconSize: Density.iconPt
+                textSize: Density.textPt
                 edge: root.hostEdge
                 compact: root.hostCompact
-                thickness: root.hostThickness > 0 ? root.hostThickness : Config.bar.sizes.innerWidth
+                thickness: root.hostThickness > 0 ? root.hostThickness : Density.inner
                 screenName: root.hostScreenName !== "" ? root.hostScreenName : root.screen.name
             }
         }
@@ -206,7 +206,7 @@ StyledRect {
                 anchors.right: root.vertical ? undefined : parent.right
                 anchors.rightMargin: root.vertical ? 0 : (root.chip ? Appearance.padding.small : -Appearance.padding.small)
                 name: root.vertical ? "chevron-up" : "chevron-right"
-                font.pointSize: Appearance.font.size.large
+                font.pointSize: Density.iconPt
                 rotation: root.expanded ? 180 : 0
 
                 Behavior on rotation {

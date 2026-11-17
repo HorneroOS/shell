@@ -805,6 +805,7 @@
   "plugins": {
     "settings": {},
     "instances": {},
+    "quickTiles": [],
     "desktopWidgetSlots": {},
     "desktopWidgets": {},
     "dashboardLayout": {},

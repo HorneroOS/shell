@@ -18,3 +18,11 @@ python3 scripts/validate_plugin.py examples/plugins/example-commands
 
 The manifest declares no process or network capability. Quickshell code is
 not sandboxed; validation is a review aid, not a security guarantee.
+
+## Tile and panel
+
+`contributes.quickSettings` + `surfaces.quickSetting` (Tile.qml) add a "Quiet
+mode" tile the person can place in the Utilities quick toggles (Control Center
+› Extensions › Details); its state is a `hidden` setting. `contributes.panels`
++ `surfaces.panel` (Panel.qml) add a panel that opens inside the extension's
+row in Control Center › Extensions and is loaded only while open.

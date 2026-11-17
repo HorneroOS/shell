@@ -56,10 +56,10 @@ PLACEMENTS = ("background", "bar", "dashboard", "desktop")
 # › Extensions; "launcher" (search/launcher action) is hosted by
 # PluginLauncherHost into the launcher provider registry, and
 # declaring one grants no privilege.
-SURFACES = PLACEMENTS + ("launcher", "settings", "commands")
+SURFACES = PLACEMENTS + ("launcher", "settings", "commands", "quickSetting", "panel")
 # Surfaces that exist only from PluginKit 4 (RFC 0003): declaring one needs
 # `"pluginKit": 4`.
-SURFACES_V4 = ("commands",)
+SURFACES_V4 = ("commands", "quickSetting", "panel")
 # Dashboard card size classes (shell#378): preferred card width class a
 # dashboard surface may hint; the user's persisted layout wins.
 DASHBOARD_CARD_SIZES = ("compact", "standard", "wide")
@@ -281,78 +281,93 @@ def _validate_surfaces(
 
 # Contributions (RFC 0003 section 4.1): declarative metadata the Shell can
 # list without running extension code. PluginKit 4 defines `commands`
-# (launcher rows, IPC, key bindings); other kinds are rejected until a
-# later level defines them, so an older validator never silently accepts
-# a contribution it cannot host.
-CONTRIBUTION_KINDS = ("commands",)
+# (launcher rows, IPC, key bindings), `quickSettings` (tiles in the quick
+# toggles) and `panels` (Control Center › Extensions panels). Other kinds
+# are rejected until a later level defines them, so an older validator never
+# silently accepts a contribution it cannot host. Each kind needs the
+# surface that implements it, and each such surface needs its kind.
+CONTRIBUTION_SURFACES = {"commands": "commands", "quickSettings": "quickSetting", "panels": "panel"}
+CONTRIBUTION_KINDS = tuple(CONTRIBUTION_SURFACES)
 COMMAND_ID = re.compile(r"^[a-z][a-zA-Z0-9]{0,31}$")
-MAX_COMMANDS = 16
-COMMAND_FIELDS = {"id", "title", "description", "glyph", "keywords"}
+CONTRIBUTION_LIMITS = {"commands": 16, "quickSettings": 4, "panels": 4}
+CONTRIBUTION_FIELDS = {
+    "commands": {"id", "title", "description", "glyph", "keywords"},
+    "quickSettings": {"id", "title", "glyph", "kind"},
+    "panels": {"id", "title", "glyph"},
+}
+TILE_KINDS = ("toggle", "button")
 
 
-def _validate_contributes(manifest: dict, declared_level: int) -> list[dict]:
-    """Validate `contributes`; returns the declared command list."""
+def _validate_contributes(manifest: dict, declared_level: int) -> dict[str, list]:
+    """Validate `contributes`; returns the declared lists by kind."""
     surfaces = manifest.get("surfaces") or {}
-    has_surface = "commands" in surfaces
     if "contributes" not in manifest:
-        if has_surface:
-            raise ValidationError(
-                "surfaces.commands needs contributes.commands: declare the commands "
-                "(id, title) the extension provides so the Shell can list them"
-            )
-        return []
+        for kind, surface in CONTRIBUTION_SURFACES.items():
+            if surface in surfaces:
+                raise ValidationError(
+                    f"surfaces.{surface} needs contributes.{kind}: declare what the "
+                    "extension provides so the Shell can list it"
+                )
+        return {}
     if declared_level < 4:
         raise ValidationError('contributes needs PluginKit 4; declare "pluginKit": 4 in the manifest')
     contributes = _object(manifest["contributes"], "contributes")
     if not contributes:
-        raise ValidationError("contributes must declare at least one contribution kind (remove it or add commands)")
+        raise ValidationError("contributes must declare at least one contribution kind (remove it or add one)")
     unknown = set(contributes) - set(CONTRIBUTION_KINDS)
     if unknown:
         raise ValidationError(
             f"contributes contains unknown kinds: {', '.join(sorted(unknown))} "
             f"(known kinds: {', '.join(CONTRIBUTION_KINDS)})"
         )
-    commands = contributes.get("commands", [])
-    if not isinstance(commands, list) or not commands or len(commands) > MAX_COMMANDS:
-        raise ValidationError(f"contributes.commands must be a list of 1 to {MAX_COMMANDS} commands")
-    seen: set[str] = set()
     glyphs = glyph_names()
-    for index, raw in enumerate(commands):
-        where = f"contributes.commands[{index}]"
-        command = _object(raw, where)
-        extra = set(command) - COMMAND_FIELDS
-        if extra:
+    declared: dict[str, list] = {}
+    for kind, items in contributes.items():
+        limit = CONTRIBUTION_LIMITS[kind]
+        if not isinstance(items, list) or not items or len(items) > limit:
+            raise ValidationError(f"contributes.{kind} must be a list of 1 to {limit} entries")
+        seen: set[str] = set()
+        for index, raw in enumerate(items):
+            where = f"contributes.{kind}[{index}]"
+            entry = _object(raw, where)
+            extra = set(entry) - CONTRIBUTION_FIELDS[kind]
+            if extra:
+                raise ValidationError(
+                    f"{where} contains unknown fields: {', '.join(sorted(extra))} "
+                    f"(allowed: {', '.join(sorted(CONTRIBUTION_FIELDS[kind]))})"
+                )
+            if not {"id", "title"} <= set(entry):
+                raise ValidationError(f"{where} must contain id and title")
+            entry_id = entry["id"]
+            if not isinstance(entry_id, str) or not COMMAND_ID.fullmatch(entry_id):
+                raise ValidationError(f"{where}.id must match {COMMAND_ID.pattern}")
+            if entry_id in seen:
+                raise ValidationError(f"{where}.id duplicates another entry: {entry_id}")
+            seen.add(entry_id)
+            _string(entry["title"], f"{where}.title", 48)
+            if "description" in entry:
+                _string(entry["description"], f"{where}.description", 120)
+            if "glyph" in entry and (not isinstance(entry["glyph"], str) or (glyphs and entry["glyph"] not in glyphs)):
+                raise ValidationError(f"{where}.glyph must be a Hornero Glyph name (assets/fonts/hornero-glyphs.names)")
+            if "kind" in entry and entry["kind"] not in TILE_KINDS:
+                raise ValidationError(f"{where}.kind must be one of: {', '.join(TILE_KINDS)}")
+            if "keywords" in entry:
+                keywords = entry["keywords"]
+                if (
+                    not isinstance(keywords, list) or len(keywords) > 8
+                    or any(not isinstance(k, str) or not k.strip() or len(k) > 24 for k in keywords)
+                    or len(set(keywords)) != len(keywords)
+                ):
+                    raise ValidationError(f"{where}.keywords must be at most 8 unique strings of at most 24 characters")
+        if CONTRIBUTION_SURFACES[kind] not in surfaces:
             raise ValidationError(
-                f"{where} contains unknown fields: {', '.join(sorted(extra))} "
-                "(a command declares id, title and optional description, glyph, keywords)"
+                f"contributes.{kind} needs surfaces.{CONTRIBUTION_SURFACES[kind]}: the entrypoint that implements it"
             )
-        if not {"id", "title"} <= set(command):
-            raise ValidationError(f"{where} must contain id and title")
-        command_id = command["id"]
-        if not isinstance(command_id, str) or not COMMAND_ID.fullmatch(command_id):
-            raise ValidationError(f"{where}.id must match {COMMAND_ID.pattern}")
-        if command_id in seen:
-            raise ValidationError(f"{where}.id duplicates another command: {command_id}")
-        seen.add(command_id)
-        _string(command["title"], f"{where}.title", 48)
-        if "description" in command:
-            _string(command["description"], f"{where}.description", 120)
-        if "glyph" in command and (not isinstance(command["glyph"], str) or (glyphs and command["glyph"] not in glyphs)):
-            raise ValidationError(f"{where}.glyph must be a Hornero Glyph name (assets/fonts/hornero-glyphs.names)")
-        if "keywords" in command:
-            keywords = command["keywords"]
-            if (
-                not isinstance(keywords, list) or len(keywords) > 8
-                or any(not isinstance(k, str) or not k.strip() or len(k) > 24 for k in keywords)
-                or len(set(keywords)) != len(keywords)
-            ):
-                raise ValidationError(f"{where}.keywords must be at most 8 unique strings of at most 24 characters")
-    if not has_surface:
-        raise ValidationError(
-            "contributes.commands needs surfaces.commands: the entrypoint that implements "
-            "`function run(commandId: string, args: string): string`"
-        )
-    return commands
+        declared[kind] = items
+    for kind, surface in CONTRIBUTION_SURFACES.items():
+        if surface in surfaces and kind not in declared:
+            raise ValidationError(f"surfaces.{surface} needs contributes.{kind}")
+    return declared
 
 
 def _unescape_qml_string(raw: str) -> str:
@@ -1275,6 +1290,15 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
     _validate_translation_catalogs(root, translations_declaration, qml_files)
     for entry in theme_templates:
         _check_theme_template(entry["template"], (root / entry["template"]).read_text(encoding="utf-8"))
+
+    tile_surface = (manifest.get("surfaces") or {}).get("quickSetting")
+    if tile_surface:
+        tile_source = (root / tile_surface["entrypoint"]).read_text(encoding="utf-8")
+        if not re.search(r"\bfunction\s+toggle\s*\(", tile_source) or not re.search(r"\bchecked\b", tile_source):
+            raise ValidationError(
+                "surfaces.quickSetting entrypoint must expose `property bool checked` "
+                "and implement `function toggle()` (optional: `property string subtitle`, `property bool busy`)"
+            )
 
     desktop_surface = (manifest.get("surfaces") or {}).get("desktop") or {}
     if desktop_surface.get("instances") is True:

@@ -29,6 +29,11 @@ JsonObject {
     // and namespaces its settings, geometry and anchor like a plugin id.
     property var instances: ({})
     readonly property int maxInstances: 8
+    // Extension quick-setting tiles the person placed in the quick toggles
+    // (RFC 0003 section 4.3): ["<pluginId>:<tileId>"], in display order.
+    // Tiles are off until added here; stale keys are ignored on read.
+    property var quickTiles: []
+    readonly property int maxQuickTiles: 12
     // Safe recovery mode (shell#380): when true, no user extension
     // QML (and no plugin manifest) is loaded at all, so the Control
     // Center Extensions pane stays reachable to disable a broken
@@ -247,6 +252,36 @@ JsonObject {
 
     function instanceKey(pluginId: string, instanceId: string): string {
         return instanceId ? `${pluginId}#${instanceId}` : pluginId;
+    }
+
+    function validTileKey(key: string): bool {
+        return /^[a-z0-9]+(?:-[a-z0-9]+)*:[a-z][a-zA-Z0-9]{0,31}$/.test(key);
+    }
+
+    function quickTilesList(): var {
+        const list = Array.isArray(quickTiles) ? quickTiles : [];
+        const result = [];
+        for (const key of list) {
+            if (typeof key === "string" && validTileKey(key) && !result.includes(key))
+                result.push(key);
+            if (result.length >= maxQuickTiles)
+                break;
+        }
+        return result;
+    }
+
+    function setQuickTile(key: string, placed: bool): bool {
+        if (!validTileKey(key))
+            return false;
+        const current = quickTilesList();
+        const has = current.includes(key);
+        if (placed === has)
+            return true;
+        if (placed && current.length >= maxQuickTiles)
+            return false;
+        quickTiles = placed ? current.concat([key]) : current.filter(k => k !== key);
+        saveRequested();
+        return true;
     }
 
     function instancesSource(): var {

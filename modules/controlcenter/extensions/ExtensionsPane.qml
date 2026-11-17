@@ -46,6 +46,8 @@ Item {
     property string expandedPluginId: ""
     property string settingsPluginId: ""
     property string customSettingsPluginId: ""
+    // Open extension panel ("<pluginId>:<panelId>"), one at a time.
+    property string openPanelKey: ""
 
     // Installed-plugin JSON (horneroctl plugin list --json, verified live)
     // has no category or description field: entries carry id, name,
@@ -956,6 +958,49 @@ Item {
                                 }
                             }
 
+                            // Quick-setting tiles this extension offers (RFC
+                            // 0003 section 4.3): off until the person adds
+                            // them to the Utilities quick toggles.
+                            Repeater {
+                                model: root.expandedPluginId === row.entry.id && row.entry.enabled && row.entry.contributes ? row.entry.contributes.quickSettings : []
+
+                                delegate: RowLayout {
+                                    id: tileRow
+
+                                    required property var modelData
+                                    readonly property string tileKey: `${row.entry.id}:${modelData.id}`
+
+                                    Layout.fillWidth: true
+                                    spacing: Appearance.spacing.small
+
+                                    StyledText {
+                                        Layout.fillWidth: true
+                                        text: qsTr("Quick toggle: %1").arg(tileRow.modelData.title)
+                                        wrapMode: Text.Wrap
+                                    }
+
+                                    StyledSwitch {
+                                        Accessible.name: qsTr("Show %1 in the quick toggles").arg(tileRow.modelData.title)
+                                        checked: Config.plugins.quickTilesList().includes(tileRow.tileKey)
+                                        onToggled: Config.plugins.setQuickTile(tileRow.tileKey, checked)
+                                    }
+                                }
+                            }
+
+                            Repeater {
+                                model: row.entry.enabled && row.entry.contributes ? row.entry.contributes.panels : []
+
+                                delegate: PluginPanelHost {
+                                    required property var modelData
+
+                                    Layout.fillWidth: true
+                                    pluginId: row.entry.id
+                                    panel: modelData
+                                    open: root.openPanelKey === `${row.entry.id}:${modelData.id}`
+                                    visible: open
+                                }
+                            }
+
                             PluginInstancesSection {
                                 id: instancesSection
 
@@ -1023,6 +1068,19 @@ Item {
                                     text: root.settingsPluginId === row.entry.id ? qsTr("Hide settings") : qsTr("Settings")
                                     type: TextButton.Text
                                     onClicked: root.settingsPluginId = root.settingsPluginId === row.entry.id ? "" : row.entry.id
+                                }
+
+                                Repeater {
+                                    model: row.entry.enabled && row.entry.contributes ? row.entry.contributes.panels : []
+
+                                    delegate: TextButton {
+                                        required property var modelData
+                                        readonly property string panelKey: `${row.entry.id}:${modelData.id}`
+
+                                        text: root.openPanelKey === panelKey ? qsTr("Close %1").arg(modelData.title) : modelData.title
+                                        type: TextButton.Text
+                                        onClicked: root.openPanelKey = root.openPanelKey === panelKey ? "" : panelKey
+                                    }
                                 }
 
                                 TextButton {

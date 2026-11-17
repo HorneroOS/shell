@@ -989,7 +989,7 @@ minimum it needs with the optional top-level `"pluginKit"` integer (default
 | Level | Adds |
 | --- | --- |
 | 3 | Signal: Theme, glyphs, surfaces (bar, dashboard, desktop, background, launcher, settings), typed settings (boolean, integer, number, string, enum), data facades |
-| 4 | Command contributions (`contributes.commands`, `surfaces.commands`), settings schema v2 (colour, list, text, path; title, group, unit, step, visibleWhen), Control Center live preview, per-instance desktop widgets (`surfaces.desktop.instances`, `hostInstanceId`, `Settings.instanceId`) |
+| 4 | Contributions (`contributes.commands` / `quickSettings` / `panels` with `surfaces.commands` / `quickSetting` / `panel`), `hidden` settings, `strings` type, `UiScrollArea`, settings schema v2 (colour, list, text, path; title, group, unit, step, visibleWhen), Control Center live preview, per-instance desktop widgets (`surfaces.desktop.instances`, `hostInstanceId`, `Settings.instanceId`) |
 
 `scripts/validate_plugin.py` derives the level a manifest actually needs from
 the features it uses and rejects a package that under-declares; a value above
@@ -1041,6 +1041,43 @@ Each extension's handler has its own Loader: a failure marks that extension
 failed and never the launcher or another extension. Only declared command ids
 run. The handler is in-process QML running as your user, unsandboxed, like
 every other surface. `examples/plugins/example-commands` is a complete example.
+
+## Quick-setting tiles and panels
+
+Two more PluginKit 4 contributions use the same `contributes` declaration
+(RFC 0003 sections 4.3 and 4.4), each with the surface that implements it.
+
+```json
+"contributes": {
+  "quickSettings": [{ "id": "quiet", "title": "Quiet mode", "glyph": "bell", "kind": "toggle" }],
+  "panels": [{ "id": "tags", "title": "Tags", "glyph": "layout-sidebar" }]
+},
+"surfaces": {
+  "quickSetting": { "entrypoint": "Tile.qml" },
+  "panel": { "entrypoint": "Panel.qml" }
+}
+```
+
+- **Quick-setting tile** (`surfaces.quickSetting`, at most 4): an `Item`
+  exposing `property bool checked`, optional `string subtitle` and `bool
+  busy`, and `function toggle()`. The host draws the tile with the same
+  geometry and state layer as the built-in toggles, and supplies its
+  accessible name from the title and subtitle; `kind: "button"` draws no
+  checked state. Tiles are **off by default**: the person adds one in Control
+  Center › Extensions › Details (stored in `plugins.quickTiles`, at most 12),
+  and it appears after the built-in toggles in the Utilities panel. Keep
+  tile state in a `hidden` setting.
+- **Panel** (`surfaces.panel`, at most 4): an `Item` shown inside the
+  extension's row in Control Center › Extensions when the person opens it,
+  loaded only while open. It gets the host context with `hostSurface:
+  "panel"`. A panel cannot navigate or change other panes. A Control Center
+  navigation-rail entry is not offered yet; panels live in the Extensions
+  pane.
+
+Both load asynchronously in their own Loader; a failure marks that extension
+failed and leaves the tile disabled or shows an inline error, never affecting
+the host. Same trust as every surface: in-process QML as your user,
+unsandboxed. `examples/plugins/example-commands` shows both.
 
 ## Manifest: multiple surfaces
 

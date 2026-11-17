@@ -121,3 +121,33 @@ def test_bars_pane_exposes_the_controls():
                    "densityScale", "autoDensity", "rounding.scale", "spacing.scale", "padding.scale",
                    "resetBar", "resetGlobals", "Config.save()", "Accessible.name"):
         assert needle in editor, needle
+
+
+@NODE
+def test_corner_radius_control_accepts_style_default_and_clamps():
+    out = geo(f"""
+const b = {BARS};
+console.log(JSON.stringify([setBarField(b, 0, 'radius', -9)[0].radius, setBarField(b, 0, 'radius', 11)[0].radius, setBarField(b, 0, 'radius', 99)[0].radius]));""")
+    assert out == [-1, 11, 24]
+
+
+def test_cockpit_shape_matches_the_reference_form():
+    """Cockpit: floating-inset rounded top pill, flush square bottom strip.
+    Cockpit Clear: both strips flush with zero background."""
+    cockpit = json.loads((ROOT / "presets/cockpit.json").read_text(encoding="utf-8"))["bar"]["bars"]
+    top, bottom = cockpit
+    assert (top["style"], top["margin"], top["thickness"], top["radius"], top["backdrop"]) == ("inset", 18, 42, 11, "solid")
+    assert (bottom["style"], bottom["margin"], bottom["thickness"], bottom["backdrop"]) == ("attached", 0, 28, "solid")
+    assert "radius" not in bottom
+    clear = json.loads((ROOT / "presets/cockpit-clear.json").read_text(encoding="utf-8"))["bar"]["bars"]
+    assert [(b["style"], b["margin"], b["backdrop"]) for b in clear] == [("attached", 0, "clear")] * 2
+    assert [b["thickness"] for b in clear] == [46, 30]
+    # Same content as before: only the form changed.
+    assert [e["id"] for e in clear[1]["groups"]["start"]] == ["workspaces"]
+    assert clear[1]["groups"]["start"][0]["options"]["style"] == "labels"
+
+
+def test_bar_radius_is_normalised_and_drawn():
+    cfg = (ROOT / "config/BarConfig.qml").read_text(encoding="utf-8")
+    assert "radius: typeof b.radius === \"number\"" in cfg
+    assert "root.spec.radius >= 0" in (ROOT / "modules/bar/Bar.qml").read_text(encoding="utf-8")

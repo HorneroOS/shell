@@ -9,7 +9,7 @@
     "bars": [
       {
         "edge": "top",
-        "style": "inset",
+        "style": "attached",
         "backdrop": "clear",
         "groups": {
           "start": [
@@ -80,15 +80,15 @@
           ]
         },
         "reserve": true,
-        "margin": 6,
-        "thickness": 34,
+        "margin": 0,
+        "thickness": 46,
         "density": "values"
       },
       {
         "edge": "bottom",
-        "style": "inset",
+        "style": "attached",
         "backdrop": "clear",
-        "thickness": 26,
+        "thickness": 30,
         "groups": {
           "start": [
             {
@@ -117,7 +117,7 @@
           ]
         },
         "reserve": true,
-        "margin": 6,
+        "margin": 0,
         "density": "values"
       }
     ],

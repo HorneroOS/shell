@@ -18,16 +18,16 @@ JsonObject {
     // Factory default is the Cockpit layout (presets/cockpit.json): act on
     // top, glance below. Hornero Left/Right remain available as presets.
     property list<var> bars: [{
-        edge: "top", style: "inset", reserve: true, margin: 6,
-        thickness: 34, density: "values", backdrop: "solid",
+        edge: "top", style: "inset", reserve: true, margin: 18, radius: 11,
+        thickness: 42, density: "values", backdrop: "solid",
         groups: {
             start: [{id: "logo", enabled: true}, {id: "quickActions", enabled: true, options: {actions: ["screenshot", "layoutPicker", "settings"]}}, {id: "audioSlider", enabled: true, options: {showValue: true}}, {id: "brightnessSlider", enabled: true, options: {showValue: true}}],
             center: [{id: "clock", enabled: true, options: {showDate: true}}, {id: "weather", enabled: true}],
             end: [{id: "modeIndicator", enabled: true}, {id: "statusIcons", enabled: true}, {id: "tray", enabled: true}, {id: "extensions", enabled: true}, {id: "power", enabled: true}]
         }
     }, {
-        edge: "bottom", style: "inset", reserve: true, margin: 6,
-        thickness: 26, density: "values", backdrop: "solid",
+        edge: "bottom", style: "attached", reserve: true, margin: 0,
+        thickness: 28, density: "values", backdrop: "solid",
         groups: {
             start: [{id: "workspaces", enabled: true}],
             center: [{id: "media", enabled: true}],
@@ -71,6 +71,8 @@ JsonObject {
             reserve: typeof b.reserve === "boolean" ? b.reserve : styleReserves(style),
             margin: typeof b.margin === "number" ? Math.max(0, Math.min(b.margin, 256)) : 6,
             thickness: typeof b.thickness === "number" ? Math.max(20, Math.min(b.thickness, 256)) : sizes.innerWidth,
+            // Slab corner radius in px; -1 keeps the style's own radius.
+            radius: typeof b.radius === "number" ? Math.max(0, Math.min(b.radius, 24)) : -1,
             density: b.density === "glyphs" ? "glyphs" : "values",
             backdrop: barBackdrops.includes(b.backdrop) ? b.backdrop : "solid",
             groups: {

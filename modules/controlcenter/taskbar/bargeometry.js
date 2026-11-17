@@ -2,7 +2,7 @@
 
 // Pure bar geometry editing for the Bars pane (user directive: every
 // debatable size is an end-user control). One bar of `bar.bars` is
-// {edge, style, reserve, margin, thickness, density, backdrop, groups};
+// {edge, style, reserve, margin, thickness, radius, density, backdrop, groups};
 // the global sizes live in `bar.sizes` and `appearance.{rounding,spacing,
 // padding}.scale`. Every function returns a copy, clamps to the same limits
 // config/BarConfig.qml enforces, and never touches groups or options.
@@ -16,6 +16,8 @@ var DENSITIES = ["values", "glyphs"];
 var LIMITS = {
     thickness: { min: 24, max: 96, step: 2, fallback: 34 },
     margin: { min: 0, max: 24, step: 1, fallback: 6 },
+    // -1 keeps the style's own radius (square attached strips, 3 px slabs).
+    radius: { min: -1, max: 24, step: 1, fallback: -1 },
     innerWidth: { min: 22, max: 56, step: 2, fallback: 24 },
     contentScale: { min: 0.75, max: 1.5, step: 0.05, fallback: 1 },
     densityScale: { min: 0.75, max: 1.5, step: 0.05, fallback: 1 },
@@ -58,7 +60,7 @@ function setBarField(bars, index, field, value) {
     if (index < 0 || index >= out.length)
         return out;
     var bar = out[index];
-    if (field === "thickness" || field === "margin") {
+    if (field === "thickness" || field === "margin" || field === "radius") {
         bar[field] = clamp(field, value);
     } else if (field === "style") {
         if (STYLES.indexOf(value) < 0)
@@ -87,7 +89,7 @@ function presetBar(preset, edge) {
     return i < 0 ? null : bars[i];
 }
 
-// Resets thickness, margin, style and density of bar `index` to the
+// Resets thickness, margin, radius, style and density of bar `index` to the
 // preset's bar on that edge (or the factory fallbacks when none).
 function resetBar(bars, index, preset) {
     var out = clone(toArray(bars));
@@ -97,6 +99,7 @@ function resetBar(bars, index, preset) {
     var bar = out[index];
     bar.thickness = ref ? clamp("thickness", ref.thickness) : LIMITS.thickness.fallback;
     bar.margin = ref ? clamp("margin", ref.margin) : LIMITS.margin.fallback;
+    bar.radius = ref && typeof ref.radius === "number" ? clamp("radius", ref.radius) : LIMITS.radius.fallback;
     if (ref && STYLES.indexOf(ref.style) >= 0) {
         bar.style = ref.style;
         bar.reserve = typeof ref.reserve === "boolean" ? ref.reserve : bar.style !== "floating" && bar.style !== "islands";

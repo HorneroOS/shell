@@ -106,8 +106,8 @@ nothing is translucent glass.
 
 | Preset | Edge: style, thickness, margin | Personality |
 | --- | --- | --- |
-| Cockpit | top: inset 34, 6 / bottom: inset 26, 6 | Flagship: act on top, know below, two floating bezels |
-| Cockpit Clear | same geometry, no slab | Same muscle memory, only adaptive ink |
+| Cockpit | top: inset 42, 18, radius 11 / bottom: attached 28, flush | Flagship: a rounded floating pill to act on, a flush square strip to know below |
+| Cockpit Clear | top: attached 46 / bottom: attached 30, both flush, no slab | Same content, no background: only adaptive ink, workspace labels with an underline |
 | Horizon | top: inset 34, 6 / bottom (clear): inset 26, 6 | One instrument line plus a clear workspace line |
 | Classic Top / Bottom | attached 36 (cell 28, content 110 %) | Conventional single bar |
 | Minimal Top | top: attached 34 (cell 26) | Quiet: workspaces, clock, power |
@@ -210,7 +210,7 @@ in `modules/controlcenter/taskbar/barorder.js`.
 ## Bar size, density and the controls
 
 Bars are refined, never fat, but also never cramped. Shipped thickness is
-34 px (Cockpit top), 26 px (the bottom lines), 34 to 36 px for the
+42 px (Cockpit top pill) and 46 px (Cockpit Clear top), 28 and 30 px (their flush bottom strips), 26 px (Horizon's bottom line), 34 to 36 px for the
 horizontal layouts, 32 px for the Gaming overlay and 50 px for the dock.
 The Hornero Left/Right rails are chunky on purpose: 60 px with 44 px cells,
 which is the 56 to 64 px rail of the original Caelestia sidebar, with
@@ -238,6 +238,7 @@ as `config/BarConfig.qml`:
 | --- | --- | --- |
 | Thickness (per bar) | `bar.bars[].thickness` | 24 to 96 px |
 | Gap to screen edge (per bar) | `bar.bars[].margin` | 0 to 24 px |
+| Corner radius (per bar) | `bar.bars[].radius` | 0 to 24 px, -1 (default) keeps the style's own radius |
 | Style (per bar) | `bar.bars[].style` | attached, inset, floating, islands, dock |
 | Edge (per bar) | `bar.bars[].edge` | top, bottom, left, right (one bar per edge) |
 | Density (per bar) | `bar.bars[].density` | values, glyphs |

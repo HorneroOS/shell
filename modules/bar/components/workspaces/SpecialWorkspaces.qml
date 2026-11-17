@@ -188,8 +188,8 @@ Item {
                 id: label
 
                 Layout.alignment: root.vertical ? Qt.AlignHCenter | Qt.AlignTop : Qt.AlignVCenter | Qt.AlignLeft
-                Layout.preferredHeight: root.vertical ? Config.bar.sizes.innerWidth - Appearance.padding.small * 2 : implicitHeight
-                Layout.preferredWidth: root.vertical ? implicitWidth : Config.bar.sizes.innerWidth - Appearance.padding.small * 2
+                Layout.preferredHeight: root.vertical ? Density.inner - Appearance.padding.small * 2 : implicitHeight
+                Layout.preferredWidth: root.vertical ? implicitWidth : Density.inner - Appearance.padding.small * 2
 
                 sourceComponent: ws.icon.length === 1 ? letterComp : iconComp
 
@@ -197,6 +197,7 @@ Item {
                     id: iconComp
 
                     Glyph {
+                        size: Density.iconPt
                         name: ws.icon
                         verticalAlignment: Qt.AlignVCenter
                     }
@@ -206,6 +207,7 @@ Item {
                     id: letterComp
 
                     StyledText {
+                        font.pointSize: Density.textPt
                         text: ws.icon
                         verticalAlignment: Qt.AlignVCenter
                     }
@@ -316,6 +318,7 @@ Item {
                 }
 
                 Glyph {
+                    size: Density.iconPt
                     required property var modelData
 
                     name: Icons.getAppCategoryIcon(modelData.lastIpcObject.class, "terminal")
@@ -359,6 +362,7 @@ Item {
                 }
 
                 Glyph {
+                    size: Density.iconPt
                     required property var modelData
 
                     name: Icons.getAppCategoryIcon(modelData.lastIpcObject.class, "terminal")

@@ -36,7 +36,7 @@ Item {
 
     visible: root.shown
     implicitWidth: root.shown ? layout.implicitWidth + Appearance.padding.small * 2 : 0
-    implicitHeight: root.shown ? Math.max(layout.implicitHeight, Config.bar.sizes.innerWidth - Appearance.padding.small * 2) : 0
+    implicitHeight: root.shown ? Math.max(layout.implicitHeight, Density.inner - Appearance.padding.small * 2) : 0
 
     Accessible.role: Accessible.Button
     Accessible.name: qsTr("Experience mode: %1").arg(Experience.label)
@@ -65,7 +65,7 @@ Item {
         Glyph {
             name: Experience.glyph
             color: root.accent
-            font.pointSize: Appearance.font.size.normal
+            font.pointSize: Density.iconPt
         }
 
         StyledText {
@@ -73,7 +73,7 @@ Item {
             text: root.code
             color: root.accent
             font.family: Appearance.font.family.mono
-            font.pointSize: Appearance.font.size.small
+            font.pointSize: Density.microPt
             font.weight: root.tone.weight > Font.Normal ? root.tone.weight : Font.Medium
             font.letterSpacing: 0.8
         }

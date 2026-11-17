@@ -76,10 +76,12 @@ Item {
             id: indicator
 
             Layout.alignment: root.vertical ? Qt.AlignHCenter | Qt.AlignTop : Qt.AlignVCenter | Qt.AlignLeft
-            Layout.preferredHeight: root.vertical ? Config.bar.sizes.innerWidth - Appearance.padding.small * 2 : implicitHeight
-            Layout.preferredWidth: root.vertical ? implicitWidth : Config.bar.sizes.innerWidth - Appearance.padding.small * 2
+            Layout.preferredHeight: root.vertical ? Density.inner - Appearance.padding.small * 2 : implicitHeight
+            Layout.preferredWidth: root.vertical ? implicitWidth : Density.inner - Appearance.padding.small * 2
 
             animate: true
+            mono: true
+            font.pointSize: Density.textPt
             text: {
                 if (root.niriMode) {
                     const nativeLabel = Compositor.workspaceLabel(root.workspaceData, root.ws);
@@ -120,8 +122,8 @@ Item {
             Layout.alignment: root.vertical ? Qt.AlignHCenter : Qt.AlignVCenter
             Layout.fillHeight: root.vertical
             Layout.fillWidth: !root.vertical
-            Layout.topMargin: root.vertical ? -Config.bar.sizes.innerWidth / 10 : 0
-            Layout.leftMargin: root.vertical ? 0 : -Config.bar.sizes.innerWidth / 10
+            Layout.topMargin: root.vertical ? -Density.inner / 10 : 0
+            Layout.leftMargin: root.vertical ? 0 : -Density.inner / 10
 
             visible: active
             active: root.hasWindows
@@ -161,6 +163,7 @@ Item {
                     }
 
                     Glyph {
+                        size: Density.iconPt
                         required property var modelData
 
                         name: root.iconForWindow(modelData)
@@ -202,6 +205,7 @@ Item {
                     }
 
                     Glyph {
+                        size: Density.iconPt
                         required property var modelData
 
                         name: root.iconForWindow(modelData)

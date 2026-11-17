@@ -11,8 +11,8 @@
       {
         "edge": "bottom",
         "style": "dock",
-        "margin": 12,
-        "thickness": 44,
+        "margin": 6,
+        "thickness": 34,
         "groups": {
           "start": [
             {
@@ -76,7 +76,7 @@
       }
     ],
     "sizes": {
-      "innerWidth": 40
+      "innerWidth": 26
     },
     "status": {
       "showAudio": true,

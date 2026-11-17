@@ -1,4 +1,5 @@
 import qs.components
+import qs.services
 import qs.config
 import Quickshell
 import QtQuick
@@ -51,7 +52,7 @@ Item {
 
                 iconSource: Quickshell.iconPath(modelData.icon, "application-x-executable")
                 label: modelData.name
-                iconSize: Appearance.font.size.normal
+                iconSize: Density.iconPt
                 onActivated: modelData.execute()
             }
         }

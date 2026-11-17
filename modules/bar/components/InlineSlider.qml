@@ -35,6 +35,7 @@ RowLayout {
     implicitHeight: Math.max(icon.implicitHeight, slider.implicitHeight)
 
     Glyph {
+        size: Density.iconPt
         id: icon
 
         Layout.alignment: Qt.AlignVCenter
@@ -61,7 +62,7 @@ RowLayout {
 
         Layout.alignment: Qt.AlignVCenter
         implicitWidth: root.compact ? 64 : 110
-        implicitHeight: Appearance.font.size.normal * 1.6
+        implicitHeight: Density.iconPx * 1.2
         from: 0
         to: 1
         value: root.isAudio ? Audio.volume : (root.monitor?.brightness ?? 0)
@@ -111,7 +112,7 @@ RowLayout {
         visible: root.showValue
         horizontalAlignment: Text.AlignLeft
         text: `${Math.round(slider.value * 100)}%`
-        font.pointSize: Appearance.font.size.smaller
+        font.pointSize: Density.textPt
         font.family: Appearance.font.family.mono
         color: root.tone.inkMuted
 

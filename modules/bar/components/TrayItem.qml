@@ -16,8 +16,8 @@ MouseArea {
     Accessible.name: root.modelData.title || root.modelData.id
 
     acceptedButtons: Qt.LeftButton | Qt.RightButton
-    implicitWidth: Appearance.font.size.small * 2
-    implicitHeight: Appearance.font.size.small * 2
+    implicitWidth: Density.iconPx + 4
+    implicitHeight: Density.iconPx + 4
 
     onClicked: event => {
         if (event.button === Qt.LeftButton)

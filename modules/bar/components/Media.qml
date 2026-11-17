@@ -42,7 +42,7 @@ Item {
             visible: !root.vertical && (root.player?.canGoPrevious ?? false)
             icon: "player-skip-back"
             label: qsTr("Previous track")
-            iconSize: Appearance.font.size.normal
+            iconSize: Density.iconPt
             onActivated: root.player?.previous()
         }
 
@@ -58,7 +58,7 @@ Item {
             visible: !root.vertical && (root.player?.canGoNext ?? false)
             icon: "player-skip-forward"
             label: qsTr("Next track")
-            iconSize: Appearance.font.size.normal
+            iconSize: Density.iconPt
             onActivated: root.player?.next()
         }
 
@@ -69,7 +69,7 @@ Item {
             text: root.title
             elide: Text.ElideRight
             color: root.tone.inkMuted
-            font.pointSize: Appearance.font.size.smaller
+            font.pointSize: Density.textPt
         }
     }
 }

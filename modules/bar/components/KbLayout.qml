@@ -30,14 +30,14 @@ Item {
             Layout.alignment: Qt.AlignCenter
             name: "keyboard"
             color: root.tone.inkMuted
-            font.pointSize: Appearance.font.size.normal
+            font.pointSize: Density.iconPt
         }
 
         StyledText {
             Layout.alignment: Qt.AlignCenter
             text: Compositor.keyboardLayoutShort
             color: root.tone.ink
-            font.pointSize: Appearance.font.size.smaller
+            font.pointSize: Density.textPt
             font.capitalization: Font.AllUppercase
         }
     }

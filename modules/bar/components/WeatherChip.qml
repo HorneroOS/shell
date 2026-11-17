@@ -33,7 +33,7 @@ Item {
             Layout.alignment: Qt.AlignCenter
             name: Weather.icon
             color: Signal.palette.cue
-            font.pointSize: Appearance.font.size.normal
+            font.pointSize: Density.iconPt
         }
 
         StyledText {
@@ -41,7 +41,7 @@ Item {
             visible: root.density === "values" || root.vertical
             text: Weather.temp
             color: root.tone.ink
-            font.pointSize: Appearance.font.size.smaller
+            font.pointSize: Density.textPt
         }
     }
 }

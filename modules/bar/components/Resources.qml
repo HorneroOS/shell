@@ -113,7 +113,7 @@ Item {
                     visible: !root.showText
                     name: metric.modelData.icon
                     color: metric.critical ? root.tone.alert : metric.warning ? root.tone.signal : root.tone.inkMuted
-                    font.pointSize: Appearance.font.size.normal
+                    font.pointSize: Density.iconPt
                 }
 
                 StyledText {
@@ -121,7 +121,7 @@ Item {
                     mono: true
                     text: metric.modelData.label
                     color: root.tone.inkMuted
-                    font.pointSize: Appearance.font.size.small
+                    font.pointSize: Density.microPt
                     font.capitalization: Font.AllUppercase
                     font.letterSpacing: 0.88
                 }
@@ -149,7 +149,7 @@ Item {
                     mono: true
                     text: metric.modelData.text
                     color: metric.critical ? root.tone.alert : root.tone.ink
-                    font.pointSize: Appearance.font.size.smaller
+                    font.pointSize: Density.textPt
                     font.features: {
                         "tnum": 1
                     }
@@ -160,7 +160,7 @@ Item {
 
                         text: "100%"
                         font.family: Appearance.font.family.mono
-                        font.pointSize: Appearance.font.size.smaller
+                        font.pointSize: Density.textPt
                     }
                 }
             }

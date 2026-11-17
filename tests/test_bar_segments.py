@@ -9,8 +9,8 @@ MODE = (ROOT / "modules" / "bar" / "components" / "ModeIndicator.qml").read_text
 
 
 def test_segment_padding_and_rule_inset_follow_the_spec():
-    assert "segmentPadding: vertical ? 8 : 12" in BAR
-    assert "segmentInset: 8" in BAR
+    assert "segmentPadding: vertical ? Density.segmentPadRail : Density.segmentPad" in BAR
+    assert "segmentInset: 6" in BAR
     # Groups carry no spacing of their own: segments own their padding.
     assert BAR.count("rowSpacing: 0") >= 1 and "columnSpacing: 0" in BAR
     assert "Layout.leftMargin: root.vertical ? 0 : wrapped.leadPad" in BAR

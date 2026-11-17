@@ -39,7 +39,7 @@ Item {
             Layout.alignment: Qt.AlignCenter
             name: root.charging ? "battery-charging" : root.percent > 80 ? "battery-4" : root.percent > 50 ? "battery-3" : root.percent > 20 ? "battery-2" : "battery-exclamation"
             color: root.low ? root.tone.alert : root.tone.inkMuted
-            font.pointSize: Appearance.font.size.normal
+            font.pointSize: Density.iconPt
         }
 
         StyledText {
@@ -47,7 +47,7 @@ Item {
             visible: root.density === "values" && !root.vertical
             text: `${Math.round(root.percent)}%`
             color: root.low ? root.tone.alert : root.tone.ink
-            font.pointSize: Appearance.font.size.smaller
+            font.pointSize: Density.textPt
         }
     }
 }

@@ -10,7 +10,7 @@
       {
         "edge": "top",
         "style": "floating",
-        "margin": 14,
+        "margin": 6,
         "groups": {
           "start": [
             {
@@ -59,13 +59,13 @@
           ]
         },
         "reserve": true,
-        "thickness": 36,
+        "thickness": 26,
         "density": "values",
         "backdrop": "solid"
       }
     ],
     "sizes": {
-      "innerWidth": 32
+      "innerWidth": 22
     },
     "status": {
       "showNetwork": true,

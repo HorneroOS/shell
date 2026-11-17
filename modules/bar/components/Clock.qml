@@ -33,7 +33,7 @@ Item {
         anchors.fill: parent
         anchors.margins: -Appearance.padding.normal
         color: Signal.tPalette.panel
-        radius: Appearance.rounding.normal
+        radius: Appearance.rounding.small
     }
 
     GridLayout {
@@ -54,6 +54,7 @@ Item {
             visible: active
 
             sourceComponent: Glyph {
+                size: Density.iconPt
                 name: "calendar-month"
                 color: root.colour
             }
@@ -72,7 +73,7 @@ Item {
                 id: hourMetrics
 
                 text: "00"
-                font.pointSize: Appearance.font.size.large
+                font.pointSize: Density.clockPt
                 font.family: Appearance.font.family.display
                 font.weight: Font.Medium
                 font.features: {
@@ -84,7 +85,7 @@ Item {
                 Layout.alignment: Qt.AlignVCenter
 
                 text: Time.hourStr
-                font.pointSize: Appearance.font.size.large
+                font.pointSize: Density.clockPt
                 font.family: Appearance.font.family.display
                 font.weight: Font.Medium
                 font.features: {
@@ -97,7 +98,7 @@ Item {
 
             StyledText {
                 text: ":"
-                font.pointSize: Appearance.font.size.large
+                font.pointSize: Density.clockPt
                 font.family: Appearance.font.family.display
                 font.weight: Font.Medium
                 color: root.colour
@@ -107,7 +108,7 @@ Item {
                 Layout.alignment: Qt.AlignVCenter
 
                 text: Time.minuteStr
-                font.pointSize: Appearance.font.size.large
+                font.pointSize: Density.clockPt
                 font.family: Appearance.font.family.display
                 font.weight: Font.Medium
                 font.features: {
@@ -122,7 +123,7 @@ Item {
                 Layout.leftMargin: Appearance.spacing.small / 2
                 visible: Config.services.useTwelveHourClock
                 text: Time.amPmStr
-                font.pointSize: Appearance.font.size.smaller
+                font.pointSize: Density.textPt
                 font.family: Appearance.font.family.mono
                 color: root.tone.inkMuted
             }
@@ -136,7 +137,7 @@ Item {
             visible: root.showDate && !root.vertical
 
             text: Time.format("ddd d MMM").toUpperCase()
-            font.pointSize: Appearance.font.size.smaller
+            font.pointSize: Density.textPt
             font.family: Appearance.font.family.mono
             color: root.tone.inkMuted
         }
@@ -151,29 +152,27 @@ Item {
             StyledText {
                 Layout.alignment: Qt.AlignHCenter
                 text: Time.hourStr
-                font.pointSize: Appearance.font.size.smaller
+                font.pointSize: Density.textPt
                 font.family: Appearance.font.family.mono
                 color: root.colour
             }
 
-            RowLayout {
+            StyledText {
                 Layout.alignment: Qt.AlignHCenter
-                spacing: Appearance.spacing.small / 2
+                text: Time.minuteStr
+                font.pointSize: Density.textPt
+                font.family: Appearance.font.family.mono
+                color: root.colour
+            }
 
-                StyledText {
-                    text: Time.minuteStr
-                    font.pointSize: Appearance.font.size.smaller
-                    font.family: Appearance.font.family.mono
-                    color: root.colour
-                }
-
-                StyledText {
-                    visible: Config.services.useTwelveHourClock && Time.amPmStr !== ""
-                    text: Time.amPmStr
-                    font.pointSize: Appearance.font.size.small
-                    font.family: Appearance.font.family.sans
-                    color: root.tone.inkMuted
-                }
+            // Stacked under the minutes: a rail is too narrow for "14 AM".
+            StyledText {
+                Layout.alignment: Qt.AlignHCenter
+                visible: Config.services.useTwelveHourClock && Time.amPmStr !== ""
+                text: Time.amPmStr
+                font.pointSize: Density.microPt
+                font.family: Appearance.font.family.mono
+                color: root.tone.inkMuted
             }
         }
 
@@ -183,9 +182,9 @@ Item {
             vertical: root.vertical
             section: "clock"
             iconColour: root.colour
-            iconSize: Appearance.font.size.normal
-            textSize: Appearance.font.size.smaller
-            thickness: Config.bar.sizes.innerWidth
+            iconSize: Density.iconPt
+            textSize: Density.textPt
+            thickness: Density.inner
             screenName: root.screen.name
         }
     }

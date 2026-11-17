@@ -1,0 +1,3 @@
+# Thin bars: offscreen evidence
+
+Offscreen Qt render of the real `Bar` for every shipped preset (1080 logical height) and, for Cockpit and Hornero Left, at logical heights 720, 768 and 960 (1366x768 and 1280x720 at scale 1; 2560x1440 at 1.5 gives 960; 3840x2160 at 2 and 1920x1080 give 1080). The density factor is fed the logical height through `Density.screenHeight` in the harness copy. `before-cockpit-1080` is the bar as merged in #517/#518 (52 px top, 44 px bottom). Stand-in gradient wallpaper; popouts and the frame are not drawn; Cockpit Clear renders blank offscreen (ink sampling). Not a QA-VM or host capture.

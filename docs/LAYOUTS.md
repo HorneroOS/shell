@@ -11,8 +11,8 @@ schema.
 {
   "edge": "top",
   "style": "inset",
-  "margin": 8,
-  "thickness": 40,
+  "margin": 4,
+  "thickness": 28,
   "reserve": true,
   "density": "values",
   "backdrop": "solid",
@@ -31,8 +31,8 @@ bar is ignored. Per-screen bar sets override the global set when present.
 | Field | Values | Default |
 | --- | --- | --- |
 | `style` | `attached`, `inset`, `floating`, `islands`, `dock` | `attached` |
-| `margin` | 0–256 px | 8 |
-| `thickness` | 16–256 px | `bar.sizes.innerWidth` |
+| `margin` | 0–256 px | 6 |
+| `thickness` | 20–256 px (the whole bar body; density-scaled) | `bar.sizes.innerWidth` |
 | `reserve` | boolean | true for strips and docks, false for floating styles |
 | `density` | `values`, `glyphs` | `values` |
 | `backdrop` | `solid`, `clear` | `solid` |
@@ -81,8 +81,8 @@ settings, and screenshot. Unknown actions are skipped with a warning.
 
 The installed catalogue contains 14 presets (Signal Bezel audit,
 signal-visual-language §14). It includes Hornero Left/Right (inspired by
-Caelestia's layout, preserved with attribution), Cockpit (36 px inset top
-rail, 30 px attached bottom strip) and Cockpit Clear (same anatomy, no bar
+Caelestia's layout, preserved with attribution), Cockpit (28 px inset top
+rail, 24 px attached bottom strip) and Cockpit Clear (same anatomy, no bar
 backdrop at all — adaptive per-region ink only), Horizon, Islands, Minimal
 Float (formerly Cozy Minimal), Dock Bottom, Classic Top/Bottom, Minimal
 Top/Left, Studio, and Gaming. **Cockpit is the factory default**
@@ -104,11 +104,11 @@ read-only and are never changed.
 
 ## Segments and the mode indicator
 
-Bar entries are **segments** (signal-visual-language §4.1): 12 px horizontal
-padding (8 px vertical in left/right rails), no spacing in the group, and a
-1 px `rule` between segments inset 8 px from the bar edges (20 px tall in a
-36 px rail). Adjacent icon-only entries (`quickActions`, `statusIcons`,
-`tray`, `extensions`) form one segment with a 12 px gap and no rule.
+Bar entries are **segments** (signal-visual-language §4.1): 10 px horizontal
+padding (6 px vertical in left/right rails), no spacing in the group, and a
+1 px `rule` between segments inset 6 px from the bar edges (16 px tall in a
+28 px rail). Adjacent icon-only entries (`quickActions`, `statusIcons`,
+`tray`, `extensions`) form one segment with a 10 px gap and no rule.
 Cockpit Clear draws no rules.
 
 `modeIndicator` is a compact experience-mode indicator (shell#478): the
@@ -165,3 +165,20 @@ added at the end of the bar. Per-entry `options` and unknown fields are kept,
 so the result is still a valid preset-shaped bar set. Choosing another layout
 replaces the order with that layout's, exactly as before. The pure logic lives
 in `modules/controlcenter/taskbar/barorder.js`.
+
+## Thin bars and density
+
+Bars are thin by design: shipped thickness is 28 px (Cockpit top, Classic,
+Studio), 26 px (Horizon, Minimal, Islands, Minimal Float), 24 px (strips,
+Gaming) and 32 px for the Hornero Left/Right rails (30 px for Minimal Left),
+with 3 px maximum corner radius and 1 px hairlines. `thickness` is the whole
+bar body: there is no extra frame padding around it.
+
+`services/Density.qml` derives one density factor from the screen's logical
+height (physical height divided by the compositor scale: 1280x720 is 0.86,
+1366x768 is 0.89, 2560x1440 at 1.5 and 1920x1080 are 0.96 and 1.0, 3840x2160
+at 2 is 1.0) and scales bar thickness, `bar.sizes.innerWidth`, segment
+padding, icons (14 to 16 px), text (11 to 12 px) and the clock. Text never goes
+below 11 px, bars never below 24 px (the full bar height is every segment's hit
+target). Tune it with `bar.sizes.autoDensity` (default true) and
+`bar.sizes.densityScale` (0.75 to 1.5).

@@ -23,10 +23,10 @@ Item {
     ColouredIcon {
         anchors.centerIn: parent
         source: SysInfo.osLogo
-        implicitSize: Appearance.font.size.large * 1.2
+        implicitSize: Density.iconPx + 2
         colour: Signal.palette.phosphor
     }
 
-    implicitWidth: Appearance.font.size.large * 1.2
-    implicitHeight: Appearance.font.size.large * 1.2
+    implicitWidth: Density.iconPx + 2
+    implicitHeight: Density.iconPx + 2
 }

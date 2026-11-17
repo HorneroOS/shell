@@ -215,11 +215,11 @@ def test_factory_values_match_code_defaults():
         # (presets/cockpit.json): top rail to act, bottom strip to know.
         ("bar.bars.0.edge", "top"),
         ("bar.bars.0.style", "inset"),
-        ("bar.bars.0.margin", 6),
-        ("bar.bars.0.thickness", 36),
+        ("bar.bars.0.margin", 4),
+        ("bar.bars.0.thickness", 28),
         ("bar.bars.1.edge", "bottom"),
         ("bar.bars.1.style", "attached"),
-        ("bar.bars.1.thickness", 30),
+        ("bar.bars.1.thickness", 24),
         ("bar.bars.1.groups.start.0.id", "workspaces"),
         ("bar.workspaces.shown", 5),
         ("bar.workspaces.maxWindowIcons", 5),
@@ -233,7 +233,7 @@ def test_factory_values_match_code_defaults():
         ("bar.status.showNetwork", True),
         ("bar.status.showAudio", True),
         ("bar.status.showBattery", False),
-        ("bar.sizes.innerWidth", 32),
+        ("bar.sizes.innerWidth", 22),
         ("bar.bars.0.groups.start.0.id", "logo"),
         ("bar.bars.0.groups.center.0.id", "clock"),
         # Cockpit top-rail end order (presets/cockpit.json).

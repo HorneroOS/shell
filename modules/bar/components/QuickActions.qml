@@ -46,7 +46,7 @@ Item {
                 icon: ShellActions.known[modelData].icon
                 label: ShellActions.known[modelData].label
                 colour: root.tone.inkMuted
-                iconSize: Appearance.font.size.normal
+                iconSize: Density.iconPt
                 onActivated: ShellActions.run(modelData)
             }
         }
@@ -57,9 +57,9 @@ Item {
             vertical: root.vertical
             section: "actions"
             iconColour: root.tone.inkMuted
-            iconSize: Appearance.font.size.normal
-            textSize: Appearance.font.size.smaller
-            thickness: Config.bar.sizes.innerWidth
+            iconSize: Density.iconPt
+            textSize: Density.textPt
+            thickness: Density.inner
             screenName: ""
         }
     }

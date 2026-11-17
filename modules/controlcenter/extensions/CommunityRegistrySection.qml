@@ -129,7 +129,7 @@ Item {
             Layout.fillWidth: true
             text: qsTr("An index signature identifies who published the list. It does not mean HorneroOS reviewed the code or that the code is safe. Community QML runs with your user privileges and has no sandbox.")
             font.pointSize: Appearance.font.size.small
-            color: Signal.palette.ruleStrong
+            color: Signal.palette.inkMuted
             wrapMode: Text.Wrap
         }
 
@@ -137,7 +137,7 @@ Item {
             Layout.fillWidth: true
             text: qsTr("Read-only for now. Community install, update, and rollback are unavailable until horneroctl preserves the verified revision and payload hash through those actions.")
             font.pointSize: Appearance.font.size.small
-            color: Signal.palette.ruleStrong
+            color: Signal.palette.inkMuted
             wrapMode: Text.Wrap
         }
 
@@ -146,7 +146,7 @@ Item {
             visible: root.indexVersion.length > 0
             text: qsTr("Verified index v%1 · source snapshot %2").arg(root.indexVersion).arg(root.generatedFrom || qsTr("not recorded"))
             font.pointSize: Appearance.font.size.small
-            color: Signal.palette.ruleStrong
+            color: Signal.palette.inkMuted
             wrapMode: Text.Wrap
         }
 
@@ -179,7 +179,7 @@ Item {
             visible: root.indexVersion.length > 0 && root.entries.length === 0
             text: qsTr("The verified community index has no entries.")
             font.pointSize: Appearance.font.size.small
-            color: Signal.palette.ruleStrong
+            color: Signal.palette.inkMuted
             wrapMode: Text.Wrap
         }
 
@@ -188,7 +188,7 @@ Item {
             visible: root.entries.length > 0 && root.filteredEntries().length === 0
             text: qsTr("No verified community entries match this search.")
             font.pointSize: Appearance.font.size.small
-            color: Signal.palette.ruleStrong
+            color: Signal.palette.inkMuted
             wrapMode: Text.Wrap
         }
 
@@ -221,7 +221,7 @@ Item {
                         Layout.fillWidth: true
                         text: qsTr("Source: %1").arg(communityRow.modelData.repository)
                         font.pointSize: Appearance.font.size.small
-                        color: Signal.palette.ruleStrong
+                        color: Signal.palette.inkMuted
                         wrapMode: Text.Wrap
                     }
 
@@ -230,7 +230,7 @@ Item {
                         visible: root.marketplaceText(communityRow.modelData).length > 0
                         text: root.marketplaceText(communityRow.modelData)
                         font.pointSize: Appearance.font.size.small
-                        color: Signal.palette.ruleStrong
+                        color: Signal.palette.inkMuted
                         wrapMode: Text.Wrap
                     }
 
@@ -241,7 +241,7 @@ Item {
                             .arg(communityRow.modelData.sha256)
                             .arg(communityRow.modelData.authorKeyFingerprint)
                         font.pointSize: Appearance.font.size.smaller
-                        color: Signal.palette.ruleStrong
+                        color: Signal.palette.inkMuted
                         wrapMode: Text.Wrap
                     }
                 }

@@ -31,7 +31,7 @@ ColumnLayout {
         visible: !root.session.bt.hasAdapter
         wrapMode: Text.WordWrap
         text: qsTr("No Bluetooth adapter found. The Bluetooth service may be stopped, or this machine has no Bluetooth hardware.")
-        color: Signal.palette.ruleStrong
+        color: Signal.palette.inkMuted
     }
 
     StyledText {
@@ -51,7 +51,7 @@ ColumnLayout {
 
     StyledText {
         text: qsTr("General adapter settings")
-        color: Signal.palette.ruleStrong
+        color: Signal.palette.inkMuted
     }
 
     StyledRect {
@@ -112,7 +112,7 @@ ColumnLayout {
 
     StyledText {
         text: qsTr("Per-adapter settings")
-        color: Signal.palette.ruleStrong
+        color: Signal.palette.inkMuted
     }
 
     StyledRect {
@@ -348,7 +348,7 @@ ColumnLayout {
                         anchors.left: parent.left
 
                         text: qsTr("Rename adapter")
-                        color: Signal.palette.ruleStrong
+                        color: Signal.palette.inkMuted
                         font.pointSize: Appearance.font.size.small
                     }
 
@@ -480,7 +480,7 @@ ColumnLayout {
 
     StyledText {
         text: qsTr("Information about the current adapter")
-        color: Signal.palette.ruleStrong
+        color: Signal.palette.inkMuted
     }
 
     StyledRect {
@@ -506,7 +506,7 @@ ColumnLayout {
 
             StyledText {
                 text: root.session.bt.currentAdapter ? BluetoothAdapterState.toString(root.session.bt.currentAdapter.state) : qsTr("Unknown")
-                color: Signal.palette.ruleStrong
+                color: Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.small
             }
 
@@ -517,7 +517,7 @@ ColumnLayout {
 
             StyledText {
                 text: root.session.bt.currentAdapter?.dbusPath ?? ""
-                color: Signal.palette.ruleStrong
+                color: Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.small
             }
 
@@ -528,7 +528,7 @@ ColumnLayout {
 
             StyledText {
                 text: root.session.bt.currentAdapter?.adapterId ?? ""
-                color: Signal.palette.ruleStrong
+                color: Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.small
             }
         }

@@ -122,7 +122,7 @@ Item {
             StyledText {
                 Layout.alignment: Qt.AlignHCenter
                 text: root.network ? qsTr("Network: %1").arg(root.network.ssid) : ""
-                color: Signal.palette.ruleStrong
+                color: Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.small
             }
 
@@ -249,7 +249,7 @@ Item {
                     id: placeholder
                     anchors.centerIn: parent
                     text: qsTr("Password")
-                    color: Signal.palette.ruleStrong
+                    color: Signal.palette.inkMuted
                     font.pointSize: Appearance.font.size.normal
                     font.family: Appearance.font.family.mono
                     opacity: passwordContainer.passwordBuffer ? 0 : 1

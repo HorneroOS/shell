@@ -66,7 +66,7 @@ StyledFlickable {
 
                         StyledText {
                             text: qsTr("Connection settings for this device")
-                            color: Signal.palette.ruleStrong
+                            color: Signal.palette.inkMuted
                         }
 
                         StyledText {
@@ -138,7 +138,7 @@ StyledFlickable {
 
                         StyledText {
                             text: qsTr("Additional settings")
-                            color: Signal.palette.ruleStrong
+                            color: Signal.palette.inkMuted
                         }
 
                         StyledRect {
@@ -202,7 +202,7 @@ StyledFlickable {
                                             anchors.left: parent.left
 
                                             text: qsTr("Device name")
-                                            color: Signal.palette.ruleStrong
+                                            color: Signal.palette.inkMuted
                                             font.pointSize: Appearance.font.size.small
                                         }
 
@@ -351,7 +351,7 @@ StyledFlickable {
 
                         StyledText {
                             text: qsTr("Information about this device")
-                            color: Signal.palette.ruleStrong
+                            color: Signal.palette.inkMuted
                         }
 
                         StyledRect {
@@ -408,7 +408,7 @@ StyledFlickable {
 
                                 StyledText {
                                     text: root.device?.dbusPath ?? ""
-                                    color: Signal.palette.ruleStrong
+                                    color: Signal.palette.inkMuted
                                     font.pointSize: Appearance.font.size.small
                                 }
 
@@ -419,7 +419,7 @@ StyledFlickable {
 
                                 StyledText {
                                     text: root.device?.address ?? ""
-                                    color: Signal.palette.ruleStrong
+                                    color: Signal.palette.inkMuted
                                     font.pointSize: Appearance.font.size.small
                                 }
 
@@ -430,7 +430,7 @@ StyledFlickable {
 
                                 StyledText {
                                     text: root.device?.bonded ? qsTr("Yes") : qsTr("No")
-                                    color: Signal.palette.ruleStrong
+                                    color: Signal.palette.inkMuted
                                     font.pointSize: Appearance.font.size.small
                                 }
 
@@ -441,7 +441,7 @@ StyledFlickable {
 
                                 StyledText {
                                     text: root.device?.deviceName ?? ""
-                                    color: Signal.palette.ruleStrong
+                                    color: Signal.palette.inkMuted
                                     font.pointSize: Appearance.font.size.small
                                 }
                             }

@@ -238,7 +238,7 @@ StyledRect {
             Layout.fillWidth: true
             text: qsTr("Not run yet.")
             font.pointSize: Appearance.font.size.small
-            color: Signal.palette.ruleStrong
+            color: Signal.palette.inkMuted
         }
     }
 }

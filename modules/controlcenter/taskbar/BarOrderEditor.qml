@@ -166,7 +166,7 @@ ColumnLayout {
                     StyledText {
                         visible: groupCard.entries.length === 0
                         text: qsTr("Empty")
-                        color: Signal.palette.ruleStrong
+                        color: Signal.palette.inkMuted
                         font.pointSize: Appearance.font.size.small
                     }
 

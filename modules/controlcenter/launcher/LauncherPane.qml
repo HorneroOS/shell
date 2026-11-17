@@ -195,7 +195,7 @@ Item {
 
                 StyledText {
                     text: qsTr("All applications available in the launcher")
-                    color: Signal.palette.ruleStrong
+                    color: Signal.palette.inkMuted
                 }
 
                 StyledRect {

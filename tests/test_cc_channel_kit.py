@@ -49,3 +49,32 @@ def test_displays_readouts_come_from_screens_and_hypr_not_guesses():
     assert "Quickshell.screens.map" in src and "Hypr.monitorFor(s)" in src
     assert "NaN" in src and "isNaN(outputRow.modelData.hz)" in src
     assert "brightnessAvailable" in src
+
+
+def test_row_kit_is_framed_not_tonal_and_text_never_uses_rule_strong():
+    section = _src(ROOT / "components/SectionContainer.qml")
+    assert 'color: "transparent"' in section and "border.color: Signal.palette.rule" in section
+    for rel in ("components/controls/SwitchRow.qml", "components/controls/SpinBoxRow.qml",
+                "components/controls/SplitButtonRow.qml", "modules/controlcenter/components/CtlCard.qml",
+                "modules/controlcenter/components/ConnectedButtonGroup.qml"):
+        assert "Signal.layer(Signal.palette.panel" not in _src(ROOT / rel), rel
+    for path in CC.rglob("*.qml"):
+        if path.name == "AppearancePreviewPane.qml":
+            continue
+        assert "\n            color: Signal.palette.ruleStrong\n" not in _src(path) or "Glyph" in _src(path), path
+
+
+def test_property_row_prints_unavailable_for_missing_values():
+    row = _src(ROOT / "components/PropertyRow.qml")
+    assert 'qsTr("unavailable")' in row and "mono: true" in row
+    for path in (CC / "network").glob("*.qml"):
+        assert 'qsTr("N/A")' not in _src(path), path
+
+
+def test_power_and_system_use_channel_panels_and_meters():
+    assert _src(CC / "power/PowerPane.qml").count("ChannelPanel {") == 2
+    system = _src(CC / "system/SystemPane.qml")
+    assert "SegmentMeter {" in system and "ChannelPanel {" in system
+    assert "Signal.palette.lifted" not in system  # no filled progress track
+    updates = _src(CC / "updates/UpdatesPane.qml")
+    assert "ChannelPanel {" in updates and 'qsTr("Dependencies & recovery")' in updates

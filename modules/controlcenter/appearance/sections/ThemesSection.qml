@@ -362,7 +362,7 @@ CollapsibleSection {
                                             anchors.horizontalCenter: parent.horizontalCenter
                                             name: wallpaperThumb.loading ? "wallpaper" : "photo-off"
                                             font.pointSize: Appearance.font.size.small
-                                            color: Signal.palette.ruleStrong
+                                            color: Signal.palette.inkMuted
                                         }
 
                                         StyledText {

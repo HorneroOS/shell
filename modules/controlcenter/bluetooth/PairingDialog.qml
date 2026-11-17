@@ -77,7 +77,7 @@ Item {
                 horizontalAlignment: Text.AlignHCenter
                 wrapMode: Text.WordWrap
                 text: root.session.bt.pairingDeviceAddress ? qsTr("Device: %1 (%2)").arg(root.session.bt.pairingDeviceName).arg(root.session.bt.pairingDeviceAddress) : qsTr("Device: %1").arg(root.session.bt.pairingDeviceName)
-                color: Signal.palette.ruleStrong
+                color: Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.small
             }
 
@@ -96,7 +96,7 @@ Item {
                 wrapMode: Text.WordWrap
                 visible: root.session.bt.pairingKind === "confirmation"
                 text: qsTr("Only confirm if this code matches the code shown on the other device.")
-                color: Signal.palette.ruleStrong
+                color: Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.small
             }
 

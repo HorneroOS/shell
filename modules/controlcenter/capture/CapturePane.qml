@@ -275,7 +275,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Screenshot and recording defaults live in horneroctl capture (XDG pictures/videos directories); this pane never shows a control the backend cannot honour.")
                             font.pointSize: Appearance.font.size.small
-                            color: Signal.palette.ruleStrong
+                            color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
                     }

@@ -37,7 +37,7 @@ ColumnLayout {
         Glyph {
             visible: root.readonly
             name: "lock"
-            color: Signal.palette.ruleStrong
+            color: Signal.palette.inkMuted
             font.pointSize: Appearance.font.size.small
         }
 

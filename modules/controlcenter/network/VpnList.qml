@@ -452,7 +452,7 @@ ColumnLayout {
                     Layout.fillWidth: true
                     text: qsTr("Choose a provider to add")
                     wrapMode: Text.WordWrap
-                    color: Signal.palette.ruleStrong
+                    color: Signal.palette.inkMuted
                     font.pointSize: Appearance.font.size.small
                 }
 

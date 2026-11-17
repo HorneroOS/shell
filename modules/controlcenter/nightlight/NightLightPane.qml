@@ -358,7 +358,7 @@ Item {
                             Layout.fillWidth: true
                             text: qsTr("Temperature applies immediately while Night Light is on and is stored for the next time otherwise. This pane never shows a control the backend cannot honour.")
                             font.pointSize: Appearance.font.size.small
-                            color: Signal.palette.ruleStrong
+                            color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
                         }
                     }

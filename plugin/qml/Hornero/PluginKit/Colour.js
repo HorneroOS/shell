@@ -129,6 +129,36 @@ function ensureContrast(fg, bg, min) {
     return best;
 }
 
+// "#RRGGBB" for an OKLCH colour (hue in degrees), clamped into sRGB by
+// reducing chroma at fixed lightness and hue. Only for UI affordances
+// (the manual accent picker); palette synthesis is the engine's job.
+function oklchHex(L, C, h) {
+    var rad = h * Math.PI / 180;
+    var c = C;
+    for (var i = 0; i < 24; i++) {
+        var a = c * Math.cos(rad);
+        var b = c * Math.sin(rad);
+        var l = L + 0.3963377774 * a + 0.2158037573 * b;
+        var m = L - 0.1055613458 * a - 0.0638541728 * b;
+        var s = L - 0.0894841775 * a - 1.291485548 * b;
+        l = l * l * l;
+        m = m * m * m;
+        s = s * s * s;
+        var r = [4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s, -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s];
+        if (Math.min(r[0], r[1], r[2]) >= -0.0005 && Math.max(r[0], r[1], r[2]) <= 1.0005)
+            break;
+        c *= 0.9;
+    }
+    return rgbToHex(oklabToRgb([L, c * Math.cos(rad), c * Math.sin(rad)]));
+}
+
+// Hue (degrees, [0,360)), chroma and lightness of a #RRGGBB colour.
+function hexToHueChroma(h) {
+    var lab = hexToOklab(h);
+    var hue = Math.atan2(lab[2], lab[1]) * 180 / Math.PI;
+    return { hue: hue < 0 ? hue + 360 : hue, chroma: Math.sqrt(lab[1] * lab[1] + lab[2] * lab[2]), lightness: lab[0] };
+}
+
 // Flat {role: "#RRGGBB", term0..term15} view of a schema-v2 scheme object.
 // `glow` falls back to `signal` as in Signal.optionalRoles.
 function flatten(scheme) {

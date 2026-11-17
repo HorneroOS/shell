@@ -14,7 +14,7 @@ A provider declares:
 | --- | --- |
 | `id` | Stable state/section name (for example `calc`, `win`). |
 | `prefix` | Explicit route under `Config.launcher.actionPrefix` (default `>`): `>calc …`, `>win …`. Empty for the default provider. |
-| `icon` | Material icon name for the section. |
+| `icon` | Hornero Glyph name for the section (`Glyph { name }`). |
 | `section` | Section its results belong to. |
 | `query(text)` | Returns ranked results, best first. The registry preserves that order inside the section. |
 | `activate(result, list)` | Optional activation callback. Delegates may own activation instead (the calculator row does). |

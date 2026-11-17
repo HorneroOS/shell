@@ -36,7 +36,7 @@ Item {
         anchors.horizontalCenterOffset: -1
 
         name: "power"
-        color: root.tone.inkMuted
+        color: root.tone.ink
         font.bold: true
         font.pointSize: Density.iconPt
     }

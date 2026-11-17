@@ -11,6 +11,8 @@ MouseArea {
     id: root
 
     required property SystemTrayItem modelData
+    // Region tone (Tray.qml): tray icons take the ink of their region.
+    property var tone: ClearInk.neutral
 
     Accessible.role: Accessible.Button
     Accessible.name: root.modelData.title || root.modelData.id
@@ -31,7 +33,7 @@ MouseArea {
 
         anchors.fill: parent
         source: Icons.getTrayIcon(root.modelData.id, root.modelData.icon)
-        colour: Signal.palette.inkMuted
+        colour: root.tone.ink
         layer.enabled: Config.bar.tray.recolour
     }
 }

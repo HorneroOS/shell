@@ -38,16 +38,15 @@ Item {
         Glyph {
             Layout.alignment: Qt.AlignCenter
             name: root.charging ? "battery-charging" : root.percent > 80 ? "battery-4" : root.percent > 50 ? "battery-3" : root.percent > 20 ? "battery-2" : "battery-exclamation"
-            color: root.low ? root.tone.alert : root.tone.inkMuted
+            color: root.low ? root.tone.alert : root.tone.ink
             font.pointSize: Density.iconPt
         }
 
-        StyledText {
+        BarText {
             Layout.alignment: Qt.AlignCenter
             visible: root.density === "values" && !root.vertical
             text: `${Math.round(root.percent)}%`
             color: root.low ? root.tone.alert : root.tone.ink
-            font.pointSize: Density.textPt
         }
     }
 }

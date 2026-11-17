@@ -20,6 +20,16 @@ Singleton {
     // foreground colours; Cockpit Clear never gains a fill from this.
     readonly property var sets: Config.appearance.highContrast ? Model.setsFrom(null) : Model.setsFrom(Signal.clearInk)
     readonly property string configuredStyle: Model.normaliseStyle(Config.bar.clearStyle)
+    // User knobs (Bars > Clear text): shadow/outline strength, ring width and
+    // the ink polarity ("auto" follows the wallpaper). High Contrast keeps
+    // the ink as it is but never weakens the shadow below the factory value.
+    readonly property var knobs: ({
+            strength: Config.appearance.highContrast ? Math.max(1, Config.bar.clearInk.strength) : Config.bar.clearInk.strength,
+            outline: Config.bar.clearInk.outline,
+            polarity: Model.normalisePolarity(Config.bar.clearInk.polarity)
+        })
+    readonly property var polarities: Model.POLARITIES
+    readonly property string configuredPolarity: Model.normalisePolarity(Config.bar.clearInk.polarity)
 
     // What bar components use when no region tone applies.
     readonly property QtObject neutral: QtObject {
@@ -38,6 +48,29 @@ Singleton {
             return;
         Config.bar.clearStyle = name;
         Config.save();
+    }
+
+    function setKnob(name: string, value: var): void {
+        if (name === "polarity")
+            Config.bar.clearInk.polarity = Model.normalisePolarity(value);
+        else if (name === "strength")
+            Config.bar.clearInk.strength = Math.max(0, Math.min(1.5, value));
+        else if (name === "outline")
+            Config.bar.clearInk.outline = Math.max(0, Math.min(2, value));
+        else
+            return;
+        Config.save();
+    }
+
+    function polarityLabel(name: string): string {
+        switch (name) {
+        case "light":
+            return qsTr("Light");
+        case "dark":
+            return qsTr("Dark");
+        default:
+            return qsTr("Auto");
+        }
     }
 
     function styleLabel(name: string): string {

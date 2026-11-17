@@ -10,6 +10,9 @@ import QtQuick
 StyledRect {
     id: root
 
+    // Region tone: the plain Signal palette, or per-region ink on Cockpit Clear.
+    property var tone: ClearInk.neutral
+
     required property ShellScreen screen
 
     readonly property alias layout: layout
@@ -102,7 +105,9 @@ StyledRect {
 
                 model: SystemTray.items
 
-                TrayItem {}
+                TrayItem {
+                    tone: root.tone
+                }
             }
         }
     }
@@ -140,7 +145,9 @@ StyledRect {
 
                 model: SystemTray.items
 
-                TrayItem {}
+                TrayItem {
+                    tone: root.tone
+                }
             }
         }
     }
@@ -169,6 +176,7 @@ StyledRect {
                 anchors.right: root.vertical ? undefined : parent.right
                 anchors.rightMargin: root.vertical ? 0 : (root.chip ? Appearance.padding.small : -Appearance.padding.small)
                 name: root.vertical ? "chevron-up" : "chevron-right"
+                color: root.tone.ink
                 font.pointSize: Density.iconPt
                 rotation: root.expanded ? 180 : 0
 

@@ -62,14 +62,14 @@ Item {
             onActivated: root.player?.next()
         }
 
-        StyledText {
+        BarText {
             visible: !root.vertical && root.title !== ""
             Layout.leftMargin: Appearance.spacing.small
             Layout.maximumWidth: root.maxTitleWidth
+            role: "label"
             text: root.title
             elide: Text.ElideRight
-            color: root.tone.inkMuted
-            font.pointSize: Density.textPt
+            color: root.tone.ink
         }
     }
 }

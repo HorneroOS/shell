@@ -46,28 +46,56 @@ function contentScale(cs) {
     return clamp(cs > 0 ? cs : 1, 0.75, 1.5);
 }
 
-function icon(f, cs) {
-    return Math.round(clamp(Math.round(16 * f), 15, 18) * contentScale(cs));
+// `is` / `ts` are the item style multipliers (iconScale / textScale).
+function icon(f, cs, is) {
+    return Math.round(clamp(Math.round(16 * f), 15, 18) * contentScale(cs) * iconScale(is));
 }
 
-function text(f, cs) {
-    return Math.round(clamp(Math.round(12 * f), MIN_TEXT, 13) * contentScale(cs));
+function text(f, cs, ts) {
+    return Math.round(clamp(Math.round(12 * f), MIN_TEXT, 13) * contentScale(cs) * textScale(ts));
 }
 
 // Eyebrows and meter captions (signal-visual-language §4.1): 11 px caps,
 // 12 px once the content scale reaches 1.15.
-function micro(f, cs) {
-    return Math.round(11 * Math.sqrt(contentScale(cs)));
+function micro(f, cs, ts) {
+    return Math.round(11 * Math.sqrt(contentScale(cs)) * textScale(ts));
 }
 
-function clock(f, cs) {
-    return Math.round(Math.max(14, Math.round(16 * f)) * contentScale(cs));
+function clock(f, cs, ts) {
+    return Math.round(Math.max(14, Math.round(16 * f)) * contentScale(cs) * textScale(ts));
 }
 
-function segmentPadding(f, vertical) {
-    return Math.max(vertical ? 6 : 8, Math.round((vertical ? 8 : 12) * f));
+function segmentPadding(f, vertical, gap) {
+    return Math.max(vertical ? 6 : 8, Math.round((vertical ? 8 : 12) * f * itemSpacing(gap)));
 }
 
 function pt(px) {
     return px * PT_PER_PX;
+}
+
+// Item style knobs (Bars > Size & shape): each multiplies the value the
+// density model derived, so a user choice stays proportional on every screen.
+function scaleOf(v, lo, hi) {
+    var n = Number(v);
+    return clamp(isFinite(n) && n > 0 ? n : 1, lo, hi);
+}
+
+function iconScale(v) {
+    return scaleOf(v, 0.6, 1.5);
+}
+
+function textScale(v) {
+    return scaleOf(v, 0.75, 1.5);
+}
+
+function itemSpacing(v) {
+    return scaleOf(v, 0.5, 2);
+}
+
+// Weight of bar values, dates and labels: 300..600 in steps of 50.
+function textWeight(v, shift) {
+    var n = Number(v);
+    var base = clamp(isFinite(n) ? Math.round(n / 50) * 50 : 400, 300, 600);
+    var sh = Number(shift);
+    return clamp(base + (isFinite(sh) ? sh : 0), 100, 900);
 }

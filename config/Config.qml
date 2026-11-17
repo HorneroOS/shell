@@ -418,6 +418,12 @@ Singleton {
             persistent: bar.persistent,
             showOnHover: bar.showOnHover,
             clearStyle: bar.clearStyle,
+            clearInk: {
+                strength: bar.clearInk.strength,
+                outline: bar.clearInk.outline,
+                polarity: bar.clearInk.polarity
+            },
+            typeface: bar.typeface,
             mark: bar.mark,
             dragThreshold: bar.dragThreshold,
             perScreen: bar.perScreen,
@@ -484,6 +490,10 @@ Singleton {
                 autoDensity: bar.sizes.autoDensity,
                 densityScale: bar.sizes.densityScale,
                 contentScale: bar.sizes.contentScale,
+                iconScale: bar.sizes.iconScale,
+                textScale: bar.sizes.textScale,
+                itemSpacing: bar.sizes.itemSpacing,
+                textWeight: bar.sizes.textWeight,
                 windowPreviewSize: bar.sizes.windowPreviewSize,
                 trayMenuWidth: bar.sizes.trayMenuWidth,
                 batteryWidth: bar.sizes.batteryWidth,

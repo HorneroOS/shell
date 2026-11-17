@@ -32,8 +32,40 @@ ColumnLayout {
     }
 
     StyledText {
+        text: qsTr("Ink")
+        font.pointSize: Appearance.font.size.small
+        font.weight: Font.Medium
+        color: Signal.palette.ink
+    }
+
+    SegmentedControl {
+        accessibleName: qsTr("Cockpit Clear ink polarity")
+        model: ClearInk.polarities.map(n => ClearInk.polarityLabel(n))
+        currentIndex: Math.max(0, ClearInk.polarities.indexOf(ClearInk.configuredPolarity))
+        onActivated: index => ClearInk.setKnob("polarity", ClearInk.polarities[index])
+    }
+
+    SpinBoxRow {
+        label: qsTr("Shadow strength (%)")
+        value: Math.round(Config.bar.clearInk.strength * 100)
+        min: 0
+        max: 150
+        step: 5
+        onValueModified: value => ClearInk.setKnob("strength", value / 100)
+    }
+
+    SpinBoxRow {
+        label: qsTr("Outline width (%)")
+        value: Math.round(Config.bar.clearInk.outline * 100)
+        min: 0
+        max: 200
+        step: 10
+        onValueModified: value => ClearInk.setKnob("outline", value / 100)
+    }
+
+    StyledText {
         Layout.fillWidth: true
-        text: root.forced ? qsTr("High Contrast is on: Contrast style is used.") : qsTr("Auto picks light or dark ink per region of the wallpaper. Outline and Shadow are fixed; Contrast adds a heavier outline and weight.")
+        text: root.forced ? qsTr("High Contrast is on: Contrast style is used.") : qsTr("Auto keeps one ink and a soft shadow, and flips only where the wallpaper needs it. Outline is a firm ring, Shadow a soft drop, Contrast both with heavier weight. Ink, strength and width fine-tune any style.")
         wrapMode: Text.WordWrap
         font.pointSize: Appearance.font.size.smaller
         color: Signal.palette.inkMuted

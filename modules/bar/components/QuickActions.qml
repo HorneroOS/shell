@@ -45,7 +45,7 @@ Item {
 
                 icon: ShellActions.known[modelData].icon
                 label: ShellActions.known[modelData].label
-                colour: root.tone.inkMuted
+                colour: root.tone.ink
                 iconSize: Density.iconPt
                 onActivated: ShellActions.run(modelData)
             }
@@ -56,7 +56,7 @@ Item {
         PluginBarWidgets {
             vertical: root.vertical
             section: "actions"
-            iconColour: root.tone.inkMuted
+            iconColour: root.tone.ink
             iconSize: Density.iconPt
             textSize: Density.textPt
             thickness: Density.inner

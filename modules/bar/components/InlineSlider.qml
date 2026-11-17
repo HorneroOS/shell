@@ -46,7 +46,7 @@ RowLayout {
                 return "volume-off";
             return "volume";
         }
-        color: root.tone.inkMuted
+        color: root.tone.ink
 
         Behavior on text {
             Anim {}
@@ -65,7 +65,8 @@ RowLayout {
         implicitHeight: Density.iconPx * 1.2
         // Ink at rest; amber only while the person is dragging it.
         ruleTrack: root.tone.active
-        fillColour: slider.pressed ? root.tone.signal : root.tone.inkMuted
+        fillColour: slider.pressed ? root.tone.signal : root.tone.ink
+        trackColour: root.tone.active ? Qt.alpha(root.tone.ink, 0.42) : Signal.palette.lifted
         thumbColour: slider.pressed ? root.tone.signal : root.tone.ink
         from: 0
         to: 1
@@ -108,7 +109,7 @@ RowLayout {
     }
 
     // Fixed width ("100%") so the bar does not jitter as the level changes.
-    StyledText {
+    BarText {
         id: valueText
 
         Layout.alignment: Qt.AlignVCenter
@@ -116,9 +117,7 @@ RowLayout {
         visible: root.showValue
         horizontalAlignment: Text.AlignLeft
         text: `${Math.round(slider.value * 100)}%`
-        font.pointSize: Density.textPt
-        font.family: Appearance.font.family.mono
-        color: root.tone.inkMuted
+        color: root.tone.ink
 
         TextMetrics {
             id: valueMetrics

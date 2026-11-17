@@ -112,27 +112,27 @@ Item {
                 Glyph {
                     visible: !root.showText
                     name: metric.modelData.icon
-                    color: metric.critical ? root.tone.alert : metric.warning ? root.tone.signal : root.tone.inkMuted
+                    color: metric.critical ? root.tone.alert : metric.warning ? root.tone.signal : root.tone.ink
                     font.pointSize: Density.iconPt
                 }
 
-                StyledText {
+                BarText {
                     visible: root.showText
-                    mono: true
+                    role: "eyebrow"
                     text: metric.modelData.label
-                    color: root.tone.inkMuted
-                    font.pointSize: Density.microPt
-                    font.capitalization: Font.AllUppercase
-                    font.letterSpacing: 0.88
+                    // Dim by weight of ink, not by a second grey: a muted
+                    // grey disappears on a busy wallpaper.
+                    color: root.tone.ink
+                    opacity: 0.78
                 }
 
                 Instruments.SegmentMeter {
                     visible: root.showMeters
                     Layout.alignment: Qt.AlignVCenter
                     count: 8
-                    segmentWidth: 3
-                    segmentLength: 10
-                    gap: 2
+                    segmentWidth: Density.clean ? 2 : 3
+                    segmentLength: Density.clean ? 8 : 10
+                    gap: Density.clean ? 3 : 2
                     value: metric.modelData.fraction
                     threshold: metric.modelData.warn
                     critical: metric.modelData.crit
@@ -140,27 +140,21 @@ Item {
                     offColor: root.tone.active ? Qt.alpha(root.tone.ink, root.tone.offAlpha) : Signal.palette.rule
                 }
 
-                StyledText {
+                BarText {
                     id: valueText
 
                     visible: root.showText
                     Layout.preferredWidth: valueMetrics.width
                     horizontalAlignment: Text.AlignLeft
-                    mono: true
                     text: metric.modelData.text
                     color: metric.critical ? root.tone.alert : root.tone.ink
-                    font.pointSize: Density.textPt
-                    font.features: {
-                        "tnum": 1
-                    }
 
                     // Fixed width ("100%") so the strip does not jitter.
                     TextMetrics {
                         id: valueMetrics
 
                         text: "100%"
-                        font.family: Appearance.font.family.mono
-                        font.pointSize: Density.textPt
+                        font: valueText.font
                     }
                 }
             }

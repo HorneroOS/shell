@@ -1,316 +1,81 @@
 pragma ComponentBehavior: Bound
 
 import qs.components
-import qs.components.effects
 import qs.services
 import qs.config
 import qs.utils
-import Quickshell
-import Quickshell.Widgets
+import qs.modules.instruments as Instruments
 import Quickshell.Services.Notifications
 import QtQuick
 import QtQuick.Layouts
 
-StyledRect {
+// One app's notifications on the lock screen: a fixed row with the app
+// name, a count and the newest line. Reading only — expand by unlocking.
+// Urgency is named in words (URGENT), never colour alone.
+Rectangle {
     id: root
 
     required property string modelData
 
     readonly property list<var> notifs: Notifs.list.filter(notif => notif.appName === modelData)
-    readonly property string image: notifs.find(n => n.image.length > 0)?.image ?? ""
-    readonly property string appIcon: notifs.find(n => n.appIcon.length > 0)?.appIcon ?? ""
-    readonly property string urgency: notifs.some(n => n.urgency === NotificationUrgency.Critical) ? "critical" : notifs.some(n => n.urgency === NotificationUrgency.Normal) ? "normal" : "low"
-
-    property bool expanded
+    readonly property bool critical: notifs.some(n => n.urgency === NotificationUrgency.Critical)
 
     anchors.left: parent?.left
     anchors.right: parent?.right
     implicitHeight: content.implicitHeight + Appearance.padding.normal * 2
 
-    clip: true
-    radius: Appearance.rounding.normal
-    color: root.urgency === "critical" ? Signal.palette.cueWell : Signal.layer(Signal.palette.raised, 2)
+    radius: Appearance.rounding.small
+    color: Signal.palette.raised
+    border.width: 1
+    border.color: root.critical ? Signal.palette.alert : Signal.palette.rule
 
-    RowLayout {
+    ColumnLayout {
         id: content
 
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.top: parent.top
+        anchors.verticalCenter: parent.verticalCenter
         anchors.margins: Appearance.padding.normal
+        spacing: 2
 
-        spacing: Appearance.spacing.normal
-
-        Item {
-            Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-            implicitWidth: Config.notifs.sizes.image
-            implicitHeight: Config.notifs.sizes.image
-
-            Component {
-                id: imageComp
-
-                Image {
-                    source: Qt.resolvedUrl(root.image)
-                    fillMode: Image.PreserveAspectCrop
-                    cache: false
-                    asynchronous: true
-                    width: Config.notifs.sizes.image
-                    height: Config.notifs.sizes.image
-                }
-            }
-
-            Component {
-                id: appIconComp
-
-                ColouredIcon {
-                    implicitSize: Math.round(Config.notifs.sizes.image * 0.6)
-                    source: Quickshell.iconPath(root.appIcon)
-                    colour: root.urgency === "critical" ? Signal.palette.onAlert : root.urgency === "low" ? Signal.palette.ink : Signal.palette.onCueWell
-                    layer.enabled: root.appIcon.endsWith("symbolic")
-                }
-            }
-
-            Component {
-                id: materialIconComp
-
-                Glyph {
-                    name: Icons.getNotifIcon(root.notifs[0]?.summary, root.urgency)
-                    color: root.urgency === "critical" ? Signal.palette.onAlert : root.urgency === "low" ? Signal.palette.ink : Signal.palette.onCueWell
-                    font.pointSize: Appearance.font.size.large
-                }
-            }
-
-            ClippingRectangle {
-                anchors.fill: parent
-                color: root.urgency === "critical" ? Signal.palette.alert : root.urgency === "low" ? Signal.layer(Signal.palette.lifted, 3) : Signal.palette.cueWell
-                radius: Appearance.rounding.full
-
-                Loader {
-                    anchors.centerIn: parent
-                    sourceComponent: root.image ? imageComp : root.appIcon ? appIconComp : materialIconComp
-                }
-            }
-
-            Loader {
-                anchors.right: parent.right
-                anchors.bottom: parent.bottom
-                active: root.appIcon && root.image
-
-                sourceComponent: StyledRect {
-                    implicitWidth: Config.notifs.sizes.badge
-                    implicitHeight: Config.notifs.sizes.badge
-
-                    color: root.urgency === "critical" ? Signal.palette.alert : root.urgency === "low" ? Signal.palette.lifted : Signal.palette.cueWell
-                    radius: Appearance.rounding.full
-
-                    ColouredIcon {
-                        anchors.centerIn: parent
-                        implicitSize: Math.round(Config.notifs.sizes.badge * 0.6)
-                        source: Quickshell.iconPath(root.appIcon)
-                        colour: root.urgency === "critical" ? Signal.palette.onAlert : root.urgency === "low" ? Signal.palette.ink : Signal.palette.onCueWell
-                        layer.enabled: root.appIcon.endsWith("symbolic")
-                    }
-                }
-            }
-        }
-
-        ColumnLayout {
-            Layout.topMargin: -Appearance.padding.small
-            Layout.bottomMargin: -Appearance.padding.small / 2 - (root.expanded ? 0 : spacing)
+        RowLayout {
             Layout.fillWidth: true
-            spacing: Math.round(Appearance.spacing.small / 2)
+            spacing: Appearance.spacing.small
 
-            RowLayout {
-                Layout.bottomMargin: -parent.spacing
-                Layout.fillWidth: true
-                spacing: Appearance.spacing.smaller
-
-                StyledText {
-                    Layout.fillWidth: true
-                    text: root.modelData
-                    color: Signal.palette.inkMuted
-                    font.pointSize: Appearance.font.size.small
-                    elide: Text.ElideRight
-                }
-
-                StyledText {
-                    animate: true
-                    text: root.notifs[0]?.timeStr ?? ""
-                    color: Signal.palette.ruleStrong
-                    font.pointSize: Appearance.font.size.small
-                }
-
-                StyledRect {
-                    implicitWidth: expandBtn.implicitWidth + Appearance.padding.smaller * 2
-                    implicitHeight: groupCount.implicitHeight + Appearance.padding.small
-
-                    color: root.urgency === "critical" ? Signal.palette.alert : Signal.layer(Signal.palette.lifted, 2)
-                    radius: Appearance.rounding.full
-
-                    opacity: root.notifs.length > Config.notifs.groupPreviewNum ? 1 : 0
-                    Layout.preferredWidth: root.notifs.length > Config.notifs.groupPreviewNum ? implicitWidth : 0
-
-                    StateLayer {
-                        color: root.urgency === "critical" ? Signal.palette.onAlert : Signal.palette.ink
-
-                        function onClicked(): void {
-                            root.expanded = !root.expanded;
-                        }
-                    }
-
-                    RowLayout {
-                        id: expandBtn
-
-                        anchors.centerIn: parent
-                        spacing: Appearance.spacing.small / 2
-
-                        StyledText {
-                            id: groupCount
-
-                            Layout.leftMargin: Appearance.padding.small / 2
-                            animate: true
-                            text: root.notifs.length
-                            color: root.urgency === "critical" ? Signal.palette.onAlert : Signal.palette.ink
-                            font.pointSize: Appearance.font.size.small
-                        }
-
-                        Glyph {
-                            Layout.rightMargin: -Appearance.padding.small / 2
-                            animate: true
-                            name: root.expanded ? "chevron-up" : "chevron-down"
-                            color: root.urgency === "critical" ? Signal.palette.onAlert : Signal.palette.ink
-                        }
-                    }
-
-                    Behavior on opacity {
-                        Anim {}
-                    }
-
-                    Behavior on Layout.preferredWidth {
-                        Anim {}
-                    }
-                }
-            }
-
-            Repeater {
-                model: ScriptModel {
-                    values: root.notifs.slice(0, Config.notifs.groupPreviewNum)
-                }
-
-                NotifLine {
-                    id: notif
-
-                    ParallelAnimation {
-                        running: true
-
-                        Anim {
-                            target: notif
-                            property: "opacity"
-                            from: 0
-                            to: 1
-                        }
-                        Anim {
-                            target: notif
-                            property: "scale"
-                            from: 0.7
-                            to: 1
-                        }
-                        Anim {
-                            target: notif.Layout
-                            property: "preferredHeight"
-                            from: 0
-                            to: notif.implicitHeight
-                        }
-                    }
-
-                    ParallelAnimation {
-                        running: notif.modelData.closed
-                        onFinished: notif.modelData.unlock(notif)
-
-                        Anim {
-                            target: notif
-                            property: "opacity"
-                            to: 0
-                        }
-                        Anim {
-                            target: notif
-                            property: "scale"
-                            to: 0.7
-                        }
-                        Anim {
-                            target: notif.Layout
-                            property: "preferredHeight"
-                            to: 0
-                        }
-                    }
-                }
-            }
-
-            Loader {
+            Instruments.Eyebrow {
                 Layout.fillWidth: true
 
-                opacity: root.expanded ? 1 : 0
-                Layout.preferredHeight: root.expanded ? implicitHeight : 0
-                active: opacity > 0
+                label: root.modelData
+            }
 
-                sourceComponent: ColumnLayout {
-                    Repeater {
-                        model: ScriptModel {
-                            values: root.notifs.slice(Config.notifs.groupPreviewNum)
-                        }
+            Instruments.OnAirChip {
+                visible: root.critical
+                fill: Signal.palette.alert
+                ink: Signal.palette.onAlert
+                text: qsTr("Urgent")
+            }
 
-                        NotifLine {}
-                    }
-                }
-
-                Behavior on opacity {
-                    Anim {}
-                }
+            StyledText {
+                mono: true
+                text: String(root.notifs.length)
+                color: Signal.palette.inkMuted
+                font.pointSize: Appearance.font.size.small
             }
         }
-    }
 
-    Behavior on implicitHeight {
-        Anim {
-            duration: Appearance.anim.durations.settle
-            easing.bezierCurve: Appearance.anim.curves.settle
-        }
-    }
+        StyledText {
+            id: line
 
-    component NotifLine: StyledText {
-        id: notifLine
+            readonly property var latest: root.notifs[0] ?? null
 
-        required property Notifs.Notif modelData
+            Layout.fillWidth: true
 
-        Layout.fillWidth: true
-        textFormat: Text.MarkdownText
-        text: {
-            const summary = modelData.summary.replace(/\n/g, " ");
-            const body = modelData.body.replace(/\n/g, " ");
-            const colour = root.urgency === "critical" ? Signal.palette.cue : Signal.palette.ruleStrong;
-
-            if (metrics.text === metrics.elidedText)
-                return `${summary} <span style='color:${colour}'>${body}</span>`;
-
-            const t = metrics.elidedText.length - 3;
-            if (t < summary.length)
-                return `${summary.slice(0, t)}...`;
-
-            return `${summary} <span style='color:${colour}'>${body.slice(0, t - summary.length)}...</span>`;
-        }
-        color: root.urgency === "critical" ? Signal.palette.onCueWell : Signal.palette.ink
-
-        Component.onCompleted: modelData.lock(this)
-        Component.onDestruction: modelData.unlock(this)
-
-        TextMetrics {
-            id: metrics
-
-            text: `${notifLine.modelData.summary} ${notifLine.modelData.body}`.replace(/\n/g, " ")
-            font.pointSize: notifLine.font.pointSize
-            font.family: notifLine.font.family
-            elideWidth: notifLine.width
+            text: latest ? `${latest.summary} ${latest.body}`.replace(/\n/g, " ") : ""
             elide: Text.ElideRight
+            maximumLineCount: 1
+
+            Component.onCompleted: latest?.lock(this)
+            Component.onDestruction: latest?.unlock(this)
         }
     }
 }

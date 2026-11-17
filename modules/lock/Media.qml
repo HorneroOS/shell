@@ -1,205 +1,136 @@
 pragma ComponentBehavior: Bound
 
 import qs.components
-import qs.components.effects
 import qs.services
 import qs.config
 import QtQuick
 import QtQuick.Layouts
 
-Item {
+// Lock media footer: what is playing and the three transport controls.
+// Hidden entirely when there is no player.
+RowLayout {
     id: root
 
     required property var lock
+    readonly property bool active: !!Players.active
 
-    anchors.left: parent.left
-    anchors.right: parent.right
-    implicitHeight: layout.implicitHeight
-
-    Image {
-        anchors.fill: parent
-        source: Players.active?.trackArtUrl ?? ""
-
-        asynchronous: true
-        fillMode: Image.PreserveAspectCrop
-        sourceSize.width: width
-        sourceSize.height: height
-
-        layer.enabled: true
-        layer.effect: OpacityMask {
-            maskSource: mask
-        }
-
-        opacity: status === Image.Ready ? 1 : 0
-
-        Behavior on opacity {
-            Anim {
-                duration: Appearance.anim.durations.scan
-            }
-        }
-    }
+    spacing: Appearance.spacing.normal
 
     Rectangle {
-        id: mask
+        implicitWidth: 40
+        implicitHeight: 40
+        radius: Appearance.rounding.small
+        color: Signal.palette.sunken
+        border.width: 1
+        border.color: Signal.palette.rule
+        clip: true
 
-        anchors.fill: parent
-        layer.enabled: true
-        visible: false
+        Glyph {
+            anchors.centerIn: parent
 
-        gradient: Gradient {
-            orientation: Gradient.Horizontal
+            name: "playlist"
+            color: Signal.palette.inkMuted
+        }
 
-            GradientStop {
-                position: 0
-                color: Qt.rgba(0, 0, 0, 0.5)
-            }
-            GradientStop {
-                position: 0.4
-                color: Qt.rgba(0, 0, 0, 0.2)
-            }
-            GradientStop {
-                position: 0.8
-                color: Qt.rgba(0, 0, 0, 0)
-            }
+        Image {
+            anchors.fill: parent
+            anchors.margins: 1
+
+            source: Players.active?.trackArtUrl ?? "" // qmllint disable incompatible-type
+            asynchronous: true
+            fillMode: Image.PreserveAspectCrop
+            sourceSize.width: width
+            sourceSize.height: height
         }
     }
 
     ColumnLayout {
-        id: layout
-
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.margins: Appearance.padding.large
+        Layout.fillWidth: true
+        spacing: 0
 
         StyledText {
-            Layout.topMargin: Appearance.padding.large
-            Layout.bottomMargin: Appearance.spacing.larger
-            text: qsTr("Now playing")
+            Layout.fillWidth: true
+
+            text: (Players.active?.trackTitle ?? "") || qsTr("Unknown title")
+            font.weight: Font.Medium
+            elide: Text.ElideRight
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+
+            text: (Players.active?.trackArtist ?? "") || qsTr("Unknown artist")
             color: Signal.palette.inkMuted
-            font.family: Appearance.font.family.mono
-            font.weight: 500
-        }
-
-        StyledText {
-            Layout.fillWidth: true
-            animate: true
-            text: Players.active?.trackArtist ?? qsTr("No media")
-            color: Signal.palette.signal
-            horizontalAlignment: Text.AlignHCenter
-            font.pointSize: Appearance.font.size.large
-            font.family: Appearance.font.family.mono
-            font.weight: 600
+            font.pointSize: Appearance.font.size.small
             elide: Text.ElideRight
-        }
-
-        StyledText {
-            Layout.fillWidth: true
-            animate: true
-            text: Players.active?.trackTitle ?? qsTr("No media")
-            horizontalAlignment: Text.AlignHCenter
-            font.pointSize: Appearance.font.size.larger
-            font.family: Appearance.font.family.mono
-            elide: Text.ElideRight
-        }
-
-        RowLayout {
-            Layout.alignment: Qt.AlignHCenter
-            Layout.topMargin: Appearance.spacing.large * 1.2
-            Layout.bottomMargin: Appearance.padding.large
-
-            spacing: Appearance.spacing.large
-
-            PlayerControl {
-                icon: "player-skip-back"
-
-                function onClicked(): void {
-                    if (Players.active?.canGoPrevious)
-                        Players.active.previous();
-                }
-            }
-
-            PlayerControl {
-                animate: true
-                icon: active ? "player-pause" : "player-play"
-                colour: "signal"
-                level: active ? 2 : 1
-                active: Players.active?.isPlaying ?? false
-
-                function onClicked(): void {
-                    if (Players.active?.canTogglePlaying)
-                        Players.active.togglePlaying();
-                }
-            }
-
-            PlayerControl {
-                icon: "player-skip-forward"
-
-                function onClicked(): void {
-                    if (Players.active?.canGoNext)
-                        Players.active.next();
-                }
-            }
         }
     }
 
-    component PlayerControl: StyledRect {
-        id: control
+    Control {
+        glyph: "player-skip-back"
+        name: qsTr("Previous track")
+        usable: Players.active?.canGoPrevious ?? false
 
-        property alias animate: controlIcon.animate
-        property alias icon: controlIcon.name
-        property bool active
-        // Signal accent role: "signal", "cue" or "phosphor".
-        property string colour: "cue"
-        readonly property string onColour: `on${colour.charAt(0).toUpperCase()}${colour.slice(1)}`
-        property int level: 1
+        function onClicked(): void {
+            Players.active?.previous();
+        }
+    }
+
+    Control {
+        glyph: Players.active?.isPlaying ? "player-pause" : "player-play"
+        name: Players.active?.isPlaying ? qsTr("Pause") : qsTr("Play")
+        usable: Players.active?.canTogglePlaying ?? false
+
+        function onClicked(): void {
+            Players.active?.togglePlaying();
+        }
+    }
+
+    Control {
+        glyph: "player-skip-forward"
+        name: qsTr("Next track")
+        usable: Players.active?.canGoNext ?? false
+
+        function onClicked(): void {
+            Players.active?.next();
+        }
+    }
+
+    component Control: Rectangle {
+        id: ctl
+
+        required property string glyph
+        required property string name
+        required property bool usable
 
         function onClicked(): void {
         }
 
-        Layout.preferredWidth: implicitWidth + (controlState.pressed ? Appearance.padding.normal * 2 : active ? Appearance.padding.small * 2 : 0)
-        implicitWidth: controlIcon.implicitWidth + Appearance.padding.large * 2
-        implicitHeight: controlIcon.implicitHeight + Appearance.padding.normal * 2
+        implicitWidth: 32
+        implicitHeight: 32
+        radius: Appearance.rounding.small
+        color: Signal.palette.lifted
+        border.width: 1
+        border.color: Signal.palette.rule
+        opacity: ctl.usable ? 1 : 0.5
 
-        color: active ? Signal.palette[colour] : Signal.palette[`${colour}Well`]
-        radius: active || controlState.pressed ? Appearance.rounding.normal : Math.min(implicitWidth, implicitHeight) / 2 * Math.min(1, Appearance.rounding.scale)
-
-        Elevation {
-            anchors.fill: parent
-            radius: parent.radius
-            z: -1
-            level: controlState.containsMouse && !controlState.pressed ? control.level + 1 : control.level
-        }
+        Accessible.role: Accessible.Button
+        Accessible.name: ctl.name
 
         StateLayer {
-            id: controlState
-
-            color: control.active ? Signal.palette[control.onColour] : Signal.palette[`${control.onColour}Well`]
+            disabled: !ctl.usable
+            radius: parent.radius
 
             function onClicked(): void {
-                control.onClicked();
+                ctl.onClicked();
             }
         }
 
         Glyph {
-            id: controlIcon
-
             anchors.centerIn: parent
-            color: control.active ? Signal.palette[control.onColour] : Signal.palette[`${control.onColour}Well`]
-            font.pointSize: Appearance.font.size.large
-        }
 
-        Behavior on Layout.preferredWidth {
-            Anim {
-                duration: Appearance.anim.durations.settleFast
-                easing.bezierCurve: Appearance.anim.curves.settleFast
-            }
-        }
-
-        Behavior on radius {
-            Anim {
-                duration: Appearance.anim.durations.settleFast
-                easing.bezierCurve: Appearance.anim.curves.settleFast
-            }
+            name: ctl.glyph
+            color: ctl.usable ? Signal.palette.ink : Signal.palette.inkMuted
         }
     }
 }

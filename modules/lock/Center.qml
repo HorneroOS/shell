@@ -6,418 +6,357 @@ import qs.components.images
 import qs.services
 import qs.config
 import qs.utils
+import qs.modules.instruments as Instruments
+import Quickshell
 import QtQuick
 import QtQuick.Layouts
 
+// Lock centre column: the clock, then the sign-in module. Calm by design:
+// one clip-reveal of the clock on show (`sweep`, `scan`), then nothing
+// moves. Plex Sans Condensed numerals, date in Plex Mono, a single
+// `signal` hairline as the only accent. Glow (amendment 2) is limited to
+// that hairline in the Signal experience.
 ColumnLayout {
     id: root
 
     required property var lock
     readonly property real centerScale: Math.min(1, (lock.screen?.height ?? 1440) / 1440)
     readonly property int centerWidth: Config.lock.sizes.centerWidth * centerScale
+    readonly property real clockSize: Appearance.font.size.display * 2.4 * centerScale
+    readonly property string userName: Quickshell.env("USER") ?? ""
 
     Layout.preferredWidth: centerWidth
     Layout.fillWidth: false
     Layout.fillHeight: true
 
-    spacing: Appearance.spacing.large * 2
+    spacing: Appearance.spacing.large
 
-    RowLayout {
+    Item {
+        Layout.fillHeight: true
+    }
+
+    // Clock, revealed once by a clip wipe from the left. The outer item
+    // keeps the final size so the numerals never move; only the clip opens.
+    Item {
+        id: clockBox
+
+        property real reveal: 0
+
         Layout.alignment: Qt.AlignHCenter
-        spacing: Appearance.spacing.small
+        implicitWidth: clockRow.implicitWidth
+        implicitHeight: clockRow.implicitHeight
 
-        StyledText {
-            Layout.alignment: Qt.AlignVCenter
-            text: Time.hourStr
-            color: Signal.palette.cue
-            font.pointSize: Math.floor(Appearance.font.size.extraLarge * 3 * root.centerScale)
-            font.family: Appearance.font.family.display
-            font.bold: true
+        Component.onCompleted: revealAnim.start()
+
+        Anim {
+            id: revealAnim
+
+            target: clockBox
+            property: "reveal"
+            from: 0
+            to: 1
+            duration: Appearance.anim.durations.scan
+            easing.bezierCurve: Appearance.anim.curves.sweep
         }
 
-        StyledText {
-            Layout.alignment: Qt.AlignVCenter
-            text: ":"
-            color: Signal.palette.signal
-            font.pointSize: Math.floor(Appearance.font.size.extraLarge * 3 * root.centerScale)
-            font.family: Appearance.font.family.display
-            font.bold: true
-        }
+        Item {
+            width: clockBox.width * clockBox.reveal
+            height: clockBox.height
+            clip: true
 
-        StyledText {
-            Layout.alignment: Qt.AlignVCenter
-            text: Time.minuteStr
-            color: Signal.palette.cue
-            font.pointSize: Math.floor(Appearance.font.size.extraLarge * 3 * root.centerScale)
-            font.family: Appearance.font.family.display
-            font.bold: true
-        }
+            Row {
+                id: clockRow
 
-        Loader {
-            Layout.leftMargin: Appearance.spacing.small
-            Layout.alignment: Qt.AlignVCenter
+                spacing: 4
 
-            active: Config.services.useTwelveHourClock
-            visible: active
+                StyledText {
+                    text: Time.hourStr
+                    font.family: Appearance.font.family.display
+                    font.weight: Font.Medium
+                    font.pointSize: root.clockSize
+                    font.features: {
+                        "tnum": 1
+                    }
+                }
 
-            sourceComponent: StyledText {
-                text: Time.amPmStr
-                color: Signal.palette.signal
-                font.pointSize: Math.floor(Appearance.font.size.extraLarge * 2 * root.centerScale)
-                font.family: Appearance.font.family.display
-                font.bold: true
+                StyledText {
+                    text: ":"
+                    color: Signal.palette.inkMuted
+                    font.family: Appearance.font.family.display
+                    font.weight: Font.Medium
+                    font.pointSize: root.clockSize
+                }
+
+                StyledText {
+                    text: Time.minuteStr
+                    font.family: Appearance.font.family.display
+                    font.weight: Font.Medium
+                    font.pointSize: root.clockSize
+                    font.features: {
+                        "tnum": 1
+                    }
+                }
+
+                StyledText {
+                    anchors.baseline: parent.children[0].baseline
+                    visible: Config.services.useTwelveHourClock
+                    leftPadding: Appearance.spacing.small
+                    mono: true
+                    text: Time.amPmStr
+                    color: Signal.palette.inkMuted
+                    font.pointSize: Math.floor(root.clockSize / 4)
+                }
             }
+        }
+    }
+
+    // The one accent: a short `signal` hairline between clock and date.
+    Item {
+        Layout.alignment: Qt.AlignHCenter
+        implicitWidth: 48
+        implicitHeight: 2
+
+        OnAirBar {
+            glow: true
+            edge: "bottom"
         }
     }
 
     StyledText {
         Layout.alignment: Qt.AlignHCenter
-        Layout.topMargin: -Appearance.padding.large * 2
 
-        text: Time.format("dddd, d MMMM yyyy")
-        color: Signal.palette.phosphor
-        font.pointSize: Math.floor(Appearance.font.size.extraLarge * root.centerScale)
-        font.family: Appearance.font.family.mono
-        font.bold: true
+        mono: true
+        text: Time.format("dddd d MMMM yyyy")
+        color: Signal.palette.inkMuted
+        font.pointSize: Math.max(Appearance.font.size.normal, Math.floor(Appearance.font.size.larger * root.centerScale))
+        font.capitalization: Font.AllUppercase
+        font.letterSpacing: Appearance.font.size.larger * 0.08
     }
 
-    StyledClippingRect {
+    // Sign-in module.
+    Instruments.Frame {
+        Layout.alignment: Qt.AlignHCenter
         Layout.topMargin: Appearance.spacing.large * 2
-        Layout.alignment: Qt.AlignHCenter
+        Layout.preferredWidth: root.centerWidth * 0.8
+        implicitHeight: headerHeight + signIn.implicitHeight + 16
+        channel: "01"
+        title: qsTr("Locked")
+        context: root.userName
+        active: true
 
-        implicitWidth: root.centerWidth / 2
-        implicitHeight: root.centerWidth / 2
+        ColumnLayout {
+            id: signIn
 
-        color: Signal.tPalette.panel
-        radius: Appearance.rounding.full
-
-        Glyph {
-            anchors.centerIn: parent
-
-            name: "user"
-            color: Signal.palette.inkMuted
-            font.pointSize: Math.floor(root.centerWidth / 4)
-        }
-
-        CachingImage {
-            id: pfp
-
-            anchors.fill: parent
-            path: `${Paths.home}/.face`
-        }
-    }
-
-    StyledRect {
-        Layout.alignment: Qt.AlignHCenter
-
-        implicitWidth: root.centerWidth * 0.8
-        implicitHeight: input.implicitHeight + Appearance.padding.small * 2
-
-        color: Signal.tPalette.panel
-        radius: Appearance.rounding.full
-
-        focus: true
-        onActiveFocusChanged: {
-            if (!activeFocus)
-                forceActiveFocus();
-        }
-
-        Keys.onPressed: event => {
-            if (root.lock.unlocking)
-                return;
-
-            if (event.key === Qt.Key_Enter || event.key === Qt.Key_Return)
-                inputField.placeholder.animate = false;
-
-            root.lock.pam.handleKey(event);
-        }
-
-        StateLayer {
-            hoverEnabled: false
-            cursorShape: Qt.IBeamCursor
-
-            function onClicked(): void {
-                parent.forceActiveFocus();
-            }
-        }
-
-        RowLayout {
-            id: input
-
-            anchors.fill: parent
-            anchors.margins: Appearance.padding.small
+            anchors.left: parent.left
+            anchors.right: parent.right
             spacing: Appearance.spacing.normal
 
-            Item {
-                implicitWidth: implicitHeight
-                implicitHeight: fprintIcon.implicitHeight + Appearance.padding.small * 2
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Appearance.spacing.normal
 
-                Glyph {
-                    id: fprintIcon
+                Rectangle {
+                    implicitWidth: 44
+                    implicitHeight: 44
+                    radius: Appearance.rounding.small
+                    color: Signal.palette.sunken
+                    border.width: 1
+                    border.color: Signal.palette.rule
+                    clip: true
 
-                    anchors.centerIn: parent
-                    animate: true
-                    name: {
-                        if (root.lock.pam.fprint.tries >= Config.lock.maxFprintTries)
-                            return "fingerprint-off";
-                        if (root.lock.pam.fprint.active)
-                            return "fingerprint";
-                        return "lock";
+                    Glyph {
+                        anchors.centerIn: parent
+
+                        name: "user"
+                        color: Signal.palette.inkMuted
+                        font.pointSize: Appearance.font.size.large
                     }
-                    color: root.lock.pam.fprint.tries >= Config.lock.maxFprintTries ? Signal.palette.alert : Signal.palette.ink
-                    opacity: root.lock.pam.passwd.active ? 0 : 1
 
-                    Behavior on opacity {
-                        Anim {}
+                    CachingImage {
+                        anchors.fill: parent
+                        anchors.margins: 1
+
+                        path: `${Paths.home}/.face`
                     }
                 }
 
-                CircularIndicator {
-                    anchors.fill: parent
-                    running: root.lock.pam.passwd.active
+                // Entry well. Focus stays here: key presses go to PAM.
+                Instruments.Well {
+                    id: entry
+
+                    Layout.fillWidth: true
+                    implicitHeight: 44
+
+                    focus: true
+                    onActiveFocusChanged: {
+                        if (!activeFocus)
+                            forceActiveFocus();
+                    }
+
+                    border.color: activeFocus ? Signal.palette.focus : Signal.palette.rule
+                    border.width: activeFocus ? 2 : 1
+
+                    Keys.onPressed: event => {
+                        if (root.lock.unlocking)
+                            return;
+
+                        root.lock.pam.handleKey(event);
+                    }
+
+                    StateLayer {
+                        hoverEnabled: false
+                        cursorShape: Qt.IBeamCursor
+
+                        function onClicked(): void {
+                            entry.forceActiveFocus();
+                        }
+                    }
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.margins: 4
+                        spacing: Appearance.spacing.small
+
+                        Item {
+                            implicitWidth: 32
+                            implicitHeight: 32
+
+                            Glyph {
+                                anchors.centerIn: parent
+
+                                name: {
+                                    if (root.lock.pam.fprint.tries >= Config.lock.maxFprintTries)
+                                        return "fingerprint-off";
+                                    if (root.lock.pam.fprint.active)
+                                        return "fingerprint";
+                                    return "lock";
+                                }
+                                color: root.lock.pam.fprint.tries >= Config.lock.maxFprintTries ? Signal.palette.alert : Signal.palette.inkMuted
+                            }
+                        }
+
+                        InputField {
+                            id: inputField
+
+                            pam: root.lock.pam
+                        }
+
+                        Rectangle {
+                            implicitWidth: 32
+                            implicitHeight: 32
+
+                            radius: Appearance.rounding.small
+                            color: root.lock.pam.buffer ? Signal.palette.signal : Signal.palette.lifted
+                            border.width: 1
+                            border.color: root.lock.pam.buffer ? Signal.palette.signal : Signal.palette.rule
+
+                            StateLayer {
+                                color: root.lock.pam.buffer ? Signal.palette.onSignal : Signal.palette.ink
+
+                                Accessible.role: Accessible.Button
+                                Accessible.name: qsTr("Unlock")
+
+                                function onClicked(): void {
+                                    root.lock.pam.passwd.start();
+                                }
+                            }
+
+                            Glyph {
+                                anchors.centerIn: parent
+
+                                name: "arrow-forward"
+                                color: root.lock.pam.buffer ? Signal.palette.onSignal : Signal.palette.ink
+                            }
+                        }
+                    }
                 }
             }
 
-            InputField {
-                id: inputField
+            // Status lines. Errors are named in words; nothing flashes.
+            StyledText {
+                id: message
 
-                pam: root.lock.pam
+                readonly property Pam pam: root.lock.pam
+                readonly property string msg: {
+                    if (pam.fprintState === "error")
+                        return qsTr("FP ERROR: %1").arg(pam.fprint.message);
+                    if (pam.state === "error")
+                        return qsTr("PW ERROR: %1").arg(pam.passwd.message);
+
+                    if (pam.lockMessage)
+                        return pam.lockMessage;
+
+                    if (pam.state === "max" && pam.fprintState === "max")
+                        return qsTr("Maximum password and fingerprint attempts reached.");
+                    if (pam.state === "max") {
+                        if (pam.fprint.available)
+                            return qsTr("Maximum password attempts reached. Please use fingerprint.");
+                        return qsTr("Maximum password attempts reached.");
+                    }
+                    if (pam.fprintState === "max")
+                        return qsTr("Maximum fingerprint attempts reached. Please use password.");
+
+                    if (pam.state === "fail") {
+                        if (pam.fprint.available)
+                            return qsTr("Incorrect password. Please try again or use fingerprint.");
+                        return qsTr("Incorrect password. Please try again.");
+                    }
+                    if (pam.fprintState === "fail")
+                        return qsTr("Fingerprint not recognized (%1/%2). Please try again or use password.").arg(pam.fprint.tries).arg(Config.lock.maxFprintTries);
+
+                    return "";
+                }
+
+                Layout.fillWidth: true
+                visible: msg !== ""
+                text: msg
+                color: Signal.palette.alert
+                mono: true
+                font.pointSize: Appearance.font.size.small
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
             }
 
-            StyledRect {
-                implicitWidth: implicitHeight
-                implicitHeight: enterIcon.implicitHeight + Appearance.padding.small * 2
+            StyledText {
+                id: stateMessage
 
-                color: root.lock.pam.buffer ? Signal.palette.signal : Signal.layer(Signal.palette.raised, 2)
-                radius: Appearance.rounding.full
-
-                StateLayer {
-                    color: root.lock.pam.buffer ? Signal.palette.onSignal : Signal.palette.ink
-
-                    Accessible.role: Accessible.Button
-                    Accessible.name: qsTr("Unlock")
-
-                    function onClicked(): void {
-                        root.lock.pam.passwd.start();
+                readonly property string msg: {
+                    const layoutChanged = Compositor.supports("keyboardLayoutState") && !Compositor.keyboardLayoutIsDefault;
+                    const lockStatus = Compositor.supports("lockStatus");
+                    if (layoutChanged) {
+                        if (lockStatus && Compositor.capsLock && Compositor.numLock)
+                            return qsTr("Caps lock and Num lock are ON.\nKeyboard layout: %1").arg(Compositor.keyboardLayoutName);
+                        if (lockStatus && Compositor.capsLock)
+                            return qsTr("Caps lock is ON. Keyboard layout: %1").arg(Compositor.keyboardLayoutName);
+                        if (lockStatus && Compositor.numLock)
+                            return qsTr("Num lock is ON. Keyboard layout: %1").arg(Compositor.keyboardLayoutName);
+                        return qsTr("Keyboard layout: %1").arg(Compositor.keyboardLayoutName);
                     }
+
+                    if (!lockStatus)
+                        return "";
+                    if (Compositor.capsLock && Compositor.numLock)
+                        return qsTr("Caps lock and Num lock are ON.");
+                    if (Compositor.capsLock)
+                        return qsTr("Caps lock is ON.");
+                    if (Compositor.numLock)
+                        return qsTr("Num lock is ON.");
+
+                    return "";
                 }
 
-                Glyph {
-                    id: enterIcon
-
-                    anchors.centerIn: parent
-                    name: "arrow-forward"
-                    color: root.lock.pam.buffer ? Signal.palette.onSignal : Signal.palette.ink
-                    font.weight: 500
-                }
+                Layout.fillWidth: true
+                visible: msg !== "" && !message.visible
+                text: msg
+                color: Signal.palette.inkMuted
+                mono: true
+                font.pointSize: Appearance.font.size.small
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
             }
         }
     }
 
     Item {
-        Layout.fillWidth: true
-        Layout.topMargin: -Appearance.spacing.large
-
-        implicitHeight: Math.max(message.implicitHeight, stateMessage.implicitHeight)
-
-        Behavior on implicitHeight {
-            Anim {}
-        }
-
-        StyledText {
-            id: stateMessage
-
-            readonly property string msg: {
-                const layoutChanged = Compositor.supports("keyboardLayoutState") && !Compositor.keyboardLayoutIsDefault;
-                const lockStatus = Compositor.supports("lockStatus");
-                if (layoutChanged) {
-                    if (lockStatus && Compositor.capsLock && Compositor.numLock)
-                        return qsTr("Caps lock and Num lock are ON.\nKeyboard layout: %1").arg(Compositor.keyboardLayoutName);
-                    if (lockStatus && Compositor.capsLock)
-                        return qsTr("Caps lock is ON. Keyboard layout: %1").arg(Compositor.keyboardLayoutName);
-                    if (lockStatus && Compositor.numLock)
-                        return qsTr("Num lock is ON. Keyboard layout: %1").arg(Compositor.keyboardLayoutName);
-                    return qsTr("Keyboard layout: %1").arg(Compositor.keyboardLayoutName);
-                }
-
-                if (!lockStatus)
-                    return "";
-                if (Compositor.capsLock && Compositor.numLock)
-                    return qsTr("Caps lock and Num lock are ON.");
-                if (Compositor.capsLock)
-                    return qsTr("Caps lock is ON.");
-                if (Compositor.numLock)
-                    return qsTr("Num lock is ON.");
-
-                return "";
-            }
-
-            property bool shouldBeVisible
-
-            onMsgChanged: {
-                if (msg) {
-                    if (opacity > 0) {
-                        animate = true;
-                        text = msg;
-                        animate = false;
-                    } else {
-                        text = msg;
-                    }
-                    shouldBeVisible = true;
-                } else {
-                    shouldBeVisible = false;
-                }
-            }
-
-            anchors.left: parent.left
-            anchors.right: parent.right
-
-            scale: shouldBeVisible && !message.msg ? 1 : 0.7
-            opacity: shouldBeVisible && !message.msg ? 1 : 0
-            color: Signal.palette.inkMuted
-            animateProp: "opacity"
-
-            font.family: Appearance.font.family.mono
-            horizontalAlignment: Qt.AlignHCenter
-            wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-            lineHeight: 1.2
-
-            Behavior on scale {
-                Anim {}
-            }
-
-            Behavior on opacity {
-                Anim {}
-            }
-        }
-
-        StyledText {
-            id: message
-
-            readonly property Pam pam: root.lock.pam
-            readonly property string msg: {
-                if (pam.fprintState === "error")
-                    return qsTr("FP ERROR: %1").arg(pam.fprint.message);
-                if (pam.state === "error")
-                    return qsTr("PW ERROR: %1").arg(pam.passwd.message);
-
-                if (pam.lockMessage)
-                    return pam.lockMessage;
-
-                if (pam.state === "max" && pam.fprintState === "max")
-                    return qsTr("Maximum password and fingerprint attempts reached.");
-                if (pam.state === "max") {
-                    if (pam.fprint.available)
-                        return qsTr("Maximum password attempts reached. Please use fingerprint.");
-                    return qsTr("Maximum password attempts reached.");
-                }
-                if (pam.fprintState === "max")
-                    return qsTr("Maximum fingerprint attempts reached. Please use password.");
-
-                if (pam.state === "fail") {
-                    if (pam.fprint.available)
-                        return qsTr("Incorrect password. Please try again or use fingerprint.");
-                    return qsTr("Incorrect password. Please try again.");
-                }
-                if (pam.fprintState === "fail")
-                    return qsTr("Fingerprint not recognized (%1/%2). Please try again or use password.").arg(pam.fprint.tries).arg(Config.lock.maxFprintTries);
-
-                return "";
-            }
-
-            anchors.left: parent.left
-            anchors.right: parent.right
-
-            scale: 0.7
-            opacity: 0
-            color: Signal.palette.alert
-
-            font.pointSize: Appearance.font.size.small
-            font.family: Appearance.font.family.mono
-            horizontalAlignment: Qt.AlignHCenter
-            wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-
-            onMsgChanged: {
-                if (msg) {
-                    if (opacity > 0) {
-                        animate = true;
-                        text = msg;
-                        animate = false;
-
-                        exitAnim.stop();
-                        if (scale < 1)
-                            appearAnim.restart();
-                        else
-                            flashAnim.restart();
-                    } else {
-                        text = msg;
-                        exitAnim.stop();
-                        appearAnim.restart();
-                    }
-                } else {
-                    appearAnim.stop();
-                    flashAnim.stop();
-                    exitAnim.start();
-                }
-            }
-
-            Connections {
-                target: root.lock.pam
-
-                function onFlashMsg(): void {
-                    exitAnim.stop();
-                    if (message.scale < 1)
-                        appearAnim.restart();
-                    else
-                        flashAnim.restart();
-                }
-            }
-
-            Anim {
-                id: appearAnim
-
-                target: message
-                properties: "scale,opacity"
-                to: 1
-                onFinished: flashAnim.restart()
-            }
-
-            SequentialAnimation {
-                id: flashAnim
-
-                loops: 2
-
-                FlashAnim {
-                    to: 0.3
-                }
-                FlashAnim {
-                    to: 1
-                }
-            }
-
-            ParallelAnimation {
-                id: exitAnim
-
-                Anim {
-                    target: message
-                    property: "scale"
-                    to: 0.7
-                    duration: Appearance.anim.durations.long
-                }
-                Anim {
-                    target: message
-                    property: "opacity"
-                    to: 0
-                    duration: Appearance.anim.durations.long
-                }
-            }
-        }
-    }
-
-    component FlashAnim: NumberAnimation {
-        target: message
-        property: "opacity"
-        duration: Appearance.anim.durations.short
-        easing.type: Easing.Linear
+        Layout.fillHeight: true
+        Layout.preferredHeight: 2
     }
 }

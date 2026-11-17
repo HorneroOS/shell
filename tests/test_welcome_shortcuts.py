@@ -147,3 +147,23 @@ def test_shortcut_keycaps_use_printed_glyphs():
                  '"escape": "Esc"', '"mouse:272": "Left click"'):
         assert pair in text, f"keycap glyph missing: {pair}"
     assert "XF86" in text, "media keys must prettify the XF86 prefix"
+
+
+def test_shortcuts_page_never_shows_build_wording():
+    """VA-09: no manifest/regenerate wording for end users; a live
+    `hyprctl binds -j` fallback fills the page when the packaged manifest
+    is missing, and a single group hides the redundant All chip."""
+    text = SHORTCUT_LIST.read_text()
+    assert "Regenerate" not in text and "shortcuts manifest" not in text
+    assert "visible: root.groupNames.length > 1" in text
+    hints = (WELCOME / "ShortcutHints.qml").read_text()
+    assert "Compositor.refreshHyprlandBinds()" in hints
+    assert '["hyprctl", "binds", "-j"]' in (ROOT / "services" / "Compositor.qml").read_text()
+    assert "onLoadFailed: root.fallback()" in hints
+
+
+def test_start_page_has_one_primary_action():
+    start = (PAGES / "StartPage.qml").read_text()
+    assert start.count("primary: true") == 1
+    assert start.index("primary: true") < start.index("EditionPanel {}")
+    assert 'Take the tour' in start.split("primary: true", 1)[1].split("}", 1)[0]

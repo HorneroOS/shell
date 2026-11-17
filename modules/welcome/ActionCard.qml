@@ -17,6 +17,8 @@ StyledRect {
     required property string description
     property string shortcutId: ""
     property bool interactive: true
+    // The one call to action on a page: filled `signal` segment.
+    property bool primary: false
 
     signal activated()
 
@@ -28,9 +30,9 @@ StyledRect {
     implicitHeight: Math.max(88, content.implicitHeight + Appearance.padding.normal * 2)
 
     radius: Appearance.rounding.small
-    color: root.interactive && cardState.containsMouse ? Signal.palette.raised : Signal.palette.panel
+    color: root.primary ? Signal.palette.signal : root.interactive && cardState.containsMouse ? Signal.palette.raised : Signal.palette.panel
     border.width: 1
-    border.color: Signal.palette.rule
+    border.color: root.primary ? Signal.palette.signal : Signal.palette.rule
 
     Behavior on color {
         CAnim {}
@@ -48,7 +50,7 @@ StyledRect {
 
         Glyph {
             name: root.icon
-            color: Signal.palette.signal
+            color: root.primary ? Signal.palette.onSignal : Signal.palette.signal
             font.pointSize: Appearance.font.size.large
         }
 
@@ -59,6 +61,7 @@ StyledRect {
             StyledText {
                 Layout.fillWidth: true
                 text: root.title
+                color: root.primary ? Signal.palette.onSignal : Signal.palette.ink
                 font.weight: 600
                 elide: Text.ElideRight
             }
@@ -66,7 +69,7 @@ StyledRect {
             StyledText {
                 Layout.fillWidth: true
                 text: root.description
-                color: Signal.palette.inkMuted
+                color: root.primary ? Signal.palette.onSignal : Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.smaller
                 wrapMode: Text.WordWrap
             }
@@ -97,7 +100,7 @@ StyledRect {
         Glyph {
             visible: root.interactive
             name: "chevron-right"
-            color: Signal.palette.inkMuted
+            color: root.primary ? Signal.palette.onSignal : Signal.palette.inkMuted
         }
     }
 

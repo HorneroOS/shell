@@ -1,6 +1,7 @@
 pragma Singleton
 
 import qs.utils
+import qs.services
 import Quickshell
 import Quickshell.Io
 import QtQuick
@@ -43,6 +44,9 @@ Singleton {
     // the curated first-wins view; entries feed the filterable cheatsheet.
     property var entries: []
     property bool ready: false
+    // True when the entries come from the live compositor instead of the
+    // packaged manifest (first run before materialize has written it).
+    property bool live: false
 
     readonly property string manifestPath: `${Paths.data}/shortcuts.json`
 
@@ -90,15 +94,81 @@ Singleton {
         root.ready = true;
     }
 
+    // Fallback when the packaged manifest is absent or empty: ask the
+    // running Hyprland for its binds (`hyprctl binds -j`) so the Shortcuts
+    // page is populated on a clean profile. Same entry shape as the
+    // manifest; ids are synthesised and never collide with curated ids.
+    readonly property var modBits: [[64, "SUPER"], [4, "CTRL"], [8, "ALT"], [1, "SHIFT"]]
+
+    function parseBinds(text: string): void {
+        const out = {};
+        const all = [];
+        try {
+            const list = JSON.parse(text);
+            if (Array.isArray(list)) {
+                for (const b of list) {
+                    if (b === null || typeof b !== "object" || b.catchall === true || b.mouse === true)
+                        continue;
+                    if (typeof b.submap === "string" && b.submap !== "")
+                        continue;
+                    if (typeof b.key !== "string" || b.key === "" || typeof b.dispatcher !== "string" || b.dispatcher === "")
+                        continue;
+                    const mask = Number(b.modmask) || 0;
+                    const mods = [];
+                    for (const [bit, name] of root.modBits) {
+                        if ((mask & bit) !== 0)
+                            mods.push(name);
+                    }
+                    const args = typeof b.arg === "string" ? b.arg : "";
+                    const slug = (b.dispatcher + "-" + args.split(/\s+/)[0]).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+                    const id = "bind-" + slug + "-" + mods.join("").toLowerCase() + "-" + b.key.toLowerCase();
+                    if (out[id] === undefined)
+                        out[id] = mods.concat([b.key]).join(" + ");
+                    all.push({ id, dispatcher: b.dispatcher, args, mods, key: b.key });
+                }
+            }
+        } catch (e) {
+            // Unreadable compositor output: the page shows its plain empty state.
+        }
+        if (all.length > 0) {
+            root.badges = out;
+            root.entries = all;
+            root.live = true;
+        }
+        root.ready = true;
+    }
+
+    function fallback(): void {
+        root.badges = {};
+        root.entries = [];
+        if (!Compositor.isHyprland) {
+            root.ready = true;
+            return;
+        }
+        if (Compositor.hyprlandBindsLoaded)
+            root.parseBinds(Compositor.hyprlandBindsJson);
+        else
+            Compositor.refreshHyprlandBinds();
+    }
+
+    Connections {
+        target: Compositor
+
+        function onHyprlandBindsLoadedChanged(): void {
+            if (Compositor.hyprlandBindsLoaded && root.entries.length === 0)
+                root.parseBinds(Compositor.hyprlandBindsJson);
+        }
+    }
+
     FileView {
         path: root.manifestPath
         watchChanges: true
         onFileChanged: reload()
-        onLoaded: root.parse(text())
-        onLoadFailed: {
-            root.badges = {};
-            root.entries = [];
-            root.ready = true;
+        onLoaded: {
+            root.parse(text());
+            if (root.entries.length === 0)
+                root.fallback();
         }
+        onLoadFailed: root.fallback()
     }
 }

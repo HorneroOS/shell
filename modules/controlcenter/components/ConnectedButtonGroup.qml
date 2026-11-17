@@ -10,15 +10,35 @@ import QtQuick.Layouts
 StyledRect {
     id: root
 
+    // Inside a ChannelPanel the row is flat: no frame of its own, a hairline
+    // separates it from the previous row.
+    readonly property bool flat: {
+        for (let p = root.parent; p; p = p.parent) {
+            if (p.isChannelPanel === true)
+                return true;
+        }
+        return false;
+    }
+    readonly property bool isFirst: {
+        const siblings = root.parent ? root.parent.children : [];
+        for (let i = 0; i < siblings.length; i++) {
+            if (siblings[i] === root)
+                return true;
+            if (siblings[i].visible && siblings[i].implicitHeight > 0)
+                return false;
+        }
+        return true;
+    }
+
     property var options: [] // Array of {label: string, propertyName: string, onToggled: function}
     property var rootItem: null // The root item that contains the properties we want to bind to
     property string title: "" // Optional title text
 
     Layout.fillWidth: true
-    implicitHeight: layout.implicitHeight + Appearance.padding.large * 2
+    implicitHeight: layout.implicitHeight + (root.flat ? Appearance.padding.small * 2 : Appearance.padding.large * 2)
     radius: Appearance.rounding.small
     color: "transparent"
-    border.width: 1
+    border.width: root.flat ? 0 : 1
     border.color: Signal.palette.rule
     clip: true
 
@@ -26,11 +46,20 @@ StyledRect {
         Anim {}
     }
 
+    Hairline {
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        visible: root.flat && !root.isFirst
+    }
+
     ColumnLayout {
         id: layout
 
         anchors.fill: parent
-        anchors.margins: Appearance.padding.large
+        anchors.margins: root.flat ? Appearance.padding.small : Appearance.padding.large
+        anchors.leftMargin: root.flat ? 0 : Appearance.padding.large
+        anchors.rightMargin: root.flat ? 0 : Appearance.padding.large
         spacing: Appearance.spacing.normal
 
         StyledText {

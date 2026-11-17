@@ -78,3 +78,20 @@ def test_power_and_system_use_channel_panels_and_meters():
     assert "Signal.palette.lifted" not in system  # no filled progress track
     updates = _src(CC / "updates/UpdatesPane.qml")
     assert "ChannelPanel {" in updates and 'qsTr("Dependencies & recovery")' in updates
+
+
+def test_settings_panes_use_channel_panels_instead_of_tonal_cards():
+    for rel in ("notifications/NotificationsPane.qml", "osd/OsdPane.qml", "windows/WindowsPane.qml",
+                "nightlight/NightLightPane.qml", "accessibility/AccessibilityPane.qml",
+                "capture/CapturePane.qml", "session/SessionPane.qml", "lockscreen/LockScreenPane.qml"):
+        src = _src(CC / rel)
+        assert "ChannelPanel {" in src, rel
+        assert "Signal.layer(Signal.palette.panel" not in src, rel
+
+
+def test_kit_rows_go_flat_inside_a_channel_panel():
+    assert "isChannelPanel: true" in _src(KIT / "ChannelPanel.qml")
+    for rel in ("components/controls/SwitchRow.qml", "components/controls/SpinBoxRow.qml",
+                "components/controls/SplitButtonRow.qml", "modules/controlcenter/components/ConnectedButtonGroup.qml"):
+        src = _src(ROOT / rel)
+        assert "p.isChannelPanel === true" in src and "border.width: root.flat ? 0 : 1" in src, rel

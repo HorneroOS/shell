@@ -9,6 +9,26 @@ import QtQuick.Layouts
 StyledRect {
     id: root
 
+    // Inside a ChannelPanel the row is flat: no frame of its own, a hairline
+    // separates it from the previous row.
+    readonly property bool flat: {
+        for (let p = root.parent; p; p = p.parent) {
+            if (p.isChannelPanel === true)
+                return true;
+        }
+        return false;
+    }
+    readonly property bool isFirst: {
+        const siblings = root.parent ? root.parent.children : [];
+        for (let i = 0; i < siblings.length; i++) {
+            if (siblings[i] === root)
+                return true;
+            if (siblings[i].visible && siblings[i].implicitHeight > 0)
+                return false;
+        }
+        return true;
+    }
+
     required property string label
     required property real value
     required property real min
@@ -17,14 +37,21 @@ StyledRect {
     property var onValueModified: function (value) {}
 
     Layout.fillWidth: true
-    implicitHeight: row.implicitHeight + Appearance.padding.large * 2
+    implicitHeight: row.implicitHeight + (root.flat ? Appearance.padding.small * 2 : Appearance.padding.large * 2)
     radius: Appearance.rounding.small
     color: "transparent"
-    border.width: 1
+    border.width: root.flat ? 0 : 1
     border.color: Signal.palette.rule
 
     Behavior on implicitHeight {
         Anim {}
+    }
+
+    Hairline {
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        visible: root.flat && !root.isFirst
     }
 
     RowLayout {
@@ -33,7 +60,9 @@ StyledRect {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
-        anchors.margins: Appearance.padding.large
+        anchors.margins: root.flat ? Appearance.padding.small : Appearance.padding.large
+        anchors.leftMargin: root.flat ? 0 : Appearance.padding.large
+        anchors.rightMargin: root.flat ? 0 : Appearance.padding.large
         spacing: Appearance.spacing.normal
 
         StyledText {

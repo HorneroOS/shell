@@ -80,7 +80,9 @@ Item {
         Layout.fillWidth: true
         implicitHeight: row.implicitHeight + Appearance.padding.normal * 2
         radius: Appearance.rounding.small
-        color: Signal.layer(Signal.palette.raised, 2)
+        color: terminalCard.installed && terminalCard.terminalId === root.selectedTerminal ? Signal.palette.signalWell : "transparent"
+        border.width: 1
+        border.color: Signal.palette.rule
 
         Item {
             id: row
@@ -273,7 +275,7 @@ Item {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
-                spacing: Appearance.spacing.normal
+                spacing: Appearance.spacing.large
 
                 PaneHeader {
                     id: header

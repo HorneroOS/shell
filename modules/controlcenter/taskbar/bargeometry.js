@@ -20,6 +20,11 @@ var LIMITS = {
     radius: { min: -1, max: 24, step: 1, fallback: -1 },
     innerWidth: { min: 22, max: 56, step: 2, fallback: 24 },
     contentScale: { min: 0.75, max: 1.5, step: 0.05, fallback: 1 },
+    // Item style: icon size, text size, gap between items, text weight.
+    iconScale: { min: 0.6, max: 1.5, step: 0.05, fallback: 1 },
+    textScale: { min: 0.75, max: 1.5, step: 0.05, fallback: 1 },
+    itemSpacing: { min: 0.5, max: 2, step: 0.05, fallback: 1 },
+    textWeight: { min: 300, max: 600, step: 50, fallback: 400 },
     densityScale: { min: 0.75, max: 1.5, step: 0.05, fallback: 1 },
     roundingScale: { min: 0.5, max: 2, step: 0.1, fallback: 1 },
     spacingScale: { min: 0.75, max: 1.5, step: 0.05, fallback: 1 },
@@ -119,6 +124,11 @@ function presetGlobals(preset) {
     return {
         innerWidth: clamp("innerWidth", sizes.innerWidth),
         contentScale: clamp("contentScale", sizes.contentScale === undefined ? 1 : sizes.contentScale),
+        iconScale: clamp("iconScale", sizes.iconScale === undefined ? 1 : sizes.iconScale),
+        textScale: clamp("textScale", sizes.textScale === undefined ? 1 : sizes.textScale),
+        itemSpacing: clamp("itemSpacing", sizes.itemSpacing === undefined ? 1 : sizes.itemSpacing),
+        textWeight: clamp("textWeight", sizes.textWeight === undefined ? 400 : sizes.textWeight),
+        typeface: preset && preset.bar && preset.bar.typeface === "sans" ? "sans" : "mono",
         densityScale: clamp("densityScale", sizes.densityScale === undefined ? 1 : sizes.densityScale),
         roundingScale: clamp("roundingScale", scale("rounding")),
         spacingScale: clamp("spacingScale", scale("spacing")),

@@ -59,6 +59,11 @@ ColumnLayout {
         const g = root.presetGlobals;
         Config.bar.sizes.innerWidth = g.innerWidth;
         Config.bar.sizes.contentScale = g.contentScale;
+        Config.bar.sizes.iconScale = g.iconScale;
+        Config.bar.sizes.textScale = g.textScale;
+        Config.bar.sizes.itemSpacing = g.itemSpacing;
+        Config.bar.sizes.textWeight = g.textWeight;
+        Config.bar.typeface = g.typeface;
         Config.bar.sizes.densityScale = g.densityScale;
         Config.bar.sizes.autoDensity = true;
         Config.appearance.rounding.scale = g.roundingScale;
@@ -257,6 +262,59 @@ ColumnLayout {
     }
 
     SpinBoxRow {
+        label: qsTr("Icon size (%)")
+        value: Math.round(Config.bar.sizes.iconScale * 100)
+        min: Geo.LIMITS.iconScale.min * 100
+        max: Geo.LIMITS.iconScale.max * 100
+        step: 5
+        onValueModified: value => root.setSize("iconScale", value / 100)
+    }
+
+    SpinBoxRow {
+        label: qsTr("Text size (%)")
+        value: Math.round(Config.bar.sizes.textScale * 100)
+        min: Geo.LIMITS.textScale.min * 100
+        max: Geo.LIMITS.textScale.max * 100
+        step: 5
+        onValueModified: value => root.setSize("textScale", value / 100)
+    }
+
+    SpinBoxRow {
+        label: qsTr("Text weight")
+        value: Config.bar.sizes.textWeight
+        min: Geo.LIMITS.textWeight.min
+        max: Geo.LIMITS.textWeight.max
+        step: Geo.LIMITS.textWeight.step
+        onValueModified: value => root.setSize("textWeight", value)
+    }
+
+    SpinBoxRow {
+        label: qsTr("Space between items (%)")
+        value: Math.round(Config.bar.sizes.itemSpacing * 100)
+        min: Geo.LIMITS.itemSpacing.min * 100
+        max: Geo.LIMITS.itemSpacing.max * 100
+        step: 5
+        onValueModified: value => root.setSize("itemSpacing", value / 100)
+    }
+
+    StyledText {
+        Layout.fillWidth: true
+        text: qsTr("Text face")
+        font.pointSize: Appearance.font.size.smaller
+        color: Signal.palette.inkMuted
+    }
+
+    SegmentedControl {
+        accessibleName: qsTr("Text face of bar values and labels")
+        model: [qsTr("Mono (Signal)"), qsTr("Sans (clean)")]
+        currentIndex: Config.bar.typeface === "sans" ? 1 : 0
+        onActivated: index => {
+            Config.bar.typeface = index === 1 ? "sans" : "mono";
+            Config.save();
+        }
+    }
+
+    SpinBoxRow {
         label: qsTr("Density (%)")
         value: Math.round(Config.bar.sizes.densityScale * 100)
         min: Geo.LIMITS.densityScale.min * 100
@@ -304,7 +362,7 @@ ColumnLayout {
     TextButton {
         text: qsTr("Reset all sizes")
         type: TextButton.Tonal
-        Accessible.name: qsTr("Reset cell size, scales, radius, gap and padding to the layout default")
+        Accessible.name: qsTr("Reset cell size, scales, text face, radius, gap and padding to the layout default")
         onClicked: root.resetGlobals()
     }
 }

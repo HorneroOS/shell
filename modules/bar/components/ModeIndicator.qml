@@ -32,7 +32,7 @@ Item {
     readonly property string code: root.codes[Experience.mode] ?? ""
     readonly property bool showCode: !root.vertical && Experience.density !== "icons"
     // Non-default modes read in `signal`; Everyday stays muted.
-    readonly property color accent: Experience.mode === "everyday" ? root.tone.inkMuted : root.tone.signal
+    readonly property color accent: Experience.mode === "everyday" ? root.tone.ink : root.tone.signal
 
     visible: root.shown
     implicitWidth: root.shown ? layout.implicitWidth + Appearance.padding.small * 2 : 0
@@ -68,14 +68,12 @@ Item {
             font.pointSize: Density.iconPt
         }
 
-        StyledText {
+        BarText {
             visible: root.showCode
-            text: root.code
+            role: "eyebrow"
+            text: Density.clean ? root.code.charAt(0) + root.code.slice(1).toLowerCase() : root.code
             color: root.accent
-            font.family: Appearance.font.family.mono
-            font.pointSize: Density.microPt
-            font.weight: root.tone.weight > Font.Normal ? root.tone.weight : Font.Medium
-            font.letterSpacing: 0.8
+            font.weight: Math.max(Density.textWeight, root.tone.weight > Font.Normal ? root.tone.weight : Font.Medium)
         }
     }
 }

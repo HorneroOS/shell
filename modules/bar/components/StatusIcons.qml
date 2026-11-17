@@ -201,12 +201,11 @@ StyledRect {
             accessibleLabel: qsTr("Keyboard layout controls")
             active: Config.bar.status.showKbLayout && Compositor.supports("keyboardLayoutSwitch")
 
-            sourceComponent: StyledText {
-                font.pointSize: Density.textPt
+            sourceComponent: BarText {
+                role: "label"
                 animate: true
-                text: Compositor.keyboardLayoutShort
+                text: Density.clean ? Compositor.keyboardLayoutShort.toLowerCase() : Compositor.keyboardLayoutShort
                 color: root.colour
-                font.family: Appearance.font.family.mono
             }
         }
 

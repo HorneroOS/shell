@@ -953,6 +953,8 @@ Item {
             property real outlinePx: halo.fx.outlinePx
             property real shadowPx: halo.fx.shadowPx
             property real haloAlpha: halo.fx.alpha
+            property real shadowAlpha: halo.fx.shadowAlpha
+            property real shadowDy: halo.fx.shadowDy
 
             visible: root.clear && wrapped.item !== null && halo.fx.enabled
             x: -halo.pad

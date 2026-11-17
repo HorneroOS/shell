@@ -17,6 +17,9 @@ import QtQuick
 StyledRect {
     id: root
 
+    // Region tone: the plain Signal palette, or per-region ink on Cockpit Clear.
+    property var tone: ClearInk.neutral
+
     required property ShellScreen screen
     readonly property alias layout: layout
     readonly property alias expandIcon: expandIcon
@@ -128,7 +131,7 @@ StyledRect {
                 hiddenIds: Config.bar.extensions.hiddenIcons
                 // Recolour mirrors the tray: icons take the secondary tint;
                 // without it the island leaves plugin icon colours alone.
-                iconColour: Config.bar.extensions.recolour ? Signal.palette.inkMuted : "transparent"
+                iconColour: Config.bar.extensions.recolour ? root.tone.ink : "transparent"
                 iconSize: Density.iconPt
                 textSize: Density.textPt
                 edge: root.hostEdge
@@ -178,7 +181,7 @@ StyledRect {
                 hiddenIds: Config.bar.extensions.hiddenIcons
                 // Recolour mirrors the tray: icons take the secondary tint;
                 // without it the island leaves plugin icon colours alone.
-                iconColour: Config.bar.extensions.recolour ? Signal.palette.inkMuted : "transparent"
+                iconColour: Config.bar.extensions.recolour ? root.tone.ink : "transparent"
                 iconSize: Density.iconPt
                 textSize: Density.textPt
                 edge: root.hostEdge
@@ -213,6 +216,7 @@ StyledRect {
                 anchors.right: root.vertical ? undefined : parent.right
                 anchors.rightMargin: root.vertical ? 0 : (root.chip ? Appearance.padding.small : -Appearance.padding.small)
                 name: root.vertical ? "chevron-up" : "chevron-right"
+                color: root.tone.ink
                 font.pointSize: Density.iconPt
                 rotation: root.expanded ? 180 : 0
 

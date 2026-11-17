@@ -80,7 +80,11 @@ Item {
             Layout.preferredWidth: root.vertical ? implicitWidth : Density.inner - Appearance.padding.small * 2
 
             animate: true
-            mono: true
+            font.family: Density.dataFamily
+            font.weight: Density.textWeight
+            font.features: ({
+                    "tnum": 1
+                })
             font.pointSize: Density.textPt
             text: {
                 if (root.niriMode) {

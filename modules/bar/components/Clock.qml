@@ -24,6 +24,10 @@ Item {
     // bar.clock.showDate for this layout.
     property var options: ({})
     readonly property bool showDate: typeof options?.showDate === "boolean" ? options.showDate : Config.bar.clock.showDate
+    // Clean typography (Sans): the time is the same face as every other
+    // value, one step larger; the Signal face is Plex Sans Condensed Medium.
+    readonly property string timeFamily: Density.clean ? Appearance.font.family.sans : Appearance.font.family.display
+    readonly property int timeWeight: Density.clean ? Density.textWeight : Font.Medium
 
     implicitWidth: layout.implicitWidth
     implicitHeight: layout.implicitHeight
@@ -55,7 +59,7 @@ Item {
 
             sourceComponent: Glyph {
                 size: Density.iconPt
-                name: "calendar-month"
+                name: "clock"
                 color: root.colour
             }
         }
@@ -74,20 +78,20 @@ Item {
 
                 text: "00"
                 font.pointSize: Density.clockPt
-                font.family: Appearance.font.family.display
-                font.weight: Font.Medium
+                font.family: root.timeFamily
+                font.weight: root.timeWeight
                 font.features: {
                     "tnum": 1
                 }
             }
 
             StyledText {
-                Layout.alignment: Qt.AlignVCenter
+                Layout.alignment: Qt.AlignBaseline
 
                 text: Time.hourStr
                 font.pointSize: Density.clockPt
-                font.family: Appearance.font.family.display
-                font.weight: Font.Medium
+                font.family: root.timeFamily
+                font.weight: root.timeWeight
                 font.features: {
                     "tnum": 1
                 }
@@ -97,20 +101,21 @@ Item {
             }
 
             StyledText {
+                Layout.alignment: Qt.AlignBaseline
                 text: ":"
                 font.pointSize: Density.clockPt
-                font.family: Appearance.font.family.display
-                font.weight: Font.Medium
+                font.family: root.timeFamily
+                font.weight: root.timeWeight
                 color: root.colour
             }
 
             StyledText {
-                Layout.alignment: Qt.AlignVCenter
+                Layout.alignment: Qt.AlignBaseline
 
                 text: Time.minuteStr
                 font.pointSize: Density.clockPt
-                font.family: Appearance.font.family.display
-                font.weight: Font.Medium
+                font.family: root.timeFamily
+                font.weight: root.timeWeight
                 font.features: {
                     "tnum": 1
                 }
@@ -119,27 +124,26 @@ Item {
                 horizontalAlignment: StyledText.AlignLeft
             }
 
-            StyledText {
+            BarText {
                 Layout.leftMargin: Appearance.spacing.small / 2
+                Layout.alignment: Qt.AlignBaseline
                 visible: Config.services.useTwelveHourClock
-                text: Time.amPmStr
-                font.pointSize: Density.textPt
-                font.family: Appearance.font.family.mono
+                role: "label"
+                text: Density.clean ? Time.amPmStr.toLowerCase() : Time.amPmStr
                 color: root.tone.inkMuted
             }
-        }
 
-        // Date: Plex Mono 12, uppercase, `inkMuted`, 8 px after the time
-        // (horizontal bars only).
-        StyledText {
-            Layout.alignment: Qt.AlignCenter
-            Layout.leftMargin: Appearance.spacing.smaller - Appearance.spacing.small
-            visible: root.showDate && !root.vertical
+            // Date: `inkMuted` after the time, on the time's baseline. Mono
+            // type is upper case ("TUE 17 NOV"); clean type is sentence case.
+            BarText {
+                Layout.alignment: Qt.AlignBaseline
+                Layout.leftMargin: Appearance.spacing.small
+                visible: root.showDate
 
-            text: Time.format("ddd d MMM").toUpperCase()
-            font.pointSize: Density.textPt
-            font.family: Appearance.font.family.mono
-            color: root.tone.inkMuted
+                role: "label"
+                text: Density.clean ? Time.format("ddd d MMM") : Time.format("ddd d MMM").toUpperCase()
+                color: root.tone.inkMuted
+            }
         }
 
         // Keep a rail clock compact: the meridiem shares the minute row

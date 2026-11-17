@@ -29,16 +29,16 @@ Item {
         Glyph {
             Layout.alignment: Qt.AlignCenter
             name: "keyboard"
-            color: root.tone.inkMuted
+            color: root.tone.ink
             font.pointSize: Density.iconPt
         }
 
-        StyledText {
+        BarText {
             Layout.alignment: Qt.AlignCenter
-            text: Compositor.keyboardLayoutShort
+            role: "label"
+            text: Density.clean ? Compositor.keyboardLayoutShort.toLowerCase() : Compositor.keyboardLayoutShort
             color: root.tone.ink
-            font.pointSize: Density.textPt
-            font.capitalization: Font.AllUppercase
+            font.capitalization: Density.clean ? Font.MixedCase : Font.AllUppercase
         }
     }
 }

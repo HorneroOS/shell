@@ -32,16 +32,15 @@ Item {
         Glyph {
             Layout.alignment: Qt.AlignCenter
             name: Weather.icon
-            color: Signal.palette.inkMuted
+            color: root.tone.ink
             font.pointSize: Density.iconPt
         }
 
-        StyledText {
+        BarText {
             Layout.alignment: Qt.AlignCenter
             visible: root.density === "values" || root.vertical
             text: Weather.temp
             color: root.tone.ink
-            font.pointSize: Density.textPt
         }
     }
 }

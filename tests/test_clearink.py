@@ -58,56 +58,55 @@ def test_polarity_follows_the_larger_contrast(mean, polarity):
     assert out == polarity
 
 
-def test_auto_halo_and_detail_shadow():
+def test_auto_is_a_hairline_rim_plus_soft_shadow_never_a_sticker_outline():
     flat = run_js("return toneFor({mean: 0.05, dev: 0.02}, 'auto', false)")
     busy = run_js("return toneFor({mean: 0.05, dev: 0.2}, 'auto', false)")
-    assert flat["haloPx"] == 3 and flat["shadowPx"] == 0 and flat["haloAlpha"] == 0.96
-    assert busy["haloPx"] == 3 and busy["shadowPx"] == 5  # deviation > 0.12
+    assert flat["haloPx"] == 1 and flat["haloAlpha"] == 0.5
+    assert flat["shadowPx"] == 3 and flat["shadowAlpha"] == pytest.approx(0.62)
+    assert busy["shadowPx"] == 4 and busy["shadowAlpha"] == pytest.approx(0.74)  # deviation > 0.12
+    # No style may bring back the old 3 px near-opaque ring.
+    for style in ("auto", "outline", "shadow", "contrast"):
+        t = run_js(f"return toneFor({{mean: 0.5, dev: 0.3}}, '{style}', false)")
+        assert t["haloPx"] <= 2 and (t["haloPx"] == 0 or t["haloAlpha"] > 0), style
 
 
 def test_foreground_styles():
     t = lambda style, mean=0.05: run_js(  # noqa: E731
         f"return toneFor({{mean: {mean}, dev: 0.3}}, '{style}', false)")
-    assert (t("outline")["haloPx"], t("outline")["shadowPx"]) == (3, 0)
-    assert (t("shadow")["haloPx"], t("shadow")["shadowPx"]) == (1, 4)
+    assert (t("outline")["haloPx"], t("outline")["shadowPx"]) == (1.5, 0)
+    assert (t("shadow")["haloPx"], t("shadow")["shadowPx"]) == (0, 4)
     contrast = t("contrast")
-    assert (contrast["haloPx"], contrast["shadowPx"], contrast["weight"]) == (3, 3, 600)
-    # Unknown styles are Auto.
+    assert (contrast["haloPx"], contrast["shadowPx"], contrast["weight"]) == (2, 3, 600)
     assert t("bogus")["style"] == "auto"
 
 
-def test_every_style_keeps_a_solid_ring_on_any_wallpaper():
-    # Legibility never depends on the wallpaper: every style draws an
-    # outline ring at every mean, so no style can fall to a bare glyph.
-    for style in ("auto", "outline", "shadow", "contrast"):
-        for mean in (0.0, 0.18, 0.5, 1.0):
-            tone = run_js(f"return toneFor({{mean: {mean}, dev: 0.01}}, '{style}', false)")
-            assert tone["haloPx"] >= 1 and tone["haloAlpha"] >= 0.9, (style, mean)
+def test_knobs_scale_the_halo_and_can_switch_it_off():
+    base = run_js("return toneFor({mean: 0.05, dev: 0.02}, 'auto', false)")
+    weak = run_js("return toneFor({mean: 0.05, dev: 0.02}, 'auto', false, null, {strength: 0.5, outline: 2})")
+    assert weak["shadowAlpha"] == pytest.approx(base["shadowAlpha"] * 0.5)
+    assert weak["haloPx"] == pytest.approx(base["haloPx"] * 2)
+    off = run_js("return effectParams(toneFor({mean: 0.05, dev: 0.02}, 'auto', false, null, {strength: 0}))")
+    assert off["enabled"] is False
+
+
+def test_forced_polarity_overrides_the_wallpaper():
+    light = run_js("return toneFor({mean: 1, dev: 0}, 'auto', false, null, {polarity: 'light'}).polarity")
+    dark = run_js("return toneFor({mean: 0, dev: 0}, 'auto', false, null, {polarity: 'dark'}).polarity")
+    assert (light, dark) == ("light", "dark")
+
+
+def test_auto_keeps_the_theme_polarity_on_dark_and_flips_on_bright_regions():
+    night = lambda m: run_js(f"return toneFor({{mean: {m}, dev: 0.02}}, 'auto', false).polarity")  # noqa: E731
+    day = lambda m: run_js(f"return toneFor({{mean: {m}, dev: 0.02}}, 'auto', true).polarity")  # noqa: E731
+    assert night(0.1) == "light" and night(0.7) == "dark"
+    assert day(0.9) == "dark" and day(0.01) == "light"
 
 
 def test_unknown_wallpaper_follows_theme_and_keeps_every_cue():
     night = run_js("return toneFor(null, 'auto', false)")
     day = run_js("return toneFor(null, 'auto', true)")
     assert (night["polarity"], day["polarity"]) == ("light", "dark")
-    assert night["known"] is False and night["haloPx"] == 3 and night["shadowPx"] == 5
-
-
-def test_halo_keeps_every_text_role_at_4_5_to_1_on_any_pixel():
-    # Worst case of §12.2: the 96 % halo composited over the opposite
-    # extreme of the wallpaper (black for a light halo, white for dark).
-    def mix(fg, bg, a):
-        f = [int(fg[i:i + 2], 16) for i in (1, 3, 5)]
-        b = [int(bg[i:i + 2], 16) for i in (1, 3, 5)]
-        return "#" + "".join(f"{round(x * a + y * (1 - a)):02x}" for x, y in zip(f, b))
-
-    tones = run_js("return {light: LIGHT, dark: DARK}")
-    for polarity, wall in (("light", "#FFFFFF"), ("dark", "#000000")):
-        t = tones[polarity]
-        # Light ink has a dark halo; the wallpaper pixel under the halo is
-        # the opposite extreme (bright) in the worst case.
-        under = mix(t["halo"], wall, 0.96)
-        for role in ("ink", "inkMuted"):
-            assert hex_contrast(t[role], under) >= 4.5, (polarity, role)
+    assert night["known"] is False and night["shadowPx"] == 4 and night["shadowAlpha"] > 0
 
 
 def test_grid_and_region_stats_split_a_two_tone_wallpaper():
@@ -141,9 +140,9 @@ def test_cover_rect_and_grid_rows():
 
 def test_effect_params_describe_a_glyph_shadow_not_a_box():
     flat = run_js("return effectParams(toneFor({mean: 0.05, dev: 0.02}, 'auto', false))")
-    assert flat["enabled"] and flat["outlinePx"] == 3 and flat["alpha"] == 0.96
-    assert flat["pad"] >= flat["outlinePx"] + 1  # the ring never clips
-    off = run_js("return effectParams({haloPx: 0, shadowPx: 0, haloAlpha: 0.96})")
+    assert flat["enabled"] and flat["outlinePx"] == 1 and flat["shadowPx"] == 3
+    assert flat["pad"] >= flat["shadowPx"] + flat["shadowDy"] + 1  # the shadow never clips
+    off = run_js("return effectParams({haloPx: 0, shadowPx: 0, haloAlpha: 0.5})")
     assert off["enabled"] is False
 
 

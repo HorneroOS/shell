@@ -166,25 +166,35 @@ including High Contrast. Legibility comes only from the foreground:
 
 - **Adaptive ink.** `components/clearink/ClearInkField.qml` draws the
   wallpaper once (on wallpaper or screen change, never per frame) into a
-  192-column luminance grid. Each bar entry owns a `ClearInkTone`: the
-  mean and deviation of the wallpaper under it (padded 2 px) pick the
-  polarity with the larger contrast, between the theme's Night ink
-  (`#ECE6DA`, halo `#0C0F13`) and Day ink (`#1B1E22`, halo `#FFFFFF`).
-  Wallpapers never recolour the UI. Video or unreadable wallpapers follow
-  the theme polarity and keep every cue on. The model is
-  `services/clearink.js`.
-- **Glyph-only halo and shadow.** Each entry gets one silhouette shadow in
-  the halo colour (88 % alpha), never a box. Bar components read their
-  colours from `tone` (`ink`, `inkMuted`, `signal`, `alert`); outside a
-  clear bar `tone` is the plain Signal palette.
+  192-column luminance grid. Each bar entry owns a `ClearInkTone`. Auto
+  keeps the theme's own polarity (Night ink `#ECE6DA`, Day ink `#1B1E22`)
+  while it holds 4.5:1 against the wallpaper next to the strokes (with the
+  halo laid under them) and 2.2 x the raw contrast, and flips only where it
+  does not, so a bar reads as one ink on most wallpapers. Wallpapers never
+  recolour the UI. Video or unreadable wallpapers follow the theme
+  polarity. The model is `services/clearink.js`.
+- **Glyph-only rim and shadow.** Each entry gets a silhouette halo in the
+  polarity's halo colour, never a box: a 1 px rim at 50 % plus a soft 3 px
+  drop shadow (4 px on detailed regions) in Auto. The shader
+  (`assets/shaders/clearinkhalo.frag`) carries separate ring and shadow
+  alphas. Bar components read their colours from `tone` (`ink`,
+  `inkMuted`, `signal`, `alert`); outside a clear bar `tone` is the plain
+  Signal palette. Tray icons and extension text follow the region ink.
 - **Styles** (`bar.clearStyle`, Layout Picker and Settings > Layout):
-  Auto (1 px halo, plus a 4 px soft shadow on detailed regions), Outline,
-  Shadow (2 px, falls back to Outline under 3:1) and Contrast (2 px halo,
-  SemiBold). High Contrast forces Contrast.
+  Auto (rim plus soft shadow), Outline (1.5 px firm ring), Shadow (4 px
+  soft drop) and Contrast (2 px ring plus shadow, SemiBold). High Contrast
+  forces Contrast. `bar.clearInk.{polarity,strength,outline}` fine-tune any
+  style (Auto/Light/Dark ink, 0 to 150 % strength, 0 to 200 % ring width).
+- **Item style.** Clear ships `bar.typeface: "sans"`, `iconScale` 0.88,
+  `textScale` 1.08, `itemSpacing` 1.5: one quiet foreground voice (Plex
+  Sans, sentence case, no tracking, tabular figures only for numbers), one
+  glyph set at one optical size, icons in the primary ink, a 2 px / 1 px
+  rule slider with a tick, thin 2 px meter segments. All of it is under
+  Bars > Size & shape.
 - **Popouts** opened from a clear bar are ordinary opaque Signal panels.
 
-The halo is an approximation of the spec's text outline: a MultiEffect
-silhouette shadow, so it also rings meter segments and glyph icons.
+The halo is computed per entry by a shader over the entry's silhouette, so
+it also covers meter segments and glyph icons.
 
 ## Ownership and persistence
 
@@ -244,6 +254,11 @@ as `config/BarConfig.qml`:
 | Density (per bar) | `bar.bars[].density` | values, glyphs |
 | Cell size | `bar.sizes.innerWidth` | 22 to 56 px |
 | Icon and label size | `bar.sizes.contentScale` | 75 to 150 % |
+| Icon size | `bar.sizes.iconScale` | 60 to 150 % |
+| Text size | `bar.sizes.textScale` | 75 to 150 % |
+| Text weight | `bar.sizes.textWeight` | 300 to 600 |
+| Space between items | `bar.sizes.itemSpacing` | 50 to 200 % |
+| Text face | `bar.typeface` | mono or sans |
 | Density | `bar.sizes.densityScale` | 75 to 150 % |
 | Follow screen height | `bar.sizes.autoDensity` | on, off |
 | Corner radius | `appearance.rounding.scale` | 50 to 200 % |

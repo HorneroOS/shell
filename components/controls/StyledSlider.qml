@@ -28,6 +28,8 @@ Slider {
     // Rule track (Cockpit Clear): a 1 px line with square ends and a
     // slim thumb instead of the capsule track, so the glyph halo stays light.
     property bool ruleTrack: false
+    // The part of the track beyond the handle.
+    property color trackColour: Signal.palette.lifted
 
     opacity: root.enabled ? 1 : 0.5
 
@@ -36,8 +38,9 @@ Slider {
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             anchors.left: parent.left
-            anchors.topMargin: root.ruleTrack ? (root.implicitHeight - 1) / 2 : root.implicitHeight / 3
-            anchors.bottomMargin: root.ruleTrack ? (root.implicitHeight - 1) / 2 : root.implicitHeight / 3
+            // Rule track: a 2 px filled line over a 1 px remainder.
+            anchors.topMargin: root.ruleTrack ? Math.floor((root.implicitHeight - 2) / 2) : root.implicitHeight / 3
+            anchors.bottomMargin: root.ruleTrack ? Math.ceil((root.implicitHeight - 2) / 2) : root.implicitHeight / 3
 
             implicitWidth: root.handle.x - root.implicitHeight / 6
 
@@ -51,12 +54,12 @@ Slider {
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             anchors.right: parent.right
-            anchors.topMargin: root.ruleTrack ? (root.implicitHeight - 1) / 2 : root.implicitHeight / 3
-            anchors.bottomMargin: root.ruleTrack ? (root.implicitHeight - 1) / 2 : root.implicitHeight / 3
+            anchors.topMargin: root.ruleTrack ? Math.floor((root.implicitHeight - 1) / 2) : root.implicitHeight / 3
+            anchors.bottomMargin: root.ruleTrack ? Math.ceil((root.implicitHeight - 1) / 2) : root.implicitHeight / 3
 
             implicitWidth: parent.width - root.handle.x - root.handle.implicitWidth - root.implicitHeight / 6
 
-            color: Signal.palette.lifted
+            color: root.trackColour
             radius: root.ruleTrack ? 0 : Appearance.rounding.small
             topLeftRadius: root.ruleTrack ? 0 : root.implicitHeight / 15
             bottomLeftRadius: root.ruleTrack ? 0 : root.implicitHeight / 15
@@ -70,7 +73,7 @@ Slider {
         implicitHeight: root.implicitHeight
 
         color: root.thumbColour
-        radius: Appearance.rounding.small
+        radius: root.ruleTrack ? 0 : Appearance.rounding.small
 
         MouseArea {
             anchors.fill: parent

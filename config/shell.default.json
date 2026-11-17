@@ -180,6 +180,12 @@
     "persistent": true,
     "showOnHover": true,
     "clearStyle": "auto",
+    "clearInk": {
+      "strength": 1,
+      "outline": 1,
+      "polarity": "auto"
+    },
+    "typeface": "mono",
     "mark": "hornero",
     "dragThreshold": 20,
     "perScreen": [],
@@ -378,7 +384,11 @@
       "kbLayoutWidth": 320,
       "autoDensity": true,
       "densityScale": 1,
-      "contentScale": 1
+      "contentScale": 1,
+      "iconScale": 1,
+      "textScale": 1,
+      "itemSpacing": 1,
+      "textWeight": 400
     },
     "excludedScreens": []
   },

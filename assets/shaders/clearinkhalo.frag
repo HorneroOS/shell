@@ -5,7 +5,8 @@
 // shadow, both painted in the halo colour. Only the ring/shadow is output;
 // the real glyphs are drawn above it, so the foreground keeps its own
 // anti-aliasing. No box, slab or tint is ever produced: pixels further than
-// outlinePx / shadowPx from a painted pixel stay fully transparent.
+// outlinePx / shadowPx from a painted pixel stay fully transparent. The ring
+// and the soft shadow carry their own peak alpha (haloAlpha, shadowAlpha).
 
 layout(location = 0) in vec2 qt_TexCoord0;
 layout(location = 0) out vec4 fragColor;
@@ -19,6 +20,8 @@ layout(std140, binding = 0) uniform buf {
     float outlinePx;  // hard outline radius, logical px (0 = none)
     float shadowPx;   // soft shadow radius, logical px (0 = none)
     float haloAlpha;  // peak alpha of the ring
+    float shadowAlpha; // peak alpha of the soft shadow
+    float shadowDy;   // soft shadow drop, logical px (positive = down)
 };
 
 layout(binding = 1) uniform sampler2D source;
@@ -56,12 +59,14 @@ void main()
 
     float soft = 0.0;
     if (shadowPx > 0.0) {
-        float sum = own;
+        // The shadow sits shadowDy below the glyph, like a text shadow.
+        vec2 suv = uv - vec2(0.0, shadowDy * texel.y);
+        float sum = texture(source, suv).a;
         for (int i = 0; i < 12; i++) {
             float a = float(i) * (TAU / 12.0);
             vec2 d = vec2(cos(a), sin(a));
-            sum += tap(uv, d, shadowPx);
-            sum += tap(uv, d, shadowPx * 0.5);
+            sum += tap(suv, d, shadowPx);
+            sum += tap(suv, d, shadowPx * 0.5);
         }
         // Dense near the glyph, fading out at shadowPx; 2.6 lifts the mean
         // of a thin stroke's neighbourhood to a usable alpha.
@@ -80,6 +85,6 @@ void main()
     // lift it so the ring is solid next to the glyph (RFC 0001 §5.1 needs
     // the foreground, not the wallpaper, to carry the contrast).
     ring = clamp(ring * 2.6, 0.0, 1.0);
-    float a = clamp(max(ring, soft), 0.0, 1.0) * haloAlpha;
+    float a = clamp(max(ring * haloAlpha, soft * shadowAlpha), 0.0, 1.0);
     fragColor = vec4(halo.rgb * a, a) * qt_Opacity;
 }

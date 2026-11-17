@@ -122,7 +122,11 @@
       }
     ],
     "sizes": {
-      "innerWidth": 24
+      "innerWidth": 24,
+      "iconScale": 0.88,
+      "textScale": 1.08,
+      "itemSpacing": 1.5,
+      "textWeight": 400
     },
     "status": {
       "showAudio": true,
@@ -135,7 +139,8 @@
       "workspaces": true,
       "volume": true,
       "brightness": true
-    }
+    },
+    "typeface": "sans"
   },
   "border": {
     "frameEnabled": false

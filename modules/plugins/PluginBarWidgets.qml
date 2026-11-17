@@ -137,7 +137,8 @@ Repeater {
         // Raw Qt Controls an extension uses in its bar popover (TextField,
         // ComboBox, ...) take the shell palette instead of the Basic style's
         // white field, as on the dashboard host.
-        palette.windowText: Signal.palette.ink
+        // On a Clear bar the island's region ink (iconColour) is the foreground.
+        palette.windowText: root.iconColour.a > 0 ? root.iconColour : Signal.palette.ink
         palette.window: Signal.palette.panel
         palette.base: Signal.palette.raised
         palette.alternateBase: Signal.palette.lifted

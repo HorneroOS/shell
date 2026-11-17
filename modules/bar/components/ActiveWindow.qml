@@ -90,7 +90,8 @@ Item {
         }
         text: Config.bar.activeWindow.compact ? compactTitle : rawTitle
         font.pointSize: Density.textPt
-        font.family: Appearance.font.family.mono
+        font.family: Density.dataFamily
+        font.weight: Density.textWeight
         elide: Qt.ElideRight
         elideWidth: root.maxLength - (root.vertical ? icon.height : icon.width + Appearance.spacing.small)
 
@@ -128,6 +129,7 @@ Item {
 
         font.pointSize: metrics.font.pointSize
         font.family: metrics.font.family
+        font.weight: metrics.font.weight
         color: root.colour
         opacity: root.current === this ? 1 : 0
         visible: !root.compactRail

@@ -7,6 +7,13 @@ JsonObject {
     // "auto" | "outline" | "shadow" | "contrast". High Contrast forces
     // "contrast".
     property string clearStyle: "auto"
+    // Cockpit Clear ink knobs: shadow/outline strength (0..1.5), ring width
+    // (0..2) and polarity ("auto" | "light" | "dark").
+    property ClearInkKnobs clearInk: ClearInkKnobs {}
+    // Typeface of values, dates and labels in the bars: "mono" (IBM Plex
+    // Mono, the Signal data face) or "sans" (IBM Plex Sans, plain case, no
+    // tracking). Clear layouts ship "sans".
+    property string typeface: "mono"
     // Launcher mark in the bar: "hornero" (symbolic mark, signal amber) or
     // "distro" (the base distribution logo, in ink).
     property string mark: "hornero"
@@ -226,6 +233,12 @@ JsonObject {
         property bool background: false
     }
 
+    component ClearInkKnobs: JsonObject {
+        property real strength: 1
+        property real outline: 1
+        property string polarity: "auto"
+    }
+
     component Sizes: JsonObject {
         property int innerWidth: 24
         // Density (services/Density.qml): follow the screen's logical height,
@@ -234,6 +247,13 @@ JsonObject {
         property real densityScale: 1
         // Icon and label size multiplier (0.75..1.5): chunky rails raise it.
         property real contentScale: 1
+        // Item style (all multipliers of the density-derived values): icon
+        // size, text size, gap between items/segments, and the text weight
+        // (300..600) of values, dates and labels.
+        property real iconScale: 1
+        property real textScale: 1
+        property real itemSpacing: 1
+        property int textWeight: 400
         property int windowPreviewSize: 400
         property int trayMenuWidth: 300
         property int batteryWidth: 250

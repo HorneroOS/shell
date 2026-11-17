@@ -185,8 +185,8 @@ including High Contrast. Legibility comes only from the foreground:
   soft drop) and Contrast (2 px ring plus shadow, SemiBold). High Contrast
   forces Contrast. `bar.clearInk.{polarity,strength,outline}` fine-tune any
   style (Auto/Light/Dark ink, 0 to 150 % strength, 0 to 200 % ring width).
-- **Item style.** Clear ships `bar.typeface: "sans"`, `iconScale` 0.88,
-  `textScale` 1.08, `itemSpacing` 1.5: one quiet foreground voice (Plex
+- **Item style.** Clear ships `bar.typeface: "sans"`, `iconScale` 0.9,
+  `textScale` 1.1, `itemSpacing` 2: one quiet foreground voice (Plex
   Sans, sentence case, no tracking, tabular figures only for numbers), one
   glyph set at one optical size, icons in the primary ink, a 2 px / 1 px
   rule slider with a tick, thin 2 px meter segments. All of it is under

@@ -22,7 +22,8 @@ def test_bottom_strip_resources_are_segmented_real_meters():
     src = (ROOT / "modules/bar/components/Resources.qml").read_text(encoding="utf-8")
     assert "Instruments.SegmentMeter" in src and "count: 8" in src
     assert "SystemUsage.cpuTempAvailable" in src  # no sensor, no temperature
-    assert '"tnum": 1' in src
+    assert "BarText" in src  # values are BarText role "value": tabular figures
+    assert 'tabular: root.role === "value"' in (ROOT / "components/BarText.qml").read_text(encoding="utf-8")
     assert "readonly property bool available: metrics.length > 0" in src
     bar = (ROOT / "modules/bar/Bar.qml").read_text(encoding="utf-8")
     assert "compact: root.compact" in bar
@@ -35,7 +36,9 @@ def test_idle_media_transport_leaves_no_segment():
 
 def test_bar_clock_uses_plex_sans_condensed():
     clock = (ROOT / "modules/bar/components/Clock.qml").read_text(encoding="utf-8")
-    assert "font.family: Appearance.font.family.display" in clock
-    assert "font.weight: Font.Medium" in clock and "font.pointSize: Density.clockPt" in clock
+    # Signal face: Plex Sans Condensed Medium; clean (Sans) type uses the plain
+    # face at the item weight.
+    assert "Appearance.font.family.display" in clock and "font.family: root.timeFamily" in clock
+    assert "Font.Medium" in clock and "font.pointSize: Density.clockPt" in clock
     assert "toUpperCase()" in clock
 

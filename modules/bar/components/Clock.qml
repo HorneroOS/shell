@@ -157,7 +157,7 @@ Item {
                 Layout.alignment: Qt.AlignHCenter
                 text: Time.hourStr
                 font.pointSize: Density.textPt
-                font.family: Appearance.font.family.mono
+                font.family: Density.dataFamily
                 color: root.colour
             }
 
@@ -165,7 +165,7 @@ Item {
                 Layout.alignment: Qt.AlignHCenter
                 text: Time.minuteStr
                 font.pointSize: Density.textPt
-                font.family: Appearance.font.family.mono
+                font.family: Density.dataFamily
                 color: root.colour
             }
 
@@ -175,7 +175,7 @@ Item {
                 visible: Config.services.useTwelveHourClock && Time.amPmStr !== ""
                 text: Time.amPmStr
                 font.pointSize: Density.microPt
-                font.family: Appearance.font.family.mono
+                font.family: Density.dataFamily
                 color: root.tone.inkMuted
             }
         }

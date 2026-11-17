@@ -40,7 +40,10 @@ QtObject {
         }
     }
     readonly property color ink: root.data.ink
-    readonly property color inkMuted: root.data.inkMuted
+    // Secondary ink: the scheme's muted role pulled 60 % towards the primary
+    // ink. A bare grey vanishes on a vivid wallpaper; this stays dimmer than
+    // the primary but keeps contrast and the same halo.
+    readonly property color inkMuted: Qt.tint(root.data.inkMuted, Qt.alpha(root.data.ink, 0.6))
     readonly property color signal: root.data.signal
     readonly property color alert: root.data.alert
     readonly property color halo: Qt.alpha(root.data.halo, Math.max(root.data.haloAlpha, root.data.shadowAlpha))

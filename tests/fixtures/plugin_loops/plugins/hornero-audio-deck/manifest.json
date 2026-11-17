@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 3,
+  "id": "hornero-audio-deck",
+  "name": "hornero-audio-deck fixture",
+  "version": "1.0.0",
+  "description": "Fixture desktop widget for the binding-loop regression test.",
+  "entrypoint": "Main.qml",
+  "placement": "desktop",
+  "files": ["Main.qml"],
+  "surfaces": {
+    "desktop": {"entrypoint": "Main.qml", "width": 320, "height": 300, "minWidth": 200, "minHeight": 160, "anchor": "top-left"}
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 3,
+  "id": "hornero-calculator",
+  "name": "hornero-calculator fixture",
+  "version": "1.0.0",
+  "description": "Fixture bar indicator and launcher provider for the binding-loop regression test.",
+  "entrypoint": "Main.qml",
+  "placement": "bar",
+  "files": ["Main.qml", "Launcher.qml"],
+  "surfaces": {
+    "bar": {"entrypoint": "Main.qml", "section": "actions"},
+    "launcher": {"entrypoint": "Launcher.qml"}
+  }
+}

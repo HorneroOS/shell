@@ -146,7 +146,7 @@ Scope {
                         // be a safe relative .qml listed in files, and
                         // redeclaring the primary placement with a
                         // different file is a conflict, not an override.
-                        const knownSurfaces = ["background", "bar", "dashboard", "desktop", "launcher", "settings"];
+                        const knownSurfaces = ["background", "bar", "dashboard", "desktop", "launcher", "settings", "commands"];
                         const safeEntrypoint = value => typeof value === "string" && !value.includes("..") && !value.includes("\\")
                             && /^(?!\/)(?!\.{1,2}(\/|$))(?!.*\/\.{1,2}(\/|$))(?!.*\/\/)[A-Za-z0-9._\/-]+\.qml$/.test(value);
                         const effectiveSurfaces = ({});
@@ -165,12 +165,16 @@ Scope {
                                     Plugins.markFailed(slot.modelData.id, `manifest surfaces contains unknown surface "${name}"`);
                                     return;
                                 }
+                                if (name === "commands" && !(Number.isInteger(manifest.pluginKit) && manifest.pluginKit >= 4)) {
+                                    Plugins.markFailed(slot.modelData.id, "manifest surfaces.commands is a PluginKit 4 surface and requires pluginKit 4");
+                                    return;
+                                }
                                 const surface = manifest.surfaces[name];
                                 if (!surface || typeof surface !== "object" || Array.isArray(surface)) {
                                     Plugins.markFailed(slot.modelData.id, `manifest surfaces.${name} must be an object`);
                                     return;
                                 }
-                                const desktopKeys = ["width", "height", "minWidth", "minHeight", "resizable", "anchor"];
+                                const desktopKeys = ["width", "height", "minWidth", "minHeight", "resizable", "anchor", "instances"];
                                 const extra = Object.keys(surface).filter(key => key !== "entrypoint" && key !== "enabled" && key !== "size" && key !== "category" && key !== "section" && !desktopKeys.includes(key));
                                 if (extra.length > 0) {
                                     Plugins.markFailed(slot.modelData.id, `manifest surfaces.${name} contains unknown fields: ${extra.join(", ")}`);
@@ -222,6 +226,10 @@ Scope {
                                 }
                                 if (surface.resizable !== undefined && typeof surface.resizable !== "boolean") {
                                     Plugins.markFailed(slot.modelData.id, "manifest surfaces.desktop.resizable must be a boolean");
+                                    return;
+                                }
+                                if (surface.instances !== undefined && (typeof surface.instances !== "boolean" || (surface.instances && !(Number.isInteger(manifest.pluginKit) && manifest.pluginKit >= 4)))) {
+                                    Plugins.markFailed(slot.modelData.id, "manifest surfaces.desktop.instances must be a boolean and requires pluginKit 4");
                                     return;
                                 }
                                 if (surface.anchor !== undefined && !["top-left", "top-center", "top-right", "middle-left", "middle-center", "middle-right", "bottom-left", "bottom-center", "bottom-right"].includes(surface.anchor)) {
@@ -425,6 +433,7 @@ Scope {
                         slot.placement = placement;
                         const settings = manifest.capabilities && manifest.capabilities.settings;
                         Plugins.markPlacement(slot.modelData.id, placement, manifest.entrypoint, settings || ({}), effectiveSurfaces);
+                        Plugins.markContributes(slot.modelData.id, manifest.contributes === undefined ? null : manifest.contributes);
                         Plugins.markTranslations(slot.modelData.id, manifest.translations === undefined ? null : manifest.translations);
                         Plugins.markMarketplace(slot.modelData.id, manifest.marketplace === undefined ? null : manifest.marketplace);
                         Plugins.markDescription(slot.modelData.id, manifest.description);

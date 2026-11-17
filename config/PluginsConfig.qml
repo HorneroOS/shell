@@ -21,6 +21,14 @@ JsonObject {
     // DashboardLayout.normalizeLayout tolerates any malformed shape,
     // so a stale or hand-edited value degrades to manifest order.
     property var dashboardLayout: ({})
+    // Extra instances of a plugin's desktop widget (RFC 0003 section 6):
+    // {pluginId: [{id, label}]}. The primary instance (the widget every
+    // enabled extension already has) is implicit and has the empty
+    // instance id; its storage key is the plugin id, so no stored data
+    // is migrated. An extra instance's key is `<pluginId>#<instanceId>`
+    // and namespaces its settings, geometry and anchor like a plugin id.
+    property var instances: ({})
+    readonly property int maxInstances: 8
     // Safe recovery mode (shell#380): when true, no user extension
     // QML (and no plugin manifest) is loaded at all, so the Control
     // Center Extensions pane stays reachable to disable a broken
@@ -225,7 +233,154 @@ JsonObject {
         return true;
     }
 
+    // Namespace for stored per-instance data: a plugin id, optionally
+    // followed by `#<instanceId>` for an extra instance. Plugin ids and
+    // instance ids are validated separately, so a key can never collide
+    // with another plugin's id (`#` is not a plugin id character).
     function validPluginId(pluginId: string): bool {
-        return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(pluginId);
+        return /^[a-z0-9]+(?:-[a-z0-9]+)*(?:#[a-z0-9]{1,8})?$/.test(pluginId);
+    }
+
+    function validInstanceId(instanceId: string): bool {
+        return /^[a-z0-9]{1,8}$/.test(instanceId);
+    }
+
+    function instanceKey(pluginId: string, instanceId: string): string {
+        return instanceId ? `${pluginId}#${instanceId}` : pluginId;
+    }
+
+    // Values read from shell.json arrive as native variant lists whose
+    // Array.isArray() is false; a JSON round trip yields plain JS arrays.
+    function plain(value: var): var {
+        try {
+            return JSON.parse(JSON.stringify(value));
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function instancesSource(): var {
+        const source = plain(instances);
+        return source && typeof source === "object" && !Array.isArray(source) ? source : ({});
+    }
+
+    // Normalised extra instances of one plugin: well-formed, unique,
+    // bounded. Anything malformed in a hand-edited config is ignored.
+    function instancesOf(pluginId: string): var {
+        const list = instancesSource()[pluginId];
+        if (!Array.isArray(list))
+            return [];
+        const seen = new Set();
+        const result = [];
+        for (const item of list) {
+            if (!item || typeof item !== "object" || typeof item.id !== "string" || !validInstanceId(item.id) || seen.has(item.id))
+                continue;
+            seen.add(item.id);
+            const label = typeof item.label === "string" ? item.label.trim().slice(0, 32) : "";
+            result.push({
+                id: item.id,
+                label: label
+            });
+            if (result.length >= maxInstances)
+                break;
+        }
+        return result;
+    }
+
+    // Adds an extra instance and returns its id ("" when refused). A new
+    // instance starts from the declared defaults, or from a copy of the
+    // stored settings of `copyFrom` (an instance key, e.g. the primary).
+    function addInstance(pluginId: string, label: string, copyFrom: string): string {
+        if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(pluginId))
+            return "";
+        const current = instancesOf(pluginId);
+        if (current.length >= maxInstances)
+            return "";
+        let n = 1;
+        while (current.some(item => item.id === `i${n}`))
+            n++;
+        const id = `i${n}`;
+        const next = JSON.parse(JSON.stringify(instancesSource()));
+        next[pluginId] = current.concat([{
+                id: id,
+                label: (label || "").trim().slice(0, 32)
+            }]);
+        instances = next;
+        if (copyFrom && validPluginId(copyFrom)) {
+            const source = settings && typeof settings === "object" && !Array.isArray(settings) ? settings : ({});
+            const stored = source[copyFrom];
+            if (stored && typeof stored === "object" && !Array.isArray(stored)) {
+                const copy = JSON.parse(JSON.stringify(settings));
+                copy[instanceKey(pluginId, id)] = JSON.parse(JSON.stringify(stored));
+                settings = copy;
+            }
+        }
+        saveRequested();
+        return id;
+    }
+
+    function renameInstance(pluginId: string, instanceId: string, label: string): bool {
+        const current = instancesOf(pluginId);
+        if (!current.some(item => item.id === instanceId))
+            return false;
+        const next = JSON.parse(JSON.stringify(instancesSource()));
+        next[pluginId] = current.map(item => item.id === instanceId ? {
+                id: item.id,
+                label: (label || "").trim().slice(0, 32)
+            } : item);
+        instances = next;
+        saveRequested();
+        return true;
+    }
+
+    // Removes an extra instance and everything stored for it: settings,
+    // geometry and anchor on every display.
+    function removeInstance(pluginId: string, instanceId: string): bool {
+        const current = instancesOf(pluginId);
+        if (!current.some(item => item.id === instanceId))
+            return false;
+        const key = instanceKey(pluginId, instanceId);
+        const next = JSON.parse(JSON.stringify(instancesSource()));
+        const kept = current.filter(item => item.id !== instanceId);
+        if (kept.length > 0)
+            next[pluginId] = kept;
+        else
+            delete next[pluginId];
+        instances = next;
+        const withoutKey = source => {
+            if (!source || typeof source !== "object" || Array.isArray(source))
+                return null;
+            const copy = JSON.parse(JSON.stringify(source));
+            let changed = false;
+            if (Object.prototype.hasOwnProperty.call(copy, key)) {
+                delete copy[key];
+                changed = true;
+            }
+            return changed ? copy : null;
+        };
+        const withoutKeyPerScreen = source => {
+            if (!source || typeof source !== "object" || Array.isArray(source))
+                return null;
+            const copy = JSON.parse(JSON.stringify(source));
+            let changed = false;
+            for (const screen of Object.keys(copy)) {
+                if (copy[screen] && typeof copy[screen] === "object" && Object.prototype.hasOwnProperty.call(copy[screen], key)) {
+                    delete copy[screen][key];
+                    changed = true;
+                }
+            }
+            return changed ? copy : null;
+        };
+        const nextSettings = withoutKey(settings);
+        if (nextSettings)
+            settings = nextSettings;
+        const nextWidgets = withoutKeyPerScreen(desktopWidgets);
+        if (nextWidgets)
+            desktopWidgets = nextWidgets;
+        const nextSlots = withoutKeyPerScreen(desktopWidgetSlots);
+        if (nextSlots)
+            desktopWidgetSlots = nextSlots;
+        saveRequested();
+        return true;
     }
 }

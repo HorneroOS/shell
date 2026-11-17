@@ -236,9 +236,10 @@ def test_schema_stays_strict_about_unknown_fields():
     # shell#439 adds the bar-only section hint (native island to join).
     # PluginKit 3 adds the desktop-only widget geometry hints.
     assert set(surface_def["properties"]) == {"entrypoint", "enabled", "size", "category", "section",
-                                              "width", "height", "minWidth", "minHeight", "resizable", "anchor"}
+                                              "width", "height", "minWidth", "minHeight", "resizable", "anchor",
+                                              "instances"}
     assert set(SCHEMA["properties"]["surfaces"]["properties"]) == {
-        "background", "bar", "dashboard", "desktop", "launcher", "settings"
+        "background", "bar", "dashboard", "desktop", "launcher", "settings", "commands"
     }
 
 

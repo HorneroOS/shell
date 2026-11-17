@@ -503,6 +503,42 @@ Geometry hints live on the desktop surface:
 - Desktop widgets live on the desktop layer, below windows; they never
   take keyboard focus from applications.
 
+### Instances of a desktop widget
+
+PluginKit 4 lets the person place the same desktop widget more than once, for
+example two clocks for two time zones, each with its own settings, position and
+size (RFC 0003 section 6).
+
+An extension opts in with `"instances": true` on its `desktop` surface (and
+`"pluginKit": 4`) and reads its settings per instance:
+
+```qml
+Item {
+    property string hostInstanceId: ""   // "" = main widget
+    Settings { pluginId: "my-clock"; instanceId: root.hostInstanceId }
+}
+```
+
+The validator refuses `instances: true` unless the desktop entrypoint declares
+`hostInstanceId` and binds an `instanceId`, so a second copy can never silently
+share the first one's state; an extension that did not opt in cannot get extra
+instances. Control Center › Extensions › Settings then shows an **Instances**
+block: select the main widget or an instance to retarget the generated
+settings and the live preview, **Add instance** (starts from the selected
+instance's stored settings), rename, and **Remove instance** (deletes its
+settings, position and size on every display). At most 8 extra instances.
+
+Storage: `plugins.instances` is `{ "<pluginId>": [{ "id": "i1", "label": "Home" }] }`
+in the shell config. An instance's key is `<pluginId>#<instanceId>`; settings
+(`plugins.settings`), geometry (`plugins.desktopWidgets`) and anchor
+(`plugins.desktopWidgetSlots`) are stored under that key, and the main widget
+keeps the plain plugin id, so nothing existing is migrated. Load state,
+diagnostics, safe mode and enable/disable stay per plugin; `qs ipc call plugins
+status` reports the plugin once. The curated Signal deck keeps one widget per
+extension. `Desktop.anchor()` and `Desktop.geometry()` accept an instance key.
+
+`examples/plugins/example-instance-clock` is a complete example.
+
 ## Accessibility and keyboard contract
 
 Extension UI follows the same keyboard/focus rules as native shell
@@ -615,6 +651,7 @@ also renders sensibly before/without injection.
 | `hostAvailableHeight` | `int` | Same for height (0 = uncapped, e.g. scrolling dashboard cards) |
 | `hostCompact` | `bool` | Narrow surface: any vertical rail, or a horizontal bar under the shell's compact width breakpoint. Drop secondary labels and stack rows when set |
 | `hostScreenName` | `string` | Display hosting this instance (a bar/desktop plugin is instantiated once per screen); empty when not screen-bound |
+| `hostInstanceId` | `string` | PluginKit 4: instance of a desktop widget — empty for the main widget, a short id for an extra [instance](#instances-of-a-desktop-widget) |
 
 Sizes are logical pixels, already corrected for output scale by Qt,
 so one layout serves every scale. On the bar, the cross-axis
@@ -942,7 +979,7 @@ minimum it needs with the optional top-level `"pluginKit"` integer (default
 | Level | Adds |
 | --- | --- |
 | 3 | Signal: Theme, glyphs, surfaces (bar, dashboard, desktop, background, launcher, settings), typed settings (boolean, integer, number, string, enum), data facades |
-| 4 | Settings schema v2 (colour, list, text, path; title, group, unit, step, visibleWhen), Control Center live preview |
+| 4 | Command contributions (`contributes.commands`, `surfaces.commands`), settings schema v2 (colour, list, text, path; title, group, unit, step, visibleWhen), Control Center live preview, per-instance desktop widgets (`surfaces.desktop.instances`, `hostInstanceId`, `Settings.instanceId`) |
 
 `scripts/validate_plugin.py` derives the level a manifest actually needs from
 the features it uses and rejects a package that under-declares; a value above
@@ -951,6 +988,49 @@ runtime the host refuses one package whose `pluginKit` exceeds the resolved
 kit (an update message, `failed` state) and keeps loading the others. An older
 Shell rejects the unknown `pluginKit` field, which is the intended outcome:
 the package is not installable where it cannot run.
+
+## Commands: launcher, IPC and key bindings
+
+PluginKit 4 lets an extension contribute **commands**: named actions the
+person can start from the launcher, from a script and from a key binding
+(RFC 0003 section 4.2). Commands are declared in the manifest, so the Shell
+lists and searches them without running extension code, and the handler is
+loaded only on the first invocation.
+
+```json
+"pluginKit": 4,
+"contributes": {
+  "commands": [
+    { "id": "greet", "title": "Say hello", "glyph": "bolt",
+      "description": "Shows a greeting", "keywords": ["hello"] }
+  ]
+},
+"surfaces": { "commands": { "entrypoint": "Commands.qml" } }
+```
+
+`id` matches `^[a-z][a-zA-Z0-9]{0,31}$` and is unique per package; at most 16
+commands; `title` at most 48 characters; `glyph` is a Hornero Glyph name
+(default `command`); at most 8 `keywords`. The entrypoint root implements
+`function run(commandId: string, args: string): string` and returns an empty
+string on success or a short error (an exception counts as an error). It is
+not the same thing as `capabilities.actions`, which lists broker actions the
+extension may *request*; commands are what the extension *provides*.
+
+- Launcher: type `>do` followed by a space (the configured action prefix plus `do`) and a few
+  letters; rows match the title, keywords and extension name. Enter runs the
+  command; a failure is shown as a notification.
+- IPC: `qs ipc call plugincommands list` (JSON) and
+  `qs ipc call plugincommands run <pluginId> <commandId> [args]` (`ok` or a
+  one-line error). `args` is one string of at most 512 characters, passed to
+  the handler untouched and never interpreted by the Shell.
+- Key bindings: the Shell writes none. Bind a key to that `qs ipc call` in
+  your compositor configuration.
+
+Commands run only on a user gesture (launcher Enter or an explicit IPC call).
+Each extension's handler has its own Loader: a failure marks that extension
+failed and never the launcher or another extension. Only declared command ids
+run. The handler is in-process QML running as your user, unsandboxed, like
+every other surface. `examples/plugins/example-commands` is a complete example.
 
 ## Manifest: multiple surfaces
 
@@ -996,6 +1076,7 @@ and 2 packages are refused; see
 | `desktop` | [Desktop widget](#desktop-widgets) on each display's desktop layer; may declare `width`, `height`, `minWidth`, `minHeight`, `resizable`, `anchor`. | Yes |
 | `background` | Headless entry point (timers, toasts); only declare it where a headless component is justified. | Yes |
 | `launcher` | Launcher/search action entry point. | Yes — `PluginLauncherHost` loads it hidden and registers it into the launcher provider registry ([LAUNCHER.md](LAUNCHER.md)). Contract (query/result): root `Item` with settable string `query` and readonly var `result` = `{ok: bool, text: string}`; prefix is the plugin id minus a leading `hornero-`; copy-on-activate copies `result.text` (wl-copy, the calc convention — no plugin activation hook). In-process QML running as your user, unsandboxed, same trust as every other surface. |
+| `commands` | PluginKit 4: handler for the commands declared in `contributes.commands` ([Commands](#commands-launcher-ipc-and-key-bindings)). | Yes — `PluginCommandHost`, loaded on first invocation. |
 | `settings` | Custom Control Center settings entry point. | Yes — Control Center › Extensions loads it in the plugin's Custom settings tab alongside the generated settings UI (above), which renders `capabilities.settings` without it. In-process QML, same trust as other surfaces. |
 
 Each surface declares `entrypoint` (a safe package-relative `.qml` path that

@@ -737,6 +737,7 @@ Singleton {
     function serializePlugins(): var {
         return {
             settings: plugins.settings,
+            instances: plugins.instances,
             desktopWidgetSlots: plugins.desktopWidgetSlots,
             desktopWidgets: plugins.desktopWidgets,
             dashboardLayout: plugins.dashboardLayout,

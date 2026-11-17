@@ -43,7 +43,7 @@ Item {
     readonly property real contentNeed: pluginLoader.item ? pluginLoader.item.implicitHeight + root.headerHeight + Appearance.spacing.small + root.padding * 2 : 0
     onContentNeedChanged: {
         if (root.deck && root.contentNeed > 0)
-            root.needMeasured(root.pluginId, root.contentNeed);
+            root.needMeasured(root.instanceKey, root.contentNeed);
     }
     // Solver placement from PluginDesktopWidgets ({fx, fy, width, height}),
     // used until the person moves or resizes the widget (their saved
@@ -52,17 +52,22 @@ Item {
     readonly property bool deck: root.deckPlacement !== null
 
     readonly property string pluginId: entry.id
+    // Per-instance namespace (RFC 0003 section 6): the plugin id for the
+    // primary widget, `<id>#<instanceId>` for an extra instance. Geometry,
+    // anchor and settings are stored under it; load state stays per plugin.
+    readonly property string instanceId: entry.instanceId ?? ""
+    readonly property string instanceKey: entry.instanceKey ?? entry.id
     readonly property var hint: Plugins.surfaceFor(entry, "desktop") ?? ({})
     readonly property var saved: root.deck ? ({
             fx: root.deckPlacement.fx,
             fy: root.deckPlacement.fy,
             width: root.deckPlacement.width,
             height: root.deckPlacement.height
-        }) : (Config.plugins.desktopWidgetGeometry(root.pluginId, root.screenName) ?? root.autoPlacement)
+        }) : (Config.plugins.desktopWidgetGeometry(root.instanceKey, root.screenName) ?? root.autoPlacement)
     readonly property string anchorSlot: {
         const slots = Config.plugins.desktopWidgetSlots;
         const perScreen = slots && typeof slots === "object" ? slots[root.screenName || "default"] : null;
-        const explicit = perScreen && typeof perScreen === "object" ? perScreen[root.pluginId] : undefined;
+        const explicit = perScreen && typeof perScreen === "object" ? perScreen[root.instanceKey] : undefined;
         return Config.plugins.allowedDesktopSlots.includes(explicit) ? explicit : (Config.plugins.allowedDesktopSlots.includes(root.hint.anchor) ? root.hint.anchor : "bottom-right");
     }
     readonly property bool editing: Plugins.desktopEditing
@@ -157,7 +162,7 @@ Item {
         if (root.deck)
             Experience.setDeckGeometry(root.screenName, root.pluginId, geometry);
         else
-            Config.plugins.setDesktopWidgetGeometry(root.pluginId, root.screenName, geometry, true);
+            Config.plugins.setDesktopWidgetGeometry(root.instanceKey, root.screenName, geometry, true);
     }
 
     RectangularShadow {
@@ -188,7 +193,7 @@ Item {
             font.capitalization: Font.AllUppercase
             font.letterSpacing: Appearance.font.size.small * 0.08
             color: Signal.palette.inkMuted
-            text: `${String(root.channel).padStart(2, "0")} · ${pluginLoader.item?.widgetTitle || root.entry.name || root.pluginId}`
+            text: `${String(root.channel).padStart(2, "0")} · ${(pluginLoader.item?.widgetTitle || root.entry.name || root.pluginId) + (root.entry.instanceLabel ? ` · ${root.entry.instanceLabel}` : "")}`
             elide: Text.ElideRight
             width: Math.min(implicitWidth, root.width - root.padding * 2 - context.implicitWidth - Appearance.spacing.larger)
         }
@@ -276,6 +281,13 @@ Item {
                 property: "hostCompact"
                 value: pluginLoader.hostAvailableWidth < 280
                 when: pluginLoader.item !== null && "hostCompact" in pluginLoader.item
+                restoreMode: Binding.RestoreNone
+            }
+            Binding {
+                target: pluginLoader.item
+                property: "hostInstanceId"
+                value: root.instanceId
+                when: pluginLoader.item !== null && "hostInstanceId" in pluginLoader.item
                 restoreMode: Binding.RestoreNone
             }
             Binding {
@@ -392,7 +404,7 @@ Item {
         }
 
         Accessible.role: Accessible.Grip
-        Accessible.name: qsTr("Move %1").arg(root.entry.name || root.pluginId)
+        Accessible.name: qsTr("Move %1").arg((root.entry.name || root.pluginId) + (root.entry.instanceLabel ? ` · ${root.entry.instanceLabel}` : ""))
     }
 
     // Corner resize grip: two hairline ticks in `cue`.
@@ -449,7 +461,7 @@ Item {
         }
 
         Accessible.role: Accessible.Grip
-        Accessible.name: qsTr("Resize %1").arg(root.entry.name || root.pluginId)
+        Accessible.name: qsTr("Resize %1").arg((root.entry.name || root.pluginId) + (root.entry.instanceLabel ? ` · ${root.entry.instanceLabel}` : ""))
     }
 
     // Dimension readout while editing (Plex Mono, tabular).

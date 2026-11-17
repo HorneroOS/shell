@@ -45,6 +45,9 @@
         },
         "settings": {
           "$ref": "#/$defs/surface"
+        },
+        "commands": {
+          "$ref": "#/$defs/surface"
         }
       }
     },
@@ -1162,6 +1165,60 @@
       "maximum": 4,
       "default": 3,
       "description": "Minimum PluginKit apiLevel the package needs (RFC 0003). Defaults to 3. Features that exist only from level 4 (colour/list/text/path settings, title/group/unit/step/visibleWhen, contributes, instances) must declare 4; scripts/validate_plugin.py enforces that a package cannot under-declare, and a Shell whose kit is older refuses the package plainly."
+    },
+    "contributes": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "description": "PluginKit 4 (RFC 0003): declarative contributions the Shell lists without running extension code. Requires pluginKit 4 and, for commands, surfaces.commands (the entrypoint implementing `function run(commandId, args): string`). Cross-field rules (surface present, glyph names) are enforced by scripts/validate_plugin.py.",
+      "properties": {
+        "commands": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "title"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-zA-Z0-9]{0,31}$"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 48,
+                "pattern": "\\S"
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120,
+                "pattern": "\\S"
+              },
+              "glyph": {
+                "type": "string",
+                "pattern": "^[a-z0-9-]+$"
+              },
+              "keywords": {
+                "type": "array",
+                "maxItems": 8,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 24,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "$defs": {
@@ -1254,6 +1311,10 @@
           ],
           "default": "bottom-right",
           "description": "Desktop surface only: where the widget starts on a screen before the person moves it."
+        },
+        "instances": {
+          "type": "boolean",
+          "description": "Desktop surface only (PluginKit 4, RFC 0003). true declares that the extension reads its settings per instance (hostInstanceId + Settings.instanceId), so Control Center may add extra instances of the widget, each with its own settings, position and size. Requires pluginKit 4; scripts/validate_plugin.py checks the entrypoint reads hostInstanceId."
         }
       }
     }

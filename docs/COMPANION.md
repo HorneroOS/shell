@@ -165,6 +165,45 @@ companion unless the event is priority 3. External text is plain,
 single-line and capped at 80 characters. Reduced motion still shows the
 bubble; the animation holds a still frame.
 
+## Design note: behaviour matrix, budgets, accessibility
+
+Audit (2026-11-17, shell main `5a32461`): the companion already ships a
+painterly 25-animation vocabulary (idle, blink, look, preen, stretch,
+hop, greet, walk, hover, takeoff, fly, land, perch, peek, drag, talk,
+think, listen, work, approve, celebrate, deny, worry, error, sleep), 8
+skins, a store state machine, an idle scheduler, IPC and a Control
+Center pane. What it lacked was *context*: it never reacted to real
+events and had no per-mode or quiet-hours behaviour. Reactions reuse the
+existing art; no new poses were needed.
+
+| Experience mode | Companion | Reactions (default) | Idle acting |
+| --- | --- | --- | --- |
+| Everyday | visible | full | per activity level |
+| Signal | visible | full | per activity level |
+| Focus | visible, sleeps after the idle timeout | quiet: priority 3 only, no bubble | per activity level |
+| Studio | visible | quiet | per activity level |
+| Gaming | hidden (game mode) | silent | none (hidden) |
+
+Fullscreen windows, the session lock, the area picker and an open
+Settings window hide the companion regardless of mode.
+
+Budgets: the companion costs nothing when disabled (no surfaces, no
+timers), nothing when hidden (the player pauses while suppressed) and
+nothing while idle with a still frame; the only recurring work is the
+30 s idle poll, the optional idle scheduler (one single-shot timer, 4-40 s
+by activity level) and one sprite-frame timer while an animation plays.
+The reaction bus has no timers of its own. Measured numbers live in the
+PR evidence (visible-idle vs hidden CPU in the QA VM).
+
+Accessibility: bubbles are plain text and dismissible; the sprite has an
+accessible name; reduced motion holds still frames and uses jump cuts;
+nothing flashes; reactions never move focus. Sounds are not shipped
+(there is no sound engine, so there is no knob either).
+
+Not done yet (see the PRs): looking at the cursor, perching on window
+edges (both need compositor window geometry or cursor polling and a cost
+review), a sound pack, and extra art (see the PR description).
+
 ## Z-order policy
 
 The companion is ambient chrome, not a window citizen: it lives on

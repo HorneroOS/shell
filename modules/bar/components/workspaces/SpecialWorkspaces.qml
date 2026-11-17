@@ -22,6 +22,8 @@ Item {
     // Orientation of the owning bar (set by Bar.qml); defaults to the
     // primary bar for standalone use.
     property bool vertical: Config.bar.isVerticalFor(screen.name)
+    // Cross-axis size of one cell (Workspaces.cellCross); set by Workspaces.
+    property int cellCross: Density.inner - Appearance.padding.small * 2
 
     layer.enabled: true
     layer.effect: OpacityMask {
@@ -188,8 +190,8 @@ Item {
                 id: label
 
                 Layout.alignment: root.vertical ? Qt.AlignHCenter | Qt.AlignTop : Qt.AlignVCenter | Qt.AlignLeft
-                Layout.preferredHeight: root.vertical ? Density.inner - Appearance.padding.small * 2 : implicitHeight
-                Layout.preferredWidth: root.vertical ? implicitWidth : Density.inner - Appearance.padding.small * 2
+                Layout.preferredHeight: root.vertical ? root.cellCross : implicitHeight
+                Layout.preferredWidth: root.vertical ? implicitWidth : root.cellCross
 
                 sourceComponent: ws.icon.length === 1 ? letterComp : iconComp
 

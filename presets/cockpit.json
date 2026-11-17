@@ -89,7 +89,7 @@
       {
         "edge": "bottom",
         "style": "attached",
-        "thickness": 28,
+        "thickness": 34,
         "groups": {
           "start": [
             {
@@ -125,7 +125,11 @@
       }
     ],
     "sizes": {
-      "innerWidth": 24
+      "innerWidth": 24,
+      "islandInset": 5
+    },
+    "workspaces": {
+      "activeInset": 4
     },
     "status": {
       "showAudio": true,

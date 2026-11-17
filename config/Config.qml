@@ -457,6 +457,7 @@ Singleton {
                 showWindows: bar.workspaces.showWindows,
                 showWindowsOnSpecialWorkspaces: bar.workspaces.showWindowsOnSpecialWorkspaces,
                 activeTrail: bar.workspaces.activeTrail,
+                activeInset: bar.workspaces.activeInset,
                 perMonitorWorkspaces: bar.workspaces.perMonitorWorkspaces,
                 label: bar.workspaces.label,
                 occupiedLabel: bar.workspaces.occupiedLabel,
@@ -498,6 +499,7 @@ Singleton {
             },
             sizes: {
                 innerWidth: bar.sizes.innerWidth,
+                islandInset: bar.sizes.islandInset,
                 autoDensity: bar.sizes.autoDensity,
                 densityScale: bar.sizes.densityScale,
                 contentScale: bar.sizes.contentScale,

@@ -19,6 +19,11 @@ var LIMITS = {
     // -1 keeps the style's own radius (square attached strips, 3 px slabs).
     radius: { min: -1, max: 24, step: 1, fallback: -1 },
     innerWidth: { min: 22, max: 56, step: 2, fallback: 24 },
+    // Island inset: least gap between islands and the bar edge, and the
+    // inset of the active-workspace highlight inside its track (px at
+    // density 1; both scale with the density factor).
+    islandInset: { min: 0, max: 12, step: 1, fallback: 4 },
+    activeInset: { min: 0, max: 8, step: 1, fallback: 4 },
     contentScale: { min: 0.75, max: 1.5, step: 0.05, fallback: 1 },
     // Item style: icon size, text size, gap between items, text weight.
     iconScale: { min: 0.6, max: 1.5, step: 0.05, fallback: 1 },
@@ -117,12 +122,15 @@ function resetBar(bars, index, preset) {
 // Global values a preset ships, with fallbacks. Keys match LIMITS.
 function presetGlobals(preset) {
     var sizes = preset && preset.bar && preset.bar.sizes ? preset.bar.sizes : {};
+    var ws = preset && preset.bar && preset.bar.workspaces ? preset.bar.workspaces : {};
     var ap = preset && preset.appearance ? preset.appearance : {};
     function scale(group) {
         return ap[group] && typeof ap[group].scale === "number" ? ap[group].scale : 1;
     }
     return {
         innerWidth: clamp("innerWidth", sizes.innerWidth),
+        islandInset: clamp("islandInset", sizes.islandInset === undefined ? LIMITS.islandInset.fallback : sizes.islandInset),
+        activeInset: clamp("activeInset", ws.activeInset === undefined ? LIMITS.activeInset.fallback : ws.activeInset),
         contentScale: clamp("contentScale", sizes.contentScale === undefined ? 1 : sizes.contentScale),
         iconScale: clamp("iconScale", sizes.iconScale === undefined ? 1 : sizes.iconScale),
         textScale: clamp("textScale", sizes.textScale === undefined ? 1 : sizes.textScale),

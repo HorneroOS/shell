@@ -347,6 +347,7 @@
       "showWindows": true,
       "showWindowsOnSpecialWorkspaces": true,
       "activeTrail": false,
+      "activeInset": 4,
       "perMonitorWorkspaces": true,
       "label": "",
       "occupiedLabel": "",
@@ -388,6 +389,7 @@
     },
     "sizes": {
       "innerWidth": 24,
+      "islandInset": 4,
       "windowPreviewSize": 400,
       "trayMenuWidth": 300,
       "batteryWidth": 250,

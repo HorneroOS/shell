@@ -69,6 +69,34 @@ function segmentPadding(f, vertical, gap) {
     return Math.max(vertical ? 6 : 8, Math.round((vertical ? 8 : 12) * f * itemSpacing(gap)));
 }
 
+// Island inset (Bars > Size & shape): the least gap between an island (the
+// workspace track, tray, status and extension chips, hover cells) and the
+// bar's cross-axis edges. `base` is the user's px at density 1; it scales
+// with the density factor like the bar thickness does, and never takes more
+// than a quarter of the bar body per side.
+var MIN_CHIP = 18;
+
+function islandInset(base, f, body) {
+    var n = Number(base);
+    var px = Math.round(clamp(isFinite(n) ? n : 0, 0, 12) * f);
+    return body > 0 ? Math.min(px, Math.floor(body / 4)) : px;
+}
+
+// Cross-axis size of an island: the cell size (`inner`) as before, but
+// never so tall that the inset is lost; never below MIN_CHIP.
+function chip(inner, body, inset) {
+    return Math.max(MIN_CHIP, Math.min(inner, body - 2 * inset));
+}
+
+// Active-workspace indicator inset inside its cell/track (px at density 1,
+// 0..8, scaled by the factor). Never leaves less than `floor` px of
+// indicator, so the numeral always fits.
+function activeInset(base, f, size, floor) {
+    var n = Number(base);
+    var px = Math.round(clamp(isFinite(n) ? n : 0, 0, 8) * f);
+    return Math.max(0, Math.min(px, Math.floor((size - floor) / 2)));
+}
+
 function pt(px) {
     return px * PT_PER_PX;
 }

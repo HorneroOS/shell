@@ -137,7 +137,7 @@ def test_cockpit_shape_matches_the_reference_form():
     cockpit = json.loads((ROOT / "presets/cockpit.json").read_text(encoding="utf-8"))["bar"]["bars"]
     top, bottom = cockpit
     assert (top["style"], top["margin"], top["thickness"], top["radius"], top["backdrop"]) == ("inset", 18, 42, 11, "solid")
-    assert (bottom["style"], bottom["margin"], bottom["thickness"], bottom["backdrop"]) == ("attached", 0, 28, "solid")
+    assert (bottom["style"], bottom["margin"], bottom["thickness"], bottom["backdrop"]) == ("attached", 0, 34, "solid")
     assert "radius" not in bottom
     clear = json.loads((ROOT / "presets/cockpit-clear.json").read_text(encoding="utf-8"))["bar"]["bars"]
     assert [(b["style"], b["margin"], b["backdrop"]) for b in clear] == [("attached", 0, "clear")] * 2

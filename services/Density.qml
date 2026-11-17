@@ -43,6 +43,21 @@ Singleton {
     readonly property int segmentPad: Model.segmentPadding(factor, false, itemSpacing)
     readonly property int segmentPadRail: Model.segmentPadding(factor, true, itemSpacing)
 
+    // Island inset (px, density-scaled) and the island cross-axis size of a
+    // bar whose body is `body` px thick (see density.js).
+    function insetFor(body: real): int {
+        return Model.islandInset(Config.bar.sizes.islandInset, factor, body);
+    }
+
+    function chip(body: real): int {
+        return Model.chip(inner, body, insetFor(body));
+    }
+
+    // Active-workspace indicator inset inside a track/cell of `size` px.
+    function activeInset(size: real): int {
+        return Model.activeInset(Config.bar.workspaces.activeInset, factor, size, textPx + 4);
+    }
+
     function pt(px: real): real {
         return Model.pt(px);
     }

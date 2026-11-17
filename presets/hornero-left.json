@@ -8,7 +8,11 @@
     "showOnHover": true,
     "sizes": {
       "innerWidth": 44,
-      "contentScale": 1.25
+      "contentScale": 1.25,
+      "islandInset": 6
+    },
+    "workspaces": {
+      "activeInset": 4
     },
     "status": {
       "showAudio": true,

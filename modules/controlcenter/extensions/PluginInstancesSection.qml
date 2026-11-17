@@ -40,7 +40,7 @@ ColumnLayout {
     StyledText {
         Layout.fillWidth: true
         text: qsTr("Instances")
-        font.weight: 500
+        font.weight: Appearance.font.weight.medium
     }
 
     StyledText {

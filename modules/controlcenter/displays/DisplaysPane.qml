@@ -6,7 +6,7 @@ import qs.components
 import qs.components.controls
 import qs.components.effects
 import Quickshell
-import qs.modules.instruments
+import qs.modules.instruments as Instruments
 import qs.components.containers
 import qs.config
 import qs.services
@@ -341,7 +341,7 @@ Item {
 
                             required property var modelData
 
-                            label: modelData.name
+                            label: modelData.name.length > 0 ? modelData.name : qsTr("Unnamed output")
                             description: modelData.model.length > 0 ? modelData.model : qsTr("model unavailable")
 
                             below: [
@@ -351,7 +351,7 @@ Item {
                                     columnSpacing: Appearance.spacing.normal
                                     rowSpacing: Appearance.spacing.small
 
-                                    Readout {
+                                    Instruments.Readout {
                                         Layout.fillWidth: true
                                         Layout.preferredWidth: 1
                                         label: qsTr("Resolution")
@@ -360,7 +360,7 @@ Item {
                                         valueSize: Appearance.font.size.large
                                     }
 
-                                    Readout {
+                                    Instruments.Readout {
                                         Layout.fillWidth: true
                                         Layout.preferredWidth: 1
                                         label: qsTr("Refresh")
@@ -369,7 +369,7 @@ Item {
                                         valueSize: Appearance.font.size.large
                                     }
 
-                                    Readout {
+                                    Instruments.Readout {
                                         Layout.fillWidth: true
                                         Layout.preferredWidth: 1
                                         label: qsTr("Scale")
@@ -378,7 +378,7 @@ Item {
                                         valueSize: Appearance.font.size.large
                                     }
 
-                                    Readout {
+                                    Instruments.Readout {
                                         Layout.fillWidth: true
                                         Layout.preferredWidth: 1
                                         label: qsTr("Position")
@@ -406,7 +406,7 @@ Item {
                 ChannelPanel {
                     title: qsTr("Arrangement")
                     readoutAvailable: root.outputs.length > 0
-                    readout: root.statusText
+                    readout: root.outputs.length > 1 ? qsTr("%1 outputs").arg(root.outputs.length) : qsTr("single output")
 
                     Item {
                         id: map
@@ -446,7 +446,7 @@ Item {
                                     horizontalAlignment: Text.AlignHCenter
                                     elide: Text.ElideRight
                                     mono: true
-                                    text: tile.modelData.name
+                                    text: tile.modelData.name.length > 0 ? tile.modelData.name : qsTr("Output")
                                     color: Signal.palette.onSignalWell
                                     font.pointSize: Appearance.font.size.small
                                     Accessible.ignored: true
@@ -499,7 +499,7 @@ Item {
                 ChannelPanel {
                     title: qsTr("Brightness")
                     readoutAvailable: root.brightnessAvailable
-                    readout: qsTr("%1 %").arg(Math.round(root.brightness))
+                    readout: root.brightnessAvailable ? qsTr("%1 %").arg(Math.round(root.brightness)) : ""
 
                     SettingRow {
                         label: qsTr("Backlight")
@@ -508,6 +508,7 @@ Item {
                         below: [
                             SliderInput {
                                 Layout.fillWidth: true
+                                visible: root.brightnessAvailable
                                 label: qsTr("Brightness")
                                 value: root.brightness
                                 from: 0
@@ -577,7 +578,7 @@ Item {
                     }
 
                     SettingRow {
-                        visible: root.compositorText !== ""
+                        visible: root.layoutCurrent !== "" && root.compositorText !== ""
                         label: root.compositorText
                     }
                 }

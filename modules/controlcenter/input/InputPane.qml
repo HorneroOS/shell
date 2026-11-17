@@ -266,20 +266,38 @@ Item {
                                 Layout.fillWidth: true
                                 spacing: Appearance.spacing.small
 
-                                StyledTextField {
+                                Well {
                                     Layout.fillWidth: true
-                                    placeholderText: qsTr("us,latam")
-                                    text: root.layoutsField
-                                    onTextChanged: root.layoutsField = text
-                                    onAccepted: root.applyLayoutSet()
+                                    implicitHeight: layoutsInput.implicitHeight + Appearance.padding.small * 2
+                                    outline: layoutsInput.activeFocus ? Signal.palette.focus : Signal.palette.rule
+
+                                    StyledTextField {
+                                        id: layoutsInput
+
+                                        anchors.fill: parent
+                                        anchors.margins: Appearance.padding.small
+                                        placeholderText: qsTr("us,latam")
+                                        text: root.layoutsField
+                                        onTextChanged: root.layoutsField = text
+                                        onAccepted: root.applyLayoutSet()
+                                    }
                                 }
 
-                                StyledTextField {
-                                    Layout.preferredWidth: 140
-                                    placeholderText: qsTr("Variant (intl,)")
-                                    text: root.variantField
-                                    onTextChanged: root.variantField = text
-                                    onAccepted: root.applyLayoutSet()
+                                Well {
+                                    Layout.preferredWidth: 160
+                                    implicitHeight: variantInput.implicitHeight + Appearance.padding.small * 2
+                                    outline: variantInput.activeFocus ? Signal.palette.focus : Signal.palette.rule
+
+                                    StyledTextField {
+                                        id: variantInput
+
+                                        anchors.fill: parent
+                                        anchors.margins: Appearance.padding.small
+                                        placeholderText: qsTr("Variant (intl,)")
+                                        text: root.variantField
+                                        onTextChanged: root.variantField = text
+                                        onAccepted: root.applyLayoutSet()
+                                    }
                                 }
 
                                 TextButton {
@@ -311,7 +329,6 @@ Item {
 
                     SettingRow {
                         visible: root.compositor === "hyprland"
-                        label: qsTr("Pointer sensitivity")
 
                         below: [
                             SliderInput {

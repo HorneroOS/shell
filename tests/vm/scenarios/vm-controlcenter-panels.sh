@@ -108,6 +108,7 @@ vpn|VPN
 appearance|Appearance
 nightlight|Night Light
 accessibility|Accessibility
+customisation|Customisation
 experience|Experience
 taskbar|Bars
 layout|Layout

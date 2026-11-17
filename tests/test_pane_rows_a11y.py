@@ -43,6 +43,7 @@ def test_audio_device_rows_named():
     src = _src("audio/AudioPane.qml")
     assert 'qsTr(", current output")' in src
     assert 'qsTr(", current input")' in src
+    assert "Accessible.name: (root.label" in _src("components/DeviceRow.qml")
 
 
 def test_launcher_pane_rows_named():

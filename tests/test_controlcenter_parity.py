@@ -104,7 +104,7 @@ def test_displays_brightness_and_compositor_controls():
     assert '"hypr", "animations", "set", profile, "--yes"' in pane
     assert '"hypr", "animations", "restore", "--yes"' in pane
     # Honest unavailable state off-Hyprland, nothing faked.
-    assert "Compositor controls are unavailable" in pane
+    assert "need the Hyprland backend; nothing is faked" in pane
     # No per-output resolution/scale editing (no ctl leaf exists yet).
     assert '"hypr", "monitors", "set"' in pane  # only existing arrangement modes
     assert "--resolution" not in pane and "scale\", \"" not in pane

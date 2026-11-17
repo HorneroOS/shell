@@ -106,6 +106,14 @@ Singleton {
         root.probing = false;
     }
 
+    function safeMarkdown(text: string): string {
+        return Run.safeMarkdown(text);
+    }
+
+    function isSafeLink(link: string): bool {
+        return Run.isSafeLink(link);
+    }
+
     function traceLines(): string {
         const out = [];
         for (const e of root.run.timeline) {

@@ -378,13 +378,16 @@ Item {
                             anchors.right: parent.right
                             anchors.top: parent.top
                             anchors.margins: Appearance.padding.large
-                            text: modelData.text
+                            text: modelData.role === "assistant" ? AssistantRun.safeMarkdown(modelData.text) : modelData.text
                             textFormat: modelData.role === "assistant" ? Text.MarkdownText : Text.PlainText
                             font.pointSize: Appearance.font.size.small
                             color: bubble.mine ? Signal.palette.onSignalWell : Signal.palette.ink
                             linkColor: bubble.mine ? Signal.palette.onSignalWell : Signal.palette.signal
                             wrapMode: Text.Wrap
-                            onLinkActivated: link => Qt.openUrlExternally(link)
+                            onLinkActivated: link => {
+                                if (AssistantRun.isSafeLink(link))
+                                    Qt.openUrlExternally(link);
+                            }
                         }
 
                         ColumnLayout {
@@ -484,7 +487,7 @@ Item {
                             anchors.right: parent.right
                             anchors.verticalCenter: parent.verticalCenter
                             anchors.margins: Appearance.padding.large
-                            text: root.bridge.streamText !== "" ? root.bridge.streamText : qsTr("Javi está pensando") + ".".repeat(root.dotPhase)
+                            text: root.bridge.streamText !== "" ? AssistantRun.safeMarkdown(root.bridge.streamText) : qsTr("Javi está pensando") + ".".repeat(root.dotPhase)
                             textFormat: Text.MarkdownText
                             font.pointSize: Appearance.font.size.small
                             color: Signal.palette.ink

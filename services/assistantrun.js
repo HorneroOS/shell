@@ -504,3 +504,27 @@ function replay(lines, opts) {
     }
     return { state: s, intents: all };
 }
+
+// ---- untrusted text hardening --------------------------------------
+
+// Model and tool output is untrusted. Rendering it as Markdown must
+// not make the shell fetch anything (a remote image is an exfiltration
+// channel: the URL can carry data) and must not pass raw HTML through.
+// Images become an inert note; dangerous raw tags are dropped.
+function safeMarkdown(text) {
+    var s = (text === null || text === undefined) ? "" : text.toString();
+    s = s.replace(/!\[([^\]]*)\]\s*\([^)]*\)/g, function (m, alt) {
+        return "[image omitted" + (alt ? ": " + alt : "") + "]";
+    });
+    s = s.replace(/!\[([^\]]*)\]\s*\[[^\]]*\]/g, function (m, alt) {
+        return "[image omitted" + (alt ? ": " + alt : "") + "]";
+    });
+    s = s.replace(/<\s*\/?\s*(img|iframe|script|object|embed|link|style|svg|video|audio|source|meta|base|form)\b[^>]*>/gi, "");
+    return s;
+}
+
+// Links in answers open only as web pages, and only on an explicit
+// click: no file:, data:, javascript:, custom-handler or relative URL.
+function isSafeLink(link) {
+    return /^https?:\/\/[^\s]+$/i.test((link === null || link === undefined) ? "" : link.toString());
+}

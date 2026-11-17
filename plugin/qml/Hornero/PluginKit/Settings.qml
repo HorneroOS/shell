@@ -66,10 +66,16 @@ JsonObject {
             return typeof value === "number" && Number.isInteger(value);
         if (type === "number")
             return typeof value === "number" && Number.isFinite(value);
-        if (type === "string")
+        if (type === "string" || type === "text")
             return typeof value === "string" && value.length <= 4096;
         if (type === "enum")
             return typeof value === "string" && value.length <= 4096;
+        if (type === "colour")
+            return typeof value === "string" && value.length <= 9;
+        if (type === "path")
+            return typeof value === "string" && value.length <= 1024;
+        if (type === "list")
+            return Array.isArray(value) && value.length <= 32;
         return false;
     }
 }

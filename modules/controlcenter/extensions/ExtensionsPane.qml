@@ -956,6 +956,15 @@ Item {
                                 }
                             }
 
+                            PluginPreviewFrame {
+                                id: previewFrame
+
+                                Layout.fillWidth: true
+                                visible: root.settingsPluginId === row.entry.id && root.hasPluginSettings(row.entry) && previewFrame.shown
+                                active: root.settingsPluginId === row.entry.id && root.hasPluginSettings(row.entry)
+                                pluginId: row.entry.id
+                            }
+
                             PluginSettingsSection {
                                 Layout.fillWidth: true
                                 visible: root.settingsPluginId === row.entry.id && root.hasPluginSettings(row.entry)

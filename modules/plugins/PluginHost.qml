@@ -109,6 +109,18 @@ Scope {
                             Plugins.markFailed(slot.modelData.id, "manifest schemaVersion must be 3 (unknown manifest versions are rejected)");
                             return;
                         }
+                        // RFC 0003: `pluginKit` is the minimum apiLevel the
+                        // package needs (default 3). A package that needs a
+                        // newer kit than the one resolved is refused plainly,
+                        // per package; the others keep loading.
+                        if (manifest.pluginKit !== undefined && (!Number.isInteger(manifest.pluginKit) || manifest.pluginKit < 3)) {
+                            Plugins.markFailed(slot.modelData.id, "manifest pluginKit must be an integer of at least 3");
+                            return;
+                        }
+                        if (Number.isInteger(manifest.pluginKit) && Plugins.kitLevel >= 0 && manifest.pluginKit > Plugins.kitLevel) {
+                            Plugins.markFailed(slot.modelData.id, qsTr("This extension needs PluginKit %1 and the installed one is API level %2. Update the hornero-shell package.").arg(manifest.pluginKit).arg(Plugins.kitLevel));
+                            return;
+                        }
                         if (typeof manifest.version !== "string" || !/^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/.test(manifest.version)) {
                             Plugins.markFailed(slot.modelData.id, "manifest version must be semantic versioning");
                             return;

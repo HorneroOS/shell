@@ -135,7 +135,7 @@ def test_invalid_setting_declarations_are_rejected(tmp_path, settings):
         {"count": {"type": "integer", "default": 5, "minimum": 1.5}},
         {"label": {"type": "string", "default": "x", "pattern": ".*"}},
         {"label": {"type": "string", "default": "x", "maxLength": 4097}},
-        {"where": {"type": "path", "default": "/etc/passwd"}},
+        {"tint": {"type": "colour", "default": "red"}},
     ],
 )
 def test_schema_rejects_what_it_can_express(settings):
@@ -146,9 +146,9 @@ def test_schema_and_validator_agree_on_the_closed_type_set():
     setting_schema = SCHEMA["properties"]["capabilities"]["properties"]["settings"]
     declared = set(setting_schema["additionalProperties"]["properties"]["type"]["enum"])
     assert declared == set(VALIDATOR.SETTING_TYPES) == {
-        "boolean", "integer", "number", "string", "enum"
+        "boolean", "integer", "number", "string", "enum",
+        "colour", "list", "text", "path",
     }
-    assert "path" not in declared
     for kind in declared:
         assert f'"{kind}"' in SERVICE, f"runtime must mirror setting type {kind}"
 
@@ -237,8 +237,8 @@ def test_reset_removes_stored_values_and_saves():
     assert "function resetAll(): bool" in FACADE
     assert "Config.plugins.resetSettings(pluginId)" in FACADE
     # Generated UI reset (per-field and confirmed reset-all).
-    assert "Config.plugins.resetSetting(root.pluginId, field.key)" in SECTION
-    assert "Config.plugins.resetSettings(root.pluginId)" in SECTION
+    assert "Config.plugins.resetSetting(root.storageKey, field.key)" in SECTION
+    assert "Config.plugins.resetSettings(root.storageKey)" in SECTION
     assert "confirmResetAll" in SECTION
 
 
@@ -257,7 +257,7 @@ def test_generated_ui_covers_every_type_with_native_controls():
     assert "Object.keys(root.declarations).sort()" in SECTION
     assert "Plugins.migratedSettingValue(decl, stored)" in SECTION
     assert "Plugins.settingValueValid(decl, value)" in SECTION
-    assert "Config.plugins.setSetting(root.pluginId, key, value)" in SECTION
+    assert "Config.plugins.setSetting(root.storageKey, key, value)" in SECTION
     # Descriptions surface visibly, as accessible text, and as tooltip.
     assert "field.description" in SECTION
     assert "Accessible.description: field.description" in SECTION

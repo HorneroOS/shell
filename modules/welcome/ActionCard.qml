@@ -62,7 +62,7 @@ StyledRect {
                 Layout.fillWidth: true
                 text: root.title
                 color: root.primary ? Signal.palette.onSignal : Signal.palette.ink
-                font.weight: 600
+                font.weight: Appearance.font.weight.strong
                 elide: Text.ElideRight
             }
 
@@ -92,7 +92,7 @@ StyledRect {
                     text: ShortcutHints.badge(root.shortcutId)
                     color: Signal.palette.ink
                     font.pointSize: Appearance.font.size.smaller
-                    font.weight: 600
+                    font.weight: Appearance.font.weight.strong
                 }
             }
         }

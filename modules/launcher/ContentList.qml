@@ -137,7 +137,7 @@ Item {
                 text: root.state === "wallpapers" ? qsTr("No wallpapers found") : (root.showThemesList ? qsTr("No themes found") : qsTr("No results found"))
                 color: Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.larger
-                font.weight: 500
+                font.weight: Appearance.font.weight.medium
             }
 
             StyledText {

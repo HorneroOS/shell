@@ -72,7 +72,7 @@ Item {
                             text: Notifs.notClosed.length
                             color: Signal.palette.onSignal
                             font.pointSize: Appearance.font.size.smaller
-                            font.weight: 600
+                            font.weight: Appearance.font.weight.strong
                         }
                     }
                 }
@@ -388,7 +388,7 @@ Item {
                                 Layout.fillWidth: true
                                 text: qsTr("Recent")
                                 font.pointSize: Appearance.font.size.normal
-                                font.weight: 500
+                                font.weight: Appearance.font.weight.medium
                             }
 
                             TextButton {
@@ -437,7 +437,7 @@ Item {
                                             Layout.fillWidth: true
                                             text: notifCard.modelData.summary || notifCard.modelData.appName || ""
                                             font.pointSize: Appearance.font.size.small
-                                            font.weight: 600
+                                            font.weight: Appearance.font.weight.strong
                                             elide: Text.ElideRight
                                         }
 

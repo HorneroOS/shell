@@ -325,7 +325,7 @@ Item {
 
             text: Strings.wallpaperDisplayName(modelData.name)
             font.pointSize: Appearance.font.size.smaller
-            font.weight: 500
+            font.weight: Appearance.font.weight.medium
             color: isCurrent ? Signal.palette.signal : Signal.palette.ink
             elide: Text.ElideMiddle
             maximumLineCount: 1

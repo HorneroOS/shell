@@ -523,7 +523,7 @@ Item {
                         Layout.fillWidth: true
                         text: Plugins.entries.length === 1 ? qsTr("1 extension installed") : qsTr("%1 extensions installed").arg(Plugins.entries.length)
                         font.pointSize: Appearance.font.size.normal
-                        font.weight: 600
+                        font.weight: Appearance.font.weight.strong
                     }
 
                     TextButton {
@@ -723,7 +723,7 @@ Item {
                                         StyledText {
                                             text: row.entry.name
                                             font.pointSize: Appearance.font.size.normal
-                                            font.weight: 600
+                                            font.weight: Appearance.font.weight.strong
                                         }
 
                                         StyledText {
@@ -841,7 +841,7 @@ Item {
                                 visible: root.pendingEnable === row.entry.id
                                 text: qsTr("Before you enable this extension")
                                 font.pointSize: Appearance.font.size.normal
-                                font.weight: 600
+                                font.weight: Appearance.font.weight.strong
                             }
 
                             StyledText {
@@ -1071,7 +1071,7 @@ Item {
                 StyledText {
                     text: qsTr("Official catalogue — HorneroOS/plugins")
                     font.pointSize: Appearance.font.size.large
-                    font.weight: 500
+                    font.weight: Appearance.font.weight.medium
                 }
 
                 StyledText {
@@ -1146,7 +1146,7 @@ Item {
 
                             StyledText {
                                 text: `${catRow.modelData.name} ${catRow.modelData.version} · ${catRow.modelData.trust}`
-                                font.weight: 500
+                                font.weight: Appearance.font.weight.medium
                             }
 
                             Flow {
@@ -1423,7 +1423,7 @@ Item {
                 text: chip.label
                 color: chip.fg
                 font.pointSize: Appearance.font.size.small
-                font.weight: 500
+                font.weight: Appearance.font.weight.medium
             }
         }
     }
@@ -1474,7 +1474,7 @@ Item {
                 text: fchip.label
                 color: fchip.selected ? Signal.palette.onSignalWell : Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.small
-                font.weight: 500
+                font.weight: Appearance.font.weight.medium
             }
         }
     }

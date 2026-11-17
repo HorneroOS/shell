@@ -70,7 +70,7 @@ Item {
                 StyledText {
                     text: Math.round(root.level * 100) + "%"
                     font.pointSize: Appearance.font.size.extraLarge
-                    font.weight: 600
+                    font.weight: Appearance.font.weight.strong
                     color: contents.textColour
                 }
 

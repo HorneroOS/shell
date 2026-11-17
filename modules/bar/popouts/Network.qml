@@ -29,7 +29,7 @@ ColumnLayout {
         Layout.topMargin: visible ? Appearance.padding.normal : 0
         Layout.rightMargin: Appearance.padding.small
         text: qsTr("Wireless")
-        font.weight: 500
+        font.weight: Appearance.font.weight.medium
     }
 
     Toggle {
@@ -224,7 +224,7 @@ ColumnLayout {
         Layout.topMargin: visible ? Appearance.padding.normal : 0
         Layout.rightMargin: Appearance.padding.small
         text: qsTr("Ethernet")
-        font.weight: 500
+        font.weight: Appearance.font.weight.medium
     }
 
     StyledText {

@@ -162,7 +162,7 @@ ColumnLayout {
                         text: qsTr(BarOrder.groupTitle(root.bar?.edge ?? "top", groupCard.modelData))
                         color: Signal.palette.signal
                         font.pointSize: Appearance.font.size.smaller
-                        font.weight: 600
+                        font.weight: Appearance.font.weight.strong
                     }
 
                     StyledText {

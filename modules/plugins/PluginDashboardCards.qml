@@ -169,7 +169,7 @@ Item {
 
                         text: section.modelData.pinned ? qsTr("Pinned") : section.modelData.category !== "" ? section.modelData.category : qsTr("Other")
                         font.pointSize: Appearance.font.size.normal
-                        font.weight: 600
+                        font.weight: Appearance.font.weight.strong
                         color: Signal.palette.inkMuted
                         Accessible.role: Accessible.Heading
                         Accessible.name: text
@@ -375,7 +375,7 @@ Item {
                                                 anchors.centerIn: parent
                                                 text: card.live.state === "loaded" ? qsTr("Loaded") : card.live.state === "failed" ? qsTr("Failed") : card.live.state === "blocked" ? qsTr("Blocked") : qsTr("Pending")
                                                 font.pointSize: Appearance.font.size.smaller
-                                                font.weight: 600
+                                                font.weight: Appearance.font.weight.strong
                                                 color: card.live.state === "failed" || card.live.state === "blocked" ? Signal.palette.onAlertWell : card.live.state === "loaded" ? Signal.palette.onSignalWell : Signal.palette.inkMuted
                                             }
                                         }

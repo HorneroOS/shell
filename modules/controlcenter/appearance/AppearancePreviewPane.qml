@@ -227,7 +227,7 @@ StyledRect {
                     Layout.fillWidth: true
                     text: root.titleText || qsTr("Select an option")
                     font.pointSize: Appearance.font.size.normal
-                    font.weight: 600
+                    font.weight: Appearance.font.weight.strong
                     color: previewColor("ink", Signal.palette.ink)
                     elide: Text.ElideRight
                 }
@@ -349,7 +349,7 @@ StyledRect {
                                 Layout.fillWidth: true
                                 text: qsTr("About this look")
                                 font.pointSize: Appearance.font.size.small
-                                font.weight: 600
+                                font.weight: Appearance.font.weight.strong
                                 color: previewColor("ink", Signal.palette.ink)
                             }
 
@@ -553,7 +553,7 @@ StyledRect {
                                 Layout.fillWidth: true
                                 text: qsTr("Interface sample")
                                 font.pointSize: Appearance.font.size.small
-                                font.weight: 600
+                                font.weight: Appearance.font.weight.strong
                                 color: previewColor("ink", Signal.palette.ink)
                             }
                             StyledRect {
@@ -592,7 +592,7 @@ StyledRect {
                                         Layout.fillWidth: true
                                         text: qsTr("A desktop that feels like yours")
                                         font.pointSize: Appearance.font.size.small
-                                        font.weight: 600
+                                        font.weight: Appearance.font.weight.strong
                                         color: previewColor("ink", Signal.palette.ink)
                                         elide: Text.ElideRight
                                     }
@@ -633,7 +633,7 @@ StyledRect {
                             text: qsTr("Typography Preview")
                             font.family: root.rootPane.fontFamilySans
                             font.pointSize: Appearance.font.size.normal * root.rootPane.fontSizeScale
-                            font.weight: 600
+                            font.weight: Appearance.font.weight.strong
                             color: previewColor("ink", Signal.palette.ink)
                         }
 
@@ -728,7 +728,7 @@ StyledRect {
             Layout.fillWidth: true
             text: row.value
             font.pointSize: Appearance.font.size.small
-            font.weight: 500
+            font.weight: Appearance.font.weight.medium
             color: previewColor("ink", Signal.palette.ink)
             elide: Text.ElideMiddle
         }

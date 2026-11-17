@@ -32,7 +32,7 @@ ColumnLayout {
         Layout.topMargin: Appearance.padding.normal
         Layout.rightMargin: Appearance.padding.small
         text: qsTr("Keyboard Layouts")
-        font.weight: 500
+        font.weight: Appearance.font.weight.medium
     }
 
     ListView {
@@ -157,7 +157,7 @@ ColumnLayout {
             Layout.fillWidth: true
             text: kb.activeLabel
             elide: Text.ElideRight
-            font.weight: 500
+            font.weight: Appearance.font.weight.medium
             color: Signal.palette.signal
         }
 

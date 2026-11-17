@@ -110,7 +110,7 @@ StyledRect {
                     text: root.title
                     elide: Text.ElideRight
                     font.pointSize: Appearance.font.size.normal
-                    font.weight: 600
+                    font.weight: Appearance.font.weight.strong
                     color: root.selected ? Signal.palette.onSignalWell : Signal.palette.ink
                 }
 

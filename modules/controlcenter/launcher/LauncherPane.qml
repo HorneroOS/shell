@@ -189,7 +189,7 @@ Item {
                     Layout.topMargin: Appearance.spacing.large
                     text: qsTr("Applications (%1)").arg(root.searchText ? root.filteredApps.length : allAppsDb.apps.length)
                     font.pointSize: Appearance.font.size.normal
-                    font.weight: 500
+                    font.weight: Appearance.font.weight.medium
                 }
 
                 StyledText {

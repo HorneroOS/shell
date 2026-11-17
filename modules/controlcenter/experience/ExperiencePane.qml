@@ -169,7 +169,7 @@ Item {
             StyledText {
                 text: card.title
                 font.pointSize: Appearance.font.size.normal
-                font.weight: 500
+                font.weight: Appearance.font.weight.medium
             }
         }
     }
@@ -274,7 +274,7 @@ Item {
                                         StyledText {
                                             text: modeCard.modelData.label
                                             font.pointSize: Appearance.font.size.normal
-                                            font.weight: 600
+                                            font.weight: Appearance.font.weight.strong
                                         }
 
                                         StyledText {

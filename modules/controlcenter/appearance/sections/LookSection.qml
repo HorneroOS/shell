@@ -26,20 +26,20 @@ CollapsibleSection {
             id: "hornero",
             label: qsTr("Hornero"),
             blurb: qsTr("The factory look: crisp Signal bezel, reference spacing."),
-            rounding: 1, spacing: 1, padding: 1, font: 1, motion: 1, glow: 1
+            rounding: 1, spacing: 1, padding: 1, font: 1, motion: 1, glow: 1, weight: 0, curve: "smooth"
         },
         {
             id: "cozy",
             label: qsTr("Cozy"),
             blurb: qsTr("Softer corners, roomier spacing, a gentler glow and unhurried motion."),
-            rounding: 1.6, spacing: 1.1, padding: 1.15, font: 1.05, motion: 1.2, glow: 1.2
+            rounding: 1.6, spacing: 1.1, padding: 1.15, font: 1.05, motion: 1.2, glow: 1.2, weight: 0, curve: "bouncy"
         }
     ]
 
     function sameLook(look: var): bool {
         const p = root.rootPane;
         const eq = (a, b) => Math.abs(a - b) < 0.005;
-        return eq(p.roundingScale, look.rounding) && eq(p.spacingScale, look.spacing) && eq(p.paddingScale, look.padding) && eq(p.fontSizeScale, look.font) && eq(p.animDurationsScale, look.motion) && eq(Config.appearance.glow.intensity, look.glow);
+        return eq(p.roundingScale, look.rounding) && eq(p.spacingScale, look.spacing) && eq(p.paddingScale, look.padding) && eq(p.fontSizeScale, look.font) && eq(p.animDurationsScale, look.motion) && eq(Config.appearance.glow.intensity, look.glow) && Config.appearance.font.weight.shift === look.weight && Config.appearance.anim.curveStyle === look.curve;
     }
 
     function apply(look: var): void {
@@ -50,6 +50,8 @@ CollapsibleSection {
         p.fontSizeScale = look.font;
         p.animDurationsScale = look.motion;
         Config.appearance.glow.intensity = look.glow;
+        Config.appearance.font.weight.shift = look.weight;
+        Config.appearance.anim.curveStyle = look.curve;
         p.saveConfig();
     }
 
@@ -154,6 +156,70 @@ CollapsibleSection {
             stepSize: 0.05
             suffix: "×"
             decimals: 2
+        }
+    }
+
+    SectionContainer {
+        contentSpacing: Appearance.spacing.small
+
+        SizeSlider {
+            target: Config.appearance.font.weight
+            key: "shift"
+            label: qsTr("Text weight shift")
+            from: -200
+            to: 200
+            defaultValue: 0
+            stepSize: 100
+            suffix: ""
+        }
+
+        StyledText {
+            text: qsTr("Motion style")
+            font.pointSize: Appearance.font.size.normal
+        }
+
+        Flow {
+            Layout.fillWidth: true
+            spacing: Appearance.spacing.small
+
+            Repeater {
+                model: [
+                    {
+                        id: "smooth",
+                        label: qsTr("Smooth")
+                    },
+                    {
+                        id: "snappy",
+                        label: qsTr("Snappy")
+                    },
+                    {
+                        id: "bouncy",
+                        label: qsTr("Bouncy")
+                    }
+                ]
+
+                TextButton {
+                    required property var modelData
+
+                    text: modelData.label
+                    toggle: true
+                    checked: Appearance.anim.curves.style === modelData.id
+                    type: TextButton.Tonal
+                    Accessible.name: qsTr("%1 motion style").arg(modelData.label)
+                    onClicked: {
+                        Config.appearance.anim.curveStyle = modelData.id;
+                        Config.save();
+                    }
+                }
+            }
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+            text: qsTr("Snappy never overshoots; Bouncy gives panels a little more give. Opacity and colour never overshoot, and reduced motion still wins.")
+            font.pointSize: Appearance.font.size.small
+            color: Signal.palette.inkMuted
+            wrapMode: Text.WordWrap
         }
     }
 

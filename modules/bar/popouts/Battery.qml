@@ -60,7 +60,7 @@ Column {
                         text: qsTr("Performance Degraded")
                         color: Signal.palette.onAlert
                         font.family: Appearance.font.family.mono
-                        font.weight: 500
+                        font.weight: Appearance.font.weight.medium
                     }
 
                     Glyph {

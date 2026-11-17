@@ -122,7 +122,7 @@ Item {
         StyledText {
             text: qsTr("Community registry")
             font.pointSize: Appearance.font.size.large
-            font.weight: 500
+            font.weight: Appearance.font.weight.medium
         }
 
         StyledText {
@@ -214,7 +214,7 @@ Item {
 
                     StyledText {
                         text: communityRow.modelData.id
-                        font.weight: 500
+                        font.weight: Appearance.font.weight.medium
                     }
 
                     StyledText {

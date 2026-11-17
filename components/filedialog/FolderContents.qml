@@ -58,14 +58,14 @@ Item {
                 name: "trash"
                 color: Signal.palette.ruleStrong
                 font.pointSize: Appearance.font.size.extraLarge * 2
-                font.weight: 500
+                font.weight: Appearance.font.weight.medium
             }
 
             StyledText {
                 text: qsTr("This folder is empty")
                 color: Signal.palette.ruleStrong
                 font.pointSize: Appearance.font.size.large
-                font.weight: 500
+                font.weight: Appearance.font.weight.medium
             }
         }
 

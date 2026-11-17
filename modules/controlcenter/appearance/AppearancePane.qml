@@ -718,7 +718,7 @@ Item {
                         StyledText {
                             text: qsTr("Appearance")
                             font.pointSize: Appearance.font.size.large
-                            font.weight: 500
+                            font.weight: Appearance.font.weight.medium
                         }
 
                         Item {

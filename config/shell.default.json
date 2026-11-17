@@ -20,11 +20,15 @@
       },
       "size": {
         "scale": 1
+      },
+      "weight": {
+        "shift": 0
       }
     },
     "anim": {
       "mediaGifSpeedAdjustment": 300,
       "sessionGifSpeed": 0.7,
+      "curveStyle": "smooth",
       "durations": {
         "scale": 1
       }

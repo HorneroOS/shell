@@ -170,7 +170,7 @@ Popup {
                 Layout.fillWidth: true
                 text: qsTr("Find a setting")
                 font.pointSize: Appearance.font.size.large
-                font.weight: 600
+                font.weight: Appearance.font.weight.strong
             }
 
             StyledText {
@@ -285,7 +285,7 @@ Popup {
                                 Layout.fillWidth: true
                                 text: row.modelData.title
                                 color: row.index === root.session.searchSelection ? Signal.palette.onSignalWell : Signal.palette.ink
-                                font.weight: 500
+                                font.weight: Appearance.font.weight.medium
                                 elide: Text.ElideRight
                             }
 

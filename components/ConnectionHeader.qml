@@ -31,7 +31,7 @@ ColumnLayout {
             text: root.title
             elide: Text.ElideRight
             font.pointSize: Appearance.font.size.large
-            font.weight: 600
+            font.weight: Appearance.font.weight.strong
             Accessible.role: Accessible.Heading
         }
     }

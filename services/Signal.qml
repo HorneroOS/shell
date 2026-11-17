@@ -6,6 +6,7 @@ import qs.utils
 import Quickshell
 import Quickshell.Io
 import QtQuick
+import "chromatic.js" as Chromatic
 
 // Hornero Signal colour roles (RFC 0001 §3.1/§3.2).
 //
@@ -39,6 +40,23 @@ Singleton {
     property string themeMode: "dark"
     property bool themeStateReady: false
     property string _pendingPersistId: ""
+
+    // Hornero Chromatic (RFC 0002). Optional blocks of the live scheme;
+    // `chromatic` is null for curated themes. `minSurfaceAlpha` and
+    // `clearInk` are consumed by layer()/surface() and ClearInk.
+    property var chromatic: null
+    property var minSurfaceAlpha: ({})
+    property var clearInk: null
+    // "smooth" interpolates palette changes in OKLab (<= 12 steps over
+    // <= 240 ms); "instant" swaps. Bound to appearance.chromatic.transition.
+    property string transitionMode: Config.appearance.chromatic.transition
+    // True while a candidate palette is shown in memory only (see
+    // beginPreview); nothing is persisted until horneroctl applies it.
+    readonly property bool previewing: _snapshot !== null
+    property var _snapshot: null
+    // Number of palette steps applied by the last transition (test hook).
+    property int transitionSteps: 0
+    readonly property bool transitionActive: _tween.active
 
     signal builtInThemePersisted(string id, bool ok, string error)
 
@@ -211,16 +229,131 @@ Singleton {
     // Apply a schema-v2 scheme object to the live palette. Returns false
     // (and leaves the palette untouched) for an incomplete scheme.
     function applyScheme(scheme: var): bool {
+        return _adopt(scheme, false);
+    }
+
+    function _adopt(scheme: var, animate: bool): bool {
         if (!scheme || !isCompletePalette(scheme.palette)) {
             console.warn("Signal: ignoring scheme without a complete schema-v2 palette");
             return false;
         }
-        _fill(current, scheme);
+        _paint(scheme, animate === true && themeStateReady);
         themeId = scheme.id || "";
         themeMode = scheme.mode === "light" ? "light" : "dark";
+        _chromaticSource = scheme.chromatic ?? null;
+        chromatic = Chromatic.status(scheme);
+        minSurfaceAlpha = Chromatic.cleanMinSurfaceAlpha(scheme.minSurfaceAlpha);
+        clearInk = Chromatic.cleanClearInk(scheme.clearInk);
         themeStateReady = true;
         return true;
     }
+
+    // Transitions never run for reduced motion, gaming mode, high contrast
+    // or `transition: "instant"`.
+    readonly property bool transitionAllowed: transitionMode !== "instant" && !Appearance.anim.reduced && !GameMode.enabled && !Config.appearance.highContrast
+
+    function _currentFlat(): var {
+        const flat = {};
+        for (const role of roles)
+            flat[role] = String(current[role]);
+        flat.glow = String(current.glow);
+        for (let i = 0; i < 16; i++)
+            flat[`term${i}`] = String(current[`term${i}`]);
+        return flat;
+    }
+
+    function _assign(flat: var): void {
+        for (const key of Object.keys(flat))
+            current[key] = flat[key];
+    }
+
+    // Paint `scheme` into the live palette: instantly, or through the
+    // OKLab tween when `animate` and allowed.
+    function _paint(scheme: var, animate: bool): void {
+        const target = Chromatic.flatten(scheme);
+        const steps = (animate && transitionAllowed) ? Chromatic.stepsFor(240) : 0;
+        _tween.stop();
+        const from = _currentFlat();
+        let differs = false;
+        for (const key of Object.keys(target)) {
+            if (String(from[key]).toLowerCase() !== target[key].toLowerCase()) {
+                differs = true;
+                break;
+            }
+        }
+        if (!differs)
+            return;
+        if (steps === 0) {
+            transitionSteps = 0;
+            _assign(target);
+            return;
+        }
+        _tween.start(from, target, steps);
+    }
+
+    // Candidate palette shown in memory only. Validates completeness and
+    // returns false (nothing changes) for an incomplete scheme. The first
+    // call snapshots the live palette so cancelPreview() can restore it;
+    // nothing is written anywhere.
+    function beginPreview(scheme: var): bool {
+        if (!scheme || !isCompletePalette(scheme.palette)) {
+            console.warn("Signal: preview refused: incomplete schema-v2 palette");
+            return false;
+        }
+        if (_snapshot === null) {
+            _snapshot = _captureSnapshot();
+            _snapshotReady = themeStateReady;
+        }
+        _adopt(scheme, true);
+        return true;
+    }
+
+    // Ends the preview and keeps the candidate palette until the applied
+    // scheme arrives through the live file (same fingerprint: no visible
+    // change).
+    function commitPreview(): void {
+        _snapshot = null;
+    }
+
+    // Restores the pre-preview palette, theme identity and optional
+    // blocks. Writes nothing.
+    function cancelPreview(): void {
+        const snap = _snapshot;
+        if (snap === null)
+            return;
+        _snapshot = null;
+        _adopt(snap, true);
+        // A preview taken before the first live scheme must not count as
+        // having adopted a theme: the configured one is still owed.
+        themeStateReady = _snapshotReady;
+        if (!themeStateReady && Config.loaded)
+            _adoptConfiguredTheme();
+    }
+
+    property bool _snapshotReady: false
+
+    function _captureSnapshot(): var {
+        const palette = {};
+        for (const role of roles)
+            palette[role] = String(current[role]);
+        palette.glow = String(current.glow);
+        const terminal = [];
+        for (let i = 0; i < 16; i++)
+            terminal.push(String(current[`term${i}`]));
+        return {
+            "schemaVersion": 2,
+            "id": themeId,
+            "mode": themeMode,
+            "palette": palette,
+            "terminal": terminal,
+            "chromatic": _chromaticSource,
+            "minSurfaceAlpha": minSurfaceAlpha,
+            "clearInk": clearInk
+        };
+    }
+
+    // The scheme's raw chromatic block, kept so a snapshot restores it.
+    property var _chromaticSource: null
 
     function applyBuiltInTheme(id: string): void {
         if (isBuiltInTheme(id))
@@ -265,7 +398,13 @@ Singleton {
         } catch (e) {
             console.warn("Signal: live scheme is not valid JSON:", e);
         }
-        if (scheme && scheme.schemaVersion === 2 && applyScheme(scheme))
+        if (scheme && scheme.schemaVersion === 2 && _snapshot !== null && isCompletePalette(scheme.palette)) {
+            // A candidate is on screen: the file becomes what Cancel
+            // restores, the preview itself stays untouched.
+            _snapshot = scheme;
+            return;
+        }
+        if (scheme && scheme.schemaVersion === 2 && _adopt(scheme, true))
             return;
         // Legacy/invalid scheme: present the configured built-in.
         schemeFile.loadFailedOnce = true;
@@ -279,7 +418,7 @@ Singleton {
     // its one-shot migration) and, on first run, publish it so horneroctl
     // consumers (Hyprland borders, hyprlock) render the same roles.
     function _adoptConfiguredTheme(): void {
-        if (themeStateReady)
+        if (themeStateReady || previewing)
             return;
         const id = isBuiltInTheme(Config.appearance.theme) ? Config.appearance.theme : defaultThemeId;
         applyBuiltInTheme(id);
@@ -302,14 +441,23 @@ Singleton {
 
     // Translucency: layer 0 is the surface backdrop, nested layers keep a
     // slight lift so stacked cards stay distinguishable.
-    function layer(c: color, layer: var): color {
+    function layer(c: color, layer: var, role: var): color {
         if (!transparency.enabled)
             return c;
         if (layer === 0)
-            return Qt.alpha(c, transparency.base);
+            return Qt.alpha(c, Math.max(transparency.base, alphaFloor(role ? String(role) : "base")));
         const depth = layer ?? 1;
         const lift = (light ? -0.04 : 0.05) * depth;
-        return Qt.rgba(Math.max(0, Math.min(1, c.r + lift)), Math.max(0, Math.min(1, c.g + lift)), Math.max(0, Math.min(1, c.b + lift)), transparency.layers);
+        return Qt.rgba(Math.max(0, Math.min(1, c.r + lift)), Math.max(0, Math.min(1, c.g + lift)), Math.max(0, Math.min(1, c.b + lift)), Math.max(transparency.layers, alphaFloor(role ? String(role) : "panel")));
+    }
+
+    // Smallest backdrop alpha the live scheme allows for a surface role
+    // (`minSurfaceAlpha`, RFC 0002 §4.9); 0 for curated themes. Only
+    // consulted while translucency is on, so High Contrast (opaque) and
+    // Cockpit Clear (no backdrop at all) are unaffected.
+    function alphaFloor(role: string): real {
+        const v = minSurfaceAlpha ? minSurfaceAlpha[role] : undefined;
+        return typeof v === "number" && !isNaN(v) ? v : 0;
     }
 
     // Resolved backdrop alpha for a named surface (bar, launcher,
@@ -320,9 +468,10 @@ Singleton {
             return 1;
         const els = transparency.elements ?? {};
         const v = els[element];
+        const floor = alphaFloor(element === "bar" ? "base" : "panel");
         if (typeof v === "number" && !isNaN(v))
-            return Math.max(0, Math.min(1, v));
-        return transparency.base;
+            return Math.max(floor, Math.max(0, Math.min(1, v)));
+        return Math.max(floor, transparency.base);
     }
 
     // Backdrop colour for a named surface: compose as
@@ -384,6 +533,50 @@ Singleton {
         }
     }
 
+    // OKLab palette tween: at most 12 steps, one Timer tick (20 ms) each.
+    // Every tick assigns one interpolated frame to `current`; the final
+    // tick assigns the exact target, so a tween can never leave the
+    // palette between two colours.
+    QtObject {
+        id: tweenState
+
+        property var from: null
+        property var to: null
+        property int step: 0
+        property int steps: 0
+    }
+
+    Timer {
+        id: tweenTimer
+
+        interval: Chromatic.STEP_MS
+        repeat: true
+        onTriggered: {
+            tweenState.step++;
+            root._assign(Chromatic.frame(tweenState.from, tweenState.to, tweenState.step, tweenState.steps));
+            root.transitionSteps = tweenState.step;
+            if (tweenState.step >= tweenState.steps)
+                tweenTimer.stop();
+        }
+    }
+
+    readonly property QtObject _tween: QtObject {
+        readonly property bool active: tweenTimer.running
+
+        function start(from: var, to: var, steps: int): void {
+            tweenState.from = from;
+            tweenState.to = to;
+            tweenState.step = 0;
+            tweenState.steps = steps;
+            root.transitionSteps = 0;
+            tweenTimer.restart();
+        }
+
+        function stop(): void {
+            tweenTimer.stop();
+        }
+    }
+
     IpcHandler {
         target: "signal"
 
@@ -397,6 +590,10 @@ Singleton {
 
         function theme(): string {
             return root.themeId;
+        }
+
+        function previewing(): bool {
+            return root.previewing;
         }
     }
 
@@ -421,12 +618,12 @@ Singleton {
 
     // Translucent variants of the surface roles; content roles stay opaque.
     component LayeredPalette: LayeredInkRoles {
-        readonly property color ground: root.layer(root.palette.ground, 0)
-        readonly property color sunken: root.layer(root.palette.sunken)
-        readonly property color base: root.layer(root.palette.base, 0)
-        readonly property color panel: root.layer(root.palette.panel)
-        readonly property color raised: root.layer(root.palette.raised)
-        readonly property color lifted: root.layer(root.palette.lifted)
+        readonly property color ground: root.layer(root.palette.ground, 0, "base")
+        readonly property color sunken: root.layer(root.palette.sunken, 1, "sunken")
+        readonly property color base: root.layer(root.palette.base, 0, "base")
+        readonly property color panel: root.layer(root.palette.panel, 1, "panel")
+        readonly property color raised: root.layer(root.palette.raised, 1, "raised")
+        readonly property color lifted: root.layer(root.palette.lifted, 1, "lifted")
         readonly property color ink: root.layer(root.palette.ink)
         readonly property color inkMuted: root.layer(root.palette.inkMuted)
         readonly property color inkFaint: root.layer(root.palette.inkFaint)

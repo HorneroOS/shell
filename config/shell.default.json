@@ -34,6 +34,30 @@
       "base": 0.85,
       "layers": 0.4,
       "elements": {}
+    },
+    "chromatic": {
+      "source": "wallpaper",
+      "seeds": [],
+      "variant": "auto",
+      "mode": "auto",
+      "contrast": "standard",
+      "surfaceDepth": "standard",
+      "chroma": 1,
+      "hueShift": 0,
+      "follow": "auto",
+      "perMode": {
+        "dark": {
+          "variant": "auto"
+        },
+        "light": {
+          "variant": "auto"
+        }
+      },
+      "fallback": {
+        "dark": "hornero-signal-night",
+        "light": "hornero-signal-day"
+      },
+      "transition": "smooth"
     }
   },
   "general": {

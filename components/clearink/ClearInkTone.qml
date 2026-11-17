@@ -15,9 +15,9 @@ QtObject {
     // changes of any ancestor reach us through field.poke().
     readonly property var data: {
         if (!root.field)
-            return Model.toneFor(null, ClearInk.style, Signal.light);
+            return Model.toneFor(null, ClearInk.style, Signal.light, ClearInk.sets);
         root.field.revision;
-        return Model.toneFor(root.field.statsFor(root.target), ClearInk.style, Signal.light);
+        return Model.toneFor(root.field.statsFor(root.target), ClearInk.style, Signal.light, ClearInk.sets);
     }
 
     readonly property Connections geometry: Connections {
@@ -46,8 +46,8 @@ QtObject {
     readonly property color halo: Qt.alpha(root.data.halo, root.data.haloAlpha)
     // The halo shader picks one of these per pixel from the foreground it
     // surrounds: dark behind light foreground, light behind dark.
-    readonly property color haloOnLight: Model.LIGHT.halo
-    readonly property color haloOnDark: Model.DARK.halo
+    readonly property color haloOnLight: ClearInk.sets.light.halo
+    readonly property color haloOnDark: ClearInk.sets.dark.halo
     readonly property int weight: root.data.weight
     readonly property real offAlpha: root.data.offAlpha
     readonly property bool active: true

@@ -288,6 +288,30 @@ Singleton {
                 base: appearance.transparency.base,
                 layers: appearance.transparency.layers,
                 elements: appearance.transparency.elements
+            },
+            chromatic: {
+                source: appearance.chromatic.source,
+                seeds: appearance.chromatic.seeds,
+                variant: appearance.chromatic.variant,
+                mode: appearance.chromatic.mode,
+                contrast: appearance.chromatic.contrast,
+                surfaceDepth: appearance.chromatic.surfaceDepth,
+                chroma: appearance.chromatic.chroma,
+                hueShift: appearance.chromatic.hueShift,
+                follow: appearance.chromatic.follow,
+                perMode: {
+                    dark: {
+                        variant: appearance.chromatic.perMode.dark.variant
+                    },
+                    light: {
+                        variant: appearance.chromatic.perMode.light.variant
+                    }
+                },
+                fallback: {
+                    dark: appearance.chromatic.fallback.dark,
+                    light: appearance.chromatic.fallback.light
+                },
+                transition: appearance.chromatic.transition
             }
         };
     }

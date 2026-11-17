@@ -271,8 +271,8 @@ def test_pane_shows_settings_only_for_plugins_that_declare_them():
     assert "function pluginSettings(entry): var" in PANE
     assert "function hasPluginSettings(entry): bool" in PANE
     assert "PluginSettingsSection {" in PANE
-    assert "visible: root.hasPluginSettings(row.modelData)" in PANE
-    assert "root.settingsPluginId === row.modelData.id" in PANE
+    assert "visible: root.hasPluginSettings(row.entry)" in PANE
+    assert "root.settingsPluginId === row.entry.id" in PANE
     # No settings -> the section itself renders nothing.
     assert "visible: root.settingKeys().length > 0" in SECTION
     # Installed-but-not-hosted entries fall back to the capabilities

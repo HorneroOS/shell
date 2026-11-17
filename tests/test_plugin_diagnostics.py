@@ -57,7 +57,7 @@ def test_recovery_pane_is_core_ui_with_disable_and_safe_mode_toggle():
     assert "Plugins.safeMode" in PANE and "HORNERO_SAFE_MODE" in PANE
     assert "Config.plugins.setSafeMode(!Config.plugins.safeMode)" in PANE
     # Disable stays available in safe mode (horneroctl lifecycle).
-    assert 'runLifecycle("disable", row.modelData.id)' in PANE
+    assert 'runLifecycle("disable", row.entry.id)' in PANE
     assert "Safe mode" in PANE
 
 
@@ -67,7 +67,7 @@ def test_per_extension_reload_and_diagnostics_surface():
     assert "!current || !current.enabled || !current.installed || root.safeMode" in SERVICE
     assert "function reloadPlugin(id: string): string" in HOST
     assert "reloadPlugin(id)" in IPC
-    assert "Plugins.reloadPlugin(row.modelData.id)" in PANE
+    assert "Plugins.reloadPlugin(row.entry.id)" in PANE
     assert "loadMs" in SERVICE and "attempts" in SERVICE
     assert "pluginDiagnostics" in PANE
     assert "diagnosticsLog: root.diagnosticsLog" in SERVICE

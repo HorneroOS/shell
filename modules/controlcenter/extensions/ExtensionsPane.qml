@@ -4,6 +4,7 @@ import ".."
 import "../components"
 import "."
 import qs.components
+import qs.modules.plugins
 import qs.components.controls
 import qs.components.containers
 import qs.components.effects
@@ -170,16 +171,21 @@ Item {
         const declared = capabilities || {};
         const commands = Array.isArray(declared.processCommands) ? declared.processCommands : [];
         const hosts = Array.isArray(declared.networkHosts) ? declared.networkHosts : [];
+        const providers = Array.isArray(declared.providers) ? declared.providers : [];
         const settings = declared.settings && typeof declared.settings === "object" ? declared.settings : {};
-        const settingsSummary = Object.keys(settings).sort().map(key => `${key}: ${JSON.stringify(settings[key])}`).join(", ");
+        const keys = Object.keys(settings).sort();
+        // Names and types only: the full declaration (defaults, bounds,
+        // descriptions) is in Details and the plugin's own settings UI.
+        const settingsSummary = keys.length === 0 ? "" : keys.map(key => `${key} (${settings[key] && settings[key].type ? settings[key].type : "?"})`).join(", ");
         const provenance = verified === false
             ? qsTr("Unverified plugin-manifest declarations")
             : qsTr("Plugin-declared capabilities");
-        return qsTr("%1\nProcess commands: %2\nNetwork hosts: %3\nSettings: %4")
+        return qsTr("%1\nRuns commands: %2\nNetwork hosts: %3\nShared data read: %4\nSettings it stores: %5")
             .arg(provenance)
-            .arg(commands.length ? commands.join(", ") : qsTr("None declared"))
-            .arg(hosts.length ? hosts.join(", ") : qsTr("None declared"))
-            .arg(settingsSummary || qsTr("None declared"));
+            .arg(commands.length ? commands.join(", ") : qsTr("none"))
+            .arg(hosts.length ? hosts.join(", ") : qsTr("none"))
+            .arg(providers.length ? providers.join(", ") : qsTr("none"))
+            .arg(settingsSummary || qsTr("none"));
     }
 
     // Marketplace metadata (shell#379): installed entries carry the
@@ -604,13 +610,25 @@ Item {
                     wrapMode: Text.Wrap
                 }
 
+                // Rows are keyed by plugin id: a load-state update from any
+                // plugin used to rebuild every row (scroll jumped to the top
+                // and the list blanked while scrolling). The row reads its
+                // live entry; the list is only rebuilt when the set of ids
+                // changes.
+                StableList {
+                    id: rowIds
+
+                    source: root.filteredPlugins().map(entry => entry.id)
+                }
+
                 Repeater {
-                    model: root.filteredPlugins()
+                    model: rowIds.list
 
                     delegate: StyledRect {
                         id: row
 
                         required property var modelData
+                        readonly property var entry: Plugins.entryFor(row.modelData) ?? ({})
 
                         Layout.fillWidth: true
                         radius: Appearance.rounding.small
@@ -637,13 +655,13 @@ Item {
                                     implicitWidth: 44
                                     implicitHeight: 44
                                     radius: Appearance.rounding.small
-                                    color: row.modelData.enabled ? Signal.palette.signalWell : Signal.tPalette.lifted
+                                    color: row.entry.enabled ? Signal.palette.signalWell : Signal.tPalette.lifted
 
                                     Glyph {
                                         anchors.centerIn: parent
-                                        name: root.placementIcon(row.modelData.placement)
+                                        name: root.placementIcon(row.entry.placement)
                                         font.pointSize: Appearance.font.size.large
-                                        color: row.modelData.enabled ? Signal.palette.onSignalWell : Signal.palette.inkMuted
+                                        color: row.entry.enabled ? Signal.palette.onSignalWell : Signal.palette.inkMuted
                                     }
                                 }
 
@@ -656,14 +674,14 @@ Item {
                                         spacing: Appearance.spacing.small
 
                                         StyledText {
-                                            text: row.modelData.name
+                                            text: row.entry.name
                                             font.pointSize: Appearance.font.size.normal
                                             font.weight: 600
                                         }
 
                                         StyledText {
                                             Layout.fillWidth: true
-                                            text: row.modelData.version ? `v${row.modelData.version}` : ""
+                                            text: row.entry.version ? `v${row.entry.version}` : ""
                                             font.pointSize: Appearance.font.size.small
                                             color: Signal.palette.inkMuted
                                         }
@@ -671,12 +689,12 @@ Item {
 
                                     StyledText {
                                         Layout.fillWidth: true
-                                        visible: !!row.modelData.description
-                                        text: row.modelData.description ?? ""
+                                        visible: !!row.entry.description
+                                        text: row.entry.description ?? ""
                                         font.pointSize: Appearance.font.size.small
                                         color: Signal.palette.inkMuted
                                         wrapMode: Text.Wrap
-                                        maximumLineCount: root.expandedPluginId === row.modelData.id ? 20 : 2
+                                        maximumLineCount: root.expandedPluginId === row.entry.id ? 20 : 2
                                         elide: Text.ElideRight
                                     }
 
@@ -686,12 +704,12 @@ Item {
                                         spacing: Appearance.spacing.small
 
                                         ExtensionChip {
-                                            label: Plugins.safeMode && row.modelData.enabled ? qsTr("Safe mode") : !row.modelData.enabled && !row.modelData.requestedEnabled ? qsTr("Disabled") : row.modelData.state === "loaded" ? qsTr("Loaded") : row.modelData.state === "failed" ? qsTr("Failed") : row.modelData.state === "blocked" ? qsTr("Blocked") : qsTr("Pending")
-                                            tone: !row.modelData.enabled && !row.modelData.requestedEnabled ? "neutral" : row.modelData.state === "loaded" ? "good" : row.modelData.state === "failed" || row.modelData.state === "blocked" ? "bad" : "neutral"
+                                            label: Plugins.safeMode && row.entry.enabled ? qsTr("Safe mode") : !row.entry.enabled && !row.entry.requestedEnabled ? qsTr("Disabled") : row.entry.state === "loaded" ? qsTr("Loaded") : row.entry.state === "failed" ? qsTr("Failed") : row.entry.state === "blocked" ? qsTr("Blocked") : qsTr("Pending")
+                                            tone: !row.entry.enabled && !row.entry.requestedEnabled ? "neutral" : row.entry.state === "loaded" ? "good" : row.entry.state === "failed" || row.entry.state === "blocked" ? "bad" : "neutral"
                                         }
 
                                         ExtensionChip {
-                                            readonly property var kit: root.kitStatus(row.modelData)
+                                            readonly property var kit: root.kitStatus(row.entry)
                                             label: kit.label
                                             tone: kit.tone
                                             icon: kit.icon
@@ -700,22 +718,22 @@ Item {
                                         }
 
                                         ExtensionChip {
-                                            visible: root.maturityLabel(row.modelData).length > 0
-                                            label: root.maturityLabel(row.modelData)
+                                            visible: root.maturityLabel(row.entry).length > 0
+                                            label: root.maturityLabel(row.entry)
                                         }
 
                                         ExtensionChip {
-                                            visible: !!row.modelData.placement
-                                            label: root.placementLabel(row.modelData.placement)
-                                            icon: root.placementIcon(row.modelData.placement)
+                                            visible: !!row.entry.placement
+                                            label: root.placementLabel(row.entry.placement)
+                                            icon: root.placementIcon(row.entry.placement)
                                         }
 
                                         ExtensionChip {
-                                            label: root.trustLabel(row.modelData.trust)
+                                            label: root.trustLabel(row.entry.trust)
                                             Accessible.role: Accessible.StaticText
-                                            Accessible.name: qsTr("Trust: %1").arg(row.modelData.trust ?? qsTr("unknown"))
-                                            icon: (["untrusted", "stale-trust", "modified", "unverified"].includes(row.modelData.trust)) ? "alert-triangle" : "rosette-discount-check"
-                                            tone: (["untrusted", "stale-trust", "modified", "unverified"].includes(row.modelData.trust)) ? "bad" : "neutral"
+                                            Accessible.name: qsTr("Trust: %1").arg(row.entry.trust ?? qsTr("unknown"))
+                                            icon: (["untrusted", "stale-trust", "modified", "unverified"].includes(row.entry.trust)) ? "alert-triangle" : "rosette-discount-check"
+                                            tone: (["untrusted", "stale-trust", "modified", "unverified"].includes(row.entry.trust)) ? "bad" : "neutral"
                                         }
                                     }
                                 }
@@ -723,10 +741,10 @@ Item {
 
                             StyledText {
                                 Layout.fillWidth: true
-                                visible: root.expandedPluginId === row.modelData.id && row.modelData.source === "https://github.com/HorneroOS/plugins.git"
+                                visible: root.expandedPluginId === row.entry.id && row.entry.source === "https://github.com/HorneroOS/plugins.git"
                                 text: qsTr("Catalogue revision: %1\nExpected payload SHA-256: %2")
-                                    .arg(row.modelData.revision || qsTr("Not recorded"))
-                                    .arg(row.modelData.catalog_sha256 || qsTr("Not recorded"))
+                                    .arg(row.entry.revision || qsTr("Not recorded"))
+                                    .arg(row.entry.catalog_sha256 || qsTr("Not recorded"))
                                 font.pointSize: Appearance.font.size.smaller
                                 font.family: Appearance.font.family.mono
                                 color: Signal.palette.inkMuted
@@ -735,23 +753,23 @@ Item {
 
                             StyledText {
                                 Layout.fillWidth: true
-                                visible: root.isDeprecated(row.modelData)
-                                text: root.deprecationText(row.modelData)
+                                visible: root.isDeprecated(row.entry)
+                                text: root.deprecationText(row.entry)
                                 font.pointSize: Appearance.font.size.small
                                 color: Signal.palette.alert
                                 wrapMode: Text.Wrap
                             }
 
                             TextButton {
-                                visible: root.replacedById(row.modelData).length > 0
-                                text: qsTr("View replacement: %1").arg(root.replacedById(row.modelData))
+                                visible: root.replacedById(row.entry).length > 0
+                                text: qsTr("View replacement: %1").arg(root.replacedById(row.entry))
                                 type: TextButton.Text
-                                onClicked: root.openReplacement(root.replacedById(row.modelData))
+                                onClicked: root.openReplacement(root.replacedById(row.entry))
                             }
 
                             StyledText {
                                 Layout.fillWidth: true
-                                visible: root.pendingTrust === row.modelData.id
+                                visible: root.pendingTrust === row.entry.id
                                 text: qsTr("You are trusting the exact code currently installed for this plugin. If its files change, you will be asked again. Trusting does not enable it.")
                                 font.pointSize: Appearance.font.size.small
                                 color: Signal.palette.alert
@@ -760,8 +778,8 @@ Item {
 
                             StyledText {
                                 Layout.fillWidth: true
-                                visible: !!row.modelData.detail
-                                text: row.modelData.detail ?? ""
+                                visible: !!row.entry.detail
+                                text: row.entry.detail ?? ""
                                 font.pointSize: Appearance.font.size.small
                                 color: Signal.palette.alert
                                 wrapMode: Text.Wrap
@@ -769,9 +787,8 @@ Item {
 
                             StyledText {
                                 Layout.fillWidth: true
-                                visible: root.pendingEnable === row.modelData.id
-                                text: qsTr("This plugin's QML will run as your user, without a sandbox. Enable only if you reviewed its source.\n%1")
-                                    .arg(root.declaredCapabilities(row.modelData.capabilities, row.modelData.capabilities_verified))
+                                visible: root.pendingEnable === row.entry.id
+                                text: qsTr("This plugin's QML will run as your user, without a sandbox. Enable only if you reviewed its source.")
                                 font.pointSize: Appearance.font.size.small
                                 color: Signal.palette.alert
                                 wrapMode: Text.Wrap
@@ -779,8 +796,17 @@ Item {
 
                             StyledText {
                                 Layout.fillWidth: true
-                                visible: root.expandedPluginId === row.modelData.id
-                                text: root.pluginDetail(row.modelData)
+                                visible: root.pendingEnable === row.entry.id
+                                text: root.declaredCapabilities(row.entry.capabilities, row.entry.capabilities_verified)
+                                font.pointSize: Appearance.font.size.small
+                                color: Signal.palette.ink
+                                wrapMode: Text.Wrap
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                visible: root.expandedPluginId === row.entry.id
+                                text: root.pluginDetail(row.entry)
                                 font.pointSize: Appearance.font.size.small
                                 color: Signal.palette.inkMuted
                                 wrapMode: Text.Wrap
@@ -793,11 +819,11 @@ Item {
                             // plain-language permission explanations.
                             ColumnLayout {
                                 Layout.fillWidth: true
-                                visible: root.expandedPluginId === row.modelData.id
+                                visible: root.expandedPluginId === row.entry.id
                                 spacing: Appearance.spacing.small
 
                                 Repeater {
-                                    model: root.screenshotSources(row.modelData)
+                                    model: root.screenshotSources(row.entry)
 
                                     delegate: Image {
                                         required property var modelData
@@ -814,8 +840,8 @@ Item {
 
                                 StyledText {
                                     Layout.fillWidth: true
-                                    visible: root.screenshotSources(row.modelData).length === 0 && root.screenshotCaptions(row.modelData).length > 0
-                                    text: root.screenshotCaptions(row.modelData)
+                                    visible: root.screenshotSources(row.entry).length === 0 && root.screenshotCaptions(row.entry).length > 0
+                                    text: root.screenshotCaptions(row.entry)
                                     font.pointSize: Appearance.font.size.small
                                     color: Signal.palette.inkMuted
                                     wrapMode: Text.Wrap
@@ -823,8 +849,8 @@ Item {
 
                                 StyledText {
                                     Layout.fillWidth: true
-                                    visible: root.compatibilityText(row.modelData).length > 0
-                                    text: root.compatibilityText(row.modelData)
+                                    visible: root.compatibilityText(row.entry).length > 0
+                                    text: root.compatibilityText(row.entry)
                                     font.pointSize: Appearance.font.size.small
                                     color: Signal.palette.inkMuted
                                     wrapMode: Text.Wrap
@@ -832,8 +858,8 @@ Item {
 
                                 StyledText {
                                     Layout.fillWidth: true
-                                    visible: root.changelogText(row.modelData).length > 0
-                                    text: root.changelogText(row.modelData)
+                                    visible: root.changelogText(row.entry).length > 0
+                                    text: root.changelogText(row.entry)
                                     font.pointSize: Appearance.font.size.small
                                     color: Signal.palette.inkMuted
                                     wrapMode: Text.Wrap
@@ -841,7 +867,7 @@ Item {
 
                                 StyledText {
                                     Layout.fillWidth: true
-                                    text: root.permissionExplanations(row.modelData)
+                                    text: root.permissionExplanations(row.entry)
                                     font.pointSize: Appearance.font.size.small
                                     color: Signal.palette.inkMuted
                                     wrapMode: Text.Wrap
@@ -850,9 +876,9 @@ Item {
 
                             PluginSettingsSection {
                                 Layout.fillWidth: true
-                                visible: root.settingsPluginId === row.modelData.id && root.hasPluginSettings(row.modelData)
-                                pluginId: row.modelData.id
-                                settings: root.pluginSettings(row.modelData)
+                                visible: root.settingsPluginId === row.entry.id && root.hasPluginSettings(row.entry)
+                                pluginId: row.entry.id
+                                settings: root.pluginSettings(row.entry)
                             }
 
                             // Custom settings surface, in its own
@@ -863,19 +889,19 @@ Item {
                             // enabled settings surface.
                             PluginSettingsHost {
                                 Layout.fillWidth: true
-                                visible: root.customSettingsPluginId === row.modelData.id && root.hasSettingsSurface(row.modelData)
-                                pluginId: row.modelData.id
-                                entrypoint: root.settingsSurfaceEntrypoint(row.modelData)
+                                visible: root.customSettingsPluginId === row.entry.id && root.hasSettingsSurface(row.entry)
+                                pluginId: row.entry.id
+                                entrypoint: root.settingsSurfaceEntrypoint(row.entry)
                             }
 
                             Repeater {
-                                model: row.modelData.placement === "desktop" ? Quickshell.screens : []
+                                model: row.entry.placement === "desktop" ? Quickshell.screens : []
 
                                 delegate: DesktopWidgetPosition {
                                     required property var modelData
 
                                     Layout.fillWidth: true
-                                    pluginId: row.modelData.id
+                                    pluginId: row.entry.id
                                     screenName: modelData.name
                                 }
                             }
@@ -886,23 +912,23 @@ Item {
                                 spacing: Appearance.spacing.small
 
                                 TextButton {
-                                    text: root.expandedPluginId === row.modelData.id ? qsTr("Hide details") : qsTr("Details")
+                                    text: root.expandedPluginId === row.entry.id ? qsTr("Hide details") : qsTr("Details")
                                     type: TextButton.Text
-                                    onClicked: root.expandedPluginId = root.expandedPluginId === row.modelData.id ? "" : row.modelData.id
+                                    onClicked: root.expandedPluginId = root.expandedPluginId === row.entry.id ? "" : row.entry.id
                                 }
 
                                 TextButton {
-                                    visible: root.hasPluginSettings(row.modelData)
-                                    text: root.settingsPluginId === row.modelData.id ? qsTr("Hide settings") : qsTr("Settings")
+                                    visible: root.hasPluginSettings(row.entry)
+                                    text: root.settingsPluginId === row.entry.id ? qsTr("Hide settings") : qsTr("Settings")
                                     type: TextButton.Text
-                                    onClicked: root.settingsPluginId = root.settingsPluginId === row.modelData.id ? "" : row.modelData.id
+                                    onClicked: root.settingsPluginId = root.settingsPluginId === row.entry.id ? "" : row.entry.id
                                 }
 
                                 TextButton {
-                                    visible: root.hasSettingsSurface(row.modelData)
-                                    text: root.customSettingsPluginId === row.modelData.id ? qsTr("Hide custom settings") : qsTr("Custom settings")
+                                    visible: root.hasSettingsSurface(row.entry)
+                                    text: root.customSettingsPluginId === row.entry.id ? qsTr("Hide custom settings") : qsTr("Custom settings")
                                     type: TextButton.Text
-                                    onClicked: root.customSettingsPluginId = root.customSettingsPluginId === row.modelData.id ? "" : row.modelData.id
+                                    onClicked: root.customSettingsPluginId = root.customSettingsPluginId === row.entry.id ? "" : row.entry.id
                                 }
 
                                 Item {
@@ -910,26 +936,26 @@ Item {
                                 }
 
                                 TextButton {
-                                    visible: !row.modelData.enabled && (["untrusted", "stale-trust", "modified", "unverified"].includes(row.modelData.trust)) && root.pendingTrust !== row.modelData.id
+                                    visible: !row.entry.enabled && (["untrusted", "stale-trust", "modified", "unverified"].includes(row.entry.trust)) && root.pendingTrust !== row.entry.id
                                     enabled: !lifecycleProc.running
                                     text: qsTr("Trust…")
                                     type: TextButton.Tonal
                                     onClicked: {
                                         root.actionError = "";
-                                        root.pendingTrust = row.modelData.id;
+                                        root.pendingTrust = row.entry.id;
                                     }
                                 }
 
                                 TextButton {
-                                    visible: root.pendingTrust === row.modelData.id
+                                    visible: root.pendingTrust === row.entry.id
                                     enabled: !lifecycleProc.running
                                     text: qsTr("Confirm trust")
                                     type: TextButton.Filled
-                                    onClicked: root.runLifecycle("trust", row.modelData.id)
+                                    onClicked: root.runLifecycle("trust", row.entry.id)
                                 }
 
                                 TextButton {
-                                    visible: root.pendingTrust === row.modelData.id
+                                    visible: root.pendingTrust === row.entry.id
                                     enabled: !lifecycleProc.running
                                     text: qsTr("Cancel")
                                     type: TextButton.Text
@@ -937,26 +963,26 @@ Item {
                                 }
 
                                 TextButton {
-                                    visible: !row.modelData.enabled && !row.modelData.requestedEnabled && root.pendingEnable !== row.modelData.id
+                                    visible: !row.entry.enabled && !row.entry.requestedEnabled && root.pendingEnable !== row.entry.id
                                     enabled: !lifecycleProc.running
                                     text: qsTr("Enable…")
                                     type: TextButton.Tonal
                                     onClicked: {
                                         root.actionError = "";
-                                        root.pendingEnable = row.modelData.id;
+                                        root.pendingEnable = row.entry.id;
                                     }
                                 }
 
                                 TextButton {
-                                    visible: root.pendingEnable === row.modelData.id
+                                    visible: root.pendingEnable === row.entry.id
                                     enabled: !lifecycleProc.running
                                     text: qsTr("Confirm enable")
                                     type: TextButton.Filled
-                                    onClicked: root.runLifecycle("enable", row.modelData.id)
+                                    onClicked: root.runLifecycle("enable", row.entry.id)
                                 }
 
                                 TextButton {
-                                    visible: root.pendingEnable === row.modelData.id
+                                    visible: root.pendingEnable === row.entry.id
                                     enabled: !lifecycleProc.running
                                     text: qsTr("Cancel")
                                     type: TextButton.Text
@@ -964,18 +990,18 @@ Item {
                                 }
 
                                 TextButton {
-                                    visible: row.modelData.enabled && !Plugins.safeMode
+                                    visible: row.entry.enabled && !Plugins.safeMode
                                     text: qsTr("Reload")
                                     type: TextButton.Tonal
-                                    onClicked: Plugins.reloadPlugin(row.modelData.id)
+                                    onClicked: Plugins.reloadPlugin(row.entry.id)
                                 }
 
                                 TextButton {
-                                    visible: row.modelData.enabled || row.modelData.requestedEnabled
+                                    visible: row.entry.enabled || row.entry.requestedEnabled
                                     enabled: !lifecycleProc.running
                                     text: qsTr("Disable")
                                     type: TextButton.Tonal
-                                    onClicked: root.runLifecycle("disable", row.modelData.id)
+                                    onClicked: root.runLifecycle("disable", row.entry.id)
                                 }
                             }
                         }

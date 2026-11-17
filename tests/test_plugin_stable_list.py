@@ -80,3 +80,15 @@ def test_stable_list_republishes_only_on_structural_change(tmp_path):
 def test_every_host_builds_delegates_from_a_stable_list(host):
     source = (ROOT / "modules/plugins" / host).read_text(encoding="utf-8")
     assert "StableList {" in source, host
+
+
+def test_update_takes_effect_without_restart():
+    """The entrypoint URL carries the package version so a running shell
+    recompiles an updated extension (QML caches per URL)."""
+    service = (ROOT / "services/Plugins.qml").read_text(encoding="utf-8")
+    assert "function entrypointUrl(id: string, entrypoint: string): string" in service
+    assert "?v=${encodeURIComponent(version)}" in service
+    for host in HOSTS:
+        source = (ROOT / "modules/plugins" / host).read_text(encoding="utf-8")
+        if "file://" in source:
+            raise AssertionError(f"{host} builds a raw file:// entrypoint URL")

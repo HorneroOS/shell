@@ -66,6 +66,9 @@ Singleton {
     // Session state, never persisted; entered from Control Center or
     // `qs ipc call plugins editDesktop`.
     property bool desktopEditing: false
+    // Ids of enabled desktop widgets the solver could not place (no room);
+    // reported by `plugins status`, never drawn overlapping another.
+    property var desktopNoRoom: []
 
     // Loader error strings can embed URLs or argv a plugin built from
     // its own settings; redact credential-looking assignments before
@@ -126,6 +129,18 @@ Singleton {
     readonly property bool hostingBlocked: root.safeMode || root.kitBlocked
 
     onKitBlockedChanged: root.applyKitGate()
+
+    // Toggling safe mode live: hosts empty at once, so report it instead of
+    // leaving stale "loaded" states, and rediscover when it is turned off.
+    onSafeModeChanged: {
+        if (root.safeMode)
+            root.entries = root.entries.map(e => e.enabled && e.installed ? Object.assign({}, e, {
+                state: "safe-mode",
+                detail: qsTr("Safe mode is on: this plugin was not loaded. Disable it here, or turn safe mode off to load plugins again.")
+            }) : e);
+        else if (root.discovered)
+            root.reload();
+    }
 
     function applyKitGate(): void {
         if (!root.kitBlocked)
@@ -367,6 +382,18 @@ Singleton {
             settings: normalized
         }) : e);
         root.entries = next;
+    }
+
+    // Entrypoint URL with the package version as a cache key: QML caches a
+    // compiled component per URL, so after `horneroctl plugin catalog
+    // update` a running shell would keep the old code until restart. A new
+    // version changes the URL, the host rebuilds the Loader (the version is
+    // part of the StableList structure) and the new file is compiled. Only
+    // the entrypoint is keyed; a same-version edit needs a restart.
+    function entrypointUrl(id: string, entrypoint: string): string {
+        const entry = root.entries.find(e => e.id === id);
+        const version = entry && typeof entry.version === "string" ? entry.version : "";
+        return `file://${root.pluginsDir}/${id}/${entrypoint}` + (version !== "" ? `?v=${encodeURIComponent(version)}` : "");
     }
 
     // Live entry for one id (state, detail, trust, ...). Delegates built
@@ -762,7 +789,7 @@ Singleton {
                 text = "";
             }
         }
-        return text.split(`file://${root.pluginsDir}/`).join("").replace(/\s+/g, " ").trim();
+        return text.split(`file://${root.pluginsDir}/`).join("").replace(/\?v=[^:\s]*/g, "").replace(/\s+/g, " ").trim();
     }
 
     // Per-extension reload (shell#380): reset one entry to pending
@@ -828,6 +855,7 @@ Singleton {
                 churnWindowMs: root.churnWindowMs
             },
             diagnosticsLog: root.diagnosticsLog,
+            desktopNoRoom: root.desktopNoRoom,
             count: root.entries.length,
             loaded: root.entries.filter(e => e.state === "loaded").length,
             failed: root.entries.filter(e => e.state === "failed").length,

@@ -18,12 +18,12 @@ def test_manifest_description_reaches_the_entries():
 
 
 def test_cards_show_description_and_chips_and_hide_hashes_by_default():
-    assert "text: row.modelData.description ?? \"\"" in PANE
+    assert "text: row.entry.description ?? \"\"" in PANE
     for fn in ("placementIcon", "placementLabel", "trustLabel"):
         assert f"function {fn}(" in PANE
     assert PANE.count("ExtensionChip {") >= 3
     hashes = PANE[PANE.index('qsTr("Catalogue revision: %1\\nExpected payload SHA-256: %2")') - 400:]
-    assert "visible: root.expandedPluginId === row.modelData.id &&" in hashes
+    assert "visible: root.expandedPluginId === row.entry.id &&" in hashes
 
 
 def test_sandbox_warning_is_the_header_intro():

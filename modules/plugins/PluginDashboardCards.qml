@@ -287,7 +287,7 @@ Item {
                                         palette.mid: Signal.palette.ruleStrong
                                         palette.dark: Signal.palette.ruleStrong
                                         palette.light: Signal.palette.lifted
-                                        source: card.modelData.entrypoint ? `file://${Plugins.pluginsDir}/${card.modelData.id}/${card.modelData.entrypoint}` : ""
+                                        source: card.modelData.entrypoint ? Plugins.entrypointUrl(card.modelData.id, card.modelData.entrypoint) : ""
                                         asynchronous: true
 
                                         onStatusChanged: {

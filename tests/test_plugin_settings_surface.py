@@ -52,9 +52,9 @@ def test_pane_offers_surface_alongside_generated_ui():
     # Alongside, not replacing: both components render in the row,
     # each gated on its own declaration kind and the expanded row.
     assert "PluginSettingsSection {" in PANE and "PluginSettingsHost {" in PANE
-    assert "visible: root.settingsPluginId === row.modelData.id && root.hasPluginSettings(row.modelData)" in PANE
-    assert "visible: root.customSettingsPluginId === row.modelData.id && root.hasSettingsSurface(row.modelData)" in PANE
-    assert "entrypoint: root.settingsSurfaceEntrypoint(row.modelData)" in PANE
+    assert "visible: root.settingsPluginId === row.entry.id && root.hasPluginSettings(row.entry)" in PANE
+    assert "visible: root.customSettingsPluginId === row.entry.id && root.hasSettingsSurface(row.entry)" in PANE
+    assert "entrypoint: root.settingsSurfaceEntrypoint(row.entry)" in PANE
     assert PANE.index("PluginSettingsSection {") < PANE.index("PluginSettingsHost {")
 
 
@@ -74,7 +74,7 @@ def test_surface_host_fault_isolation_like_other_hosts():
 def test_disable_and_safe_mode_unload_surface():
     assert "Plugins.hasSurface(root.pluginId, \"settings\")" in HOST_CC
     assert "active: root.surfaceAvailable && root.visible" in HOST_CC
-    assert 'source: active ? `file://${Plugins.pluginsDir}/${root.pluginId}/${root.entrypoint}` : ""' in HOST_CC
+    assert 'source: active ? Plugins.entrypointUrl(root.pluginId, root.entrypoint) : ""' in HOST_CC
     # Service side: pluginsForSurface/hasSurface return nothing in
     # safe mode and skip disabled/uninstalled entries.
     assert "if (root.hostingBlocked)\n            return []" in SERVICE
@@ -90,9 +90,9 @@ def test_no_surface_means_no_change():
     assert "PluginSettingsHost" in HOST  # only as a pointer comment
     # Pane affordance requires either kind; a plugin with neither
     # has no Settings button (hasAnyPluginSettings false path).
-    assert "visible: root.hasSettingsSurface(row.modelData)" in PANE
+    assert "visible: root.hasSettingsSurface(row.entry)" in PANE
     assert "qsTr(\"Custom settings\")" in PANE
-    assert "root.customSettingsPluginId === row.modelData.id" in PANE
+    assert "root.customSettingsPluginId === row.entry.id" in PANE
 
 
 def test_honest_trust_note_in_ui_and_docs():

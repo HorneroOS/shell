@@ -4,6 +4,7 @@ import qs.components
 import qs.components.containers
 import qs.services
 import qs.config
+import qs.modules.companion
 import qs.modules.plugins
 import Quickshell
 import Quickshell.Wayland
@@ -164,14 +165,25 @@ Loader {
 
                 screenName: win.screen.name
                 // The desktop clock's box, so the Signal deck flows around it.
-                reserved: clockLoader.item ? [
-                    {
-                        x: clockLoader.x - desktopWidgets.x,
-                        y: clockLoader.y - desktopWidgets.y,
-                        width: clockLoader.width,
-                        height: clockLoader.height
-                    }
-                ] : []
+                // Reserved zones: the desktop clock's box and the Companion
+                // mascot's perch (widgets never start under the bird).
+                readonly property real mascotSize: Math.round(128 * CompanionStore.sizeScale)
+                readonly property bool mascotHere: CompanionStore.visible && win.screen.name === (CompanionStore.screenName !== "" ? CompanionStore.screenName : (Compositor.focusedOutputName || win.screen.name))
+                reserved: (clockLoader.item ? [
+                        {
+                            x: clockLoader.x - desktopWidgets.x,
+                            y: clockLoader.y - desktopWidgets.y,
+                            width: clockLoader.width,
+                            height: clockLoader.height
+                        }
+                    ] : []).concat(desktopWidgets.mascotHere ? [
+                        {
+                            x: Math.round(CompanionStore.posX * win.width - desktopWidgets.mascotSize / 2) - desktopWidgets.x,
+                            y: Math.round(CompanionStore.posY * win.height - desktopWidgets.mascotSize) - desktopWidgets.y,
+                            width: desktopWidgets.mascotSize,
+                            height: desktopWidgets.mascotSize
+                        }
+                    ] : [])
                 opacity: Experience.desktopWidgetsVisible ? 1 : 0
                 visible: opacity > 0 && desktopWidgets.hasContent
 

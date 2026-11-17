@@ -382,8 +382,20 @@ def test_deck_geometry_never_touches_the_everyday_widget_layout():
 
 
 def test_host_keeps_the_desktop_clock_clear():
-    assert "reserved: clockLoader.item" in BACKGROUND
+    assert "reserved: (clockLoader.item" in BACKGROUND
     assert "desktopWidgets.hasContent" in BACKGROUND
+
+
+def test_host_keeps_the_companion_perch_clear():
+    assert "CompanionStore.posX * win.width" in BACKGROUND
+    assert "mascotHere" in BACKGROUND
+
+
+def test_user_widgets_use_the_deck_solver_and_never_overlap():
+    assert "Experience.deckCompose({" in HOST
+    assert "userPlacements" in HOST and "noRoomIds" in HOST
+    assert "Plugins.desktopNoRoom" in HOST
+    assert "autoPlacement" in FRAME
 
 
 def test_missing_extensions_degrade_honestly():
@@ -473,3 +485,18 @@ def test_deck_sees_surfaces_of_installed_but_not_enabled_packages():
     assert "Plugins.markPlacement(previewSlot.modelData.id" in reader
     assert "manifest.files.includes(value)" in reader
     assert "Plugins.markFailed" not in reader
+
+
+def test_a_floating_reserved_zone_shrinks_a_widget_instead_of_dropping_the_rail():
+    """The Companion's perch sits mid-rail: a widget that can live with less
+    height stops above it (instead of the whole right rail being lost), and
+    nothing ever overlaps the zone or another widget."""
+    area = {"width": 1216, "height": 704}
+    mascot = {"x": 1000, "y": 400, "width": 128, "height": 128}
+    res = compose(area, reserved=[mascot], ids=["hornero-agenda", "hornero-audio-deck", "hornero-calendar"])
+    assert_sane(res, area, reserved=[mascot])
+    placed = {p["id"]: p for p in res["placements"]}
+    assert "hornero-calendar" in placed, res
+    assert placed["hornero-calendar"]["y"] + placed["hornero-calendar"]["height"] <= mascot["y"]
+    res = compose(area, reserved=[mascot])
+    assert_sane(res, area, reserved=[mascot])

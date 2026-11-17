@@ -466,7 +466,7 @@ def test_extensions_pane_surfaces_trust_state():
     assert 'qsTr("Trust: %1")' in pane
     assert 'qsTr("Trust…")' in pane
     assert 'qsTr("Confirm trust")' in pane
-    assert 'runLifecycle("trust", row.modelData.id)' in pane
+    assert 'runLifecycle("trust", row.entry.id)' in pane
     assert "pendingTrust" in pane
 
 

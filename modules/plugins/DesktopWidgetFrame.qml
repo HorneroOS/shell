@@ -45,9 +45,10 @@ Item {
         if (root.deck && root.contentNeed > 0)
             root.needMeasured(root.pluginId, root.contentNeed);
     }
-    // Collision-free first-run slot chosen by PluginDesktopWidgets; used
-    // when the person has not picked an anchor (never overrides one).
-    property string defaultSlot: ""
+    // Solver placement from PluginDesktopWidgets ({fx, fy, width, height}),
+    // used until the person moves or resizes the widget (their saved
+    // geometry always wins and is what the solver then honours).
+    property var autoPlacement: null
     readonly property bool deck: root.deckPlacement !== null
 
     readonly property string pluginId: entry.id
@@ -57,12 +58,12 @@ Item {
             fy: root.deckPlacement.fy,
             width: root.deckPlacement.width,
             height: root.deckPlacement.height
-        }) : Config.plugins.desktopWidgetGeometry(root.pluginId, root.screenName)
+        }) : (Config.plugins.desktopWidgetGeometry(root.pluginId, root.screenName) ?? root.autoPlacement)
     readonly property string anchorSlot: {
         const slots = Config.plugins.desktopWidgetSlots;
         const perScreen = slots && typeof slots === "object" ? slots[root.screenName || "default"] : null;
         const explicit = perScreen && typeof perScreen === "object" ? perScreen[root.pluginId] : undefined;
-        return Config.plugins.allowedDesktopSlots.includes(explicit) ? explicit : (Config.plugins.allowedDesktopSlots.includes(root.defaultSlot) ? root.defaultSlot : (Config.plugins.allowedDesktopSlots.includes(root.hint.anchor) ? root.hint.anchor : "bottom-right"));
+        return Config.plugins.allowedDesktopSlots.includes(explicit) ? explicit : (Config.plugins.allowedDesktopSlots.includes(root.hint.anchor) ? root.hint.anchor : "bottom-right");
     }
     readonly property bool editing: Plugins.desktopEditing
     readonly property bool resizable: root.hint.resizable !== false
@@ -210,7 +211,7 @@ Item {
             active: !root.suspended && !!root.entry.entrypoint
             asynchronous: true
             // pluginsForSurface hands the desktop surface's file in entrypoint.
-            source: root.entry.entrypoint ? `file://${Plugins.pluginsDir}/${root.pluginId}/${root.entry.entrypoint}` : ""
+            source: root.entry.entrypoint ? Plugins.entrypointUrl(root.pluginId, root.entry.entrypoint) : ""
             enabled: !root.editing
 
             onStatusChanged: {

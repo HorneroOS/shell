@@ -271,9 +271,11 @@ Singleton {
         readonly property LazyLoader dummyImageLoader: LazyLoader {
             active: false
 
-            Item {
+            PanelWindow {
                 implicitWidth: Config.notifs.sizes.image
                 implicitHeight: Config.notifs.sizes.image
+                color: "transparent"
+                mask: Region {}
 
                 Image {
                     function tryCache(): void {

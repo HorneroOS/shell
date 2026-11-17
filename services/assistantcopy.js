@@ -96,6 +96,11 @@ var STRINGS = {
     "error.no-answer": { en: "The assistant did not answer. Check the connection and retry.", es: "El asistente no respondió. Revisa la conexión y reintenta." },
     "error.interrupted": { en: "The connection dropped mid-answer. The text above is partial.", es: "Se cortó la conexión a mitad de la respuesta. El texto de arriba está incompleto." },
     "error.disabled": { en: "The assistant is off. Turn it on in Control Center > Javi.", es: "El asistente está apagado. Actívalo en Centro de control > Javi." },
+    "thinking": { en: "Javi is thinking", es: "Javi est\u00e1 pensando" },
+    "chip.updates": { en: "What updates are pending?", es: "\u00bfQu\u00e9 actualizaciones hay pendientes?" },
+    "chip.slow": { en: "Why is my machine slow?", es: "\u00bfPor qu\u00e9 va lento mi equipo?" },
+    "chip.themes": { en: "Show me the GTK themes", es: "Mu\u00e9strame los temas GTK" },
+    "chip.capabilities": { en: "What can you do?", es: "\u00bfQu\u00e9 puedes hacer?" },
     "workbench.expand": { en: "Expand Workbench", es: "Expandir Workbench" },
     "workbench.collapse": { en: "Collapse Workbench", es: "Contraer Workbench" }
 };

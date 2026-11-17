@@ -72,8 +72,8 @@ clarifies or runs commands. When the gateway asks for a decision (a
 typed `approval`/`clarify` frame) or the mode blocks a tool, the
 run is stopped (a stop, never an approval) and the row offers an
 explicit "Continue in Workbench" hand-off: a quick question never
-silently becomes agent operations. `qs ipc call companion quick
-[text]` opens the launcher straight into this ask (see
+silently becomes agent operations. `qs ipc call companion quick`
+(or `quickWith <text>`) opens the launcher straight into this ask (see
 `docs/ASSISTANT_WORKBENCH.md`).
 
 **Fallback.** An error, a disabled/unreachable assistant or an

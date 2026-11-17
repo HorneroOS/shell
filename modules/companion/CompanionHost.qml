@@ -840,6 +840,26 @@ Scope {
         }
     }
 
+    function openQuick(text: string): void {
+        InlineAsk.prefill = text === "" ? " " : text;
+        const v = Visibilities.getForActive();
+        if (!v)
+            return;
+        if (v.launcher)
+            InlineAsk.prefill = "";
+        else
+            v.launcher = true;
+    }
+
+    function openWorkbench(text: string): void {
+        CompanionStore.summon();
+        CompanionStore.forceVisible = true;
+        assistantBridge.chatOpen = true;
+        assistantBridge.workbenchOpen = true;
+        if (text !== "")
+            assistantBridge.ask(text);
+    }
+
     IpcHandler {
         target: "companion"
 
@@ -904,30 +924,25 @@ Scope {
         // Javi Radio quick assistant: opens the launcher straight into
         // the inline Ask (read-only, never acts). Bind it yourself, e.g.
         // `bind = SUPER, J, exec, qs ipc call companion quick`; the shell
-        // writes no keybinding. The optional text is only prefilled.
-        function quick(text: string): void {
-            const t = (text ?? "").toString().trim();
-            InlineAsk.prefill = t === "" ? " " : t;
-            const v = Visibilities.getForActive();
-            if (!v)
-                return;
-            if (v.launcher)
-                InlineAsk.prefill = "";
-            else
-                v.launcher = true;
+        // writes no keybinding. Quickshell IPC needs every argument, so
+        // the no-argument and the prefilled forms are separate functions.
+        function quick(): void {
+            root.openQuick("");
+        }
+
+        function quickWith(text: string): void {
+            root.openQuick((text ?? "").toString().trim());
         }
 
         // Level C: the conversation panel expanded into the Workbench
-        // (same engine). With text, asks in the current mode; the
-        // user chose the escalation by calling this.
-        function workbench(text: string): void {
-            CompanionStore.summon();
-            CompanionStore.forceVisible = true;
-            assistantBridge.chatOpen = true;
-            assistantBridge.workbenchOpen = true;
-            const t = (text ?? "").toString().trim();
-            if (t !== "")
-                assistantBridge.ask(t);
+        // (same engine). `workbenchAsk` also asks in the current mode;
+        // the user chose the escalation by calling it.
+        function workbench(): void {
+            root.openWorkbench("");
+        }
+
+        function workbenchAsk(text: string): void {
+            root.openWorkbench((text ?? "").toString().trim());
         }
 
         function chat(): void {

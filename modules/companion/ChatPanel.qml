@@ -26,6 +26,9 @@ Item {
     property int dotPhase: 0
 
     readonly property int cardWidth: 392
+    // The conversation yields height to a pending decision so the
+    // card is always fully on screen.
+    readonly property int listHeight: AssistantRun.pendingDecision ? 150 : 360
     readonly property string lang: root.bridge.lang
 
     function t(key: string): string {
@@ -149,29 +152,33 @@ Item {
                         }
                     }
 
-                    StyledText {
-                        // One honest status from the canonical state
-                        // (connected / disconnected / running / blocked /
-                        // awaiting approval / failed / degraded).
-                        text: root.t("status." + (AssistantRun.probing && AssistantRun.status === "disconnected" ? "reconnecting" : AssistantRun.status)) + (root.bridge.busy ? ".".repeat(root.dotPhase) : "")
-                        font.family: Appearance.font.family.mono
-                        font.pointSize: Appearance.font.size.smaller
-                        color: root.statusColor()
-                        elide: Text.ElideRight
+                    RowLayout {
+                        spacing: Appearance.spacing.small
+
+                        // Phosphor status light: same colour as the status text.
+                        Rectangle {
+                            implicitWidth: 8
+                            implicitHeight: 8
+                            radius: 4
+                            color: root.statusColor()
+                            opacity: root.bridge.busy && !CompanionStore.reducedMotion ? (root.dotPhase % 2 === 0 ? 1 : 0.35) : 1
+                        }
+
+                        StyledText {
+                            // One honest status from the canonical state
+                            // (connected / disconnected / running / blocked /
+                            // awaiting approval / failed / degraded).
+                            text: root.t("status." + (AssistantRun.probing && AssistantRun.status === "disconnected" ? "reconnecting" : AssistantRun.status))
+                            font.family: Appearance.font.family.mono
+                            font.pointSize: Appearance.font.size.smaller
+                            color: root.statusColor()
+                            elide: Text.ElideRight
+                        }
                     }
                 }
 
                 Item {
                     Layout.fillWidth: true
-                }
-
-                // Phosphor status light (retro 199X accent).
-                Rectangle {
-                    implicitWidth: 9
-                    implicitHeight: 9
-                    radius: 5
-                    color: root.statusColor()
-                    opacity: root.bridge.busy && !CompanionStore.reducedMotion ? (root.dotPhase % 2 === 0 ? 1 : 0.35) : 1
                 }
 
                 IconButton {
@@ -321,9 +328,9 @@ Item {
                 id: view
 
                 Layout.fillWidth: true
-                Layout.preferredHeight: 360
-                Layout.minimumHeight: 360
-                Layout.maximumHeight: 360
+                Layout.preferredHeight: root.listHeight
+                Layout.minimumHeight: root.listHeight
+                Layout.maximumHeight: root.listHeight
                 clip: true
                 spacing: Appearance.spacing.normal
                 model: root.bridge.history
@@ -487,7 +494,7 @@ Item {
                             anchors.right: parent.right
                             anchors.verticalCenter: parent.verticalCenter
                             anchors.margins: Appearance.padding.large
-                            text: root.bridge.streamText !== "" ? AssistantRun.safeMarkdown(root.bridge.streamText) : qsTr("Javi está pensando") + ".".repeat(root.dotPhase)
+                            text: root.bridge.streamText !== "" ? AssistantRun.safeMarkdown(root.bridge.streamText) : root.t("thinking") + ".".repeat(root.dotPhase)
                             textFormat: Text.MarkdownText
                             font.pointSize: Appearance.font.size.small
                             color: Signal.palette.ink
@@ -503,7 +510,7 @@ Item {
                         spacing: Appearance.spacing.small
 
                         Repeater {
-                            model: [qsTr("¿Qué updates hay pendientes?"), qsTr("¿Por qué está lenta la máquina?"), qsTr("Mostrame los themes GTK"), qsTr("¿Qué podés hacer?")]
+                            model: ["chip.updates", "chip.slow", "chip.themes", "chip.capabilities"].map(k => root.t(k))
 
                             delegate: TextButton {
                                 required property var modelData
@@ -626,8 +633,8 @@ Item {
                 }
 
                 TextButton {
-                    visible: root.bridge.busy
-                    text: qsTr("Stop")
+                    visible: root.bridge.busy || AssistantRun.pendingDecision
+                    text: root.t("action.stop")
                     type: TextButton.Tonal
                     onClicked: root.bridge.askStop()
                 }

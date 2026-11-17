@@ -755,7 +755,10 @@ Scope {
         if (run.phase === "completed") {
             if (text !== "") {
                 root.pushHistoryTraced("assistant", text, trace);
-                CompanionStore.say(text, 12000);
+                // The panel already shows the answer; the bubble is
+                // only for when the conversation is closed.
+                if (!root.chatOpen)
+                    CompanionStore.say(text, 12000);
             }
         } else if (run.phase === "awaiting-approval" || run.phase === "awaiting-clarification") {
             if (text !== "")

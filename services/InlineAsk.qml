@@ -102,7 +102,7 @@ Singleton {
         const q = root.askedPrompt.trim();
         if (q === "")
             return;
-        Quickshell.execDetached(["quickshell", "ipc", "call", "companion", "workbench", q]);
+        Quickshell.execDetached(["quickshell", "ipc", "call", "companion", "workbenchAsk", q]);
         if (list)
             list.visibilities.launcher = false;
     }

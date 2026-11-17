@@ -122,7 +122,7 @@ cockpit preset and Signal Night theme itself).
 | `toaster` | `modules/Shortcuts.qml` | `info/success/warn/error(title, message, icon)` |
 | `picker` | `modules/areapicker/AreaPicker.qml` | `open()`, `openFreeze()` (+ close variants per file) |
 | `lock` | `modules/lock/Lock.qml` | `lock()`, `unlock()` |
-| `companion` | `modules/companion/CompanionHost.qml` | `summon()`, `hide()`, `toggle()`, `say(text, timeoutMs)`, `tip()`, `play(animation)`, `setState(state)`, `setSkin(skin)`, `resetPosition()`, `status()`, `ask(text)`, `askStop()`, `approve(runId, decision)`, `clarify(runId, answer)`, `events(runId)`, `quick([text])`, `workbench([text])` |
+| `companion` | `modules/companion/CompanionHost.qml` | `summon()`, `hide()`, `toggle()`, `say(text, timeoutMs)`, `tip()`, `play(animation)`, `setState(state)`, `setSkin(skin)`, `resetPosition()`, `status()`, `ask(text)`, `askStop()`, `approve(runId, decision)`, `clarify(runId, answer)`, `events(runId)`, `quick()`, `quickWith(text)`, `workbench()`, `workbenchAsk(text)` |
 | `plugins` | `modules/plugins/PluginHost.qml` | `status()`, `reload()`, `reloadPlugin(id)`, `editDesktop()`, `doneDesktop()`, `toggleEditDesktop()`, `telemetry()` |
 | `debug` (first output), `debug.<output>` (every other output) | `modules/drawers/Drawers.qml` | `borders()`, `bars()`, `dump()`, `focusState()` (debug only) |
 
@@ -172,11 +172,13 @@ only change the animation — no backend exists behind them;
 JSON (`{"enabled", "state", "skin", "animation", "suppressed",
 "bubbleOpen", "nestStage", "activityLevel"}`). See `docs/COMPANION.md`.
 
-`companion quick [text]` is the Javi Radio entry point: it opens the
-launcher straight into the inline Ask (`>ai`), read-only, prefilled
-with the optional text; it never sends by itself and never acts.
-`companion workbench [text]` opens Javi's conversation panel expanded
-into the Workbench (Level C) and, with text, asks in the current mode.
+`companion quick` is the Javi Radio entry point: it opens the
+launcher straight into the inline Ask (`>ai`), read-only; `quickWith
+<text>` prefills it. Neither sends by itself nor acts.
+`companion workbench` opens Javi's conversation panel expanded into
+the Workbench (Level C); `workbenchAsk <text>` also asks in the current
+mode. (Quickshell IPC needs every argument, hence the separate
+functions.)
 `companion approve|clarify` only act on the run that is actually
 waiting (the run id must match the pending request) and `approve` is
 always a single `once` decision. The shell writes no keybinding for

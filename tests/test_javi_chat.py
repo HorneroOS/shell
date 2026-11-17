@@ -185,3 +185,24 @@ def test_approval_card_has_no_bulk_or_auto_consent():
 def test_mic_is_explicit_cancellable_and_capped():
     assert "recordMaxSeconds: 120" in BRIDGE
     assert "discardRecording" in BRIDGE and "stopRecording(false)" in PANEL
+
+
+def test_every_scrollbar_in_companion_binds_its_flickable():
+    # A StyledScrollBar without `flickable` fails to create the whole
+    # companion window silently (found in the QA VM, not by qmllint).
+    import re
+    for qml in COMPANION.glob("*.qml"):
+        text = qml.read_text()
+        for m in re.finditer(r"StyledScrollBar\.vertical:\s*StyledScrollBar\s*\{([^}]*)\}", text):
+            assert "flickable:" in m.group(1), f"{qml.name}: scrollbar without flickable"
+
+
+def test_javi_radio_ipc_entry_points_are_argument_complete_and_documented():
+    host = (COMPANION / "CompanionHost.qml").read_text()
+    doc = (ROOT / "docs" / "IPC.md").read_text()
+    for fn in ("quick()", "quickWith(text: string)", "workbench()", "workbenchAsk(text: string)"):
+        assert f"function {fn}" in host
+    for name in ("quick()", "quickWith(text)", "workbench()", "workbenchAsk(text)"):
+        assert name in doc
+    # The shell writes no keybinding for them.
+    assert "GlobalShortcut" not in host and "CustomShortcut" not in host

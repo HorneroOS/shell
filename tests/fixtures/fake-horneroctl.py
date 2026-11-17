@@ -81,6 +81,7 @@ def wait_decision(limit=120):
 
 
 def play(scn, run_id):
+    (D / "lastrun").write_text(run_id)
     if scn == "stream":
         out({"type": "run", "text": run_id})
         out({"type": "thinking", "text": "checking what is installed"})
@@ -162,6 +163,8 @@ def main(argv):
         # events follows an existing run: only the tail of the scenario.
         run_id = args[2] if verb == "events" and len(args) > 2 else "run_fake_%d" % int(time.time())
         if verb == "events":
+            if "--stream" not in args and scn == "approval-closed":
+                return final(False, "waiting", runId=run_id, pending="approval", detail="rm -r ./build", choices="once,deny")
             if scn in ("approval-closed", "approval"):
                 out({"type": "delta", "text": "Done after your decision."})
                 return final(True, "ok", runId=run_id, pending="none")

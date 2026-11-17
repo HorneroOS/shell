@@ -22,7 +22,11 @@ Rectangle {
     id: root
 
     required property var bridge
+    // Compact (panel): request + scope + decision, details on demand.
+    // The Workbench shows everything.
+    property bool expanded: false
 
+    property bool showDetails: false
     readonly property var pend: root.bridge.pendingApproval
     readonly property string lang: root.bridge.lang
     readonly property var gw: AssistantRun.gateway
@@ -57,7 +61,7 @@ Rectangle {
         spacing: Appearance.spacing.small
 
         StyledText {
-            Layout.preferredWidth: 78
+            Layout.preferredWidth: 96
             Layout.alignment: Qt.AlignTop
             text: row.label
             font.family: Appearance.font.family.mono
@@ -117,28 +121,12 @@ Rectangle {
             }
         }
 
+        // Not sandboxed is always visible: it changes how much the
+        // decision matters.
         Row2 {
-            label: AssistantCopy.t("approval.run", root.lang)
-            value: root.pend ? root.pend.runId : ""
-        }
-        Row2 {
-            visible: root.lastTool() !== ""
-            label: qsTr("Tool")
-            value: root.lastTool()
-        }
-        Row2 {
-            label: AssistantCopy.t("approval.mode", root.lang)
-            value: AssistantCopy.t("mode." + CompanionStore.chatMode, root.lang)
-            mono: false
-        }
-        Row2 {
-            visible: root.gw.workspace !== ""
-            label: AssistantCopy.t("approval.workspace", root.lang)
-            value: root.gw.workspace
-        }
-        Row2 {
+            visible: !root.expanded && !root.gw.sandboxed && root.gw.isolation !== "unknown"
             label: AssistantCopy.t("approval.isolation", root.lang)
-            value: AssistantCopy.t(root.gw.sandboxed ? "approval.isolation.sandboxed" : (root.gw.isolation === "unknown" ? "approval.isolation.unknown" : "approval.isolation.unsandboxed"), root.lang)
+            value: AssistantCopy.t("approval.isolation.unsandboxed", root.lang)
             mono: false
         }
         Row2 {
@@ -146,10 +134,48 @@ Rectangle {
             value: AssistantCopy.t("approval.scope.once", root.lang)
             mono: false
         }
-        Row2 {
-            label: AssistantCopy.t("approval.risk", root.lang)
-            value: AssistantCopy.t("approval.risk.text", root.lang)
-            mono: false
+
+        TextButton {
+            visible: !root.expanded
+            text: root.showDetails ? qsTr("Hide details") : qsTr("Details")
+            type: TextButton.Text
+            onClicked: root.showDetails = !root.showDetails
+        }
+
+        ColumnLayout {
+            visible: root.expanded || root.showDetails
+            Layout.fillWidth: true
+            spacing: Appearance.spacing.small
+
+            Row2 {
+                label: AssistantCopy.t("approval.run", root.lang)
+                value: root.pend ? root.pend.runId : ""
+            }
+            Row2 {
+                visible: root.lastTool() !== ""
+                label: qsTr("Tool")
+                value: root.lastTool()
+            }
+            Row2 {
+                label: AssistantCopy.t("approval.mode", root.lang)
+                value: AssistantCopy.t("mode." + CompanionStore.chatMode, root.lang)
+                mono: false
+            }
+            Row2 {
+                visible: root.gw.workspace !== ""
+                label: AssistantCopy.t("approval.workspace", root.lang)
+                value: root.gw.workspace
+            }
+            Row2 {
+                label: AssistantCopy.t("approval.isolation", root.lang)
+                value: AssistantCopy.t(root.gw.sandboxed ? "approval.isolation.sandboxed" : (root.gw.isolation === "unknown" ? "approval.isolation.unknown" : "approval.isolation.unsandboxed"), root.lang)
+                mono: false
+            }
+            Row2 {
+                label: AssistantCopy.t("approval.risk", root.lang)
+                value: AssistantCopy.t("approval.risk.text", root.lang)
+                mono: false
+            }
         }
 
         StyledText {

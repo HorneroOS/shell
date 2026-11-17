@@ -161,13 +161,13 @@ only ever user actions on the card.
 - **B. Conversation panel**: streaming, markdown, copy, retry, stop, sessions,
   model line, attachments, mic with status and discard, live trace, errors,
   connection banner with Reconnect.
-- **C. Workbench**: the same panel expanded (`qs ipc call companion workbench`
-  or the expand button). Tabs: Activity timeline, Approvals (pending card and
+- **C. Workbench**: the same panel expanded (`qs ipc call companion workbench`,
+  `workbenchAsk <text>`, or the expand button). Tabs: Activity timeline, Approvals (pending card and
   decisions this session), Artifacts (files you attached; the backend lists no
   agent files), History (sessions, clear, retention). Model and mode controls.
   A new pending approval opens the Approvals tab itself.
 
-Javi Radio entry points: `companion quick [text]` (bind it yourself, the shell
+Javi Radio entry points: `companion quick` / `quickWith <text>` (bind it yourself, the shell
 writes no keybinding), the launcher `>ai` route, click on Javi (opens the
 panel), and the Workbench IPC. A bar module and a PluginKit action reuse these
 two IPC calls; they add no new authority.

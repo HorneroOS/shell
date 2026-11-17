@@ -216,7 +216,9 @@ Rectangle {
                 model: AssistantRun.timeline
                 onCountChanged: positionViewAtEnd()
 
-                StyledScrollBar.vertical: StyledScrollBar {}
+                StyledScrollBar.vertical: StyledScrollBar {
+                    flickable: timelineView
+                }
 
                 delegate: RowLayout {
                     id: entry
@@ -282,6 +284,7 @@ Rectangle {
 
                 ApprovalCard {
                     bridge: root.bridge
+                    expanded: true
                 }
 
                 StyledText {

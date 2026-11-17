@@ -12,10 +12,12 @@
 #include <QImageReader>
 #include <QProcess>
 #include <QStandardPaths>
+#include <QTemporaryDir>
 
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <optional>
 
 namespace hornero::chromatic {
 
@@ -24,6 +26,9 @@ namespace {
 constexpr qint64 kWholeFileLimit = 64LL << 20;
 constexpr qint64 kEdgeBytes = 4LL << 20;
 constexpr int kDecodeSide = 512;
+// Animated sources are decoded sequentially up to the last sampled frame, so
+// the work is bounded in decoded pixels and frames, never by the file alone.
+constexpr int kMaxScannedFrames = 4096;
 
 const std::array<double, 256>& linearLut() {
     static const std::array<double, 256> lut = [] {
@@ -63,17 +68,29 @@ Expected<QImage> extractVideoFrame(const QString& path, const SourceKey& key, co
         if (!hit.isNull())
             return hit;
     }
-    const QString target = cached.isEmpty()
-        ? QDir(QStandardPaths::writableLocation(QStandardPaths::TempLocation))
-              .filePath(QStringLiteral("hornero-chromatic-%1.png").arg(key.digest.mid(7, 16)))
-        : cached + QStringLiteral(".part.png");
+    // Without a frame cache the frame goes into a private (0700, unpredictable)
+    // directory: a fixed name in the shared temp dir lets another local user
+    // plant a symlink that `ffmpeg -y` would write through.
+    std::optional<QTemporaryDir> scratch;
+    QString target;
+    if (cached.isEmpty()) {
+        scratch.emplace(QDir(QStandardPaths::writableLocation(QStandardPaths::TempLocation))
+                            .filePath(QStringLiteral("hornero-chromatic-XXXXXX")));
+        if (!scratch->isValid())
+            return unreadable(QStringLiteral("could not create a private scratch directory for ffmpeg"));
+        target = scratch->filePath(QStringLiteral("frame.png"));
+    } else {
+        target = cached + QStringLiteral(".part.png");
+    }
     // One frame at 1 s, or at 0 when the video is shorter.
     for (const char* at : { "1", "0" }) {
         QFile::remove(target);
         QProcess proc;
         proc.setProcessChannelMode(QProcess::SeparateChannels);
         proc.start(ffmpeg,
-            { QStringLiteral("-nostdin"), QStringLiteral("-v"), QStringLiteral("error"), QStringLiteral("-ss"),
+            { QStringLiteral("-nostdin"), QStringLiteral("-v"), QStringLiteral("error"),
+                // The source is untrusted: never let a container pull in network or other protocols.
+                QStringLiteral("-protocol_whitelist"), QStringLiteral("file"), QStringLiteral("-ss"),
                 QString::fromLatin1(at), QStringLiteral("-i"), path, QStringLiteral("-frames:v"), QStringLiteral("1"),
                 QStringLiteral("-vf"),
                 QStringLiteral("scale=w=%1:h=%1:force_original_aspect_ratio=decrease").arg(kDecodeSide),
@@ -212,25 +229,36 @@ Expected<FrameSet> decode(const QString& path, const DecodeOptions& opts, const 
         return set;
     }
     set.kind = SourceKind::Animated;
-    const int n = std::min(std::max(1, opts.maxFrames), count);
+    // Frames are decoded in order up to the last sampled one, so only the
+    // first `reachable` frames are candidates (deterministic: the content
+    // key still maps to one analysis).
+    const qint64 perFrame = size.isValid() ? std::max<qint64>(1, static_cast<qint64>(size.width()) * size.height()) : 1;
+    const int reachable = static_cast<int>(
+        std::max<qint64>(1, std::min<qint64>({ count, kMaxScannedFrames, opts.maxDecodedPixels / perFrame })));
+    const int n = std::min(std::max(1, opts.maxFrames), reachable);
     QList<int> wanted;
     for (int i = 0; i < n; ++i)
-        wanted << static_cast<int>((static_cast<qint64>(i) * count) / n);
+        wanted << static_cast<int>((static_cast<qint64>(i) * reachable) / n);
     int index = 0;
+    qint64 decoded = 0;
     for (int target : wanted) {
         QImage img;
         while (index <= target) {
             img = reader.read();
             if (img.isNull())
                 return unreadable(QStringLiteral("animation frame %1 failed to decode").arg(index));
+            decoded += static_cast<qint64>(img.width()) * img.height();
             ++index;
         }
         QImage frame = normaliseFrame(img);
         if (frame.isNull())
             return unreadable(QStringLiteral("animation frame %1 could not be converted").arg(target));
         set.frames.append(frame);
+        if (decoded > opts.maxDecodedPixels)
+            break; // frames were larger than announced: keep what we have
     }
-    set.note = QStringLiteral("%1 of %2 frames").arg(n).arg(count);
+    set.note = reachable < count ? QStringLiteral("%1 of the first %2 of %3 frames").arg(set.frames.size()).arg(reachable).arg(count)
+                                 : QStringLiteral("%1 of %2 frames").arg(set.frames.size()).arg(count);
     return set;
 }
 

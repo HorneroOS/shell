@@ -30,6 +30,9 @@ struct DecodeOptions {
     QString ffmpeg = QStringLiteral("ffmpeg"); // empty: video unsupported
     QString frameCacheDir;                     // where extracted video frames are kept
     qint64 maxPixels = 100'000'000;
+    // Decoded-pixel budget for animated sources: sampling stops at the last
+    // frame that fits, so a many-frame animation cannot pin a core or memory.
+    qint64 maxDecodedPixels = 1'500'000'000;
     int ffmpegTimeoutMs = 5000;
 };
 

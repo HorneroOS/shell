@@ -188,6 +188,9 @@ Across toolchains the golden test accepts colour drift up to ΔEOK 0.005
   `tests/chromatic/cases.json`; byte-identical repeats.
 - `tests/test_chromatic_golden.py` — 540 goldens (20 cases × 9 variants ×
   3 modes).
+- `tests/test_chromatic_catalogue.py` — config's credited catalogue
+  wallpapers: goldens for `auto` and `balanced`, and every variant × mode
+  accepted by `validate_scheme`.
 - `tests/test_chromatic_fuzz.py` — truncated, bit-flipped and disguised
   inputs end with exit 0 or 3, never a crash.
 - `tests/test_chromatic_perf.py` — RFC §14 budgets, failing at 3×.

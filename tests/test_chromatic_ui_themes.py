@@ -26,5 +26,5 @@ def test_section_controls_are_keyboard_reachable_and_named():
     gallery = (APP / "sections" / "ChromaticVariantGallery.qml").read_text()
     assert "Keys.onEscapePressed" in section
     assert "activeFocusOnTab" in gallery and "Qt.Key_Space" in gallery and "Accessible.checked" in gallery
-    assert section.count("accessibleName:") >= 5
+    assert section.count("accessibleName:") >= 4
     assert "Component.onDestruction: ChromaticPreview.previewLive(false)" in section

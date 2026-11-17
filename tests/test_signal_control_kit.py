@@ -98,3 +98,12 @@ def test_controls_are_not_pills():
         src = _src(path)
         assert "rounding.full" not in src, path.name
         assert "implicitHeight / 2 * Math.min(1, Appearance.rounding.scale)" not in src, path.name
+
+
+def test_switch_state_is_not_colour_only():
+    """VA-16: ON/OFF must read in greyscale: cap mark, position and a word."""
+    src = (ROOT / "components/controls/StyledSwitch.qml").read_text()
+    assert 'qsTr("ON") : qsTr("OFF")' in src, "state word on the open half"
+    assert "implicitHeight: Math.max(32, implicitIndicatorHeight)" in src
+    assert "border.width: root.checked ? 0 : 1.5" in src, "hollow O ring when off"
+    assert "root.checked ? 2 : parent.height * 0.4" in src, "solid I bar when on"

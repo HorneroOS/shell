@@ -230,6 +230,8 @@ JsonObject {
         // times a user multiplier (0.75..1.5).
         property bool autoDensity: true
         property real densityScale: 1
+        // Icon and label size multiplier (0.75..1.5): chunky rails raise it.
+        property real contentScale: 1
         property int windowPreviewSize: 400
         property int trayMenuWidth: 300
         property int batteryWidth: 250

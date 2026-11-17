@@ -72,13 +72,14 @@
           ]
         },
         "reserve": true,
-        "thickness": 32,
+        "thickness": 36,
         "density": "values",
         "backdrop": "solid"
       }
     ],
     "sizes": {
-      "innerWidth": 24
+      "innerWidth": 28,
+      "contentScale": 1.1
     },
     "status": {
       "showAudio": true,

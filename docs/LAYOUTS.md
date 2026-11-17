@@ -108,18 +108,18 @@ nothing is translucent glass.
 | --- | --- | --- |
 | Cockpit | top: inset 34, 6 / bottom: inset 26, 6 | Flagship: act on top, know below, two floating bezels |
 | Cockpit Clear | same geometry, no slab | Same muscle memory, only adaptive ink |
-| Horizon | top: inset 32, 6 / bottom (clear): inset 26, 6 | One instrument line plus a clear workspace line |
-| Classic Top / Bottom | attached 32 | Conventional single bar |
-| Minimal Top | top: attached 30 | Quiet: workspaces, clock, power |
-| Minimal Float | top: floating 30, 8 | One quiet floating strip |
+| Horizon | top: inset 34, 6 / bottom (clear): inset 26, 6 | One instrument line plus a clear workspace line |
+| Classic Top / Bottom | attached 36 (cell 28, content 110 %) | Conventional single bar |
+| Minimal Top | top: attached 34 (cell 26) | Quiet: workspaces, clock, power |
+| Minimal Float | top: floating 34, 8 (cell 26) | One quiet floating strip |
 | Floating Island | top: floating 34, 10 | One compact centred module: workspaces, clock, status |
-| Islands | top: islands 32, 8 | Three separate rack modules |
-| Productivity | top: inset 32, 6 | Calm focused work: workspaces, active window, clock, essential tray |
-| Studio | top: attached 32 | Media and meters beside the clock |
-| Gaming | bottom: floating 28, 8 (no reservation) | Out of the way overlay |
-| Dock Bottom | bottom: dock 46, 8 | Console dock with 28 px app tiles |
-| Hornero Left / Right | attached 48 | Generous Caelestia-inspired rail with the frame |
-| Minimal Left | left: attached 38 | Instrument rail |
+| Islands | top: islands 36, 8 (cell 28) | Three separate rack modules |
+| Productivity | top: inset 36, 6 (cell 28) | Calm focused work: workspaces, active window, clock, essential tray |
+| Studio | top: attached 36 (cell 28) | Media and meters beside the clock |
+| Gaming | bottom: floating 32, 8 (no reservation) | Out of the way overlay |
+| Dock Bottom | bottom: dock 50, 8 | Console dock with 28 px app tiles |
+| Hornero Left / Right | attached 60 (cell 44, content 125 %) | Chunky Caelestia-inspired rail: roomy cells, 20 px icons, 15 px labels |
+| Minimal Left | left: attached 48 (cell 36, content 115 %) | Instrument rail |
 
 The density factor (`services/density.js`) scales these gently: at most 6 %
 smaller on a 720p screen and 10 % larger at 2160p. Primary text never drops
@@ -207,19 +207,50 @@ so the result is still a valid preset-shaped bar set. Choosing another layout
 replaces the order with that layout's, exactly as before. The pure logic lives
 in `modules/controlcenter/taskbar/barorder.js`.
 
-## Thin bars and density
+## Bar size, density and the controls
 
-Bars are thin by design: shipped thickness is 28 px (Cockpit top, Classic,
-Studio), 26 px (Horizon, Minimal, Islands, Minimal Float), 24 px (strips,
-Gaming) and 32 px for the Hornero Left/Right rails (30 px for Minimal Left),
-with 3 px maximum corner radius and 1 px hairlines. `thickness` is the whole
-bar body: there is no extra frame padding around it.
+Bars are refined, never fat, but also never cramped. Shipped thickness is
+34 px (Cockpit top), 26 px (the bottom lines), 34 to 36 px for the
+horizontal layouts, 32 px for the Gaming overlay and 50 px for the dock.
+The Hornero Left/Right rails are chunky on purpose: 60 px with 44 px cells,
+which is the 56 to 64 px rail of the original Caelestia sidebar, with
+`contentScale` 1.25 so icons are 20 px and workspace and clock labels 15 px
+(shell#583). Radii stay at most 3 to 5 px and hairlines 1 px. `thickness` is
+the whole bar body: there is no extra frame padding around it.
 
 `services/Density.qml` derives one density factor from the screen's logical
 height (physical height divided by the compositor scale: 1280x720 is 0.86,
 1366x768 is 0.89, 2560x1440 at 1.5 and 1920x1080 are 0.96 and 1.0, 3840x2160
 at 2 is 1.0) and scales bar thickness, `bar.sizes.innerWidth`, segment
-padding, icons (14 to 16 px), text (11 to 12 px) and the clock. Text never goes
-below 11 px, bars never below 24 px (the full bar height is every segment's hit
-target). Tune it with `bar.sizes.autoDensity` (default true) and
-`bar.sizes.densityScale` (0.75 to 1.5).
+padding, icons (15 to 18 px), text (12 to 13 px) and the clock, then
+`bar.sizes.contentScale` multiplies icons, text and clock on top. Bars never
+go below 24 px (the full bar height is every segment's hit target). Popouts
+anchor to the scaled bar, so any thickness keeps them correct.
+
+### Every value is a control
+
+The defaults above are only defaults. Control Center, Bars, "Size & shape"
+edits the live config (the real bars follow while you drag; a to-scale strip
+shows the selected bar) and every control validates against the same limits
+as `config/BarConfig.qml`:
+
+| Control | Config key | Range |
+| --- | --- | --- |
+| Thickness (per bar) | `bar.bars[].thickness` | 24 to 96 px |
+| Gap to screen edge (per bar) | `bar.bars[].margin` | 0 to 24 px |
+| Style (per bar) | `bar.bars[].style` | attached, inset, floating, islands, dock |
+| Edge (per bar) | `bar.bars[].edge` | top, bottom, left, right (one bar per edge) |
+| Density (per bar) | `bar.bars[].density` | values, glyphs |
+| Cell size | `bar.sizes.innerWidth` | 22 to 56 px |
+| Icon and label size | `bar.sizes.contentScale` | 75 to 150 % |
+| Density | `bar.sizes.densityScale` | 75 to 150 % |
+| Follow screen height | `bar.sizes.autoDensity` | on, off |
+| Corner radius | `appearance.rounding.scale` | 50 to 200 % |
+| Gap between items | `appearance.spacing.scale` | 75 to 150 % |
+| Padding | `appearance.padding.scale` | 75 to 150 % |
+
+"Reset this bar" and "Reset all sizes" return to the values the active layout
+preset ships (read from the preset JSON next to the shell), or to the factory
+fallbacks when the layout is custom. The pure logic lives in
+`modules/controlcenter/taskbar/bargeometry.js`; the controls edit the global
+bar set (per-screen overrides keep their own values).

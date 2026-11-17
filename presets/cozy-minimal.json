@@ -59,13 +59,14 @@
           ]
         },
         "reserve": true,
-        "thickness": 30,
+        "thickness": 34,
         "density": "values",
         "backdrop": "solid"
       }
     ],
     "sizes": {
-      "innerWidth": 24
+      "innerWidth": 26,
+      "contentScale": 1.05
     },
     "status": {
       "showNetwork": true,

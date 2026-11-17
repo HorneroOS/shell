@@ -64,7 +64,7 @@ def test_variant_previews_are_engine_results_computed_on_demand():
     assert "variantPreviewsWanted" in svc and "variantSchemes" in svc and "variantFailed" in svc
     gallery = (SECTIONS / "ChromaticVariantGallery.qml").read_text()
     assert "ChromaticPreview.variantPreviewsWanted = true" in gallery
-    assert "Component.onDestruction: ChromaticPreview.variantPreviewsWanted = false" in gallery
+    assert "ChromaticPreview.variantPreviewsWanted = false" in gallery and "ChromaticPreview.endHover()" in gallery
 
 
 @requires_qs
@@ -156,3 +156,20 @@ def test_accent_is_in_config_schema_defaults_and_ui():
     # presets are an opt-in data file, with a dark and a light twin each
     presets = (ROOT / "services" / "accents.js").read_text()
     assert presets.count("group: \"kawaii\"") >= 6 and presets.count("light:") >= 6
+def test_variant_tiles_preview_on_hover_and_focus_transiently():
+    gallery = (SECTIONS / "ChromaticVariantGallery.qml").read_text()
+    assert "onPreviewStarted: ChromaticPreview.hoverVariant" in gallery and "onPreviewEnded: ChromaticPreview.endHover()" in gallery
+    svc = (ROOT / "services" / "ChromaticPreview.qml").read_text()
+    assert "function hoverVariant" in svc and "function endHover" in svc and "_resumeLive" in svc
+    # the shared 30 s idle timer also ends a forgotten hover
+    assert 'root.hoveredVariant = "";' in svc
+
+
+@requires_qs
+def test_offscreen_hover_preview_is_transient_and_restores(tmp_path):
+    r = run_gallery(tmp_path, HHOVER=1)
+    assert r["before"] != r["during"] and r["duringPreviewing"] is True
+    assert r["after"] == r["before"] and r["afterPreviewing"] is False
+    # an existing candidate preview is resumed, not dropped
+    assert r["resumed"] == r["candidate"] and r["resumedPreviewing"] is True
+    assert r["afterResume"] == r["before"] and r["hoverClearedOnEnd"] is True

@@ -226,6 +226,38 @@ Singleton {
         _variantNext();
     }
 
+    // ---- hover preview of a variant -------------------------------------
+    // Transient: shows a variant's palette on the live shell while the
+    // pointer or keyboard focus rests on its tile, and puts back whatever
+    // was shown before (the candidate the user is already previewing, or
+    // the applied theme) when it leaves. Memory only, self-cancelling after
+    // 30 s, and instant under reduced motion (Signal.transitionAllowed).
+    property string hoveredVariant: ""
+    property bool _resumeLive: false
+
+    function hoverVariant(id: string): void {
+        const scheme = id === "" ? null : variantSchemes[id] ?? null;
+        if (!scheme)
+            return;
+        if (hoveredVariant === "")
+            _resumeLive = Signal.previewing;
+        if (Signal.beginPreview(scheme)) {
+            hoveredVariant = id;
+            idleCancel.restart();
+        }
+    }
+
+    function endHover(): void {
+        if (hoveredVariant === "")
+            return;
+        hoveredVariant = "";
+        // Back to the candidate the user was already previewing, else to the real theme.
+        if (_resumeLive && result)
+            Signal.beginPreview(result.scheme);
+        else
+            Signal.cancelPreview();
+    }
+
     onVariantPreviewsWantedChanged: {
         if (variantPreviewsWanted)
             _variantTrigger.restart();
@@ -475,7 +507,10 @@ Singleton {
         id: idleCancel
 
         interval: 30000
-        onTriggered: Signal.cancelPreview()
+        onTriggered: {
+            root.hoveredVariant = "";
+            Signal.cancelPreview();
+        }
     }
 
     // A helper that cannot even be started never reports an exit.

@@ -171,6 +171,8 @@ ShellRoot {
                     root.manageScenario();
                 if (Quickshell.env("HACCENT") === "1") {
                     root.accentScenario();
+                if (Quickshell.env("HHOVER") === "1") {
+                    root.hoverScenario();
                     return;
                 }
                 if (Quickshell.env("HEDIT") === "1") {
@@ -268,6 +270,28 @@ ShellRoot {
         Config.appearance.accent.color = "";
         o.resetToTheme = String(Signal.palette.signal) === base;
         o.ctxMode = Experience.mode;
+    function hoverScenario(): void {
+        const o = root.out;
+        Config.appearance.chromatic.transition = "instant";
+        const sig = () => String(Signal.palette.signal);
+        const P = ChromaticPreview;
+        o.before = sig();
+        P.hoverVariant("neon");
+        o.during = sig();
+        o.duringPreviewing = Signal.previewing;
+        P.endHover();
+        o.after = sig();
+        o.afterPreviewing = Signal.previewing;
+        // with a candidate already previewed, leaving the tile resumes it
+        P.previewLive(true);
+        o.candidate = sig();
+        P.hoverVariant("muted");
+        P.endHover();
+        o.resumed = sig();
+        o.resumedPreviewing = Signal.previewing;
+        P.previewLive(false);
+        o.afterResume = sig();
+        o.hoverClearedOnEnd = P.hoveredVariant === "";
         root.finish();
     }
 

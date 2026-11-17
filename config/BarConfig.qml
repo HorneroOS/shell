@@ -215,6 +215,15 @@ JsonObject {
         property bool compact: false
         property list<var> iconSubs: []
         property list<string> hiddenIcons: []
+        // Widest a single extension indicator may be (logical px, along the
+        // bar); longer labels elide (shell#531).
+        property int itemMaxWidth: 160
+        // Share of the bar's main axis (%) the Quick actions, clock and
+        // status islands may spend on extension indicators before the rest
+        // move to the Extensions island, and the share the Extensions island
+        // itself may take before it collapses behind its chevron.
+        property int sectionBudget: 18
+        property int islandBudget: 40
     }
 
     component Status: JsonObject {

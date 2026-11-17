@@ -1,9 +1,11 @@
 pragma ComponentBehavior: Bound
 
 import qs.services
+import qs.config
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
+import "baroverflow.js" as Overflow
 
 // Bar placement for community plugins (M2 slice 2): renders every
 // enabled plugin whose manifest declares `placement: "bar"` inside the
@@ -23,6 +25,14 @@ import QtQuick.Layouts
 // so a plugin that honours them is never clipped, and a vertical rail
 // reports hostCompact so horizontal button rows can stack instead of
 // being forced into the rail's cross-axis thickness.
+//
+// Overflow (shell#531): every indicator is clamped to
+// bar.extensions.itemMaxWidth, and a native island (actions, clock,
+// status) keeps its indicators inside bar.extensions.sectionBudget % of
+// the bar's main axis. Indicators that do not fit, lowest priority
+// first (declaration order), move to the Extensions island instead of
+// being painted over their neighbours. A plugin whose root declares
+// `available: false` has nothing to show and takes no room at all.
 Repeater {
     id: root
 
@@ -55,6 +65,9 @@ Repeater {
     // Sections whose island is absent from this bar layout: their
     // indicators fall back to this (end) instance instead of vanishing.
     property var fallbackSections: []
+    // The Extensions island takes the indicators other islands could not
+    // fit (shell#531).
+    property bool acceptOverflow: false
     // Plugin ids hidden on this island (bar.extensions.hiddenIcons,
     // mirroring bar.tray.hiddenIcons); other islands leave it empty.
     property var hiddenIds: []
@@ -64,12 +77,51 @@ Repeater {
     // a thinner rail than the plugin assumed; the main-axis cap keeps
     // one plugin from starving its neighbours.
     readonly property int availableCross: thickness > 0 ? thickness : 64
-    readonly property int availableMain: 240
+    readonly property int availableMain: Config.bar.extensions.itemMaxWidth
     readonly property int availableWidth: vertical ? availableCross : availableMain
     readonly property int availableHeight: vertical ? availableMain : availableCross
     readonly property string hostOrientation: vertical ? "vertical" : "horizontal"
     readonly property string hostEdge: edge !== "" ? edge : "none"
     readonly property bool hostCompact: vertical || compact
+
+    // ---- Overflow (shell#531) ----
+
+    // The island hosts the Extensions island's own end section: it never
+    // overflows (it collapses behind its chevron instead).
+    readonly property bool canOverflow: root.section !== "end" && Plugins.hasOverflowSink(root.screenName)
+    readonly property real barMain: root.vertical ? (Window.window?.height ?? 0) : (Window.window?.width ?? 0)
+    readonly property real budget: root.canOverflow ? Overflow.budgetFor(root.barMain, Config.bar.extensions.sectionBudget) : 0
+    readonly property int itemGap: 6
+    property var overflowIds: []
+
+    function replan(): void {
+        const items = [];
+        for (let i = 0; i < root.count; i++) {
+            const d = root.itemAt(i);
+            if (!d)
+                continue;
+            items.push({
+                id: d.modelData.id,
+                width: d.measuredMain,
+                // Declared order is the priority: earlier indicators stay.
+                priority: Math.max(0, 100 - i)
+            });
+        }
+        const result = Overflow.plan(items, root.budget, root.itemGap, root.availableMain);
+        const next = result.overflow;
+        if (JSON.stringify(next) !== JSON.stringify(root.overflowIds))
+            root.overflowIds = next;
+    }
+
+    function queueReplan(): void {
+        Qt.callLater(root.replan);
+    }
+
+    onBudgetChanged: root.queueReplan()
+    onItemAdded: root.queueReplan()
+    onItemRemoved: root.queueReplan()
+    onOverflowIdsChanged: Plugins.setBarOverflow(root.screenName, root.section, root.overflowIds)
+    Component.onDestruction: Plugins.setBarOverflow(root.screenName, root.section, [])
 
     // Structurally stable (StableList.qml): a plugin reporting loaded or
     // failed must not rebuild every other indicator's Loader.
@@ -79,7 +131,7 @@ Repeater {
         StableList {
             id: stable
 
-            source: root.surfaceActive ? Plugins.barPlugins().filter(p => !root.hiddenIds.includes(p.id) && ((p.barSection || "end") === root.section || root.fallbackSections.includes(p.barSection || "end"))) : []
+            source: root.surfaceActive ? Plugins.barPlugins().filter(p => !root.hiddenIds.includes(p.id) && ((p.barSection || "end") === root.section || root.fallbackSections.includes(p.barSection || "end") || (root.acceptOverflow && Plugins.isBarOverflowed(root.screenName, p.id)))) : []
         }
     ]
 
@@ -125,11 +177,47 @@ Repeater {
         readonly property int hostIconSize: root.iconSize
         readonly property int hostTextSize: root.textSize
 
+        // Main-axis size last reported by the loaded entrypoint, kept while
+        // an overflowed indicator is unloaded so the plan stays stable.
+        property real measuredMain: 0
+        // Natural size of the entrypoint: its implicit size, else the size it
+        // was given. The Loader is clamped to itemMaxWidth along the main axis
+        // (Row and Column parents ignore Layout.maximum*), and the loaded
+        // item is resized to it, so a long label elides instead of spilling.
+        readonly property real natWidth: pluginLoader.item ? (pluginLoader.item.implicitWidth > 0 ? pluginLoader.item.implicitWidth : pluginLoader.item.width) : 0
+        readonly property real natHeight: pluginLoader.item ? (pluginLoader.item.implicitHeight > 0 ? pluginLoader.item.implicitHeight : pluginLoader.item.height) : 0
+        readonly property real liveMain: root.vertical ? pluginLoader.natHeight : pluginLoader.natWidth
+        // Opt-in: an entrypoint with nothing to show (no player, no device)
+        // declares `available: false` and leaves the bar entirely.
+        readonly property bool hasData: !pluginLoader.item || !("available" in pluginLoader.item) || pluginLoader.item.available !== false
+        readonly property bool overflowed: !root.acceptOverflow && root.overflowIds.includes(pluginLoader.modelData.id)
+
+        onLiveMainChanged: {
+            if (pluginLoader.liveMain > 0 && Math.abs(pluginLoader.liveMain - pluginLoader.measuredMain) > 0.5)
+                pluginLoader.measuredMain = pluginLoader.hasData ? pluginLoader.liveMain : 0;
+        }
+        onHasDataChanged: {
+            if (!pluginLoader.hasData)
+                pluginLoader.measuredMain = 0;
+            else
+                pluginLoader.measuredMain = pluginLoader.liveMain;
+        }
+        onMeasuredMainChanged: root.queueReplan()
+
+        active: !pluginLoader.overflowed
+        visible: !pluginLoader.overflowed && pluginLoader.hasData
+
         Layout.alignment: root.vertical ? Qt.AlignHCenter : Qt.AlignVCenter
         anchors.horizontalCenter: root.centerChildren && root.vertical ? parent?.horizontalCenter : undefined
         anchors.verticalCenter: root.centerChildren && !root.vertical ? parent?.verticalCenter : undefined
+        width: root.vertical ? pluginLoader.natWidth : Math.min(pluginLoader.natWidth, root.availableMain)
+        height: root.vertical ? Math.min(pluginLoader.natHeight, root.availableMain) : pluginLoader.natHeight
         Layout.maximumWidth: root.availableWidth
         Layout.maximumHeight: root.availableHeight
+        // Breathing room from the native items before it (Layout parents; a
+        // Row or Column spaces its children itself).
+        Layout.leftMargin: root.vertical ? 0 : root.itemGap
+        Layout.topMargin: root.vertical ? root.itemGap : 0
         clip: true
         // Plugins cannot import Shell theming; give their default text the
         // bar's themed foreground through palette inheritance instead of

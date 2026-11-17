@@ -645,6 +645,20 @@ islands, styled like their native neighbours.
   is not in the current layout, the indicator falls back to the
   Extensions island. `section` is bar-only and enforced by the schema,
   `scripts/validate_plugin.py` and the runtime host.
+- **Width and overflow** (shell#531) — a bar indicator is never wider
+  than `bar.extensions.itemMaxWidth` (default 160 px, Control Center →
+  Taskbar → *Extensions Settings*); the host resizes the entrypoint to
+  that width, so a `Text` with `elide` shortens instead of spilling over
+  its neighbours. The Quick actions, clock and status islands keep their
+  extension indicators inside `bar.extensions.sectionBudget` percent of
+  the bar's main axis (default 18). Indicators that do not fit, the last
+  declared first, move to the Extensions island, which itself collapses
+  behind its chevron past `bar.extensions.islandBudget` percent (default
+  40). Nothing is painted over a core segment, and with no Extensions
+  island in the layout nothing overflows. An entrypoint with nothing to
+  show (no player, no device) declares `property bool available` and sets
+  it to `false`: the host then gives it no room at all instead of
+  reserving width for a placeholder.
 
 ## Host context
 

@@ -40,9 +40,11 @@ StyledRect {
     readonly property bool chip: Config.bar.extensions.background && !clear
     // Overflow guard: many enabled indicators used to run over the bar's
     // other groups (18 text indicators overlapped the left group and the
-    // clock). When the row would take more than 40% of the bar's main axis
+    // clock). When the row would take more than its budget of the bar's main axis
     // it collapses behind the chevron exactly like bar.extensions.compact.
-    readonly property real crowdedLimit: (root.vertical ? root.screen.height : root.screen.width) * 0.4
+    // The budget is bar.extensions.islandBudget (default 40%). The island is
+    // also the overflow sink of the other islands (shell#531).
+    readonly property real crowdedLimit: (root.vertical ? root.screen.height : root.screen.width) * Config.bar.extensions.islandBudget / 100
     readonly property bool crowded: !Config.bar.extensions.compact && root.count > 1
         && (root.vertical ? layout.implicitHeight : layout.implicitWidth) + root.padding * 2 > root.crowdedLimit
     readonly property bool compact: Config.bar.extensions.compact || root.crowded
@@ -77,6 +79,29 @@ StyledRect {
 
     Accessible.role: Accessible.Grouping
     Accessible.name: qsTr("Extensions")
+
+    // Overflow sink (shell#531): while this island renders, other islands
+    // may hand it the indicators they cannot fit.
+    readonly property string sinkScreen: root.screen?.name ?? ""
+    // null while not registered (an empty name is a valid screen key).
+    property var registeredSink: null
+    function syncSink(): void {
+        const want = root.surfaceActive && root.screen ? root.sinkScreen : null;
+        if (want === root.registeredSink)
+            return;
+        if (root.registeredSink !== null)
+            Plugins.setOverflowSink(root.registeredSink, false);
+        root.registeredSink = want;
+        if (want !== null)
+            Plugins.setOverflowSink(want, true);
+    }
+    onSurfaceActiveChanged: root.syncSink()
+    onSinkScreenChanged: root.syncSink()
+    Component.onCompleted: root.syncSink()
+    Component.onDestruction: {
+        if (root.registeredSink !== null)
+            Plugins.setOverflowSink(root.registeredSink, false);
+    }
 
     Loader {
         id: layout
@@ -129,6 +154,7 @@ StyledRect {
 
                 vertical: root.vertical
                 section: "end"
+                acceptOverflow: true
                 centerChildren: true
                 surfaceActive: root.surfaceActive
                 fallbackSections: root.fallbackSections
@@ -179,6 +205,7 @@ StyledRect {
 
                 vertical: root.vertical
                 section: "end"
+                acceptOverflow: true
                 centerChildren: true
                 surfaceActive: root.surfaceActive
                 fallbackSections: root.fallbackSections

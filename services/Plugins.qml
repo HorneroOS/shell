@@ -866,6 +866,48 @@ Singleton {
         return root.pluginsForSurface("bar");
     }
 
+    // Bar overflow (shell#531). Island hosts that cannot fit all their
+    // indicators report the ones to move as `barOverflow["<screen>|<section>"]`;
+    // the Extensions island (an overflow sink, one count per screen) renders
+    // them. Without a sink nothing overflows, so an indicator never vanishes.
+    property var barOverflow: ({})
+    property var overflowSinks: ({})
+
+    function setBarOverflow(screen: string, section: string, ids: var): void {
+        const key = `${screen}|${section}`;
+        const next = Object.assign({}, root.barOverflow);
+        if (ids && ids.length > 0)
+            next[key] = Array.from(ids);
+        else if (key in next)
+            delete next[key];
+        else
+            return;
+        root.barOverflow = next;
+    }
+
+    function isBarOverflowed(screen: string, id: string): bool {
+        const prefix = `${screen}|`;
+        for (const key in root.barOverflow) {
+            if (key.startsWith(prefix) && root.barOverflow[key].includes(id))
+                return true;
+        }
+        return false;
+    }
+
+    function setOverflowSink(screen: string, on: bool): void {
+        const next = Object.assign({}, root.overflowSinks);
+        const count = Math.max(0, (next[screen] ?? 0) + (on ? 1 : -1));
+        if (count === 0)
+            delete next[screen];
+        else
+            next[screen] = count;
+        root.overflowSinks = next;
+    }
+
+    function hasOverflowSink(screen: string): bool {
+        return (root.overflowSinks[screen] ?? 0) > 0;
+    }
+
     function dashboardPlugins(): var {
         return root.pluginsForSurface("dashboard");
     }

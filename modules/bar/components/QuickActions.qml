@@ -14,6 +14,7 @@ Item {
     property var tone: ClearInk.neutral
 
     property bool vertical
+    property string screenName: ""
     property var options: ({})
     readonly property var actions: {
         // Options arrive as QML-wrapped sequences (Array.isArray is false);
@@ -60,7 +61,7 @@ Item {
             iconSize: Density.iconPt
             textSize: Density.textPt
             thickness: Density.inner
-            screenName: ""
+            screenName: root.screenName
         }
     }
 }

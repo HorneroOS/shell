@@ -870,6 +870,7 @@ Item {
 
                             sourceComponent: QuickActions {
                                 vertical: root.vertical
+                                screenName: root.screen?.name ?? ""
                                 options: actionsLoader.options
                             }
                         }

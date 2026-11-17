@@ -219,3 +219,30 @@ def test_sources_can_be_muted_from_control_center():
     pane = (ROOT / "modules/controlcenter/companion/CompanionPane.qml").read_text()
     assert 'patchReactions("mutedSources"' in pane and "CompanionReactions.seenSources" in pane
     assert "seenSources" in BUS
+
+
+@NODE
+def test_mode_look_is_sanitized_and_defaults_are_neutral():
+    r = run_js("""console.log(JSON.stringify(sanitizeModeLook({gaming: {visible: false, size: 9, skin: 'Bad Skin'},
+      focus: {size: 0.73, skin: 'mono'}, nope: {visible: false}})));""")
+    assert r["gaming"] == {"visible": False, "size": 2.0, "skin": ""}
+    assert r["focus"] == {"visible": True, "size": 0.75, "skin": "mono"}
+    assert "nope" not in r
+    d = run_js("console.log(JSON.stringify(sanitizeModeLook(null)))")
+    assert all(v == {"visible": True, "size": 1.0, "skin": ""} for v in d.values()) and len(d) == 5
+
+
+def test_mode_look_is_wired_through_store_host_and_pane():
+    assert "effectiveSizeScale" in HOST and "effectiveSkin" in HOST
+    assert "modeLook: persist.modeLook" in STORE and "modeHidden" in STORE
+    pane = (ROOT / "modules/controlcenter/companion/CompanionPane.qml").read_text()
+    for needle in ('"visible"', '"size"', '"skin"', "resetModeLook()"):
+        assert needle in pane
+
+
+def test_bubbles_and_labels_are_translatable_and_accessible():
+    assert BUS.count("qsTr(") >= 18
+    host = HOST
+    assert "Accessible.role: Accessible.PopupMenu" in host and "Accessible.MenuItem" in host
+    assert "win.stateLabel" in host
+    assert "Accessible.name: root.text" in (COMP / "Bubble.qml").read_text()

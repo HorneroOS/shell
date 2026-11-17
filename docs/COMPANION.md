@@ -204,6 +204,33 @@ Not done yet (see the PRs): looking at the cursor, perching on window
 edges (both need compositor window geometry or cursor polling and a cost
 review), a sound pack, and extra art (see the PR description).
 
+## Per-mode look
+
+Control Center › Companion › "Look per Experience mode" lets each mode
+show or hide Javi, scale him (a multiplier on the global size, 0.5-2.0)
+and pick its own character; "Default character" follows the global skin.
+Gaming mode still hides him regardless (game-mode suppression), and an
+explicit request (chat, summon) outranks a mode that hides him.
+
+## Art needs (for the maintainer)
+
+The engine ships with the existing painterly set; these poses would
+deepen it and are the only missing art. Each must follow the
+character bible above (3/4 profile facing right, rufous back, cream
+belly, 512x512 canvas, feet baseline y=472) and be derived by
+`scripts/derive-companion-assets.py`:
+
+| Pose | Used for | Frames |
+| ---- | -------- | ------ |
+| `notify` (head tilt toward the bar) | `notification` reaction, replaces `look` | 3 |
+| `celebrate-small` | `download.done`, `task.done`, quieter than `celebrate` | 3 |
+| `yawn` | settling into quiet hours / Focus sleep | 4 |
+| `perch-edge` | perching on a window or bar edge (needs window geometry) | 2-3 |
+| `sleep` for the `nocturnal` skin | night-time sleep matching the skin | 4 |
+
+Until then reactions reuse `look`, `approve` and `hop`, so nothing is
+blocked on art.
+
 ## Z-order policy
 
 The companion is ambient chrome, not a window citizen: it lives on

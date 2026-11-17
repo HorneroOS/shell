@@ -106,7 +106,7 @@ Item {
 
                 Image {
                     sourceSize: Qt.size(68, 68)
-                    source: Companion.frameSource(CompanionStore.skin, "idle")
+                    source: Companion.frameSource(CompanionStore.effectiveSkin, "idle")
                     Layout.preferredWidth: 34
                     Layout.preferredHeight: 34
                     Layout.maximumWidth: 34

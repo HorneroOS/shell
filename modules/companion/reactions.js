@@ -60,6 +60,33 @@ function defaults() {
     };
 }
 
+// Per-mode look: the companion can be hidden, resized (multiplier on the
+// global size) or re-skinned while a given Experience mode is active.
+// skin "" means "use the global skin".
+function defaultModeLook() {
+    var out = {};
+    for (var i = 0; i < MODE_IDS.length; i++)
+        out[MODE_IDS[i]] = { visible: true, size: 1.0, skin: "" };
+    return out;
+}
+
+function sanitizeModeLook(raw) {
+    var out = defaultModeLook();
+    var o = (raw && typeof raw === "object" && !Array.isArray(raw)) ? raw : {};
+    for (var i = 0; i < MODE_IDS.length; i++) {
+        var src = o[MODE_IDS[i]];
+        if (!src || typeof src !== "object")
+            continue;
+        if (typeof src.visible === "boolean")
+            out[MODE_IDS[i]].visible = src.visible;
+        if (typeof src.size === "number" && isFinite(src.size))
+            out[MODE_IDS[i]].size = Math.max(0.5, Math.min(2.0, Math.round(src.size * 20) / 20));
+        if (typeof src.skin === "string" && /^[a-z0-9-]{0,32}$/.test(src.skin))
+            out[MODE_IDS[i]].skin = src.skin;
+    }
+    return out;
+}
+
 function emptyHistory() {
     return { lastByKind: {}, recent: [], bySource: {} };
 }
@@ -190,13 +217,15 @@ function decide(input) {
     if (typeof input.hasAnimation === "function" && !input.hasAnimation(anim))
         anim = "";
     var bubble = "";
+    var isCustom = false;
     if (level === "full" && s.bubbles) {
         var custom = source === "shell" ? "" : sanitizeText(input.text);
-        bubble = custom !== "" ? custom : def.bubble;
+        isCustom = custom !== "";
+        bubble = isCustom ? custom : def.bubble;
     }
     if (anim === "" && bubble === "")
         return { ok: false, reason: "nothing-to-show" };
-    return { ok: true, kind: kind, anim: anim, bubble: bubble, bubbleMs: BUBBLE_MS, priority: def.priority, source: source };
+    return { ok: true, kind: kind, anim: anim, bubble: bubble, custom: isCustom, bubbleMs: BUBBLE_MS, priority: def.priority, source: source };
 }
 
 // Returns a new history with an accepted reaction recorded (old entries

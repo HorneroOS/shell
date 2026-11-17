@@ -19,9 +19,12 @@ Item {
     readonly property bool blurEnabled: bgEnabled && Config.background.desktopClock.background.blur && !Experience.gaming
     readonly property bool invertColors: Config.background.desktopClock.invertColors
     readonly property bool useLightSet: Signal.light ? !invertColors : invertColors
-    readonly property color safePrimary: useLightSet ? Signal.palette.signalWell : Signal.palette.signal
-    readonly property color safeSecondary: useLightSet ? Signal.palette.cueWell : Signal.palette.cue
-    readonly property color safeTertiary: useLightSet ? Signal.palette.phosphorWell : Signal.palette.phosphor
+    // Over a plate the numerals are plain `ink`; with no plate they sit on
+    // the wallpaper and follow the invert switch (with the glyph-only
+    // shadow from the clock settings), as before.
+    readonly property color safeInk: bgEnabled ? Signal.palette.ink : useLightSet ? Signal.palette.inverse : Signal.palette.ink
+    readonly property color safeMuted: bgEnabled ? Signal.palette.inkMuted : safeInk
+    readonly property color safeAccent: useLightSet ? Signal.palette.signalWell : Signal.palette.signal
 
     implicitWidth: layout.implicitWidth + (Appearance.padding.large * 4 * root.scale)
     implicitHeight: layout.implicitHeight + (Appearance.padding.large * 2 * root.scale)
@@ -62,9 +65,11 @@ Item {
 
             visible: root.bgEnabled
             anchors.fill: parent
-            radius: Appearance.rounding.large * root.scale
+            radius: Appearance.rounding.small
             opacity: Config.background.desktopClock.background.opacity
             color: Signal.palette.base
+            border.width: 1
+            border.color: Signal.palette.rule
 
             layer.enabled: root.blurEnabled
         }
@@ -73,31 +78,40 @@ Item {
             id: layout
 
             anchors.centerIn: parent
-            spacing: Appearance.spacing.larger * root.scale
+            spacing: Appearance.spacing.large * root.scale
 
+            // Plex Sans Condensed numerals with a static colon.
             RowLayout {
-                spacing: Appearance.spacing.small
+                spacing: 2
 
                 StyledText {
                     text: Time.hourStr
-                    font.pointSize: Appearance.font.size.extraLarge * 3 * root.scale
-                    font.weight: Font.Bold
-                    color: root.safePrimary
+                    font.family: Appearance.font.family.display
+                    font.pointSize: Appearance.font.size.display * root.scale
+                    font.weight: Font.Medium
+                    font.features: {
+                        "tnum": 1
+                    }
+                    color: root.safeInk
                 }
 
                 StyledText {
                     text: ":"
-                    font.pointSize: Appearance.font.size.extraLarge * 3 * root.scale
-                    color: root.safeTertiary
-                    opacity: 0.8
-                    Layout.topMargin: -Appearance.padding.large * 1.5 * root.scale
+                    font.family: Appearance.font.family.display
+                    font.pointSize: Appearance.font.size.display * root.scale
+                    font.weight: Font.Medium
+                    color: root.safeMuted
                 }
 
                 StyledText {
                     text: Time.minuteStr
-                    font.pointSize: Appearance.font.size.extraLarge * 3 * root.scale
-                    font.weight: Font.Bold
-                    color: root.safeSecondary
+                    font.family: Appearance.font.family.display
+                    font.pointSize: Appearance.font.size.display * root.scale
+                    font.weight: Font.Medium
+                    font.features: {
+                        "tnum": 1
+                    }
+                    color: root.safeInk
                 }
 
                 Loader {
@@ -109,46 +123,49 @@ Item {
 
                     sourceComponent: StyledText {
                         text: Time.amPmStr
-                        font.pointSize: Appearance.font.size.large * root.scale
-                        color: root.safeSecondary
+                        mono: true
+                        font.pointSize: Appearance.font.size.normal * root.scale
+                        color: root.safeMuted
                     }
                 }
             }
 
-            StyledRect {
+            // The accent: a 2 px `signal` rule, square ends.
+            Rectangle {
                 Layout.fillHeight: true
-                Layout.preferredWidth: 4 * root.scale
+                Layout.preferredWidth: 2
                 Layout.topMargin: Appearance.spacing.larger * root.scale
                 Layout.bottomMargin: Appearance.spacing.larger * root.scale
-                radius: Appearance.rounding.full
-                color: root.safePrimary
-                opacity: 0.8
+                color: root.safeAccent
             }
 
             ColumnLayout {
-                spacing: 0
+                spacing: 2
 
                 StyledText {
-                    text: Time.format("MMMM").toUpperCase()
-                    font.pointSize: Appearance.font.size.large * root.scale
-                    font.letterSpacing: 4
-                    font.weight: Font.Bold
-                    color: root.safeSecondary
+                    text: Time.format("MMMM")
+                    mono: true
+                    font.capitalization: Font.AllUppercase
+                    font.pointSize: Appearance.font.size.normal * root.scale
+                    font.letterSpacing: Appearance.font.size.normal * 0.08 * root.scale
+                    color: root.safeMuted
                 }
 
                 StyledText {
                     text: Time.format("dd")
+                    font.family: Appearance.font.family.display
                     font.pointSize: Appearance.font.size.extraLarge * root.scale
-                    font.letterSpacing: 2
                     font.weight: Font.Medium
-                    color: root.safePrimary
+                    color: root.safeInk
                 }
 
                 StyledText {
                     text: Time.format("dddd")
-                    font.pointSize: Appearance.font.size.larger * root.scale
-                    font.letterSpacing: 2
-                    color: root.safeSecondary
+                    mono: true
+                    font.capitalization: Font.AllUppercase
+                    font.pointSize: Appearance.font.size.small * root.scale
+                    font.letterSpacing: Appearance.font.size.small * 0.08 * root.scale
+                    color: root.safeMuted
                 }
             }
         }

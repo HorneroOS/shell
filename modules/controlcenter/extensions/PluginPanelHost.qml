@@ -31,7 +31,7 @@ ColumnLayout {
         Layout.fillWidth: true
         visible: root.available || root.loadFailed
         text: root.panel.title
-        font.weight: 500
+        font.weight: Appearance.font.weight.medium
     }
 
     Loader {

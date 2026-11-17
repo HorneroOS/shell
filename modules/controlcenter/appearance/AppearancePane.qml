@@ -42,7 +42,7 @@ Item {
     property real borderThickness: Config.border.thickness ?? 1
 
     // Section disclosure: which sections start expanded. Persisted in
-    // Config.controlCenter.appearanceExpandedSections (default: Themes).
+    // Config.controlCenter.appearanceOpenSections (default: Themes).
     // _sectionsReady guards write-back while initial state is restored.
     property bool _sectionsReady: false
     readonly property var _sectionKeys: ["themes", "gtkTheme", "gtkColorScheme", "iconTheme", "fonts", "animations", "scales", "transparency", "border", "background", "health"]
@@ -50,19 +50,19 @@ Item {
     property var sectionScroll: null
 
     function isSectionExpanded(key: string): bool {
-        return Config.controlCenter.appearanceExpandedSections.indexOf(key) !== -1;
+        return Config.controlCenter.appearanceOpenSections.indexOf(key) !== -1;
     }
 
     function persistSection(key: string, expanded: bool): void {
         if (!root._sectionsReady)
             return;
-        const list = Config.controlCenter.appearanceExpandedSections.slice();
+        const list = Config.controlCenter.appearanceOpenSections.slice();
         const i = list.indexOf(key);
         if (expanded && i === -1)
             list.push(key);
         if (!expanded && i !== -1)
             list.splice(i, 1);
-        Config.controlCenter.appearanceExpandedSections = list;
+        Config.controlCenter.appearanceOpenSections = list;
         Config.save();
     }
 
@@ -74,7 +74,7 @@ Item {
                 section.expanded = expand;
         }
         root._sectionsReady = true;
-        Config.controlCenter.appearanceExpandedSections = expand ? root._sectionKeys.slice() : [];
+        Config.controlCenter.appearanceOpenSections = expand ? root._sectionKeys.slice() : [];
         Config.save();
     }
 

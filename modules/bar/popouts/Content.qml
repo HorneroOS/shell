@@ -185,7 +185,7 @@ Item {
 
                 name: `traymenu${index}`
                 eyebrow: qsTr("07 · TRAY")
-                context: trayMenu.modelData.tooltipTitle || trayMenu.modelData.title || ""
+                context: trayMenu.modelData?.tooltipTitle || trayMenu.modelData?.title || ""
                 sourceComponent: trayMenuComp
 
                 Connections {
@@ -206,7 +206,7 @@ Item {
 
                     TrayMenu {
                         popouts: root.wrapper
-                        trayItem: trayMenu.modelData.menu
+                        trayItem: trayMenu.modelData?.menu ?? null
                     }
                 }
             }

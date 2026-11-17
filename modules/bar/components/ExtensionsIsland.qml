@@ -59,7 +59,7 @@ StyledRect {
     implicitWidth: root.vertical ? Config.bar.sizes.innerWidth : root.nonAnimWidth
     implicitHeight: root.vertical ? root.nonAnimHeight : Config.bar.sizes.innerWidth
     color: Qt.alpha(Signal.tPalette.panel, (root.chip && root.count > 0) ? Signal.tPalette.panel.a : 0)
-    radius: Appearance.rounding.full
+    radius: Appearance.rounding.normal
 
     Accessible.role: Accessible.Grouping
     Accessible.name: qsTr("Extensions")

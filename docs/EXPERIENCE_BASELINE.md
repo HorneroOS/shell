@@ -175,7 +175,7 @@ distinguish wallpapers by name; thumbnails carry the whole burden.
 
 > **Fixed in the current configuration path:** Themes is expanded by default,
 > and each section's disclosure state is persisted in
-> `controlCenter.appearanceExpandedSections`. The original capture predates
+> `controlCenter.appearanceOpenSections` (renamed from `appearanceExpandedSections`, whose stale values left Themes collapsed on upgraded configs; the old key is ignored). The original capture predates
 > that behavior; a fresh visual check is still needed to assess first-run
 > discoverability across the full pane.
 

@@ -114,7 +114,7 @@ ColumnLayout {
                 implicitWidth: implicitHeight
                 implicitHeight: wirelessConnectIcon.implicitHeight + Appearance.padding.small
 
-                radius: Appearance.rounding.full
+                radius: Appearance.rounding.small
                 color: Qt.alpha(Signal.palette.signal, networkItem.modelData.active ? 1 : 0)
 
                 CircularIndicator {
@@ -169,7 +169,7 @@ ColumnLayout {
         Layout.fillWidth: true
         implicitHeight: rescanBtn.implicitHeight + Appearance.padding.small * 2
 
-        radius: Appearance.rounding.full
+        radius: Appearance.rounding.small
         color: Signal.palette.signalWell
 
         StateLayer {
@@ -294,7 +294,7 @@ ColumnLayout {
                 implicitWidth: implicitHeight
                 implicitHeight: connectIcon.implicitHeight + Appearance.padding.small
 
-                radius: Appearance.rounding.full
+                radius: Appearance.rounding.small
                 color: Qt.alpha(Signal.palette.signal, ethernetItem.modelData.connected ? 1 : 0)
 
                 CircularIndicator {

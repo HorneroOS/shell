@@ -161,19 +161,25 @@ Singleton {
         readonly property bool isDdc: root.ddcMonitors.some(m => m.connector === modelData.name)
         readonly property string busNum: root.ddcMonitors.find(m => m.connector === modelData.name)?.busNum ?? ""
         readonly property bool isAppleDisplay: root.appleDisplayPresent && modelData.model.startsWith("StudioDisplay")
+        // True only once a real backlight/DDC/Apple reading arrived. Desktop
+        // monitors without a backlight stay false and every surface hides.
+        property bool available: false
         property real brightness
         property real queuedBrightness: NaN
 
         readonly property Process initProc: Process {
             stdout: StdioCollector {
                 onStreamFinished: {
+                    let value = NaN;
                     if (monitor.isAppleDisplay) {
-                        const val = parseInt(text.trim());
-                        monitor.brightness = val / 101;
+                        value = parseInt(text.trim()) / 101;
                     } else {
-                        const [, , , cur, max] = text.split(" ");
-                        monitor.brightness = parseInt(cur) / parseInt(max);
+                        const [, , , cur, max] = text.trim().split(" ");
+                        value = parseInt(max) > 0 ? parseInt(cur) / parseInt(max) : NaN;
                     }
+                    monitor.available = isFinite(value);
+                    if (monitor.available)
+                        monitor.brightness = value;
                 }
             }
         }
@@ -189,6 +195,8 @@ Singleton {
         }
 
         function setBrightness(value: real): void {
+            if (!available)
+                return;
             value = Math.max(0, Math.min(1, value));
             const rounded = Math.round(value * 100);
             if (Math.round(brightness * 100) === rounded)

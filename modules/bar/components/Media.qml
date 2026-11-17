@@ -25,6 +25,8 @@ Item {
         return a ? `${t} — ${a}` : t;
     }
 
+    // Read by the bar: an idle transport leaves no segment, padding or rule.
+    readonly property bool available: active
     visible: active
     implicitWidth: active ? layout.implicitWidth : 0
     implicitHeight: active ? layout.implicitHeight : 0

@@ -32,7 +32,7 @@ StyledRect {
     signal popoutRequested(string name, Item anchor)
 
     color: clear ? "transparent" : Signal.tPalette.panel
-    radius: Appearance.rounding.full
+    radius: Appearance.rounding.normal
 
     clip: true
     implicitWidth: vertical ? Config.bar.sizes.innerWidth : iconGrid.implicitWidth + Appearance.padding.normal * 2
@@ -379,7 +379,7 @@ StyledRect {
         }
 
         FocusRing {
-            radius: Appearance.rounding.full
+            radius: Appearance.rounding.small
         }
     }
 }

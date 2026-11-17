@@ -76,7 +76,7 @@ Item {
             implicitHeight: vertical ? (start && end ? end.y + end.size - start.y + 2 : 0) : Config.bar.sizes.innerWidth - Appearance.padding.small * 2 + 2
 
             color: Signal.layer(Signal.palette.raised, 2)
-            radius: Appearance.rounding.full
+            radius: Appearance.rounding.small
 
             scale: 0
             Component.onCompleted: scale = 1

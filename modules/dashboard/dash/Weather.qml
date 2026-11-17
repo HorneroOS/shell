@@ -12,7 +12,7 @@ Item {
 
     readonly property bool live: Weather.ready
 
-    Component.onCompleted: Weather.reload()
+    Component.onCompleted: Weather.refreshIfStale()
 
     RowLayout {
         anchors.left: parent.left

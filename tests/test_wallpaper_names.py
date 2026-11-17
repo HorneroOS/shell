@@ -4,7 +4,8 @@ indistinguishable after truncation).
 
 Contract: `Strings.wallpaperDisplayName` strips the extension and a
 trailing _WxH resolution suffix and renders separators as spaces
-(`wallhaven-73v179_1920x1080.png` -> `wallhaven 73v179`). Display
+(`wallhaven-73v179_1920x1080.png` -> `Untitled 73v1`; stock-site
+prefix stripped, bare site ids are not names). Display
 only — search/filter keep matching raw filenames. Never blank."""
 import re
 from pathlib import Path
@@ -42,11 +43,14 @@ def _display(name):
     s = re.sub(r"\.[A-Za-z0-9]+$", "", s)
     s = re.sub(r"[_-]\d+x\d+$", "", s)
     s = re.sub(r"\s+", " ", re.sub(r"[_-]+", " ", s)).strip()
+    bare = re.sub(r"^(wallhaven|unsplash|pexels|pixabay|wallpaperflare|wallpaperaccess|wp|photo|image|img) ", "", s, flags=re.I)
+    if bare != s and re.fullmatch(r"[A-Za-z0-9]{4,12}", bare):
+        return "Untitled " + bare[:4]
     return s if s else str(name)
 
 
 def test_display_names_cover_live_wallpapers():
-    assert _display("wallhaven-73v179_1920x1080.png") == "wallhaven 73v179"
+    assert _display("wallhaven-73v179_1920x1080.png") == "Untitled 73v1"
     assert _display("flowers-02.jpg") == "flowers 02"
     assert _display("hornero-os-dark.png") == "hornero os dark"
     assert _display("Distance.gif") == "Distance"
@@ -63,3 +67,12 @@ def test_display_names_cover_live_wallpapers():
         seen += 1
     if seen == 0:
         pytest.skip("no live wallpaper files to check against")
+
+
+def test_appearance_hierarchy_and_titlebar_are_signal():
+    """VA-07: Preview is an eyebrow, the titlebar is an eyebrow trail."""
+    pane = (ROOT / "modules/controlcenter/appearance/AppearancePane.qml").read_text()
+    assert 'label: qsTr("Preview")' in pane and "extraLarge\n                    font.weight: 600" not in pane
+    bar = (ROOT / "modules/controlcenter/WindowTitle.qml").read_text()
+    assert "Instruments.Eyebrow" in bar and "Hairline" in bar
+    assert "horizontalCenter" not in bar, "no centred bold title"

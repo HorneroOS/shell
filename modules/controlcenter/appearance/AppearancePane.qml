@@ -12,6 +12,7 @@ import qs.components.images
 import qs.services
 import qs.config
 import qs.utils
+import qs.modules.instruments as Instruments
 import qs.modules.controlcenter
 import Hornero
 import Hornero.Models
@@ -586,12 +587,9 @@ Item {
                 anchors.fill: parent
                 spacing: 0
 
-                StyledText {
-                    Layout.alignment: Qt.AlignHCenter
-                    Layout.bottomMargin: Appearance.spacing.normal
-                    text: qsTr("Preview")
-                    font.pointSize: Appearance.font.size.extraLarge
-                    font.weight: 600
+                Instruments.Eyebrow {
+                    Layout.bottomMargin: Appearance.spacing.small
+                    label: qsTr("Preview")
                 }
 
                 AppearancePreviewPane {

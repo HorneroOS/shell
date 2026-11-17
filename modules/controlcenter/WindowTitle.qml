@@ -1,7 +1,9 @@
 import qs.components
 import qs.components.controls
+import qs.components.effects
 import qs.services
 import qs.config
+import qs.modules.instruments as Instruments
 import Quickshell
 import QtQuick
 
@@ -11,7 +13,7 @@ StyledRect {
     required property ShellScreen screen
     required property Session session
 
-    implicitHeight: text.implicitHeight + Appearance.padding.normal
+    implicitHeight: 30 + Appearance.padding.normal + 1
     color: Signal.tPalette.panel
 
     // Brand tile (same treatment as Welcome): the graphite logo
@@ -35,16 +37,27 @@ StyledRect {
         }
     }
 
-    StyledText {
+    // Eyebrow trail in the Signal channel language: SETTINGS · PAGE.
+    // The compositor window title (WindowFactory) stays "Hornero Settings -
+    // Page" for window matching; this bar shows the trail only.
+    Instruments.Eyebrow {
         id: text
 
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.leftMargin: Appearance.padding.normal * 2 + 30
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.verticalCenterOffset: -1
 
-        text: qsTr("Hornero Settings - %1").arg(root.session.activeTitle)
-        font.capitalization: Font.Capitalize
-        font.pointSize: Appearance.font.size.larger
-        font.weight: 500
+        label: `${qsTr("Settings")} · ${root.session.activeTitle}`
+        Accessible.ignored: false
+        Accessible.role: Accessible.Heading
+        Accessible.name: qsTr("Settings, %1").arg(root.session.activeTitle)
+    }
+
+    Hairline {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
     }
 
     Item {
@@ -61,6 +74,7 @@ StyledRect {
             Accessible.description: qsTr("Close the floating Settings window")
 
             radius: Appearance.rounding.small
+            activeFocusOnTab: true
 
             function onClicked(): void {
                 WindowFactory.closeWindow(QsWindow.window);

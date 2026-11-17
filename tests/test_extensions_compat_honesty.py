@@ -12,7 +12,7 @@ def test_kit_status_uses_reported_schema_version_and_never_guesses():
 
 
 def test_both_installed_and_catalogue_rows_show_compatibility():
-    assert "root.kitStatus(row.modelData)" in PANE
+    assert "root.kitStatus(row.entry)" in PANE
     assert "root.kitStatus(catRow.modelData)" in PANE
 
 

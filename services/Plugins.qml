@@ -130,6 +130,18 @@ Singleton {
 
     onKitBlockedChanged: root.applyKitGate()
 
+    // Toggling safe mode live: hosts empty at once, so report it instead of
+    // leaving stale "loaded" states, and rediscover when it is turned off.
+    onSafeModeChanged: {
+        if (root.safeMode)
+            root.entries = root.entries.map(e => e.enabled && e.installed ? Object.assign({}, e, {
+                state: "safe-mode",
+                detail: qsTr("Safe mode is on: this plugin was not loaded. Disable it here, or turn safe mode off to load plugins again.")
+            }) : e);
+        else if (root.discovered)
+            root.reload();
+    }
+
     function applyKitGate(): void {
         if (!root.kitBlocked)
             return;

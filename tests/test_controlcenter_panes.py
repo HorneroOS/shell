@@ -613,7 +613,7 @@ def test_extensions_installed_search_and_trust_placement_filters():
     assert "function filteredPlugins(): var" in pane
     assert "[entry.name, entry.id, entry.description]" in pane
     assert 'String(value || "")' in pane  # absent description must not crash
-    assert "model: root.filteredPlugins()" in pane
+    assert "source: root.filteredPlugins().map(entry => entry.id)" in pane
     assert "category" not in pane.split("function filteredPlugins", 1)[1].split("function pluginTrustValues", 1)[0]
     assert "property string pluginTrustFilter" in pane
     assert "property string pluginPlacementFilter" in pane
@@ -647,7 +647,7 @@ def test_extensions_expandable_detail_is_truthful_and_reuses_lifecycle():
                   "entry.description"):
         assert field in detail, f"detail must show {field}"
     assert "QML plugins are not sandboxed" in detail
-    assert "visible: root.expandedPluginId === row.modelData.id" in pane
+    assert "visible: root.expandedPluginId === row.entry.id" in pane
     assert 'qsTr("Hide details")' in pane and 'qsTr("Details")' in pane
     # No new fake actions: detail adds none, existing lifecycle/catalogue
     # actions remain the only writers.

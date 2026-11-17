@@ -169,8 +169,12 @@ ShellRoot {
                 root.out.dbg = [ChromaticPreview.helperAvailable, ChromaticPreview.helperChecked, ChromaticPreview.busy, ChromaticPreview.variantPreviewsWanted, ChromaticPreview.errorCode, ChromaticPreview._variantSig.length, ChromaticPreview._variantCurrent];
                 if (Quickshell.env("HMANAGE") === "1") {
                     root.manageScenario();
+                    return;
+                }
                 if (Quickshell.env("HACCENT") === "1") {
                     root.accentScenario();
+                    return;
+                }
                 if (Quickshell.env("HHOVER") === "1") {
                     root.hoverScenario();
                     return;
@@ -250,6 +254,8 @@ ShellRoot {
                 root.finish();
             }
         }
+    }
+
     function accentScenario(): void {
         const o = root.out;
         Config.appearance.chromatic.transition = "instant";
@@ -270,6 +276,9 @@ ShellRoot {
         Config.appearance.accent.color = "";
         o.resetToTheme = String(Signal.palette.signal) === base;
         o.ctxMode = Experience.mode;
+        root.finish();
+    }
+
     function hoverScenario(): void {
         const o = root.out;
         Config.appearance.chromatic.transition = "instant";

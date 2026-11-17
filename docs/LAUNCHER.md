@@ -201,6 +201,19 @@ so activation copies `result.text` via `wl-copy`
 (`Quickshell.execDetached(["wl-copy", …])`), exactly the
 built-in calc provider's convention, and closes the launcher.
 
+**Several rows (`results`).** An entrypoint that has more than one
+answer (a clipboard history, an emoji search) exposes a readonly var
+property `results` instead of, or next to, `result`: an array of
+`{ text, title?, subtitle?, glyph? }`. When `results` is an array it
+wins; each valid entry becomes one row (at most 24), `title` defaults to
+the one-line form of `text`, `subtitle` to the extension name and `glyph`
+to the extension icon (a Hornero Glyph name). Entries without a non-empty
+string `text` are dropped, `text` is bounded to 16 KiB and labels to 200
+characters. Activating a row copies that entry's `text` with `wl-copy`
+and closes the launcher, so privacy-sensitive history stays inside the
+extension: the host stores nothing and logs nothing about the rows.
+Entrypoints exposing only `result` behave exactly as before.
+
 **Fault isolation.** Each plugin loads in its own hidden,
 asynchronous Loader. `Loader.Error` marks only that plugin
 failed through `Plugins.markFailed`; one broken launcher plugin

@@ -96,6 +96,12 @@ Singleton {
         return LauncherPlugin.launcherRow(pluginId, displayName, icon, raw);
     }
 
+    // Every registry row for one plugin entrypoint: its multi-row
+    // `results` array when present, else the single `result` row.
+    function launcherRows(pluginId: string, displayName: string, icon: string, item: var): var {
+        return LauncherPlugin.launcherRows(pluginId, displayName, icon, item);
+    }
+
     function providerById(id: string): var {
         for (const p of providers) {
             if (p.id === id)

@@ -133,8 +133,8 @@ def test_icon_from_manifest_entry_else_generic():
 
 def test_query_bridge_sets_query_reads_result_single_row():
     assert "hosted.query = text" in HOST
-    assert "hosted.result" in HOST
-    assert "return row ? [row] : []" in HOST
+    assert "hosted)" in HOST
+    assert "Providers.launcherRows(slot.pluginId, slot.displayName, slot.icon, hosted)" in HOST
     # AppList serves plugin providers through the registry query.
     assert 'return "plugin";' in APPLIST
     assert 'name: "plugin"' in APPLIST
@@ -174,6 +174,37 @@ def test_activation_copies_result_text_wl_copy_like_calc():
     # No plugin activation hook is invented anywhere.
     assert "onActivate" not in HOST and "activate(" not in (
         ROOT / "examples/plugins/example-multi-surface/Launcher.qml").read_text()
+
+
+def test_multi_row_contract_executes():
+    out = _run_js("""
+const long = "x".repeat(20000);
+const many = Array.from({length: 40}, (_, i) => ({text: "t" + i}));
+console.log(JSON.stringify([
+  launcherContractOk({query: "", results: []}),
+  launcherContractOk({query: "", results: "nope"}),
+  launcherContractOk({results: []}),
+  launcherRows("hornero-stowaway", "Stowaway", "puzzle", {query: "", result: {ok: true, text: "5"}}).length,
+  launcherRows("p", "P", "puzzle", {results: [
+      {text: "a\\nb  c", glyph: "clipboard", subtitle: "s"},
+      {text: "emoji", title: "T"},
+      {text: ""}, {text: 5}, null, "x", {title: "no text"}]}),
+  launcherRows("p", "P", "puzzle", {results: many}).length,
+  launcherRows("p", "P", "puzzle", {results: [{text: long}]})[0].payload.text.length,
+  launcherRows("p", "P", "puzzle", {results: [{text: long}]})[0].title.length,
+  launcherRows("p", "P", "puzzle", {result: {ok: false, text: "Error"}, results: []}),
+  launcherRows("p", "P", "puzzle", null)
+]));""")
+    assert out[0] is True and out[1] is False and out[2] is False
+    assert out[3] == 1  # single-result form unchanged
+    rows = out[4]
+    assert [r["title"] for r in rows] == ["a b c", "T"]
+    assert rows[0]["icon"] == "clipboard" and rows[0]["subtitle"] == "s"
+    assert rows[1]["icon"] == "puzzle" and rows[1]["subtitle"] == "P"
+    assert rows[0]["payload"] == {"ok": True, "text": "a\nb  c"}  # copy keeps the real text
+    assert out[5] == 24  # bounded
+    assert out[6] == 16384 and out[7] == 200
+    assert out[8] == [] and out[9] == []
 
 
 # --- Fault isolation -------------------------------------------------------
@@ -217,6 +248,7 @@ def test_docs_describe_hosted_launcher_contract():
                    "wl-copy", "no row", "builtinsRegistered"):
         assert needle in DOCS_LAUNCHER, needle
     assert "unsandboxed" in DOCS_LAUNCHER and "unsandboxed" in DOCS_PLUGINS
+    assert "`results`" in DOCS_LAUNCHER and "`results`" in DOCS_PLUGINS
 
 
 # --- Regressions -------------------------------------------------------------

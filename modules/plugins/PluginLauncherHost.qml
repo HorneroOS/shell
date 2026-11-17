@@ -17,8 +17,10 @@ import QtQuick
 // property `query` and a readonly var property `result` shaped
 // { ok: bool, text: string }. This host sets query and reads
 // result; there is no plugin activation hook, so activation
-// copies result.text with wl-copy, the built-in calc provider's
-// convention (see docs/LAUNCHER.md).
+// copies the row's text with wl-copy, the built-in calc provider's
+// convention (see docs/LAUNCHER.md). An entrypoint may expose a
+// `results` array instead for several rows (additive, see
+// launcherplugin.js).
 //
 // Fault isolation: each plugin gets its own asynchronous Loader.
 // Loader.Error marks only that plugin failed through the Plugins
@@ -94,8 +96,7 @@ Item {
                         } catch (e) {
                             return [];
                         }
-                        const row = Providers.launcherRow(slot.pluginId, slot.displayName, slot.icon, hosted.result);
-                        return row ? [row] : [];
+                        return Providers.launcherRows(slot.pluginId, slot.displayName, slot.icon, hosted);
                     },
                     "activate": (result, list) => {
                         // No plugin activation hook exists in the

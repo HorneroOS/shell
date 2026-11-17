@@ -44,7 +44,7 @@ ColumnLayout {
     StyledText {
         Layout.fillWidth: true
         text: qsTr("Preview")
-        font.weight: 500
+        font.weight: Appearance.font.weight.medium
     }
 
     StyledText {

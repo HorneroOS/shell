@@ -65,7 +65,7 @@ ColumnLayout {
         text: qsTr("Reorder or hide what each bar shows. Changes apply to the current layout right away; choosing another layout in Layout replaces them with that layout's order.")
         wrapMode: Text.WordWrap
         color: Signal.palette.inkMuted
-        font.pointSize: Appearance.font.size.small
+        font.pointSize: Appearance.font.size.smaller
     }
 
     // Scope: only shown when some screen has its own bar set.
@@ -161,7 +161,7 @@ ColumnLayout {
                     StyledText {
                         text: qsTr(BarOrder.groupTitle(root.bar?.edge ?? "top", groupCard.modelData))
                         color: Signal.palette.signal
-                        font.pointSize: Appearance.font.size.small
+                        font.pointSize: Appearance.font.size.smaller
                         font.weight: 600
                     }
 
@@ -169,7 +169,7 @@ ColumnLayout {
                         visible: groupCard.entries.length === 0
                         text: qsTr("Empty")
                         color: Signal.palette.inkMuted
-                        font.pointSize: Appearance.font.size.small
+                        font.pointSize: Appearance.font.size.smaller
                     }
 
                     Repeater {
@@ -245,7 +245,7 @@ ColumnLayout {
         visible: root.bar !== null && addRepeater.count > 0
         text: qsTr("Add a section")
         color: Signal.palette.inkMuted
-        font.pointSize: Appearance.font.size.small
+        font.pointSize: Appearance.font.size.smaller
     }
 
     Flow {

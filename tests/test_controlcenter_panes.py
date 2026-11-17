@@ -937,3 +937,13 @@ def test_every_single_column_pane_opens_with_the_registry_header():
         assert "SettingsHeader {" not in src, pid
     header = (CC / "components/PaneHeader.qml").read_text()
     assert "PaneRegistry.getById(root.paneId)" in header
+
+
+def test_subpage_header_matches_pane_header_and_labels_are_12px():
+    """VA-18: sub-pages open with an eyebrow and a 28 px title; Companion,
+    Windows and Bars labels are at least 12 px."""
+    hdr = (CC / "components/SettingsHeader.qml").read_text()
+    assert "Instruments.Eyebrow" in hdr and "Appearance.font.size.extraLarge" in hdr
+    for rel in ("companion/CompanionPane.qml", "windows/WindowsPane.qml",
+                "taskbar/BarOrderEditor.qml", "taskbar/TaskbarPane.qml"):
+        assert "Appearance.font.size.small\n" not in (CC / rel).read_text() + "\n", rel

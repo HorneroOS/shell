@@ -44,11 +44,15 @@ StyledRect {
         return (expanded ? expandIcon.implicitWidth + layout.implicitWidth + spacing : expandIcon.implicitWidth) + padding * 2;
     }
 
+    // Island cross-axis size (Density.chip): the cell size, shrunk so the
+    // island keeps its inset from the bar edge. Set by Bar.qml.
+    property int cross: Density.inner
+
     clip: true
     visible: vertical ? height > 0 : width > 0
 
-    implicitWidth: vertical ? Density.inner : nonAnimWidth
-    implicitHeight: vertical ? nonAnimHeight : Density.inner
+    implicitWidth: vertical ? cross : nonAnimWidth
+    implicitHeight: vertical ? nonAnimHeight : cross
 
     color: Qt.alpha(Signal.tPalette.panel, (root.chip && items.count > 0) ? Signal.tPalette.panel.a : 0)
     radius: Appearance.rounding.small

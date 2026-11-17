@@ -12,6 +12,9 @@ Item {
     required property ShellScreen screen
     property bool vertical: Config.bar.isVerticalFor(screen.name)
 
+    // Cross-axis size of one cell (Workspaces.cellCross); set by Workspaces.
+    property int cellCross: Density.inner - Appearance.padding.small * 2
+
     required property Repeater workspaces
     required property var occupied
     required property int groupOffset
@@ -72,8 +75,8 @@ Item {
 
             x: vertical ? 0 : (start?.x ?? 0) - 1
             y: vertical ? (start?.y ?? 0) - 1 : 0
-            implicitWidth: vertical ? Density.inner - Appearance.padding.small * 2 + 2 : (start && end ? end.x + end.size - start.x + 2 : 0)
-            implicitHeight: vertical ? (start && end ? end.y + end.size - start.y + 2 : 0) : Density.inner - Appearance.padding.small * 2 + 2
+            implicitWidth: vertical ? root.cellCross + 2 : (start && end ? end.x + end.size - start.x + 2 : 0)
+            implicitHeight: vertical ? (start && end ? end.y + end.size - start.y + 2 : 0) : root.cellCross + 2
 
             color: Signal.layer(Signal.palette.raised, 2)
             radius: Appearance.rounding.small

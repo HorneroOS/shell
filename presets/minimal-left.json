@@ -8,7 +8,11 @@
     "showOnHover": true,
     "sizes": {
       "innerWidth": 36,
-      "contentScale": 1.15
+      "contentScale": 1.15,
+      "islandInset": 4
+    },
+    "workspaces": {
+      "activeInset": 4
     },
     "status": {},
     "scrollActions": {

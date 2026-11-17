@@ -30,7 +30,13 @@ ColumnLayout {
         clip: true
 
         Loader {
-            anchors.centerIn: parent
+            // Fit the dock instead of centring at the text's natural width,
+            // so a narrow dock wraps the placeholder rather than clipping it.
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.margins: Appearance.padding.normal
+            anchors.verticalCenter: parent.verticalCenter
+            height: item?.implicitHeight ?? 0
             active: opacity > 0
             opacity: root.contentHidden || Notifs.list.length === 0 ? 1 : 0
 
@@ -53,7 +59,9 @@ ColumnLayout {
                 }
 
                 StyledText {
-                    Layout.alignment: Qt.AlignHCenter
+                    Layout.fillWidth: true
+                    horizontalAlignment: Text.AlignHCenter
+                    wrapMode: Text.WordWrap
                     text: Config.lock.hideNotifs ? qsTr("Unlock to read notifications") : Microcopy.line("notifications.empty")
                     color: Signal.palette.inkMuted
                     font.family: Appearance.font.family.mono

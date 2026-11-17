@@ -65,7 +65,7 @@ ShellRoot {
         id: win
 
         visible: true
-        width: 900
+        width: Number(Quickshell.env("HWIDTH")) || 900
         height: 2600
         color: Signal.palette.ground
 

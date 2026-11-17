@@ -34,7 +34,7 @@ ColumnLayout {
         const _deck = Config.experience.deck;
         return Experience.deckOrderFor(root.mode);
     }
-    readonly property var anchors: {
+    readonly property var anchorMap: {
         const _deck = Config.experience.deck;
         return Experience.deckAnchorsFor(root.mode);
     }
@@ -273,7 +273,7 @@ ColumnLayout {
             readonly property string avail: root.availability[card.modelData] ?? "not-installed"
             readonly property bool ready: card.avail === "ready"
             readonly property bool shown: card.ready && !root.hidden.includes(card.modelData)
-            readonly property string anchor: root.anchors[card.modelData] ?? (card.item ? `${card.item.side}-${card.item.edge}` : "right-top")
+            readonly property string anchor: root.anchorMap[card.modelData] ?? (card.item ? `${card.item.side}-${card.item.edge}` : "right-top")
             readonly property var look: {
                 const _deck = Config.experience.deck;
                 return Experience.deckStyleOf(root.mode, card.modelData);

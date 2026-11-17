@@ -1,93 +1,96 @@
 import qs.components
 import qs.services
 import qs.config
+import qs.modules.instruments as Instruments
 import QtQuick
 import QtQuick.Layouts
 
-RowLayout {
+// Lock composition (Signal Bezel, brand surface): the clock and sign-in
+// module sit in the centre; weather and media are quiet footers at the
+// lower corners, the notification placeholder on the right. A single 45°
+// La Plata diagonal hairline crosses the lower left — the one brand
+// ornament permitted by RFC 0001 §2, never inside a control. Telemetry and
+// system facts are deliberately absent: a locked screen shows nothing the
+// owner has not chosen to share with whoever walks past.
+Item {
     id: root
 
     required property var lock
 
-    spacing: Appearance.spacing.large * 2
+    // 45° diagonal hairline.
+    Item {
+        anchors.fill: parent
+        clip: true
 
-    ColumnLayout {
-        Layout.fillWidth: true
-        spacing: Appearance.spacing.normal
-
-        StyledRect {
-            Layout.fillWidth: true
-            implicitHeight: weather.implicitHeight
-
-            topLeftRadius: Appearance.rounding.large
-            radius: Appearance.rounding.small
-            color: Signal.tPalette.panel
-
-            WeatherInfo {
-                id: weather
-
-                rootHeight: root.height
-            }
-        }
-
-        StyledRect {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-
-            radius: Appearance.rounding.small
-            color: Signal.tPalette.panel
-
-            Fetch {}
-        }
-
-        StyledClippingRect {
-            Layout.fillWidth: true
-            implicitHeight: media.implicitHeight
-
-            bottomLeftRadius: Appearance.rounding.large
-            radius: Appearance.rounding.small
-            color: Signal.tPalette.panel
-
-            Media {
-                id: media
-
-                lock: root.lock
-            }
+        Rectangle {
+            width: Math.hypot(parent.width, parent.height)
+            height: 1
+            color: Signal.palette.ruleStrong
+            opacity: 0.45
+            x: -width / 2 + parent.height * 0.18
+            y: parent.height * 0.82
+            transformOrigin: Item.Center
+            rotation: -45
+            antialiasing: true
         }
     }
 
     Center {
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
         lock: root.lock
     }
 
     ColumnLayout {
-        Layout.fillWidth: true
-        spacing: Appearance.spacing.normal
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        anchors.margins: Appearance.padding.large * 2
+        width: Math.min(360, root.width * 0.24)
+        spacing: Appearance.spacing.small
 
-        StyledRect {
+        Instruments.Frame {
             Layout.fillWidth: true
-            implicitHeight: resources.implicitHeight
+            implicitHeight: weather.implicitHeight + 24
+            padding: 12
+            visible: Weather.ready
 
-            topRightRadius: Appearance.rounding.large
-            radius: Appearance.rounding.small
-            color: Signal.tPalette.panel
+            WeatherInfo {
+                id: weather
 
-            Resources {
-                id: resources
+                anchors.left: parent.left
+                anchors.right: parent.right
             }
         }
 
-        StyledRect {
+        Instruments.Frame {
             Layout.fillWidth: true
-            Layout.fillHeight: true
+            implicitHeight: media.implicitHeight + 24
+            padding: 12
+            visible: media.active
 
-            bottomRightRadius: Appearance.rounding.large
-            radius: Appearance.rounding.small
-            color: Signal.tPalette.panel
+            Media {
+                id: media
 
-            NotifDock {
+                anchors.left: parent.left
+                anchors.right: parent.right
                 lock: root.lock
             }
+        }
+    }
+
+    Instruments.Frame {
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.margins: Appearance.padding.large * 2
+        width: Math.min(360, root.width * 0.24)
+        height: Config.lock.hideNotifs || Notifs.list.length === 0 ? 128 : Math.min(root.height * 0.5, 420)
+        channel: "02"
+        title: qsTr("Notifications")
+
+        NotifDock {
+            anchors.fill: parent
+            lock: root.lock
         }
     }
 }

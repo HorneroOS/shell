@@ -1,177 +1,49 @@
-pragma ComponentBehavior: Bound
-
 import qs.components
 import qs.services
 import qs.config
-import qs.utils
+import qs.modules.instruments as Instruments
 import QtQuick
 import QtQuick.Layouts
 
-ColumnLayout {
+// Lock weather footer: icon, temperature, condition. Only shown while the
+// weather service has a forecast; no placeholder when it has none.
+RowLayout {
     id: root
 
-    required property int rootHeight
+    spacing: Appearance.spacing.normal
 
-    anchors.left: parent.left
-    anchors.right: parent.right
-    anchors.margins: Appearance.padding.large * 2
+    Glyph {
+        Layout.alignment: Qt.AlignVCenter
 
-    spacing: Appearance.spacing.small
-
-    Loader {
-        Layout.topMargin: Appearance.padding.large * 2
-        Layout.bottomMargin: -Appearance.padding.large
-        Layout.alignment: Qt.AlignHCenter
-
-        active: root.rootHeight > 610
-        visible: active
-
-        sourceComponent: StyledText {
-            text: qsTr("Weather")
-            color: Signal.palette.signal
-            font.pointSize: Appearance.font.size.extraLarge
-            font.weight: 500
-        }
+        name: Weather.icon
+        color: Signal.palette.cue
+        font.pointSize: Appearance.font.size.extraLarge
     }
 
-    RowLayout {
+    ColumnLayout {
         Layout.fillWidth: true
-        spacing: Appearance.spacing.large
+        spacing: 0
 
-        Glyph {
-            animate: true
-            name: Weather.icon
-            color: Signal.palette.cue
-            font.pointSize: Appearance.font.size.extraLarge * 2.5
+        StyledText {
+            text: Weather.temp
+            font.family: Appearance.font.family.display
+            font.weight: Font.Medium
+            font.pointSize: Appearance.font.size.large
         }
 
-        ColumnLayout {
-            spacing: Appearance.spacing.small
+        StyledText {
+            Layout.fillWidth: true
 
-            StyledText {
-                Layout.fillWidth: true
-
-                animate: true
-                text: Weather.description
-                color: Signal.palette.cue
-                font.pointSize: Appearance.font.size.large
-                font.weight: 500
-                elide: Text.ElideRight
-            }
-
-            StyledText {
-                Layout.fillWidth: true
-
-                animate: true
-                visible: !!Weather.cc
-                text: qsTr("Humidity: %1%").arg(Weather.humidity)
-                color: Signal.palette.inkMuted
-                font.pointSize: Appearance.font.size.normal
-                elide: Text.ElideRight
-            }
-        }
-
-        Loader {
-            Layout.rightMargin: Appearance.padding.smaller
-            active: root.width > 400 && !!Weather.cc
-            visible: active
-
-            sourceComponent: ColumnLayout {
-                spacing: Appearance.spacing.small
-
-                StyledText {
-                    Layout.fillWidth: true
-
-                    animate: true
-                    text: Weather.temp
-                    color: Signal.palette.signal
-                    horizontalAlignment: Text.AlignRight
-                    font.pointSize: Appearance.font.size.extraLarge
-                    font.weight: 500
-                    elide: Text.ElideLeft
-                }
-
-                StyledText {
-                    Layout.fillWidth: true
-
-                    animate: true
-                    text: qsTr("Feels like: %1").arg(Weather.feelsLike)
-                    color: Signal.palette.ruleStrong
-                    horizontalAlignment: Text.AlignRight
-                    font.pointSize: Appearance.font.size.smaller
-                    elide: Text.ElideLeft
-                }
-            }
+            text: Weather.description
+            color: Signal.palette.inkMuted
+            font.pointSize: Appearance.font.size.small
+            elide: Text.ElideRight
         }
     }
 
-    Loader {
-        id: forecastLoader
+    Instruments.Eyebrow {
+        Layout.alignment: Qt.AlignTop
 
-        Layout.topMargin: Appearance.spacing.smaller
-        Layout.bottomMargin: Appearance.padding.large * 2
-        Layout.fillWidth: true
-
-        active: root.rootHeight > 820 && Weather.ready
-        visible: active
-
-        sourceComponent: RowLayout {
-            spacing: Appearance.spacing.large
-
-            Repeater {
-                model: {
-                    const forecast = Weather.hourlyForecast;
-                    const count = root.width < 320 ? 3 : root.width < 400 ? 4 : 5;
-                    if (!forecast)
-                        return Array.from({
-                            length: count
-                        }, () => null);
-
-                    return forecast.slice(0, count);
-                }
-
-                ColumnLayout {
-                    id: forecastHour
-
-                    required property var modelData
-
-                    Layout.fillWidth: true
-                    spacing: Appearance.spacing.small
-
-                    StyledText {
-                        Layout.fillWidth: true
-                        text: {
-                            const hour = forecastHour.modelData?.hour ?? 0;
-                            return hour > 12 ? `${(hour - 12).toString().padStart(2, "0")} PM` : `${hour.toString().padStart(2, "0")} AM`;
-                        }
-                        color: Signal.palette.ruleStrong
-                        horizontalAlignment: Text.AlignHCenter
-                        font.pointSize: Appearance.font.size.larger
-                    }
-
-                    Glyph {
-                        Layout.alignment: Qt.AlignHCenter
-                        name: forecastHour.modelData?.icon ?? "cloud-exclamation"
-                        font.pointSize: Appearance.font.size.extraLarge * 1.5
-                        font.weight: 500
-                    }
-
-                    StyledText {
-                        Layout.alignment: Qt.AlignHCenter
-                        text: Config.services.useFahrenheit ? `${forecastHour.modelData?.tempF ?? 0}°F` : `${forecastHour.modelData?.tempC ?? 0}°C`
-                        color: Signal.palette.cue
-                        font.pointSize: Appearance.font.size.larger
-                    }
-                }
-            }
-        }
-    }
-
-    Timer {
-        running: true
-        triggeredOnStart: true
-        repeat: true
-        interval: 900000 // 15 minutes
-        onTriggered: Weather.reload()
+        label: Weather.city
     }
 }

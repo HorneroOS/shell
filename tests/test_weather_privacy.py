@@ -158,8 +158,10 @@ assert.equal(scope.city, 'Unknown City');
 
 
 def test_lock_weather_hides_measurements_until_weather_is_available():
+    # The lock footer shows only a temperature and condition, and only while
+    # the service has a real forecast: no fabricated 0 % humidity, no
+    # placeholder when nothing is configured or loaded.
     source = LOCK_WEATHER.read_text()
-    humidity = re.search(r"StyledText\s*\{[^{}]*text:\s*qsTr\(\"Humidity:", source, re.S)
-    assert humidity, "lock weather should keep a humidity row for configured locations"
-    assert re.search(r"visible:\s*!!Weather\.cc", humidity.group(0)), "humidity must not show a fabricated 0%"
-    assert "active: root.rootHeight > 820 && Weather.ready" in source, "forecast rows need loaded weather data"
+    assert "Humidity" not in source, "lock weather must not carry unconfirmed measurements"
+    content = (ROOT / "modules" / "lock" / "Content.qml").read_text()
+    assert re.search(r"visible:\s*Weather\.ready\s+WeatherInfo|visible:\s*Weather\.ready\n\n\s+WeatherInfo", content), "lock weather frame must hide until Weather.ready"

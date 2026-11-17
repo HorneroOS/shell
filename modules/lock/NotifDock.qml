@@ -2,11 +2,9 @@ pragma ComponentBehavior: Bound
 
 import qs.components
 import qs.components.containers
-import qs.components.effects
 import qs.services
 import qs.config
 import Quickshell
-import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
 
@@ -16,31 +14,19 @@ ColumnLayout {
     required property var lock
 
     anchors.fill: parent
-    anchors.margins: Appearance.padding.large
-
     spacing: Appearance.spacing.smaller
 
     // Privacy boundary: while locked, notification bodies stay hidden and
     // even the count is withheld — only the neutral placeholder shows.
     readonly property bool contentHidden: Config.lock.hideNotifs
 
-    StyledText {
-        Layout.fillWidth: true
-        text: !root.contentHidden && Notifs.list.length > 0 ? qsTr("%1 notification%2").arg(Notifs.list.length).arg(Notifs.list.length === 1 ? "" : "s") : qsTr("Notifications")
-        color: Signal.palette.ruleStrong
-        font.family: Appearance.font.family.mono
-        font.weight: 500
-        elide: Text.ElideRight
-    }
-
-    ClippingRectangle {
+    Item {
         id: clipRect
 
         Layout.fillWidth: true
         Layout.fillHeight: true
 
-        radius: Appearance.rounding.small
-        color: "transparent"
+        clip: true
 
         Loader {
             anchors.centerIn: parent
@@ -48,28 +34,21 @@ ColumnLayout {
             opacity: root.contentHidden || Notifs.list.length === 0 ? 1 : 0
 
             sourceComponent: ColumnLayout {
-                spacing: Appearance.spacing.large
+                spacing: Appearance.spacing.small
 
-                Image {
-                    asynchronous: true
-                    source: Qt.resolvedUrl(`${Quickshell.shellDir}/assets/dino.png`)
-                    fillMode: Image.PreserveAspectFit
-                    sourceSize.width: clipRect.width * 0.8
-
-                    layer.enabled: true
-                    layer.effect: Colouriser {
-                        colorizationColor: Signal.palette.rule
-                        brightness: 1
-                    }
+                Glyph {
+                    Layout.alignment: Qt.AlignHCenter
+                    name: Config.lock.hideNotifs ? "lock" : "bell-off"
+                    color: Signal.palette.inkMuted
+                    font.pointSize: Appearance.font.size.extraLarge
                 }
 
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
-                    text: Config.lock.hideNotifs ? qsTr("Unlock for Notifications") : qsTr("No Notifications")
-                    color: Signal.palette.rule
-                    font.pointSize: Appearance.font.size.large
+                    text: Config.lock.hideNotifs ? qsTr("Unlock to read notifications") : qsTr("No notifications")
+                    color: Signal.palette.inkMuted
                     font.family: Appearance.font.family.mono
-                    font.weight: 500
+                    font.pointSize: Appearance.font.size.small
                 }
             }
 
@@ -95,56 +74,6 @@ ColumnLayout {
             }
 
             delegate: NotifGroup {}
-
-            add: Transition {
-                Anim {
-                    property: "opacity"
-                    from: 0
-                    to: 1
-                }
-                Anim {
-                    property: "scale"
-                    from: 0
-                    to: 1
-                    duration: Appearance.anim.durations.settle
-                    easing.bezierCurve: Appearance.anim.curves.settle
-                }
-            }
-
-            remove: Transition {
-                Anim {
-                    property: "opacity"
-                    to: 0
-                }
-                Anim {
-                    property: "scale"
-                    to: 0.6
-                }
-            }
-
-            move: Transition {
-                Anim {
-                    properties: "opacity,scale"
-                    to: 1
-                }
-                Anim {
-                    property: "y"
-                    duration: Appearance.anim.durations.settle
-                    easing.bezierCurve: Appearance.anim.curves.settle
-                }
-            }
-
-            displaced: Transition {
-                Anim {
-                    properties: "opacity,scale"
-                    to: 1
-                }
-                Anim {
-                    property: "y"
-                    duration: Appearance.anim.durations.settle
-                    easing.bezierCurve: Appearance.anim.curves.settle
-                }
-            }
         }
     }
 }

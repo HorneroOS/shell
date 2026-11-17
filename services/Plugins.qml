@@ -438,6 +438,18 @@ Singleton {
         }) : e);
     }
 
+    // Minimum PluginKit level the manifest declares (default 3), for the
+    // Extensions pane chip.
+    function markPluginKit(id: string, level: var): void {
+        const value = Number.isInteger(level) ? level : 3;
+        const current = root.entries.find(e => e.id === id);
+        if (!current || current.pluginKit === value)
+            return;
+        root.entries = root.entries.map(e => e.id === id ? Object.assign({}, e, {
+            pluginKit: value
+        }) : e);
+    }
+
     function markDescription(id: string, description: var): void {
         const text = root.normalizeDescription(description);
         const current = root.entries.find(e => e.id === id);

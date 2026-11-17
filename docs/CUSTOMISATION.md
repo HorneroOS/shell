@@ -63,3 +63,17 @@ mislead, so they are left out until the dashboard consumes them.
 - `appearance.anim.curveStyle` = `smooth` (factory) | `snappy` (no overshoot) | `bouncy` (a little more give on
   spatial motion only). Opacity/colour never overshoot, and reduced motion still wins.
 - The Cozy look uses the bouncy style; the Hornero look restores weight 0 and smooth.
+
+## Customisation overview (Control Center > Customisation)
+
+Lists every look, size and behaviour setting that differs from `config/shell.default.json`, with its default, an **Edit**
+button (jumps to the pane/section), a per-item **Reset**, a search field, and **Reset all** (with confirmation).
+Your data is never listed or reset: apps, paths, favourites, hidden apps, launcher actions, bars/layouts, chromatic
+and per-surface transparency maps. The rules live in `services/customisation.js` (pure, tested with node).
+
+### Look packs
+
+Export turns the changed settings into a JSON text (`hornero/look-pack@1`, values keyed by dotted path); Import validates each
+entry against the factory file (known customisation path, same type, number clamped to 0..10x the factory value) and
+reports what it skipped. User data and unknown keys are rejected. Logic: `exportPack` / `validatePack` in
+`services/customisation.js`. A file-based `horneroctl config export|import` can reuse the same format later.

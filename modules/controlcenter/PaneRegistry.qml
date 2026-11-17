@@ -80,6 +80,16 @@ QtObject {
             readonly property list<string> keywords: ["accessibility", "text size", "font", "motion", "reduce motion", "vision", "a11y"]
         },
         QtObject {
+            readonly property string id: "customisation"
+            readonly property string label: "customisation"
+            readonly property string title: qsTr("Customisation")
+            readonly property string icon: "adjustments"
+            readonly property string component: "customisation/CustomisationPane.qml"
+            readonly property string category: "look"
+            readonly property string description: qsTr("Everything you changed from the defaults, with reset")
+            readonly property list<string> keywords: ["customisation", "customization", "changed", "defaults", "reset", "reset all", "factory", "overview", "modified"]
+        },
+        QtObject {
             readonly property string id: "experience"
             readonly property string label: "experience"
             readonly property string title: qsTr("Experience")

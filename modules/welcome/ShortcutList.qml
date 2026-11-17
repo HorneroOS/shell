@@ -306,7 +306,9 @@ ColumnLayout {
             readonly property var filteredRows: groupCard.modelData.rows.filter(r => root.matches(r))
 
             color: Signal.palette.panel
-            radius: Appearance.rounding.large
+            radius: Appearance.rounding.small
+            border.width: 1
+            border.color: Signal.palette.rule
             implicitHeight: cardColumn.implicitHeight + Appearance.padding.normal * 2
 
             ColumnLayout {
@@ -339,17 +341,20 @@ ColumnLayout {
                     StyledRect {
                         Layout.preferredHeight: countLabel.implicitHeight + 6
                         Layout.preferredWidth: countLabel.implicitWidth + 14
-                        color: Signal.palette.signalWell
-                        radius: Appearance.rounding.full
+                        color: Signal.palette.sunken
+                        radius: Appearance.rounding.small
+                        border.width: 1
+                        border.color: Signal.palette.rule
 
                         StyledText {
                             id: countLabel
 
                             anchors.centerIn: parent
+                            mono: true
                             text: groupCard.filteredRows.length
                             font.pointSize: Appearance.font.size.smaller
                             font.weight: 600
-                            color: Signal.palette.onSignalWell
+                            color: Signal.palette.ink
                         }
                     }
 
@@ -371,8 +376,8 @@ ColumnLayout {
 
                         Layout.fillWidth: true
                         implicitHeight: rowInner.implicitHeight + Appearance.padding.normal
-                        radius: Appearance.rounding.normal
-                        color: Signal.layer(Signal.palette.raised, 1)
+                        radius: Appearance.rounding.small
+                        color: Signal.palette.raised
 
                         RowLayout {
                             id: rowInner
@@ -446,10 +451,12 @@ ColumnLayout {
         Layout.preferredHeight: chipLabel.implicitHeight + 10
         Layout.preferredWidth: chipLabel.implicitWidth + 24
 
+        // Fixed rectangular cell: selected = signalWell fill, signal
+        // outline and bold label, not colour alone.
         color: chip.selected ? Signal.palette.signalWell : Signal.palette.raised
-        radius: Appearance.rounding.full
+        radius: Appearance.rounding.small
         border.width: 1
-        border.color: chip.selected ? "transparent" : Signal.palette.ruleStrong
+        border.color: chip.selected ? Signal.palette.signal : Signal.palette.ruleStrong
 
         StyledText {
             id: chipLabel

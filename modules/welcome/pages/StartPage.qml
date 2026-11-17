@@ -8,6 +8,15 @@ PageView {
         subtitle: qsTr("Your desktop is ready. Open the launcher to start anything, or take the tour below — and switch off automatic opening at the bottom whenever you like.")
     }
 
+    EditionPanel {}
+
+    ActionCard {
+        icon: "adjustments-horizontal"
+        title: qsTr("Choose a mode")
+        description: qsTr("Everyday is the default. Focus, Signal, Studio and Gaming are set in Settings.")
+        onActivated: Actions.openControlCenter("experience")
+    }
+
     ActionCard {
         icon: "compass"
         title: qsTr("Take the tour")

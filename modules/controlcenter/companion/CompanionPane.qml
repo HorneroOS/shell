@@ -307,6 +307,36 @@ Item {
                             }
                         }
 
+                        StyledText {
+                            visible: sourcesRepeater.count > 0
+                            text: qsTr("Extensions and tools that asked Javi to react")
+                            font.pointSize: Appearance.font.size.smaller
+                            color: Signal.palette.inkMuted
+                        }
+
+                        Repeater {
+                            id: sourcesRepeater
+
+                            model: {
+                                const all = CompanionReactions.seenSources.concat(CompanionStore.reactionSettings.mutedSources);
+                                return all.filter((v, i) => all.indexOf(v) === i);
+                            }
+
+                            SwitchRow {
+                                required property string modelData
+
+                                Layout.fillWidth: true
+                                label: qsTr("Allow %1").arg(modelData)
+                                checked: CompanionStore.reactionSettings.mutedSources.indexOf(modelData) < 0
+                                onToggled: checked => {
+                                    const muted = CompanionStore.reactionSettings.mutedSources.filter(v => v !== modelData);
+                                    if (!checked)
+                                        muted.push(modelData);
+                                    CompanionStore.patchReactions("mutedSources", muted);
+                                }
+                            }
+                        }
+
                         SwitchRow {
                             label: qsTr("Quiet hours")
                             checked: CompanionStore.reactionSettings.quietHours.enabled

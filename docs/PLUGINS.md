@@ -50,6 +50,15 @@ to import Shell internals:
 - `Notifications.toast(summary, body, glyph)` shows a bounded in-shell
   toast (the third argument is a Hornero Glyph name). It does not create a
   persistent desktop notification.
+- `Companion.react(pluginId, kind, text)` asks Javi to react to something
+  that really happened in the extension. `kind` is one of `build.done`,
+  `build.failed`, `download.done`, `device.connected`,
+  `device.disconnected`, `task.done`, `attention`; `text` is optional plain
+  text (one line, 80 characters). It is a request: the user's per-event,
+  per-Experience-mode and quiet-hours settings decide, each extension gets
+  3 reactions per minute and can be muted in Control Center › Companion,
+  and the shell-only kinds (battery, notification, charger, mode) are
+  refused. Returns whether Javi showed it. Never use it for decoration.
 - `Desktop.editing`, `Desktop.anchor(pluginId, screenName)` and
   `Desktop.geometry(pluginId, screenName)` read desktop widget state.
   Users change placement in Control Center or in desktop edit mode;

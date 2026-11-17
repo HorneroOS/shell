@@ -696,7 +696,7 @@ Singleton {
             root.applied(fp);
             if (!undoing && applyProc.snap) {
                 const snap = applyProc.snap;
-                Undo.offer("chromatic", qsTr("Chromatic palette"), () => root._restoreSnapshot(snap), root.result ? qsTr("%1, %2").arg(root.result.scheme.variant ?? "").arg(root.result.scheme.mode ?? "") : "");
+                Undo.offer("chromatic", qsTr("Chromatic palette"), () => root._restoreSnapshot(snap), root.result ? qsTr("%1, %2").arg(root.result.inference?.variant ?? request.variant).arg(root.result.scheme.mode ?? "") : "");
             }
             if (root._applyAgain) {
                 root._applyAgain = false;
@@ -740,9 +740,14 @@ Singleton {
                 if (ctlProc.kind === "import" || ctlProc.kind === "save")
                     root.savedPalettesChanged();
                 Signal.reloadFromDisk();
-                if (ctlProc.kind === "follow")
-                    Undo.offer("chromatic", qsTr("Palette follows the wallpaper"), () => root.rollback() || true, qsTr("Undo returns to the previous palette."));
-                else if (ctlProc.kind === "off" && ctlProc.snap) {
+                // A follow right after the person changed the wallpaper rides on that
+                // change's Undo (restoring the wallpaper re-derives the palette); it
+                // never replaces it, and never offers an undo of an undo.
+                const folded = Undo.kind === "undone" || (Undo.kind === "applied" && Undo.key === "appearance");
+                if (ctlProc.kind === "follow") {
+                    if (!folded)
+                        Undo.offer("chromatic", qsTr("Palette follows the wallpaper"), () => root.rollback() || true, qsTr("Undo returns to the previous palette."));
+                } else if (ctlProc.kind === "off" && ctlProc.snap) {
                     const snap = ctlProc.snap;
                     Undo.offer("chromatic", qsTr("Chromatic turned off"), () => root._restoreSnapshot(snap), "");
                 }

@@ -185,6 +185,16 @@ def test_layout_apply_is_snapshotted_and_restored_atomically():
     assert "_queued" in grid, "a newer choice made while busy must win, not be dropped"
 
 
+def test_wallpaper_follow_does_not_replace_the_wallpaper_undo():
+    service = (ROOT / "services" / "ChromaticPreview.qml").read_text()
+    assert 'Undo.key === "appearance"' in service and 'Undo.kind === "undone"' in service
+
+
+def test_layout_burst_keeps_the_first_snapshot():
+    grid = (ROOT / "modules" / "layoutpicker" / "PresetGrid.qml").read_text()
+    assert "continuing" in grid and "root._begin(q, true)" in grid
+
+
 def test_policy_doc_lists_every_pane():
     for path in sorted(p for p in CC.iterdir() if p.is_dir() and p.name not in ("components", "state", "windows")):
         assert path.name in DOC, f"docs/CONTROL-CENTER-APPLY.md must classify the {path.name} pane"

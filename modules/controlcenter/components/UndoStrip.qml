@@ -120,6 +120,7 @@ Item {
 
                 text: qsTr("Dismiss")
                 type: TextButton.Text
+                inactiveOnColour: root.failedKind ? Signal.palette.onAlertWell : Signal.palette.inkMuted
                 Accessible.name: qsTr("Dismiss the notice about %1").arg(Undo.title)
                 onClicked: Undo.dismiss()
             }

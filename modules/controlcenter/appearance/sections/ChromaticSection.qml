@@ -113,7 +113,7 @@ CollapsibleSection {
     }
 
     SwitchRow {
-        label: qsTr("Use Chromatic: colours that follow your wallpaper")
+        label: qsTr("Use Chromatic colours")
         checked: root.active
         onToggled: checked => {
             if (checked)

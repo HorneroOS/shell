@@ -124,14 +124,22 @@ Item {
             root.currentName = name;
             return;
         }
-        root._begin(name);
+        root._begin(name, false);
     }
 
-    function _begin(name: string): void {
+    // `continuing`: a newer choice made while the previous one was applying.
+    // It keeps the FIRST safety copy, so one Undo goes back to where the burst
+    // started rather than to an intermediate layout.
+    function _begin(name: string, continuing: bool): void {
         root._target = name;
-        root._prevName = root.currentName;
         root._failure = "";
+        if (!continuing)
+            root._prevName = root.currentName;
         root.currentName = name; // optimistic; the re-list corrects if it failed
+        if (continuing) {
+            root._startApply();
+            return;
+        }
         root._snapDir = `${root.undoRoot}/${Date.now()}`;
         snapProc.command = ["sh", "-c", 'set -eu; d="$1"; mkdir -p "$d"; cp -p "$2" "$d/shell.json"; if [ -f "$3" ]; then cp -p "$3" "$d/current-shell-preset"; fi; ls -1dt "$(dirname "$d")"/*/ | tail -n +4 | xargs -r rm -rf', "sh", root._snapDir, `${Paths.config}/shell.json`, `${Paths.state}/current-shell-preset`];
         snapProc.running = true;
@@ -280,7 +288,7 @@ Item {
         const q = root._queued;
         root._queued = "";
         if (q !== "")
-            root._begin(q);
+            root._begin(q, true);
     }
 
     focus: root.keyboardNav

@@ -211,6 +211,164 @@ Item {
 
 
                 ChannelPanel {
+                    title: qsTr("Reactions")
+
+                    ColumnLayout {
+                        id: reactionsCol
+
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
+                        spacing: Appearance.spacing.small
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Javi reacts only to things that really happened: a notification, a battery warning, a mode switch, or a finished build or download reported by an extension. Never on a timer.")
+                            font.pointSize: Appearance.font.size.smaller
+                            color: Signal.palette.inkMuted
+                            wrapMode: Text.Wrap
+                        }
+
+                        SwitchRow {
+                            label: qsTr("React to events")
+                            checked: CompanionStore.reactionSettings.enabled
+                            onToggled: checked => CompanionStore.patchReactions("enabled", checked)
+                        }
+
+                        SwitchRow {
+                            label: qsTr("Speech bubbles with reactions")
+                            enabled: CompanionStore.reactionSettings.enabled
+                            checked: CompanionStore.reactionSettings.bubbles
+                            onToggled: checked => CompanionStore.patchReactions("bubbles", checked)
+                        }
+
+                        StyledText {
+                            text: qsTr("Per event")
+                            font.pointSize: Appearance.font.size.smaller
+                            color: Signal.palette.inkMuted
+                        }
+
+                        Repeater {
+                            model: CompanionReactions.catalog
+
+                            SwitchRow {
+                                required property var modelData
+
+                                Layout.fillWidth: true
+                                enabled: CompanionStore.reactionSettings.enabled
+                                label: modelData.external ? qsTr("%1 (from extensions)").arg(modelData.label) : modelData.label
+                                checked: CompanionStore.reactionSettings.kindsOff.indexOf(modelData.id) < 0
+                                onToggled: checked => CompanionStore.setKindEnabled(modelData.id, checked)
+                            }
+                        }
+
+                        StyledText {
+                            text: qsTr("Per Experience mode")
+                            font.pointSize: Appearance.font.size.smaller
+                            color: Signal.palette.inkMuted
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Full: every enabled event. Quiet: only important events, animation only. Silent: no reactions.")
+                            font.pointSize: Appearance.font.size.smaller
+                            color: Signal.palette.inkMuted
+                            wrapMode: Text.Wrap
+                        }
+
+                        Repeater {
+                            model: CompanionReactions.modeIds
+
+                            RowLayout {
+                                id: modeRow
+
+                                required property string modelData
+
+                                Layout.fillWidth: true
+                                spacing: Appearance.spacing.small
+
+                                StyledText {
+                                    Layout.preferredWidth: 90
+                                    text: modeRow.modelData === "focus" ? qsTr("Focus") : modeRow.modelData === "signal" ? qsTr("Signal") : modeRow.modelData === "gaming" ? qsTr("Gaming") : modeRow.modelData === "studio" ? qsTr("Studio") : qsTr("Everyday")
+                                }
+
+                                Repeater {
+                                    model: CompanionReactions.levels
+
+                                    TextButton {
+                                        required property string modelData
+
+                                        text: modelData === "quiet" ? qsTr("Quiet") : modelData === "silent" ? qsTr("Silent") : qsTr("Full")
+                                        toggle: true
+                                        checked: CompanionStore.reactionSettings.modeBehaviour[modeRow.modelData] === modelData
+                                        type: TextButton.Tonal
+                                        onClicked: CompanionStore.setModeBehaviour(modeRow.modelData, modelData)
+                                    }
+                                }
+                            }
+                        }
+
+                        SwitchRow {
+                            label: qsTr("Quiet hours")
+                            checked: CompanionStore.reactionSettings.quietHours.enabled
+                            onToggled: checked => CompanionStore.setQuietHours("enabled", checked)
+                        }
+
+                        SliderInput {
+                            Layout.fillWidth: true
+
+                            enabled: CompanionStore.reactionSettings.quietHours.enabled
+                            label: qsTr("Quiet from")
+                            value: parseInt(CompanionStore.reactionSettings.quietHours.start)
+                            from: 0
+                            to: 23
+                            stepSize: 1
+                            suffix: ":00"
+                            decimals: 0
+                            onValueModified: newValue => CompanionStore.setQuietHours("start", Math.round(newValue) + ":00")
+                        }
+
+                        SliderInput {
+                            Layout.fillWidth: true
+
+                            enabled: CompanionStore.reactionSettings.quietHours.enabled
+                            label: qsTr("Quiet until")
+                            value: parseInt(CompanionStore.reactionSettings.quietHours.end)
+                            from: 0
+                            to: 23
+                            stepSize: 1
+                            suffix: ":00"
+                            decimals: 0
+                            onValueModified: newValue => CompanionStore.setQuietHours("end", Math.round(newValue) + ":00")
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("During quiet hours Javi only reacts to important events, without a speech bubble.")
+                            font.pointSize: Appearance.font.size.smaller
+                            color: Signal.palette.inkMuted
+                            wrapMode: Text.Wrap
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Appearance.spacing.small
+
+                            TextButton {
+                                text: qsTr("Preview a reaction")
+                                type: TextButton.Tonal
+                                onClicked: CompanionStore.playReaction("celebrate", qsTr("Like this."), 4000, 3)
+                            }
+
+                            TextButton {
+                                text: qsTr("Reset reactions")
+                                type: TextButton.Tonal
+                                onClicked: CompanionStore.setReactionSettings({})
+                            }
+                        }
+                    }
+                }
+
+                ChannelPanel {
                     title: qsTr("Assistant (Hermes)")
 
                     ColumnLayout {

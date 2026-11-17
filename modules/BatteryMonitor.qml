@@ -21,6 +21,7 @@ Scope {
                     Toaster.toast(qsTr("Charger unplugged"), qsTr("Battery is discharging"), "plug-off");
             } else {
                 CompanionReactions.react("charger.plugged", "shell", "");
+                Sounds.play("charger", false);
                 if (Config.utilities.toasts.chargingChanged)
                     Toaster.toast(qsTr("Charger plugged in"), qsTr("Battery is charging"), "power");
                 for (const level of root.warnLevels)
@@ -41,6 +42,7 @@ Scope {
                 if (p <= level.level && !level.warned) {
                     level.warned = true;
                     CompanionReactions.react(level.critical ? "battery.critical" : "battery.low", "shell", "");
+                    Sounds.play("battery", false);
                     Toaster.toast(level.title ?? qsTr("Battery warning"), level.message ?? qsTr("Battery level is low"), level.icon ?? "battery-exclamation", level.critical ? Toast.Error : Toast.Warning);
                     // Critical levels also file a durable, DND-aware
                     // notification (shell#224); plain warnings stay

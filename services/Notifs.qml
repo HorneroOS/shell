@@ -166,6 +166,7 @@ Singleton {
             const held = route.held;
             if (held)
                 Experience.noteHeld();
+            Sounds.play("notification", held || props.dnd);
             const comp = notifComp.createObject(root, {
                 popup: route.popup && ![...Visibilities.screens.values()].some(v => v.sidebar),
                 notification: notif

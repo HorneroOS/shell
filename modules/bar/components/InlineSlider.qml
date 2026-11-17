@@ -63,6 +63,9 @@ RowLayout {
         Layout.alignment: Qt.AlignVCenter
         implicitWidth: root.compact ? 64 : 110
         implicitHeight: Density.iconPx * 1.2
+        // Ink at rest; amber only while the person is dragging it.
+        fillColour: slider.pressed ? root.tone.signal : root.tone.inkMuted
+        thumbColour: slider.pressed ? root.tone.signal : root.tone.ink
         from: 0
         to: 1
         value: root.isAudio ? Audio.volume : (root.monitor?.brightness ?? 0)

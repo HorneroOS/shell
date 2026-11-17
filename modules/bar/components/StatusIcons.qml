@@ -20,7 +20,7 @@ StyledRect {
 
     required property ShellScreen screen
 
-    property color colour: Signal.palette.cue
+    property color colour: root.tone.ink
     readonly property alias items: iconGrid
     // Orientation of the owning bar (set by Bar.qml); defaults to the
     // primary bar for standalone use.

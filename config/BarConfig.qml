@@ -7,6 +7,9 @@ JsonObject {
     // "auto" | "outline" | "shadow" | "contrast". High Contrast forces
     // "contrast".
     property string clearStyle: "auto"
+    // Launcher mark in the bar: "hornero" (symbolic mark, signal amber) or
+    // "distro" (the base distribution logo, in ink).
+    property string mark: "hornero"
     property int dragThreshold: 20
     // Optional per-screen bar-set overrides: [{ screen: "MONITOR-NAME", bars: [...] }]
     property list<var> perScreen: []
@@ -185,7 +188,7 @@ JsonObject {
 
     component Tray: JsonObject {
         property bool background: false
-        property bool recolour: false
+        property bool recolour: true
         property bool compact: false
         property list<var> iconSubs: []
         property list<string> hiddenIcons: []
@@ -196,7 +199,7 @@ JsonObject {
     // defaults, so both islands read and behave identically.
     component Extensions: JsonObject {
         property bool background: false
-        property bool recolour: false
+        property bool recolour: true
         property bool compact: false
         property list<var> iconSubs: []
         property list<string> hiddenIcons: []

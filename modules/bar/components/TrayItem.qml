@@ -31,7 +31,7 @@ MouseArea {
 
         anchors.fill: parent
         source: Icons.getTrayIcon(root.modelData.id, root.modelData.icon)
-        colour: Signal.palette.cue
+        colour: Signal.palette.inkMuted
         layer.enabled: Config.bar.tray.recolour
     }
 }

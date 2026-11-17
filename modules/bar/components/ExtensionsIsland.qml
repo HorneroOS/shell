@@ -128,7 +128,7 @@ StyledRect {
                 hiddenIds: Config.bar.extensions.hiddenIcons
                 // Recolour mirrors the tray: icons take the secondary tint;
                 // without it the island leaves plugin icon colours alone.
-                iconColour: Config.bar.extensions.recolour ? Signal.palette.cue : "transparent"
+                iconColour: Config.bar.extensions.recolour ? Signal.palette.inkMuted : "transparent"
                 iconSize: Density.iconPt
                 textSize: Density.textPt
                 edge: root.hostEdge
@@ -178,7 +178,7 @@ StyledRect {
                 hiddenIds: Config.bar.extensions.hiddenIcons
                 // Recolour mirrors the tray: icons take the secondary tint;
                 // without it the island leaves plugin icon colours alone.
-                iconColour: Config.bar.extensions.recolour ? Signal.palette.cue : "transparent"
+                iconColour: Config.bar.extensions.recolour ? Signal.palette.inkMuted : "transparent"
                 iconSize: Density.iconPt
                 textSize: Density.textPt
                 edge: root.hostEdge

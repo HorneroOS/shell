@@ -147,6 +147,17 @@ mode glyph and, outside `icons` density, a three-letter eyebrow (`FOC`,
 mode; `options.always: true` keeps it visible. Cockpit and Cockpit Clear
 ship it first in the top rail's end group. Click opens Settings.
 
+## Chromatic discipline and the mark
+
+Bar foregrounds are `ink` or `inkMuted`. `signal` (amber) marks only the
+mark, the active workspace bar, the mode chip, on-air chips and a live
+interaction; `alert` marks only urgent states. The clock is one colour. Slider
+fill and thumb are ink at rest and turn amber only while dragged. Tray and
+extension icons are recoloured monochrome by default (`bar.tray.recolour`,
+`bar.extensions.recolour`; set either to `false` for full-colour icons).
+`bar.mark` is `hornero` (the symbolic mark in `signal`, default) or `distro`
+(the base distribution logo, in ink). `tests/test_bar_chroma.py` guards this.
+
 ## Cockpit Clear
 
 `backdrop: "clear"` bars have a genuinely absent background (RFC 0001 §5.1):

@@ -2,6 +2,7 @@ import qs.components.effects
 import qs.services
 import qs.config
 import qs.utils
+import Quickshell
 import QtQuick
 
 Item {
@@ -22,9 +23,11 @@ Item {
 
     ColouredIcon {
         anchors.centerIn: parent
-        source: SysInfo.osLogo
+        // The Hornero mark (signal amber, the one permanent accent) on every
+        // host; `bar.mark: "distro"` opts into the base distro logo, in ink.
+        source: Config.bar.mark === "distro" ? SysInfo.osLogo : Qt.resolvedUrl(`${Quickshell.shellDir}/assets/mark.svg`)
         implicitSize: Density.iconPx + 2
-        colour: Signal.palette.phosphor
+        colour: Config.bar.mark === "distro" ? Signal.palette.ink : Signal.palette.signal
     }
 
     implicitWidth: Density.iconPx + 2

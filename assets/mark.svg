@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-label="Hornero mark">
+  <title>Hornero symbolic mark</title>
+  <desc>Monochrome setting-sun disc cut by two horizon bars; recoloured at runtime (signal amber in the bar).</desc>
+  <path fill="#ffffff" d="M12 2.5a9.5 9.5 0 0 1 8.77 5.85H3.23A9.5 9.5 0 0 1 12 2.5Z"/>
+  <path fill="#ffffff" d="M2.7 10.1h18.6a9.5 9.5 0 0 1 .2 1.9 9.5 9.5 0 0 1-.2 1.9H2.7a9.5 9.5 0 0 1-.2-1.9 9.5 9.5 0 0 1 .2-1.9Z"/>
+  <path fill="#ffffff" d="M3.23 15.65h17.54A9.5 9.5 0 0 1 12 21.5a9.5 9.5 0 0 1-8.77-5.85Z"/>
+</svg>

@@ -124,7 +124,7 @@ def test_pane_policy_controls_are_real_horneroctl_calls():
 
 
 def test_chat_modes_are_real_and_cannot_escalate():
-    assert '"--mode", CompanionStore.chatMode' in BRIDGE
+    assert 'askWith(text, CompanionStore.chatMode)' in BRIDGE and '"--mode", runMode' in BRIDGE
     assert 'property string chatMode: "agent"' in STORE
     assert "setChatMode" in STORE
     for mode in ('"ask"', '"agent"', '"chat"'):
@@ -183,8 +183,8 @@ def test_approval_card_has_no_bulk_or_auto_consent():
 
 
 def test_mic_is_explicit_cancellable_and_capped():
-    assert "recordMaxSeconds: 120" in BRIDGE
-    assert "discardRecording" in BRIDGE and "stopRecording(false)" in PANEL
+    assert "readonly property int recordMaxSeconds: 120" in BRIDGE and "// fixed:" in BRIDGE
+    assert "discardRecording" in BRIDGE and "stopRecording(false, false)" in PANEL
 
 
 def test_every_scrollbar_in_companion_binds_its_flickable():
@@ -200,9 +200,9 @@ def test_every_scrollbar_in_companion_binds_its_flickable():
 def test_javi_radio_ipc_entry_points_are_argument_complete_and_documented():
     host = (COMPANION / "CompanionHost.qml").read_text()
     doc = (ROOT / "docs" / "IPC.md").read_text()
-    for fn in ("quick()", "quickWith(text: string)", "workbench()", "workbenchAsk(text: string)"):
+    for fn in ("quick()", "quickWith(text: string)", "workbench()", "workbenchDraft(text: string)"):
         assert f"function {fn}" in host
-    for name in ("quick()", "quickWith(text)", "workbench()", "workbenchAsk(text)"):
+    for name in ("quick()", "quickWith(text)", "workbench()", "workbenchDraft(text)"):
         assert name in doc
     # The shell writes no keybinding for them.
     assert "GlobalShortcut" not in host and "CustomShortcut" not in host
@@ -211,3 +211,34 @@ def test_javi_radio_ipc_entry_points_are_argument_complete_and_documented():
 def test_decision_follows_events_only_when_stream_is_gone_and_run_unsettled():
     assert "needFollow" in BRIDGE
     assert "!streamLive && AssistantRun.pendingDecision" in BRIDGE
+
+
+def test_review_hardening_contracts():
+    inline = (ROOT / "services" / "InlineAsk.qml").read_text()
+    # M5: hand-off stages text, never sends
+    assert "workbenchDraft" in inline and "workbenchAsk" not in inline
+    assert "assistantBridge.draft = text" in (COMPANION / "CompanionHost.qml").read_text()
+    # M7: prompts/answers follow `--` (a leading dash is data)
+    assert '"--", q]' in inline
+    assert '"--", prompt' in BRIDGE and '"--", text]' in BRIDGE
+    # H1: decisions carry the displayed request id
+    assert '"--request", pend.requestId' in BRIDGE
+    assert 'pend.requestId === "" || pend.truncated' in BRIDGE
+    # H3: every cancel path stops the gateway run
+    assert "stopRun()" in inline and "Component.onDestruction" in inline and "root.cancel();" in inline
+    assert "Component.onDestruction" in BRIDGE
+    # M6/M8
+    assert "umask 077" in BRIDGE and "mkdir -p -m 700" in BRIDGE
+    assert "sweepVoiceFiles" in BRIDGE and "stopRecording(false, true)" in BRIDGE
+    assert "isValidRunId" in BRIDGE
+    # L6/L7
+    assert "pendingLink" in PANEL and "armTimer" in CARD and "root.armed" in CARD
+    # M3
+    assert "wellFlick" in CARD and "truncated" in CARD
+
+
+def test_history_is_written_via_stdin_and_marked_saved_only_on_success():
+    assert "stdinEnabled: true" in BRIDGE and "historyWriter.write(" in BRIDGE
+    assert "'${quoted}'" not in BRIDGE  # no shell-quoted payload
+    assert "if (exitCode === 0)\n                root.lastSavedHistory" in BRIDGE
+    assert 'id.replace(/[.*+?^${}()|[\\]\\\\]/g' in BRIDGE  # session id is regex-escaped

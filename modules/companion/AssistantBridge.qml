@@ -142,17 +142,32 @@ Scope {
         root.saveHistory();
     }
 
+    // The text goes to the writer on STDIN, never through the shell
+    // command line (no quoting, no injection, no argv size limit).
+    // `lastSavedHistory` only advances after a successful write, so a
+    // failed write is retried on the next change. Writes are
+    // serialised: a change during a write is saved right after it.
+    property string wantedHistory: ""
+    property bool historyWriting: false
+
     function saveHistory(): void {
         // Retention 0 ("off") keeps the conversation in memory only.
         const text = CompanionStore.chatHistoryLimit === 0 ? "[]" : JSON.stringify(root.history);
-        if (text === root.lastSavedHistory)
+        root.wantedHistory = text;
+        root.flushHistory();
+    }
+
+    function flushHistory(): void {
+        if (root.historyWriting || root.wantedHistory === root.lastSavedHistory)
             return;
-        root.lastSavedHistory = text;
-        const quoted = text.replace(/'/g, "'\\''");
+        root.historyWriting = true;
+        root.writingHistory = root.wantedHistory;
         const path = root.historyPath;
-        historyWriter.command = ["sh", "-c", `mkdir -p "$(dirname '${path}')" && tmp="$(mktemp "$(dirname '${path}')/.chat.XXXXXX")" && printf '%s' '${quoted}' > "$tmp" && mv -f "$tmp" '${path}'`];
+        historyWriter.command = ["sh", "-c", "umask 077; d=\"$(dirname \"$1\")\"; mkdir -p -m 700 \"$d\" && tmp=\"$(mktemp \"$d/.chat.XXXXXX\")\" && cat > \"$tmp\" && mv -f \"$tmp\" \"$1\"", "sh", path];
         historyWriter.running = true;
     }
+
+    property string writingHistory: ""
 
     property string lastSavedHistory: ""
 
@@ -170,6 +185,12 @@ Scope {
     property int askSeq: 0
 
     function ask(text: string): void {
+        root.askWith(text, CompanionStore.chatMode);
+    }
+
+    // `mode` is explicit per call: external entry points (IPC) always
+    // pass "ask", so nothing outside the panel can start an agent run.
+    function askWith(text: string, mode: string): void {
         const prompt = (text ?? "").toString().trim();
         if (prompt === "" && root.attachments.length === 0)
             return;
@@ -177,22 +198,30 @@ Scope {
             CompanionStore.say(AssistantCopy.t("status.running", root.lang), 4000);
             return;
         }
+        const runMode = ["ask", "agent", "chat"].includes(mode) ? mode : "ask";
         const sentAttachments = root.attachments.slice();
         root.attachments = [];
         root.lastPrompt = prompt;
         const shown = prompt === "" ? qsTr("(attachment)") : prompt;
         root.pushHistory("user", sentAttachments.length > 0 ? `${shown} 📎 ${sentAttachments.length}` : shown);
         root.noteArtifacts(sentAttachments);
-        root.askSeq = AssistantRun.begin(CompanionStore.chatMode, false);
+        root.askSeq = AssistantRun.begin(runMode, false);
         root.clearPendingSnapshot();
-        let cmd = ["horneroctl", "assistant", "ask", prompt === "" ? qsTr("Describe and answer based on the attached file(s).") : prompt, "--json", "--stream", "--mode", CompanionStore.chatMode];
+        // Options first, then `--` and the text: a prompt that starts
+        // with a dash is data, never a flag.
+        let cmd = ["horneroctl", "assistant", "ask", "--json", "--stream", "--mode", runMode];
         if (root.currentSession !== "")
             cmd = cmd.concat(["--session", root.currentSession]);
         for (const p of sentAttachments)
             cmd = cmd.concat(["--attach", p.toString()]);
+        cmd = cmd.concat(["--", prompt === "" ? qsTr("Describe and answer based on the attached file(s).") : prompt]);
         askProcess.command = cmd;
         askProcess.running = true;
     }
+
+    // Text staged for the panel's input by an external entry point
+    // (hand-off from the quick ask). Never sent by itself.
+    property string draft: ""
 
     // The open panel already shows every outcome; a speech bubble would
     // grow the companion window past the screen. Bubbles are for when
@@ -255,21 +284,34 @@ Scope {
     // seconds), can be discarded without sending, auto-stops after
     // two minutes, and the file is deleted once the run ends. Hermes
     // transcribes gateway-side; the shell never touches STT keys.
+    // fixed: two minutes is a privacy cap on one recording (an
+    // ambient-mic backstop), not a taste setting; it is exposed as
+    // `recordMaxSeconds` for tests only.
     property int recordSeconds: 0
     readonly property int recordMaxSeconds: 120
+    // Voice files live in a private (0700) cache dir, are created
+    // 0600, and are deleted in every exit path: discard, run end,
+    // shell shutdown and a sweep of stale clips at startup.
+    readonly property string voiceDir: `${Quickshell.cacheDir}/javi-voice`
+    property var voiceFiles: []
 
     function startRecording(): void {
         if (root.recording || root.busy)
             return;
-        root.recordPath = `${Quickshell.cacheDir}/javi-voice-${Date.now()}.wav`;
-        recordProcess.command = ["pw-record", "--rate", "16000", "--channels", "1", root.recordPath];
+        const rnd = Math.floor(Math.random() * 0xffffffff).toString(16);
+        root.recordPath = `${root.voiceDir}/javi-voice-${Date.now()}-${rnd}.wav`;
+        root.voiceFiles = root.voiceFiles.concat([root.recordPath]);
+        recordProcess.command = ["sh", "-c", "umask 077; mkdir -p -m 700 \"$1\" && exec pw-record --rate 16000 --channels 1 \"$2\"", "sh", root.voiceDir, root.recordPath];
         recordProcess.running = true;
         root.recordSeconds = 0;
         root.recording = true;
         CompanionStore.requestState("listening");
     }
 
-    function stopRecording(send: bool): void {
+    // send=true: attach and send. send=false with keep=false: discard.
+    // keep=true (auto-stop): attach but do NOT send and do NOT delete,
+    // so a long recording is never lost silently.
+    function stopRecording(send: bool, keep: bool): void {
         if (!root.recording)
             return;
         root.recording = false;
@@ -278,6 +320,8 @@ Scope {
         if (send && root.recordPath !== "") {
             root.addAttachment(root.recordPath);
             root.ask(qsTr("Transcribe the attached audio and treat the transcription as my message. Answer it."));
+        } else if (keep === true && root.recordPath !== "") {
+            root.addAttachment(root.recordPath);
         } else {
             root.discardRecording();
         }
@@ -286,9 +330,31 @@ Scope {
     function discardRecording(): void {
         if (root.recordPath === "")
             return;
-        rmProcess.command = ["rm", "-f", "--", root.recordPath];
-        rmProcess.running = true;
+        root.removeVoiceFile(root.recordPath);
         root.recordPath = "";
+    }
+
+    function removeVoiceFile(path: string): void {
+        if (!path.startsWith(root.voiceDir + "/"))
+            return;
+        Quickshell.execDetached(["rm", "-f", "--", path]);
+        root.voiceFiles = root.voiceFiles.filter(p => p !== path);
+        root.attachments = root.attachments.filter(p => p !== path);
+    }
+
+    function removeAllVoiceFiles(): void {
+        for (const p of root.voiceFiles.slice())
+            root.removeVoiceFile(p);
+    }
+
+    // Stale clips from a crashed session (and the pre-0700 location).
+    function sweepVoiceFiles(): void {
+        sweepProcess.command = ["sh", "-c", "find \"$1\" -maxdepth 1 -name 'javi-voice-*.wav' -mmin +2 -delete 2>/dev/null; find \"$2\" -maxdepth 1 -name 'javi-voice-*.wav' -mmin +2 -delete 2>/dev/null; true", "sh", root.voiceDir, Quickshell.cacheDir];
+        sweepProcess.running = true;
+    }
+
+    Process {
+        id: sweepProcess
     }
 
     Timer {
@@ -298,8 +364,8 @@ Scope {
         onTriggered: {
             root.recordSeconds += 1;
             if (root.recordSeconds >= root.recordMaxSeconds) {
-                root.stopRecording(false);
-                CompanionStore.say(AssistantCopy.t("mic.auto-stopped", root.lang), 5000);
+                root.stopRecording(false, true);
+                CompanionStore.say(AssistantCopy.t("mic.auto-stopped", root.lang), 6000);
             }
         }
     }
@@ -311,17 +377,23 @@ Scope {
     function approve(runId: string, decision: string): void {
         const id = (runId ?? "").toString().trim();
         const choice = (decision ?? "").toString().trim();
-        if (id === "" || (choice !== "approve" && choice !== "deny")) {
-            CompanionStore.say("I need a run id and an approve or deny decision.", 6000);
+        if (!AssistantRun.isValidRunId(id) || (choice !== "approve" && choice !== "deny")) {
+            CompanionStore.say("I need a valid run id and an approve or deny decision.", 6000);
             return;
         }
         if (root.decisionBusy)
             return;
-        // The decision must name the run that is actually waiting:
-        // a stale card/IPC call cannot decide a different run.
+        // The decision must name the run AND the exact request that
+        // is waiting: a stale card cannot decide another request.
         const pend = AssistantRun.pending;
         if (!pend || pend.kind !== "approval" || pend.runId !== id) {
             CompanionStore.say(qsTr("That request is no longer waiting."), 5000);
+            return;
+        }
+        if (choice === "approve" && (pend.requestId === "" || pend.truncated)) {
+            // Allow needs a request id to bind to and the whole text on
+            // screen; Deny is always possible.
+            CompanionStore.say(qsTr("This request cannot be allowed from here. You can deny it."), 6000);
             return;
         }
         root.decisionBusy = true;
@@ -329,14 +401,17 @@ Scope {
         root.decisionKind = "approval";
         root.decisionDenied = choice === "deny";
         root.decisionDetail = pend.detail;
-        decisionProcess.command = ["horneroctl", "assistant", "approve", id, choice, "--json"];
+        let cmd = ["horneroctl", "assistant", "approve", id, choice, "--json"];
+        if (pend.requestId !== "")
+            cmd = cmd.concat(["--request", pend.requestId]);
+        decisionProcess.command = cmd;
         decisionProcess.running = true;
     }
 
     function clarify(runId: string, answer: string): void {
         const id = (runId ?? "").toString().trim();
         const text = (answer ?? "").toString().trim();
-        if (id === "" || text === "" || root.decisionBusy)
+        if (!AssistantRun.isValidRunId(id) || text === "" || root.decisionBusy)
             return;
         const pend = AssistantRun.pending;
         if (!pend || pend.kind !== "clarify" || pend.runId !== id) {
@@ -348,7 +423,7 @@ Scope {
         root.decisionKind = "clarify";
         root.decisionDenied = false;
         root.decisionDetail = pend.detail;
-        decisionProcess.command = ["horneroctl", "assistant", "clarify", id, text, "--json"];
+        decisionProcess.command = ["horneroctl", "assistant", "clarify", id, "--json", "--", text];
         decisionProcess.running = true;
     }
 
@@ -375,7 +450,7 @@ Scope {
         const partial = AssistantRun.answerText;
         const wasPending = AssistantRun.pendingDecision;
         AssistantRun.cancel();
-        if (id !== "") {
+        if (AssistantRun.isValidRunId(id)) {
             stopProcess.command = ["horneroctl", "assistant", "stop", id, "--json"];
             stopProcess.running = true;
             root.sayIfClosed(qsTr("Stopped, including the Hermes run."), 5000);
@@ -409,7 +484,9 @@ Scope {
             "kind": pend.kind,
             "detail": pend.detail
         });
-        pendingWriter.exec(["sh", "-c", "mkdir -p \"$(dirname \"$1\")\" && printf '%s' \"$2\" > \"$1.tmp\" && mv -f \"$1.tmp\" \"$1\"", "sh", root.pendingPath, text]);
+        // Private dir and file (umask 077): the snapshot names a run and a
+        // redacted request, nothing else, but it is still user-private.
+        pendingWriter.exec(["sh", "-c", "umask 077; d=\"$(dirname \"$1\")\"; mkdir -p -m 700 \"$d\" && printf '%s' \"$2\" > \"$1.tmp\" && mv -f \"$1.tmp\" \"$1\"", "sh", root.pendingPath, text]);
     }
 
     function clearPendingSnapshot(): void {
@@ -417,8 +494,11 @@ Scope {
     }
 
     function verifyRestoredRequest(snap: var): void {
-        if (!snap || !snap.runId || root.busy)
+        if (!snap || !AssistantRun.isValidRunId((snap.runId ?? "").toString()) || root.busy) {
+            // A malformed snapshot is never acted on; drop it.
+            root.clearPendingSnapshot();
             return;
+        }
         root.restoreSeq = AssistantRun.begin(CompanionStore.chatMode, false);
         root.restoreRun = snap.runId.toString();
         restoreProcess.out = "";
@@ -457,6 +537,18 @@ Scope {
         root.refreshSessions();
         pendingReader.path = root.pendingPath;
         pendingReader.reload();
+        root.sweepVoiceFiles();
+    }
+
+    // Shell exit: do not leave an Ask/Agent run orphaned on the
+    // gateway, and remove any voice clip.
+    Component.onDestruction: {
+        const id = AssistantRun.runId;
+        if ((root.busy || AssistantRun.pendingDecision) && AssistantRun.isValidRunId(id))
+            Quickshell.execDetached(["horneroctl", "assistant", "stop", id, "--json"]);
+        for (const p of root.voiceFiles)
+            if (p.startsWith(root.voiceDir + "/"))
+                Quickshell.execDetached(["rm", "-f", "--", p]);
     }
 
     FileView {
@@ -501,10 +593,12 @@ Scope {
             if (body !== "")
                 AssistantRun.feed(seq, body);
             AssistantRun.exited(seq, exitCode);
-            // Not pending anymore (decided, finished or expired): the
-            // reducer shows no request; do not surface a stale run.
-            if (!AssistantRun.pending)
+            // Not pending anymore (decided, finished, expired or not
+            // found): drop the snapshot and show nothing stale.
+            if (!AssistantRun.pending) {
+                root.clearPendingSnapshot();
                 AssistantRun.reset();
+            }
         }
     }
 
@@ -542,7 +636,7 @@ Scope {
                 root.chatSessions = ids.map(id => {
                     let title = id;
                     for (const line of lines) {
-                        const m = line.match(new RegExp(id + " — (.*) \\(since"));
+                        const m = line.match(new RegExp(id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + " — (.*) \\(since"));
                         if (m)
                             title = m[1];
                     }
@@ -630,6 +724,23 @@ Scope {
 
     Process {
         id: historyWriter
+
+        stdinEnabled: true
+        onStarted: {
+            historyWriter.write(root.writingHistory);
+            historyWriter.stdinEnabled = false;
+        }
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode === 0)
+                root.lastSavedHistory = root.writingHistory;
+            root.historyWriting = false;
+            historyWriter.stdinEnabled = true;
+            // A change that arrived during the write (or a failed
+            // write on the next change) is flushed by the next call;
+            // flush now only for a newer text, never in a failure loop.
+            if (exitCode === 0)
+                root.flushHistory();
+        }
     }
 
     Process {
@@ -668,6 +779,9 @@ Scope {
 
     // While disconnected and the panel is open, re-probe gently so
     // "Disconnected" becomes "Connected" without a manual refresh.
+    // fixed: 15 s is a gentle reconnect probe (one status call, only
+    // while the panel is open and not connected); it is a courtesy,
+    // not a visible preference, and the Reconnect button is immediate.
     Timer {
         interval: 15000
         repeat: true
@@ -729,7 +843,7 @@ Scope {
     }
 
     function followEvents(runId: string): void {
-        if (askProcess.running || runId === "")
+        if (askProcess.running || !AssistantRun.isValidRunId(runId))
             return;
         root.askSeq = AssistantRun.begin(CompanionStore.chatMode, true);
         // begin() clears the run; keep the id we are following.
@@ -753,8 +867,9 @@ Scope {
         onExited: (exitCode, exitStatus) => {
             const seq = root.askSeq;
             AssistantRun.exited(seq, exitCode);
-            if (root.recordPath !== "" && !root.recording)
-                root.discardRecording();
+            // The clips of this message are no longer needed.
+            if (!root.recording)
+                root.removeAllVoiceFiles();
             root.settleRun();
         }
     }

@@ -22,10 +22,16 @@
 // CommandResult line is a disconnect, never a silent success, and
 // clears all "running" activity (no stale activity after death).
 
+// fixed: size/length bounds below are safety limits (memory, render
+// cost, the "exact request is shown whole" guarantee), not preferences.
 var TEXT_CAP = 32768;
 var TIMELINE_CAP = 200;
 var ENTRY_CAP = 600;
 var THINK_CAP = 2000;
+// The exact request is never truncated silently: up to DETAIL_CAP it is
+// shown whole; beyond it the card says so and Allow stays disabled.
+var DETAIL_CAP = 8000;
+var MARKDOWN_CAP = 20000;
 
 var PHASES = ["idle", "starting", "streaming", "awaiting-approval", "awaiting-clarification", "cancelling", "completed", "failed", "cancelled", "disconnected", "blocked"];
 
@@ -46,7 +52,9 @@ function initial() {
         streamClosed: true,
         activeTools: 0,
         lastIntent: "rest",
-        counter: 0
+        counter: 0,
+        runMode: "",
+        nextControl: ""
     };
 }
 
@@ -56,6 +64,57 @@ function isActive(state) {
 
 function isPending(state) {
     return !!PENDING[state.phase];
+}
+
+// Strict shape for ids that reach argv or a URL path.
+function isValidRunId(id) {
+    return typeof id === "string" && /^[A-Za-z0-9._-]{1,64}$/.test(id) && id !== "." && id !== "..";
+}
+
+// prompt-id or prompt-id@generation
+function isValidRequestRef(ref) {
+    return typeof ref === "string" && /^[A-Za-z0-9._-]{1,64}(@[0-9]{1,12})?$/.test(ref);
+}
+
+function hex4(code) {
+    var h = code.toString(16).toUpperCase();
+    while (h.length < 4)
+        h = "0" + h;
+    return h;
+}
+
+// Makes hidden characters visible so a request cannot disguise itself:
+// bidi overrides/isolates, zero-width characters and control
+// characters (except newline and tab) become ⟦U+XXXX⟧ markers.
+// Returns { text, flagged, truncated }.
+function visibleText(text, cap) {
+    var s = (text === null || text === undefined) ? "" : text.toString();
+    var truncated = s.length > cap;
+    if (truncated)
+        s = s.slice(0, cap);
+    var flagged = false;
+    s = s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F\u200B-\u200F\u202A-\u202E\u2060-\u2069\u061C\uFEFF]/g, function (ch) {
+        flagged = true;
+        return "\u27E6U+" + hex4(ch.charCodeAt(0)) + "\u27E7";
+    });
+    return { text: s, flagged: flagged, truncated: truncated };
+}
+
+function makePending(kind, runId, detail, requestId, runMode, live, choices) {
+    var v = visibleText(detail, DETAIL_CAP);
+    return {
+        kind: kind,
+        runId: runId,
+        detail: v.text,
+        truncated: v.truncated,
+        flagged: v.flagged,
+        requestId: isValidRequestRef(requestId) ? requestId : "",
+        mode: runMode || "unknown",
+        choices: choices || [],
+        deciding: false,
+        error: "",
+        live: live === true
+    };
 }
 
 function clip(text, cap) {
@@ -94,7 +153,11 @@ function parseFrame(line) {
     if (type === "delta")
         return text !== "" ? { kind: "delta", text: text } : { kind: "ignore" };
     if (type === "run")
-        return text !== "" ? { kind: "run", runId: text } : { kind: "ignore" };
+        return isValidRunId(text) ? { kind: "run", runId: text } : { kind: "ignore" };
+    if (type === "mode")
+        return { kind: "mode", mode: text };
+    if (type === "approval.control")
+        return isValidRequestRef(text) ? { kind: "control", ref: text } : { kind: "ignore" };
     if (type === "approval" || type === "clarify")
         return { kind: type, detail: text };
     if (type === "thinking" || type === "commentary")
@@ -230,6 +293,14 @@ function reduce(prev, event) {
             state.runId = f.runId;
             return result(state, intents);
         }
+        if (f.kind === "mode") {
+            state.runMode = (f.mode === "ask" || f.mode === "agent" || f.mode === "chat") ? f.mode : "unknown";
+            return result(state, intents);
+        }
+        if (f.kind === "control") {
+            state.nextControl = f.ref;
+            return result(state, intents);
+        }
         if (state.phase === "starting" || state.phase === "streaming" || state.phase === "cancelling") {
             // keep going below
         }
@@ -288,18 +359,20 @@ function reduce(prev, event) {
             }
         } else if (f.kind === "approval") {
             state.phase = "awaiting-approval";
-            state.pending = { kind: "approval", runId: state.runId, detail: clip(f.detail, ENTRY_CAP), choices: [], deciding: false, error: "", live: true };
-            pushEntry(state, { kind: "approval", text: clip(f.detail, ENTRY_CAP), status: "pending", ts: event.ts || 0 });
+            // A new request replaces any earlier one (never merges).
+            state.pending = makePending("approval", state.runId, f.detail, state.nextControl, state.runMode, true, []);
+            state.nextControl = "";
+            pushEntry(state, { kind: "approval", text: state.pending.detail, status: "pending", ts: event.ts || 0 });
             intents.push({ intent: "attention" });
         } else if (f.kind === "clarify") {
             state.phase = "awaiting-clarification";
-            state.pending = { kind: "clarify", runId: state.runId, detail: clip(f.detail, ENTRY_CAP), choices: [], deciding: false, error: "", live: true };
-            pushEntry(state, { kind: "clarify", text: clip(f.detail, ENTRY_CAP), status: "pending", ts: event.ts || 0 });
+            state.pending = makePending("clarify", state.runId, f.detail, "", state.runMode, true, []);
+            pushEntry(state, { kind: "clarify", text: state.pending.detail, status: "pending", ts: event.ts || 0 });
             intents.push({ intent: "attention" });
         } else if (f.kind === "final") {
             state.outcome = f.payload;
             var d = (f.payload && f.payload.data) || {};
-            if (d.runId && !state.runId)
+            if (d.runId && !state.runId && isValidRunId(d.runId.toString()))
                 state.runId = d.runId.toString();
             // Final line handled fully at exit (single settle point),
             // but a pending payload can be applied immediately.
@@ -319,22 +392,26 @@ function applyPendingFromPayload(state, payload, ts) {
     var d = (payload && payload.data) || {};
     var kind = (d.pending || "").toString();
     var runId = (d.runId || state.runId || "").toString();
-    if (runId !== "")
+    if (isValidRunId(runId))
         state.runId = runId;
+    else
+        runId = "";
     var detail = (d.detail || payload.message || "").toString();
+    var mode = (d.mode || state.runMode || "").toString();
     if (kind === "approval" && runId !== "") {
         var choices = (d.choices || "").toString().split(",").filter(function (c) { return c !== ""; });
         var had = state.pending && state.pending.kind === "approval";
-        state.pending = { kind: "approval", runId: runId, detail: clip(detail, ENTRY_CAP), choices: choices, deciding: false, error: "", live: had ? state.pending.live : false };
+        var req = d.request ? d.request.toString() : (had ? state.pending.requestId : "");
+        state.pending = makePending("approval", runId, detail, req, mode, had ? state.pending.live : false, choices);
         state.phase = "awaiting-approval";
         if (!had)
-            pushEntry(state, { kind: "approval", text: clip(detail, ENTRY_CAP), status: "pending", ts: ts });
+            pushEntry(state, { kind: "approval", text: state.pending.detail, status: "pending", ts: ts });
     } else if (kind === "clarify" && runId !== "") {
         var hadC = state.pending && state.pending.kind === "clarify";
-        state.pending = { kind: "clarify", runId: runId, detail: clip(detail, ENTRY_CAP), choices: [], deciding: false, error: "", live: hadC ? state.pending.live : false };
+        state.pending = makePending("clarify", runId, detail, "", mode, hadC ? state.pending.live : false, []);
         state.phase = "awaiting-clarification";
         if (!hadC)
-            pushEntry(state, { kind: "clarify", text: clip(detail, ENTRY_CAP), status: "pending", ts: ts });
+            pushEntry(state, { kind: "clarify", text: state.pending.detail, status: "pending", ts: ts });
     }
 }
 
@@ -510,17 +587,36 @@ function replay(lines, opts) {
 // Model and tool output is untrusted. Rendering it as Markdown must
 // not make the shell fetch anything (a remote image is an exfiltration
 // channel: the URL can carry data) and must not pass raw HTML through.
-// Images become an inert note; dangerous raw tags are dropped.
+// No blacklist of tags: the two constructs that can load or inject
+// are neutralised structurally with HTML entities, which Markdown
+// decodes to literal characters and which are immune to backslash
+// tricks:
+//   "<"  -> "&lt;"      (no raw HTML, no autolink, no <img>)
+//   "![" -> "&#33;["    (no image syntax, inline or reference)
+// Reference definitions ("[x]: url") are dropped, and input above
+// MARKDOWN_CAP is shown as plain text instead (see markdownOk). All
+// operations are linear string splits, never backtracking regexes.
 function safeMarkdown(text) {
     var s = (text === null || text === undefined) ? "" : text.toString();
-    s = s.replace(/!\[([^\]]*)\]\s*\([^)]*\)/g, function (m, alt) {
-        return "[image omitted" + (alt ? ": " + alt : "") + "]";
-    });
-    s = s.replace(/!\[([^\]]*)\]\s*\[[^\]]*\]/g, function (m, alt) {
-        return "[image omitted" + (alt ? ": " + alt : "") + "]";
-    });
-    s = s.replace(/<\s*\/?\s*(img|iframe|script|object|embed|link|style|svg|video|audio|source|meta|base|form)\b[^>]*>/gi, "");
-    return s;
+    if (s.length > MARKDOWN_CAP)
+        return s.slice(0, MARKDOWN_CAP);
+    s = s.split("<").join("&lt;");
+    s = s.split("![").join("&#33;[");
+    var lines = s.split("\n");
+    var kept = [];
+    for (var i = 0; i < lines.length; i++) {
+        var t = lines[i].replace(/^\s+/, "");
+        if (t.charAt(0) === "[" && t.indexOf("]:") > 0 && t.indexOf("]:") < 200)
+            continue;
+        kept.push(lines[i]);
+    }
+    return kept.join("\n");
+}
+
+// Whether the text may be rendered as Markdown at all. Above the cap
+// the caller must use plain text (no parser work on huge input).
+function markdownOk(text) {
+    return (text === null || text === undefined) ? true : text.toString().length <= MARKDOWN_CAP;
 }
 
 // Links in answers open only as web pages, and only on an explicit

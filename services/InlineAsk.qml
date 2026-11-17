@@ -52,8 +52,8 @@ Singleton {
         const q = (question ?? "").toString().trim();
         if (q === "")
             return;
-        // A new query cancels any in-flight run first.
-        proc.running = false;
+        // A new query cancels any in-flight run first (server side too).
+        root.cancel();
         root.askedPrompt = q;
         root.text = "";
         root.errorText = "";
@@ -66,7 +66,7 @@ Singleton {
         // `--mode ask` is the read-only contract (hornero#414/#415):
         // fail closed rather than fall back to the agent default when
         // horneroctl is too old to know the flag.
-        proc.command = ["horneroctl", "assistant", "ask", q, "--json", "--stream", "--mode", "ask"];
+        proc.command = ["horneroctl", "assistant", "ask", "--json", "--stream", "--mode", "ask", "--", q];
         proc.running = true;
     }
 
@@ -80,8 +80,28 @@ Singleton {
     function cancel(): void {
         if (!root.busy && !proc.running)
             return;
+        root.stopRun();
         proc.running = false;
         root.busy = false;
+    }
+
+    // Every cancel path (Escape, launcher close, a new query, shell
+    // exit) asks the gateway to stop the run too: killing only the
+    // local process would leave an Ask run running. When the run id is
+    // not known yet the user is told, because the run may continue.
+    function stopRun(): void {
+        if (root.runId !== "" && /^[A-Za-z0-9._-]{1,64}$/.test(root.runId)) {
+            stopProc.running = false;
+            stopProc.running = true;
+        } else if (root.busy) {
+            // The launcher may be closing: a toast survives it.
+            Quickshell.execDetached(["quickshell", "ipc", "call", "toaster", "warn", "Javi", qsTr("Stopped locally; the run may still be going on the gateway (its id was not known yet)."), "alert-triangle"]);
+        }
+    }
+
+    Component.onDestruction: {
+        if (root.busy && root.runId !== "" && /^[A-Za-z0-9._-]{1,64}$/.test(root.runId))
+            Quickshell.execDetached(["horneroctl", "assistant", "stop", root.runId, "--json"]);
     }
 
     // Previous `>ai` behaviour (shell#216): summon Javi through the
@@ -102,7 +122,7 @@ Singleton {
         const q = root.askedPrompt.trim();
         if (q === "")
             return;
-        Quickshell.execDetached(["quickshell", "ipc", "call", "companion", "workbenchAsk", q]);
+        Quickshell.execDetached(["quickshell", "ipc", "call", "companion", "workbenchDraft", q]);
         if (list)
             list.visibilities.launcher = false;
     }

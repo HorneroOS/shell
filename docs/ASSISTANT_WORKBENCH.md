@@ -162,15 +162,16 @@ only ever user actions on the card.
   model line, attachments, mic with status and discard, live trace, errors,
   connection banner with Reconnect.
 - **C. Workbench**: the same panel expanded (`qs ipc call companion workbench`,
-  `workbenchAsk <text>`, or the expand button). Tabs: Activity timeline, Approvals (pending card and
+  `workbenchDraft <text>`, which only stages text, or the expand button). Tabs: Activity timeline, Approvals (pending card and
   decisions this session), Artifacts (files you attached; the backend lists no
   agent files), History (sessions, clear, retention). Model and mode controls.
   A new pending approval opens the Approvals tab itself.
 
 Javi Radio entry points: `companion quick` / `quickWith <text>` (bind it yourself, the shell
 writes no keybinding), the launcher `>ai` route, click on Javi (opens the
-panel), and the Workbench IPC. A bar module and a PluginKit action reuse these
-two IPC calls; they add no new authority.
+panel), and the Workbench IPC. A bar module and a PluginKit action can use only these entry points
+(open UI, stage text, read-only ask); there is no IPC to approve, deny
+or answer anything.
 
 ## 4. Approval UX rules
 
@@ -179,8 +180,10 @@ tool reported by the gateway, mode, workspace, isolation (never "sandboxed"
 unless the backend said `bubblewrap`), scope ("this one action, once"), and an
 honest risk line (Javi cannot rate it). Buttons are Deny and "Allow once" with
 equal weight, neither focused by default, disabled while a decision is in
-flight. No "approve all", no remember, no auto-approve, no timer. Ask and Chat
-modes never produce approvals (horneroctl denies them).
+flight. No "approve all", no remember, no auto-approve, no timer. In Ask and Chat modes an approval event is denied by horneroctl
+without showing a card, whatever the run status says; the mode is the
+RUN's mode, recorded server-side by run id (an unknown run is treated
+as read-only).
 
 ## 5. Security notes
 

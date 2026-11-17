@@ -122,7 +122,7 @@ cockpit preset and Signal Night theme itself).
 | `toaster` | `modules/Shortcuts.qml` | `info/success/warn/error(title, message, icon)` |
 | `picker` | `modules/areapicker/AreaPicker.qml` | `open()`, `openFreeze()` (+ close variants per file) |
 | `lock` | `modules/lock/Lock.qml` | `lock()`, `unlock()` |
-| `companion` | `modules/companion/CompanionHost.qml` | `summon()`, `hide()`, `toggle()`, `say(text, timeoutMs)`, `tip()`, `play(animation)`, `setState(state)`, `setSkin(skin)`, `resetPosition()`, `status()`, `ask(text)`, `askStop()`, `approve(runId, decision)`, `clarify(runId, answer)`, `events(runId)`, `quick()`, `quickWith(text)`, `workbench()`, `workbenchAsk(text)` |
+| `companion` | `modules/companion/CompanionHost.qml` | `summon()`, `hide()`, `toggle()`, `say(text, timeoutMs)`, `tip()`, `play(animation)`, `setState(state)`, `setSkin(skin)`, `resetPosition()`, `status()`, `ask(text)`, `askStop()`, `events(runId)`, `quick()`, `quickWith(text)`, `workbench()`, `workbenchDraft(text)` |
 | `plugins` | `modules/plugins/PluginHost.qml` | `status()`, `reload()`, `reloadPlugin(id)`, `editDesktop()`, `doneDesktop()`, `toggleEditDesktop()`, `telemetry()` |
 | `debug` (first output), `debug.<output>` (every other output) | `modules/drawers/Drawers.qml` | `borders()`, `bars()`, `dump()`, `focusState()` (debug only) |
 
@@ -176,13 +176,20 @@ JSON (`{"enabled", "state", "skin", "animation", "suppressed",
 launcher straight into the inline Ask (`>ai`), read-only; `quickWith
 <text>` prefills it. Neither sends by itself nor acts.
 `companion workbench` opens Javi's conversation panel expanded into
-the Workbench (Level C); `workbenchAsk <text>` also asks in the current
-mode. (Quickshell IPC needs every argument, hence the separate
-functions.)
-`companion approve|clarify` only act on the run that is actually
-waiting (the run id must match the pending request) and `approve` is
-always a single `once` decision. The shell writes no keybinding for
-either: bind them yourself, e.g. Hyprland
+the Workbench (Level C); `workbenchDraft <text>` also stages the text
+in the input and sends nothing (the user presses Send, in the mode the
+panel shows). Quickshell IPC needs every argument, hence the separate
+functions.
+
+External callers cannot start agent work or decide anything:
+`companion ask <text>` always runs in read-only **Ask** mode whatever
+the panel's mode is, and there is deliberately **no** IPC to approve,
+deny or answer a request: decisions happen only on the approval card
+in the shell UI, bound to the exact request displayed. A bar module or
+a PluginKit action can reach `quick`, `quickWith`, `workbench` and
+`workbenchDraft` (open UI, stage text) and read-only `ask`; none of
+them can approve, deny, attach files or start an agent run. The shell
+writes no keybinding: bind them yourself, e.g. Hyprland
 `bind = SUPER, J, exec, qs ipc call companion quick`. See
 `docs/ASSISTANT_WORKBENCH.md`.
 

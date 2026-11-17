@@ -26,6 +26,7 @@ Item {
     property int dotPhase: 0
 
     readonly property int cardWidth: 392
+    property string pendingLink: ""
     // The conversation yields height to a pending decision so the
     // card is always fully on screen.
     readonly property int listHeight: AssistantRun.pendingDecision ? 96 : Math.min(360, Math.max(140, Screen.height - 520))
@@ -64,6 +65,20 @@ Item {
         if (st === "running")
             return Signal.palette.phosphor;
         return st === "unknown" ? Signal.palette.inkMuted : Signal.palette.alert;
+    }
+
+    // A hand-off from the quick ask stages text here; it is never sent
+    // until the user presses Send.
+    Connections {
+        target: root.bridge
+
+        function onDraftChanged(): void {
+            if (root.bridge.draft !== "") {
+                input.text = root.bridge.draft;
+                root.bridge.draft = "";
+                input.forceActiveFocus();
+            }
+        }
     }
 
     function focusInput(): void {
@@ -315,7 +330,7 @@ Item {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: CompanionStore.chatMode === "agent" ? qsTr("Approvals ask you first") : qsTr("Never asks for approvals")
+                    text: CompanionStore.chatMode === "agent" ? qsTr("Approvals ask you first") : qsTr("Approval requests are denied automatically")
                     font.family: Appearance.font.family.mono
                     font.pointSize: Appearance.font.size.smaller
                     color: Signal.palette.ruleStrong
@@ -386,14 +401,16 @@ Item {
                             anchors.top: parent.top
                             anchors.margins: Appearance.padding.large
                             text: modelData.role === "assistant" ? AssistantRun.safeMarkdown(modelData.text) : modelData.text
-                            textFormat: modelData.role === "assistant" ? Text.MarkdownText : Text.PlainText
+                            textFormat: modelData.role === "assistant" && AssistantRun.markdownOk(modelData.text) ? Text.MarkdownText : Text.PlainText
                             font.pointSize: Appearance.font.size.small
                             color: bubble.mine ? Signal.palette.onSignalWell : Signal.palette.ink
                             linkColor: bubble.mine ? Signal.palette.onSignalWell : Signal.palette.signal
                             wrapMode: Text.Wrap
                             onLinkActivated: link => {
+                                // Show the real target first; opening is a
+                                // second, explicit click.
                                 if (AssistantRun.isSafeLink(link))
-                                    Qt.openUrlExternally(link);
+                                    root.pendingLink = link;
                             }
                         }
 
@@ -495,7 +512,7 @@ Item {
                             anchors.verticalCenter: parent.verticalCenter
                             anchors.margins: Appearance.padding.large
                             text: root.bridge.streamText !== "" ? AssistantRun.safeMarkdown(root.bridge.streamText) : root.t("thinking") + ".".repeat(root.dotPhase)
-                            textFormat: Text.MarkdownText
+                            textFormat: AssistantRun.markdownOk(root.bridge.streamText) ? Text.MarkdownText : Text.PlainText
                             font.pointSize: Appearance.font.size.small
                             color: Signal.palette.ink
                             linkColor: Signal.palette.signal
@@ -531,6 +548,39 @@ Item {
 
             ClarifyCard {
                 bridge: root.bridge
+            }
+
+            // -- Link target confirmation --------------------------------
+            RowLayout {
+                Layout.fillWidth: true
+                visible: root.pendingLink !== ""
+                spacing: Appearance.spacing.small
+
+                StyledText {
+                    Layout.fillWidth: true
+                    Layout.minimumWidth: 0
+                    text: root.pendingLink
+                    textFormat: Text.PlainText
+                    font.family: Appearance.font.family.mono
+                    font.pointSize: Appearance.font.size.smaller
+                    color: Signal.palette.ink
+                    wrapMode: Text.WrapAnywhere
+                }
+
+                TextButton {
+                    text: qsTr("Open")
+                    type: TextButton.Tonal
+                    onClicked: {
+                        Qt.openUrlExternally(root.pendingLink);
+                        root.pendingLink = "";
+                    }
+                }
+
+                TextButton {
+                    text: qsTr("Cancel")
+                    type: TextButton.Text
+                    onClicked: root.pendingLink = ""
+                }
             }
 
             // -- Attachment chips ---------------------------------------
@@ -569,7 +619,7 @@ Item {
                     accessibleName: root.bridge.recording ? qsTr("Stop recording") : qsTr("Record voice message")
                     type: IconButton.Text
                     checked: root.bridge.recording
-                    onClicked: root.bridge.recording ? root.bridge.stopRecording(true) : root.bridge.startRecording()
+                    onClicked: root.bridge.recording ? root.bridge.stopRecording(true, false) : root.bridge.startRecording()
                 }
 
                 StyledInputField {
@@ -641,13 +691,13 @@ Item {
                 TextButton {
                     text: root.t("mic.cancel")
                     type: TextButton.Tonal
-                    onClicked: root.bridge.stopRecording(false)
+                    onClicked: root.bridge.stopRecording(false, false)
                 }
 
                 TextButton {
                     text: root.t("mic.send")
                     type: TextButton.Filled
-                    onClicked: root.bridge.stopRecording(true)
+                    onClicked: root.bridge.stopRecording(true, false)
                 }
             }
         }

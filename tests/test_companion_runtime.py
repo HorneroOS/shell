@@ -244,8 +244,12 @@ def test_assistant_bridge_horneroctl_mediated():
 
 def test_assistant_ipc_surface():
     assert "AssistantBridge" in HOST
-    for fn in ("ask(", "askStop(", "approve(", "clarify(", "events("):
+    for fn in ("ask(", "askStop(", "events("):
         assert f"function {fn}" in HOST, f"companion IPC missing {fn}"
+    # No IPC can decide a request (card-only, bound to the displayed one).
+    for fn in ("approve(", "clarify(", "deny("):
+        assert f"function {fn}" not in HOST, f"companion IPC must not expose {fn}"
+    assert 'askWith((text ?? "").toString(), "ask")' in HOST
     doc = (ROOT / "docs" / "IPC.md").read_text()
     assert "askStop()" in doc
 

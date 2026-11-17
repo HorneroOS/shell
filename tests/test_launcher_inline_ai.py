@@ -135,7 +135,7 @@ def test_inline_ask_cancel_and_new_query_semantics():
     assert "if (!root.busy)" in INLINE_QML
     # A new ask supersedes an in-flight one instead of being dropped.
     ask_body = INLINE_QML.split("function ask(")[1].split("function stop()")[0]
-    assert "proc.running = false" in ask_body
+    assert "root.cancel()" in ask_body  # cancel() stops the process and the gateway run
     assert "root.busy = true" in ask_body
 
 

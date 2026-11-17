@@ -857,7 +857,7 @@ Scope {
         assistantBridge.chatOpen = true;
         assistantBridge.workbenchOpen = true;
         if (text !== "")
-            assistantBridge.ask(text);
+            assistantBridge.draft = text;
     }
 
     IpcHandler {
@@ -914,11 +914,14 @@ Scope {
             return JSON.stringify(CompanionStore.status());
         }
 
+        // External callers can only start READ-ONLY runs: the mode is
+        // fixed to "ask" here whatever the panel's mode is. Agent runs
+        // (tools, approvals) are started only from the panel itself.
         function ask(text: string): void {
             CompanionStore.summon();
             CompanionStore.forceVisible = true;
             assistantBridge.chatOpen = true;
-            assistantBridge.ask((text ?? "").toString());
+            assistantBridge.askWith((text ?? "").toString(), "ask");
         }
 
         // Javi Radio quick assistant: opens the launcher straight into
@@ -935,13 +938,14 @@ Scope {
         }
 
         // Level C: the conversation panel expanded into the Workbench
-        // (same engine). `workbenchAsk` also asks in the current mode;
-        // the user chose the escalation by calling it.
+        // (same engine). `workbenchDraft` only stages text in the input;
+        // nothing is sent until the user presses Send (in the panel's
+        // current mode, which is shown).
         function workbench(): void {
             root.openWorkbench("");
         }
 
-        function workbenchAsk(text: string): void {
+        function workbenchDraft(text: string): void {
             root.openWorkbench((text ?? "").toString().trim());
         }
 
@@ -953,14 +957,6 @@ Scope {
 
         function askStop(): void {
             assistantBridge.askStop();
-        }
-
-        function approve(runId: string, decision: string): void {
-            assistantBridge.approve((runId ?? "").toString(), (decision ?? "").toString());
-        }
-
-        function clarify(runId: string, answer: string): void {
-            assistantBridge.clarify((runId ?? "").toString(), (answer ?? "").toString());
         }
 
         function events(runId: string): void {

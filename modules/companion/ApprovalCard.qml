@@ -27,6 +27,24 @@ Rectangle {
     property bool expanded: false
 
     property bool showDetails: false
+    // A short enable delay whenever a card appears or its request
+    // changes: a click aimed at the previous card cannot land on a new
+    // request that replaced it a moment ago.
+    property bool armed: false
+    readonly property string requestKey: root.pend ? `${root.pend.runId}|${root.pend.requestId}|${root.pend.detail}` : ""
+    onRequestKeyChanged: {
+        root.armed = false;
+        if (root.requestKey !== "")
+            armTimer.restart();
+    }
+
+    Timer {
+        id: armTimer
+
+        interval: 700
+        onTriggered: root.armed = true
+    }
+
     readonly property var pend: root.bridge.pendingApproval
     readonly property string lang: root.bridge.lang
     readonly property var gw: AssistantRun.gateway
@@ -98,27 +116,69 @@ Rectangle {
             color: Signal.palette.alert
         }
 
-        // The exact request, in a readable well; never summarised.
+        // The exact request, whole. Long text scrolls inside the well;
+        // it is never summarised or cut (see `truncated` below).
         Rectangle {
             Layout.fillWidth: true
-            implicitHeight: what.implicitHeight + Appearance.padding.normal * 2
+            implicitHeight: Math.min(what.implicitHeight + Appearance.padding.normal * 2, 160)
             radius: 3
             color: Signal.palette.phosphorWell
+            clip: true
 
-            StyledText {
-                id: what
+            Flickable {
+                id: wellFlick
 
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.margins: Appearance.padding.normal
-                text: root.pend ? root.pend.detail : ""
-                textFormat: Text.PlainText
-                font.family: Appearance.font.family.mono
-                font.pointSize: Appearance.font.size.small
-                color: Signal.palette.ink
-                wrapMode: Text.WrapAnywhere
+                anchors.fill: parent
+                contentWidth: width
+                contentHeight: what.implicitHeight + Appearance.padding.normal * 2
+                boundsBehavior: Flickable.StopAtBounds
+                clip: true
+
+                StyledScrollBar.vertical: StyledScrollBar {
+                    flickable: wellFlick
+                }
+
+                StyledText {
+                    id: what
+
+                    x: Appearance.padding.normal
+                    y: Appearance.padding.normal
+                    width: wellFlick.width - Appearance.padding.normal * 2
+                    text: root.pend ? root.pend.detail : ""
+                    textFormat: Text.PlainText
+                    font.family: Appearance.font.family.mono
+                    font.pointSize: Appearance.font.size.small
+                    color: Signal.palette.ink
+                    wrapMode: Text.WrapAnywhere
+                }
             }
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+            visible: root.pend !== null && root.pend.truncated
+            text: AssistantCopy.t("approval.truncated", root.lang)
+            font.pointSize: Appearance.font.size.smaller
+            color: Signal.palette.alert
+            wrapMode: Text.Wrap
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+            visible: root.pend !== null && root.pend.flagged
+            text: AssistantCopy.t("approval.hidden-chars", root.lang)
+            font.pointSize: Appearance.font.size.smaller
+            color: Signal.palette.alert
+            wrapMode: Text.Wrap
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+            visible: root.pend !== null && root.pend.requestId === ""
+            text: AssistantCopy.t("approval.unbound", root.lang)
+            font.pointSize: Appearance.font.size.smaller
+            color: Signal.palette.alert
+            wrapMode: Text.Wrap
         }
 
         // Not sandboxed is always visible: it changes how much the
@@ -130,6 +190,7 @@ Rectangle {
             mono: false
         }
         Row2 {
+            visible: root.pend !== null && root.pend.requestId !== ""
             label: AssistantCopy.t("approval.scope", root.lang)
             value: AssistantCopy.t("approval.scope.once", root.lang)
             mono: false
@@ -152,13 +213,18 @@ Rectangle {
                 value: root.pend ? root.pend.runId : ""
             }
             Row2 {
+                visible: root.pend !== null && root.pend.requestId !== ""
+                label: AssistantCopy.t("approval.request", root.lang)
+                value: root.pend ? root.pend.requestId : ""
+            }
+            Row2 {
                 visible: root.lastTool() !== ""
                 label: qsTr("Tool")
                 value: root.lastTool()
             }
             Row2 {
                 label: AssistantCopy.t("approval.mode", root.lang)
-                value: AssistantCopy.t("mode." + CompanionStore.chatMode, root.lang)
+                value: root.pend && ["ask", "agent", "chat"].includes(root.pend.mode) ? AssistantCopy.t("mode." + root.pend.mode, root.lang) : AssistantCopy.t("approval.mode.unknown", root.lang)
                 mono: false
             }
             Row2 {
@@ -211,14 +277,14 @@ Rectangle {
             TextButton {
                 text: AssistantCopy.t("approval.deny", root.lang)
                 type: TextButton.Tonal
-                enabled: !root.bridge.decisionBusy
+                enabled: root.armed && !root.bridge.decisionBusy
                 onClicked: root.bridge.approve(root.pend.runId, "deny")
             }
 
             TextButton {
                 text: AssistantCopy.t("approval.allow", root.lang)
                 type: TextButton.Tonal
-                enabled: !root.bridge.decisionBusy
+                enabled: root.armed && !root.bridge.decisionBusy && root.pend !== null && root.pend.requestId !== "" && !root.pend.truncated
                 onClicked: root.bridge.approve(root.pend.runId, "approve")
             }
         }

@@ -98,8 +98,24 @@ def play(scn, run_id):
             out({"type": "delta", "text": f"word{i} "})
             time.sleep(0.4)
         return final(True, "ok", runId=run_id)
+    if scn == "md":
+        # Untrusted output with remote images / raw HTML: the harness
+        # checks nothing is fetched (a listener on 127.0.0.1:8099).
+        out({"type": "run", "text": run_id})
+        out({"type": "delta", "text": "Result ![x](http://127.0.0.1:8099/md-image.png) and <img src=\"http://127.0.0.1:8099/html-image.png\"> done.\n\n![r][1]\n\n[1]: http://127.0.0.1:8099/ref-image.png\n"})
+        return final(True, "ok", runId=run_id)
+    if scn in ("bidi", "long"):
+        out({"type": "run", "text": run_id})
+        out({"type": "mode", "text": "agent"})
+        out({"type": "approval.control", "text": "pBIDI@1"})
+        detail = "rm \u202e gnp.exe -rf ~\u0007" if scn == "bidi" else "echo " + ("A" * 9000)
+        out({"type": "approval", "text": detail})
+        wait_decision()
+        return final(True, "ok", runId=run_id)
     if scn == "approval":
         out({"type": "run", "text": run_id})
+        out({"type": "mode", "text": "agent"})
+        out({"type": "approval.control", "text": "p1@1"})
         out({"type": "tool", "text": "▸ terminal: pacman -S --noconfirm htop"})
         out({"type": "approval", "text": "pacman -S --noconfirm htop"})
         decision = wait_decision()
@@ -176,6 +192,9 @@ def main(argv):
         signal.signal(signal.SIGTERM, lambda *_: os._exit(143))
         return play(scn, run_id)
     if verb == "approve":
+        if "--request" not in args:
+            print(json.dumps({"command": "assistant approve", "ok": False, "message": "fake: no --request given", "data": {}}))
+            return 1
         (D / "decision").write_text("deny" if args[3:4] == ["deny"] else "approve")
         out({"command": "assistant approve", "ok": True, "message": f"Decision recorded for run {args[2]}: {args[3]}.", "data": {"runId": args[2], "decision": args[3]}})
         return 0

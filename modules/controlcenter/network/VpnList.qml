@@ -99,7 +99,7 @@ ColumnLayout {
                 width: ListView.view ? ListView.view.width : undefined
 
                 color: Qt.alpha(Signal.tPalette.panel, (root.session && root.session.vpn && root.session.vpn.active === modelData) ? Signal.tPalette.panel.a : 0)
-                radius: Appearance.rounding.normal
+                radius: Appearance.rounding.small
 
                 Accessible.role: Accessible.Button
                 Accessible.name: (modelData.displayName || qsTr("Unknown")) + (modelData.enabled && VPN.connected ? qsTr(", connected") : "")
@@ -126,7 +126,7 @@ ColumnLayout {
                         implicitWidth: implicitHeight
                         implicitHeight: icon.implicitHeight + Appearance.padding.normal * 2
 
-                        radius: Appearance.rounding.normal
+                        radius: Appearance.rounding.small
                         color: modelData.enabled && VPN.connected ? Signal.palette.signalWell : Signal.tPalette.raised
 
                         Glyph {
@@ -179,7 +179,7 @@ ColumnLayout {
                         implicitWidth: implicitHeight
                         implicitHeight: connectIcon.implicitHeight + Appearance.padding.smaller * 2
 
-                        radius: Appearance.rounding.full
+                        radius: Appearance.rounding.small
                         color: Qt.alpha(Signal.palette.signalWell, VPN.connected && modelData.enabled ? 1 : 0)
 
                         Interactive {
@@ -233,7 +233,7 @@ ColumnLayout {
                         implicitWidth: implicitHeight
                         implicitHeight: deleteIcon.implicitHeight + Appearance.padding.smaller * 2
 
-                        radius: Appearance.rounding.full
+                        radius: Appearance.rounding.small
                         color: "transparent"
 
                         Interactive {
@@ -400,7 +400,7 @@ ColumnLayout {
 
         background: StyledRect {
             color: Signal.palette.raised
-            radius: Appearance.rounding.large
+            radius: Appearance.rounding.small
 
             Elevation {
                 anchors.fill: parent

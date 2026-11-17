@@ -204,7 +204,7 @@ Item {
                     Layout.bottomMargin: Appearance.spacing.small
 
                     color: Signal.layer(Signal.palette.panel, 2)
-                    radius: Appearance.rounding.full
+                    radius: Appearance.rounding.small
 
                     implicitHeight: Math.max(searchIcon.implicitHeight, searchField.implicitHeight, clearIcon.implicitHeight)
 
@@ -312,7 +312,7 @@ Item {
                             readonly property bool isSelected: root.selectedApp === modelData
 
                             color: isSelected ? Signal.layer(Signal.palette.panel, 2) : "transparent"
-                            radius: Appearance.rounding.normal
+                            radius: Appearance.rounding.small
 
                             Accessible.role: Accessible.Button
                             Accessible.name: modelData.name || modelData.entry?.name || qsTr("Unknown")

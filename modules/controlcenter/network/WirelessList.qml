@@ -106,7 +106,7 @@ DeviceList {
             width: ListView.view ? ListView.view.width : undefined
 
             color: Qt.alpha(Signal.tPalette.panel, root.activeItem === modelData ? Signal.tPalette.panel.a : 0)
-            radius: Appearance.rounding.normal
+            radius: Appearance.rounding.small
 
             Accessible.role: Accessible.Button
             Accessible.name: (modelData.ssid || qsTr("Unknown")) + (modelData.active ? qsTr(", connected") : "")
@@ -134,7 +134,7 @@ DeviceList {
                     implicitWidth: implicitHeight
                     implicitHeight: icon.implicitHeight + Appearance.padding.normal * 2
 
-                    radius: Appearance.rounding.normal
+                    radius: Appearance.rounding.small
                     color: modelData.active ? Signal.palette.signalWell : Signal.tPalette.raised
 
                     Glyph {
@@ -188,7 +188,7 @@ DeviceList {
                     implicitWidth: implicitHeight
                     implicitHeight: connectIcon.implicitHeight + Appearance.padding.smaller * 2
 
-                    radius: Appearance.rounding.full
+                    radius: Appearance.rounding.small
                     color: Qt.alpha(Signal.palette.signalWell, modelData.active ? 1 : 0)
 
                     Accessible.role: Accessible.Button

@@ -58,7 +58,7 @@ ColumnLayout {
         Layout.fillWidth: true
         implicitHeight: adapterStatus.implicitHeight + Appearance.padding.large * 2
 
-        radius: Appearance.rounding.normal
+        radius: Appearance.rounding.small
         color: Signal.tPalette.panel
 
         ColumnLayout {
@@ -119,7 +119,7 @@ ColumnLayout {
         Layout.fillWidth: true
         implicitHeight: adapterSettings.implicitHeight + Appearance.padding.large * 2
 
-        radius: Appearance.rounding.normal
+        radius: Appearance.rounding.small
         color: Signal.tPalette.panel
 
         ColumnLayout {
@@ -487,7 +487,7 @@ ColumnLayout {
         Layout.fillWidth: true
         implicitHeight: adapterInfo.implicitHeight + Appearance.padding.large * 2
 
-        radius: Appearance.rounding.normal
+        radius: Appearance.rounding.small
         color: Signal.tPalette.panel
 
         ColumnLayout {

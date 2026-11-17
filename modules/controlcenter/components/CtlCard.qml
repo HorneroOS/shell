@@ -29,7 +29,7 @@ StyledRect {
     property bool armed: false
 
     Layout.fillWidth: true
-    radius: Appearance.rounding.normal
+    radius: Appearance.rounding.small
     color: Signal.layer(Signal.palette.panel, 1)
     implicitHeight: col.implicitHeight + Appearance.padding.large * 2
 

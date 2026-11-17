@@ -207,7 +207,7 @@ Item {
 
                 StyledRect {
                     Layout.fillWidth: true
-                    radius: Appearance.rounding.normal
+                    radius: Appearance.rounding.small
                     color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: nlCol.implicitHeight + Appearance.padding.large * 2
 

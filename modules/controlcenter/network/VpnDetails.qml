@@ -256,7 +256,7 @@ DeviceDetails {
 
         background: StyledRect {
             color: Signal.palette.raised
-            radius: Appearance.rounding.large
+            radius: Appearance.rounding.small
 
             Elevation {
                 anchors.fill: parent

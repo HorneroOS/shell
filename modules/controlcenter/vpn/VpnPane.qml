@@ -54,7 +54,7 @@ Item {
 
                         StyledRect {
                             visible: VPN.connected || VPN.connecting
-                            radius: Appearance.rounding.full
+                            radius: Appearance.rounding.small
                             color: VPN.connected ? Signal.palette.signal : Signal.layer(Signal.palette.raised, 2)
                             implicitWidth: connLabel.implicitWidth + Appearance.padding.normal * 2
                             implicitHeight: connLabel.implicitHeight + Appearance.padding.smaller

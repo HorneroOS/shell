@@ -142,7 +142,7 @@ Popup {
 
     background: StyledRect {
         color: Signal.tPalette.raised
-        radius: Appearance.rounding.large
+        radius: Appearance.rounding.small
         border.width: 1
         border.color: Signal.palette.inkMuted
     }
@@ -257,7 +257,7 @@ Popup {
                         id: resultSurface
                         anchors.fill: parent
                         implicitHeight: Appearance.padding.larger * 2 + resultIcon.implicitHeight
-                        radius: Appearance.rounding.normal
+                        radius: Appearance.rounding.small
                         color: row.index === root.session.searchSelection ? Signal.palette.cueWell : "transparent"
 
                         StateLayer {

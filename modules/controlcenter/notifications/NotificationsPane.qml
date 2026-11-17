@@ -60,7 +60,7 @@ Item {
 
                     StyledRect {
                         visible: Notifs.notClosed.length > 0
-                        radius: Appearance.rounding.full
+                        radius: Appearance.rounding.small
                         color: Signal.palette.signal
                         implicitWidth: Math.max(implicitHeight, badgeText.implicitWidth + Appearance.padding.smaller * 2)
                         implicitHeight: badgeText.implicitHeight + Appearance.padding.smaller
@@ -80,7 +80,7 @@ Item {
                 // ── Do Not Disturb ───────────────────────────────────────────
                 StyledRect {
                     Layout.fillWidth: true
-                    radius: Appearance.rounding.normal
+                    radius: Appearance.rounding.small
                     color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: dndCol.implicitHeight + Appearance.padding.large * 2
 
@@ -104,7 +104,7 @@ Item {
                 // ── Behavior ─────────────────────────────────────────────────
                 StyledRect {
                     Layout.fillWidth: true
-                    radius: Appearance.rounding.normal
+                    radius: Appearance.rounding.small
                     color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: behaviorCol.implicitHeight + Appearance.padding.large * 2
 
@@ -165,7 +165,7 @@ Item {
                 // ── Lock screen ────────────────────────────────────────────
                 StyledRect {
                     Layout.fillWidth: true
-                    radius: Appearance.rounding.normal
+                    radius: Appearance.rounding.small
                     color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: lockCol.implicitHeight + Appearance.padding.large * 2
 
@@ -196,7 +196,7 @@ Item {
                 // ── Toast events ─────────────────────────────────────────────
                 StyledRect {
                     Layout.fillWidth: true
-                    radius: Appearance.rounding.normal
+                    radius: Appearance.rounding.small
                     color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: toastsCol.implicitHeight + Appearance.padding.large * 2
 
@@ -317,7 +317,7 @@ Item {
                 // ── Recent notifications ──────────────────────────────────────
                 StyledRect {
                     Layout.fillWidth: true
-                    radius: Appearance.rounding.normal
+                    radius: Appearance.rounding.small
                     color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: historyCol.implicitHeight + Appearance.padding.large * 2
 

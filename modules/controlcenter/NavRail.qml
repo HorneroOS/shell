@@ -266,18 +266,23 @@ Item {
         StyledRect {
             id: background
 
-            radius: Appearance.rounding.full
-            color: Qt.alpha(Signal.palette.cueWell, item.active ? 1 : 0)
+            radius: Appearance.rounding.small
+            color: Qt.alpha(Signal.palette.signalWell, item.active ? 1 : 0)
 
             implicitWidth: icon.implicitWidth + icon.anchors.leftMargin * 2
             implicitHeight: icon.implicitHeight + Appearance.padding.small
+
+            OnAirBar {
+                edge: "right"
+                active: item.active
+            }
 
             Interactive {
                 Accessible.role: Accessible.Button
                 Accessible.name: item.active ? qsTr("%1, current Settings page").arg(item.title) : item.title
                 Accessible.description: qsTr("Open the %1 Settings page").arg(item.title)
 
-                color: item.active ? Signal.palette.onCueWell : Signal.palette.ink
+                color: item.active ? Signal.palette.onSignalWell : Signal.palette.ink
 
                 function onClicked(): void {
                     // Allow navigation even during the short opening gate; the
@@ -300,7 +305,7 @@ Item {
                 anchors.leftMargin: Appearance.padding.large
 
                 name: item.icon
-                color: item.active ? Signal.palette.onCueWell : Signal.palette.ink
+                color: item.active ? Signal.palette.onSignalWell : Signal.palette.ink
                 font.pointSize: Appearance.font.size.large
             }
 
@@ -312,16 +317,9 @@ Item {
 
                 implicitWidth: 8
                 implicitHeight: 8
-                radius: Appearance.rounding.full
+                radius: Appearance.rounding.small
                 color: Signal.palette.alert
                 visible: item.badgeVisible
-
-                SequentialAnimation on scale {
-                    running: item.badgeVisible
-                    loops: Animation.Infinite
-                    NumberAnimation { to: 1.2; duration: 900; easing.type: Easing.InOutSine }
-                    NumberAnimation { to: 1.0; duration: 900; easing.type: Easing.InOutSine }
-                }
             }
 
             StyledText {
@@ -333,7 +331,7 @@ Item {
 
                 opacity: 0
                 text: item.title
-                color: item.active ? Signal.palette.onCueWell : Signal.palette.ink
+                color: item.active ? Signal.palette.onSignalWell : Signal.palette.ink
                 font.capitalization: Font.Capitalize
             }
 

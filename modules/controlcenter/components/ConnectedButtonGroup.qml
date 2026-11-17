@@ -16,7 +16,7 @@ StyledRect {
 
     Layout.fillWidth: true
     implicitHeight: layout.implicitHeight + Appearance.padding.large * 2
-    radius: Appearance.rounding.normal
+    radius: Appearance.rounding.small
     color: Signal.layer(Signal.palette.panel, 2)
     clip: true
 
@@ -73,7 +73,7 @@ StyledRect {
 
                     // Match utilities Toggles radius styling
                     // Each button has full rounding (not connected) since they have spacing
-                    radius: stateLayer.pressed ? Appearance.rounding.small / 2 : internalChecked ? Appearance.rounding.small : Appearance.rounding.normal
+                    radius: stateLayer.pressed ? Appearance.rounding.small / 2 : internalChecked ? Appearance.rounding.small : Appearance.rounding.small
 
                     // Match utilities Toggles inactive color
                     inactiveColour: Signal.layer(Signal.palette.lifted, 2)

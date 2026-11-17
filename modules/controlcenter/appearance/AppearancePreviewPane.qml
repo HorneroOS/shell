@@ -121,7 +121,7 @@ StyledRect {
         return out;
     }
 
-    radius: Appearance.rounding.normal
+    radius: Appearance.rounding.small
     color: previewColor("panel", Signal.tPalette.panel)
 
     Item {
@@ -140,7 +140,7 @@ StyledRect {
                 Layout.preferredHeight: root.compact ? 120 : -1
                 Layout.fillWidth: root.compact
                 Layout.fillHeight: !root.compact
-                radius: Appearance.rounding.normal
+                radius: Appearance.rounding.small
                 color: previewColor("raised", Signal.tPalette.raised)
 
                 Image {
@@ -184,7 +184,7 @@ StyledRect {
                     anchors.top: parent.top
                     anchors.margins: Appearance.padding.small
                     visible: root.active && !!root.modeText
-                    radius: Appearance.rounding.full
+                    radius: Appearance.rounding.small
                     color: Qt.alpha(previewColor("base", Signal.palette.base), 0.88)
                     implicitWidth: modeBadge.implicitWidth + Appearance.padding.small * 2
                     implicitHeight: modeBadge.implicitHeight + Appearance.padding.smaller
@@ -301,7 +301,7 @@ StyledRect {
 
                         delegate: StyledRect {
                             required property var modelData
-                            radius: Appearance.rounding.full
+                            radius: Appearance.rounding.small
                             color: root.previewColor(modelData.role, modelData.fallback)
                             implicitHeight: 22
                             implicitWidth: 22
@@ -334,7 +334,7 @@ StyledRect {
                     Layout.fillHeight: !root.compact && root.showAdvancedDetails
                     Layout.preferredHeight: root.showAdvancedDetails ? (root.compact ? 260 : 360) : 56
                     visible: root.active && root.hasRecipe
-                    radius: Appearance.rounding.normal
+                    radius: Appearance.rounding.small
                     color: Qt.alpha(previewColor("raised", Signal.tPalette.raised), 0.65)
 
                     ColumnLayout {
@@ -509,7 +509,7 @@ StyledRect {
 
                                 delegate: StyledRect {
                                     required property var modelData
-                                    radius: Appearance.rounding.full
+                                    radius: Appearance.rounding.small
                                     color: Qt.alpha(previewColor("cueWell", Signal.palette.cueWell), 0.55)
                                     implicitWidth: tagLabel.implicitWidth + Appearance.padding.small * 2
                                     implicitHeight: tagLabel.implicitHeight + Appearance.padding.smaller
@@ -534,7 +534,7 @@ StyledRect {
                     Layout.fillWidth: true
                     Layout.fillHeight: root.isThemePreview && !root.compact
                     visible: root.active && root.isThemePreview && !root.compact
-                    radius: Appearance.rounding.normal
+                    radius: Appearance.rounding.small
                     color: Qt.alpha(previewColor("raised", Signal.tPalette.raised), 0.82)
 
                     ColumnLayout {
@@ -557,7 +557,7 @@ StyledRect {
                                 color: previewColor("ink", Signal.palette.ink)
                             }
                             StyledRect {
-                                radius: Appearance.rounding.full
+                                radius: Appearance.rounding.small
                                 color: previewColor("signalWell", Signal.palette.signalWell)
                                 implicitWidth: sampleBadge.implicitWidth + Appearance.padding.small * 2
                                 implicitHeight: sampleBadge.implicitHeight + Appearance.padding.smaller
@@ -621,7 +621,7 @@ StyledRect {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     visible: root.active && root.showAdvancedDetails && !root.isThemePreview && !root.compact
-                    radius: Appearance.rounding.normal * root.rootPane.roundingScale
+                    radius: Appearance.rounding.small * root.rootPane.roundingScale
                     color: root.rootPane.transparencyEnabled ? Qt.alpha(previewColor("panel", Signal.palette.panel), root.rootPane.transparencyBase) : previewColor("panel", Signal.palette.panel)
 
                     ColumnLayout {
@@ -677,7 +677,7 @@ StyledRect {
         property string label
         property string value
 
-        radius: Appearance.rounding.full
+        radius: Appearance.rounding.small
         color: Qt.alpha(previewColor("signalWell", Signal.palette.signalWell), 0.7)
         implicitWidth: chipRow.implicitWidth + Appearance.padding.small * 2
         implicitHeight: chipRow.implicitHeight + Appearance.padding.smaller

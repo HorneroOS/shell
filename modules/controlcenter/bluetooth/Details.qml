@@ -81,7 +81,7 @@ StyledFlickable {
                             Layout.fillWidth: true
                             implicitHeight: deviceStatus.implicitHeight + Appearance.padding.large * 2
 
-                            radius: Appearance.rounding.normal
+                            radius: Appearance.rounding.small
                             color: Signal.tPalette.panel
 
                             ColumnLayout {
@@ -145,7 +145,7 @@ StyledFlickable {
                             Layout.fillWidth: true
                             implicitHeight: deviceProps.implicitHeight + Appearance.padding.large * 2
 
-                            radius: Appearance.rounding.normal
+                            radius: Appearance.rounding.small
                             color: Signal.tPalette.panel
 
                             ColumnLayout {
@@ -358,7 +358,7 @@ StyledFlickable {
                             Layout.fillWidth: true
                             implicitHeight: deviceInfo.implicitHeight + Appearance.padding.large * 2
 
-                            radius: Appearance.rounding.normal
+                            radius: Appearance.rounding.small
                             color: Signal.tPalette.panel
 
                             ColumnLayout {
@@ -385,7 +385,7 @@ StyledFlickable {
                                     StyledRect {
                                         Layout.fillWidth: true
                                         Layout.fillHeight: true
-                                        radius: Appearance.rounding.full
+                                        radius: Appearance.rounding.small
                                         color: Signal.palette.cueWell
 
                                         StyledRect {
@@ -395,7 +395,7 @@ StyledFlickable {
                                             anchors.margins: parent.height * 0.25
 
                                             implicitWidth: root.device?.batteryAvailable ? batteryPercent.width * root.device.battery : 0
-                                            radius: Appearance.rounding.full
+                                            radius: Appearance.rounding.small
                                             color: Signal.palette.signal
                                         }
                                     }
@@ -489,7 +489,7 @@ StyledFlickable {
 
                 implicitHeight: fabMenuItemInner.implicitHeight + Appearance.padding.larger * 2
 
-                radius: Appearance.rounding.full
+                radius: Appearance.rounding.small
                 color: Signal.palette.signalWell
 
                 opacity: 0
@@ -630,7 +630,7 @@ StyledFlickable {
             implicitWidth: 64
             implicitHeight: 64
 
-            radius: Appearance.rounding.normal
+            radius: Appearance.rounding.small
             color: root.session.bt.fabMenuOpen ? Signal.palette.signal : Signal.palette.signalWell
 
             states: State {

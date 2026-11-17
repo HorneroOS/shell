@@ -52,7 +52,7 @@ Item {
         required property var action
 
         Layout.fillWidth: true
-        radius: Appearance.rounding.normal
+        radius: Appearance.rounding.small
         color: Signal.layer(Signal.palette.raised, 2)
         implicitHeight: row.implicitHeight + Appearance.padding.normal * 2
 
@@ -68,7 +68,7 @@ Item {
                 Layout.preferredWidth: Appearance.font.size.extraLarge * 1.5
                 Layout.maximumWidth: Appearance.font.size.extraLarge * 1.5
                 Layout.alignment: Qt.AlignVCenter
-                radius: Appearance.rounding.normal
+                radius: Appearance.rounding.small
                 color: Signal.layer(Signal.palette.signalWell, 2)
                 implicitHeight: 36
 
@@ -141,7 +141,7 @@ Item {
         StyledRect {
             Layout.fillWidth: true
             implicitHeight: 6
-            radius: Appearance.rounding.full
+            radius: Appearance.rounding.small
             color: Signal.layer(Signal.palette.lifted, 1)
 
             StyledRect {
@@ -201,7 +201,7 @@ Item {
                 // ── Live stats ───────────────────────────────────────────────
                 StyledRect {
                     Layout.fillWidth: true
-                    radius: Appearance.rounding.normal
+                    radius: Appearance.rounding.small
                     color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: statsCol.implicitHeight + Appearance.padding.large * 2
 
@@ -295,7 +295,7 @@ Item {
                 // ── Actions ──────────────────────────────────────────────────
                 StyledRect {
                     Layout.fillWidth: true
-                    radius: Appearance.rounding.normal
+                    radius: Appearance.rounding.small
                     color: Signal.layer(Signal.palette.panel, 2)
                     implicitHeight: actionsCol.implicitHeight + Appearance.padding.large * 2
 
@@ -373,7 +373,7 @@ Item {
                 // ── Tools ────────────────────────────────────────────────────
                 StyledRect {
                     Layout.fillWidth: true
-                    radius: Appearance.rounding.normal
+                    radius: Appearance.rounding.small
                     color: Signal.layer(Signal.palette.panel, 2)
                     implicitHeight: toolsCol.implicitHeight + Appearance.padding.large * 2
 

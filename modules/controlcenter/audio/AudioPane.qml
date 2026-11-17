@@ -94,7 +94,7 @@ Item {
                                     Layout.fillWidth: true
 
                                     color: Audio.sink?.id === modelData.id ? Signal.layer(Signal.palette.panel, 2) : "transparent"
-                                    radius: Appearance.rounding.normal
+                                    radius: Appearance.rounding.small
 
                                     Accessible.role: Accessible.Button
                                     Accessible.name: (modelData.description || qsTr("Unknown")) + (Audio.sink?.id === modelData.id ? qsTr(", current output") : "")
@@ -178,7 +178,7 @@ Item {
                                     Layout.fillWidth: true
 
                                     color: Audio.source?.id === modelData.id ? Signal.layer(Signal.palette.panel, 2) : "transparent"
-                                    radius: Appearance.rounding.normal
+                                    radius: Appearance.rounding.small
 
                                     Accessible.role: Accessible.Button
                                     Accessible.name: (modelData.description || qsTr("Unknown")) + (Audio.source?.id === modelData.id ? qsTr(", current input") : "")
@@ -326,7 +326,7 @@ Item {
                                     implicitWidth: implicitHeight
                                     implicitHeight: muteIcon.implicitHeight + Appearance.padding.normal * 2
 
-                                    radius: Appearance.rounding.normal
+                                    radius: Appearance.rounding.small
                                     color: Audio.muted ? Signal.palette.cue : Signal.palette.cueWell
 
                                     Interactive {
@@ -441,7 +441,7 @@ Item {
                                     implicitWidth: implicitHeight
                                     implicitHeight: muteInputIcon.implicitHeight + Appearance.padding.normal * 2
 
-                                    radius: Appearance.rounding.normal
+                                    radius: Appearance.rounding.small
                                     color: Audio.sourceMuted ? Signal.palette.cue : Signal.palette.cueWell
 
                                     Interactive {
@@ -572,7 +572,7 @@ Item {
                                             implicitWidth: implicitHeight
                                             implicitHeight: streamMuteIcon.implicitHeight + Appearance.padding.normal * 2
 
-                                            radius: Appearance.rounding.normal
+                                            radius: Appearance.rounding.small
                                             color: Audio.getStreamMuted(modelData) ? Signal.palette.cue : Signal.palette.cueWell
 
                                             Interactive {

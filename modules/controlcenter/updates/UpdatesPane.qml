@@ -231,7 +231,7 @@ Item {
                 // ── Status card ──────────────────────────────────────────
                 StyledRect {
                     Layout.fillWidth: true
-                    radius: Appearance.rounding.normal
+                    radius: Appearance.rounding.small
                     color: Signal.layer(Signal.palette.raised, 1)
 
                     implicitHeight: statusRow.implicitHeight + Appearance.padding.normal * 2
@@ -285,7 +285,7 @@ Item {
                 StyledRect {
                     visible: root.rebootRequired
                     Layout.fillWidth: true
-                    radius: Appearance.rounding.normal
+                    radius: Appearance.rounding.small
                     color: Signal.layer(Signal.palette.phosphorWell, 1)
                     implicitHeight: rebootRow.implicitHeight + Appearance.padding.normal * 2
 
@@ -339,7 +339,7 @@ Item {
                 StyledRect {
                     visible: root.horneroPendingCount >= 0
                     Layout.fillWidth: true
-                    radius: Appearance.rounding.normal
+                    radius: Appearance.rounding.small
                     color: Signal.layer(Signal.palette.raised, 1)
                     implicitHeight: horneroLane.implicitHeight + Appearance.padding.normal * 2
 

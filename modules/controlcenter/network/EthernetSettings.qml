@@ -40,7 +40,7 @@ ColumnLayout {
         Layout.fillWidth: true
         implicitHeight: ethernetInfo.implicitHeight + Appearance.padding.large * 2
 
-        radius: Appearance.rounding.normal
+        radius: Appearance.rounding.small
         color: Signal.tPalette.panel
 
         ColumnLayout {

@@ -36,7 +36,7 @@ CollapsibleSection {
                 readonly property bool isCurrent: modelData === previewController.pendingGtkTheme
 
                 color: Qt.alpha(Signal.tPalette.panel, isCurrent ? Signal.tPalette.panel.a : 0)
-                radius: Appearance.rounding.normal
+                radius: Appearance.rounding.small
                 border.width: isCurrent ? 1 : 0
                 border.color: Signal.palette.signal
 

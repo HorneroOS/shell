@@ -151,7 +151,7 @@ ColumnLayout {
 
         background: StyledRect {
             color: Signal.palette.base
-            radius: Appearance.rounding.large
+            radius: Appearance.rounding.small
         }
 
         StyledFlickable {

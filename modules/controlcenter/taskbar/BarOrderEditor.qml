@@ -144,7 +144,7 @@ ColumnLayout {
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignTop
                 implicitHeight: groupColumn.implicitHeight + Appearance.padding.large * 2
-                radius: Appearance.rounding.normal
+                radius: Appearance.rounding.small
                 color: Signal.tPalette.raised
 
                 ColumnLayout {

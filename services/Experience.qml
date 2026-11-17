@@ -91,26 +91,32 @@ Singleton {
     readonly property bool scanlines: fields["scanlines"] && !Signal.light && !Config.appearance.highContrast
 
     readonly property bool fullscreenActive: Compositor.hasFullscreenOnFocusedOutput()
+    // The one definition of what the mode means under a fullscreen window
+    // (services/experience.js `policy`, executed headless in tests).
+    readonly property var policy: Model.policy(fields, {
+        mode: mode,
+        fullscreen: fullscreenActive
+    })
     // Notification policy: non-critical popups are held (filed in the
     // notification center without a popup) while this is true.
-    readonly property bool holdPopups: fields["notifications.hold"] || (fields["notifications.suppressFullscreen"] && fullscreenActive)
+    readonly property bool holdPopups: policy.holdPopups
     property int heldCount: 0
 
     // Shared telemetry providers (§6.5): 1 Hz everyday, 2 Hz signal,
     // paused while a fullscreen window covers the shell when the profile
     // asks for it (drawers close and refuse to open over fullscreen).
     readonly property int telemetryIntervalMs: Model.telemetryInterval(fields, Config.dashboard.resourceUpdateInterval)
-    readonly property bool telemetryPaused: fields["telemetry.pauseWhenHidden"] && fullscreenActive
+    readonly property bool telemetryPaused: policy.telemetryPaused
 
     // Desktop layer: none hides desktop widgets and the desktop clock,
     // user keeps the user's set, instruments adds the Signal deck.
     readonly property string desktopWidgets: fields["desktopWidgets"]
-    readonly property bool desktopWidgetsVisible: desktopWidgets !== "none" && !(gaming && fullscreenActive)
+    readonly property bool desktopWidgetsVisible: policy.desktopWidgetsVisible
     readonly property bool instruments: desktopWidgets === "instruments"
 
     readonly property string preferredLayout: fields["layout.preset"]
     readonly property string powerSuggestion: fields["power.suggest"]
-    readonly property bool idleInhibit: fields["idle.inhibitFullscreen"] && fullscreenActive
+    readonly property bool idleInhibit: policy.idleInhibit
     // Edition hooks. Missing capabilities stay off and are reported.
     readonly property bool hyprlandTuningAvailable: Compositor.supports("hyprlandTuning")
     readonly property bool hyprlandTuning: fields["hooks.hyprlandTuning"] && hyprlandTuningAvailable

@@ -444,12 +444,11 @@ def test_glow_is_never_on_in_day_high_contrast_or_low_motion():
 
 def test_notification_policy_holds_non_critical_popups_only():
     notifs = (ROOT / "services" / "Notifs.qml").read_text()
-    assert "const held = !critical && !props.dnd && Experience.holdPopups;" in notifs
-    assert "popup: (critical || (!props.dnd && !held))" in notifs
+    assert "ExperienceModel.notificationDisposition(Experience.holdPopups, critical, props.dnd)" in notifs
+    assert "popup: route.popup" in notifs
     assert "Experience.noteHeld()" in notifs
     hold = next(l for l in QML.splitlines() if "readonly property bool holdPopups:" in l)
-    assert 'fields["notifications.hold"]' in hold
-    assert 'fields["notifications.suppressFullscreen"] && fullscreenActive' in hold
+    assert "policy.holdPopups" in hold
     assert "_toastHeld()" in QML
 
 
@@ -458,12 +457,12 @@ def test_telemetry_rate_and_pause_follow_the_mode():
         src = (ROOT / rel).read_text()
         assert "interval: Experience.telemetryIntervalMs" in src, rel
         assert "root.refCount > 0 && !Experience.telemetryPaused" in src, rel
-    assert 'telemetryPaused: fields["telemetry.pauseWhenHidden"] && fullscreenActive' in QML
+    assert "readonly property bool telemetryPaused: policy.telemetryPaused" in QML
 
 
 def test_gaming_hides_the_desktop_layer_under_fullscreen():
     line = next(l for l in QML.splitlines() if "readonly property bool desktopWidgetsVisible:" in l)
-    assert 'desktopWidgets !== "none"' in line and "!(gaming && fullscreenActive)" in line
+    assert "policy.desktopWidgetsVisible" in line
     background = (ROOT / "modules" / "background" / "Background.qml").read_text()
     assert "Config.background.desktopClock.enabled && Experience.desktopWidgetsVisible" in background
     assert "opacity: Experience.desktopWidgetsVisible ? 1 : 0" in background
@@ -494,3 +493,89 @@ def test_bars_follow_the_mode_density():
     bar = (ROOT / "modules" / "bar" / "Bar.qml").read_text()
     assert "density: root.spec.density" not in bar
     assert bar.count("density: Experience.barDensity(root.spec.density)") == 3
+
+
+# --- Runtime policy under a fullscreen window (behaviour, executed) --------
+
+def policy(mode: str, fullscreen: bool, overrides: dict | None = None):
+    return run_js(
+        f"const p = resolve({json.dumps(mode)}, {json.dumps(overrides or {})});"
+        f"return policy(p.fields, {{mode: {json.dumps(mode)}, fullscreen: {json.dumps(fullscreen)}}});"
+    )
+
+
+@pytest.mark.parametrize("value,expected", [
+    (0, False), (1, False), (2, True), (3, True), (None, False), ("2", False),
+])
+def test_fullscreen_state_is_a_bit_test(value, expected):
+    assert run_js(f"return isFullscreenState({json.dumps(value)});") is expected
+
+
+def test_gaming_policy_while_a_window_is_fullscreen():
+    p = policy("gaming", True)
+    assert p == {
+        "holdPopups": True,
+        "telemetryPaused": True,
+        "desktopWidgetsVisible": False,
+        "idleInhibit": True,
+    }
+
+
+def test_gaming_policy_holds_notifications_and_pauses_nothing_else_off_fullscreen():
+    p = policy("gaming", False)
+    # Queued even when nothing is fullscreen: that is the mode's point.
+    assert p["holdPopups"] is True
+    # Polling continues and idle is not inhibited without a covering window.
+    assert p["telemetryPaused"] is False
+    assert p["idleInhibit"] is False
+    # Gaming has no desktop layer at all (desktopWidgets: none).
+    assert p["desktopWidgetsVisible"] is False
+
+
+def test_everyday_is_untouched_by_fullscreen():
+    p = policy("everyday", True)
+    assert p == {
+        "holdPopups": False,
+        "telemetryPaused": False,
+        "desktopWidgetsVisible": True,
+        "idleInhibit": False,
+    }
+
+
+def test_studio_suppresses_popups_only_under_fullscreen():
+    assert policy("studio", False)["holdPopups"] is False
+    assert policy("studio", True)["holdPopups"] is True
+
+
+def test_gaming_guardrails_cannot_be_overridden_into_motion_or_glow():
+    over = {"gaming": {"motion": "full", "glow": True, "scanlines": True}}
+    p = run_js(f"return resolve('gaming', {json.dumps(over)}).fields;")
+    assert p["motion"] == "off"
+    assert p["glow"] is False
+    assert p["scanlines"] is False
+
+
+def test_user_can_opt_gaming_out_of_the_hold_and_the_policy_follows():
+    over = {"gaming": {"notifications.hold": False, "notifications.suppressFullscreen": False}}
+    assert policy("gaming", True, over)["holdPopups"] is False
+
+
+@pytest.mark.parametrize("hold,critical,dnd,held,popup", [
+    (True, False, False, True, False),   # queued: filed, no popup
+    (True, True, False, False, True),    # critical always reaches the person
+    (True, False, True, False, False),   # Do Not Disturb: silent
+    (True, True, True, False, True),     # critical beats DND by design
+    (False, False, False, False, True),  # no policy: normal popup
+    (False, False, True, False, False),
+])
+def test_notification_disposition(hold, critical, dnd, held, popup):
+    out = run_js(
+        f"return notificationDisposition({json.dumps(hold)}, {json.dumps(critical)}, {json.dumps(dnd)});"
+    )
+    assert out == {"held": held, "popup": popup}
+
+
+def test_compositor_uses_the_bit_test_for_fullscreen_windows():
+    comp = (ROOT / "services" / "Compositor.qml").read_text()
+    assert "lastIpcObject.fullscreen === 2" not in comp
+    assert comp.count("ExperienceModel.isFullscreenState(window.lastIpcObject.fullscreen)") == 2

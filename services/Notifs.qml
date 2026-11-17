@@ -1,6 +1,7 @@
 pragma Singleton
 pragma ComponentBehavior: Bound
 
+import "experience.js" as ExperienceModel
 import qs.components.misc
 import qs.config
 import qs.utils
@@ -156,11 +157,12 @@ Singleton {
             // suppression): held notifications are filed without a popup
             // and counted so leaving the mode can report them.
             const critical = notif.urgency === NotificationUrgency.Critical;
-            const held = !critical && !props.dnd && Experience.holdPopups;
+            const route = ExperienceModel.notificationDisposition(Experience.holdPopups, critical, props.dnd);
+            const held = route.held;
             if (held)
                 Experience.noteHeld();
             const comp = notifComp.createObject(root, {
-                popup: (critical || (!props.dnd && !held)) && ![...Visibilities.screens.values()].some(v => v.sidebar),
+                popup: route.popup && ![...Visibilities.screens.values()].some(v => v.sidebar),
                 notification: notif
             });
             root.list = [comp, ...root.list];

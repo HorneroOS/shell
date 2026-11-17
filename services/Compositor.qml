@@ -1,5 +1,6 @@
 pragma Singleton
 
+import "experience.js" as ExperienceModel
 import Quickshell
 import Quickshell.Io
 import qs.services
@@ -127,13 +128,13 @@ Singleton {
     function hasFullscreenOnScreen(screen: var): bool {
         if (!isHyprland)
             return false;
-        return Hypr.monitorFor(screen)?.activeWorkspace?.toplevels.values.some(window => window.lastIpcObject.fullscreen === 2) ?? false;
+        return Hypr.monitorFor(screen)?.activeWorkspace?.toplevels.values.some(window => ExperienceModel.isFullscreenState(window.lastIpcObject.fullscreen)) ?? false;
     }
 
     function hasFullscreenOnFocusedOutput(): bool {
         if (!isHyprland)
             return false;
-        return Hypr.focusedWorkspace?.toplevels.values.some(window => window.lastIpcObject.fullscreen === 2) ?? false;
+        return Hypr.focusedWorkspace?.toplevels.values.some(window => ExperienceModel.isFullscreenState(window.lastIpcObject.fullscreen)) ?? false;
     }
 
     function activeWorkspaceHasWindows(screen: var): bool {

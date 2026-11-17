@@ -364,7 +364,8 @@ def test_gaming_and_focus_instantiate_nothing():
         block = exp[exp.index(f'"{mode}": _profile'):]
         block = block[: block.index("}),")]
         assert '"desktopWidgets": "none"' in block, mode
-    assert "!(gaming && fullscreenActive)" in EXPERIENCE
+    assert "readonly property bool desktopWidgetsVisible: policy.desktopWidgetsVisible" in EXPERIENCE
+    assert '!(gaming && fs)' in exp
 
 
 def test_deck_enters_and_exits_with_the_shared_motion_primitives():

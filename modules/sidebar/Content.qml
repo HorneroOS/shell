@@ -20,12 +20,14 @@ Item {
         anchors.fill: parent
         spacing: Appearance.spacing.normal
 
-        StyledRect {
+        Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            radius: Appearance.rounding.normal
-            color: Signal.tPalette.sunken
+            radius: Appearance.rounding.small
+            color: Signal.palette.sunken
+            border.width: 1
+            border.color: Signal.palette.rule
 
             NotifDock {
                 props: root.props
@@ -33,12 +35,5 @@ Item {
             }
         }
 
-        StyledRect {
-            Layout.topMargin: Appearance.padding.large - layout.spacing
-            Layout.fillWidth: true
-            implicitHeight: 1
-
-            color: Signal.tPalette.rule
-        }
     }
 }

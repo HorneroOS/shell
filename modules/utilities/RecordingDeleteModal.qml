@@ -129,8 +129,10 @@ Loader {
 
         StyledRect {
             anchors.centerIn: parent
-            radius: Appearance.rounding.large
-            color: Signal.palette.raised
+            radius: Appearance.rounding.small
+            color: Signal.palette.lifted
+            border.width: 1
+            border.color: Signal.palette.ruleStrong
 
             scale: 0
             Component.onCompleted: scale = Qt.binding(() => root.props.recordingConfirmDelete ? 1 : 0)

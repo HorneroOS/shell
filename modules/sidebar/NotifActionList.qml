@@ -117,15 +117,18 @@ Item {
                     implicitWidth: actionInner.implicitWidth + Appearance.padding.normal * 2
                     implicitHeight: actionInner.implicitHeight + Appearance.padding.small * 2
 
-                    Layout.preferredWidth: implicitWidth + (actionStateLayer.pressed ? Appearance.padding.large : 0)
-                    radius: actionStateLayer.pressed ? Appearance.rounding.small / 2 : Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.lifted, 4)
+                    // Fixed square cell in every state: no width or radius
+                    // morph on press.
+                    radius: Appearance.rounding.small
+                    color: Signal.palette.lifted
+                    border.width: 1
+                    border.color: Signal.palette.rule
 
                     Timer {
                         id: copyTimer
 
                         interval: 3000
-                        onTriggered: actionInner.item.text = "content_copy"
+                        onTriggered: actionInner.item.text = "copy"
                     }
 
                     StateLayer {
@@ -136,7 +139,7 @@ Item {
                                 root.notif.close();
                             } else if (action.modelData.isCopy) {
                                 Quickshell.clipboardText = root.notif.body;
-                                actionInner.item.text = "inventory";
+                                actionInner.item.text = "check";
                                 copyTimer.start();
                             } else if (action.modelData.invoke) {
                                 action.modelData.invoke();
@@ -159,7 +162,7 @@ Item {
                         Glyph {
                             animate: action.modelData.isCopy ?? false
                             name: action.modelData.isCopy ? "copy" : "x"
-                            color: Signal.palette.inkMuted
+                            color: Signal.palette.ink
                         }
                     }
 
@@ -176,21 +179,7 @@ Item {
 
                         StyledText {
                             text: action.modelData.text
-                            color: Signal.palette.inkMuted
-                        }
-                    }
-
-                    Behavior on Layout.preferredWidth {
-                        Anim {
-                            duration: Appearance.anim.durations.settleFast
-                            easing.bezierCurve: Appearance.anim.curves.settleFast
-                        }
-                    }
-
-                    Behavior on radius {
-                        Anim {
-                            duration: Appearance.anim.durations.settleFast
-                            easing.bezierCurve: Appearance.anim.curves.settleFast
+                            color: Signal.palette.ink
                         }
                     }
                 }

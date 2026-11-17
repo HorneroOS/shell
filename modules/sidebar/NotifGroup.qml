@@ -50,8 +50,10 @@ StyledRect {
     implicitHeight: content.implicitHeight + Appearance.padding.normal * 2
 
     clip: true
-    radius: Appearance.rounding.normal
-    color: Signal.layer(Signal.palette.panel, 2)
+    radius: Appearance.rounding.small
+    color: Signal.palette.panel
+    border.width: 1
+    border.color: root.urgency === NotificationUrgency.Critical ? Signal.palette.alert : Signal.palette.rule
 
     RowLayout {
         id: content
@@ -87,7 +89,7 @@ StyledRect {
                 ColouredIcon {
                     implicitSize: Math.round(Config.notifs.sizes.image * 0.6)
                     source: Quickshell.iconPath(root.appIcon)
-                    colour: root.urgency === NotificationUrgency.Critical ? Signal.palette.onAlert : root.urgency === NotificationUrgency.Low ? Signal.palette.ink : Signal.palette.onCueWell
+                    colour: root.urgency === NotificationUrgency.Critical ? Signal.palette.onAlert : root.urgency === NotificationUrgency.Low ? Signal.palette.ink : Signal.palette.ink
                     layer.enabled: root.appIcon.endsWith("symbolic")
                 }
             }
@@ -97,15 +99,18 @@ StyledRect {
 
                 Glyph {
                     name: Icons.getNotifIcon(root.notifs[0]?.summary, root.urgency)
-                    color: root.urgency === NotificationUrgency.Critical ? Signal.palette.onAlert : root.urgency === NotificationUrgency.Low ? Signal.palette.ink : Signal.palette.onCueWell
+                    color: root.urgency === NotificationUrgency.Critical ? Signal.palette.onAlert : root.urgency === NotificationUrgency.Low ? Signal.palette.ink : Signal.palette.ink
                     font.pointSize: Appearance.font.size.large
                 }
             }
 
-            StyledClippingRect {
+            Rectangle {
                 anchors.fill: parent
-                color: root.urgency === NotificationUrgency.Critical ? Signal.palette.alert : root.urgency === NotificationUrgency.Low ? Signal.layer(Signal.palette.raised, 3) : Signal.palette.cueWell
-                radius: Appearance.rounding.full
+                clip: true
+                color: root.urgency === NotificationUrgency.Critical ? Signal.palette.alert : Signal.palette.sunken
+                radius: Appearance.rounding.small
+                border.width: 1
+                border.color: root.urgency === NotificationUrgency.Critical ? Signal.palette.alert : Signal.palette.rule
 
                 Loader {
                     anchors.centerIn: parent
@@ -122,14 +127,14 @@ StyledRect {
                     implicitWidth: Config.notifs.sizes.badge
                     implicitHeight: Config.notifs.sizes.badge
 
-                    color: root.urgency === NotificationUrgency.Critical ? Signal.palette.alert : root.urgency === NotificationUrgency.Low ? Signal.palette.raised : Signal.palette.cueWell
-                    radius: Appearance.rounding.full
+                    color: root.urgency === NotificationUrgency.Critical ? Signal.palette.alert : Signal.palette.raised
+                    radius: Appearance.rounding.small
 
                     ColouredIcon {
                         anchors.centerIn: parent
                         implicitSize: Math.round(Config.notifs.sizes.badge * 0.6)
                         source: Quickshell.iconPath(root.appIcon)
-                        colour: root.urgency === NotificationUrgency.Critical ? Signal.palette.onAlert : root.urgency === NotificationUrgency.Low ? Signal.palette.ink : Signal.palette.onCueWell
+                        colour: root.urgency === NotificationUrgency.Critical ? Signal.palette.onAlert : root.urgency === NotificationUrgency.Low ? Signal.palette.ink : Signal.palette.ink
                         layer.enabled: root.appIcon.endsWith("symbolic")
                     }
                 }
@@ -162,7 +167,7 @@ StyledRect {
                 StyledText {
                     animate: true
                     text: root.notifs.find(n => !n.closed)?.timeStr ?? ""
-                    color: Signal.palette.ruleStrong
+                    color: Signal.palette.inkMuted
                     font.pointSize: Appearance.font.size.small
                 }
 
@@ -170,8 +175,10 @@ StyledRect {
                     implicitWidth: expandBtn.implicitWidth + Appearance.padding.smaller * 2
                     implicitHeight: groupCount.implicitHeight + Appearance.padding.small
 
-                    color: root.urgency === NotificationUrgency.Critical ? Signal.palette.alert : Signal.layer(Signal.palette.raised, 3)
-                    radius: Appearance.rounding.full
+                    color: root.urgency === NotificationUrgency.Critical ? Signal.palette.alert : Signal.palette.lifted
+                    radius: Appearance.rounding.small
+                    border.width: 1
+                    border.color: root.urgency === NotificationUrgency.Critical ? Signal.palette.alert : Signal.palette.rule
 
                     StateLayer {
                         color: root.urgency === NotificationUrgency.Critical ? Signal.palette.onAlert : Signal.palette.ink

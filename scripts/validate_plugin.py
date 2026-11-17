@@ -64,7 +64,7 @@ BAR_SECTIONS = ("status", "actions", "clock", "end")
 SCHEMA_VERSIONS = (3,)
 # PluginKit API level this validator targets; must equal
 # plugin/qml/Hornero/PluginKit/PluginKitInfo.qml apiLevel (tested).
-PLUGINKIT_API_LEVEL = 3
+PLUGINKIT_API_LEVEL = 4
 # Material-era manifests (PluginKit 1/2) are refused with a migration hint.
 LEGACY_SCHEMA_VERSIONS = (1, 2)
 DESKTOP_ANCHORS = (
@@ -405,25 +405,44 @@ def effective_surfaces(manifest: dict) -> dict[str, dict]:
 
 # Extension settings (shell#374): typed declarations in
 # capabilities.settings drive the generated Control Center UI. The
-# type set is closed: boolean, integer, number, string and enum (a
-# string restricted to declared `options`). There is deliberately no
-# path type: settings are plain Shell-owned values, never filesystem
-# paths the shell would open, so no setting can escape the user's
-# config dirs through this contract.
-SETTING_TYPES = ("boolean", "integer", "number", "string", "enum")
+# base type set is boolean, integer, number, string and enum (a
+# string restricted to declared `options`). PluginKit 4 adds colour,
+# list (multi-select over `options`), text (multi-line string) and
+# path (a string the Shell never opens; RFC 0003 section 5.1), plus
+# display-only fields (title, group, unit, step, visibleWhen). The
+# new types and fields require `"pluginKit": 4` in the manifest.
+SETTING_TYPES_V3 = ("boolean", "integer", "number", "string", "enum")
+SETTING_TYPES_V4 = ("colour", "list", "text", "path")
+SETTING_TYPES = SETTING_TYPES_V3 + SETTING_TYPES_V4
 SETTING_STRING_MAX = 4096
 SETTING_ENUM_MAX_OPTIONS = 32
+SETTING_PATH_MAX = 1024
+SETTING_LIST_MAX_ITEMS = 32
+# Display-only fields valid on every type; constraints per type below.
+SETTING_DISPLAY_ALL = frozenset({"title", "group", "visibleWhen"})
+SETTING_DISPLAY_NUMERIC = frozenset({"unit", "step"})
 SETTING_FIELDS = {
     "type", "default", "description",
     "minimum", "maximum", "minLength", "maxLength", "options",
+    "step", "unit", "title", "group", "visibleWhen",
+    "alpha", "minItems", "maxItems", "rows", "kind", "mustExist",
 }
 SETTING_CONSTRAINTS = {
     "boolean": frozenset(),
-    "integer": frozenset({"minimum", "maximum"}),
-    "number": frozenset({"minimum", "maximum"}),
+    "integer": frozenset({"minimum", "maximum", "step", "unit"}),
+    "number": frozenset({"minimum", "maximum", "step", "unit"}),
     "string": frozenset({"minLength", "maxLength"}),
     "enum": frozenset({"options"}),
+    "colour": frozenset({"alpha"}),
+    "list": frozenset({"options", "minItems", "maxItems"}),
+    "text": frozenset({"minLength", "maxLength", "rows"}),
+    "path": frozenset({"kind", "mustExist"}),
 }
+# Fields that exist only from PluginKit 4 on, whatever the type.
+SETTING_V4_FIELDS = frozenset({"title", "group", "visibleWhen", "step", "unit"})
+PATH_KINDS = ("file", "directory")
+COLOUR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
+COLOUR_ALPHA_RE = re.compile(r"^#[0-9a-fA-F]{6}(?:[0-9a-fA-F]{2})?$")
 
 
 def _is_finite_number(value: object) -> bool:
@@ -450,7 +469,7 @@ def setting_value_valid(declaration: dict, value: object) -> bool:
     elif kind == "number":
         if not _is_finite_number(value):
             return False
-    elif kind == "string":
+    elif kind in ("string", "text"):
         if not isinstance(value, str) or len(value) > SETTING_STRING_MAX:
             return False
         if "minLength" in declaration and len(value) < declaration["minLength"]:
@@ -460,6 +479,22 @@ def setting_value_valid(declaration: dict, value: object) -> bool:
         return True
     elif kind == "enum":
         return isinstance(value, str) and value in declaration.get("options", [])
+    elif kind == "colour":
+        pattern = COLOUR_ALPHA_RE if declaration.get("alpha") is True else COLOUR_RE
+        return isinstance(value, str) and pattern.fullmatch(value) is not None
+    elif kind == "list":
+        if not isinstance(value, list) or len(value) != len(set(map(str, value))):
+            return False
+        options = declaration.get("options", [])
+        if any(not isinstance(item, str) or item not in options for item in value):
+            return False
+        return declaration.get("minItems", 0) <= len(value) <= declaration.get("maxItems", len(options))
+    elif kind == "path":
+        return (
+            isinstance(value, str)
+            and len(value) <= SETTING_PATH_MAX
+            and not any(ord(char) < 32 or ord(char) == 127 for char in value)
+        )
     else:
         return False
     # integer / number range constraints
@@ -497,18 +532,32 @@ def _validate_setting(key: str, setting: dict) -> None:
     if kind not in SETTING_TYPES:
         raise ValidationError(
             f"setting {key} type must be one of: {', '.join(SETTING_TYPES)} "
-            f"(got {kind!r}; there is no path-typed setting — settings are "
-            "plain Shell-owned values, never filesystem paths)"
+            f"(got {kind!r}; settings are plain Shell-owned values — a path "
+            "setting is a string the Shell never opens)"
         )
-    misplaced = (set(setting) - {"type", "default", "description"}) - SETTING_CONSTRAINTS[kind]
+    allowed_extra = SETTING_CONSTRAINTS[kind] | SETTING_DISPLAY_ALL
+    misplaced = (set(setting) - {"type", "default", "description"}) - allowed_extra
     if misplaced:
         raise ValidationError(
             f"setting {key} of type {kind} cannot declare "
-            f"{', '.join(sorted(misplaced))} (allowed constraints for "
-            f"{kind}: {', '.join(sorted(SETTING_CONSTRAINTS[kind])) or 'none'})"
+            f"{', '.join(sorted(misplaced))} (allowed fields for "
+            f"{kind}: {', '.join(sorted(allowed_extra))})"
         )
     if "description" in setting:
         _string(setting["description"], f"setting {key} description", 160)
+    if "title" in setting:
+        _string(setting["title"], f"setting {key} title", 48)
+    if "group" in setting:
+        _string(setting["group"], f"setting {key} group", 32)
+    if "unit" in setting:
+        _string(setting["unit"], f"setting {key} unit", 8)
+    if "step" in setting:
+        step = setting["step"]
+        if not _is_finite_number(step) or step <= 0 or (kind == "integer" and not _is_plain_int(step)):
+            raise ValidationError(
+                f"setting {key} step must be a positive "
+                f"{'integer' if kind == 'integer' else 'number'}"
+            )
 
     if kind == "integer":
         for bound in ("minimum", "maximum"):
@@ -524,7 +573,7 @@ def _validate_setting(key: str, setting: dict) -> None:
             and setting["minimum"] > setting["maximum"]
         ):
             raise ValidationError(f"setting {key} minimum must not exceed maximum")
-    if kind == "string":
+    if kind in ("string", "text"):
         for bound in ("minLength", "maxLength"):
             if bound in setting and (
                 not _is_plain_int(setting[bound])
@@ -538,22 +587,96 @@ def _validate_setting(key: str, setting: dict) -> None:
             and setting["minLength"] > setting["maxLength"]
         ):
             raise ValidationError(f"setting {key} minLength must not exceed maxLength")
-    if kind == "enum":
+    if kind == "text" and "rows" in setting and (
+        not _is_plain_int(setting["rows"]) or not 1 <= setting["rows"] <= 12
+    ):
+        raise ValidationError(f"setting {key} rows must be an integer between 1 and 12")
+    if kind in ("enum", "list"):
         options = setting.get("options")
         if not isinstance(options, list) or not options or len(options) > SETTING_ENUM_MAX_OPTIONS:
             raise ValidationError(
-                f"setting {key} of type enum must declare options: a list of "
+                f"setting {key} of type {kind} must declare options: a list of "
                 f"1 to {SETTING_ENUM_MAX_OPTIONS} allowed values"
             )
         if any(not isinstance(option, str) or not option or len(option) > 64 for option in options):
             raise ValidationError(f"setting {key} options must be non-empty strings of at most 64 characters")
         if len(options) != len(set(options)):
             raise ValidationError(f"setting {key} options must not contain duplicates")
+    if kind == "list":
+        for bound in ("minItems", "maxItems"):
+            if bound in setting and (
+                not _is_plain_int(setting[bound])
+                or not 0 <= setting[bound] <= len(setting["options"])
+            ):
+                raise ValidationError(
+                    f"setting {key} {bound} must be an integer between 0 and the number of options"
+                )
+        if "minItems" in setting and "maxItems" in setting and setting["minItems"] > setting["maxItems"]:
+            raise ValidationError(f"setting {key} minItems must not exceed maxItems")
+    if kind == "colour" and "alpha" in setting and not isinstance(setting["alpha"], bool):
+        raise ValidationError(f"setting {key} alpha must be a boolean")
+    if kind == "path":
+        if "kind" in setting and setting["kind"] not in PATH_KINDS:
+            raise ValidationError(f"setting {key} kind must be one of: {', '.join(PATH_KINDS)}")
+        if "mustExist" in setting and not isinstance(setting["mustExist"], bool):
+            raise ValidationError(f"setting {key} mustExist must be a boolean")
+        default = setting["default"]
+        if isinstance(default, str) and default != "":
+            pure = PurePosixPath(default)
+            if (
+                default.startswith(("/", "~"))
+                or ".." in pure.parts
+                or "\\" in default
+            ):
+                raise ValidationError(
+                    f"setting {key} default must be empty or a safe relative path "
+                    "(no leading / or ~, no ..): the Shell never ships a default "
+                    "pointing outside the user's own directories"
+                )
 
     if not setting_value_valid(setting, setting["default"]):
         raise ValidationError(
             f"setting {key} default does not match its declared type or constraints"
         )
+
+
+def settings_need_level(settings: dict) -> int:
+    """PluginKit level the declared settings require (3 or 4)."""
+    for setting in settings.values():
+        if (
+            isinstance(setting, dict)
+            and (setting.get("type") in SETTING_TYPES_V4 or SETTING_V4_FIELDS & set(setting))
+        ):
+            return 4
+    return 3
+
+
+def _validate_visible_when(settings: dict) -> None:
+    """visibleWhen references: known sibling, matching value, no cycles."""
+    for key, setting in settings.items():
+        if "visibleWhen" not in setting:
+            continue
+        where = f"setting {key} visibleWhen"
+        condition = _object(setting["visibleWhen"], where)
+        if set(condition) != {"key", "equals"}:
+            raise ValidationError(f"{where} must be exactly {{\"key\": <setting>, \"equals\": <value>}}")
+        target = condition["key"]
+        if target == key:
+            raise ValidationError(f"{where} must not reference the setting itself")
+        if not isinstance(target, str) or target not in settings:
+            raise ValidationError(f"{where} references unknown setting {target!r}")
+        if not setting_value_valid(settings[target], condition["equals"]):
+            raise ValidationError(
+                f"{where} equals value does not satisfy setting {target}'s declaration"
+            )
+    for key in settings:
+        seen = {key}
+        current = key
+        while "visibleWhen" in settings[current]:
+            current = settings[current]["visibleWhen"]["key"]
+            if current in seen:
+                raise ValidationError(f"setting {key} visibleWhen forms a cycle")
+            seen.add(current)
 
 
 # Marketplace metadata (shell#379): static discovery/detail data the
@@ -865,6 +988,7 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
         "schemaVersion", "id", "name", "version", "description", "author",
         "license", "homepage", "entrypoint", "files", "capabilities", "placement",
         "signing", "surfaces", "translations", "marketplace", "theme",
+        "pluginKit",
     }
     unknown = manifest.keys() - allowed
     missing = {
@@ -892,6 +1016,17 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
             "unknown manifest versions are rejected"
         )
     schema_version = manifest["schemaVersion"]
+    # Minimum PluginKit apiLevel the package needs (RFC 0003 section 3).
+    # Defaults to 3; features that exist only from level 4 on must be
+    # declared, so an author cannot under-declare and ship a package an
+    # older kit would half-load.
+    declared_level = manifest.get("pluginKit", 3)
+    if type(declared_level) is not int or not 3 <= declared_level <= PLUGINKIT_API_LEVEL:
+        raise ValidationError(
+            f"pluginKit must be an integer between 3 and {PLUGINKIT_API_LEVEL} "
+            f"(got {declared_level!r}); a package that needs a newer PluginKit "
+            "than this Shell provides is refused rather than half-loaded"
+        )
     plugin_id = _string(manifest["id"], "id", 48)
     if not ID.fullmatch(plugin_id):
         raise ValidationError("id must use lowercase letters, digits, and internal hyphens")
@@ -984,6 +1119,13 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
         if not re.fullmatch(r"[a-z][a-zA-Z0-9]{0,47}", key):
             raise ValidationError(f"invalid setting id: {key}")
         _validate_setting(key, _object(raw_setting, f"capabilities.settings.{key}"))
+    _validate_visible_when(settings)
+    if settings_need_level(settings) > declared_level:
+        raise ValidationError(
+            "capabilities.settings uses PluginKit 4 features (colour, list, "
+            "text or path settings, or title/group/unit/step/visibleWhen); "
+            'declare "pluginKit": 4 in the manifest'
+        )
 
     actual: set[str] = set()
     qml_files: list[Path] = []

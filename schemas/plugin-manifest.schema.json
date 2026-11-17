@@ -310,7 +310,7 @@
           }
         },
         "settings": {
-          "description": "Typed extension settings (shell#374). Each declaration drives the generated Control Center settings UI and the PluginKit Settings facade: exact type plus declared constraints are validated on read and write, invalid stored values fall back to `default` (migration), and reset removes the stored value. The type set is closed — boolean, integer, number, string, enum. There is no path type: settings are plain Shell-owned values, never filesystem paths the shell opens. Cross-field rules JSON Schema cannot express (minimum <= maximum, minLength <= maxLength, default inside its range/length, enum default listed in options) are enforced by scripts/validate_plugin.py and mirrored by the runtime (services/Plugins.qml).",
+          "description": "Typed extension settings (shell#374, schema v2 in PluginKit 4). Each declaration drives the generated Control Center settings UI and the PluginKit Settings facade: exact type plus declared constraints are validated on read and write, invalid stored values fall back to `default` (migration), and reset removes the stored value. The base types are boolean, integer, number, string and enum; PluginKit 4 (`pluginKit: 4`) adds colour, list, text and path plus display-only fields title, group, unit, step and visibleWhen. A path setting is a string the Shell never opens; its default must be empty or a safe relative path. Cross-field rules JSON Schema cannot express (minimum <= maximum, default inside its range/length, enum default listed in options, visibleWhen referencing a real sibling without cycles, level-4 features requiring pluginKit 4) are enforced by scripts/validate_plugin.py and mirrored by the runtime (services/Plugins.qml).",
           "type": "object",
           "propertyNames": {
             "pattern": "^[a-z][a-zA-Z0-9]{0,47}$"
@@ -329,7 +329,11 @@
                   "integer",
                   "number",
                   "string",
-                  "enum"
+                  "enum",
+                  "colour",
+                  "list",
+                  "text",
+                  "path"
                 ]
               },
               "default": {
@@ -337,7 +341,8 @@
                   "boolean",
                   "integer",
                   "number",
-                  "string"
+                  "string",
+                  "array"
                 ]
               },
               "description": {
@@ -371,6 +376,78 @@
                   "minLength": 1,
                   "maxLength": 64
                 }
+              },
+              "step": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "unit": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 8,
+                "pattern": "\\S"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 48,
+                "pattern": "\\S"
+              },
+              "group": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 32,
+                "pattern": "\\S"
+              },
+              "visibleWhen": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "key",
+                  "equals"
+                ],
+                "properties": {
+                  "key": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-zA-Z0-9]{0,47}$"
+                  },
+                  "equals": {
+                    "type": [
+                      "boolean",
+                      "integer",
+                      "number",
+                      "string",
+                      "array"
+                    ]
+                  }
+                }
+              },
+              "alpha": {
+                "type": "boolean"
+              },
+              "minItems": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 32
+              },
+              "maxItems": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 32
+              },
+              "rows": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 12
+              },
+              "kind": {
+                "enum": [
+                  "file",
+                  "directory"
+                ]
+              },
+              "mustExist": {
+                "type": "boolean"
               }
             },
             "oneOf": [
@@ -409,6 +486,46 @@
                       "required": [
                         "options"
                       ]
+                    },
+                    {
+                      "required": [
+                        "step"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "unit"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "alpha"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "minItems"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "maxItems"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "rows"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "kind"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "mustExist"
+                      ]
                     }
                   ]
                 }
@@ -426,6 +543,10 @@
                   },
                   "maximum": {
                     "type": "integer"
+                  },
+                  "step": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0
                   }
                 },
                 "not": {
@@ -443,6 +564,36 @@
                     {
                       "required": [
                         "options"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "alpha"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "minItems"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "maxItems"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "rows"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "kind"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "mustExist"
                       ]
                     }
                   ]
@@ -472,6 +623,36 @@
                     {
                       "required": [
                         "options"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "alpha"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "minItems"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "maxItems"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "rows"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "kind"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "mustExist"
                       ]
                     }
                   ]
@@ -503,6 +684,46 @@
                       "required": [
                         "options"
                       ]
+                    },
+                    {
+                      "required": [
+                        "step"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "unit"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "alpha"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "minItems"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "maxItems"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "rows"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "kind"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "mustExist"
+                      ]
                     }
                   ]
                 }
@@ -516,9 +737,6 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "options"
-                ],
                 "not": {
                   "anyOf": [
                     {
@@ -539,6 +757,333 @@
                     {
                       "required": [
                         "maxLength"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "step"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "unit"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "alpha"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "minItems"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "maxItems"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "rows"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "kind"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "mustExist"
+                      ]
+                    }
+                  ]
+                },
+                "required": [
+                  "options"
+                ]
+              },
+              {
+                "properties": {
+                  "type": {
+                    "const": "colour"
+                  },
+                  "default": {
+                    "type": "string",
+                    "pattern": "^#[0-9a-fA-F]{6}(?:[0-9a-fA-F]{2})?$"
+                  }
+                },
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "minimum"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "maximum"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "minLength"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "maxLength"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "options"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "step"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "unit"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "minItems"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "maxItems"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "rows"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "kind"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "mustExist"
+                      ]
+                    }
+                  ]
+                }
+              },
+              {
+                "properties": {
+                  "type": {
+                    "const": "list"
+                  },
+                  "default": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 64
+                    },
+                    "uniqueItems": true,
+                    "maxItems": 32
+                  }
+                },
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "minimum"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "maximum"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "minLength"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "maxLength"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "step"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "unit"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "alpha"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "rows"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "kind"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "mustExist"
+                      ]
+                    }
+                  ]
+                },
+                "required": [
+                  "options"
+                ]
+              },
+              {
+                "properties": {
+                  "type": {
+                    "const": "text"
+                  },
+                  "default": {
+                    "type": "string",
+                    "maxLength": 4096
+                  }
+                },
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "minimum"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "maximum"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "options"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "step"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "unit"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "alpha"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "minItems"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "maxItems"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "kind"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "mustExist"
+                      ]
+                    }
+                  ]
+                }
+              },
+              {
+                "properties": {
+                  "type": {
+                    "const": "path"
+                  },
+                  "default": {
+                    "type": "string",
+                    "maxLength": 1024
+                  }
+                },
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "minimum"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "maximum"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "minLength"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "maxLength"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "options"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "step"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "unit"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "alpha"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "minItems"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "maxItems"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "rows"
                       ]
                     }
                   ]
@@ -610,6 +1155,13 @@
           }
         }
       }
+    },
+    "pluginKit": {
+      "type": "integer",
+      "minimum": 3,
+      "maximum": 4,
+      "default": 3,
+      "description": "Minimum PluginKit apiLevel the package needs (RFC 0003). Defaults to 3. Features that exist only from level 4 (colour/list/text/path settings, title/group/unit/step/visibleWhen, contributes, instances) must declare 4; scripts/validate_plugin.py enforces that a package cannot under-declare, and a Shell whose kit is older refuses the package plainly."
     }
   },
   "$defs": {

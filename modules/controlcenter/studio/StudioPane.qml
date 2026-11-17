@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import ".."
 import "../components"
+import "../components/doctor.js" as Doctor
 import qs.components
 import qs.components.controls
 import qs.components.containers
@@ -71,6 +72,9 @@ Item {
     property string selectionError: ""
     property string actionError: ""
     property var doctorChecks: []
+    property string doctorSummary: ""
+    property string doctorError: ""
+    property bool doctorLoading: false
     property string artcraftState: "unknown"
     property string artcraftVersion: "unknown"
     property bool busy: false
@@ -94,6 +98,7 @@ Item {
         selectionProc.command = ["horneroctl", "--json", "studio", "selection", "show"];
         selectionProc.running = true;
         doctorProc.command = ["horneroctl", "--json", "studio", "doctor"];
+        root.doctorLoading = true;
         doctorProc.running = true;
         modeProc.command = ["horneroctl", "--json", "studio", "mode"];
         modeProc.running = true;
@@ -230,16 +235,11 @@ Item {
         }
         onStarted: doctorProc.out = ""
         onExited: {
-            try {
-                const env = JSON.parse(doctorProc.out.trim());
-                const data = env.data || {};
-                root.doctorChecks = Object.keys(data).sort().map(name => ({
-                            "name": name,
-                            "ok": data[name] === "ok"
-                        }));
-            } catch (e) {
-                root.doctorChecks = [];
-            }
+            root.doctorLoading = false;
+            const result = Doctor.parse(doctorProc.out);
+            root.doctorChecks = result.checks;
+            root.doctorSummary = result.summary;
+            root.doctorError = result.available ? "" : qsTr("Studio health is unavailable: horneroctl did not answer. Install or repair horneroctl, then refresh.");
         }
     }
 
@@ -395,10 +395,26 @@ Item {
                     spacing: Appearance.spacing.normal
 
                     PaneHeader {
-                        title: qsTr("Studio")
-                        icon: "movie"
-                        description: qsTr("Tools for music, video, streaming and design work")
+                        paneId: "studio"
                         intro: qsTr("Studio is Planned. Choose the kinds of creative work you do on this computer: Hornero remembers your choice, and installing the related apps is a separate step you review and confirm later.")
+                    }
+
+                    SectionContainer {
+                        DoctorBoard {
+                            Layout.fillWidth: true
+                            edition: qsTr("Studio")
+                            checks: root.doctorChecks
+                            loading: root.doctorLoading
+                            error: root.doctorError
+                            summary: root.doctorSummary
+                        }
+
+                        TextButton {
+                            text: qsTr("Run doctor again")
+                            Accessible.name: qsTr("Run Studio doctor again")
+                            enabled: !root.busy && !root.doctorLoading
+                            onClicked: root.refresh()
+                        }
                     }
 
                     SectionContainer {
@@ -763,37 +779,6 @@ Item {
                             Layout.fillWidth: true
                             visible: root.jobLogText.length > 0
                             text: root.jobLogText
-                            wrapMode: Text.WordWrap
-                            color: Signal.palette.inkMuted
-                            font.pointSize: Appearance.font.size.small
-                        }
-                    }
-
-                    SectionContainer {
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: qsTr("Health")
-                            font.pointSize: Appearance.font.size.large
-                            font.weight: 600
-                        }
-
-                        Repeater {
-                            model: root.doctorChecks
-
-                            StyledText {
-                                required property var modelData
-
-                                Layout.fillWidth: true
-                                text: `${modelData.ok ? "✓" : "✗"} ${modelData.name}`
-                                color: modelData.ok ? Signal.palette.inkMuted : Signal.palette.alert
-                                font.pointSize: Appearance.font.size.small
-                            }
-                        }
-
-                        StyledText {
-                            Layout.fillWidth: true
-                            visible: root.doctorChecks.length === 0
-                            text: qsTr("Health checks unavailable (is horneroctl installed?).")
                             wrapMode: Text.WordWrap
                             color: Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.small

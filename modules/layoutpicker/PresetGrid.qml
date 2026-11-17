@@ -218,7 +218,7 @@ Item {
                 readonly property bool isFocused: root.keyboardNav && index === root.focusIndex
 
                 implicitWidth: root.cardWidth
-                implicitHeight: 178
+                implicitHeight: 194
                 radius: Appearance.rounding.small
                 color: isActive ? Signal.palette.signalWell : Signal.layer(Signal.palette.raised, 1)
                 border.color: isFocused ? Signal.palette.focus : isActive ? Signal.palette.signal : Signal.palette.rule

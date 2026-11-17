@@ -52,7 +52,8 @@ def test_gaming_pane_separates_focus_session_and_feral():
 
 
 def test_gaming_diagnostics_have_loading_error_and_empty_states():
-    assert "Running diagnostics" in PANE
+    board = (ROOT / "modules/controlcenter/components/DoctorBoard.qml").read_text()
+    assert "Running checks" in board
     assert "Gaming diagnostics returned no checks" in PANE
     assert "doctorLoading" in PANE
     assert "doctorError" in PANE

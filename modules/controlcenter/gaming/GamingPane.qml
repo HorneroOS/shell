@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import ".."
 import "../components"
+import "../components/doctor.js" as Doctor
 import qs.components
 import qs.components.controls
 import qs.components.containers
@@ -59,6 +60,7 @@ Item {
 
     property var doctorChecks: []
     property string doctorError: ""
+    property string doctorSummary: ""
     property bool doctorLoading: false
     property var selectedSpecializations: []
     property var selectedApplications: []
@@ -151,19 +153,13 @@ Item {
         onStarted: doctorProc.out = ""
         onExited: {
             root.doctorLoading = false;
-            try {
-                const env = JSON.parse(doctorProc.out.trim());
-                const data = env.data || {};
-                root.doctorChecks = Object.keys(data).sort().map(name => ({
-                            "name": name,
-                            "ok": data[name] === "ok"
-                        }));
-                if (root.doctorChecks.length === 0)
-                    root.doctorError = qsTr("Gaming diagnostics returned no checks.");
-            } catch (e) {
-                root.doctorChecks = [];
+            const result = Doctor.parse(doctorProc.out);
+            root.doctorChecks = result.checks;
+            root.doctorSummary = result.summary;
+            if (!result.available)
                 root.doctorError = qsTr("Gaming is unavailable (is a horneroctl with gaming support installed?).");
-            }
+            else if (result.checks.length === 0)
+                root.doctorError = qsTr("Gaming diagnostics returned no checks.");
         }
     }
 
@@ -253,10 +249,26 @@ Item {
                     spacing: Appearance.spacing.normal
 
                     PaneHeader {
-                        title: qsTr("Gaming")
-                        icon: "device-gamepad-2"
-                        description: qsTr("Gaming profiles, launchers and gaming mode")
+                        paneId: "gaming"
                         intro: qsTr("Gaming is in Preview. Choose the gaming setups you want: Hornero remembers your choice and installs nothing until you confirm it. Hardware detection is a hint, not a guarantee that a game will run well.")
+                    }
+
+                    SectionContainer {
+                        DoctorBoard {
+                            Layout.fillWidth: true
+                            edition: qsTr("Gaming")
+                            checks: root.doctorChecks
+                            loading: root.doctorLoading
+                            error: root.doctorError
+                            summary: root.doctorSummary
+                        }
+
+                        TextButton {
+                            text: qsTr("Run doctor again")
+                            Accessible.name: qsTr("Run Gaming doctor again")
+                            enabled: !root.busy && !root.doctorLoading
+                            onClicked: root.refresh()
+                        }
                     }
 
                     SectionContainer {
@@ -400,41 +412,10 @@ Item {
 
                         StyledText {
                             Layout.fillWidth: true
-                            text: qsTr("The experimental Gamescope session is chosen at the greeter (login screen), not launched from here. It fails closed when gamescope or Steam is missing; check Diagnostics below for both. Kernel-level anti-cheat is unsupported; EAC/BattlEye depend on publisher Proton enablement.")
+                            text: qsTr("The experimental Gamescope session is chosen at the greeter (login screen), not launched from here. It fails closed when gamescope or Steam is missing; check the doctor above for both. Kernel-level anti-cheat is unsupported; EAC/BattlEye depend on publisher Proton enablement.")
                             wrapMode: Text.WordWrap
                             color: Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.small
-                        }
-                    }
-
-                    SectionContainer {
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: qsTr("Diagnostics")
-                            font.pointSize: Appearance.font.size.large
-                            font.weight: 600
-                        }
-
-                        StyledText {
-                            Layout.fillWidth: true
-                            visible: root.doctorLoading || root.doctorError.length > 0 || root.doctorChecks.length === 0
-                            text: root.doctorLoading ? qsTr("Running diagnostics…") : root.doctorError.length > 0 ? root.doctorError : qsTr("No diagnostics yet.")
-                            wrapMode: Text.WordWrap
-                            color: root.doctorError.length > 0 ? Signal.palette.alert : Signal.palette.inkMuted
-                            font.pointSize: Appearance.font.size.small
-                        }
-
-                        Repeater {
-                            model: root.doctorChecks
-
-                            StyledText {
-                                required property var modelData
-
-                                Layout.fillWidth: true
-                                text: (modelData.ok ? "✓ " : "✗ ") + modelData.name
-                                color: modelData.ok ? Signal.palette.inkMuted : Signal.palette.alert
-                                font.pointSize: Appearance.font.size.small
-                            }
                         }
                     }
                 }

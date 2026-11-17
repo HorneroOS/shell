@@ -188,6 +188,9 @@ Across toolchains the golden test accepts colour drift up to ΔEOK 0.005
   `tests/chromatic/cases.json`; byte-identical repeats.
 - `tests/test_chromatic_golden.py` — 540 goldens (20 cases × 9 variants ×
   3 modes).
+- `tests/test_chromatic_catalogue.py` — config's credited catalogue
+  wallpapers: goldens for `auto` and `balanced`, and every variant × mode
+  accepted by `validate_scheme`.
 - `tests/test_chromatic_fuzz.py` — truncated, bit-flipped and disguised
   inputs end with exit 0 or 3, never a crash.
 - `tests/test_chromatic_perf.py` — RFC §14 budgets, failing at 3×.
@@ -218,12 +221,14 @@ checkout) and `HORNERO_CHROMATIC_SCRATCH`; without them they skip. CI's
 ## Performance
 
 Measured on the development host (x86-64, GCC 16, Qt 6.12, release with
-debug info), median of 5; CI enforces 3× the budget:
+debug info), median of 5; CI enforces 3× the budget. The GitHub-hosted
+runner is roughly 4× slower than the development host on the PNG case,
+which is dominated by zlib inflate of the 33 MB synthetic file:
 
 | Operation | Budget | Measured |
 | --- | --- | --- |
-| Decode + analyse 4K JPEG | 60 ms | 19 ms |
-| Decode + analyse 4K PNG | 150 ms | 109 ms |
-| Synthesis + solver from a cached analysis | 2 ms | 0.37 ms |
+| Decode + analyse 4K JPEG | 60 ms | 24 ms |
+| Decode + analyse 4K PNG (33 MB test file) | 150 ms | 91 ms |
+| Synthesis + solver from a cached analysis | 2 ms | 0.56 ms |
 | Helper end-to-end, cache hit | 20 ms | 8.3 ms |
 | Helper peak memory 4K / 8K PNG | 96 / 220 MB | 75 / 169 MB |

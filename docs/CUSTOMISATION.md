@@ -120,3 +120,11 @@ Surfaces carrying the layer: launcher, dashboard, notification cards (inner high
 screen, Welcome, and the Control Center navigation rail and title bar. Empty states with the mascot: launcher (no
 results), sidebar and lock notification docks; greetings: dashboard station card and lock screen; session menu footer.
 Typography: `StyledText.tabular` turns on fixed-width figures (readouts, clocks) and display clocks are set a hair tighter.
+
+## Placement (Launcher, OSD)
+
+`launcher.align` (left | centre | right along the bottom edge) and `osd.align` (top | centre | bottom along the right
+edge); both default to centre. The panels keep their edge (hover regions and slide animations depend on it), only
+their position along it changes. Notification corner/edge is not offered yet: the popups, toasts and the notification
+centre share the top-right anchor with the sidebar. Needs a QA VM check for the concave corner decoration when a
+launcher is aligned left or right.

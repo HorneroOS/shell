@@ -38,7 +38,7 @@ Item {
             id: labelItem
 
             anchors.verticalCenter: parent.verticalCenter
-            width: Math.min(implicitWidth, root.width - valueItem.implicitWidth - Theme.spacing.normal - (root.glyph.length > 0 ? 20 : 0))
+            width: Math.max(0, Math.min(implicitWidth, root.width - valueItem.width - Theme.spacing.normal - (root.glyph.length > 0 ? 20 + Theme.spacing.smaller : 0)))
             role: "body"
             text: root.label
             elide: Text.ElideRight
@@ -51,6 +51,14 @@ Item {
 
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
+        // A long value (an audio device name) elides inside the row instead
+        // of printing over the label: it may take what the label does not
+        // need, but never less than 60% of the row.
+        readonly property real labelNeed: labelItem.implicitWidth + Theme.spacing.normal + (root.glyph.length > 0 ? 20 + Theme.spacing.smaller : 0)
+        width: Math.min(implicitWidth, Math.max(root.width * 0.6, root.width - labelNeed))
+        elide: Text.ElideMiddle
+        wrapMode: Text.NoWrap
+        horizontalAlignment: Text.AlignRight
         role: "value"
         color: root._shown ? Theme.palette.ink : Theme.palette.inkMuted
         text: root._shown ? root.value : "—"

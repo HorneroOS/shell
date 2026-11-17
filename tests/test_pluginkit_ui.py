@@ -320,3 +320,10 @@ def test_specimen_renders_offscreen(tmp_path, experience, light):
 def test_pluginkit_colour_js_is_a_byte_copy_of_the_shell_model():
     shell = (ROOT / "services/chromatic.js").read_bytes()
     assert (KIT / "Colour.js").read_bytes() == shell, "re-copy services/chromatic.js to PluginKit/Colour.js"
+
+
+def test_detail_row_value_elides_instead_of_overprinting_the_label():
+    source = (KIT / "UiDetailRow.qml").read_text(encoding="utf-8")
+    assert "elide: Text.ElideMiddle" in source
+    assert "root.width * 0.6" in source
+    assert "root.width - valueItem.width" in source

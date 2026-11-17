@@ -147,6 +147,9 @@ JsonObject {
     // the alpha of the glows that are allowed.
     component Glow: JsonObject {
         property real intensity: 1
+        // How many glowing items may show at once (visual language section 9
+        // says three; 1..6 allowed). Mode rules still decide whether any glow shows.
+        property int limit: 3
     }
 
     // Atmosphere (visual language section 17): the warm, cosy layer on top of

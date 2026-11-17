@@ -17,7 +17,7 @@ ONAIR = (ROOT / "components" / "OnAirBar.qml").read_text()
 
 
 def test_one_budget_of_three_lives_in_experience():
-    assert "readonly property int glowLimit: 3" in EXPERIENCE
+    assert "readonly property int glowLimit: Math.max(1, Math.min(6, Math.round(Config.appearance.glow.limit)))" in EXPERIENCE
     assert "function acquireGlow(owner: var, reserve: int): bool" in EXPERIENCE
     assert "function releaseGlow(owner: var): void" in EXPERIENCE
     assert "root._glowHolders.length >= root.glowLimit - Math.max(0, reserve)" in EXPERIENCE

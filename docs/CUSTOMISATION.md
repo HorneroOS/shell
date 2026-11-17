@@ -127,3 +127,9 @@ Typography: `StyledText.tabular` turns on fixed-width figures (readouts, clocks)
 (20 / 10 / 5 %) and hibernate level (3 %) are editable under Power > Idle and battery, with Reset per row. Rows
 are matched by action (lock, dpms off, suspend), so hand-edited or reordered lists keep working; a removed action
 leaves its row inert.
+
+## Glow budget (Appearance > Look)
+
+`appearance.glow.limit` (1 to 6, default 3) is how many glowing items may show at once (`Experience.glowLimit`); the
+visual language default is three. Mode rules (no glow in Focus or Gaming, dark themes only) still decide whether any
+glow shows. `appearance.anim.mediaGifSpeedAdjustment` and `sessionGifSpeed` are not offered: nothing reads them today.

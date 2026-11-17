@@ -613,6 +613,8 @@ def test_manager_lives_in_the_experience_pane_and_links_to_extension_settings():
     assert 'startsWith("plugin:")' in ext and "settingsPluginId = id" in ext
     # Never writes extension lifecycle state or loads a widget for the map.
     assert "Plugins.setEnabled" not in manager and "horneroctl" not in manager and "Loader" not in manager
+    assert "StyledSlider {" in manager and "onPressedChanged" in manager
+    assert "Managed in Experience" in ext and "Experience.deckCatalogue.includes(row.entry.id)" in ext
     assert "Experience.setDeckStyle(" in manager and "Experience.saveDeckPreset(" in manager
 
 

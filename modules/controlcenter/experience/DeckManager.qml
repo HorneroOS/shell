@@ -380,11 +380,42 @@ ColumnLayout {
                         onActivated: index => root.report(Experience.setDeckStyle(root.mode, card.modelData, "size", ["small", "normal", "large"][index]))
                     }
 
-                    SegmentedControl {
-                        accessibleName: qsTr("%1 opacity").arg(card.item?.label ?? card.label)
-                        model: ["100%", "85%", "70%", "50%"]
-                        currentIndex: [1, 0.85, 0.7, 0.5].findIndex(v => Math.abs(v - card.look.opacity) < 0.075)
-                        onActivated: index => root.report(Experience.setDeckStyle(root.mode, card.modelData, "opacity", index === 0 ? "" : String([1, 0.85, 0.7, 0.5][index])))
+                    Row {
+                        spacing: Appearance.spacing.small
+
+                        StyledText {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: qsTr("Opacity")
+                            font.pointSize: Appearance.font.size.small
+                            color: Signal.palette.inkMuted
+                        }
+
+                        // Commits on release: one config write per drag, the
+                        // value label follows the thumb meanwhile.
+                        StyledSlider {
+                            id: opacitySlider
+
+                            width: 140
+                            from: 0.3
+                            to: 1
+                            stepSize: 0.05
+                            value: card.look.opacity
+                            accessibleName: qsTr("%1 opacity").arg(card.item?.label ?? card.label)
+                            onPressedChanged: {
+                                if (!pressed) {
+                                    const v = Math.round(value * 100) / 100;
+                                    root.report(Experience.setDeckStyle(root.mode, card.modelData, "opacity", v >= 1 ? "" : String(v)));
+                                }
+                            }
+                        }
+
+                        StyledText {
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 40
+                            mono: true
+                            text: `${Math.round(opacitySlider.value * 100)}%`
+                            font.pointSize: Appearance.font.size.small
+                        }
                     }
 
                     SegmentedControl {

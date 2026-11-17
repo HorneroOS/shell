@@ -61,6 +61,14 @@
         "light": "hornero-signal-day"
       },
       "transition": "smooth"
+    },
+    "accent": {
+      "color": "",
+      "perMode": {
+        "dark": "",
+        "light": ""
+      },
+      "perExperience": {}
     }
   },
   "general": {

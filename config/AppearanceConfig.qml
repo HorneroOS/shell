@@ -22,6 +22,10 @@ JsonObject {
     // edits them. Never hold a wallpaper path here: the source resolves
     // from the wallpaper pointer.
     property ChromaticPrefs chromatic: ChromaticPrefs {}
+    // User accent laid over any theme (Appearance > Accent). "" everywhere
+    // means the theme's own accent. Resolution: perExperience[mode] beats
+    // perMode[dark|light] beats `color`.
+    property AccentPrefs accent: AccentPrefs {}
 
     // Geometry on a 4 px grid (RFC 0001 §3.5). `full` is only for
     // genuinely circular elements (avatars, radio dots).
@@ -99,6 +103,19 @@ JsonObject {
     component ChromaticFallback: JsonObject {
         property string dark: "hornero-signal-night"
         property string light: "hornero-signal-day"
+    }
+
+    component AccentPrefs: JsonObject {
+        // "" or #RRGGBB.
+        property string color: ""
+        property AccentPerMode perMode: AccentPerMode {}
+        // experience mode id -> "" | #RRGGBB
+        property var perExperience: ({})
+    }
+
+    component AccentPerMode: JsonObject {
+        property string dark: ""
+        property string light: ""
     }
 
     component ChromaticPrefs: JsonObject {

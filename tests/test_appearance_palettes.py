@@ -112,3 +112,30 @@ def test_offscreen_editor_edits_previews_saves_and_resets(tmp_path):
     assert draft["schemaVersion"] == 2 and draft["id"] == "my-neon-copy" and draft["name"] == "My Neon Copy"
     assert draft["palette"]["signal"] == "#FF00AA" and len(draft["terminal"]) == 16 and draft["terminal"][3] == "#112233"
     assert "appearance chromatic import" in result["_ctl_log"] and "--id my-neon-copy" in result["_ctl_log"] and "--yes" in result["_ctl_log"]
+
+
+@requires_qs
+def test_offscreen_accent_override_resolution_and_reset(tmp_path):
+    r = run_gallery(tmp_path, HACCENT=1)
+    # global accent: accent, glow follow, readable text on it
+    assert r["global"][0].lower() == "#ffb5d2" and r["global"][1].lower() == "#ffb5d2"
+    assert r["global"][2].lower() in (r["ground"].lower(), r["ink"].lower())
+    # per-colour-mode beats global; per-experience-mode beats per-colour-mode
+    assert r["perModeBeatsGlobal"].lower() == "#a6d6ff"
+    assert r["perExperienceBeatsMode"].lower() == "#b9e5a0" and r["ctxMode"] == "everyday"
+    # invalid values are ignored and clearing returns the theme's own accent
+    assert r["invalidIgnored"] is True and r["resetToTheme"] is True
+
+
+def test_accent_is_in_config_schema_defaults_and_ui():
+    import json
+
+    defaults = json.loads((ROOT / "config" / "shell.default.json").read_text())["appearance"]["accent"]
+    assert defaults == {"color": "", "perMode": {"dark": "", "light": ""}, "perExperience": {}}
+    config = (ROOT / "config" / "Config.qml").read_text()
+    assert "perExperience: appearance.accent.perExperience" in config
+    section = (SECTIONS / "AccentSection.qml").read_text()
+    assert "Reset" in section and "Low contrast on this theme" in section and "Accessible.name" in section
+    # presets are an opt-in data file, with a dark and a light twin each
+    presets = (ROOT / "services" / "accents.js").read_text()
+    assert presets.count("group: \"kawaii\"") >= 6 and presets.count("light:") >= 6

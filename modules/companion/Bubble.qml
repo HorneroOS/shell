@@ -18,6 +18,9 @@ Item {
     // When true the bubble grows leftwards (companion near right edge).
     property bool flip: false
 
+    Accessible.role: Accessible.StaticText
+    Accessible.name: root.text
+
     readonly property color bg: root.theme === "light" ? "#fffdf7" : root.theme === "pampa" ? "#faf3e3" : "#211d17"
     readonly property color fg: root.theme === "light" ? "#201d18" : root.theme === "pampa" ? "#1a1a1a" : "#f5f1e8"
     readonly property color edge: root.kind === "alert" ? "#F08B43" : root.kind === "tip" ? "#91C8A2" : root.theme === "pampa" ? "#74acdf" : root.theme === "light" ? "#d8d2c4" : "#4a4438"

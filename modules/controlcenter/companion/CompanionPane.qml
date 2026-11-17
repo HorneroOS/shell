@@ -255,7 +255,7 @@ Item {
 
                                 Layout.fillWidth: true
                                 enabled: CompanionStore.reactionSettings.enabled
-                                label: modelData.external ? qsTr("%1 (from extensions)").arg(modelData.label) : modelData.label
+                                label: modelData.external ? qsTr("%1 (from extensions)").arg(CompanionReactions.label(modelData.id)) : CompanionReactions.label(modelData.id)
                                 checked: CompanionStore.reactionSettings.kindsOff.indexOf(modelData.id) < 0
                                 onToggled: checked => CompanionStore.setKindEnabled(modelData.id, checked)
                             }
@@ -394,6 +394,93 @@ Item {
                                 type: TextButton.Tonal
                                 onClicked: CompanionStore.setReactionSettings({})
                             }
+                        }
+                    }
+                }
+
+                ChannelPanel {
+                    title: qsTr("Look per Experience mode")
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
+                        spacing: Appearance.spacing.small
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Each mode can show or hide Javi, scale him relative to the size above, and use its own character. Gaming mode always hides him.")
+                            font.pointSize: Appearance.font.size.smaller
+                            color: Signal.palette.inkMuted
+                            wrapMode: Text.Wrap
+                        }
+
+                        Repeater {
+                            model: CompanionReactions.modeIds
+
+                            ColumnLayout {
+                                id: lookRow
+
+                                required property string modelData
+                                readonly property var look: CompanionStore.modeLookSettings[lookRow.modelData]
+                                readonly property string modeName: lookRow.modelData === "focus" ? qsTr("Focus") : lookRow.modelData === "signal" ? qsTr("Signal") : lookRow.modelData === "gaming" ? qsTr("Gaming") : lookRow.modelData === "studio" ? qsTr("Studio") : qsTr("Everyday")
+
+                                Layout.fillWidth: true
+                                spacing: Appearance.spacing.small
+
+                                SwitchRow {
+                                    label: qsTr("Show Javi in %1 mode").arg(lookRow.modeName)
+                                    checked: lookRow.look.visible
+                                    onToggled: checked => CompanionStore.setModeLook(lookRow.modelData, "visible", checked)
+                                }
+
+                                SliderInput {
+                                    Layout.fillWidth: true
+
+                                    enabled: lookRow.look.visible
+                                    label: qsTr("%1 size").arg(lookRow.modeName)
+                                    value: lookRow.look.size
+                                    from: 0.5
+                                    to: 2.0
+                                    stepSize: 0.05
+                                    suffix: "×"
+                                    decimals: 2
+                                    onValueModified: newValue => CompanionStore.setModeLook(lookRow.modelData, "size", newValue)
+                                }
+
+                                Flow {
+                                    Layout.fillWidth: true
+                                    spacing: Appearance.spacing.small
+                                    enabled: lookRow.look.visible
+
+                                    TextButton {
+                                        text: qsTr("Default character")
+                                        toggle: true
+                                        checked: lookRow.look.skin === ""
+                                        type: TextButton.Tonal
+                                        onClicked: CompanionStore.setModeLook(lookRow.modelData, "skin", "")
+                                    }
+
+                                    Repeater {
+                                        model: Companion.knownSkins
+
+                                        TextButton {
+                                            required property string modelData
+
+                                            text: modelData
+                                            toggle: true
+                                            checked: lookRow.look.skin === modelData
+                                            type: TextButton.Tonal
+                                            onClicked: CompanionStore.setModeLook(lookRow.modelData, "skin", modelData)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        TextButton {
+                            text: qsTr("Reset mode looks")
+                            type: TextButton.Tonal
+                            onClicked: CompanionStore.resetModeLook()
                         }
                     }
                 }

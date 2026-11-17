@@ -110,7 +110,7 @@ Scope {
 
             required property ShellScreen modelData
 
-            readonly property int sizePx: Math.round(128 * CompanionStore.sizeScale)
+            readonly property int sizePx: Math.round(128 * CompanionStore.effectiveSizeScale)
             readonly property int screenW: win.modelData.width
             readonly property int screenH: win.modelData.height
             readonly property bool screenKnown: Quickshell.screens.some(s => s.name === CompanionStore.screenName)
@@ -120,6 +120,29 @@ Scope {
             readonly property bool menuOpen: menu.visible
             readonly property bool flipped: (win.px + win.sizePx / 2) > win.screenW / 2
             readonly property string resolvedTheme: CompanionStore.bubbleTheme === "auto" ? (Signal.light ? "light" : "dark") : CompanionStore.bubbleTheme
+
+            // Spoken state for assistive tech (literal qsTr per state).
+            readonly property string stateLabel: {
+                switch (CompanionStore.state) {
+                case "sleeping":
+                    return qsTr("sleeping");
+                case "talking":
+                    return qsTr("talking");
+                case "thinking":
+                    return qsTr("thinking");
+                case "listening":
+                    return qsTr("listening");
+                case "acting":
+                    return qsTr("working");
+                case "warning":
+                case "error":
+                    return qsTr("concerned");
+                case "peeking":
+                    return qsTr("peeking in from the edge");
+                default:
+                    return qsTr("resting");
+                }
+            }
 
             // Free position inside the screen, committed to the store
             // (as fractions + monitor name) on drag release.
@@ -364,6 +387,12 @@ Scope {
                 function onSkinChanged(): void {
                     win.loadReel();
                 }
+                function onEffectiveSkinChanged(): void {
+                    win.loadReel();
+                }
+                function onEffectiveSizeScaleChanged(): void {
+                    win.syncFromStore();
+                }
                 function onPosXChanged(): void {
                     win.syncFromStore();
                 }
@@ -376,7 +405,7 @@ Scope {
             property string lastIdleAnim: ""
 
             function loadReelFor(animation: string): void {
-                const r = Companion.reel(CompanionStore.skin, animation);
+                const r = Companion.reel(CompanionStore.effectiveSkin, animation);
                 win.currentReelNext = r.next ?? "";
                 player.setReel(r.files, r.frameMs, r.loop, r.durations ?? []);
                 player.playing = true;
@@ -519,6 +548,7 @@ Scope {
 
                         Accessible.role: Accessible.Button
                         Accessible.name: qsTr("Dismiss Javi message")
+                        Accessible.description: CompanionStore.bubbleText
 
                         onClicked: mouse => {
                             if (mouse.button === Qt.RightButton)
@@ -582,7 +612,7 @@ Scope {
                     IdleScheduler {
                         active: CompanionStore.idleAnimEnabled && CompanionStore.state === "idle" && CompanionStore.visible && !CompanionStore.suppressed && !CompanionStore.reducedMotion
                         activityLevel: CompanionStore.activityLevel
-                        skin: CompanionStore.skin
+                        skin: CompanionStore.effectiveSkin
                         wanderEnabled: CompanionStore.wanderEnabled
                         nestEnabled: CompanionStore.nestEnabled
                         nestStage: CompanionStore.nestStage
@@ -649,7 +679,8 @@ Scope {
                         cursorShape: win.dragging ? Qt.ClosedHandCursor : Qt.OpenHandCursor
 
                         Accessible.role: Accessible.Button
-                        Accessible.name: qsTr("Javi, el Hornero companion")
+                        Accessible.name: qsTr("Javi, el Hornero companion, %1").arg(win.stateLabel)
+                        Accessible.description: qsTr("Click for a tip, drag to move, right-click for the menu")
 
                         property int lastX: 0
                         property int lastY: 0
@@ -751,6 +782,9 @@ Scope {
                     z: 10
                     focus: true
 
+                    Accessible.role: Accessible.PopupMenu
+                    Accessible.name: qsTr("Javi menu")
+
                     Keys.onEscapePressed: menu.close()
 
                     function open(): void {
@@ -787,7 +821,7 @@ Scope {
                                 anchors.fill: parent
                                 hoverEnabled: true
 
-                                Accessible.role: Accessible.Button
+                                Accessible.role: Accessible.MenuItem
                                 Accessible.name: parent.label
 
                                 onEntered: parent.opacity = 0.6

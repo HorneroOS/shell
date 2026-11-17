@@ -62,7 +62,7 @@ Item {
 
         width: root.implicitWidth
         implicitHeight: layout.implicitHeight + Appearance.padding.large * 2
-        radius: Appearance.rounding.large
+        radius: Appearance.rounding.small
         color: Signal.palette.panel
         // Hornero 199X frame: a phosphor accent edge around the card.
         border.width: 1
@@ -324,7 +324,7 @@ Item {
                         anchors.left: bubble.mine ? undefined : parent.left
                         width: parent.width * 0.86
                         implicitHeight: textItem.implicitHeight + (histTrace.visible ? histTrace.implicitHeight + Appearance.spacing.small : 0) + Appearance.padding.normal * 2
-                        radius: Appearance.rounding.normal
+                        radius: Appearance.rounding.small
                         color: bubble.system ? Qt.alpha(Signal.palette.alert, 0.14) : bubble.mine ? Signal.palette.signalWell : Signal.palette.raised
 
                         Rectangle {
@@ -403,7 +403,7 @@ Item {
                         Layout.alignment: Qt.AlignLeft
                         implicitWidth: Math.min(view.width * 0.86, traceText.implicitWidth + Appearance.padding.large * 2)
                         implicitHeight: traceCol.implicitHeight + Appearance.padding.normal * 2
-                        radius: Appearance.rounding.normal
+                        radius: Appearance.rounding.small
                         color: Qt.alpha(Signal.palette.phosphorWell, 0.35)
 
                         ColumnLayout {
@@ -441,7 +441,7 @@ Item {
                         Layout.alignment: Qt.AlignLeft
                         implicitWidth: Math.min(view.width * 0.86, streamText.implicitWidth + Appearance.padding.large * 2)
                         implicitHeight: streamText.implicitHeight + Appearance.padding.normal * 2
-                        radius: Appearance.rounding.normal
+                        radius: Appearance.rounding.small
                         color: Signal.palette.raised
 
                         StyledText {

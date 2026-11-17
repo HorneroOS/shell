@@ -2,7 +2,7 @@
   "_name": "Hornero Right",
   "_description": "Right sidebar — full featured, mirrored reference shell style — inspired by Caelestia's layout",
   "_icon": "🏠",
-  "_iconMaterial": "layout-sidebar-right",
+  "_glyph": "layout-sidebar-right",
   "bar": {
     "persistent": true,
     "showOnHover": true,

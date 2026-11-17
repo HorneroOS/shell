@@ -1,7 +1,7 @@
 {
   "_name": "Cockpit Clear",
   "_description": "The dual bar with no backdrop: controls and telemetry straight on the wallpaper",
-  "_iconMaterial": "blur",
+  "_glyph": "blur",
   "_lineage": "Polybar default (X11, transparent bars)",
   "bar": {
     "persistent": true,

@@ -2,7 +2,7 @@
   "_name": "Gaming",
   "_description": "Bottom bar — minimal footprint, no logo",
   "_icon": "🎮",
-  "_iconMaterial": "device-gamepad-2",
+  "_glyph": "device-gamepad-2",
   "bar": {
     "persistent": true,
     "showOnHover": true,

@@ -2,7 +2,7 @@
   "_name": "Minimal Top",
   "_description": "Minimal top bar — workspaces + clock",
   "_icon": "✨",
-  "_iconMaterial": "minimize",
+  "_glyph": "minimize",
   "bar": {
     "persistent": true,
     "showOnHover": true,

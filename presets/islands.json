@@ -2,7 +2,7 @@
   "_name": "Islands",
   "_description": "Three floating islands: controls, time, status",
   "_icon": "🏝️",
-  "_iconMaterial": "layout-columns",
+  "_glyph": "layout-columns",
   "_lineage": "Polybar i3 multipart profile",
   "bar": {
     "persistent": true,

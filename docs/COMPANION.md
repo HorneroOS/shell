@@ -131,6 +131,40 @@ their painted identity frames and fall back to the default bird
 for the new animations; palette skins are recolors of the same
 generated poses.
 
+## Reactions to real events
+
+Javi reacts to things that actually happened, never on a timer. The
+policy is `modules/companion/reactions.js` (pure, tested under node);
+`CompanionReactions.qml` is the single bus and
+`CompanionStore.playReaction()` shows the beat.
+
+| Kind | Source | Priority | Animation | Bubble |
+| ---- | ------ | -------- | --------- | ------ |
+| `notification` | Notifs (a popup was shown; not duplicates, not held by DND/mode) | 1 | look | none |
+| `battery.low` / `battery.critical` | BatteryMonitor warn levels | 2 / 3 | worry | yes |
+| `charger.plugged` / `charger.unplugged` | UPower | 1 | approve / look | none |
+| `mode.changed` | Experience (not the first state load) | 1 | blink | none |
+| `build.done` / `build.failed` | IPC or PluginKit only | 2 | celebrate / worry | yes |
+| `download.done`, `device.connected`, `device.disconnected`, `task.done`, `attention` | IPC or PluginKit only | 1-2 | approve / look / hop | optional |
+
+There is no native build, download or device emitter yet: those kinds
+exist for IPC (`qs ipc call companion react build.done "text"`) and
+extensions, and Javi never invents them. Native-only kinds (battery,
+charger, notification, mode) cannot be raised from IPC or a plugin.
+
+Behaviour levels per Experience mode: `full` (every enabled kind, with
+bubbles), `quiet` (priority 3 only, animation only, never a bubble),
+`silent` (nothing). Defaults: Everyday full, Signal full, Focus quiet,
+Studio quiet, Gaming silent (the companion is also hidden in game mode
+and over fullscreen windows). Quiet hours (default 22:00-07:00, off)
+downgrade `full` to `quiet`; they never loosen a mode. Cooldowns are per
+kind; at most 6 non-critical reactions per 5 minutes; an extension gets
+3 per minute and can be muted per source. A reaction never interrupts a
+task state (listening/thinking/dragging...) or wakes a sleeping
+companion unless the event is priority 3. External text is plain,
+single-line and capped at 80 characters. Reduced motion still shows the
+bubble; the animation holds a still frame.
+
 ## Z-order policy
 
 The companion is ambient chrome, not a window citizen: it lives on

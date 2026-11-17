@@ -192,6 +192,39 @@ Item {
                         }
 
                         SizeSlider {
+                            target: Config.notifs
+                            key: "groupPreviewNum"
+                            label: qsTr("Notifications shown per group")
+                            from: 1
+                            to: 8
+                            defaultValue: 3
+                            stepSize: 1
+                            suffix: ""
+                        }
+
+                        SizeSlider {
+                            target: Config.notifs
+                            key: "expandThreshold"
+                            label: qsTr("Expand long notifications after")
+                            from: 5
+                            to: 80
+                            defaultValue: 20
+                            stepSize: 1
+                            suffix: "px"
+                        }
+
+                        SizeSlider {
+                            target: Config.utilities
+                            key: "maxToasts"
+                            label: qsTr("Toasts on screen at once")
+                            from: 1
+                            to: 8
+                            defaultValue: 4
+                            stepSize: 1
+                            suffix: ""
+                        }
+
+                        SizeSlider {
                             target: Config.utilities.sizes
                             key: "toastWidth"
                             label: qsTr("Toast width")

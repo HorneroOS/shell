@@ -41,3 +41,16 @@ Cozy is opt-in; the factory default is unchanged. "Reset look to factory" writes
 `appearance.glow.intensity` (0 to 1.5, default 1) multiplies the alpha of glows that the experience mode and the
 glow budget already allow (`Signal.glowIntensity`; consumers: `OnAirBar`, `ScopeTrace`). Gaming and Focus keep
 glow off regardless. Plugin-kit glows do not follow it yet (tracked in HorneroOS/.github#32).
+
+## More sizes (Control Center)
+
+| Setting | Config key | Where | Range | Default |
+|---------|-----------|-------|-------|---------|
+| Launcher max items / wallpapers / drag | `launcher.maxShown` / `maxWallpapers` / `dragThreshold` | Launcher | 3-16 / 3-15 / 10-200 | 8 / 9 / 50 |
+| Notifications per group, expand threshold | `notifs.groupPreviewNum` / `expandThreshold` | Notifications | 1-8 / 5-80 | 3 / 20 |
+| Toasts on screen | `utilities.maxToasts` | Notifications | 1-8 | 4 |
+| Bar popup widths | `bar.sizes.{trayMenuWidth,batteryWidth,networkWidth,kbLayoutWidth,windowPreviewSize}` | Bars > Popup sizes | see pane | 300/250/320/320/400 |
+| Control Center window | `controlCenter.sizes.{heightMult,ratio}` | Appearance > Look | 0.5-0.95 / 1.2-2.4 | 0.7 / 16:9 |
+
+Note: `dashboard.sizes.*` are not listed because nothing in the shell reads them today; exposing dead settings would
+mislead, so they are left out until the dashboard consumes them.

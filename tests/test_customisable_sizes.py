@@ -26,6 +26,19 @@ SIZES = [
     ("notifications/NotificationsPane.qml", "Config.utilities.sizes", "toastWidth", ("utilities", "sizes")),
     ("session/SessionPane.qml", "Config.session.sizes", "button", ("session", "sizes")),
     ("lockscreen/LockScreenPane.qml", "Config.lock.sizes", "centerWidth", ("lock", "sizes")),
+    ("launcher/Settings.qml", "Config.launcher", "maxShown", ("launcher",)),
+    ("launcher/Settings.qml", "Config.launcher", "maxWallpapers", ("launcher",)),
+    ("launcher/Settings.qml", "Config.launcher", "dragThreshold", ("launcher",)),
+    ("notifications/NotificationsPane.qml", "Config.notifs", "groupPreviewNum", ("notifs",)),
+    ("notifications/NotificationsPane.qml", "Config.notifs", "expandThreshold", ("notifs",)),
+    ("notifications/NotificationsPane.qml", "Config.utilities", "maxToasts", ("utilities",)),
+    ("taskbar/PopoutSizes.qml", "Config.bar.sizes", "trayMenuWidth", ("bar", "sizes")),
+    ("taskbar/PopoutSizes.qml", "Config.bar.sizes", "batteryWidth", ("bar", "sizes")),
+    ("taskbar/PopoutSizes.qml", "Config.bar.sizes", "networkWidth", ("bar", "sizes")),
+    ("taskbar/PopoutSizes.qml", "Config.bar.sizes", "kbLayoutWidth", ("bar", "sizes")),
+    ("taskbar/PopoutSizes.qml", "Config.bar.sizes", "windowPreviewSize", ("bar", "sizes")),
+    ("appearance/sections/LookSection.qml", "Config.controlCenter.sizes", "heightMult", ("controlCenter", "sizes")),
+    ("appearance/sections/LookSection.qml", "Config.controlCenter.sizes", "ratio", ("controlCenter", "sizes")),
 ]
 
 
@@ -56,7 +69,7 @@ def test_size_slider_commits_and_resets():
     qml = (CC / "components" / "SizeSlider.qml").read_text()
     assert "Config.save()" in qml
     assert "Math.max(root.from, Math.min(root.to" in qml, "values are clamped to the range"
-    assert "root.commit(root.defaultValue)" in qml
+    assert "root.target[root.key] = root.defaultValue" in qml
     assert "Accessible.name" in qml
 
 

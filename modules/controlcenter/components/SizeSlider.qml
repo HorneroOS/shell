@@ -33,6 +33,12 @@ RowLayout {
         Config.save();
     }
 
+    // Reset writes the exact factory value (not a stepped one).
+    function reset(): void {
+        root.target[root.key] = root.defaultValue;
+        Config.save();
+    }
+
     Layout.fillWidth: true
     spacing: Appearance.spacing.small
 
@@ -61,6 +67,6 @@ RowLayout {
         type: TextButton.Text
         visible: !root.isDefault
         Accessible.name: qsTr("Reset %1 to default").arg(root.label)
-        onClicked: root.commit(root.defaultValue)
+        onClicked: root.reset()
     }
 }

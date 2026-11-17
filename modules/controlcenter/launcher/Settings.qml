@@ -77,21 +77,34 @@ ColumnLayout {
     SectionContainer {
         contentSpacing: Appearance.spacing.small / 2
 
-        PropertyRow {
+        SizeSlider {
+            target: Config.launcher
+            key: "maxShown"
             label: qsTr("Max shown items")
-            value: qsTr("%1").arg(Config.launcher.maxShown)
+            from: 3
+            to: 16
+            defaultValue: 8
+            stepSize: 1
+            suffix: ""
         }
-
-        PropertyRow {
-            showTopMargin: true
-            label: qsTr("Max wallpapers")
-            value: qsTr("%1").arg(Config.launcher.maxWallpapers)
+        SizeSlider {
+            target: Config.launcher
+            key: "maxWallpapers"
+            label: qsTr("Max wallpapers (odd looks best)")
+            from: 3
+            to: 15
+            defaultValue: 9
+            stepSize: 1
+            suffix: ""
         }
-
-        PropertyRow {
-            showTopMargin: true
+        SizeSlider {
+            target: Config.launcher
+            key: "dragThreshold"
             label: qsTr("Drag threshold")
-            value: qsTr("%1 px").arg(Config.launcher.dragThreshold)
+            from: 10
+            to: 200
+            defaultValue: 50
+            stepSize: 5
         }
     }
 

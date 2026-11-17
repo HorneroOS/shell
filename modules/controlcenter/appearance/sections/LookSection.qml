@@ -126,6 +126,38 @@ CollapsibleSection {
     }
 
     SectionContainer {
+        contentSpacing: Appearance.spacing.small
+
+        StyledText {
+            text: qsTr("Control Center window")
+            font.pointSize: Appearance.font.size.normal
+        }
+
+        SizeSlider {
+            target: Config.controlCenter.sizes
+            key: "heightMult"
+            label: qsTr("Height (share of the screen)")
+            from: 0.5
+            to: 0.95
+            defaultValue: 0.7
+            stepSize: 0.05
+            suffix: "×"
+            decimals: 2
+        }
+        SizeSlider {
+            target: Config.controlCenter.sizes
+            key: "ratio"
+            label: qsTr("Width to height ratio")
+            from: 1.2
+            to: 2.4
+            defaultValue: 1.7777777777777777
+            stepSize: 0.05
+            suffix: "×"
+            decimals: 2
+        }
+    }
+
+    SectionContainer {
         TextButton {
             text: qsTr("Reset look to factory")
             type: TextButton.Tonal

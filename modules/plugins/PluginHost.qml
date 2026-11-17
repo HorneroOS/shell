@@ -109,6 +109,18 @@ Scope {
                             Plugins.markFailed(slot.modelData.id, "manifest schemaVersion must be 3 (unknown manifest versions are rejected)");
                             return;
                         }
+                        // RFC 0003: `pluginKit` is the minimum apiLevel the
+                        // package needs (default 3). A package that needs a
+                        // newer kit than the one resolved is refused plainly,
+                        // per package; the others keep loading.
+                        if (manifest.pluginKit !== undefined && (!Number.isInteger(manifest.pluginKit) || manifest.pluginKit < 3)) {
+                            Plugins.markFailed(slot.modelData.id, "manifest pluginKit must be an integer of at least 3");
+                            return;
+                        }
+                        if (Number.isInteger(manifest.pluginKit) && Plugins.kitLevel >= 0 && manifest.pluginKit > Plugins.kitLevel) {
+                            Plugins.markFailed(slot.modelData.id, qsTr("This extension needs PluginKit %1 and the installed one is API level %2. Update the hornero-shell package.").arg(manifest.pluginKit).arg(Plugins.kitLevel));
+                            return;
+                        }
                         if (typeof manifest.version !== "string" || !/^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/.test(manifest.version)) {
                             Plugins.markFailed(slot.modelData.id, "manifest version must be semantic versioning");
                             return;
@@ -417,6 +429,7 @@ Scope {
                         Plugins.markMarketplace(slot.modelData.id, manifest.marketplace === undefined ? null : manifest.marketplace);
                         Plugins.markDescription(slot.modelData.id, manifest.description);
                         Plugins.markSchemaVersion(slot.modelData.id, manifest.schemaVersion);
+                        Plugins.markPluginKit(slot.modelData.id, manifest.pluginKit);
                         slot.entrypoint = manifest.entrypoint;
                         const background = effectiveSurfaces.background;
                         slot.backgroundEntrypoint = background && background.enabled !== false ? background.entrypoint : "";
@@ -481,6 +494,7 @@ Scope {
                         const manifest = JSON.parse(previewManifestView.text());
                         if (manifest.id === previewSlot.modelData.id)
                             Plugins.markSchemaVersion(previewSlot.modelData.id, manifest.schemaVersion);
+                        Plugins.markPluginKit(previewSlot.modelData.id, manifest.pluginKit);
                         // Surfaces of an installed-but-not-enabled package. The
                         // Signal instrument deck loads trusted first-party
                         // widgets without a per-widget enable, so it must

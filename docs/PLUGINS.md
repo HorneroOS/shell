@@ -1,6 +1,6 @@
 # Hornero Shell extension contract
 
-**Status: PluginKit 3 (Hornero Signal).** The Shell discovers plugins that
+**Status: PluginKit 3 (Hornero Signal), apiLevel 4 (Platform).** The design of the contribution surfaces is [RFC 0003](https://github.com/HorneroOS/docs/blob/main/development/rfc-0003-pluginkit-contribution-surfaces.md); [PluginKit levels](#pluginkit-levels) states what each level adds. The Shell discovers plugins that
 `horneroctl plugin list` reports as enabled and installed, then instantiates
 each manifest entrypoint in its own Loader
 (`modules/plugins/PluginHost.qml`, state in `services/Plugins.qml`; inspect
@@ -818,13 +818,46 @@ Center under the field, as the control's accessible description, and
 as its tooltip where the control supports one) and the constraints
 for its type:
 
-| Type | `default` | Constraints | Generated control |
-| --- | --- | --- | --- |
-| `boolean` | `true` / `false` | — | Switch |
-| `integer` | integer | `minimum`, `maximum` (integers) | Spin box, plus a slider when both bounds are declared |
-| `number` | finite number | `minimum`, `maximum` | Spin box, plus a slider when both bounds are declared |
-| `string` | string (max 4096 chars) | `minLength`, `maxLength` (0–4096) | Text field |
-| `enum` | one of `options` | `options` (required: 1–32 unique non-empty strings, max 64 chars each) | One toggle button per option |
+| Type | `default` | Constraints | Generated control | Level |
+| --- | --- | --- | --- | --- |
+| `boolean` | `true` / `false` | — | Switch | 3 |
+| `integer` | integer | `minimum`, `maximum`, `step` (positive integer), `unit` | Spin box, plus a slider when both bounds are declared | 3 (`step`/`unit`: 4) |
+| `number` | finite number | `minimum`, `maximum`, `step` (positive), `unit` | Spin box, plus a slider when both bounds are declared | 3 (`step`/`unit`: 4) |
+| `string` | string (max 4096 chars) | `minLength`, `maxLength` (0–4096) | Text field | 3 |
+| `enum` | one of `options` | `options` (required: 1–32 unique non-empty strings, max 64 chars each) | One toggle button per option | 3 |
+| `colour` | `#RRGGBB` (or `#RRGGBBAA` with `alpha: true`) | `alpha` | Swatch, hex field and the Signal palette as presets | 4 |
+| `list` | array of unique strings drawn from `options` | `options` (required, as for enum), `minItems`, `maxItems` | Multi-select toggle group, declared option order | 4 |
+| `text` | string, newlines allowed (max 4096 chars) | `minLength`, `maxLength`, `rows` (1–12) | Multi-line text area | 4 |
+| `path` | empty or a safe relative path | `kind` (`file` or `directory`), `mustExist` (UI hint) | Text field, plus Browse for `kind: file` | 4 |
+
+Display-only fields available on **every** type (level 4; they never change
+what is valid): `title` (label instead of the key, max 48 chars), `group`
+(heading the control is listed under, max 32 chars; ungrouped settings come
+first, groups in first-declared order), `visibleWhen`
+(`{"key": "<other setting>", "equals": <value>}`: the control is shown only
+while that sibling equals the value; a hidden setting keeps its value and
+stays readable by the extension), and for numbers `unit` (suffix, max 8 chars)
+and `step`. The validator rejects `visibleWhen` that names an unknown key,
+itself, a value its target cannot hold, or forms a cycle.
+
+```json
+"pluginKit": 4,
+"capabilities": {
+  "settings": {
+    "accent":   { "type": "colour", "default": "#33ccff", "title": "Accent", "group": "Look" },
+    "metrics":  { "type": "list", "default": ["cpu", "mem"], "options": ["cpu", "gpu", "mem"], "minItems": 1, "group": "Data" },
+    "size":     { "type": "integer", "default": 12, "minimum": 8, "maximum": 32, "step": 2, "unit": "px", "group": "Look" },
+    "showNote": { "type": "boolean", "default": false, "group": "Data" },
+    "note":     { "type": "text", "default": "", "rows": 3, "group": "Data", "visibleWhen": { "key": "showNote", "equals": true } }
+  }
+}
+```
+
+Level-4 types and fields require `"pluginKit": 4` at the top of the manifest;
+the validator rejects a package that uses them without it, and a Shell whose
+PluginKit is older refuses the package with an update message (see
+[PluginKit levels](#pluginkit-levels)). The base five settings are unchanged
+and need no declaration.
 
 ```json
 "settings": {
@@ -843,14 +876,15 @@ outside its own range/length, and an enum default missing from
 rules live in `scripts/validate_plugin.py` and are mirrored by the
 runtime in `services/Plugins.qml`, which drops malformed
 declarations before the facade or UI can see them). There is
-deliberately **no path type**: settings are plain Shell-owned values
-in `shell.json`, never filesystem paths the shell opens, so no
-setting can escape the user's config dirs through this contract. A
-`string` setting is just a string; what plugin code does with it is
-covered by the trust boundary above, not by this schema.
+deliberately **no capability behind a path**: a `path` setting is a
+plain Shell-owned string in `shell.json` that the Shell never opens.
+Browsing uses a user-initiated file dialog, the default must be empty or a
+safe relative path (no leading `/` or `~`, no `..`), and what plugin code
+does with the string is covered by the trust boundary above, not by this
+schema.
 
 Control Center › Extensions generates one field per declared setting
-(sorted by key) from these declarations — plugins get a consistent,
+(grouped by `group`, then sorted by key) from these declarations — plugins get a consistent,
 validated, keyboard-accessible settings UI with no settings code of
 their own, and a plugin that declares no (valid) settings shows no
 Settings affordance. Generated fields read and write the same
@@ -858,6 +892,15 @@ Shell-owned storage as the PluginKit `Settings` facade, validated
 the same way, and each field offers Reset once a value is stored,
 plus a confirmed Reset-all. Declare settings and stop there unless
 a setting genuinely needs custom UI.
+
+**Live preview.** Above the generated controls, Control Center shows the
+extension's own surface (desktop widget, else bar item, else dashboard card)
+in a host-owned frame at its manifest size. Every control change reaches it
+through the shared `Settings` storage, so the effect is visible immediately
+and the extension needs no preview code. The preview has its own
+asynchronous Loader, shows a failure inline, is not instantiated in safe mode
+or for a disabled extension, and exists only while the section is open. It is
+the same unsandboxed in-process QML as the real surface.
 
 **Custom settings surface.** A manifest v2 package may additionally
 declare `surfaces.settings` (Manifest v2, below) with its own
@@ -888,6 +931,26 @@ default; the old key's stored value is ignored. Reset
 (`Settings.resetValue` / `resetAll`, or the generated UI) deletes
 the stored value outright, so the default applies until the user
 changes it again.
+
+## PluginKit levels
+
+`schemaVersion` stays `3`; the **capability level** of the installed kit is
+`Hornero.PluginKit` `PluginKitInfo.apiLevel`, and a manifest states the
+minimum it needs with the optional top-level `"pluginKit"` integer (default
+`3`).
+
+| Level | Adds |
+| --- | --- |
+| 3 | Signal: Theme, glyphs, surfaces (bar, dashboard, desktop, background, launcher, settings), typed settings (boolean, integer, number, string, enum), data facades |
+| 4 | Settings schema v2 (colour, list, text, path; title, group, unit, step, visibleWhen), Control Center live preview |
+
+`scripts/validate_plugin.py` derives the level a manifest actually needs from
+the features it uses and rejects a package that under-declares; a value above
+the validator's own level is rejected too, so a package never half-loads. At
+runtime the host refuses one package whose `pluginKit` exceeds the resolved
+kit (an update message, `failed` state) and keeps loading the others. An older
+Shell rejects the unknown `pluginKit` field, which is the intended outcome:
+the package is not installable where it cannot run.
 
 ## Manifest: multiple surfaces
 

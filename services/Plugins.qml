@@ -224,22 +224,48 @@ Singleton {
     function settingDeclarationValid(declaration: var): bool {
         if (!declaration || typeof declaration !== "object" || Array.isArray(declaration))
             return false;
+        // PluginKit 4 adds colour, list, text and path plus the
+        // display-only fields title, group, unit, step, visibleWhen
+        // (RFC 0003 section 5). `pluginKit` level gating happens in the
+        // validator and the host; the normaliser accepts what the
+        // validator accepts.
         const allowed = {
             boolean: [],
-            integer: ["minimum", "maximum"],
-            number: ["minimum", "maximum"],
+            integer: ["minimum", "maximum", "step", "unit"],
+            number: ["minimum", "maximum", "step", "unit"],
             string: ["minLength", "maxLength"],
-            enum: ["options"]
+            enum: ["options"],
+            colour: ["alpha"],
+            list: ["options", "minItems", "maxItems"],
+            text: ["minLength", "maxLength", "rows"],
+            path: ["kind", "mustExist"]
         };
         if (!Object.prototype.hasOwnProperty.call(allowed, declaration.type))
             return false;
         const keys = Object.keys(declaration);
-        const known = ["type", "default", "description"].concat(allowed[declaration.type]);
+        const known = ["type", "default", "description", "title", "group", "visibleWhen"].concat(allowed[declaration.type]);
         if (!keys.every(key => known.includes(key)) || !keys.includes("default"))
             return false;
         if (declaration.description !== undefined
                 && (typeof declaration.description !== "string" || declaration.description.length > 160
                     || !/\S/.test(declaration.description)))
+            return false;
+        for (const [field, limit] of [["title", 48], ["group", 32], ["unit", 8]]) {
+            if (declaration[field] !== undefined
+                    && (typeof declaration[field] !== "string" || declaration[field].length > limit
+                        || !/\S/.test(declaration[field])))
+                return false;
+        }
+        if (declaration.visibleWhen !== undefined) {
+            const condition = declaration.visibleWhen;
+            if (!condition || typeof condition !== "object" || Array.isArray(condition)
+                    || Object.keys(condition).length !== 2 || typeof condition.key !== "string"
+                    || !Object.prototype.hasOwnProperty.call(condition, "equals"))
+                return false;
+        }
+        if (declaration.step !== undefined
+                && (typeof declaration.step !== "number" || !Number.isFinite(declaration.step) || declaration.step <= 0
+                    || (declaration.type === "integer" && !Number.isInteger(declaration.step))))
             return false;
         if (declaration.type === "integer" || declaration.type === "number") {
             for (const bound of ["minimum", "maximum"]) {
@@ -252,7 +278,7 @@ Singleton {
                     && declaration.minimum > declaration.maximum)
                 return false;
         }
-        if (declaration.type === "string") {
+        if (declaration.type === "string" || declaration.type === "text") {
             for (const bound of ["minLength", "maxLength"]) {
                 const limit = declaration[bound];
                 if (limit !== undefined && (typeof limit !== "number" || !Number.isInteger(limit) || limit < 0 || limit > 4096))
@@ -262,11 +288,37 @@ Singleton {
                     && declaration.minLength > declaration.maxLength)
                 return false;
         }
-        if (declaration.type === "enum") {
+        if (declaration.type === "text" && declaration.rows !== undefined
+                && (!Number.isInteger(declaration.rows) || declaration.rows < 1 || declaration.rows > 12))
+            return false;
+        if (declaration.type === "enum" || declaration.type === "list") {
             const options = declaration.options;
             if (!Array.isArray(options) || options.length === 0 || options.length > 32
                     || options.some(option => typeof option !== "string" || option === "" || option.length > 64)
                     || new Set(options).size !== options.length)
+                return false;
+        }
+        if (declaration.type === "list") {
+            for (const bound of ["minItems", "maxItems"]) {
+                const limit = declaration[bound];
+                if (limit !== undefined && (!Number.isInteger(limit) || limit < 0 || limit > declaration.options.length))
+                    return false;
+            }
+            if (declaration.minItems !== undefined && declaration.maxItems !== undefined
+                    && declaration.minItems > declaration.maxItems)
+                return false;
+        }
+        if (declaration.type === "colour" && declaration.alpha !== undefined && typeof declaration.alpha !== "boolean")
+            return false;
+        if (declaration.type === "path") {
+            if (declaration.kind !== undefined && !["file", "directory"].includes(declaration.kind))
+                return false;
+            if (declaration.mustExist !== undefined && typeof declaration.mustExist !== "boolean")
+                return false;
+            const fallback = declaration.default;
+            if (typeof fallback === "string" && fallback !== ""
+                    && (fallback.startsWith("/") || fallback.startsWith("~") || fallback.includes("\\")
+                        || fallback.split("/").includes("..")))
                 return false;
         }
         return root.settingValueValid(declaration, declaration.default);
@@ -298,7 +350,7 @@ Singleton {
         } else if (declaration.type === "number") {
             if (typeof value !== "number" || !Number.isFinite(value))
                 return false;
-        } else if (declaration.type === "string") {
+        } else if (declaration.type === "string" || declaration.type === "text") {
             // Count Unicode code points like JSON Schema/Python,
             // not UTF-16 code units (String.length).
             const length = typeof value === "string" ? [...value].length : -1;
@@ -311,6 +363,18 @@ Singleton {
             return true;
         } else if (declaration.type === "enum") {
             return typeof value === "string" && Array.isArray(declaration.options) && declaration.options.includes(value);
+        } else if (declaration.type === "colour") {
+            return typeof value === "string" && (declaration.alpha === true ? /^#[0-9a-fA-F]{6}(?:[0-9a-fA-F]{2})?$/ : /^#[0-9a-fA-F]{6}$/).test(value);
+        } else if (declaration.type === "list") {
+            const options = Array.isArray(declaration.options) ? declaration.options : [];
+            if (!Array.isArray(value) || new Set(value).size !== value.length
+                    || value.some(item => typeof item !== "string" || !options.includes(item)))
+                return false;
+            const most = typeof declaration.maxItems === "number" ? declaration.maxItems : options.length;
+            const least = typeof declaration.minItems === "number" ? declaration.minItems : 0;
+            return value.length >= least && value.length <= most;
+        } else if (declaration.type === "path") {
+            return typeof value === "string" && value.length <= 1024 && !/[\u0000-\u001f\u007f]/.test(value);
         } else {
             return false;
         }
@@ -333,7 +397,19 @@ Singleton {
     // tightened range/length, malformed shape) falls back to the
     // declared default — never coerced, never a crash.
     function migratedSettingValue(declaration: var, stored: var): var {
-        return root.settingValueValid(declaration, stored) ? stored : declaration.default;
+        // Lists read from shell.json are native variant lists whose
+        // Array.isArray() is false; hand plain arrays to validation and to
+        // extension code (a JSON round trip).
+        const value = declaration && (declaration.type === "list" || declaration.type === "strings") && stored !== undefined ? root.plain(stored) : stored;
+        return root.settingValueValid(declaration, value) ? value : declaration.default;
+    }
+
+    function plain(value: var): var {
+        try {
+            return JSON.parse(JSON.stringify(value));
+        } catch (e) {
+            return null;
+        }
     }
 
     // Manifest description for the Extensions pane cards (shell#470):
@@ -354,6 +430,18 @@ Singleton {
             return;
         root.entries = root.entries.map(e => e.id === id ? Object.assign({}, e, {
             schemaVersion: version
+        }) : e);
+    }
+
+    // Minimum PluginKit level the manifest declares (default 3), for the
+    // Extensions pane chip.
+    function markPluginKit(id: string, level: var): void {
+        const value = Number.isInteger(level) ? level : 3;
+        const current = root.entries.find(e => e.id === id);
+        if (!current || current.pluginKit === value)
+            return;
+        root.entries = root.entries.map(e => e.id === id ? Object.assign({}, e, {
+            pluginKit: value
         }) : e);
     }
 

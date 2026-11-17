@@ -857,5 +857,15 @@
       "fullscreenGaming": false,
       "gamePatterns": []
     }
+  },
+  "sounds": {
+    "enabled": false,
+    "volume": 0.5,
+    "theme": "freedesktop",
+    "events": {
+      "notification": true,
+      "battery": true,
+      "charger": true
+    }
   }
 }

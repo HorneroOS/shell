@@ -131,3 +131,20 @@ def test_notify_roles_documented():
     base = (ROOT / "docs" / "EXPERIENCE_BASELINE.md").read_text()
     assert "WindowFactory.closeAll" in base
     assert "`function close(): void {}` (empty)" in base
+
+
+def test_lock_notif_placeholder_fits_its_dock():
+    """The 'Unlock to read notifications' placeholder wraps inside the dock
+    instead of being centred at its natural width and clipped."""
+    dock = (ROOT / "modules" / "lock" / "NotifDock.qml").read_text()
+    assert "anchors.centerIn: parent\n            active" not in dock
+    assert "wrapMode: Text.WordWrap" in dock and "Layout.fillWidth: true" in dock
+
+
+def test_theme_card_chips_wrap_under_the_text():
+    """Narrow Appearance pane: mode/current/staged chips sit in a Flow inside
+    the text column, never beside it, so they cannot squeeze or overlap it."""
+    src = (ROOT / "modules" / "controlcenter" / "appearance" / "sections" / "ThemesSection.qml").read_text()
+    flow = src.index("id: chipFlow")
+    for chip in ("modeChip", "currentChip", "stagedChip"):
+        assert src.index(f"id: {chip}") > flow

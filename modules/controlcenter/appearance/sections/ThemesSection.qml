@@ -266,54 +266,62 @@ CollapsibleSection {
                                     Accessible.name: themeItem.readinessText
                                     Accessible.description: themeItem.readinessDetails
                                 }
-                            }
 
-                            StyledRect {
-                                radius: Appearance.rounding.small
-                                color: Signal.palette.signalWell
-                                implicitWidth: modeChip.implicitWidth + Appearance.padding.small * 2
-                                implicitHeight: modeChip.implicitHeight + Appearance.padding.smaller * 2
+                                // Chips wrap under the text instead of squeezing it, so a
+                                // narrow pane never truncates the theme name or overlaps.
+                                Flow {
+                                    id: chipFlow
+                                    width: parent.width
+                                    spacing: Appearance.spacing.small
 
-                                StyledText {
-                                    id: modeChip
-                                    anchors.centerIn: parent
-                                    mono: true
-                                    text: (themeItem.modelData.tags ?? []).indexOf("contrast") >= 0 ? qsTr("Contrast") : themeItem.modelData.darkMode ? qsTr("Night") : qsTr("Day")
-                                    font.pointSize: Appearance.font.size.small
-                                    font.capitalization: Font.AllUppercase
-                                    color: Signal.palette.onSignalWell
+                                StyledRect {
+                                    radius: Appearance.rounding.small
+                                    color: Signal.palette.signalWell
+                                    implicitWidth: modeChip.implicitWidth + Appearance.padding.small * 2
+                                    implicitHeight: modeChip.implicitHeight + Appearance.padding.smaller * 2
+
+                                    StyledText {
+                                        id: modeChip
+                                        anchors.centerIn: parent
+                                        mono: true
+                                        text: (themeItem.modelData.tags ?? []).indexOf("contrast") >= 0 ? qsTr("Contrast") : themeItem.modelData.darkMode ? qsTr("Night") : qsTr("Day")
+                                        font.pointSize: Appearance.font.size.small
+                                        font.capitalization: Font.AllUppercase
+                                        color: Signal.palette.onSignalWell
+                                    }
                                 }
-                            }
 
-                            StyledRect {
-                                visible: themeItem.isCurrent && !themeItem.isStaged
-                                radius: Appearance.rounding.small
-                                color: Signal.palette.signalWell
-                                implicitWidth: currentChip.implicitWidth + Appearance.padding.small * 2
-                                implicitHeight: currentChip.implicitHeight + Appearance.padding.smaller * 2
+                                StyledRect {
+                                    visible: themeItem.isCurrent && !themeItem.isStaged
+                                    radius: Appearance.rounding.small
+                                    color: Signal.palette.signalWell
+                                    implicitWidth: currentChip.implicitWidth + Appearance.padding.small * 2
+                                    implicitHeight: currentChip.implicitHeight + Appearance.padding.smaller * 2
 
-                                StyledText {
-                                    id: currentChip
-                                    anchors.centerIn: parent
-                                    text: qsTr("Current")
-                                    font.pointSize: Appearance.font.size.smaller
-                                    color: Signal.palette.onSignalWell
+                                    StyledText {
+                                        id: currentChip
+                                        anchors.centerIn: parent
+                                        text: qsTr("Current")
+                                        font.pointSize: Appearance.font.size.smaller
+                                        color: Signal.palette.onSignalWell
+                                    }
                                 }
-                            }
 
-                            StyledRect {
-                                visible: themeItem.isStaged
-                                radius: Appearance.rounding.small
-                                color: Signal.palette.signalWell
-                                implicitWidth: stagedChip.implicitWidth + Appearance.padding.small * 2
-                                implicitHeight: stagedChip.implicitHeight + Appearance.padding.smaller * 2
+                                StyledRect {
+                                    visible: themeItem.isStaged
+                                    radius: Appearance.rounding.small
+                                    color: Signal.palette.signalWell
+                                    implicitWidth: stagedChip.implicitWidth + Appearance.padding.small * 2
+                                    implicitHeight: stagedChip.implicitHeight + Appearance.padding.smaller * 2
 
-                                StyledText {
-                                    id: stagedChip
-                                    anchors.centerIn: parent
-                                    text: previewController.themeDirty ? qsTr("Pending") : qsTr("Selected")
-                                    font.pointSize: Appearance.font.size.smaller
-                                    color: Signal.palette.onSignalWell
+                                    StyledText {
+                                        id: stagedChip
+                                        anchors.centerIn: parent
+                                        text: previewController.themeDirty ? qsTr("Pending") : qsTr("Selected")
+                                        font.pointSize: Appearance.font.size.smaller
+                                        color: Signal.palette.onSignalWell
+                                    }
+                                }
                                 }
                             }
                         }

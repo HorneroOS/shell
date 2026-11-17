@@ -1,5 +1,6 @@
 pragma ComponentBehavior: Bound
 
+import ".."
 import "../../components"
 import "../../../launcher/services"
 import qs.components
@@ -538,27 +539,32 @@ CollapsibleSection {
             }
         }
 
-        Repeater {
-            model: Themes.list.filter(t => t.collection === "user")
+        GridLayout {
+            Layout.fillWidth: true
+            columns: Math.max(1, Math.min(3, Math.floor(width / 220)))
+            columnSpacing: Appearance.spacing.small
+            rowSpacing: Appearance.spacing.small
 
-            RowLayout {
-                id: savedRow
+            Repeater {
+                model: Themes.list.filter(t => t.collection === "user")
 
-                required property var modelData
+                PaletteOption {
+                    id: savedRow
 
-                Layout.fillWidth: true
-                spacing: Appearance.spacing.small
+                    required property var modelData
 
-                StyledText {
+                    readonly property bool complete: Signal.isCompletePalette(modelData.palette)
+
                     Layout.fillWidth: true
-                    text: savedRow.modelData.name ?? savedRow.modelData.id
-                    elide: Text.ElideRight
-                }
-
-                TextButton {
-                    text: qsTr("Apply")
-                    type: TextButton.Tonal
-                    onClicked: ThemePipeline.applyTheme(savedRow.modelData.id, "")
+                    Layout.alignment: Qt.AlignTop
+                    kind: "button"
+                    title: modelData.name ?? modelData.id
+                    note: qsTr("Apply this palette")
+                    selected: Signal.themeStateReady && Signal.themeId === modelData.id
+                    palette: complete ? modelData.palette : (modelData.swatch ?? ({}))
+                    terminal: Array.isArray(modelData.terminal) ? modelData.terminal : []
+                    paletteLabel: qsTr("Saved palette preview")
+                    onActivated: ThemePipeline.applyTheme(modelData.id, "")
                 }
             }
         }

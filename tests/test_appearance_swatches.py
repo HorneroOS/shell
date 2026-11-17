@@ -12,6 +12,7 @@ SWATCH = (APPEARANCE / "ThemeSwatch.qml").read_text()
 def test_theme_cards_render_the_signal_swatch_from_the_theme_palette():
     assert "ThemeSwatch {" in SECTION
     assert "previewController.paletteForTheme(themeItem.modelData)" in SECTION
+    assert "terminal: sectionRoot.previewController.terminalForTheme(themeItem.modelData)" in SECTION
     for role in ("ground", "panel", "ink", "signal", "cue", "phosphor", "alert"):
         assert f'"{role}"' in SWATCH or f'role("{role}")' in SWATCH, role
     # A partial registry swatch falls back to the live roles, never undefined.

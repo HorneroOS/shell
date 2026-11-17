@@ -176,6 +176,30 @@ ink, preferences) is implemented in this repository.
   `hornero-signal-contrast` table. Cockpit Clear bars stay at zero opacity;
   Chromatic only changes their foreground ink.
 
+## Palette choosers — Control Center, Appearance
+
+Every chooser that picks something with colours shows those colours inline,
+drawn from real data and never hard-coded:
+
+- `ThemeSwatch` is the single swatch face: the miniature desk plus role
+  chips, or (`compact`) the role strip ground, panel, ink, signal, cue,
+  phosphor, alert. `showTerminal` adds the six ANSI hues (term1..term6) when
+  the data carries them (schema v2 `terminal` or `termN` keys); a registry
+  swatch with roles only shows no terminal strip.
+- `PaletteOption` is the selectable tile (radio or button): swatch, name,
+  note, selected state (ring, check glyph, text; never colour alone), focus
+  ring, Space/Enter, arrows in a radio group, accessible name and
+  description, and `previewStarted`/`previewEnded` on hover or focus. No
+  animation, so it is reduced-motion safe.
+- Used by: Themes cards (swatch face, role and terminal strips), the
+  Chromatic variant gallery (each variant's own engine result for the
+  current source, computed one at a time and only while the gallery exists:
+  `ChromaticPreview.variantSchemes`), saved Chromatic palettes, and the GTK
+  colour scheme (Signal Day and Night tables; Follow and Auto show the live
+  roles).
+- Not coloured, on purpose: GTK theme and icon theme (the installed packs
+  expose no palette to read).
+
 ## Typography — `config/AppearanceConfig.qml`
 
 | `Appearance.font.family.*` | Font | Use |

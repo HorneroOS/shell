@@ -128,6 +128,7 @@ Searcher {
         readonly property bool darkMode: modelData.mode !== "light"
         readonly property var palette: modelData.palette ?? ({})
         readonly property var swatch: modelData.swatch ?? ({})
+        readonly property var terminal: modelData.terminal ?? []
         readonly property string gtkTheme: modelData.gtkTheme || ""
         readonly property string iconTheme: modelData.iconTheme || ""
         readonly property string gtkColorScheme: {

@@ -177,6 +177,16 @@ Item {
         return Signal.isCompletePalette(theme.palette) ? theme.palette : (theme.swatch ?? ({}));
     }
 
+    // The theme's own 16 terminal colours (schema v2 `terminal`), [] when
+    // the listing carries none (a registry swatch is roles only).
+    function terminalForTheme(theme: var): var {
+        if (!theme)
+            return [];
+        if (Signal.isBuiltInTheme(theme.id))
+            return Signal.builtInThemes[theme.id].terminal ?? [];
+        return Array.isArray(theme.terminal) ? theme.terminal : [];
+    }
+
     Connections {
         target: ThemeCatalogue
         function onThemesChanged(): void {

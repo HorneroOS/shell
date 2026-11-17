@@ -109,6 +109,158 @@ Singleton {
         }
     }
 
+    // ---- per-variant palettes ------------------------------------------
+    // The Variant gallery shows each variant's real palette for the current
+    // source and settings (RFC 0002 §6). They come from the same engine as
+    // `result`, one variant at a time, only while a gallery asks for them
+    // (`variantPreviewsWanted`), and live in memory only.
+    //
+    // variantSchemes[id] is that variant's scheme ({palette, terminal}),
+    // variantFailed[id] is true when the engine refused it (for example
+    // Neon in light mode); an id in neither is still pending.
+    property bool variantPreviewsWanted: false
+    property var variantSchemes: ({})
+    property var variantFailed: ({})
+    property string _variantSig: ""
+    property var _variantQueue: []
+    property string _variantCurrent: ""
+    property bool _variantDiscard: false
+    property var _variantEngine: null
+
+    function _variantSignature(): string {
+        const r = JSON.parse(JSON.stringify(request));
+        delete r.variant;
+        return JSON.stringify([r, wallpaper, perMode, !!_engine]);
+    }
+
+    // Recompute when the source or any non-variant setting changed.
+    function refreshVariantPreviews(): void {
+        if (!variantPreviewsWanted)
+            return;
+        // No engine and no helper (yet): tiles stay empty wells, they do
+        // not claim a variant failed.
+        if (!_engine && !helperAvailable) {
+            probe();
+            return;
+        }
+        const sig = _variantSignature();
+        if (sig === _variantSig)
+            return;
+        _variantSig = sig;
+        // A run still in flight belongs to the old settings: drop its result.
+        _variantDiscard = _variantCurrent !== "";
+        variantSchemes = {};
+        variantFailed = {};
+        _variantQueue = Cli.VARIANTS.map(v => v.id);
+        _variantNext();
+    }
+
+    function _variantRequest(id: string): var {
+        const r = JSON.parse(JSON.stringify(request));
+        r.variant = id;
+        return r;
+    }
+
+    function _variantNext(): void {
+        if (_variantCurrent !== "")
+            return;
+        while (_variantQueue.length > 0) {
+            const id = _variantQueue[0];
+            _variantQueue = _variantQueue.slice(1);
+            if (_variantStart(id))
+                return;
+            _variantSet(id, null);
+        }
+    }
+
+    function _variantStart(id: string): bool {
+        const req = _variantRequest(id);
+        if (_engine) {
+            const ereq = Cli.engineRequest(req, wallpaper, perMode);
+            if (!ereq)
+                return false;
+            if (!_variantEngine) {
+                const comp = Qt.createComponent(Qt.resolvedUrl("ChromaticInProcess.qml"));
+                const obj = comp.status === Component.Ready ? comp.createObject(root) : null;
+                if (!obj || !obj.available)
+                    return false;
+                obj.finished.connect(doc => root._variantDone(Cli.parseDocument(doc)));
+                obj.failed.connect(() => root._variantDone({
+                        "ok": false
+                    }));
+                _variantEngine = obj;
+            }
+            _variantCurrent = id;
+            _variantEngine.generate(ereq);
+            return true;
+        }
+        if (!helperAvailable)
+            return false;
+        const args = Cli.helperArgs(req, wallpaper, perMode);
+        if (!args)
+            return false;
+        _variantCurrent = id;
+        variantProc.args = args;
+        variantProc.running = true;
+        return true;
+    }
+
+    function _variantSet(id: string, scheme: var): void {
+        const ok = Object.assign({}, variantSchemes);
+        const bad = Object.assign({}, variantFailed);
+        if (scheme)
+            ok[id] = scheme;
+        else
+            bad[id] = true;
+        variantSchemes = ok;
+        variantFailed = bad;
+    }
+
+    function _variantDone(parsed: var): void {
+        const id = _variantCurrent;
+        _variantCurrent = "";
+        const stale = _variantDiscard;
+        _variantDiscard = false;
+        if (id !== "" && !stale)
+            _variantSet(id, parsed && parsed.ok ? parsed.result.scheme : null);
+        _variantNext();
+    }
+
+    onVariantPreviewsWantedChanged: {
+        if (variantPreviewsWanted)
+            _variantTrigger.restart();
+    }
+    onHelperAvailableChanged: _variantTrigger.restart()
+    onRequestChanged: _variantTrigger.restart()
+    onWallpaperChanged: _variantTrigger.restart()
+
+    Timer {
+        id: _variantTrigger
+
+        // Behind the main preview, which always goes first.
+        interval: 250
+        onTriggered: {
+            if (root.busy)
+                restart();
+            else
+                root.refreshVariantPreviews();
+        }
+    }
+
+    Process {
+        id: variantProc
+
+        property var args: []
+
+        command: [root.helperPath].concat(args)
+        stdout: StdioCollector {
+            id: variantOut
+        }
+        onExited: exitCode => root._variantDone(exitCode === 0 ? Cli.parseGenerate(variantOut.text) : {
+                "ok": false
+            })
+    }
+
     Component.onCompleted: _loadEngine()
 
     property bool _again: false

@@ -294,7 +294,7 @@ Item {
                             StyledRect {
                                 Layout.fillWidth: true
                                 implicitHeight: workspacesShownRow.implicitHeight + Appearance.padding.large * 2
-                                radius: Appearance.rounding.normal
+                                radius: Appearance.rounding.small
                                 color: Signal.layer(Signal.palette.panel, 2)
 
                                 Behavior on implicitHeight {
@@ -329,7 +329,7 @@ Item {
                             StyledRect {
                                 Layout.fillWidth: true
                                 implicitHeight: workspacesActiveIndicatorRow.implicitHeight + Appearance.padding.large * 2
-                                radius: Appearance.rounding.normal
+                                radius: Appearance.rounding.small
                                 color: Signal.layer(Signal.palette.panel, 2)
 
                                 Behavior on implicitHeight {
@@ -362,7 +362,7 @@ Item {
                             StyledRect {
                                 Layout.fillWidth: true
                                 implicitHeight: workspacesOccupiedBgRow.implicitHeight + Appearance.padding.large * 2
-                                radius: Appearance.rounding.normal
+                                radius: Appearance.rounding.small
                                 color: Signal.layer(Signal.palette.panel, 2)
 
                                 Behavior on implicitHeight {
@@ -395,7 +395,7 @@ Item {
                             StyledRect {
                                 Layout.fillWidth: true
                                 implicitHeight: workspacesShowWindowsRow.implicitHeight + Appearance.padding.large * 2
-                                radius: Appearance.rounding.normal
+                                radius: Appearance.rounding.small
                                 color: Signal.layer(Signal.palette.panel, 2)
 
                                 Behavior on implicitHeight {
@@ -428,7 +428,7 @@ Item {
                             StyledRect {
                                 Layout.fillWidth: true
                                 implicitHeight: workspacesPerMonitorRow.implicitHeight + Appearance.padding.large * 2
-                                radius: Appearance.rounding.normal
+                                radius: Appearance.rounding.small
                                 color: Signal.layer(Signal.palette.panel, 2)
 
                                 Behavior on implicitHeight {

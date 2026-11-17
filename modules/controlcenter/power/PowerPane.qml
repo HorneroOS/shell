@@ -114,7 +114,7 @@ Item {
         required property string action
 
         Layout.fillWidth: true
-        radius: Appearance.rounding.normal
+        radius: Appearance.rounding.small
         color: tile.armed ? Signal.layer(Signal.palette.alertWell, 2) : Signal.layer(Signal.palette.raised, 2)
         implicitHeight: row.implicitHeight + Appearance.padding.normal * 2
 

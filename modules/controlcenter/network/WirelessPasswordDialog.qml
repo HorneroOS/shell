@@ -60,7 +60,7 @@ Item {
         implicitWidth: 400
         implicitHeight: content.implicitHeight + Appearance.padding.large * 2
 
-        radius: Appearance.rounding.normal
+        radius: Appearance.rounding.small
         color: Signal.tPalette.base
         opacity: root.session.network.showPasswordDialog && !root.isClosing ? 1 : 0
         scale: root.session.network.showPasswordDialog && !root.isClosing ? 1 : 0.7
@@ -210,7 +210,7 @@ Item {
 
                 StyledRect {
                     anchors.fill: parent
-                    radius: Appearance.rounding.normal
+                    radius: Appearance.rounding.small
                     color: passwordContainer.activeFocus ? Qt.lighter(Signal.tPalette.panel, 1.05) : Signal.tPalette.panel
                     border.width: passwordContainer.activeFocus || connectButton.hasError ? 4 : (root.visible ? 1 : 0)
                     border.color: {

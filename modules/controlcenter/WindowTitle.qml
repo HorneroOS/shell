@@ -60,7 +60,7 @@ StyledRect {
             Accessible.name: qsTr("Close Settings window")
             Accessible.description: qsTr("Close the floating Settings window")
 
-            radius: Appearance.rounding.full
+            radius: Appearance.rounding.small
 
             function onClicked(): void {
                 WindowFactory.closeWindow(QsWindow.window);

@@ -135,7 +135,7 @@ Item {
                 Accessible.role: Accessible.Button
                 Accessible.name: modelData ? (isCurrent ? qsTr("%1, current").arg(Strings.wallpaperDisplayName(modelData.name)) : Strings.wallpaperDisplayName(modelData.name)) : ""
         readonly property real itemMargin: Appearance.spacing.normal / 2
-        readonly property real itemRadius: Appearance.rounding.normal
+        readonly property real itemRadius: Appearance.rounding.small
 
         Interactive {
             anchors.fill: parent

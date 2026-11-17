@@ -85,7 +85,7 @@ ColumnLayout {
 
                     width: ListView.view ? ListView.view.width : undefined
                     color: Signal.tPalette.raised
-                    radius: Appearance.rounding.normal
+                    radius: Appearance.rounding.small
 
                     RowLayout {
                         anchors.left: parent.left

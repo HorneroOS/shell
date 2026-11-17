@@ -313,7 +313,7 @@ Item {
 
                 StyledRect {
                     Layout.fillWidth: true
-                    radius: Appearance.rounding.normal
+                    radius: Appearance.rounding.small
                     color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: monCol.implicitHeight + Appearance.padding.large * 2
 
@@ -355,7 +355,7 @@ Item {
 
                 StyledRect {
                     Layout.fillWidth: true
-                    radius: Appearance.rounding.normal
+                    radius: Appearance.rounding.small
                     color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: arrCol.implicitHeight + Appearance.padding.large * 2
 
@@ -418,7 +418,7 @@ Item {
 
                 StyledRect {
                     Layout.fillWidth: true
-                    radius: Appearance.rounding.normal
+                    radius: Appearance.rounding.small
                     color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: brightCol.implicitHeight + Appearance.padding.large * 2
 
@@ -466,7 +466,7 @@ Item {
 
                 StyledRect {
                     Layout.fillWidth: true
-                    radius: Appearance.rounding.normal
+                    radius: Appearance.rounding.small
                     color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: compCol.implicitHeight + Appearance.padding.large * 2
 

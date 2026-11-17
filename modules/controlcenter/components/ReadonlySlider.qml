@@ -51,7 +51,7 @@ ColumnLayout {
     StyledRect {
         Layout.fillWidth: true
         implicitHeight: Appearance.padding.normal
-        radius: Appearance.rounding.full
+        radius: Appearance.rounding.small
         color: Signal.layer(Signal.palette.lifted, 1)
         opacity: root.readonly ? 0.5 : 1.0
 

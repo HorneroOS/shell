@@ -142,7 +142,7 @@ DeviceList {
             implicitHeight: deviceInner.implicitHeight + Appearance.padding.normal * 2
 
             color: Qt.alpha(Signal.tPalette.panel, root.activeItem === modelData ? Signal.tPalette.panel.a : 0)
-            radius: Appearance.rounding.normal
+            radius: Appearance.rounding.small
 
             Accessible.role: Accessible.Button
             Accessible.name: (modelData ? modelData.name : qsTr("Unknown")) + (device.connected ? qsTr(", connected") : "")
@@ -168,7 +168,7 @@ DeviceList {
                     implicitWidth: implicitHeight
                     implicitHeight: icon.implicitHeight + Appearance.padding.normal * 2
 
-                    radius: Appearance.rounding.normal
+                    radius: Appearance.rounding.small
                     color: device.connected ? Signal.palette.signalWell : (device.modelData && device.modelData.bonded) ? Signal.palette.cueWell : Signal.tPalette.raised
 
                     StyledRect {
@@ -213,7 +213,7 @@ DeviceList {
                     implicitWidth: implicitHeight
                     implicitHeight: connectIcon.implicitHeight + Appearance.padding.smaller * 2
 
-                    radius: Appearance.rounding.full
+                    radius: Appearance.rounding.small
                     color: Qt.alpha(Signal.palette.signalWell, device.connected ? 1 : 0)
 
                     CircularIndicator {

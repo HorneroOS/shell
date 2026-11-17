@@ -50,7 +50,7 @@ CollapsibleSection {
 
                     readonly property bool isCurrent: modelData === rootPane.fontFamilyMono
                     color: Qt.alpha(Signal.tPalette.panel, isCurrent ? Signal.tPalette.panel.a : 0)
-                    radius: Appearance.rounding.normal
+                    radius: Appearance.rounding.small
                     border.width: isCurrent ? 1 : 0
                     border.color: Signal.palette.signal
 
@@ -146,7 +146,7 @@ CollapsibleSection {
 
                     readonly property bool isCurrent: modelData === rootPane.fontFamilySans
                     color: Qt.alpha(Signal.tPalette.panel, isCurrent ? Signal.tPalette.panel.a : 0)
-                    radius: Appearance.rounding.normal
+                    radius: Appearance.rounding.small
                     border.width: isCurrent ? 1 : 0
                     border.color: Signal.palette.signal
 
@@ -242,7 +242,7 @@ CollapsibleSection {
 
                     readonly property bool isCurrent: modelData === rootPane.fontFamilyDisplay
                     color: Qt.alpha(Signal.tPalette.panel, isCurrent ? Signal.tPalette.panel.a : 0)
-                    radius: Appearance.rounding.normal
+                    radius: Appearance.rounding.small
                     border.width: isCurrent ? 1 : 0
                     border.color: Signal.palette.signal
 

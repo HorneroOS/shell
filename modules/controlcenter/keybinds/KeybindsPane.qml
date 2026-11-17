@@ -247,7 +247,7 @@ Item {
 
                 StyledRect {
                     Layout.fillWidth: true
-                    radius: Appearance.rounding.normal
+                    radius: Appearance.rounding.small
                     color: Signal.layer(Signal.palette.panel, 1)
                     implicitHeight: kbCol.implicitHeight + Appearance.padding.large * 2
 
@@ -305,7 +305,7 @@ Item {
                                         Layout.preferredHeight: countLabel.implicitHeight + 6
                                         Layout.preferredWidth: countLabel.implicitWidth + 14
                                         color: Signal.palette.signalWell
-                                        radius: Appearance.rounding.full
+                                        radius: Appearance.rounding.small
 
                                         StyledText {
                                             id: countLabel

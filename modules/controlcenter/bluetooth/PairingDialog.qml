@@ -47,7 +47,7 @@ Item {
         anchors.centerIn: parent
         implicitWidth: 400
         implicitHeight: content.implicitHeight + Appearance.padding.large * 2
-        radius: Appearance.rounding.normal
+        radius: Appearance.rounding.small
         color: Signal.tPalette.base
 
         ColumnLayout {

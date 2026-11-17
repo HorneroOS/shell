@@ -65,7 +65,7 @@ DeviceList {
             implicitHeight: rowLayout.implicitHeight + Appearance.padding.normal * 2
 
             color: Qt.alpha(Signal.tPalette.panel, ethernetItem.isActive ? Signal.tPalette.panel.a : 0)
-            radius: Appearance.rounding.normal
+            radius: Appearance.rounding.small
 
             Accessible.role: Accessible.Button
             Accessible.name: (modelData.interface || qsTr("Unknown")) + (modelData.connected ? qsTr(", connected") : qsTr(", disconnected"))
@@ -90,7 +90,7 @@ DeviceList {
                     implicitWidth: implicitHeight
                     implicitHeight: icon.implicitHeight + Appearance.padding.normal * 2
 
-                    radius: Appearance.rounding.normal
+                    radius: Appearance.rounding.small
                     color: modelData.connected ? Signal.palette.signalWell : Signal.tPalette.raised
 
                     StyledRect {
@@ -141,7 +141,7 @@ DeviceList {
                     implicitWidth: implicitHeight
                     implicitHeight: connectIcon.implicitHeight + Appearance.padding.smaller * 2
 
-                    radius: Appearance.rounding.full
+                    radius: Appearance.rounding.small
                     color: Qt.alpha(Signal.palette.signalWell, modelData.connected ? 1 : 0)
 
                     Accessible.role: Accessible.Button

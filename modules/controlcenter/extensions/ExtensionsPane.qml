@@ -582,7 +582,7 @@ Item {
                         required property var modelData
 
                         Layout.fillWidth: true
-                        radius: Appearance.rounding.normal
+                        radius: Appearance.rounding.small
                         color: Signal.layer(Signal.palette.panel, 1)
                         implicitHeight: rowCol.implicitHeight + Appearance.padding.large * 2
 
@@ -605,7 +605,7 @@ Item {
                                     Layout.alignment: Qt.AlignTop
                                     implicitWidth: 44
                                     implicitHeight: 44
-                                    radius: Appearance.rounding.normal
+                                    radius: Appearance.rounding.small
                                     color: row.modelData.enabled ? Signal.palette.signalWell : Signal.tPalette.lifted
 
                                     Glyph {
@@ -1002,7 +1002,7 @@ Item {
                         required property var modelData
 
                         Layout.fillWidth: true
-                        radius: Appearance.rounding.normal
+                        radius: Appearance.rounding.small
                         color: Signal.layer(Signal.palette.panel, 1)
                         implicitHeight: catCol.implicitHeight + Appearance.padding.large * 2
 
@@ -1249,7 +1249,7 @@ Item {
 
         implicitWidth: chipRow.implicitWidth + Appearance.padding.normal * 2
         implicitHeight: chipRow.implicitHeight + Appearance.padding.small
-        radius: Appearance.rounding.full
+        radius: Appearance.rounding.small
         color: chip.tone === "neutral" ? Signal.tPalette.lifted : Qt.alpha(chip.fg, 0.14)
 
         Row {

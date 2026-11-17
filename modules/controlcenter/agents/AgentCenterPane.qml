@@ -444,7 +444,7 @@ Item {
 
                                 Layout.fillWidth: true
                                 implicitHeight: agentLayout.implicitHeight + Appearance.padding.large * 2
-                                radius: Appearance.rounding.normal
+                                radius: Appearance.rounding.small
                                 color: agentRow.isDefault ? Signal.palette.cueWell : Signal.tPalette.raised
 
                                 RowLayout {
@@ -458,7 +458,7 @@ Item {
                                         Layout.alignment: Qt.AlignTop
                                         implicitWidth: 44
                                         implicitHeight: 44
-                                        radius: Appearance.rounding.full
+                                        radius: Appearance.rounding.small
                                         color: agentRow.isDefault ? Signal.palette.cue : Signal.palette.signalWell
 
                                         Glyph {
@@ -628,7 +628,7 @@ Item {
 
         implicitWidth: chipText.implicitWidth + Appearance.padding.normal * 2
         implicitHeight: chipText.implicitHeight + Appearance.padding.small
-        radius: Appearance.rounding.full
+        radius: Appearance.rounding.small
         color: chip.tone === "primary" ? Signal.palette.signal : Qt.alpha(chip.fg, 0.14)
 
         StyledText {

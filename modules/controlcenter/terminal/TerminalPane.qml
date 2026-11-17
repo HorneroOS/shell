@@ -79,7 +79,7 @@ Item {
 
         Layout.fillWidth: true
         implicitHeight: row.implicitHeight + Appearance.padding.normal * 2
-        radius: Appearance.rounding.normal
+        radius: Appearance.rounding.small
         color: Signal.layer(Signal.palette.raised, 2)
 
         Item {
@@ -250,7 +250,7 @@ Item {
         anchors.margins: Appearance.padding.normal
         anchors.leftMargin: 0
         anchors.rightMargin: Appearance.padding.normal
-        radius: Appearance.rounding.normal
+        radius: Appearance.rounding.small
         color: "transparent"
 
             StyledFlickable {

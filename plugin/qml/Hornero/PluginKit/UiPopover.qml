@@ -144,7 +144,7 @@ Popup {
             bar: owner ? Object.assign({}, owner, { floating: true, item: undefined }) : null,
             preferredSide: side,
             previousSide: root.actualSide,
-            screen: { x: 0, y: 0, width: availW, height: availH, scale: 1, reserved: {} },
+            screen: { x: 0, y: 0, width: availW, height: availH, reserved: {} },
             size: { width: tipW, height: tipH },
             gutter: margin,
             gap: gap

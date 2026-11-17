@@ -63,3 +63,8 @@ mislead, so they are left out until the dashboard consumes them.
 - `appearance.anim.curveStyle` = `smooth` (factory) | `snappy` (no overshoot) | `bouncy` (a little more give on
   spatial motion only). Opacity/colour never overshoot, and reduced motion still wins.
 - The Cozy look uses the bouncy style; the Hornero look restores weight 0 and smooth.
+
+## Wallpaper fit (Appearance > Background)
+
+`background.wallpaperFit`: `crop` (factory, fill and crop), `fit` (whole image), `stretch`, `center`. Applies to still,
+animated and video wallpapers (video has no pad mode, so centre plays as fit).

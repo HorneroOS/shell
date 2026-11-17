@@ -56,3 +56,15 @@ def test_factory_look_has_factory_weight_and_curve():
 def test_weight_tokens_replace_literals():
     bad = [str(p) for p in (ROOT / "modules").rglob("*.qml") if re.search(r"font\.weight: (500|600)$", p.read_text(), re.M)]
     assert not bad, f"use Appearance.font.weight tokens: {bad}"
+
+
+def test_wallpaper_fit_is_a_setting_with_factory_crop():
+    assert FACTORY["background"]["wallpaperFit"] == "crop"
+    wp = (ROOT / "modules/background/Wallpaper.qml").read_text()
+    assert "Config.background.wallpaperFit" in wp
+    for needle in ("fillMode: root.videoFill", "fillMode: root.imageFill"):
+        assert needle in wp
+    assert "fillMode: Image.PreserveAspectCrop" not in wp
+    sec = (ROOT / "modules/controlcenter/appearance/sections/BackgroundSection.qml").read_text()
+    for opt in ("crop", "fit", "stretch", "center"):
+        assert f'id: "{opt}"' in sec

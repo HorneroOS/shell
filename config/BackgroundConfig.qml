@@ -3,6 +3,9 @@ import Quickshell.Io
 JsonObject {
     property bool enabled: true
     property bool wallpaperEnabled: true
+    // How a wallpaper that does not match the screen is placed:
+    // "crop" (fill, factory), "fit" (whole image, bars of colour), "stretch" or "center".
+    property string wallpaperFit: "crop"
     property DesktopClock desktopClock: DesktopClock {}
     property Visualiser visualiser: Visualiser {}
     property Video video: Video {}

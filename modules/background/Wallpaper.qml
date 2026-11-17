@@ -16,6 +16,11 @@ Item {
     property string source: Wallpapers.current
     property var current
     property bool completed
+    // User choice (Appearance > Background): crop (factory), fit, stretch, center.
+    readonly property string fit: ["crop", "fit", "stretch", "center"].includes(Config.background.wallpaperFit) ? Config.background.wallpaperFit : "crop"
+    readonly property int imageFill: fit === "fit" ? Image.PreserveAspectFit : fit === "stretch" ? Image.Stretch : fit === "center" ? Image.Pad : Image.PreserveAspectCrop
+    // VideoOutput has no Pad mode; centre plays as fit.
+    readonly property int videoFill: fit === "stretch" ? VideoOutput.Stretch : fit === "crop" ? VideoOutput.PreserveAspectCrop : VideoOutput.PreserveAspectFit
 
     onSourceChanged: {
         if (!source) {
@@ -235,7 +240,7 @@ Item {
                 id: videoOutput
 
                 anchors.fill: parent
-                fillMode: VideoOutput.PreserveAspectCrop
+                fillMode: root.videoFill
             }
 
             NumberAnimation {
@@ -274,7 +279,7 @@ Item {
 
             anchors.fill: parent
             asynchronous: true
-            fillMode: Image.PreserveAspectCrop
+            fillMode: root.imageFill
             source: path ? path : ""
             playing: true
             opacity: 0
@@ -313,6 +318,7 @@ Item {
             property bool isReady: status === Image.Ready
 
             anchors.fill: parent
+            fillMode: root.imageFill
             opacity: 0
 
             onStatusChanged: {

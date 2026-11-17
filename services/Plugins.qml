@@ -530,6 +530,78 @@ Singleton {
         return result;
     }
 
+    // Contributions (RFC 0003 section 4.1): declarative commands the Shell
+    // lists (launcher, IPC, Control Center) without running extension code.
+    // PluginHost records the manifest declaration here; only the validated
+    // shape is kept, mirroring scripts/validate_plugin.py, so a malformed
+    // entry simply does not exist.
+    function normalizeContributes(contributes: var): var {
+        const normalized = ({
+                commands: []
+            });
+        const list = contributes && typeof contributes === "object" && !Array.isArray(contributes) ? contributes.commands : null;
+        if (!Array.isArray(list))
+            return normalized;
+        const glyph = /^[a-z0-9-]+$/;
+        const seen = new Set();
+        for (const item of list) {
+            if (normalized.commands.length >= 16)
+                break;
+            if (!item || typeof item !== "object" || Array.isArray(item)
+                    || typeof item.id !== "string" || !/^[a-z][a-zA-Z0-9]{0,31}$/.test(item.id) || seen.has(item.id)
+                    || typeof item.title !== "string" || !/\S/.test(item.title) || item.title.length > 48)
+                continue;
+            seen.add(item.id);
+            const command = {
+                id: item.id,
+                title: item.title,
+                description: typeof item.description === "string" && /\S/.test(item.description) && item.description.length <= 120 ? item.description : "",
+                glyph: typeof item.glyph === "string" && glyph.test(item.glyph) ? item.glyph : "command",
+                keywords: Array.isArray(item.keywords) ? item.keywords.filter(k => typeof k === "string" && /\S/.test(k) && k.length <= 24).slice(0, 8) : []
+            };
+            normalized.commands.push(command);
+        }
+        return normalized;
+    }
+
+    function markContributes(id: string, contributes: var): void {
+        const normalized = root.normalizeContributes(contributes);
+        const current = root.entries.find(e => e.id === id);
+        if (current && JSON.stringify(current.contributes || null) === JSON.stringify(normalized))
+            return;
+        root.entries = root.entries.map(e => e.id === id ? Object.assign({}, e, {
+            contributes: normalized
+        }) : e);
+    }
+
+    // Every command of an enabled, installed extension whose `commands`
+    // surface is enabled, for the launcher, IPC and Control Center. Reads
+    // manifests only: listing never runs extension code.
+    function commandList(): var {
+        const result = [];
+        for (const entry of root.pluginsForSurface("commands")) {
+            const commands = entry.contributes && Array.isArray(entry.contributes.commands) ? entry.contributes.commands : [];
+            for (const command of commands) {
+                result.push({
+                    pluginId: entry.id,
+                    pluginName: entry.name || entry.id,
+                    id: command.id,
+                    title: command.title,
+                    description: command.description,
+                    glyph: command.glyph,
+                    keywords: command.keywords
+                });
+            }
+        }
+        return result;
+    }
+
+    // Host view for the command host: one copy per enabled extension that
+    // hosts the surface, entrypoint set to the commands file.
+    function commandPlugins(): var {
+        return root.pluginsForSurface("commands");
+    }
+
     // Plugin translations (shell#375): PluginHost records the
     // manifest `translations` declaration here exactly as validated;
     // PluginKit Translations reads it back by plugin id. Recording a

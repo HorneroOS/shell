@@ -72,6 +72,27 @@ Scope {
         onTriggered: CompanionStore.checkIdle()
     }
 
+    // Reactions from real shell events. Each emitter owns its event;
+    // reactions.js decides whether Javi shows it (mode, quiet hours,
+    // cooldown, per-kind switch).
+    Connections {
+        target: Notifs
+
+        function onReceived(critical: bool): void {
+            CompanionReactions.react("notification", "shell", "");
+        }
+    }
+
+    Connections {
+        target: Experience
+
+        function onModeChanged(): void {
+            // The first state load is not a switch the user made.
+            if (Experience.stateReady)
+                CompanionReactions.react("mode.changed", "shell", "");
+        }
+    }
+
     // Restart durability for the store (snapshot file I/O lives here,
     // never in the store itself).
     CompanionPersist {}
@@ -895,6 +916,19 @@ Scope {
             CompanionStore.summon();
             assistantBridge.chatOpen = !assistantBridge.chatOpen;
             CompanionStore.forceVisible = assistantBridge.chatOpen;
+        }
+
+        // Governed reaction entry point: only the external kinds in
+        // reactions.js (build.done, build.failed, download.done,
+        // device.connected, device.disconnected, task.done, attention)
+        // are accepted; text is plain, bounded and optional. Returns
+        // whether Javi showed it (see `reactStatus` for the reason).
+        function react(kind: string, text: string): bool {
+            return CompanionReactions.react((kind ?? "").toString(), "ipc", (text ?? "").toString());
+        }
+
+        function reactStatus(): string {
+            return JSON.stringify(CompanionReactions.status());
         }
 
         function askStop(): void {

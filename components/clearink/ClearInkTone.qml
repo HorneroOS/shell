@@ -44,6 +44,10 @@ QtObject {
     readonly property color signal: root.data.signal
     readonly property color alert: root.data.alert
     readonly property color halo: Qt.alpha(root.data.halo, root.data.haloAlpha)
+    // The halo shader picks one of these per pixel from the foreground it
+    // surrounds: dark behind light foreground, light behind dark.
+    readonly property color haloOnLight: Model.LIGHT.halo
+    readonly property color haloOnDark: Model.DARK.halo
     readonly property int weight: root.data.weight
     readonly property real offAlpha: root.data.offAlpha
     readonly property bool active: true

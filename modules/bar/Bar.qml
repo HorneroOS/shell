@@ -926,17 +926,39 @@ Item {
         visible: enabled && contentAvailable
         active: enabled
 
-        // Glyph/text-only halo and shadow (never a box): one silhouette
-        // shadow of the rendered entry in the region's halo colour.
-        layer.enabled: root.clear && wrapped.regionTone.effect.enabled
-        layer.effect: MultiEffect {
-            blurMax: 16
-            shadowEnabled: true
-            shadowColor: wrapped.regionTone.halo
-            shadowBlur: wrapped.regionTone.effect.blur
-            shadowOpacity: wrapped.regionTone.effect.opacity
-            shadowHorizontalOffset: 0
-            shadowVerticalOffset: 0
+        // Glyph/text-only halo and shadow (never a box): the dilated
+        // silhouette of the loaded entry, painted beneath it. Pixels more
+        // than the tone's radius away from foreground stay transparent.
+        ShaderEffect {
+            id: halo
+
+            readonly property var fx: wrapped.regionTone.effect
+            readonly property real pad: halo.fx.pad
+            property var source: haloSource
+            property color haloOnLight: wrapped.regionTone.haloOnLight
+            property color haloOnDark: wrapped.regionTone.haloOnDark
+            property size texel: Qt.size(1 / Math.max(1, width), 1 / Math.max(1, height))
+            property real outlinePx: halo.fx.outlinePx
+            property real shadowPx: halo.fx.shadowPx
+            property real haloAlpha: halo.fx.alpha
+
+            visible: root.clear && wrapped.item !== null && halo.fx.enabled
+            x: -halo.pad
+            y: -halo.pad
+            z: -1
+            width: wrapped.width + halo.pad * 2
+            height: wrapped.height + halo.pad * 2
+            fragmentShader: Qt.resolvedUrl(`${Quickshell.shellDir}/assets/shaders/clearinkhalo.frag.qsb`)
+
+            ShaderEffectSource {
+                id: haloSource
+
+                sourceItem: wrapped.item
+                sourceRect: Qt.rect(-halo.pad, -halo.pad, halo.width, halo.height)
+                hideSource: false
+                live: true
+                visible: false
+            }
         }
 
         onLoaded: {

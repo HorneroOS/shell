@@ -32,12 +32,11 @@ var DARK = {
 var STYLES = ["auto", "outline", "shadow", "contrast"];
 var DEFAULT_STYLE = "auto";
 
-// §12.1 step 4: halo alpha and the deviation above which detailed
-// wallpapers get the soft shadow too.
-var HALO_ALPHA = 0.88;
+// §12.1 step 4: peak halo alpha and the deviation above which detailed
+// wallpapers get the soft shadow too. The ring is near opaque: a thinner
+// alpha lets a vivid wallpaper through and drops the foreground below 4.5:1.
+var HALO_ALPHA = 0.94;
 var DETAIL_DEVIATION = 0.12;
-// §12.3: Shadow falls back to Outline below this mean contrast.
-var SHADOW_MIN_CONTRAST = 3;
 // §12.1 step 5: off meter segments are the polarity's ink at 30 %.
 var OFF_SEGMENT_ALPHA = 0.3;
 // Luminance grid width; rows follow the screen aspect.
@@ -156,34 +155,30 @@ function toneFor(stats, style, themeLight) {
     var st = normaliseStyle(style);
     var pick;
     var detailed;
-    var minContrast;
     if (stats) {
         pick = polarityFor(stats.mean);
         detailed = stats.dev > DETAIL_DEVIATION;
-        minContrast = pick.contrast;
     } else {
         pick = { set: themeLight ? DARK : LIGHT, contrast: 0 };
         detailed = true;
-        minContrast = 0;
     }
     var set = pick.set;
-    var haloPx = 1;
+    // Outline radius and soft-shadow radius in logical px. Every style keeps
+    // a solid ring around the glyph silhouette: legibility never depends on
+    // the wallpaper, only on the foreground (RFC 0001 §5.1).
+    var haloPx = 2;
     var shadowPx = 0;
     var weight = 400;
     if (st === "auto") {
-        shadowPx = detailed ? 4 : 0;
+        shadowPx = detailed ? 5 : 0;
     } else if (st === "outline") {
-        shadowPx = 0;
-    } else if (st === "shadow") {
-        if (stats && minContrast < SHADOW_MIN_CONTRAST) {
-            shadowPx = 0; // falls back to Outline
-        } else {
-            haloPx = 0;
-            shadowPx = 2;
-        }
-    } else if (st === "contrast") {
         haloPx = 2;
-        shadowPx = 0;
+    } else if (st === "shadow") {
+        haloPx = 1;
+        shadowPx = 4;
+    } else if (st === "contrast") {
+        haloPx = 3;
+        shadowPx = 3;
         weight = 600;
     }
     return {
@@ -203,12 +198,18 @@ function toneFor(stats, style, themeLight) {
     };
 }
 
-// MultiEffect parameters (blurMax 16) that approximate the tone's halo
-// and shadow as one glyph-silhouette shadow: the halo is the tight core,
-// the soft shadow widens it. Returns zeros when the tone draws neither.
+// Parameters of the glyph-halo shader (assets/shaders/clearinkhalo.frag):
+// the outline ring and soft shadow radii, and the item padding that keeps
+// them inside the shader's texture. Zeros when the tone draws neither.
 function effectParams(tone) {
-    var radius = tone.haloPx * 1.5 + tone.shadowPx;
-    if (radius <= 0)
-        return { enabled: false, blur: 0, opacity: 0 };
-    return { enabled: true, blur: Math.min(1, radius / 16), opacity: tone.haloAlpha };
+    var reach = Math.max(tone.haloPx, tone.shadowPx);
+    if (reach <= 0)
+        return { enabled: false, outlinePx: 0, shadowPx: 0, alpha: 0, pad: 0 };
+    return {
+        enabled: true,
+        outlinePx: tone.haloPx,
+        shadowPx: tone.shadowPx,
+        alpha: tone.haloAlpha,
+        pad: Math.ceil(reach) + 1
+    };
 }

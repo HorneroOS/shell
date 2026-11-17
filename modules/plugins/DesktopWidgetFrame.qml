@@ -73,7 +73,20 @@ Item {
     // fullscreen window also suspends them.
     readonly property bool suspended: Experience.desktopWidgets === "none" || !Experience.desktopWidgetsVisible
 
-    readonly property int padding: Appearance.padding.larger
+    // Deck appearance (Control Center › Experience › Desktop widgets):
+    // frame opacity, accent and padding density per widget and mode.
+    // Content is never made translucent, High Contrast forces an opaque
+    // frame, and user widgets keep the factory look.
+    readonly property var look: {
+        const _deck = Config.experience.deck;
+        return root.deck ? Experience.deckStyleOf(Experience.mode, root.pluginId) : ({
+                opacity: 1,
+                accent: "default",
+                density: "cozy"
+            });
+    }
+    readonly property color accentColor: root.look.accent === "signal" ? Signal.palette.signal : root.look.accent === "cue" ? Signal.palette.cue : Signal.palette.rule
+    readonly property int padding: root.look.density === "compact" ? Appearance.padding.normal : root.look.density === "roomy" ? Math.round(Appearance.padding.larger * 1.5) : Appearance.padding.larger
     readonly property int headerHeight: 28
     readonly property int minWidth: root.hint.minWidth ?? 160
     readonly property int minHeight: root.hint.minHeight ?? 96
@@ -160,9 +173,9 @@ Item {
 
         anchors.fill: parent
         radius: Appearance.rounding.small
-        color: Signal.palette.panel
+        color: Qt.alpha(Signal.palette.panel, Config.appearance.highContrast ? 1 : root.look.opacity)
         border.width: 1
-        border.color: Signal.palette.rule
+        border.color: root.accentColor
 
         // Header: channel eyebrow + context eyebrow.
         StyledText {

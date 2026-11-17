@@ -15,7 +15,7 @@ other HorneroOS components script against; renames must update
 | `notifs` | `services/Notifs.qml` | `clear()`, `isDndEnabled()`, `toggleDnd()` (+ per-file extras) |
 | `idleInhibitor` | `services/IdleInhibitor.qml` | `isEnabled()`, `toggle()`, `enable()` (+ `disable()` per file) |
 | `hypr` | `services/Hypr.qml` | `refreshDevices()`, `cycleSpecialWorkspace(direction)`, `listSpecialWorkspaces()` |
-| `experience` | `services/Experience.qml` | `get()`, `set(mode)`, `toggle(mode)`, `revert()`, `reset()`, `list()`, `profile(mode)`, `status()`, `customise(mode, field, json)`, `resetCustomisations(mode)`, `setAuto(enabled)`, `deck(mode)`, `setDeckHidden(mode, widget, hide)`, `resetDeck(mode)` — see [Experience modes](#experience-modes) |
+| `experience` | `services/Experience.qml` | `get()`, `set(mode)`, `toggle(mode)`, `revert()`, `reset()`, `list()`, `profile(mode)`, `status()`, `customise(mode, field, json)`, `resetCustomisations(mode)`, `setAuto(enabled)`, `deck(mode)`, `setDeckHidden(mode, widget, hide)`, `setDeckAnchor`, `moveDeckWidget`, `setDeckStyle`, `deckPresets`, `applyDeckBuiltin`, `saveDeckPreset`, `applyDeckPreset`, `deleteDeckPreset`, `resetDeck(mode)` — see [Experience modes](#experience-modes) |
 | `signal` | `services/Signal.qml` | `reload()` (re-read the live scheme), `mode()` (`dark`/`light`), `theme()` (applied theme id), `previewing()` (true while a Chromatic candidate is shown in memory) |
 | `brightness` | `services/Brightness.qml` | `get()`, `getFor(query)`, `set(value)` (+ `setFor` per file) |
 
@@ -41,6 +41,12 @@ Hyprland effects hook it toggled is now part of the `gaming` mode
 | `experience resetCustomisations <mode>` | `ok` — that mode returns to its factory profile |
 | `experience deck <mode>` | JSON `{mode, instruments, catalogue: [id…], hidden: [id…], customised}`: the Signal instrument deck of that mode ([docs/EXPERIENCE.md](EXPERIENCE.md)) |
 | `experience setDeckHidden <mode> <widget> <true\|false>` | `ok` or `error: …`; turns one curated instrument off (or back on) for that mode |
+| `experience setDeckAnchor <mode> <widget> <anchor>` | `ok` or `error: …`; `<anchor>` is `left-top`, `left-bottom`, `right-top`, `right-bottom`, or empty for the factory rail |
+| `experience moveDeckWidget <mode> <widget> <up\|down>` | `ok`; changes the placement priority order |
+| `experience setDeckStyle <mode> <widget> <key> <value>` | `ok` or `error: …`; `key` is `opacity` (0.3-1), `size` (`small normal large`), `accent` (`default signal cue`) or `density` (`compact cozy roomy`); empty value restores that key |
+| `experience deckPresets <mode>` | JSON `{builtin: [{id, label, show, style}], saved: [name]}` |
+| `experience applyDeckBuiltin <mode> <id>` | `ok`; ids `all cozy kawaii-night monitor time minimal` |
+| `experience saveDeckPreset <mode> <name>` / `applyDeckPreset` / `deleteDeckPreset` | `ok` or `error: …`; saved presets snapshot the mode's widgets, anchors, order, hand-placed geometry and appearance (max 5, names `[A-Za-z0-9 _-]{1,24}`) |
 | `experience resetDeck <mode>` | `ok` — the mode's deck returns to the factory composition (every display) |
 | `experience setAuto <true\|false>` | toggles automatic fullscreen-game switching (off by default); turning it off reverts an automatic switch |
 

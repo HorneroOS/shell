@@ -107,7 +107,27 @@ and not drawn, never overlapped.
 
 ### Overrides and reset
 
-- Turn a widget off per mode: Control Center › Experience › Signal deck, or
+- **Desktop widgets manager** (Control Center › Experience › Desktop widgets;
+  the one home for the deck, so Extensions only installs, enables and trusts
+  packages and links back here). Per mode it offers: an **Edit desktop**
+  button (same edit mode as `qs ipc call plugins editDesktop`: drag, corner
+  resize, 8 px grid) and **Reset layout**; a **desktop map** that runs the real
+  solver on a 1920x1080 reference display so every switch shows its effect
+  (it loads no extension, holds no provider lease and shows no telemetry);
+  per widget a switch, side/stack-end **anchor**, **order** (placement
+  priority), **size** (small 0.85x, normal, large 1.2x of the default frame),
+  frame **opacity** (100/85/70/50 %; High Contrast forces opaque), **accent**
+  (plain, signal, cue) and **density** (compact, cozy, roomy padding), and a
+  **Settings** button that opens the extension's own typed settings in
+  Extensions. **Presets**: built-in (Everything, Cozy corner, Kawaii night,
+  System monitor, Time and sky, System Insight only) and up to five saved per
+  mode. Stored in `shell.json` under `experience.deck`
+  (`hidden`, `geometry`, `anchors`, `order`, `style`, `presets`, all per mode,
+  all validated and written only when different from the factory). A widget
+  switched off is unloaded and releases its provider leases. Anchors yield to
+  a hand-placed position; the solver still never covers the bar or reserved
+  zones. Reduced motion: the map's tile moves are instant.
+- Turn a widget off per mode: Control Center › Experience › Desktop widgets, or
   `qs ipc call experience setDeckHidden signal hornero-agenda true`.
 - Move or resize: `qs ipc call plugins editDesktop` (drag, 8 px grid). While
   the deck is showing, geometry is stored per mode and per display under

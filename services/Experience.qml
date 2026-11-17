@@ -258,7 +258,71 @@ Singleton {
     }
 
     function deckItems(hints: var, measured: var): var {
-        return Deck.fitMeasured(Deck.items(hints), measured ?? ({}));
+        return Deck.fitMeasured(Deck.items(hints, Deck.prefsFor(Config.experience.deck, root.mode)), measured ?? ({}));
+    }
+
+    // The same factory/anchored/ordered items for any mode (the Control
+    // Center manager previews the mode being edited, not only the active one).
+    function deckItemsFor(id: string, hints: var): var {
+        return Deck.items(hints, Deck.prefsFor(Config.experience.deck, id));
+    }
+
+    function deckSavedFor(id: string, screenName: string): var {
+        return Deck.savedFor(Config.experience.deck, id, screenName);
+    }
+
+    function deckAnchorsFor(id: string): var {
+        return Deck.anchorsFor(Config.experience.deck, id);
+    }
+
+    function deckOrderFor(id: string): var {
+        return Deck.orderFor(Config.experience.deck, id);
+    }
+
+    function deckPresetNames(id: string): var {
+        return Deck.presetNames(Config.experience.deck, id);
+    }
+
+    function deckStyleOf(id: string, widgetId: string): var {
+        return Deck.styleOf(Config.experience.deck, id, widgetId);
+    }
+
+    function setDeckStyle(id: string, widgetId: string, key: string, value: var): string {
+        return root._deckWrite(Deck.setStyle(Config.experience.deck, id, widgetId, key, value));
+    }
+
+    readonly property var deckBuiltinPresets: Deck.builtinPresets()
+
+    function _deckWrite(res: var): string {
+        if (!res.ok)
+            return `error: ${res.error}`;
+        Config.experience.deck = res.deck;
+        Config.save();
+        return "ok";
+    }
+
+    function setDeckAnchor(id: string, widgetId: string, anchor: string): string {
+        return root._deckWrite(Deck.setAnchor(Config.experience.deck, id, widgetId, anchor));
+    }
+
+    function moveDeckWidget(id: string, widgetId: string, delta: int): string {
+        return root._deckWrite(Deck.moveWidget(Config.experience.deck, id, widgetId, delta));
+    }
+
+    function applyDeckBuiltin(id: string, presetId: string): string {
+        return root._deckWrite(Deck.applyBuiltin(Config.experience.deck, id, presetId));
+    }
+
+    function saveDeckPreset(id: string, name: string): string {
+        return root._deckWrite(Deck.savePreset(Config.experience.deck, id, name));
+    }
+
+    function applyDeckPreset(id: string, name: string): string {
+        return root._deckWrite(Deck.applyPreset(Config.experience.deck, id, name));
+    }
+
+    function deleteDeckPreset(id: string, name: string): string {
+        return root._deckWrite(Deck.deletePreset(Config.experience.deck, id, name));
     }
 
     function deckCompose(input: var): var {
@@ -668,12 +732,73 @@ Singleton {
                 instruments: root.profileFor(mode).fields["desktopWidgets"] === "instruments",
                 catalogue: root.deckCatalogue,
                 hidden: root.deckHiddenFor(mode),
+                anchors: root.deckAnchorsFor(mode),
+                order: root.deckOrderFor(mode),
                 customised: root.deckCustomisedFor(mode)
             });
         }
 
         function setDeckHidden(mode: string, widget: string, hide: bool): string {
             return root.setDeckHidden(mode, widget, hide);
+        }
+
+        // Anchor: left-top | left-bottom | right-top | right-bottom, or "" for factory.
+        function setDeckAnchor(mode: string, widget: string, anchor: string): string {
+            if (!Model.isMode(mode))
+                return `error: unknown mode: ${mode}`;
+            return root.setDeckAnchor(mode, widget, anchor);
+        }
+
+        // direction: up (placed earlier) or down.
+        function moveDeckWidget(mode: string, widget: string, direction: string): string {
+            if (!Model.isMode(mode))
+                return `error: unknown mode: ${mode}`;
+            if (direction !== "up" && direction !== "down")
+                return `error: direction must be up or down`;
+            return root.moveDeckWidget(mode, widget, direction === "up" ? -1 : 1);
+        }
+
+        // JSON {builtin: [{id, label, show}], saved: [name]} for the mode.
+        function deckPresets(mode: string): string {
+            if (!Model.isMode(mode))
+                return `error: unknown mode: ${mode}`;
+            return JSON.stringify({
+                builtin: root.deckBuiltinPresets,
+                saved: root.deckPresetNames(mode)
+            });
+        }
+
+        // Applies a built-in preset id (all, cozy, kawaii-night, monitor, time, minimal).
+        // key: opacity (0.3-1) | size (small normal large) | accent (default
+        // signal cue) | density (compact cozy roomy); empty value = factory.
+        function setDeckStyle(mode: string, widget: string, key: string, value: string): string {
+            if (!Model.isMode(mode))
+                return `error: unknown mode: ${mode}`;
+            return root.setDeckStyle(mode, widget, key, key === "opacity" && value !== "" ? Number(value) : value);
+        }
+
+        function applyDeckBuiltin(mode: string, preset: string): string {
+            if (!Model.isMode(mode))
+                return `error: unknown mode: ${mode}`;
+            return root.applyDeckBuiltin(mode, preset);
+        }
+
+        function saveDeckPreset(mode: string, name: string): string {
+            if (!Model.isMode(mode))
+                return `error: unknown mode: ${mode}`;
+            return root.saveDeckPreset(mode, name);
+        }
+
+        function applyDeckPreset(mode: string, name: string): string {
+            if (!Model.isMode(mode))
+                return `error: unknown mode: ${mode}`;
+            return root.applyDeckPreset(mode, name);
+        }
+
+        function deleteDeckPreset(mode: string, name: string): string {
+            if (!Model.isMode(mode))
+                return `error: unknown mode: ${mode}`;
+            return root.deleteDeckPreset(mode, name);
         }
 
         function resetDeck(mode: string): string {

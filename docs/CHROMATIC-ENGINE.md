@@ -55,7 +55,11 @@ disposable cache.
 8. **Synthesis** — the RFC §4.5 lightness ladder, variant parameters (§6),
    surface depth, chroma scale and hue shift; status anchors 29° / 150°
    harmonised toward the seed; cue candidates; wells, on-fills, inverse,
-   glow (dark only, never monochrome or high contrast).
+   glow (dark only, never monochrome or high contrast). Cue preference:
+   the image's second hue (unless it falls in the olive band 90°–135°),
+   then the first qualifying cool candidate (180°–290°), then any
+   qualifying candidate outside the olive band, then any qualifying one.
+   The unrotated house cue 236° is a candidate after its rotated form.
 9. **Contrast solver** — surfaces never move; foregrounds move only in
    lightness (30-step bisection) to the level's minimum plus the 0.15
    margin, in a fixed order. Focus reaches its minimum on every surface;
@@ -130,8 +134,8 @@ and recomputed) and `frames/<key>.png`; 64 MB cap, LRU by mtime.
 import Hornero.Chromatic
 
 ChromaticEngine.available        // true when the module loads
-ChromaticEngine.engineVersion    // "1.0.0+a1"
-ChromaticEngine.algorithm        // 1
+ChromaticEngine.engineVersion    // "1.0.0+a2"
+ChromaticEngine.algorithm        // 2
 ChromaticEngine.cacheDir         // read/write, default $XDG_CACHE_HOME/hornero/chromatic
 ChromaticEngine.analyse(path): ChromaticJob
 ChromaticEngine.generate(request): ChromaticJob   // JS object (keys above) or ChromaticRequest
@@ -169,8 +173,10 @@ repository is C++20, so fallible calls return `Expected<T>`
 ## Determinism and versions
 
 Identical bytes and request give byte-identical JSON across runs, cache
-states and thread counts. `kAlgorithm` (currently 1) changes whenever any
-output byte changes; the same PR regenerates the goldens
+states and thread counts. `kAlgorithm` (currently 2) changes whenever any
+output byte changes; the same PR regenerates the goldens. Algorithm 2
+changed the cue preference (violet and pink leads used to get an
+olive-yellow cue); it regenerated the goldens
 (`CHROMATIC_UPDATE_GOLDEN=1 pytest tests/test_chromatic_golden.py`).
 Across toolchains the golden test accepts colour drift up to ΔEOK 0.005
 (RFC §15); `CHROMATIC_GOLDEN_STRICT=1` demands bytes.
@@ -214,6 +220,11 @@ checkout) and `HORNERO_CHROMATIC_SCRATCH`; without them they skip. CI's
   search in step 10 is what makes every palette pass.
 - **Grey manual seeds** (chroma below 0.02) borrow the house hue at chroma
   0.06, like achromatic images; `faithful` keeps the cue at chroma ≥ 0.08.
+- **Cue order**: the RFC lists cue candidates in a fixed order whose
+  near-complement step gives violet/pink leads an olive-yellow cue. Since
+  algorithm 2 a cool cue (Signal's warm signal + cool cue identity) and
+  anything outside the olive band are preferred, using the same candidates
+  plus the unrotated house cue; separation rules are unchanged.
 - The 30° anchor rotation targets 31° so the rule survives 8-bit rounding.
 - Palettes are not cached on disk (synthesis from a cached analysis costs
   under a millisecond); only analyses and video frames are.

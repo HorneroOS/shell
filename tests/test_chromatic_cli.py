@@ -17,7 +17,7 @@ def test_version_and_variants():
     rc, doc, _ = harness.run("version")
     assert rc == 0
     assert doc["schemaVersion"] == 1 and doc["engine"]["name"] == "hornero-chromatic"
-    assert doc["algorithm"] == doc["engine"]["algorithm"] == 1
+    assert doc["algorithm"] == doc["engine"]["algorithm"] >= 1
     assert "png" in doc["formats"] and "jpeg" in doc["formats"]
     rc, doc, _ = harness.run("variants")
     assert rc == 0

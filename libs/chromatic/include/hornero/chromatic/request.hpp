@@ -14,7 +14,7 @@
 
 namespace hornero::chromatic {
 
-inline constexpr int kAlgorithm = 1;
+inline constexpr int kAlgorithm = 2;
 inline constexpr int kSchemaVersion = 1;
 inline constexpr const char* kEngineName = "hornero-chromatic";
 inline constexpr const char* kEngineVersion = "1.0.0";

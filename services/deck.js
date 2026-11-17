@@ -87,6 +87,24 @@ function items(hints) {
     return out;
 }
 
+// Widgets are never shorter than their content: `need` is
+// {id: measured frame height} reported by the host from each loaded
+// widget's implicit height. It raises minHeight and height (snapped up to
+// the grid); it never lowers anything, so the solver converges.
+function fitMeasured(list, need) {
+    var out = [];
+    for (var i = 0; i < list.length; i++) {
+        var it = list[i];
+        var n = need ? _num(need[it.id], 0) : 0;
+        if (n > it.minHeight) {
+            var snapped = Math.ceil(n / GRID) * GRID;
+            it = Object.assign({}, it, { minHeight: snapped, height: Math.max(it.height, snapped) });
+        }
+        out.push(it);
+    }
+    return out;
+}
+
 function _hit(a, b, gap) {
     return a.x < b.x + b.width + gap && b.x < a.x + a.width + gap && a.y < b.y + b.height + gap && b.y < a.y + a.height + gap;
 }

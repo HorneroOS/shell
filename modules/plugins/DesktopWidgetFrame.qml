@@ -37,6 +37,14 @@ Item {
     // Deck geometry is persisted per experience mode (Experience.
     // setDeckGeometry), never in the user's everyday widget layout.
     property var deckPlacement: null
+    // Deck only: the frame height this widget's content needs, reported to
+    // the host so the solver never makes a card shorter than its content.
+    signal needMeasured(string id, real need)
+    readonly property real contentNeed: pluginLoader.item ? pluginLoader.item.implicitHeight + root.headerHeight + Appearance.spacing.small + root.padding * 2 : 0
+    onContentNeedChanged: {
+        if (root.deck && root.contentNeed > 0)
+            root.needMeasured(root.pluginId, root.contentNeed);
+    }
     // Collision-free first-run slot chosen by PluginDesktopWidgets; used
     // when the person has not picked an anchor (never overrides one).
     property string defaultSlot: ""

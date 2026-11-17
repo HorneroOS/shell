@@ -80,6 +80,16 @@ QtObject {
             readonly property list<string> keywords: ["accessibility", "text size", "font", "motion", "reduce motion", "vision", "a11y"]
         },
         QtObject {
+            readonly property string id: "experience"
+            readonly property string label: "experience"
+            readonly property string title: qsTr("Experience")
+            readonly property string icon: "wave-sine"
+            readonly property string component: "experience/ExperiencePane.qml"
+            readonly property string category: "look"
+            readonly property string description: qsTr("Experience modes: Focus, Everyday, Signal, Gaming, Studio")
+            readonly property list<string> keywords: ["experience", "mode", "modes", "focus", "everyday", "signal", "immersive", "gaming", "studio", "glow", "density", "telemetry"]
+        },
+        QtObject {
             readonly property string id: "taskbar"
             readonly property string label: "taskbar"
             readonly property string title: qsTr("Bars")
@@ -321,6 +331,7 @@ QtObject {
         QtObject { readonly property string id: "icons"; readonly property string title: qsTr("Icon theme"); readonly property string pane: "appearance"; readonly property string section: "iconTheme"; readonly property string icon: "mood-smile"; readonly property string keywords: "icons papirus numix" },
         QtObject { readonly property string id: "fonts"; readonly property string title: qsTr("Fonts"); readonly property string pane: "appearance"; readonly property string section: "fonts"; readonly property string icon: "typography"; readonly property string keywords: "font typography typeface" },
         QtObject { readonly property string id: "motion"; readonly property string title: qsTr("Motion and animation"); readonly property string pane: "appearance"; readonly property string section: "animations"; readonly property string icon: "player-record"; readonly property string keywords: "reduce motion disable animations accessibility" },
+        QtObject { readonly property string id: "experience-modes"; readonly property string title: qsTr("Experience modes"); readonly property string pane: "experience"; readonly property string section: ""; readonly property string icon: "wave-sine"; readonly property string keywords: "focus everyday signal immersive gaming studio mode glow density" },
         QtObject { readonly property string id: "scale"; readonly property string title: qsTr("Interface size"); readonly property string pane: "appearance"; readonly property string section: "scales"; readonly property string icon: "zoom-in"; readonly property string keywords: "scale sizing density text size" },
         QtObject { readonly property string id: "transparency"; readonly property string title: qsTr("Transparency"); readonly property string pane: "appearance"; readonly property string section: "transparency"; readonly property string icon: "opacity"; readonly property string keywords: "blur opacity glass launcher notifications" },
         QtObject { readonly property string id: "wallpaper"; readonly property string title: qsTr("Wallpaper and background"); readonly property string pane: "appearance"; readonly property string section: "background"; readonly property string icon: "wallpaper"; readonly property string keywords: "desktop image background clock" },

@@ -3,6 +3,10 @@ import Quickshell.Io
 JsonObject {
     property bool persistent: true
     property bool showOnHover: true
+    // Cockpit Clear foreground style (signal-visual-language §12.3):
+    // "auto" | "outline" | "shadow" | "contrast". High Contrast forces
+    // "contrast".
+    property string clearStyle: "auto"
     property int dragThreshold: 20
     // Optional per-screen bar-set overrides: [{ screen: "MONITOR-NAME", bars: [...] }]
     property list<var> perScreen: []
@@ -31,8 +35,8 @@ JsonObject {
     readonly property var barEdges: ["top", "bottom", "left", "right"]
     readonly property var barStyles: ["attached", "inset", "floating", "islands", "dock"]
     // What a bar paints behind its components: "solid" (slab or frame strip)
-    // or "clear" (no slab, components sit on the wallpaper over a soft
-    // edge scrim). Geometry and reservation are unaffected.
+    // or "clear" (no slab and no scrim: components sit directly on the
+    // wallpaper with adaptive per-region ink). Geometry and reservation are unaffected.
     readonly property var barBackdrops: ["solid", "clear"]
 
     // QML list<var> values are not JS Arrays; copy them first.

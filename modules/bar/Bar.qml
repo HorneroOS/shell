@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import qs.components
+import qs.components.clearink
 import qs.services
 import qs.config
 import qs.modules.plugins
@@ -29,8 +30,8 @@ Item {
     readonly property bool vertical: edge === "left" || edge === "right"
     readonly property bool floating: style !== "attached"
     readonly property bool strip: style === "attached" || style === "inset"
-    // Clear backdrop: no slab, no frame strip; a soft scrim keeps the
-    // components legible on any wallpaper.
+    // Clear backdrop: no slab, no frame strip, no scrim; components sit on the
+    // wallpaper with adaptive per-region ink (signal-visual-language §12).
     readonly property bool clear: spec.backdrop === "clear"
     // Narrow horizontal bars (laptop panels, split screens) tighten wide
     // components instead of letting groups collide. A width breakpoint, not
@@ -415,36 +416,24 @@ Item {
     }
 
     onSpecChanged: resetPopout()
+    onWidthChanged: pokeInk()
+    onHeightChanged: pokeInk()
 
-    // Edge scrim for clear bars: holds its tone across the component band
-    // (where the glyphs sit) and fades out past it, a vignette rather than
-    // a slab. Strength follows the bar's transparency element so users can
-    // soften or remove it from Appearance.
-    Rectangle {
-        id: scrim
+    // Cockpit Clear has no bar background at all (RFC 0001 §5.1): no scrim,
+    // tint, slab, blur or backdrop shadow. Legibility comes only from the
+    // per-region foreground ink and glyph halo of ClearInkField/ClearInkTone.
+    ClearInkField {
+        id: inkField
 
-        readonly property bool fromStart: root.edge === "top" || root.edge === "left"
+        active: root.clear
+        screenWidth: root.screen.width
+        screenHeight: root.screen.height
+        source: Wallpapers.current
+    }
 
-        visible: root.clear
-        anchors.fill: parent
-        opacity: Config.appearance.highContrast ? 1 : 0.62 * Signal.elementAlpha("bar")
-
-        gradient: Gradient {
-            orientation: root.vertical ? Gradient.Horizontal : Gradient.Vertical
-
-            GradientStop {
-                position: 0
-                color: Config.appearance.highContrast || scrim.fromStart ? Signal.palette.base : "transparent"
-            }
-            GradientStop {
-                position: scrim.fromStart ? 0.65 : 0.35
-                color: Signal.palette.base
-            }
-            GradientStop {
-                position: 1
-                color: Config.appearance.highContrast || !scrim.fromStart ? Signal.palette.base : "transparent"
-            }
-        }
+    function pokeInk(): void {
+        if (root.clear)
+            inkField.poke();
     }
 
     Repeater {
@@ -518,17 +507,6 @@ Item {
         }
 
         visible: fits
-        // Clear bars: a soft halo in the surface colour behind every glyph,
-        // so text stays legible on any wallpaper/scheme combination.
-        layer.enabled: root.clear
-        layer.effect: MultiEffect {
-            shadowEnabled: true
-            shadowColor: Signal.palette.base
-            shadowBlur: 1
-            shadowOpacity: 1
-            shadowHorizontalOffset: 0
-            shadowVerticalOffset: 0
-        }
         width: root.vertical ? root.pillThickness : mainLen
         height: root.vertical ? mainLen : root.pillThickness
         x: root.vertical ? (root.edge === "left" ? root.floatGap : root.width - width - root.floatGap) : mainPos
@@ -608,6 +586,8 @@ Item {
         readonly property alias repeater: repeater
 
         visible: active && entries.some(e => e.enabled)
+        onXChanged: root.pokeInk()
+        onYChanged: root.pokeInk()
         implicitWidth: layout.implicitWidth
         implicitHeight: layout.implicitHeight
         width: implicitWidth
@@ -837,13 +817,43 @@ Item {
     }
 
     component WrappedLoader: Loader {
+        id: wrapped
+
         required property bool enabled
         required property string id
         required property int index
         required property var options
 
+        // Cockpit Clear: the tone of the wallpaper region under this entry.
+        readonly property ClearInkTone regionTone: ClearInkTone {
+            field: inkField
+            target: wrapped
+        }
+        readonly property var tone: root.clear ? wrapped.regionTone : ClearInk.neutral
+
         Layout.alignment: root.vertical ? Qt.AlignHCenter : Qt.AlignVCenter
         visible: enabled
         active: enabled
+
+        // Glyph/text-only halo and shadow (never a box): one silhouette
+        // shadow of the rendered entry in the region's halo colour.
+        layer.enabled: root.clear && wrapped.regionTone.effect.enabled
+        layer.effect: MultiEffect {
+            blurMax: 16
+            shadowEnabled: true
+            shadowColor: wrapped.regionTone.halo
+            shadowBlur: wrapped.regionTone.effect.blur
+            shadowOpacity: wrapped.regionTone.effect.opacity
+            shadowHorizontalOffset: 0
+            shadowVerticalOffset: 0
+        }
+
+        onLoaded: {
+            if (item && item.tone !== undefined)
+                item.tone = Qt.binding(() => wrapped.tone);
+        }
+        onXChanged: root.pokeInk()
+        onYChanged: root.pokeInk()
+        onWidthChanged: root.pokeInk()
     }
 }

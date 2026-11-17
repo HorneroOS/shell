@@ -11,6 +11,9 @@ import QtQuick.Layouts
 Item {
     id: root
 
+    // Region tone: the plain Signal palette, or per-region ink on Cockpit Clear.
+    property var tone: ClearInk.neutral
+
     property bool vertical
     property string density: "values"
     property var options: ({})
@@ -79,14 +82,14 @@ Item {
 
                 Glyph {
                     name: metric.modelData.icon
-                    color: metric.critical ? Signal.palette.alert : metric.warning ? Signal.palette.phosphor : Signal.palette.inkMuted
+                    color: metric.critical ? root.tone.alert : metric.warning ? Signal.palette.phosphor : root.tone.inkMuted
                     font.pointSize: Appearance.font.size.normal
                 }
 
                 StyledText {
                     visible: root.density === "values" && !root.vertical
                     text: metric.modelData.text
-                    color: metric.critical ? Signal.palette.alert : Signal.palette.ink
+                    color: metric.critical ? root.tone.alert : root.tone.ink
                     font.pointSize: Appearance.font.size.smaller
                     font.family: Appearance.font.family.mono
                 }

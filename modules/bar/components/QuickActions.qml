@@ -10,6 +10,9 @@ import QtQuick.Layouts
 Item {
     id: root
 
+    // Region tone: the plain Signal palette, or per-region ink on Cockpit Clear.
+    property var tone: ClearInk.neutral
+
     property bool vertical
     property var options: ({})
     readonly property var actions: {
@@ -42,7 +45,7 @@ Item {
 
                 icon: ShellActions.known[modelData].icon
                 label: ShellActions.known[modelData].label
-                colour: Signal.palette.inkMuted
+                colour: root.tone.inkMuted
                 iconSize: Appearance.font.size.normal
                 onActivated: ShellActions.run(modelData)
             }
@@ -53,7 +56,7 @@ Item {
         PluginBarWidgets {
             vertical: root.vertical
             section: "actions"
-            iconColour: Signal.palette.inkMuted
+            iconColour: root.tone.inkMuted
             iconSize: Appearance.font.size.normal
             textSize: Appearance.font.size.smaller
             thickness: Config.bar.sizes.innerWidth

@@ -13,6 +13,9 @@ import QtQuick.Layouts
 Item {
     id: root
 
+    // Region tone: the plain Signal palette, or per-region ink on Cockpit Clear.
+    property var tone: ClearInk.neutral
+
     required property ShellScreen screen
     readonly property HyprlandMonitor monitor: Hypr.monitorFor(screen)
     readonly property string activeSpecial: (Config.bar.workspaces.perMonitorWorkspaces ? monitor : Hypr.focusedMonitor)?.lastIpcObject?.specialWorkspace?.name ?? ""
@@ -316,7 +319,7 @@ Item {
                     required property var modelData
 
                     name: Icons.getAppCategoryIcon(modelData.lastIpcObject.class, "terminal")
-                    color: Signal.palette.inkMuted
+                    color: root.tone.inkMuted
                 }
             }
         }
@@ -359,7 +362,7 @@ Item {
                     required property var modelData
 
                     name: Icons.getAppCategoryIcon(modelData.lastIpcObject.class, "terminal")
-                    color: Signal.palette.inkMuted
+                    color: root.tone.inkMuted
                 }
             }
         }
@@ -388,7 +391,7 @@ Item {
 
                 Colouriser {
                     source: view
-                    sourceColor: Signal.palette.ink
+                    sourceColor: root.tone.ink
                     colorizationColor: Signal.palette.onPhosphor
 
                     anchors.horizontalCenter: root.vertical ? parent.horizontalCenter : undefined

@@ -354,6 +354,7 @@ Singleton {
         return {
             persistent: bar.persistent,
             showOnHover: bar.showOnHover,
+            clearStyle: bar.clearStyle,
             dragThreshold: bar.dragThreshold,
             perScreen: bar.perScreen,
             bars: bar.bars,

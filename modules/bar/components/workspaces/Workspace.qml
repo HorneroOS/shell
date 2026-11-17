@@ -10,6 +10,9 @@ import QtQuick.Layouts
 Item {
     id: root
 
+    // Region tone: the plain Signal palette, or per-region ink on Cockpit Clear.
+    property var tone: ClearInk.neutral
+
     required property ShellScreen screen
 
     required property int index
@@ -102,10 +105,10 @@ Item {
                 // in ink; occupied and empty in inkMuted (the tick and the
                 // edge marks carry the remaining distinction).
                 if (root.isUrgent)
-                    return Signal.palette.alert;
+                    return root.tone.alert;
                 if (root.labels)
-                    return root.isActive ? Signal.palette.signal : root.isOccupied ? Signal.palette.ink : Signal.palette.inkMuted;
-                return root.isActive || root.isVisibleElsewhere ? Signal.palette.ink : Signal.palette.inkMuted;
+                    return root.isActive ? root.tone.signal : root.isOccupied ? root.tone.ink : root.tone.inkMuted;
+                return root.isActive || root.isVisibleElsewhere ? root.tone.ink : root.tone.inkMuted;
             }
             verticalAlignment: Qt.AlignVCenter
             horizontalAlignment: Qt.AlignHCenter
@@ -161,7 +164,7 @@ Item {
                         required property var modelData
 
                         name: root.iconForWindow(modelData)
-                        color: Signal.palette.inkMuted
+                        color: root.tone.inkMuted
                     }
                 }
             }
@@ -202,7 +205,7 @@ Item {
                         required property var modelData
 
                         name: root.iconForWindow(modelData)
-                        color: Signal.palette.inkMuted
+                        color: root.tone.inkMuted
                     }
                 }
             }
@@ -217,7 +220,7 @@ Item {
         height: root.vertical ? 4 : 2
         x: root.vertical ? (root.contentAtLeft ? root.width - width - 4 : 4) : (root.width - width) / 2
         y: root.vertical ? (root.height - height) / 2 : (root.contentAtTop ? root.height - height - 4 : 4)
-        color: root.isUrgent ? Signal.palette.alert : Signal.palette.inkMuted
+        color: root.isUrgent ? root.tone.alert : root.tone.inkMuted
 
         Behavior on color {
             CAnim {}
@@ -232,7 +235,7 @@ Item {
         height: root.vertical ? root.height : 1
         x: root.vertical ? (root.contentAtLeft ? 0 : root.width - 1) : 0
         y: root.vertical ? 0 : (root.contentAtTop ? 0 : root.height - 1)
-        color: Signal.palette.ruleStrong
+        color: root.tone.active ? root.tone.inkMuted : Signal.palette.ruleStrong
     }
 
     Interactive {

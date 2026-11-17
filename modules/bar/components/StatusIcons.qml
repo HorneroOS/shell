@@ -15,6 +15,9 @@ import QtQuick.Layouts
 StyledRect {
     id: root
 
+    // Region tone: the plain Signal palette, or per-region ink on Cockpit Clear.
+    property var tone: ClearInk.neutral
+
     required property ShellScreen screen
 
     property color colour: Signal.palette.cue
@@ -148,8 +151,8 @@ StyledRect {
                 anchors.centerIn: parent
                 name: "video"
                 color: Compositor.hasActiveScreencast
-                    ? Signal.palette.alert
-                    : Signal.palette.inkMuted
+                    ? root.tone.alert
+                    : root.tone.inkMuted
                 Accessible.ignored: true
             }
 
@@ -323,7 +326,7 @@ StyledRect {
                         return "battery-charging";
                     return perc > 0.75 ? "battery-4" : perc > 0.5 ? "battery-3" : perc > 0.25 ? "battery-2" : perc > 0.1 ? "battery-1" : "battery";
                 }
-                color: !UPower.onBattery || UPower.displayDevice.percentage > 0.2 ? root.colour : Signal.palette.alert
+                color: !UPower.onBattery || UPower.displayDevice.percentage > 0.2 ? root.colour : root.tone.alert
             }
         }
 

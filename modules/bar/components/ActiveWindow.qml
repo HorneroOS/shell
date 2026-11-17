@@ -9,9 +9,12 @@ import QtQuick
 Item {
     id: root
 
+    // Region tone: the plain Signal palette, or per-region ink on Cockpit Clear.
+    property var tone: ClearInk.neutral
+
     required property var bar
     required property Brightness.Monitor monitor
-    property color colour: Signal.palette.signal
+    property color colour: root.tone.signal
 
     Accessible.role: Accessible.StaticText
     Accessible.name: Compositor.activeWindowTitle || qsTr("Desktop")

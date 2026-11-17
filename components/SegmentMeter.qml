@@ -28,10 +28,14 @@ Item {
     property int segmentThickness: 3
     property int gap: 2
     property string accessibleName: ""
+    // Cockpit Clear region tone (services/ClearInk.qml): lit segments in the
+    // polarity's ink, off segments the same ink at 30 % (§12.1 step 5).
+    property var tone: null
 
     readonly property real clamped: isNaN(root.value) ? 0 : Math.max(0, Math.min(1, root.value))
     readonly property int lit: root.available && !isNaN(root.value) ? Math.round(root.clamped * root.count) : 0
-    readonly property color onColor: root.vertical ? Signal.palette.phosphor : Signal.palette.ink
+    readonly property bool toned: root.tone !== null && root.tone.active === true
+    readonly property color onColor: root.toned ? root.tone.ink : root.vertical ? Signal.palette.phosphor : Signal.palette.ink
 
     implicitWidth: root.vertical ? root.segmentLength : root.count * root.segmentThickness + (root.count - 1) * root.gap
     implicitHeight: root.vertical ? root.count * root.segmentThickness + (root.count - 1) * root.gap : root.segmentLength
@@ -55,7 +59,7 @@ Item {
             y: root.vertical ? index * (root.segmentThickness + root.gap) : 0
             width: root.vertical ? root.segmentLength : root.segmentThickness
             height: root.vertical ? root.segmentThickness : root.segmentLength
-            color: !isLit ? Signal.palette.rule : (root.critical >= 0 && fraction > root.critical) ? Signal.palette.alert : fraction > root.threshold ? Signal.palette.signal : root.onColor
+            color: !isLit ? (root.toned ? Qt.alpha(root.tone.ink, root.tone.offAlpha) : Signal.palette.rule) : (root.critical >= 0 && fraction > root.critical) ? Signal.palette.alert : fraction > root.threshold ? Signal.palette.signal : root.onColor
 
             Accessible.ignored: true
         }

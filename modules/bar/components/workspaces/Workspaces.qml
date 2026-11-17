@@ -11,6 +11,9 @@ import QtQuick.Effects
 StyledClippingRect {
     id: root
 
+    // Region tone: the plain Signal palette, or per-region ink on Cockpit Clear.
+    property var tone: ClearInk.neutral
+
     required property ShellScreen screen
 
     // Orientation of the owning bar (set by Bar.qml); defaults to the
@@ -64,7 +67,8 @@ StyledClippingRect {
     implicitWidth: vertical ? Config.bar.sizes.innerWidth : layout.implicitWidth + Appearance.padding.small * 2
     implicitHeight: vertical ? layout.implicitHeight + Appearance.padding.small * 2 : Config.bar.sizes.innerWidth
 
-    color: labels ? "transparent" : Signal.tPalette.panel
+    // Cockpit Clear draws no fill behind any foreground group.
+    color: labels || clear ? "transparent" : Signal.tPalette.panel
     // Signal Bezel §5: rectangular strip housing fixed cells, never a pill.
     radius: Appearance.rounding.small
 
@@ -82,7 +86,7 @@ StyledClippingRect {
 
         Loader {
             asynchronous: true
-            active: Config.bar.workspaces.occupiedBg && !root.labels && !root.niriMode
+            active: Config.bar.workspaces.occupiedBg && !root.labels && !root.niriMode && !root.clear
 
             anchors.fill: parent
             anchors.margins: Appearance.padding.small
@@ -118,6 +122,7 @@ StyledClippingRect {
 
                     vertical: root.vertical
                     edge: root.edge
+                    tone: root.tone
                     labels: root.labels
                     activeWsId: root.activeWsId
                     occupied: root.occupied
@@ -148,7 +153,7 @@ StyledClippingRect {
                 width: root.vertical ? 2 : (ws?.width ?? 0)
                 height: root.vertical ? (ws?.height ?? 0) : 2
                 radius: 0
-                color: isActive ? Signal.palette.signal : Signal.palette.alert
+                color: isActive ? root.tone.signal : root.tone.alert
 
                 Behavior on color {
                     CAnim {}
@@ -166,6 +171,8 @@ StyledClippingRect {
                 screen: root.screen
                 vertical: root.vertical
                 edge: root.edge
+                tone: root.tone
+                clear: root.clear
                 activeWsId: root.activeWsId
                 workspaces: workspaces
                 mask: layout
@@ -195,6 +202,7 @@ StyledClippingRect {
         sourceComponent: SpecialWorkspaces {
             screen: root.screen
             vertical: root.vertical
+            tone: root.tone
         }
 
         Behavior on scale {

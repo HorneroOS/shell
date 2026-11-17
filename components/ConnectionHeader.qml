@@ -4,28 +4,39 @@ import qs.config
 import QtQuick
 import QtQuick.Layouts
 
+// Header for a connection (network, VPN, device): glyph and name on one
+// line over a hairline. Same anatomy as SettingsHeader.
 ColumnLayout {
     id: root
 
     required property string icon
     required property string title
 
-    spacing: Appearance.spacing.normal
-    Layout.alignment: Qt.AlignHCenter
+    spacing: Appearance.spacing.small
 
-    Glyph {
-        Layout.alignment: Qt.AlignHCenter
-        animate: true
-        name: root.icon
-        font.pointSize: Appearance.font.size.extraLarge * 3
-        font.bold: true
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: Appearance.spacing.normal
+
+        Glyph {
+            animate: true
+            name: root.icon
+            color: Signal.palette.signal
+            font.pointSize: Appearance.font.size.extraLarge
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+            animate: true
+            text: root.title
+            elide: Text.ElideRight
+            font.pointSize: Appearance.font.size.large
+            font.weight: 600
+            Accessible.role: Accessible.Heading
+        }
     }
 
-    StyledText {
-        Layout.alignment: Qt.AlignHCenter
-        animate: true
-        text: root.title
-        font.pointSize: Appearance.font.size.large
-        font.bold: true
+    Hairline {
+        Layout.fillWidth: true
     }
 }

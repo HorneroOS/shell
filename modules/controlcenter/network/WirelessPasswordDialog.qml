@@ -211,7 +211,7 @@ Item {
                 StyledRect {
                     anchors.fill: parent
                     radius: Appearance.rounding.small
-                    color: passwordContainer.activeFocus ? Qt.lighter(Signal.tPalette.panel, 1.05) : Signal.tPalette.panel
+                    color: Signal.palette.sunken
                     border.width: passwordContainer.activeFocus || connectButton.hasError ? 4 : (root.visible ? 1 : 0)
                     border.color: {
                         if (connectButton.hasError) {

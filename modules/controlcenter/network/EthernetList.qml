@@ -25,10 +25,9 @@ DeviceList {
         RowLayout {
             spacing: Appearance.spacing.smaller
 
-            StyledText {
-                text: qsTr("Settings")
-                font.pointSize: Appearance.font.size.large
-                font.weight: 500
+            Eyebrow {
+                label: qsTr("Settings")
+                color: Signal.palette.ink
             }
 
             Item {
@@ -64,8 +63,13 @@ DeviceList {
             width: ListView.view ? ListView.view.width : undefined
             implicitHeight: rowLayout.implicitHeight + Appearance.padding.normal * 2
 
-            color: Qt.alpha(Signal.tPalette.panel, ethernetItem.isActive ? Signal.tPalette.panel.a : 0)
-            radius: Appearance.rounding.small
+            color: ethernetItem.isActive ? Signal.palette.signalWell : "transparent"
+            radius: 0
+
+            OnAirBar {
+                edge: "left"
+                active: ethernetItem.isActive
+            }
 
             Accessible.role: Accessible.Button
             Accessible.name: (modelData.interface || qsTr("Unknown")) + (modelData.connected ? qsTr(", connected") : qsTr(", disconnected"))
@@ -91,7 +95,7 @@ DeviceList {
                     implicitHeight: icon.implicitHeight + Appearance.padding.normal * 2
 
                     radius: Appearance.rounding.small
-                    color: modelData.connected ? Signal.palette.signalWell : Signal.tPalette.raised
+                    color: modelData.connected ? Signal.palette.signalWell : "transparent"
 
                     StyledRect {
                         anchors.fill: parent
@@ -127,7 +131,7 @@ DeviceList {
                         StyledText {
                             Layout.fillWidth: true
                             text: modelData.connected ? qsTr("Connected") : qsTr("Disconnected")
-                            color: modelData.connected ? Signal.palette.signal : Signal.palette.ruleStrong
+                            color: modelData.connected ? Signal.palette.signal : Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.small
                             font.weight: modelData.connected ? 500 : 400
                             elide: Text.ElideRight

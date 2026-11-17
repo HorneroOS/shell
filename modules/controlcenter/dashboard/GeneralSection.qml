@@ -16,9 +16,9 @@ SectionContainer {
     Layout.fillWidth: true
     alignTop: true
 
-    StyledText {
-        text: qsTr("General Settings")
-        font.pointSize: Appearance.font.size.normal
+    Eyebrow {
+        label: qsTr("General Settings")
+        color: Signal.palette.ink
     }
 
     SwitchRow {

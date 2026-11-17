@@ -69,24 +69,15 @@ Item {
                     wrapMode: Text.Wrap
                 }
 
-                StyledRect {
-                    Layout.fillWidth: true
-                    radius: Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.panel, 1)
-                    implicitHeight: generalCol.implicitHeight + Appearance.padding.large * 2
+                ChannelPanel {
+                    title: qsTr("General")
 
                     ColumnLayout {
                         id: generalCol
 
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.large
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
                         spacing: Appearance.spacing.small
-
-                        StyledText {
-                            text: qsTr("General")
-                            font.pointSize: Appearance.font.size.normal
-                            font.weight: 500
-                        }
 
                         SwitchRow {
                             label: qsTr("Enabled")
@@ -219,24 +210,15 @@ Item {
                 }
 
 
-                StyledRect {
-                    Layout.fillWidth: true
-                    radius: Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.panel, 1)
-                    implicitHeight: assistantCol.implicitHeight + Appearance.padding.large * 2
+                ChannelPanel {
+                    title: qsTr("Assistant (Hermes)")
 
                     ColumnLayout {
                         id: assistantCol
 
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.large
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
                         spacing: Appearance.spacing.small
-
-                        StyledText {
-                            text: qsTr("Assistant (Hermes)")
-                            font.pointSize: Appearance.font.size.normal
-                            font.weight: 500
-                        }
 
                         StyledText {
                             Layout.fillWidth: true
@@ -302,24 +284,15 @@ Item {
                     }
                 }
 
-                StyledRect {
-                    Layout.fillWidth: true
-                    radius: Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.panel, 1)
-                    implicitHeight: hermesCol.implicitHeight + Appearance.padding.large * 2
+                ChannelPanel {
+                    title: qsTr("Hermes agent")
 
                     ColumnLayout {
                         id: hermesCol
 
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.large
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
                         spacing: Appearance.spacing.small
-
-                        StyledText {
-                            text: qsTr("Hermes agent")
-                            font.pointSize: Appearance.font.size.normal
-                            font.weight: 500
-                        }
 
                         StyledText {
                             Layout.fillWidth: true
@@ -554,24 +527,15 @@ Item {
                     }
                 }
 
-                StyledRect {
-                    Layout.fillWidth: true
-                    radius: Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.panel, 1)
-                    implicitHeight: policyCol.implicitHeight + Appearance.padding.large * 2
+                ChannelPanel {
+                    title: qsTr("Permissions & security")
 
                     ColumnLayout {
                         id: policyCol
 
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.large
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
                         spacing: Appearance.spacing.small
-
-                        StyledText {
-                            text: qsTr("Permissions & security")
-                            font.pointSize: Appearance.font.size.normal
-                            font.weight: 500
-                        }
 
                         StyledText {
                             Layout.fillWidth: true
@@ -644,24 +608,15 @@ Item {
                     }
                 }
 
-                StyledRect {
-                    Layout.fillWidth: true
-                    radius: Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.panel, 1)
-                    implicitHeight: promptCol.implicitHeight + Appearance.padding.large * 2
+                ChannelPanel {
+                    title: qsTr("Personality & system prompt")
 
                     ColumnLayout {
                         id: promptCol
 
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.large
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
                         spacing: Appearance.spacing.small
-
-                        StyledText {
-                            text: qsTr("Personality & system prompt")
-                            font.pointSize: Appearance.font.size.normal
-                            font.weight: 500
-                        }
 
                         StyledText {
                             Layout.fillWidth: true
@@ -675,7 +630,9 @@ Item {
                             Layout.fillWidth: true
                             implicitHeight: 140
                             radius: Appearance.rounding.small
-                            color: Signal.layer(Signal.palette.raised, 1)
+                            color: Signal.palette.sunken
+                            border.width: 1
+                            border.color: Signal.palette.rule
 
                             TextEdit {
                                 id: promptEditor
@@ -718,24 +675,15 @@ Item {
                     }
                 }
 
-                StyledRect {
-                    Layout.fillWidth: true
-                    radius: Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.panel, 1)
-                    implicitHeight: charCol.implicitHeight + Appearance.padding.large * 2
+                ChannelPanel {
+                    title: qsTr("Character")
 
                     ColumnLayout {
                         id: charCol
 
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.large
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
                         spacing: Appearance.spacing.small
-
-                        StyledText {
-                            text: qsTr("Character")
-                            font.pointSize: Appearance.font.size.normal
-                            font.weight: 500
-                        }
 
                         StyledText {
                             text: qsTr("Skin")
@@ -819,24 +767,15 @@ Item {
                     }
                 }
 
-                StyledRect {
-                    Layout.fillWidth: true
-                    radius: Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.panel, 1)
-                    implicitHeight: actionCol.implicitHeight + Appearance.padding.large * 2
+                ChannelPanel {
+                    title: qsTr("Actions")
 
                     ColumnLayout {
                         id: actionCol
 
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.large
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
                         spacing: Appearance.spacing.small
-
-                        StyledText {
-                            text: qsTr("Actions")
-                            font.pointSize: Appearance.font.size.normal
-                            font.weight: 500
-                        }
 
                         RowLayout {
                             Layout.fillWidth: true

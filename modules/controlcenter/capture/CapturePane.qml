@@ -196,11 +196,19 @@ Item {
                             }
                         }
 
-                        StyledText {
-                            text: qsTr("Screen recording")
-                            font.pointSize: Appearance.font.size.normal
-                            font.weight: 500
-                        }
+                    }
+                }
+
+                ChannelPanel {
+                    title: qsTr("Screen recording")
+
+                    ColumnLayout {
+                        id: recCol
+
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
+                        spacing: Appearance.spacing.small
+
 
                         StyledText {
                             Layout.fillWidth: true

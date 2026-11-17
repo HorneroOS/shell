@@ -44,10 +44,9 @@ DeviceList {
         RowLayout {
             spacing: Appearance.spacing.smaller
 
-            StyledText {
-                text: qsTr("Settings")
-                font.pointSize: Appearance.font.size.large
-                font.weight: 500
+            Eyebrow {
+                label: qsTr("Settings")
+                color: Signal.palette.ink
             }
 
             Item {
@@ -105,8 +104,13 @@ DeviceList {
 
             width: ListView.view ? ListView.view.width : undefined
 
-            color: Qt.alpha(Signal.tPalette.panel, root.activeItem === modelData ? Signal.tPalette.panel.a : 0)
-            radius: Appearance.rounding.small
+            color: root.activeItem === modelData ? Signal.palette.signalWell : "transparent"
+            radius: 0
+
+            OnAirBar {
+                edge: "left"
+                active: root.activeItem === modelData
+            }
 
             Accessible.role: Accessible.Button
             Accessible.name: (modelData.ssid || qsTr("Unknown")) + (modelData.active ? qsTr(", connected") : "")
@@ -135,7 +139,7 @@ DeviceList {
                     implicitHeight: icon.implicitHeight + Appearance.padding.normal * 2
 
                     radius: Appearance.rounding.small
-                    color: modelData.active ? Signal.palette.signalWell : Signal.tPalette.raised
+                    color: modelData.active ? Signal.palette.signalWell : "transparent"
 
                     Glyph {
                         id: icon
@@ -176,11 +180,34 @@ DeviceList {
                                     return qsTr("Secured");
                                 return qsTr("Open");
                             }
-                            color: modelData.active ? Signal.palette.signal : Signal.palette.ruleStrong
+                            color: modelData.active ? Signal.palette.signal : Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.small
                             font.weight: modelData.active ? 500 : 400
                             elide: Text.ElideRight
                         }
+                    }
+                }
+
+                ColumnLayout {
+                    spacing: 2
+
+                    SegmentMeter {
+                        Layout.alignment: Qt.AlignRight
+                        count: 5
+                        segmentThickness: 5
+                        segmentLength: 10
+                        value: modelData.strength / 100
+                        threshold: 1.1
+                        accessibleName: qsTr("Signal of %1").arg(modelData.ssid || qsTr("Unknown"))
+                    }
+
+                    StyledText {
+                        Layout.alignment: Qt.AlignRight
+                        mono: true
+                        text: qsTr("%1 %").arg(modelData.strength)
+                        color: Signal.palette.inkMuted
+                        font.pointSize: Appearance.font.size.small
+                        Accessible.ignored: true
                     }
                 }
 

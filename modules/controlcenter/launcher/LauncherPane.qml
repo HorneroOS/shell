@@ -155,10 +155,9 @@ Item {
                 RowLayout {
                     spacing: Appearance.spacing.smaller
 
-                    StyledText {
-                        text: qsTr("Launcher")
-                        font.pointSize: Appearance.font.size.large
-                        font.weight: 500
+                    Eyebrow {
+                        label: qsTr("Launcher")
+                        color: Signal.palette.ink
                     }
 
                     Item {
@@ -203,7 +202,9 @@ Item {
                     Layout.topMargin: Appearance.spacing.normal
                     Layout.bottomMargin: Appearance.spacing.small
 
-                    color: Signal.layer(Signal.palette.panel, 2)
+                    color: Signal.palette.sunken
+                    border.width: 1
+                    border.color: Signal.palette.rule
                     radius: Appearance.rounding.small
 
                     implicitHeight: Math.max(searchIcon.implicitHeight, searchField.implicitHeight, clearIcon.implicitHeight)
@@ -311,7 +312,7 @@ Item {
 
                             readonly property bool isSelected: root.selectedApp === modelData
 
-                            color: isSelected ? Signal.layer(Signal.palette.panel, 2) : "transparent"
+                            color: isSelected ? Signal.palette.signalWell : "transparent"
                             radius: Appearance.rounding.small
 
                             Accessible.role: Accessible.Button

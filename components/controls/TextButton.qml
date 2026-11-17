@@ -29,7 +29,7 @@ StyledRect {
     property alias label: label
 
     property bool internalChecked
-    property color activeColour: type === TextButton.Filled ? Signal.palette.signal : Signal.palette.cue
+    property color activeColour: type === TextButton.Filled ? Signal.palette.signal : Signal.palette.signalWell
     property color inactiveColour: {
         if (!toggle && type === TextButton.Filled)
             return Signal.palette.signal;
@@ -38,7 +38,7 @@ StyledRect {
     property color activeOnColour: {
         if (type === TextButton.Text)
             return Signal.palette.signal;
-        return type === TextButton.Filled ? Signal.palette.onSignal : Signal.palette.onCue;
+        return type === TextButton.Filled ? Signal.palette.onSignal : Signal.palette.onSignalWell;
     }
     property color inactiveOnColour: {
         if (!toggle && type === TextButton.Filled)

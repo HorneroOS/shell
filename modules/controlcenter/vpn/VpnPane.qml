@@ -45,11 +45,10 @@ Item {
                         Layout.fillWidth: true
                         spacing: Appearance.spacing.small
 
-                        StyledText {
+                        Eyebrow {
                             Layout.fillWidth: true
-                            text: qsTr("VPN")
-                            font.pointSize: Appearance.font.size.large
-                            font.weight: 500
+                            label: qsTr("VPN")
+                            color: Signal.palette.ink
                         }
 
                         StyledRect {

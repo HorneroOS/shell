@@ -320,6 +320,19 @@ Item {
                             wrapMode: Text.Wrap
                         }
 
+                    }
+                }
+
+                ChannelPanel {
+                    title: qsTr("Focus")
+
+                    ColumnLayout {
+                        id: focusCol
+
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
+                        spacing: Appearance.spacing.small
+
                         SliderInput {
                             Layout.fillWidth: true
                             label: qsTr("Focus follows mouse (0 off, 1 loose, 2 strict)")
@@ -334,11 +347,19 @@ Item {
                             onValueModified: newValue => root.apply("--follow-mouse", Math.round(newValue))
                         }
 
-                        StyledText {
-                            text: qsTr("Window rules (float / pin)")
-                            font.pointSize: Appearance.font.size.normal
-                            font.weight: 500
-                        }
+                    }
+                }
+
+                ChannelPanel {
+                    title: qsTr("Window rules (float / pin)")
+
+                    ColumnLayout {
+                        id: rulesCol
+
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
+                        spacing: Appearance.spacing.small
+
 
                         Repeater {
                             model: root.rules

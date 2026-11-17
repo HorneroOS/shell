@@ -79,3 +79,13 @@ def test_failed_apply_restores_the_previous_palette(tmp_path):
     assert "gates failed" in r["applyError"]
     assert r["liveAfterApply"] is False
     assert r["themeAfterApply"] == r["themeBefore"]
+
+
+def test_in_process_engine_is_optional_and_never_writes():
+    bridge = (ROOT / "services" / "ChromaticInProcess.qml").read_text()
+    assert "import Hornero.Chromatic" in bridge and "ChromaticEngine.generate" in bridge
+    for forbidden in ("Process", "persistScheme", "FileView", "Config.save"):
+        assert forbidden not in bridge, forbidden
+    # The service loads it at runtime so a missing module only means fallback.
+    assert "Qt.createComponent(Qt.resolvedUrl(\"ChromaticInProcess.qml\"))" in SERVICE
+    assert "import Hornero.Chromatic" not in SERVICE

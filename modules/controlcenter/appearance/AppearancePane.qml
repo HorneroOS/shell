@@ -730,8 +730,14 @@ Item {
                         id: chromaticSection
                         session: root.session
                         previewController: root
-                        Component.onCompleted: expanded = root.isSectionExpanded("chromatic")
-                        onExpandedChanged: root.persistSection("chromatic", expanded)
+                        // Open by default while Chromatic is the active theme,
+                        // unless the user collapsed it (remembered as the
+                        // "chromatic:closed" marker next to the open list).
+                        Component.onCompleted: expanded = root.isSectionExpanded("chromatic") || (Config.appearance.theme === "hornero-chromatic" && !root.isSectionExpanded("chromatic:closed"))
+                        onExpandedChanged: {
+                            root.persistSection("chromatic", expanded);
+                            root.persistSection("chromatic:closed", !expanded);
+                        }
                     }
 
                     ThemesSection {

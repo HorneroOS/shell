@@ -38,8 +38,11 @@ CollapsibleSection {
         StyledRect {
             id: customLookNotice
 
-            readonly property bool savedThemeMissing: !!Signal.themeId && !Themes.themeById(Signal.themeId)
-            visible: ThemeCatalogue.loaded && Signal.themeStateReady && (!Signal.themeId || savedThemeMissing)
+            // Chromatic is a reserved dynamic theme with no catalogue entry, and
+            // saved palettes are catalogue themes of the `user` collection:
+            // neither is ever a missing pack.
+            readonly property bool savedThemeMissing: !!Signal.themeId && Signal.themeId !== "hornero-chromatic" && !Themes.themeById(Signal.themeId)
+            visible: ThemeCatalogue.loaded && Signal.themeStateReady && Signal.themeId !== "hornero-chromatic" && (!Signal.themeId || savedThemeMissing)
             Layout.fillWidth: true
             implicitHeight: customLookRow.implicitHeight + Appearance.padding.normal * 2
             radius: Appearance.rounding.small

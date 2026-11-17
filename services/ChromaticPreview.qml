@@ -56,6 +56,61 @@ Singleton {
             }
         })
 
+    // In-process engine (Hornero.Chromatic) when the module is installed;
+    // the helper process is the fallback. `engineName` says which is live.
+    property var _engine: null
+    readonly property string engineName: _engine ? "in-process" : (helperAvailable ? "helper" : "none")
+
+    function _loadEngine(): void {
+        const comp = Qt.createComponent(Qt.resolvedUrl("ChromaticInProcess.qml"));
+        if (comp.status !== Component.Ready) {
+            comp.destroy();
+            return;
+        }
+        const obj = comp.createObject(root);
+        if (!obj || !obj.available)
+            return;
+        obj.finished.connect(result => root._onEngineResult(result));
+        obj.failed.connect((code, message) => root._onEngineFailed(code, message));
+        root._engine = obj;
+    }
+
+    function _onEngineResult(doc: var): void {
+        const parsed = Cli.parseDocument(doc);
+        if (!parsed.ok) {
+            _fail({
+                "code": "internal",
+                "title": qsTr("Chromatic failed"),
+                "detail": parsed.error
+            });
+            return;
+        }
+        _adopt(parsed.result);
+    }
+
+    function _onEngineFailed(code: string, message: string): void {
+        const video = request.source !== "seed" && request.source !== "house" && Cli.isVideoPath(request.source === "image" ? request.path : wallpaper);
+        _fail(Cli.describeFailure(Cli.engineFailureExit(code), message, false, video));
+    }
+
+    // Shared by the helper and in-process paths.
+    function _adopt(result: var): void {
+        errorCode = "";
+        root.result = result;
+        if (root.followAsking && !Signal.previewing) {
+            Signal.beginPreview(result.scheme);
+            askTimer.restart();
+            Toaster.toast(qsTr("Wallpaper changed"), qsTr("Previewing the matching Chromatic palette. Open Appearance, Chromatic to apply it; it reverts in 10 seconds."), "palette");
+            return;
+        }
+        if (Signal.previewing) {
+            Signal.beginPreview(result.scheme);
+            idleCancel.restart();
+        }
+    }
+
+    Component.onCompleted: _loadEngine()
+
     property bool _again: false
     property string _idleToken: ""
 
@@ -64,6 +119,11 @@ Singleton {
     signal applyFailed(string code, string message)
 
     function probe(): void {
+        if (_engine) {
+            helperAvailable = true;
+            helperChecked = true;
+            return;
+        }
         if (!helperChecked) {
             probeProc.running = true;
             probeTimeout.restart();
@@ -100,6 +160,18 @@ Singleton {
     }
 
     function _start(): void {
+        if (_engine) {
+            const ereq = Cli.engineRequest(request, wallpaper, perMode);
+            if (!ereq) {
+                result = null;
+                errorCode = "no-source";
+                errorTitle = request.source === "image" ? qsTr("Choose an image") : request.source === "seed" ? qsTr("Choose an accent colour") : qsTr("No wallpaper is set");
+                errorDetail = qsTr("Chromatic needs a source to build a palette from.");
+                return;
+            }
+            _engine.generate(ereq);
+            return;
+        }
         if (!helperAvailable && helperChecked) {
             _fail(Cli.describeFailure(0, "", true, false));
             return;
@@ -316,20 +388,7 @@ Singleton {
                 });
                 return;
             }
-            root.errorCode = "";
-            root.result = parsed.result;
-            // `ask` policy: show the new palette and give the user 10 s.
-            if (root.followAsking && !Signal.previewing) {
-                Signal.beginPreview(parsed.result.scheme);
-                askTimer.restart();
-                Toaster.toast(qsTr("Wallpaper changed"), qsTr("Previewing the matching Chromatic palette. Open Appearance, Chromatic to apply it; it reverts in 10 seconds."), "palette");
-                return;
-            }
-            // Keep a live preview in step with the candidate.
-            if (Signal.previewing) {
-                Signal.beginPreview(parsed.result.scheme);
-                idleCancel.restart();
-            }
+            root._adopt(parsed.result);
         }
     }
 

@@ -4,7 +4,7 @@ indistinguishable after truncation).
 
 Contract: `Strings.wallpaperDisplayName` strips the extension and a
 trailing _WxH resolution suffix and renders separators as spaces
-(`wallhaven-73v179_1920x1080.png` -> `Untitled 73v1`; stock-site
+(`wallhaven-73v179_1920x1080.png` -> `Wallhaven wallpaper`; stock-site
 prefix stripped, bare site ids are not names). Display
 only — search/filter keep matching raw filenames. Never blank."""
 import re
@@ -44,13 +44,17 @@ def _display(name):
     s = re.sub(r"[_-]\d+x\d+$", "", s)
     s = re.sub(r"\s+", " ", re.sub(r"[_-]+", " ", s)).strip()
     bare = re.sub(r"^(wallhaven|unsplash|pexels|pixabay|wallpaperflare|wallpaperaccess|wp|photo|image|img) ", "", s, flags=re.I)
-    if bare != s and re.fullmatch(r"[A-Za-z0-9]{4,12}", bare):
-        return "Untitled " + bare[:4]
+    m = re.match(r"^(wallhaven|unsplash|pexels|pixabay|wallpaperflare|wallpaperaccess|wp|photo|image|img) ", s, flags=re.I)
+    if m and re.fullmatch(r"[A-Za-z0-9]{4,12}", s[m.end():]):
+        brand = m.group(1).lower()
+        return "Wallpaper" if brand in ("wp", "photo", "image", "img") else brand.capitalize() + " wallpaper"
     return s if s else str(name)
 
 
 def test_display_names_cover_live_wallpapers():
-    assert _display("wallhaven-73v179_1920x1080.png") == "Untitled 73v1"
+    assert _display("wallhaven-73v179_1920x1080.png") == "Wallhaven wallpaper"
+    assert _display("wallhaven-lqxd.jpg") == "Wallhaven wallpaper"
+    assert "Untitled" not in _display("unsplash_a1b2c3.jpg")
     assert _display("flowers-02.jpg") == "flowers 02"
     assert _display("hornero-os-dark.png") == "hornero os dark"
     assert _display("Distance.gif") == "Distance"
@@ -63,7 +67,8 @@ def test_display_names_cover_live_wallpapers():
             continue
         label = _display(f.name)
         assert label, f"blank label for {f.name}"
-        assert len(label) <= len(f.stem), f"label longer than stem for {f.name}"
+        assert "Untitled" not in label
+        assert len(label) <= max(len(f.stem), 20), f"label longer than stem for {f.name}"
         seen += 1
     if seen == 0:
         pytest.skip("no live wallpaper files to check against")

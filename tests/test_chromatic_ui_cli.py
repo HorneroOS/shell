@@ -106,3 +106,21 @@ def test_inference_rows_flag_overrides():
     rows = run_js("return inferenceRows(" + json.dumps(inf) + ", normalise({mode: 'light', variant: 'auto'}, 'dark'))")
     by = {r["key"]: r for r in rows}
     assert by["mode"]["overridden"] is True and by["variant"]["overridden"] is False
+
+
+def test_engine_request_carries_the_rfc_keys_and_path():
+    out = run_js("return engineRequest(normalise({source: 'wallpaper', variant: 'vibrant', chroma: 1.2, hueShift: 10}, 'light'), '/w/a.jpg', null)")
+    assert out["path"] == "/w/a.jpg" and out["variant"] == "vibrant" and out["currentMode"] == "light"
+    assert set(out) >= {"source", "seeds", "mode", "contrast", "surfaceDepth", "chroma", "hueShift"}
+    assert run_js("return engineRequest(normalise({source: 'wallpaper'}, 'dark'), '', null)") is None
+    assert run_js("return engineRequest(normalise({source: 'seed', seeds: ['#D98A3A']}, 'dark'), '', null).path") == ""
+
+
+def test_engine_failure_codes_map_to_helper_exit_codes():
+    assert run_js("return ['source-unreadable', 'usage', 'internal', 'other'].map(engineFailureExit)") == [3, 2, 5, 5]
+
+
+def test_parse_document_accepts_an_object_like_the_in_process_result():
+    doc = json.loads(FIXTURE.read_text())
+    assert run_js("return parseDocument(%s).ok" % json.dumps(doc)) is True
+    assert run_js("return parseDocument(null).ok") is False

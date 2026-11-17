@@ -80,7 +80,7 @@ ScrollBar {
                 return 0.6;
             return 0;
         }
-        radius: Appearance.rounding.full
+        radius: Appearance.rounding.small
         color: Signal.palette.cue
 
         MouseArea {

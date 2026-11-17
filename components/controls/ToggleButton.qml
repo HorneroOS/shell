@@ -47,7 +47,8 @@ StyledRect {
     Accessible.name: root.label !== "" ? root.label : root.tooltip
     Accessible.checked: root.toggled
 
-    radius: toggled || toggleStateLayer.pressed ? Appearance.rounding.small : Math.min(width, height) / 2 * Math.min(1, Appearance.rounding.scale)
+    // Signal Bezel: rectangular channel cells, radius `small` in every state.
+    radius: Appearance.rounding.small
     color: toggled ? Signal.palette[accent] : Signal.palette[`${accent}Well`]
     opacity: root.disabled ? 0.5 : 1
 

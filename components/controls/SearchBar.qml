@@ -20,7 +20,7 @@ StyledTextField {
 
         anchors.fill: parent
         color: Signal.tPalette.panel
-        radius: Appearance.rounding.full
+        radius: Appearance.rounding.normal
         border.width: 1
         border.color: root.activeFocus ? Signal.palette.signal : "transparent"
         opacity: root.enabled ? 1 : 0.5
@@ -59,7 +59,7 @@ StyledTextField {
         Accessible.name: qsTr("Clear search")
 
         Interactive {
-            radius: Appearance.rounding.full
+            radius: Appearance.rounding.normal
 
             onClicked: root.clear()
         }

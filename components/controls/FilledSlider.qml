@@ -32,7 +32,7 @@ Slider {
 
     background: StyledRect {
         color: Signal.layer(Signal.palette.panel, 2)
-        radius: Appearance.rounding.full
+        radius: Appearance.rounding.normal
 
         StyledRect {
             anchors.left: parent.left
@@ -67,7 +67,7 @@ Slider {
             anchors.fill: parent
 
             color: Signal.palette.inverse
-            radius: Appearance.rounding.full
+            radius: Appearance.rounding.normal
 
             MouseArea {
                 id: handleInteraction
@@ -160,6 +160,6 @@ Slider {
         }
     }
     FocusRing {
-        radius: Appearance.rounding.full
+        radius: Appearance.rounding.normal
     }
 }

@@ -40,7 +40,8 @@ StyledRect {
 
     onCheckedChanged: internalChecked = checked
 
-    radius: internalChecked ? Appearance.rounding.small : implicitHeight / 2 * Math.min(1, Appearance.rounding.scale)
+    // Signal Bezel: radius `small` in every state — no pill morph.
+    radius: Appearance.rounding.small
     color: type === IconTextButton.Text ? "transparent" : internalChecked ? activeColour : inactiveColour
 
     implicitWidth: row.implicitWidth + horizontalPadding * 2

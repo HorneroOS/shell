@@ -21,7 +21,7 @@ Switch {
     implicitHeight: implicitIndicatorHeight
 
     indicator: StyledRect {
-        radius: Appearance.rounding.full
+        radius: Appearance.rounding.small
         color: root.checked ? Signal.palette.signal : Signal.layer(Signal.palette.lifted, root.cLayer)
         opacity: root.enabled ? 1 : 0.5
 
@@ -31,7 +31,7 @@ Switch {
         StyledRect {
             readonly property real nonAnimWidth: root.pressed ? implicitHeight * 1.3 : implicitHeight
 
-            radius: Appearance.rounding.full
+            radius: Appearance.rounding.small
             color: root.checked ? Signal.palette.onSignal : Signal.layer(Signal.palette.ruleStrong, root.cLayer + 1)
 
             x: root.checked ? parent.implicitWidth - nonAnimWidth - Appearance.padding.small / 2 : Appearance.padding.small / 2
@@ -159,6 +159,6 @@ Switch {
     }
 
     FocusRing {
-        radius: Appearance.rounding.full
+        radius: Appearance.rounding.small
     }
 }

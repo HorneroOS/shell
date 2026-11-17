@@ -52,7 +52,9 @@ StyledRect {
 
     onCheckedChanged: internalChecked = checked
 
-    radius: internalChecked ? Appearance.rounding.small : implicitHeight / 2 * Math.min(1, Appearance.rounding.scale)
+    // Signal Bezel: rectangular channel cells, radius `small` in every
+    // state — no pill morph between checked and unchecked.
+    radius: Appearance.rounding.small
     color: type === TextButton.Text ? "transparent" : internalChecked ? activeColour : inactiveColour
     opacity: root.disabled ? 0.5 : 1
 

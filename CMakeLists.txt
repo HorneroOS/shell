@@ -62,6 +62,13 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(-Wunused-lambda-capture)
 endif()
 
+# Hornero Chromatic engine library (RFC 0002 §3), shared by the helper
+# (extras) and the Hornero.Chromatic QML module (plugin).
+if("extras" IN_LIST ENABLE_MODULES OR "plugin" IN_LIST ENABLE_MODULES)
+    enable_testing()
+    add_subdirectory(libs/chromatic)
+endif()
+
 if("extras" IN_LIST ENABLE_MODULES)
     if(EXISTS "${CMAKE_SOURCE_DIR}/extras/CMakeLists.txt")
         add_subdirectory(extras)

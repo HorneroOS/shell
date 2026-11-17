@@ -47,6 +47,23 @@ stripped from any imported file.
   colour roles; both were removed by the Hornero Signal redesign
   (RFC 0001).
 
+## Hornero Chromatic (RFC 0002)
+
+- `libs/chromatic/`, `plugin/src/Hornero/Chromatic/` and `extras/chromatic/`
+  are a new implementation written for HorneroOS (GPL-3.0-only, like the
+  rest of the runtime).
+- **OKLab / OKLCH**: Björn Ottosson, "A perceptual color space for image
+  processing" (2020), <https://bottosson.github.io/posts/oklab/>; the
+  published conversion matrices (MIT License) are used as constants.
+- **WCAG 2.x** relative luminance and contrast ratio (W3C); **CIE76** ΔE on
+  CIELAB D65; **median cut** (Heckbert, 1982) and **Lloyd's k-means** are
+  textbook algorithms.
+- **Feature lineage**: wallpaper seeds, variants, surface depth, smart
+  mode/variant inference and app templates follow the ideas of
+  [Caelestia](https://github.com/caelestia-dots) (shell and cli, GPL-3.0).
+  No Caelestia code or tables were copied; Chromatic produces Hornero
+  Signal roles directly and uses no external colour library.
+
 ## License layout
 
 - `LICENSE` — MIT, covers the repository scaffold and project docs

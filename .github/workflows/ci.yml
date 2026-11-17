@@ -16,7 +16,8 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             cmake ninja-build pkg-config \
             qt6-base-dev qt6-declarative-dev qt6-declarative-dev-tools \
-            libqalculate-dev libpipewire-0.3-dev libaubio-dev libfftw3-dev
+            libqalculate-dev libpipewire-0.3-dev libaubio-dev libfftw3-dev \
+            ffmpeg
       - name: Build + install libcava from source
         # No libcava package exists in Ubuntu archives; build the shared
         # library from the same fork Nix/AUR packages (pinned tag for
@@ -53,6 +54,26 @@ jobs:
         run: cmake -S . -B build -D DISTRIBUTOR="ci"
       - name: Build
         run: cmake --build build
+      - name: Chromatic unit tests (ctest)
+        run: ctest --test-dir build --output-on-failure -R chromatic
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: '3.12'
+      - name: Chromatic helper tests (golden, properties, fuzz, perf)
+        # Engine tests against the built helper; config's validator at the
+        # commit the vendored gate table was copied from.
+        env:
+          HORNERO_CHROMATIC_BIN: ${{ github.workspace }}/build/lib/hornero-chromatic
+          HORNERO_CHROMATIC_CORPUS: ${{ github.workspace }}/build/lib/chromatic-corpus
+          HORNERO_CHROMATIC_BENCH: ${{ github.workspace }}/build/lib/chromatic-bench
+          HORNERO_CONFIG_DIR: ${{ runner.temp }}/config
+          HORNERO_CHROMATIC_SCRATCH: ${{ runner.temp }}/chromatic
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          git clone --quiet --filter=blob:none https://github.com/HorneroOS/config "$HORNERO_CONFIG_DIR"
+          git -C "$HORNERO_CONFIG_DIR" checkout --quiet "$(cat libs/chromatic/data/contrast-gates.sha)"
+          pip install pytest
+          python3 -m pytest -q tests/test_chromatic_*.py
 
   qml:
     runs-on: ubuntu-latest

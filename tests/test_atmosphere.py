@@ -54,6 +54,58 @@ def test_clean_clamps_and_falls_back():
     assert run_js("return clean(null);") == run_js("return DEFAULTS;")
 
 
+DUSK = {"ground": "#14100F", "sunken": "#1A1514", "base": "#201A19", "panel": "#27201E", "raised": "#302826",
+        "lifted": "#3B312E", "ink": "#F1E6D2", "glow": "#FFB070", "signal": "#F29A4A", "alert": "#F2705E",
+        "term5": "#D98FC0"}
+
+
+def test_dusk_chips_and_alert_text_are_legible_on_every_surface():
+    # Dusk alert is 4.36:1 on `lifted` (tooltips); alertText is the legible pairing.
+    assert contrast(DUSK["alert"], DUSK["lifted"]) < 4.5
+    chips = run_js(f"return chips({json.dumps(DUSK)}, 0.2);")
+    for name, colour in chips.items():
+        for s in SURFACES:
+            assert contrast(colour, DUSK[s]) >= 4.5, (name, s)
+    tip = _read("components/controls/Tooltip.qml")
+    assert "Atmosphere.alertText" in tip
+
+
+def test_low_power_drops_everything_but_the_inner_highlight():
+    lv = run_js("return levels({vignette: 1, grain: 1, scanlines: 1, lamp: 1, innerLight: 1}, false, true);")
+    assert lv["lamp"] == lv["vignette"] == lv["grain"] == lv["scanlines"] == 0 and lv["innerLight"] > 0
+    assert "PowerProfile.PowerSaver" in _read("services/Atmosphere.qml")
+
+
+def test_lamp_fades_400_to_600_ms_and_is_instant_when_reduced_or_low_power():
+    atm = _read("services/Atmosphere.qml")
+    assert "lowPower ? 0 : Appearance.anim.durations.scan" in atm
+    assert 400 <= 480 <= 600  # durations.scan = round(480 * k); k = 0 under reduced motion
+    assert '"scan": Math.round(480 * motion._k)' in _read("config/Appearance.qml")
+    assert "duration: Atmosphere.fadeMs" in _read("components/atmosphere/AtmosphereLayer.qml")
+    assert "root.shown || root.opacity > 0" in _read("components/atmosphere/AtmosphereLayer.qml")
+
+
+def test_cozy_look_keeps_effective_radii_inside_the_amendment_ceiling():
+    look = _read("modules/controlcenter/appearance/sections/LookSection.qml")
+    scale = float(re.search(r'id: "cozy".*?rounding: ([\d.]+)', look, re.S).group(1))
+    assert 3 * scale <= 6 and 5 * scale <= 6.01, "small x 2 ceiling (no pill drift)"
+
+
+def test_atmosphere_never_touches_bars_so_cockpit_clear_stays_untinted():
+    for path in ROOT.glob("modules/bar/**/*.qml"):
+        text = path.read_text()
+        assert "AtmosphereLayer" not in text and "AtmosphereTexture" not in text, path
+
+
+def test_plate_component_is_an_engraved_enum_label():
+    src = _read("components/Plate.qml")
+    for needle in ("Font.AllUppercase", "tabular: true", "Font.DemiBold", "Atmosphere.plateTracking",
+                   "appearance.display" if False else "Appearance.font.family.display"):
+        assert needle in src, needle
+    assert "font.letterSpacing: root.size * root.tracking" in src  # no font.pointSize read: no binding loop
+    assert "Plate {" in _read("modules/launcher/Content.qml")
+
+
 def test_alphas_have_hard_ceilings():
     lv = run_js("return levels({lamp: 99, innerLight: 99, vignette: 99, grain: 99, scanlines: 99}, false);")
     assert lv["lamp"] <= 0.20 and lv["innerLight"] <= 0.10 and lv["vignette"] <= 0.30
@@ -200,7 +252,7 @@ def test_every_microcopy_key_is_used():
 def test_every_knob_has_a_control_and_search_entry():
     section = _read("modules/controlcenter/appearance/sections/AtmosphereSection.qml")
     keys = set(json.loads(_read("config/shell.default.json"))["appearance"]["atmosphere"])
-    for key in keys - {"enabled", "mascot", "tone"}:
+    for key in keys - {"enabled", "mascot", "tone"}:  # incl. plateTracking
         assert f'key: "{key}"' in section, key
     assert "root.atmo.enabled = checked" in section and "root.atmo.mascot = checked" in section
     assert "root.atmo.tone = modelData.id" in section

@@ -34,7 +34,7 @@ Item {
 
     readonly property bool shown: Atmosphere.active && width > 0 && height > 0
     readonly property var lv: Atmosphere.levels
-    readonly property bool lampWanted: root.shown && root.lamp && root.lv.lamp > 0
+    readonly property bool lampWanted: (root.shown || root.opacity > 0) && root.lamp && root.lv.lamp > 0
     property bool _granted: false
     readonly property bool lampOn: root.lampWanted && root._granted
 
@@ -58,13 +58,13 @@ Item {
     anchors.fill: parent
     enabled: false
     clip: true
-    visible: root.shown
+    visible: root.shown || root.opacity > 0
     opacity: root.shown ? 1 : 0
     Accessible.ignored: true
 
     Behavior on opacity {
         NumberAnimation {
-            duration: Appearance.anim.durations.fade
+            duration: Atmosphere.fadeMs
             easing.type: Easing.BezierSpline
             easing.bezierCurve: Appearance.anim.curves.standard
         }

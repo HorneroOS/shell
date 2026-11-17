@@ -14,12 +14,12 @@
 var TONES = ["cozy", "plain"];
 var DEFAULTS = {
     enabled: true, lamp: 0.8, warmth: 0.2, innerLight: 0.8, vignette: 0.4,
-    grain: 0.3, scanlines: 0, mascot: true, tone: "cozy"
+    grain: 0.3, scanlines: 0, plateTracking: 0.14, mascot: true, tone: "cozy"
 };
 // Ranges mirror the Control Center sliders (Appearance > Atmosphere).
 var RANGES = {
     lamp: [0, 1.5], warmth: [0, 1], innerLight: [0, 1.5],
-    vignette: [0, 1], grain: [0, 1], scanlines: [0, 1]
+    vignette: [0, 1], grain: [0, 1], scanlines: [0, 1], plateTracking: [0, 0.3]
 };
 
 // Alpha at knob = 1 and the ceiling at the knob maximum. The lamp is a
@@ -119,23 +119,29 @@ function chips(palette, warmth) {
     var rose = isHex(palette.term5) ? mix(String(palette.alert), String(palette.term5), 0.5) : String(palette.alert);
     var blush = readable(rose, surfaces, ink, 4.5);
     var lamp = readable(mix(glow, blush, _num(warmth, 0, 1, 0)), surfaces, ink, 4.5);
-    return {lamp: lamp, blush: blush};
+    // `alertText`: alert pulled toward ink until it reads on every surface,
+    // including tooltips (`lifted`), where some palettes sit under 4.5:1.
+    var alertText = readable(String(palette.alert), surfaces, ink, 4.5);
+    return {lamp: lamp, blush: blush, alertText: alertText};
 }
 
 // Knobs -> alphas for one render. `light` drops the dark-only parts
 // (vignette, scanlines) and halves the lamp: a warm paper glow, not a lamp.
-function levels(cfg, light) {
+// `lowPower` (power-saver profile) drops lamp, vignette, grain and
+// scanlines, keeping only the soft inner highlight.
+function levels(cfg, light, lowPower) {
     var c = clean(cfg);
     function a(k) {
         return Math.min(CEILING[k], ALPHA[k] * c[k]);
     }
     var on = c.enabled;
+    var lp = lowPower === true;
     return {
         enabled: on,
-        lamp: on ? a("lamp") * (light ? 0.5 : 1) : 0,
+        lamp: on && !lp ? a("lamp") * (light ? 0.5 : 1) : 0,
         innerLight: on ? a("innerLight") * (light ? 0.6 : 1) : 0,
-        vignette: on && !light ? a("vignette") : 0,
-        grain: on ? a("grain") : 0,
-        scanlines: on && !light ? a("scanlines") : 0
+        vignette: on && !light && !lp ? a("vignette") : 0,
+        grain: on && !lp ? a("grain") : 0,
+        scanlines: on && !light && !lp ? a("scanlines") : 0
     };
 }

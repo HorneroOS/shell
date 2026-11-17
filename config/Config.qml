@@ -318,6 +318,7 @@ Singleton {
                 vignette: appearance.atmosphere.vignette,
                 grain: appearance.atmosphere.grain,
                 scanlines: appearance.atmosphere.scanlines,
+                plateTracking: appearance.atmosphere.plateTracking,
                 mascot: appearance.atmosphere.mascot,
                 tone: appearance.atmosphere.tone
             },

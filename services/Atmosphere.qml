@@ -4,6 +4,7 @@ import "atmosphere.js" as Model
 import qs.services
 import qs.config
 import Quickshell
+import Quickshell.Services.UPower
 import QtQuick
 
 // Atmosphere (visual language section 17): the warm, cosy layer on top of
@@ -14,6 +15,7 @@ import QtQuick
 //
 // Always user-tunable (appearance.atmosphere.*, Control Center >
 // Appearance > Atmosphere) and never forced:
+// - lamp, vignette, grain and scanlines drop in the power-saver profile;
 // - off entirely with `enabled: false`;
 // - off in High Contrast, and in Focus, Gaming and Studio modes (a stable,
 //   colour-neutral canvas), whatever the user's values say;
@@ -29,9 +31,17 @@ Singleton {
     readonly property bool allowed: !Config.appearance.highContrast && !Experience.focus && !Experience.gaming && !Experience.studio
     readonly property bool active: settings.enabled && allowed
 
-    readonly property var levels: Model.levels(active ? settings : ({
-            "enabled": false
-        }), Signal.light)
+    // Power-saver profile: lamp, vignette, grain and scanlines drop first.
+    readonly property bool lowPower: PowerProfiles.profile === PowerProfile.PowerSaver
+    // Levels ignore `enabled` and the mode guards on purpose: surfaces fade
+    // their whole layer out on those, so the lamp dims over `fadeMs`
+    // instead of snapping.
+    readonly property var levels: Model.levels(Object.assign({}, settings, {
+        "enabled": true
+    }), Signal.light, lowPower)
+    // Lamp fade on mode or setting changes: 400 to 600 ms (the `scan`
+    // duration, 480 ms), instant under reduced motion and low power.
+    readonly property int fadeMs: lowPower ? 0 : Appearance.anim.durations.scan
 
     // Accent chips derived from the live palette (custom and Chromatic
     // palettes get them too); readable on all six surfaces.
@@ -47,6 +57,9 @@ Singleton {
     }
     readonly property color lamp: chips.lamp
     readonly property color blush: chips.blush
+    // Legible alert text on any surface (tooltips included).
+    readonly property color alertText: chips.alertText
+    readonly property real plateTracking: settings.plateTracking
     // Warm-white used for inner highlights: ink pulled toward the lamp.
     readonly property color highlight: Model.mix(String(Signal.palette.ink), String(chips.lamp), 0.45)
 

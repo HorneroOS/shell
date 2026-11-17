@@ -28,6 +28,7 @@ CollapsibleSection {
             "vignette": 0.4,
             "grain": 0.3,
             "scanlines": 0,
+            "plateTracking": 0.14,
             "mascot": true,
             "tone": "cozy"
         })
@@ -233,6 +234,18 @@ CollapsibleSection {
             stepSize: 0.05
             decimals: 2
             suffix: ""
+        }
+
+        SizeSlider {
+            target: root.atmo
+            key: "plateTracking"
+            label: qsTr("Plate label tracking")
+            from: 0
+            to: 0.3
+            defaultValue: root.factory.plateTracking
+            stepSize: 0.01
+            decimals: 2
+            suffix: " em"
         }
 
         StyledText {

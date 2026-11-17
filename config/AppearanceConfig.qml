@@ -160,6 +160,7 @@ JsonObject {
     //   vignette    gentle edge darkening, 0 .. 1
     //   grain       fine film grain, 0 .. 1
     //   scanlines   faint horizontal lines, 0 .. 1 (off by default)
+    //   plateTracking  letter spacing of Plate labels, 0 .. 0.3 em
     //   mascot      show the hornero in empty states and greetings
     //   tone        microcopy voice: "cozy" or "plain"
     component Atmosphere: JsonObject {
@@ -170,6 +171,7 @@ JsonObject {
         property real vignette: 0.4
         property real grain: 0.3
         property real scanlines: 0
+        property real plateTracking: 0.14
         property bool mascot: true
         property string tone: "cozy"
     }

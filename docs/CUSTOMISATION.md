@@ -94,8 +94,15 @@ film grain and optional scanlines, plus the hornero mascot and the microcopy voi
 | `vignette` | 0 to 1 | 0.4 | Vignette |
 | `grain` | 0 to 1 | 0.3 | Film grain |
 | `scanlines` | 0 to 1 | 0 | Scanlines (off by default) |
+| `plateTracking` | 0 to 0.3 em | 0.14 | Plate label tracking (`Plate` component, enums only) |
 | `mascot` | on/off | on | Hornero mascot in empty states, greetings and the session menu |
 | `tone` | `cozy` or `plain` | cozy | Microcopy voice |
+
+Follow-ups (Bezel Calido, docs#131): lamp, vignette, grain and scanlines also drop in the power-saver profile; changing
+mode or the on/off switch fades the layer over 480 ms (instant under reduced motion and low power); the Cozy look now
+scales rounding by 1.2 so effective radii stay inside `small x 2` (no pill drift); the atmosphere is never attached to
+bars, so Cockpit Clear gets no tint; `Atmosphere.alertText` (also `Tooltip.alertColor`) is the legible alert pairing on
+`lifted` where a palette such as Dusk puts plain `alert` under 4.5:1.
 
 Guardrails that no setting overrides: the layer is hidden in High Contrast and in the Focus, Gaming and Studio modes
 (a stable, colour-neutral canvas); day themes keep a softer lamp and drop vignette and scanlines; the lamp takes one
@@ -106,7 +113,7 @@ under the content (text stays crisp); lamp, highlight and vignette are a veil of
 
 Two accent chips, `Atmosphere.lamp` and `Atmosphere.blush`, are derived from the active palette (so custom and
 Chromatic palettes get them too) and are pulled toward `ink` until they pass 4.5:1 on all six surfaces. Look > Cozy
-sets the atmosphere knobs too (lamp 1.2, tint 0.45, highlight 1.1, vignette 0.5, grain 0.4); "Reset look to factory"
+sets the atmosphere knobs too and softens corners by 1.2 (lamp 1.2, tint 0.45, highlight 1.1, vignette 0.5, grain 0.4); "Reset look to factory"
 restores the factory row. The on/off switch is never changed by a look.
 
 Surfaces carrying the layer: launcher, dashboard, notification cards (inner highlight only), OSD, session menu, lock

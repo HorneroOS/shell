@@ -27,14 +27,14 @@ CollapsibleSection {
             label: qsTr("Hornero"),
             blurb: qsTr("The factory look: crisp Signal bezel, reference spacing."),
             rounding: 1, spacing: 1, padding: 1, font: 1, motion: 1, glow: 1, weight: 0, curve: "smooth",
-            atmosphere: ({ lamp: 0.8, warmth: 0.2, innerLight: 0.8, vignette: 0.4, grain: 0.3, scanlines: 0, mascot: true, tone: "cozy" })
+            atmosphere: ({ lamp: 0.8, warmth: 0.2, innerLight: 0.8, vignette: 0.4, grain: 0.3, scanlines: 0, plateTracking: 0.14, mascot: true, tone: "cozy" })
         },
         {
             id: "cozy",
             label: qsTr("Cozy"),
             blurb: qsTr("Softer corners, roomier spacing, a gentler glow, a warmer lamp and unhurried motion."),
-            rounding: 1.6, spacing: 1.1, padding: 1.15, font: 1.05, motion: 1.2, glow: 1.2, weight: 0, curve: "bouncy",
-            atmosphere: ({ lamp: 1.2, warmth: 0.45, innerLight: 1.1, vignette: 0.5, grain: 0.4, scanlines: 0, mascot: true, tone: "cozy" })
+            rounding: 1.2, spacing: 1.1, padding: 1.15, font: 1.05, motion: 1.2, glow: 1.2, weight: 0, curve: "bouncy",
+            atmosphere: ({ lamp: 1.2, warmth: 0.45, innerLight: 1.1, vignette: 0.5, grain: 0.4, scanlines: 0, plateTracking: 0.14, mascot: true, tone: "cozy" })
         }
     ]
 
@@ -49,7 +49,7 @@ CollapsibleSection {
     function sameAtmosphere(a: var): bool {
         const cur = Config.appearance.atmosphere;
         const eq = (x, y) => Math.abs(x - y) < 0.005;
-        return eq(cur.lamp, a.lamp) && eq(cur.warmth, a.warmth) && eq(cur.innerLight, a.innerLight) && eq(cur.vignette, a.vignette) && eq(cur.grain, a.grain) && eq(cur.scanlines, a.scanlines) && cur.mascot === a.mascot && cur.tone === a.tone;
+        return eq(cur.lamp, a.lamp) && eq(cur.warmth, a.warmth) && eq(cur.innerLight, a.innerLight) && eq(cur.vignette, a.vignette) && eq(cur.grain, a.grain) && eq(cur.scanlines, a.scanlines) && eq(cur.plateTracking, a.plateTracking) && cur.mascot === a.mascot && cur.tone === a.tone;
     }
 
     function apply(look: var): void {

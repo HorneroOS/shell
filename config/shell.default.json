@@ -44,6 +44,7 @@
       "vignette": 0.4,
       "grain": 0.3,
       "scanlines": 0,
+      "plateTracking": 0.14,
       "mascot": true,
       "tone": "cozy"
     },

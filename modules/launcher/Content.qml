@@ -51,10 +51,11 @@ Item {
         anchors.rightMargin: root.padding + 4
         height: 32
 
-        Instruments.Eyebrow {
+        // The channel is an enum, so it wears the engraved plate.
+        Plate {
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
-            label: root.modeLabel
+            text: root.modeLabel
             color: Signal.palette.ink
         }
 

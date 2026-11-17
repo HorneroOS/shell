@@ -40,7 +40,7 @@ Cozy is opt-in; the factory default is unchanged. "Reset look to factory" writes
 
 `appearance.glow.intensity` (0 to 1.5, default 1) multiplies the alpha of glows that the experience mode and the
 glow budget already allow (`Signal.glowIntensity`; consumers: `OnAirBar`, `ScopeTrace`). Gaming and Focus keep
-glow off regardless. Plugin-kit glows do not follow it yet (tracked in HorneroOS/.github#32).
+glow off regardless. Plugin-kit glows (`Theme.glowAlpha`) follow it too.
 
 ## More sizes (Control Center)
 

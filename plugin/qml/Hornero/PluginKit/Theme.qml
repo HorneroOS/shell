@@ -83,7 +83,7 @@ QtObject {
     // UiScope/UiSparkline apply it; extensions do not draw glow by hand.
     readonly property bool glowEnabled: ExperienceBridge.glow
     readonly property real glowBlur: 4
-    readonly property real glowAlpha: 0.4
+    readonly property real glowAlpha: Math.min(1, 0.4 * ExperienceBridge.glowIntensity)
     // Static CRT scanlines inside scope wells (§10): Signal mode only.
     readonly property bool scanlines: ExperienceBridge.scanlines
     // Instrument density (`icons` / `values` / `labels`): how much

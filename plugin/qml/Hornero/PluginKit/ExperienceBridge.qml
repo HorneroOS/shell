@@ -11,6 +11,8 @@ QtObject {
     readonly property string mode: Experience.mode
     readonly property string density: Experience.density
     readonly property bool glow: Experience.glow
+    // User glow strength (Appearance > Look), 0..1.5, applied to glow alpha.
+    readonly property real glowIntensity: Signal.glowIntensity
     readonly property bool scanlines: Experience.scanlines
     readonly property int telemetryIntervalMs: Experience.telemetryIntervalMs
     readonly property bool telemetryPaused: Experience.telemetryPaused

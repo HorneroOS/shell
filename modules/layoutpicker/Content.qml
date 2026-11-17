@@ -33,7 +33,7 @@ Item {
     StyledClippingRect {
         anchors.fill: parent
         color: Signal.surface(Signal.layer(Signal.palette.panel, 1), "layoutpicker")
-        radius: Appearance.rounding.large
+        radius: Appearance.rounding.small
 
         ColumnLayout {
             id: mainColumn
@@ -50,7 +50,7 @@ Item {
                 StyledRect {
                     implicitWidth: 44
                     implicitHeight: 44
-                    radius: Appearance.rounding.full
+                    radius: Appearance.rounding.small
                     color: Signal.layer(Signal.palette.signalWell, 2)
 
                     Glyph {
@@ -64,6 +64,10 @@ Item {
                 ColumnLayout {
                     Layout.fillWidth: true
                     spacing: 0
+
+                    Eyebrow {
+                        label: qsTr("Layout")
+                    }
 
                     StyledText {
                         text: qsTr("Shell layout")
@@ -97,7 +101,7 @@ Item {
             // Footer hint
             StyledText {
                 Layout.alignment: Qt.AlignHCenter
-                text: qsTr("←→↑↓ navigate · Enter applies · Esc closes")
+                text: qsTr("Arrow keys move, Enter applies, Esc closes")
                 font.pointSize: Appearance.font.size.smaller
                 color: Signal.layer(Signal.palette.inkMuted, 2)
             }

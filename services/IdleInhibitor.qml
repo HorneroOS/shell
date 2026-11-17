@@ -26,12 +26,7 @@ Singleton {
 
     IdleInhibitor {
         enabled: props.enabled
-        window: PanelWindow {
-            implicitWidth: 0
-            implicitHeight: 0
-            color: "transparent"
-            mask: Region {}
-        }
+        window: null
     }
 
     IpcHandler {

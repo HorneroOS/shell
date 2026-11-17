@@ -329,12 +329,7 @@ Singleton {
     // Qualified: services/IdleInhibitor.qml shadows the Wayland type.
     Wayland.IdleInhibitor {
         enabled: root.idleInhibit
-        window: PanelWindow {
-            implicitWidth: 0
-            implicitHeight: 0
-            color: "transparent"
-            mask: Region {}
-        }
+        window: null
     }
 
     FileView {

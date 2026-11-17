@@ -39,7 +39,7 @@ Item {
                 Layout.fillHeight: true
 
                 color: Signal.tPalette.panel
-                radius: Appearance.rounding.normal
+                radius: Appearance.rounding.small
 
                 Details {
                     client: root.client
@@ -51,7 +51,7 @@ Item {
                 Layout.preferredHeight: buttons.implicitHeight
 
                 color: Signal.tPalette.panel
-                radius: Appearance.rounding.normal
+                radius: Appearance.rounding.small
 
                 Buttons {
                     id: buttons

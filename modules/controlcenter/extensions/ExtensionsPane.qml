@@ -229,7 +229,7 @@ Item {
     function kitStatus(entry): var {
         const version = entry?.schemaVersion;
         if (version === 3)
-            return { "label": qsTr("PluginKit 3"), "tone": "good", "icon": "circle-check" };
+            return { "label": entry?.pluginKit >= 4 ? qsTr("PluginKit 4") : qsTr("PluginKit 3"), "tone": "good", "icon": "circle-check" };
         if (version === 1 || version === 2 || /built for PluginKit [12]/.test(entry?.detail ?? ""))
             return { "label": qsTr("Needs PluginKit 3"), "tone": "bad", "icon": "alert-triangle" };
         return { "label": qsTr("PluginKit: not reported"), "tone": "neutral", "icon": "help-circle" };

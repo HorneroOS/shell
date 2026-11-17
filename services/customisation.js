@@ -150,7 +150,8 @@ function _type(v) {
     return Array.isArray(v) ? "array" : v === null ? "null" : typeof v;
 }
 
-function validatePack(pack, factory) {
+function validatePack(pack, factory, ranges) {
+    ranges = ranges || {};
     var fac = flatten(factory);
     var accepted = [], rejected = [];
     if (!_isPlain(pack) || pack.schema !== PACK_SCHEMA || !_isPlain(pack.values))
@@ -174,6 +175,11 @@ function validatePack(pack, factory) {
             // Within 0..10x the factory value (or +-1000 for zero/negative
             // factories); the pane's own sliders enforce tighter ranges.
             var lo = f > 0 ? 0 : f - 1000, hi = f > 0 ? Math.max(f * 10, 10) : f + 1000;
+            // The Control Center slider range (config/ranges.json) wins.
+            if (ranges[path]) {
+                lo = ranges[path].min;
+                hi = ranges[path].max;
+            }
             v = Math.max(lo, Math.min(hi, v));
         }
         accepted.push({ path: path, value: v, label: labelFor(path) });

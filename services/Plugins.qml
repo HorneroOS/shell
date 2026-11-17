@@ -582,31 +582,83 @@ Singleton {
     // entry simply does not exist.
     function normalizeContributes(contributes: var): var {
         const normalized = ({
-                commands: []
+                commands: [],
+                quickSettings: [],
+                panels: []
             });
-        const list = contributes && typeof contributes === "object" && !Array.isArray(contributes) ? contributes.commands : null;
-        if (!Array.isArray(list))
+        if (!contributes || typeof contributes !== "object" || Array.isArray(contributes))
             return normalized;
         const glyph = /^[a-z0-9-]+$/;
-        const seen = new Set();
-        for (const item of list) {
-            if (normalized.commands.length >= 16)
-                break;
-            if (!item || typeof item !== "object" || Array.isArray(item)
-                    || typeof item.id !== "string" || !/^[a-z][a-zA-Z0-9]{0,31}$/.test(item.id) || seen.has(item.id)
-                    || typeof item.title !== "string" || !/\S/.test(item.title) || item.title.length > 48)
+        const limits = {
+            commands: 16,
+            quickSettings: 4,
+            panels: 4
+        };
+        for (const kind of Object.keys(limits)) {
+            const list = contributes[kind];
+            if (!Array.isArray(list))
                 continue;
-            seen.add(item.id);
-            const command = {
-                id: item.id,
-                title: item.title,
-                description: typeof item.description === "string" && /\S/.test(item.description) && item.description.length <= 120 ? item.description : "",
-                glyph: typeof item.glyph === "string" && glyph.test(item.glyph) ? item.glyph : "command",
-                keywords: Array.isArray(item.keywords) ? item.keywords.filter(k => typeof k === "string" && /\S/.test(k) && k.length <= 24).slice(0, 8) : []
-            };
-            normalized.commands.push(command);
+            const seen = new Set();
+            for (const item of list) {
+                if (normalized[kind].length >= limits[kind])
+                    break;
+                if (!item || typeof item !== "object" || Array.isArray(item)
+                        || typeof item.id !== "string" || !/^[a-z][a-zA-Z0-9]{0,31}$/.test(item.id) || seen.has(item.id)
+                        || typeof item.title !== "string" || !/\S/.test(item.title) || item.title.length > 48)
+                    continue;
+                seen.add(item.id);
+                const entry = {
+                    id: item.id,
+                    title: item.title,
+                    glyph: typeof item.glyph === "string" && glyph.test(item.glyph) ? item.glyph : (kind === "commands" ? "command" : kind === "panels" ? "layout-sidebar" : "bolt")
+                };
+                if (kind === "commands") {
+                    entry.description = typeof item.description === "string" && /\S/.test(item.description) && item.description.length <= 120 ? item.description : "";
+                    entry.keywords = Array.isArray(item.keywords) ? item.keywords.filter(k => typeof k === "string" && /\S/.test(k) && k.length <= 24).slice(0, 8) : [];
+                }
+                if (kind === "quickSettings")
+                    entry.kind = item.kind === "button" ? "button" : "toggle";
+                normalized[kind].push(entry);
+            }
         }
         return normalized;
+    }
+
+    // Quick-setting tiles of enabled extensions (manifest data only).
+    function tileList(): var {
+        const result = [];
+        for (const entry of root.pluginsForSurface("quickSetting")) {
+            const tiles = entry.contributes && Array.isArray(entry.contributes.quickSettings) ? entry.contributes.quickSettings : [];
+            for (const tile of tiles)
+                result.push(Object.assign({}, tile, {
+                    pluginId: entry.id,
+                    pluginName: entry.name || entry.id,
+                    entrypoint: entry.entrypoint,
+                    key: `${entry.id}:${tile.id}`
+                }));
+        }
+        return result;
+    }
+
+    // Tiles the person placed (plugins.quickTiles), in their order, that
+    // still exist; stale keys are ignored, never shown.
+    function placedTiles(): var {
+        const wanted = Config.plugins.quickTilesList();
+        const all = root.tileList();
+        return wanted.map(key => all.find(t => t.key === key)).filter(t => !!t);
+    }
+
+    function panelList(): var {
+        const result = [];
+        for (const entry of root.pluginsForSurface("panel")) {
+            const panels = entry.contributes && Array.isArray(entry.contributes.panels) ? entry.contributes.panels : [];
+            for (const panel of panels)
+                result.push(Object.assign({}, panel, {
+                    pluginId: entry.id,
+                    entrypoint: entry.entrypoint
+                }));
+        }
+        return result;
     }
 
     function markContributes(id: string, contributes: var): void {

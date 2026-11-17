@@ -4,13 +4,15 @@
   "id": "example-commands",
   "name": "Example Commands",
   "version": "1.0.0",
-  "description": "Contributes two commands (a greeting and a settings-driven reminder) to the launcher, IPC and key bindings (PluginKit 4).",
+  "description": "Contributes commands, a quick-setting tile and a Control Center panel (PluginKit 4).",
   "author": "HorneroOS contributors",
   "license": "MIT",
   "entrypoint": "Main.qml",
   "files": [
     "Main.qml",
     "Commands.qml",
+    "Tile.qml",
+    "Panel.qml",
     "README.md",
     "LICENSE"
   ],
@@ -31,6 +33,22 @@
         "rows": 2,
         "maxLength": 140,
         "title": "Reminder text",
+        "group": "Messages"
+      },
+      "quiet": {
+        "type": "boolean",
+        "default": false,
+        "hidden": true
+      },
+      "tags": {
+        "type": "strings",
+        "default": [
+          "focus",
+          "write"
+        ],
+        "maxItems": 8,
+        "maxLength": 24,
+        "title": "Tags",
         "group": "Messages"
       }
     }
@@ -56,11 +74,32 @@
           "break"
         ]
       }
+    ],
+    "quickSettings": [
+      {
+        "id": "quiet",
+        "title": "Quiet mode",
+        "glyph": "bell",
+        "kind": "toggle"
+      }
+    ],
+    "panels": [
+      {
+        "id": "tags",
+        "title": "Tags",
+        "glyph": "layout-sidebar"
+      }
     ]
   },
   "surfaces": {
     "commands": {
       "entrypoint": "Commands.qml"
+    },
+    "quickSetting": {
+      "entrypoint": "Tile.qml"
+    },
+    "panel": {
+      "entrypoint": "Panel.qml"
     }
   },
   "placement": "bar"

@@ -442,7 +442,7 @@ Scope {
             // Keep a breathing margin from every screen edge: the
             // window never sits flush against the border, and the
             // grown chat card never clips off-screen.
-            margins.top: Math.max(16, Math.min(win.py + Math.round(win.bobY), Math.max(16, win.screenH - stack.implicitHeight - 16)))
+            margins.top: Math.max(16, Math.min(win.py, Math.max(16, win.screenH - stack.implicitHeight - 16)))
             margins.left: Math.max(16, Math.min(win.px, Math.max(16, win.screenW - stack.implicitWidth - 16)))
 
             // Explicit surface size from the content column: the layer
@@ -542,7 +542,11 @@ Scope {
                     height: win.sizePx
                     implicitWidth: win.peekMode ? 28 : win.sizePx
                     implicitHeight: win.sizePx
-                    clip: true
+                    // Clipping is only needed for the peek sliver; the idle
+                    // bob moves the sprite inside the surface (its canvas
+                    // has transparent padding), so it never reconfigures
+                    // the layer-shell surface per frame.
+                    clip: win.peekMode
 
                     Player {
                         id: player
@@ -627,6 +631,7 @@ Scope {
                         // portraits stay visible while the edge-facing
                         // slice is transparent padding on most skins.
                         x: win.peekMode ? -Math.round((win.sizePx - 28) / 2) : 0
+                        y: Math.round(win.bobY)
                         // Smart orientation (see updateMirror): frames
                         // face right, so mirror on the right half to face
                         // the screen center. Peek sliver is unaffected.

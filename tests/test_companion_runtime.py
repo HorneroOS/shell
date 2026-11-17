@@ -401,3 +401,10 @@ def test_companion_chat_panel_contract():
     assert 'pendingApproval.runId, "approve"' in CHAT
     assert 'chatOpen = !assistantBridge.chatOpen' in HOST
     assert "ChatPanel" in HOST
+
+
+def test_idle_bob_does_not_reconfigure_the_layer_surface():
+    # The bob used to animate the window margin every frame; it must move
+    # the sprite inside the surface instead.
+    assert "win.py + Math.round(win.bobY)" not in HOST
+    assert "y: Math.round(win.bobY)" in HOST

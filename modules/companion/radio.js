@@ -68,10 +68,15 @@ function sanitize(raw) {
 // per-entry switch; an unknown entry is always refused. Extension requests
 // are not a user gesture, so they never open Radio in the quiet modes
 // (Focus, Gaming); the user's own shortcut, click or launcher always can.
-// ctx: { mode } (the active Experience mode).
+// Under a fullscreen window nothing opens (the panel would sit beneath it
+// while holding the keyboard), so a game or video is never interrupted.
+// ctx: { mode, fullscreen } (the active Experience mode; fullscreen on the
+// focused output).
 function mayOpen(settings, entry, ctx) {
     var s = sanitize(settings);
     if (ENTRY_POINTS.indexOf(entry) < 0)
+        return false;
+    if (ctx && ctx.fullscreen === true)
         return false;
     if (entry === "plugin" && ctx && (ctx.mode === "focus" || ctx.mode === "gaming"))
         return false;

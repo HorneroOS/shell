@@ -83,9 +83,11 @@ Scope {
             screen: win.chosen
             color: "transparent"
             WlrLayershell.namespace: "hornero-radio"
-            WlrLayershell.layer: WlrLayer.Overlay
+            WlrLayershell.layer: WlrLayer.Top
             WlrLayershell.exclusionMode: ExclusionMode.Ignore
             // Explicit user gesture opened it: it may take the keyboard.
+            // Top layer (a fullscreen window covers it), and Radio refuses
+            // to open under fullscreen in the first place.
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
 
             anchors.bottom: true

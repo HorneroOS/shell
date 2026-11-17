@@ -266,6 +266,22 @@ function _tryRail(item, geo, side, rails, area, reserved, placed) {
             rail.width = Math.max(rail.width, w);
             return rect;
         }
+        // A blocker further along the rail (the Companion's perch, a widget
+        // the person placed): shrink to the room before it when the item can
+        // live with that, instead of giving up the whole rail.
+        if (fromTop && blocker.y > y) {
+            var above = _snapDown(blocker.y - GAP - y);
+            if (above >= item.minHeight && above < wantH) {
+                wantH = above;
+                continue;
+            }
+        } else if (!fromTop && blocker.y + blocker.height < y + h) {
+            var below = _snapDown(rail.bottom - (blocker.y + blocker.height + GAP));
+            if (below >= item.minHeight && below < wantH) {
+                wantH = below;
+                continue;
+            }
+        }
         // Step past the blocker along the rail and retry.
         if (fromTop)
             rail.top = Math.max(rail.top, blocker.y + blocker.height + GAP);

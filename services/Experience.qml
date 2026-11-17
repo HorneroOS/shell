@@ -255,8 +255,8 @@ Singleton {
         return Deck.isCustomised(Config.experience.deck, id);
     }
 
-    function deckItems(hints: var): var {
-        return Deck.items(hints);
+    function deckItems(hints: var, measured: var): var {
+        return Deck.fitMeasured(Deck.items(hints), measured ?? ({}));
     }
 
     function deckCompose(input: var): var {

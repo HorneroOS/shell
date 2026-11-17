@@ -431,3 +431,34 @@ def test_deck_ipc_is_documented_and_validated():
     ipc = (ROOT / "docs" / "IPC.md").read_text()
     for fn in ("experience deck", "experience setDeckHidden", "experience resetDeck"):
         assert f"`{fn}" in ipc
+
+
+def test_deck_never_makes_a_widget_shorter_than_its_content():
+    """VA-06: measured content heights raise the solver minimums; no two
+    rectangles intersect and nothing is shorter than its need."""
+    need = {"hornero-system-insight": 410, "hornero-moon-phase": 333, "hornero-network-scope": 100}
+    for area in ({"width": 1920, "height": 1080}, {"width": 1366, "height": 768}, {"width": 2048, "height": 1152}):
+        res = run_js(
+            f"""
+            const list = fitMeasured(items({{}}), {json.dumps(need)});
+            return compose({{area: {json.dumps(area)}, items: list, hidden: [], reserved: [], saved: {{}}}});
+            """
+        )
+        assert_sane(res, area)
+        by_id = {p["id"]: p for p in res["placements"]}
+        ps = res["placements"]
+        for i, a in enumerate(ps):
+            for b in ps[i + 1:]:
+                assert not overlap(a, b), (a["id"], b["id"])
+        if "hornero-system-insight" in by_id:
+            assert by_id["hornero-system-insight"]["height"] >= 416  # 410 snapped to the 8 px grid
+        if "hornero-moon-phase" in by_id:
+            assert by_id["hornero-moon-phase"]["height"] >= 336
+
+
+def test_hosts_feed_measured_content_height_back_to_the_solver():
+    frame = (ROOT / "modules/plugins/DesktopWidgetFrame.qml").read_text()
+    host = (ROOT / "modules/plugins/PluginDesktopWidgets.qml").read_text()
+    assert "pluginLoader.item.implicitHeight + root.headerHeight" in frame
+    assert "onNeedMeasured: (id, need) => root.noteNeed(id, need)" in host
+    assert "Experience.deckItems(hints, root.measuredNeed)" in host

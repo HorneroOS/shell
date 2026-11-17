@@ -74,6 +74,19 @@ Item {
         return resolved;
     }
 
+    // Frame heights the loaded deck widgets need to show all their
+    // content (reported by each frame). Only ever grows, so composition
+    // converges; the solver uses it as a minimum height.
+    property var measuredNeed: ({})
+
+    function noteNeed(id: string, need: real): void {
+        if (need <= (root.measuredNeed[id] ?? 0))
+            return;
+        const next = Object.assign({}, root.measuredNeed);
+        next[id] = need;
+        root.measuredNeed = next;
+    }
+
     readonly property var deckEntries: root.deckWanted ? Plugins.deckPlugins() : []
     readonly property var deckComposition: {
         const hints = ({});
@@ -87,7 +100,7 @@ Item {
                 width: root.width,
                 height: root.height
             },
-            items: Experience.deckItems(hints).filter(i => have[i.id]),
+            items: Experience.deckItems(hints, root.measuredNeed).filter(i => have[i.id]),
             hidden: Experience.deckHidden,
             reserved: root.reserved,
             saved: Experience.deckSaved(root.screenName)
@@ -151,6 +164,7 @@ Item {
                         entrypoint: ""
                     })
                 deckPlacement: modelData
+                onNeedMeasured: (id, need) => root.noteNeed(id, need)
                 screenName: root.screenName
                 area: root
                 channel: index + 1

@@ -43,7 +43,9 @@ StyledRect {
     implicitWidth: toggleBtnInner.implicitWidth + horizontalPadding * 2
     implicitHeight: toggleBtnIcon.implicitHeight + verticalPadding * 2
 
-    Accessible.role: Accessible.ToggleButton
+    // QAccessible has no ToggleButton role: a checkable Button is the toggle.
+    Accessible.role: Accessible.Button
+    Accessible.checkable: true
     Accessible.name: root.label !== "" ? root.label : root.tooltip
     Accessible.checked: root.toggled
 

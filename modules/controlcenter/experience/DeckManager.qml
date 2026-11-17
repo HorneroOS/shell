@@ -395,7 +395,8 @@ ColumnLayout {
                         StyledSlider {
                             id: opacitySlider
 
-                            width: 140
+                            implicitWidth: 140
+                            implicitHeight: 24
                             from: 0.3
                             to: 1
                             stepSize: 0.05

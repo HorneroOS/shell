@@ -1,5 +1,6 @@
 pragma Singleton
 
+import "deck.js" as Deck
 import qs.config
 import qs.utils
 import Quickshell
@@ -551,6 +552,54 @@ Singleton {
 
     function desktopPlugins(): var {
         return root.pluginsForSurface("desktop");
+    }
+
+    // Signal instrument deck (services/deck.js): the curated first-party
+    // instruments, in catalogue order. Unlike desktopPlugins() they need
+    // not be enabled in Extensions: an installed package whose payload is
+    // trusted loads for the deck only (the person keeps the per-mode
+    // off switch, and Extensions state is never written). Missing,
+    // untrusted or safe-mode entries are simply absent here and are
+    // reported by deckAvailability().
+    function deckEligible(entry: var): bool {
+        return !!entry && !root.safeMode && !!entry.installed && ["official", "trusted", "signed"].includes(entry.trust) && !!root.surfaceFor(entry, "desktop");
+    }
+
+    function deckPlugins(): var {
+        const result = [];
+        for (const id of Deck.ids()) {
+            const entry = root.entries.find(e => e.id === id);
+            if (!root.deckEligible(entry))
+                continue;
+            const declared = root.surfaceFor(entry, "desktop");
+            if (declared.enabled === false || typeof declared.entrypoint !== "string" || declared.entrypoint === "")
+                continue;
+            result.push(Object.assign({}, entry, {
+                entrypoint: declared.entrypoint,
+                surface: "desktop",
+                deck: true
+            }));
+        }
+        return result;
+    }
+
+    // id -> ready | not-installed | untrusted | failed, for Deck.status().
+    function deckAvailability(): var {
+        const out = ({});
+        for (const id of Deck.ids()) {
+            const entry = root.entries.find(e => e.id === id);
+            if (root.safeMode)
+                out[id] = "safe-mode";
+            else if (!entry || !entry.installed)
+                out[id] = "not-installed";
+            else if (!["official", "trusted", "signed"].includes(entry.trust))
+                out[id] = "untrusted";
+            else if (!root.surfaceFor(entry, "desktop"))
+                out[id] = "not-installed";
+            else
+                out[id] = entry.state === "failed" ? "failed" : "ready";
+        }
+        return out;
     }
 
     function setDesktopEditing(editing: bool): void {

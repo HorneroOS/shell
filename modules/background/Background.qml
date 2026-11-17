@@ -160,9 +160,20 @@ Loader {
             }
 
             PluginDesktopWidgets {
+                id: desktopWidgets
+
                 screenName: win.screen.name
+                // The desktop clock's box, so the Signal deck flows around it.
+                reserved: clockLoader.item ? [
+                    {
+                        x: clockLoader.x - desktopWidgets.x,
+                        y: clockLoader.y - desktopWidgets.y,
+                        width: clockLoader.width,
+                        height: clockLoader.height
+                    }
+                ] : []
                 opacity: Experience.desktopWidgetsVisible ? 1 : 0
-                visible: opacity > 0 && Plugins.desktopPlugins().length > 0
+                visible: opacity > 0 && desktopWidgets.hasContent
 
                 Behavior on opacity {
                     Anim {

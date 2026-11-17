@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import qs.components
+import qs.components.motion
 import qs.services
 import qs.config
 import Quickshell
@@ -21,9 +22,52 @@ Item {
     id: root
 
     required property string screenName
-    readonly property var widgets: Plugins.desktopPlugins()
+    // Zones to keep clear, in this item's coordinates (the desktop clock).
+    property var reserved: []
 
-    visible: root.widgets.length > 0
+    // `user`: the person's own enabled desktop widgets. `instruments`
+    // (Signal): the curated deck, composed per screen by services/deck.js.
+    // `none` (Focus, Gaming): nothing is instantiated, so nothing draws and
+    // no widget holds a provider lease.
+    readonly property bool userSet: Experience.desktopWidgets === "user" && Experience.desktopWidgetsVisible
+    readonly property bool deckWanted: Experience.instruments && Experience.desktopWidgetsVisible
+    readonly property var widgets: root.userSet ? Plugins.desktopPlugins() : []
+
+    readonly property var deckEntries: root.deckWanted ? Plugins.deckPlugins() : []
+    readonly property var deckComposition: {
+        const hints = ({});
+        const have = ({});
+        for (const entry of root.deckEntries) {
+            hints[entry.id] = Plugins.surfaceFor(entry, "desktop") ?? ({});
+            have[entry.id] = true;
+        }
+        return Experience.deckCompose({
+            area: {
+                width: root.width,
+                height: root.height
+            },
+            items: Experience.deckItems(hints).filter(i => have[i.id]),
+            hidden: Experience.deckHidden,
+            reserved: root.reserved,
+            saved: Experience.deckSaved(root.screenName)
+        });
+    }
+    // Placements that fit. The model only changes when a placement does
+    // (not on every plugin state update), and is kept while the deck fades
+    // out so leaving the mode exits cleanly before the widgets unload.
+    readonly property string deckKey: JSON.stringify(root.deckComposition.placements)
+    property var _deckLast: []
+    onDeckKeyChanged: if (root.deckWanted)
+        root._deckLast = root.deckComposition.placements
+    onDeckWantedChanged: if (root.deckWanted)
+        root._deckLast = root.deckComposition.placements
+    readonly property var deckModel: root.deckWanted || deckLayer.opacity > 0 ? root._deckLast : []
+
+    // Status for the Experience pane: why each curated widget is or is
+    // not on screen (not installed, untrusted, hidden, no room, ...).
+    readonly property var deckStatus: Experience.deckStatus(root.deckComposition, Plugins.deckAvailability(), Experience.deckHidden)
+
+    readonly property bool hasContent: root.widgets.length > 0 || root.deckModel.length > 0
 
     Repeater {
         model: root.widgets
@@ -40,11 +84,43 @@ Item {
         }
     }
 
+    Item {
+        id: deckLayer
+
+        anchors.fill: parent
+        opacity: root.deckWanted ? 1 : 0
+
+        Behavior on opacity {
+            FadeAnim {
+                leaving: !root.deckWanted
+            }
+        }
+
+        Repeater {
+            model: root.deckModel
+
+            delegate: DesktopWidgetFrame {
+                required property var modelData
+                required property int index
+
+                entry: Plugins.deckPlugins().find(e => e.id === modelData.id) ?? ({
+                        id: modelData.id,
+                        name: "",
+                        entrypoint: ""
+                    })
+                deckPlacement: modelData
+                screenName: root.screenName
+                area: root
+                channel: index + 1
+            }
+        }
+    }
+
     // Edit toolbar: a lifted strip centred at the top of the widget area.
     Rectangle {
         id: toolbar
 
-        visible: Plugins.desktopEditing && root.widgets.length > 0
+        visible: Plugins.desktopEditing && root.hasContent
         anchors.horizontalCenter: parent.horizontalCenter
         y: 0
         width: toolbarRow.implicitWidth + Appearance.padding.larger * 2
@@ -88,6 +164,11 @@ Item {
             ToolbarButton {
                 label: qsTr("Reset layout")
                 onActivated: {
+                    if (root.deckWanted) {
+                        // Restore the factory deck on this display.
+                        Experience.resetDeck(Experience.mode, root.screenName);
+                        return;
+                    }
                     for (const widget of root.widgets)
                         Config.plugins.resetDesktopWidgetGeometry(widget.id, root.screenName);
                 }

@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import qs.components
+import qs.components.motion
 import qs.services
 import qs.config
 import Hornero.PluginKit as Kit
@@ -31,10 +32,21 @@ Item {
     required property string screenName
     required property Item area
     required property int channel
+    // Signal deck: the placement services/deck.js computed for this
+    // screen ({x, y, width, height, fx, fy}), or null for a user widget.
+    // Deck geometry is persisted per experience mode (Experience.
+    // setDeckGeometry), never in the user's everyday widget layout.
+    property var deckPlacement: null
+    readonly property bool deck: root.deckPlacement !== null
 
     readonly property string pluginId: entry.id
     readonly property var hint: Plugins.surfaceFor(entry, "desktop") ?? ({})
-    readonly property var saved: Config.plugins.desktopWidgetGeometry(root.pluginId, root.screenName)
+    readonly property var saved: root.deck ? ({
+            fx: root.deckPlacement.fx,
+            fy: root.deckPlacement.fy,
+            width: root.deckPlacement.width,
+            height: root.deckPlacement.height
+        }) : Config.plugins.desktopWidgetGeometry(root.pluginId, root.screenName)
     readonly property string anchorSlot: {
         const slots = Config.plugins.desktopWidgetSlots;
         const perScreen = slots && typeof slots === "object" ? slots[root.screenName || "default"] : null;
@@ -43,7 +55,7 @@ Item {
     }
     readonly property bool editing: Plugins.desktopEditing
     readonly property bool resizable: root.hint.resizable !== false
-    readonly property bool signalMode: Kit.Theme.experience === "signal"
+    readonly property bool signalMode: Kit.Theme.experience === "signal" || root.deck
     // Experience profile (RFC §5a): `none` (focus, gaming) hides desktop
     // widgets and unloads them, so they cost nothing; gaming under a
     // fullscreen window also suspends them.
@@ -68,6 +80,34 @@ Item {
     property real _liveHeight: 0
 
     visible: !root.suspended
+
+    // Scan-in (RFC §3.6): deck modules fade in with the shared stagger and
+    // a short travel from the nearest side; motion level `off` shows them
+    // at once. Leaving the mode fades the whole deck layer (host).
+    property bool _revealed: !root.deck
+    opacity: root._revealed ? 1 : 0
+    transform: Translate {
+        x: root._revealed ? 0 : (root.fx < 0.5 ? -1 : 1) * Choreography.scanTravel
+
+        Behavior on x {
+            NumberAnimation {
+                duration: Choreography.fadeIn
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Choreography.curves.enter
+            }
+        }
+    }
+
+    Behavior on opacity {
+        enabled: root.deck
+        FadeAnim {}
+    }
+
+    Timer {
+        running: root.deck && !root._revealed
+        interval: Math.max(1, Choreography.rowDelay(root.channel - 1))
+        onTriggered: root._revealed = true
+    }
     readonly property real _homeX: Math.round(root.fx * Math.max(0, root.area.width - root.frameWidth))
     readonly property real _homeY: Math.round(root.fy * Math.max(0, root.area.height - root.frameHeight))
 
@@ -83,12 +123,16 @@ Item {
     function _persist(nx: real, ny: real, w: real, h: real): void {
         const freeW = Math.max(1, root.area.width - w);
         const freeH = Math.max(1, root.area.height - h);
-        Config.plugins.setDesktopWidgetGeometry(root.pluginId, root.screenName, {
+        const geometry = {
             fx: root.area.width - w <= 0 ? 0 : nx / freeW,
             fy: root.area.height - h <= 0 ? 0 : ny / freeH,
-            width: w,
-            height: h
-        }, true);
+            width: Math.round(w),
+            height: Math.round(h)
+        };
+        if (root.deck)
+            Experience.setDeckGeometry(root.screenName, root.pluginId, geometry);
+        else
+            Config.plugins.setDesktopWidgetGeometry(root.pluginId, root.screenName, geometry, true);
     }
 
     RectangularShadow {

@@ -418,6 +418,16 @@ CollapsibleSection {
         // own after the catalogue (reserved id `hornero-chromatic`, no
         // theme directory). Choosing it opens the Chromatic section; the
         // palette is only applied from there.
+        SwitchRow {
+            Layout.topMargin: Appearance.spacing.small
+            label: qsTr("Soft, cozy chips (rounder swatches, a heart on your pick)")
+            checked: Config.appearance.cozyChips
+            onToggled: checked => {
+                Config.appearance.cozyChips = checked;
+                Config.save();
+            }
+        }
+
         StyledRect {
             id: chromaticCard
 

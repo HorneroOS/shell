@@ -3,6 +3,7 @@
     "theme": "hornero-signal-night",
     "highContrast": false,
     "reducedMotion": false,
+    "cozyChips": true,
     "rounding": {
       "scale": 1
     },

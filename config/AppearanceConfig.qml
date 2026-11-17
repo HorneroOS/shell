@@ -10,6 +10,9 @@ JsonObject {
     property bool highContrast: false
     // Shell-wide reduced motion (also follows the system preference).
     property bool reducedMotion: false
+    // Soft, rounder palette chips and tiles with a heart for the selected
+    // one (the cozy touch). Off keeps the sharp Bezel chips.
+    property bool cozyChips: true
     property Rounding rounding: Rounding {}
     property Spacing spacing: Spacing {}
     property Padding padding: Padding {}

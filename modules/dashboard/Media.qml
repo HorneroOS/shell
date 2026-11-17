@@ -54,14 +54,38 @@ Item {
 
         anchors.left: parent.left
         anchors.right: parent.right
-        implicitHeight: headerHeight + deck.implicitHeight + 16
+        implicitHeight: headerHeight + (root.hasPlayer ? deck.implicitHeight : idle.implicitHeight) + 16
         channel: "01"
         title: qsTr("Playback")
         context: root.hasPlayer ? Players.getIdentity(root.player) : qsTr("No player")
 
+        // No player: one honest line instead of an empty deck.
+        RowLayout {
+            id: idle
+
+            anchors.left: parent.left
+            anchors.right: parent.right
+            visible: !root.hasPlayer
+            spacing: Appearance.spacing.normal
+
+            Glyph {
+                name: "music-off"
+                color: Signal.palette.inkMuted
+                font.pointSize: Appearance.font.size.larger
+            }
+
+            StyledText {
+                Layout.fillWidth: true
+                text: qsTr("Nothing playing. Start a player and its controls appear here.")
+                color: Signal.palette.inkMuted
+                elide: Text.ElideRight
+            }
+        }
+
         RowLayout {
             id: deck
 
+            visible: root.hasPlayer
             anchors.left: parent.left
             anchors.right: parent.right
             spacing: Appearance.spacing.large

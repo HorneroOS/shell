@@ -1,5 +1,9 @@
 # Javi (the Companion) ↔ Assistant mapping
 
+> The run state machine, typed stream frames, presentation-intent contract,
+> Quick/Conversation/Workbench levels and approval rules live in
+> `docs/ASSISTANT_WORKBENCH.md`. This file keeps the companion state mapping.
+
 The companion is **Javi, el Hornero** — presentation with a
 Hornero 199X retrofuturist chat aesthetic (phosphor status light,
 mono micro-labels, scanline header accent; reduced-motion disables
@@ -27,10 +31,10 @@ streams the answer inside the launcher via
 question/answer is kept in memory, nothing is persisted), using the same
 `horneroctl assistant ask --json --stream` path, registered as the
 `ai` provider on the launcher's provider registry. It is deliberately
-one-shot: no history, no attachments, and approvals/clarifications
-are never answered there — a failed or pending run turns the row
-into a fallback that summons this chat panel with the same question
-(the pre-inline `>ai` behaviour). Closing the launcher or leaving
+one-shot and read-only (`--mode ask`): no history, no attachments, and
+approvals/clarifications are never answered there — a pending run is
+stopped and the row offers "Continue in Workbench"; a failed run
+falls back to summoning this chat panel with the same question. Closing the launcher or leaving
 the `>ai` route cancels an in-flight inline run. See
 `docs/LAUNCHER.md`, "Inline AI", for modes, privacy and the
 documented `--mode` gap.

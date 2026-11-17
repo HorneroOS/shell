@@ -63,16 +63,18 @@ central drawer cascade closing the launcher) and **leaving the
 Only the final CommandResult line resolves the run.
 
 **Modes.** This is Ask mode: read-only, one-shot, no
-attachments, and the shell executes nothing for it — the inline
-surface never approves, clarifies or runs commands, and any
-tool/proposal text only ever appears as answer text. Documented
-gap: `horneroctl assistant ask` exposes no `--mode` flag in its
-contract (its parser rejects unknown flags), so the shell
-cannot ask the gateway to suppress tool use for this consumer;
-read-only is enforced from the shell side by never answering a
-pending approval/clarification inline. Such a pending payload
-ends the run as a failure and the user continues in the Javi
-chat panel, where decisions are explicit.
+attachments, and the shell executes nothing for it. The inline ask
+always passes `--mode ask` (hornero#414/#415: horneroctl auto-denies
+approvals and stops a run that tries a tool in that mode); on a
+horneroctl too old to know the flag the ask fails closed instead of
+running in the agent default. The surface never approves,
+clarifies or runs commands. When the gateway asks for a decision (a
+typed `approval`/`clarify` frame) or the mode blocks a tool, the
+run is stopped (a stop, never an approval) and the row offers an
+explicit "Continue in Workbench" hand-off: a quick question never
+silently becomes agent operations. `qs ipc call companion quick
+[text]` opens the launcher straight into this ask (see
+`docs/ASSISTANT_WORKBENCH.md`).
 
 **Fallback.** An error, a disabled/unreachable assistant or an
 unanswered run never leaves a dead end and never fabricates an

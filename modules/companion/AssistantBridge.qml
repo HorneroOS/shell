@@ -51,7 +51,8 @@ Scope {
     // Compatibility surface for the panel and IPC: all of these are
     // read-only views over the one canonical run state.
     readonly property bool busy: AssistantRun.active
-    readonly property string streamText: AssistantRun.active || AssistantRun.pendingDecision ? AssistantRun.answerText : ""
+    // "Stream answers live" off: the text appears once, when done.
+    readonly property string streamText: CompanionStore.chatStreaming && (AssistantRun.active || AssistantRun.pendingDecision) ? AssistantRun.answerText : ""
     readonly property string traceText: AssistantRun.traceLines()
     readonly property string lastRunId: AssistantRun.runId
     readonly property var pendingApproval: AssistantRun.pending && AssistantRun.pending.kind === "approval" ? AssistantRun.pending : null
@@ -142,7 +143,8 @@ Scope {
     }
 
     function saveHistory(): void {
-        const text = JSON.stringify(root.history);
+        // Retention 0 ("off") keeps the conversation in memory only.
+        const text = CompanionStore.chatHistoryLimit === 0 ? "[]" : JSON.stringify(root.history);
         if (text === root.lastSavedHistory)
             return;
         root.lastSavedHistory = text;

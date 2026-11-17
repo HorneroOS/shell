@@ -159,3 +159,29 @@ def test_pane_workspace_manager_is_real():
     assert '"assistant", "workspace", "use", modelData, "--yes", "--json"' in PANE
     assert '"assistant", "workspace", "create", name, "--yes", "--json"' in PANE
     assert "assistantWorkspaces.active" in PANE
+
+
+def test_streaming_and_retention_settings_are_honoured_not_decorative():
+    assert "CompanionStore.chatStreaming" in BRIDGE  # live text only when enabled
+    assert "chatHistoryLimit === 0" in BRIDGE  # retention off: nothing persisted
+
+
+def test_workbench_is_a_view_over_the_same_engine():
+    wb = (COMPANION / "WorkbenchPane.qml").read_text()
+    assert "AssistantRun" in wb and "ApprovalCard" in wb
+    # No second state machine, no process of its own except explicit user actions.
+    assert "Process {" not in wb
+    assert "askProcess" not in wb
+
+
+def test_approval_card_has_no_bulk_or_auto_consent():
+    card = "\n".join(l for l in CARD.lower().splitlines() if not l.strip().startswith("//"))
+    for banned in ("approve all", "always allow", "remember", "autoapprove", "auto-approve", "session\"", "always\""):
+        assert banned not in card
+    assert 'bridge.approve(root.pend.runId, "approve")' in CARD
+    assert "forceActiveFocus" not in CARD and "focus: true" not in CARD
+
+
+def test_mic_is_explicit_cancellable_and_capped():
+    assert "recordMaxSeconds: 120" in BRIDGE
+    assert "discardRecording" in BRIDGE and "stopRecording(false)" in PANEL

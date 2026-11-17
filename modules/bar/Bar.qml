@@ -46,6 +46,12 @@ Item {
     // Main-axis inset of strips: inset bars keep the float gap at both ends
     readonly property real stripInset: style === "inset" ? spec.margin : 0
     readonly property int groupSpacing: Appearance.spacing.large
+    // Segment anatomy (signal-visual-language §4.1/§4.2): 12 px horizontal
+    // padding (8 px vertical in rails), rules inset 8 px from the edges.
+    readonly property int segmentPadding: vertical ? 8 : 12
+    readonly property int segmentInset: 8
+    // Adjacent icon-only entries share one segment with a 12 px gap.
+    readonly property var clusterIds: ["quickActions", "statusIcons", "tray", "extensions"]
     // Kept for ActiveWindow compat (main-axis end padding)
     readonly property int vPadding: edgePadding
 
@@ -584,6 +590,58 @@ Item {
         readonly property var entries: active ? (root.spec.groups[name] ?? []) : []
         readonly property alias layout: layout
         readonly property alias repeater: repeater
+        // Main-axis positions of the 1 px rule between segments, in this
+        // group's coordinates (signal-visual-language §4.1).
+        property var separators: []
+
+        // Reads the occupied segments in order, marks icon clusters (one
+        // segment, 12 px gap, no rule inside) and rebuilds `separators`.
+        function relayoutSegments(): void {
+            const loaders = [];
+            for (const c of layout.children)
+                if (c.isSegment === true && c.visible && (root.vertical ? c.height : c.width) > 0)
+                    loaders.push(c);
+            loaders.sort((a, b) => a.index - b.index);
+            const seps = [];
+            for (let i = 0; i < loaders.length; i++) {
+                const cur = loaders[i];
+                const prev = i > 0 ? loaders[i - 1] : null;
+                const next = i < loaders.length - 1 ? loaders[i + 1] : null;
+                const joinPrev = prev !== null && root.clusterIds.includes(prev.id) && root.clusterIds.includes(cur.id);
+                const joinNext = next !== null && root.clusterIds.includes(next.id) && root.clusterIds.includes(cur.id);
+                if (cur.clusterPrev !== joinPrev)
+                    cur.clusterPrev = joinPrev;
+                if (cur.clusterNext !== joinNext)
+                    cur.clusterNext = joinNext;
+                if (prev && !joinPrev) {
+                    const a = root.vertical ? prev.y + prev.height : prev.x + prev.width;
+                    const b = root.vertical ? cur.y : cur.x;
+                    seps.push((a + b) / 2);
+                }
+            }
+            if (JSON.stringify(seps) !== JSON.stringify(group.separators))
+                group.separators = seps;
+        }
+
+        Repeater {
+            model: group.separators
+
+            Rectangle {
+                required property real modelData
+
+                // 1 px `rule`, inset 8 px from the bar's cross-axis edges
+                // (20 px tall in a 36 px rail).
+                readonly property real inset: root.segmentInset
+                x: root.vertical ? inset : modelData - 0.5
+                y: root.vertical ? modelData - 0.5 : inset
+                width: root.vertical ? group.width - inset * 2 : 1
+                height: root.vertical ? 1 : group.height - inset * 2
+                // Cockpit Clear draws no rules: nothing but the foreground.
+                visible: !root.clear
+                color: Signal.palette.rule
+                z: -1
+            }
+        }
 
         visible: active && entries.some(e => e.enabled)
         onXChanged: root.pokeInk()
@@ -599,8 +657,9 @@ Item {
             flow: root.vertical ? GridLayout.TopToBottom : GridLayout.LeftToRight
             rows: root.vertical ? -1 : 1
             columns: root.vertical ? 1 : -1
-            rowSpacing: Appearance.spacing.normal
-            columnSpacing: Appearance.spacing.normal
+            // Spacing lives in each segment's own padding (§4.1).
+            rowSpacing: 0
+            columnSpacing: 0
 
             Repeater {
                 id: repeater
@@ -741,6 +800,17 @@ Item {
                         }
                     }
                     DelegateChoice {
+                        roleValue: "modeIndicator"
+                        delegate: WrappedLoader {
+                            id: modeLoader
+
+                            sourceComponent: ModeIndicator {
+                                vertical: root.vertical
+                                options: modeLoader.options
+                            }
+                        }
+                    }
+                    DelegateChoice {
                         roleValue: "weather"
                         delegate: WrappedLoader {
                             sourceComponent: WeatherChip {
@@ -831,7 +901,21 @@ Item {
         }
         readonly property var tone: root.clear ? wrapped.regionTone : ClearInk.neutral
 
+        // Segment: the unit of composition. Padding sits on the loader so
+        // the layout needs no spacing; an icon cluster halves it between
+        // its members (12 px gap in total).
+        readonly property bool isSegment: true
+        property bool clusterPrev: false
+        property bool clusterNext: false
+        readonly property real leadPad: wrapped.clusterPrev ? root.segmentPadding / 2 : root.segmentPadding
+        readonly property real trailPad: wrapped.clusterNext ? root.segmentPadding / 2 : root.segmentPadding
+        readonly property var segmentGroup: wrapped.parent?.parent ?? null
+
         Layout.alignment: root.vertical ? Qt.AlignHCenter : Qt.AlignVCenter
+        Layout.leftMargin: root.vertical ? 0 : wrapped.leadPad
+        Layout.rightMargin: root.vertical ? 0 : wrapped.trailPad
+        Layout.topMargin: root.vertical ? wrapped.leadPad : 0
+        Layout.bottomMargin: root.vertical ? wrapped.trailPad : 0
         visible: enabled
         active: enabled
 
@@ -852,8 +936,17 @@ Item {
             if (item && item.tone !== undefined)
                 item.tone = Qt.binding(() => wrapped.tone);
         }
-        onXChanged: root.pokeInk()
-        onYChanged: root.pokeInk()
-        onWidthChanged: root.pokeInk()
+        onXChanged: wrapped.segmentChanged()
+        onYChanged: wrapped.segmentChanged()
+        onWidthChanged: wrapped.segmentChanged()
+        onHeightChanged: wrapped.segmentChanged()
+        onVisibleChanged: wrapped.segmentChanged()
+        Component.onCompleted: wrapped.segmentChanged()
+
+        function segmentChanged(): void {
+            root.pokeInk();
+            if (wrapped.segmentGroup?.relayoutSegments)
+                wrapped.segmentGroup.relayoutSegments();
+        }
     }
 }

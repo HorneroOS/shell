@@ -118,13 +118,14 @@ CollapsibleSection {
             }
 
             StyledText {
-                Layout.preferredWidth: 150
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
                 text: row.scope.label
                 elide: Text.ElideRight
             }
 
             Well {
-                Layout.preferredWidth: 132
+                Layout.preferredWidth: 116
                 Layout.preferredHeight: 28
                 outline: field.activeFocus ? Signal.palette.focus : Signal.palette.ruleStrong
 
@@ -164,18 +165,16 @@ CollapsibleSection {
                 }
             }
 
-            StyledText {
-                Layout.fillWidth: true
-                visible: row.value !== "" && root.ratio(row.value) < 3
-                text: qsTr("Low contrast on this theme")
-                color: Signal.palette.alert
-                font.pointSize: Appearance.font.size.small
-                elide: Text.ElideRight
-            }
+        }
 
-            Item {
-                Layout.fillWidth: true
-            }
+        StyledText {
+            Layout.fillWidth: true
+            Layout.leftMargin: 28 + Appearance.spacing.small
+            visible: row.value !== "" && root.ratio(row.value) < 3
+            text: qsTr("Low contrast on this theme")
+            color: Signal.palette.alert
+            font.pointSize: Appearance.font.size.small
+            wrapMode: Text.WordWrap
         }
 
         Flow {

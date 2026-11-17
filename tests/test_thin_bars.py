@@ -10,25 +10,26 @@ ROOT = Path(__file__).resolve().parent.parent
 PRESETS = sorted((ROOT / "presets").glob("*.json"))
 # Per-layout calibration (docs/LAYOUTS.md "Proportions"): edge -> (style,
 # thickness, margin). Bars are refined, not infinitesimal: horizontal strips
-# sit between 26 and 34 px, Hornero Left/Right keep their generous 48 px
-# Caelestia-inspired rails, and floating surfaces carry a deliberate margin.
+# sit between 26 and 36 px, Hornero Left/Right are chunky 60 px
+# Caelestia-inspired rails (cell 44, content scale 1.25), and floating
+# surfaces carry a deliberate margin.
 CALIBRATION = {
-    "classic-top": {"top": ("attached", 32, 6)},
-    "classic-bottom": {"bottom": ("attached", 32, 6)},
+    "classic-top": {"top": ("attached", 36, 6)},
+    "classic-bottom": {"bottom": ("attached", 36, 6)},
     "cockpit": {"top": ("inset", 34, 6), "bottom": ("inset", 26, 6)},
     "cockpit-clear": {"top": ("inset", 34, 6), "bottom": ("inset", 26, 6)},
-    "horizon": {"top": ("inset", 32, 6), "bottom": ("inset", 26, 6)},
-    "islands": {"top": ("islands", 32, 8)},
+    "horizon": {"top": ("inset", 34, 6), "bottom": ("inset", 26, 6)},
+    "islands": {"top": ("islands", 36, 8)},
     "floating-island": {"top": ("floating", 34, 10)},
-    "cozy-minimal": {"top": ("floating", 30, 8)},
-    "productivity": {"top": ("inset", 32, 6)},
-    "minimal-top": {"top": ("attached", 30, 6)},
-    "studio": {"top": ("attached", 32, 6)},
-    "gaming": {"bottom": ("floating", 28, 8)},
-    "dock-bottom": {"bottom": ("dock", 46, 8)},
-    "hornero-left": {"left": ("attached", 48, 6)},
-    "hornero-right": {"right": ("attached", 48, 6)},
-    "minimal-left": {"left": ("attached", 38, 6)},
+    "cozy-minimal": {"top": ("floating", 34, 8)},
+    "productivity": {"top": ("inset", 36, 6)},
+    "minimal-top": {"top": ("attached", 34, 6)},
+    "studio": {"top": ("attached", 36, 6)},
+    "gaming": {"bottom": ("floating", 32, 8)},
+    "dock-bottom": {"bottom": ("dock", 50, 8)},
+    "hornero-left": {"left": ("attached", 60, 6)},
+    "hornero-right": {"right": ("attached", 60, 6)},
+    "minimal-left": {"left": ("attached", 48, 6)},
 }
 
 
@@ -44,13 +45,14 @@ def test_every_preset_matches_its_calibration(path):
     assert got == expected, path.stem
     for bar in data["bar"]["bars"]:
         if bar["style"] == "dock":
-            assert 40 <= bar["thickness"] <= 52
+            assert 40 <= bar["thickness"] <= 56
         elif bar["edge"] in ("left", "right"):
-            assert 36 <= bar["thickness"] <= 52
+            assert 44 <= bar["thickness"] <= 64
         else:
-            assert 26 <= bar["thickness"] <= 34, (path.stem, bar["edge"])
+            assert 26 <= bar["thickness"] <= 36, (path.stem, bar["edge"])
         assert bar["margin"] <= 10
-    assert 22 <= data["bar"]["sizes"]["innerWidth"] <= 34
+    assert 22 <= data["bar"]["sizes"]["innerWidth"] <= 46
+    assert 1.0 <= data["bar"]["sizes"].get("contentScale", 1.0) <= 1.3
     if "border" in data:
         assert data["border"].get("thickness", 6) <= 6
     # Signal Bezel: no glassy slabs, radii stay at or below 4 px.
@@ -61,10 +63,13 @@ def test_every_preset_matches_its_calibration(path):
 
 def test_hornero_rails_are_generous_but_other_bars_stay_slim():
     rails = [CALIBRATION[n][e][1] for n, e in (("hornero-left", "left"), ("hornero-right", "right"))]
-    assert all(44 <= t <= 52 for t in rails)
+    assert all(56 <= t <= 64 for t in rails)
+    for name in ("hornero-left", "hornero-right"):
+        sizes = json.loads((ROOT / "presets" / f"{name}.json").read_text(encoding="utf-8"))["bar"]["sizes"]
+        assert sizes["innerWidth"] >= 40 and sizes["contentScale"] >= 1.2
     horizontals = [v[1] for n, bars in CALIBRATION.items() for e, v in bars.items()
                    if e in ("top", "bottom") and v[0] != "dock"]
-    assert max(horizontals) <= 34 and min(horizontals) >= 26
+    assert max(horizontals) <= 36 and min(horizontals) >= 26
 
 
 def test_bar_body_has_no_extra_padding():

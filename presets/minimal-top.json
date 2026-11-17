@@ -7,7 +7,8 @@
     "persistent": true,
     "showOnHover": true,
     "sizes": {
-      "innerWidth": 22
+      "innerWidth": 26,
+      "contentScale": 1.05
     },
     "status": {},
     "scrollActions": {
@@ -21,7 +22,7 @@
         "style": "attached",
         "reserve": true,
         "margin": 6,
-        "thickness": 30,
+        "thickness": 34,
         "density": "values",
         "backdrop": "solid",
         "groups": {

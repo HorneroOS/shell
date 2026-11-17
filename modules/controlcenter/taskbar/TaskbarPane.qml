@@ -194,6 +194,16 @@ Item {
                     Layout.fillWidth: true
                     alignTop: true
 
+                    BarGeometryEditor {
+                        Layout.fillWidth: true
+                        presetName: activePreset.preset?.name ?? ""
+                    }
+                }
+
+                SectionContainer {
+                    Layout.fillWidth: true
+                    alignTop: true
+
                     Eyebrow {
                         label: qsTr("Status Icons")
                         color: Signal.palette.ink

@@ -76,7 +76,7 @@
           ]
         },
         "reserve": true,
-        "thickness": 32,
+        "thickness": 34,
         "density": "values",
         "backdrop": "solid"
       },

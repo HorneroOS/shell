@@ -12,7 +12,7 @@
         "edge": "bottom",
         "style": "dock",
         "margin": 8,
-        "thickness": 46,
+        "thickness": 50,
         "groups": {
           "start": [
             {
@@ -77,7 +77,8 @@
       }
     ],
     "sizes": {
-      "innerWidth": 30
+      "innerWidth": 32,
+      "contentScale": 1.1
     },
     "status": {
       "showAudio": true,

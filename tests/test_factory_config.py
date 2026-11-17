@@ -261,8 +261,8 @@ def test_factory_values_match_code_defaults():
         # LockConfig.qml)
         ("controlCenter.sizes.ratio", 16 / 9),
         # Appearance disclosure default exposes Themes first run
-        # (ControlCenterConfig.qml appearanceExpandedSections).
-        ("controlCenter.appearanceExpandedSections", ["themes"]),
+        # (ControlCenterConfig.qml appearanceOpenSections).
+        ("controlCenter.appearanceOpenSections", ["themes"]),
         ("launcher.maxShown", 8),
         ("launcher.specialPrefix", "@"),
         ("launcher.useFuzzy.wallpapers", False),

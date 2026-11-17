@@ -36,6 +36,15 @@ Item {
 
     visible: width > 0
     implicitWidth: 0
+
+    onShouldBeActiveChanged: {
+        if (shouldBeActive)
+            content.retained = true;
+    }
+    onWidthChanged: {
+        if (width <= 0 && !shouldBeActive)
+            content.retained = false;
+    }
     implicitHeight: content.implicitHeight
 
     states: State {
@@ -137,7 +146,11 @@ Item {
             }
         }
 
-        Component.onCompleted: active = Qt.binding(() => root.shouldBeActive || root.visible)
+        // Kept alive until the collapse animation reaches zero width. Written
+        // imperatively: binding `active` to `root.visible` (width > 0) closes
+        // a loop through implicitWidth -> content.implicitWidth -> active.
+        property bool retained: false
+        active: root.shouldBeActive || retained
 
         sourceComponent: Content {
             monitor: root.monitor

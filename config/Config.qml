@@ -483,7 +483,7 @@ Singleton {
                 heightMult: controlCenter.sizes.heightMult,
                 ratio: controlCenter.sizes.ratio
             },
-            appearanceExpandedSections: controlCenter.appearanceExpandedSections
+            appearanceOpenSections: controlCenter.appearanceOpenSections
         };
     }
 

@@ -13,7 +13,7 @@ FloatingWindow {
     id: win
 
     title: qsTr("Hornero Welcome")
-    color: Signal.tPalette.base
+    color: Signal.palette.base
 
     implicitWidth: 1024
     implicitHeight: 640
@@ -136,7 +136,14 @@ FloatingWindow {
         StyledRect {
             Layout.fillWidth: true
             Layout.preferredHeight: 60
-            color: Signal.layer(Signal.palette.panel, 1)
+            color: Signal.palette.panel
+
+            Rectangle {
+                anchors.bottom: parent.bottom
+                width: parent.width
+                height: 1
+                color: Signal.palette.rule
+            }
 
             RowLayout {
                 anchors.fill: parent
@@ -150,7 +157,7 @@ FloatingWindow {
                 Rectangle {
                     Layout.preferredWidth: 34
                     Layout.preferredHeight: 34
-                    radius: 9
+                    radius: Appearance.rounding.small
                     color: Signal.palette.inverse
 
                     Image {
@@ -219,11 +226,17 @@ FloatingWindow {
                         Welcome.open(entry.id);
                 }
 
+                // Selected row: `raised` fill plus the on-air bar on the edge
+                // facing the content; keyboard focus adds the 2 px focus ring.
                 highlight: StyledRect {
-                    radius: Appearance.rounding.normal
-                    color: navList.activeFocus ? Signal.palette.cueWell : Signal.layer(Signal.palette.raised, 1)
+                    radius: Appearance.rounding.small
+                    color: Signal.palette.raised
                     border.width: navList.activeFocus ? 2 : 0
-                    border.color: Signal.palette.signal
+                    border.color: Signal.palette.focus
+
+                    OnAirBar {
+                        edge: "right"
+                    }
                 }
 
                 delegate: StyledRect {
@@ -236,8 +249,8 @@ FloatingWindow {
 
                     width: ListView.view.width
                     implicitHeight: 44
-                    radius: Appearance.rounding.normal
-                    color: isCurrent ? "transparent" : navMouse.containsMouse ? Signal.layer(Signal.palette.raised, 1) : "transparent"
+                    radius: Appearance.rounding.small
+                    color: isCurrent ? "transparent" : navMouse.containsMouse ? Qt.alpha(Signal.palette.raised, 0.6) : "transparent"
 
                     RowLayout {
                         anchors.fill: parent
@@ -247,14 +260,14 @@ FloatingWindow {
 
                         Glyph {
                             name: navItem.modelData.icon
-                            color: navItem.isCurrent ? Signal.palette.onCueWell : Signal.palette.inkMuted
+                            color: navItem.isCurrent ? Signal.palette.ink : Signal.palette.inkMuted
                         }
 
                         StyledText {
                             Layout.fillWidth: true
                             text: navItem.modelData.label
                             font.weight: navItem.isCurrent ? 600 : 400
-                            color: navItem.isCurrent ? Signal.palette.onCueWell : Signal.palette.ink
+                            color: navItem.isCurrent ? Signal.palette.ink : Signal.palette.inkMuted
                             elide: Text.ElideRight
                         }
                     }
@@ -295,7 +308,14 @@ FloatingWindow {
         StyledRect {
             Layout.fillWidth: true
             Layout.preferredHeight: WelcomeModule.State.writeFailed ? 88 : 64
-            color: Signal.layer(Signal.palette.panel, 1)
+            color: Signal.palette.panel
+
+            Rectangle {
+                anchors.top: parent.top
+                width: parent.width
+                height: 1
+                color: Signal.palette.rule
+            }
 
             RowLayout {
                 anchors.fill: parent
@@ -318,7 +338,7 @@ FloatingWindow {
                 StyledRect {
                     Layout.preferredWidth: 20
                     Layout.preferredHeight: 20
-                    radius: Appearance.rounding.full
+                    radius: Appearance.rounding.small
                     visible: loginSwitch.activeFocus
                     color: "transparent"
                     border.width: 2
@@ -349,7 +369,7 @@ FloatingWindow {
 
                     StyledRect {
                         anchors.fill: parent
-                        radius: Appearance.rounding.full
+                        radius: Appearance.rounding.small + 2
                         color: "transparent"
                         border.width: doneWrap.activeFocus ? 2 : 0
                         border.color: Signal.palette.signal

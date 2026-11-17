@@ -80,7 +80,7 @@ def test_every_literal_translatable_or_token():
     # No giant untranslatable corpus: every qsTr call site is a short UI
     # string, and font families come from Appearance.
     for rel, text in _read_all().items():
-        assert "font.family" not in text, f"{rel}: font family must come from StyledText/Appearance"
+        assert not re.search(r"font\.family\s*:\s*[\"']", text), f"{rel}: font family must come from StyledText/Appearance tokens"
         for literal in re.findall(r"qsTr\(\"([^\"]*)\"\)", text):
             assert len(literal) < 200, f"{rel}: suspiciously long literal: {literal[:60]}…"
 

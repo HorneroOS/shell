@@ -4,9 +4,10 @@ import qs.config
 import QtQuick
 import QtQuick.Layouts
 
-// Shared hero header for Welcome pages: icon, title, subtitle.
+// Shared header for Welcome pages: a glyph tile, the title in Plex Sans
+// Condensed and a short subtitle, left-aligned with the cards below.
 // Callers pass already-translated strings (qsTr at the call site).
-ColumnLayout {
+RowLayout {
     id: root
 
     required property string icon
@@ -14,31 +15,48 @@ ColumnLayout {
     required property string subtitle
 
     Layout.fillWidth: true
-    spacing: Appearance.spacing.small
+    Layout.bottomMargin: Appearance.spacing.small
+    spacing: Appearance.spacing.large
 
-    Glyph {
-        Layout.alignment: Qt.AlignHCenter
-        name: root.icon
-        color: Signal.palette.signal
-        font.pointSize: Appearance.font.size.large * 2
+    Rectangle {
+        Layout.alignment: Qt.AlignTop
+        implicitWidth: 56
+        implicitHeight: 56
+        radius: Appearance.rounding.small
+        color: Signal.palette.sunken
+        border.width: 1
+        border.color: Signal.palette.rule
+
+        Glyph {
+            anchors.centerIn: parent
+
+            name: root.icon
+            color: Signal.palette.signal
+            font.pointSize: Appearance.font.size.extraLarge
+        }
     }
 
-    StyledText {
-        Layout.alignment: Qt.AlignHCenter
+    ColumnLayout {
         Layout.fillWidth: true
-        text: root.title
-        font.pointSize: Appearance.font.size.large
-        font.weight: 600
-        horizontalAlignment: Text.AlignHCenter
-    }
+        spacing: Appearance.spacing.small
 
-    StyledText {
-        Layout.alignment: Qt.AlignHCenter
-        Layout.fillWidth: true
-        Layout.maximumWidth: 520
-        text: root.subtitle
-        color: Signal.palette.inkMuted
-        wrapMode: Text.WordWrap
-        horizontalAlignment: Text.AlignHCenter
+        StyledText {
+            Layout.fillWidth: true
+
+            text: root.title
+            font.family: Appearance.font.family.display
+            font.pointSize: Appearance.font.size.extraLarge
+            font.weight: Font.Medium
+            elide: Text.ElideRight
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+            Layout.maximumWidth: 640
+
+            text: root.subtitle
+            color: Signal.palette.inkMuted
+            wrapMode: Text.WordWrap
+        }
     }
 }

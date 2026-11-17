@@ -27,8 +27,10 @@ StyledRect {
     Layout.fillWidth: true
     implicitHeight: Math.max(88, content.implicitHeight + Appearance.padding.normal * 2)
 
-    radius: Appearance.rounding.normal
-    color: root.interactive && cardState.containsMouse ? Signal.layer(Signal.palette.raised, 1) : Signal.layer(Signal.palette.panel, 1)
+    radius: Appearance.rounding.small
+    color: root.interactive && cardState.containsMouse ? Signal.palette.raised : Signal.palette.panel
+    border.width: 1
+    border.color: Signal.palette.rule
 
     Behavior on color {
         CAnim {}
@@ -69,19 +71,23 @@ StyledRect {
                 wrapMode: Text.WordWrap
             }
 
+            // Keycap: the binding as a small square key, never a pill.
             StyledRect {
                 visible: root.shortcutId !== "" && ShortcutHints.has(root.shortcutId)
-                radius: Appearance.rounding.full
-                color: Signal.palette.cueWell
+                radius: Appearance.rounding.small
+                color: Signal.palette.lifted
+                border.width: 1
+                border.color: Signal.palette.ruleStrong
                 Layout.preferredHeight: badgeText.implicitHeight + 8
-                Layout.preferredWidth: badgeText.implicitWidth + 20
+                Layout.preferredWidth: badgeText.implicitWidth + 16
 
                 StyledText {
                     id: badgeText
 
                     anchors.centerIn: parent
+                    mono: true
                     text: ShortcutHints.badge(root.shortcutId)
-                    color: Signal.palette.onCueWell
+                    color: Signal.palette.ink
                     font.pointSize: Appearance.font.size.smaller
                     font.weight: 600
                 }

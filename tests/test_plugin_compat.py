@@ -48,7 +48,7 @@ def test_sizing_clip_and_desktop_palette():
     assert "Layout.maximumWidth" in bar and "clip: true" in bar
     assert "Layout.maximumWidth" in dash and "clip: true" in dash
     # Desktop widgets: host-owned frame size, content clipped to it.
-    assert "color: Signal.palette.panel" in desk
+    assert "Qt.alpha(Signal.palette.panel," in desk
     assert "width: hostAvailableWidth" in desk and "clip: true" in desk
 
 def test_theme_full_token_set():

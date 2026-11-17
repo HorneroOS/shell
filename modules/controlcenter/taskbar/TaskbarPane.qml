@@ -200,6 +200,8 @@ Item {
                     }
                 }
 
+                PopoutSizes {}
+
                 SectionContainer {
                     Layout.fillWidth: true
                     alignTop: true

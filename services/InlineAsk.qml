@@ -54,6 +54,14 @@ Singleton {
             return;
         // A new query cancels any in-flight run first (server side too).
         root.cancel();
+        if (root.stopPending) {
+            // A previous cancel is still waiting for its run id: do not
+            // start a second process over it.
+            root.stopPending = false;
+            deferTimer.stop();
+            proc.running = false;
+            root.warnNotStopped();
+        }
         root.askedPrompt = q;
         root.text = "";
         root.errorText = "";
@@ -80,27 +88,58 @@ Singleton {
     function cancel(): void {
         if (!root.busy && !proc.running)
             return;
-        root.stopRun();
-        proc.running = false;
         root.busy = false;
+        if (InlineAskLogic.validRunId(root.runId)) {
+            root.stopRun(root.runId);
+            proc.running = false;
+        } else if (proc.running) {
+            // The run id is not known yet (the gateway has not answered
+            // the run creation). Killing now would orphan a run that is
+            // about to start, so the process is kept just long enough to
+            // learn the id and stop it (see consume()); a deadline kills
+            // it and tells the user.
+            root.stopPending = true;
+            deferTimer.restart();
+        }
     }
 
     // Every cancel path (Escape, launcher close, a new query, shell
     // exit) asks the gateway to stop the run too: killing only the
-    // local process would leave an Ask run running. When the run id is
-    // not known yet the user is told, because the run may continue.
-    function stopRun(): void {
-        if (root.runId !== "" && /^[A-Za-z0-9._-]{1,64}$/.test(root.runId)) {
-            stopProc.running = false;
-            stopProc.running = true;
-        } else if (root.busy) {
-            // The launcher may be closing: a toast survives it.
-            Quickshell.execDetached(["quickshell", "ipc", "call", "toaster", "warn", "Javi", qsTr("Stopped locally; the run may still be going on the gateway (its id was not known yet)."), "alert-triangle"]);
+    // local process would leave an Ask run running. The id is captured
+    // into the command here, so a later reset of `runId` cannot change
+    // what is stopped; a failed stop is reported.
+    function stopRun(id: string): void {
+        if (!InlineAskLogic.validRunId(id))
+            return;
+        stopProc.running = false;
+        stopProc.command = ["horneroctl", "assistant", "stop", id, "--json"];
+        stopProc.running = true;
+    }
+
+    function warnNotStopped(): void {
+        // The launcher may be closing: a toast survives it.
+        Quickshell.execDetached(["quickshell", "ipc", "call", "toaster", "warn", "Javi", qsTr("Stopped locally; the run may still be going on the gateway (its id was not known yet)."), "alert-triangle"]);
+    }
+
+    property bool stopPending: false
+
+    Timer {
+        id: deferTimer
+
+        // fixed: how long a cancel waits for the run id before giving
+        // up (a safety deadline, not a preference).
+        interval: 8000
+        onTriggered: {
+            if (root.stopPending) {
+                root.stopPending = false;
+                proc.running = false;
+                root.warnNotStopped();
+            }
         }
     }
 
     Component.onDestruction: {
-        if (root.busy && root.runId !== "" && /^[A-Za-z0-9._-]{1,64}$/.test(root.runId))
+        if (root.busy && InlineAskLogic.validRunId(root.runId))
             Quickshell.execDetached(["horneroctl", "assistant", "stop", root.runId, "--json"]);
     }
 
@@ -128,7 +167,7 @@ Singleton {
     }
 
     function consume(line: string): void {
-        if (!root.busy)
+        if (!root.busy && !root.stopPending)
             return;
         const next = InlineAskLogic.applyLine({
             "text": root.text,
@@ -139,13 +178,22 @@ Singleton {
         root.text = next.text;
         root.finalPayload = next.finalPayload;
         root.runId = next.runId;
+        if (root.stopPending) {
+            // A cancel was waiting for the id: stop the run, end the stream.
+            if (InlineAskLogic.validRunId(root.runId)) {
+                root.stopPending = false;
+                deferTimer.stop();
+                root.stopRun(root.runId);
+                proc.running = false;
+            }
+            return;
+        }
         if (next.pending !== "" && root.pending === "") {
             root.pending = next.pending;
             root.needsWorkbench = true;
             // Do not leave a blocked run waiting: stop it server-side
             // (this is a stop, never an approval) and end the stream.
-            if (root.runId !== "")
-                stopProc.running = true;
+            root.stopRun(root.runId);
             proc.running = false;
             root.busy = false;
         }
@@ -154,7 +202,10 @@ Singleton {
     Process {
         id: stopProc
 
-        command: ["horneroctl", "assistant", "stop", root.runId, "--json"]
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode !== 0)
+                Quickshell.execDetached(["quickshell", "ipc", "call", "toaster", "warn", "Javi", qsTr("The stop request was not accepted. The run may still be going: horneroctl assistant status"), "alert-triangle"]);
+        }
     }
 
     Process {

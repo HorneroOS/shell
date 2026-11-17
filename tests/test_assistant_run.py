@@ -418,3 +418,50 @@ def test_long_request_is_flagged_truncated_not_silently_cut_and_hidden_chars_are
     assert st["pending"]["flagged"] is True
     assert "\u202e" not in d and "\u0007" not in d and "\u200b" not in d
     assert "U+202E" in d and "U+0007" in d and "U+200B" in d
+
+
+def test_hidden_characters_are_marked_widely():
+    cps = [0x00A0, 0x00AD, 0x034F, 0x115F, 0x1680, 0x180E, 0x2000, 0x200A, 0x2028, 0x2029, 0x202F, 0x205F, 0x2800, 0x3000, 0x3164, 0xFE00, 0xFE0F, 0xFEFF, 0x0085, 0xE0001, 0xE0041, 0xE0100, 0x200B, 0x202E, 0x2066]
+    out = run_js("""
+      const cps=%s; const bad=[];
+      for (const cp of cps){ const r=visibleText('a'+String.fromCodePoint(cp)+'b',50); if(!r.flagged || r.text.indexOf('U+')===-1) bad.push(cp); }
+      const plain=visibleText('plain text, tab\\there\\nnext',50);
+      console.log(JSON.stringify({bad, plainFlag: plain.flagged, plainText: plain.text}));
+    """ % json.dumps(cps))
+    assert out["bad"] == [] and out["plainFlag"] is False and out["plainText"] == "plain text, tab\there\nnext"
+
+
+def test_carried_request_id_is_dropped_when_the_text_differs():
+    out = run_js("""
+      let s=initial(); let r=reduce(s,{type:'begin'}); s=r.state; const q=s.seq;
+      const L=o=>{ r=reduce(s,{type:'line',seq:q,line:JSON.stringify(o)}); s=r.state; };
+      L({type:'run',text:'r1'}); L({type:'approval.control',text:'p1@1'}); L({type:'approval',text:'ls'});
+      const same = s.pending.requestId;
+      L({command:'c',ok:false,message:'m',data:{runId:'r1',pending:'approval',detail:'rm -rf ~'}});
+      console.log(JSON.stringify({same, after:s.pending.requestId, detail:s.pending.detail}));
+    """)
+    assert out == {"same": "p1@1", "after": "", "detail": "rm -rf ~"}
+    # same text keeps the id
+    out = run_js("""
+      let s=initial(); let r=reduce(s,{type:'begin'}); s=r.state; const q=s.seq;
+      const L=o=>{ r=reduce(s,{type:'line',seq:q,line:JSON.stringify(o)}); s=r.state; };
+      L({type:'run',text:'r1'}); L({type:'approval.control',text:'p1@1'}); L({type:'approval',text:'ls'});
+      L({command:'c',ok:false,message:'m',data:{runId:'r1',pending:'approval',detail:'ls'}});
+      console.log(JSON.stringify(s.pending.requestId));
+    """)
+    assert out == "p1@1"
+
+
+def test_deny_failed_is_a_failure_not_a_denial():
+    st = replay([j(type="run", text="r"), j(type="deny-failed", text="Could not deny the approval; the run was stopped."), final(False, "Could not deny", runId="r", pending="deny-failed")])["state"]
+    assert st["phase"] == "failed" and st["pending"] is None and "deny" in st["error"].lower()
+    st = replay([final(False, "Could not deny the approval on run r", runId="r", pending="deny-failed", mode="ask")])["state"]
+    assert st["phase"] == "failed"
+
+
+def test_reference_definitions_in_blockquotes_and_lists_are_dropped():
+    out = run_js(r"""
+      const t='> [r]: http://e/x\n- [r]: http://e/x\n1. > [r]: http://e/x\n  * [r]: http://e/x\nkeep [r]\n';
+      console.log(JSON.stringify(safeMarkdown(t)));
+    """)
+    assert out == "keep [r]\n"

@@ -54,7 +54,8 @@ function initial() {
         lastIntent: "rest",
         counter: 0,
         runMode: "",
-        nextControl: ""
+        nextControl: "",
+        denyFailed: false
     };
 }
 
@@ -83,9 +84,33 @@ function hex4(code) {
     return h;
 }
 
-// Makes hidden characters visible so a request cannot disguise itself:
-// bidi overrides/isolates, zero-width characters and control
-// characters (except newline and tab) become ⟦U+XXXX⟧ markers.
+// Code points that can hide or disguise text: controls (except
+// newline/tab), format characters (Cf: bidi, zero-width, tags, soft
+// hyphen, ...), every space separator except the plain space, line and
+// paragraph separators, variation selectors and the blank-looking
+// fillers (Hangul, Braille blank, combining grapheme joiner, NEL,
+// Mongolian vowel separator).
+function isHiddenCodePoint(cp) {
+    if (cp === 0x09 || cp === 0x0A)
+        return false;
+    if (cp <= 0x1F || (cp >= 0x7F && cp <= 0x9F))
+        return true;
+    if (cp === 0x00A0 || cp === 0x00AD || cp === 0x034F || cp === 0x061C || cp === 0x06DD || cp === 0x070F || cp === 0x08E2)
+        return true;
+    if ((cp >= 0x0600 && cp <= 0x0605) || cp === 0x115F || cp === 0x1160 || cp === 0x1680 || cp === 0x180E)
+        return true;
+    if ((cp >= 0x2000 && cp <= 0x200F) || (cp >= 0x2028 && cp <= 0x202F) || (cp >= 0x205F && cp <= 0x206F))
+        return true;
+    if (cp === 0x2800 || cp === 0x3000 || cp === 0x3164 || cp === 0xFEFF || cp === 0xFFA0 || (cp >= 0xFFF9 && cp <= 0xFFFB))
+        return true;
+    if (cp >= 0xFE00 && cp <= 0xFE0F)
+        return true;
+    if (cp === 0xE0001 || (cp >= 0xE0020 && cp <= 0xE007F) || (cp >= 0xE0100 && cp <= 0xE01EF))
+        return true;
+    return false;
+}
+
+// Makes hidden characters visible so a request cannot disguise itself.
 // Returns { text, flagged, truncated }.
 function visibleText(text, cap) {
     var s = (text === null || text === undefined) ? "" : text.toString();
@@ -93,11 +118,22 @@ function visibleText(text, cap) {
     if (truncated)
         s = s.slice(0, cap);
     var flagged = false;
-    s = s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F\u200B-\u200F\u202A-\u202E\u2060-\u2069\u061C\uFEFF]/g, function (ch) {
-        flagged = true;
-        return "\u27E6U+" + hex4(ch.charCodeAt(0)) + "\u27E7";
-    });
-    return { text: s, flagged: flagged, truncated: truncated };
+    var out = "";
+    for (var i = 0; i < s.length;) {
+        var cp = s.codePointAt(i);
+        var len = cp > 0xFFFF ? 2 : 1;
+        if (isHiddenCodePoint(cp)) {
+            flagged = true;
+            var h = cp.toString(16).toUpperCase();
+            while (h.length < 4)
+                h = "0" + h;
+            out += "\u27E6U+" + h + "\u27E7";
+        } else {
+            out += s.substr(i, len);
+        }
+        i += len;
+    }
+    return { text: out, flagged: flagged, truncated: truncated };
 }
 
 function makePending(kind, runId, detail, requestId, runMode, live, choices) {
@@ -158,6 +194,8 @@ function parseFrame(line) {
         return { kind: "mode", mode: text };
     if (type === "approval.control")
         return isValidRequestRef(text) ? { kind: "control", ref: text } : { kind: "ignore" };
+    if (type === "deny-failed")
+        return { kind: "denyfailed", text: text };
     if (type === "approval" || type === "clarify")
         return { kind: type, detail: text };
     if (type === "thinking" || type === "commentary")
@@ -301,6 +339,16 @@ function reduce(prev, event) {
             state.nextControl = f.ref;
             return result(state, intents);
         }
+        if (f.kind === "denyfailed") {
+            // The mode's automatic deny was not accepted and the run was
+            // stopped: a failure to show, never "denied".
+            state.pending = null;
+            state.error = clip(f.text, ENTRY_CAP);
+            state.denyFailed = true;
+            pushEntry(state, { kind: "commentary", text: state.error, ts: event.ts || 0 });
+            intents.push({ intent: "error" });
+            return result(state, intents);
+        }
         if (state.phase === "starting" || state.phase === "streaming" || state.phase === "cancelling") {
             // keep going below
         }
@@ -401,7 +449,11 @@ function applyPendingFromPayload(state, payload, ts) {
     if (kind === "approval" && runId !== "") {
         var choices = (d.choices || "").toString().split(",").filter(function (c) { return c !== ""; });
         var had = state.pending && state.pending.kind === "approval";
-        var req = d.request ? d.request.toString() : (had ? state.pending.requestId : "");
+        var shown = visibleText(detail, DETAIL_CAP).text;
+        // An id carried over from the live frame is only valid for the
+        // SAME displayed request; a different text drops it.
+        var carried = (had && state.pending.detail === shown) ? state.pending.requestId : "";
+        var req = d.request ? d.request.toString() : carried;
         state.pending = makePending("approval", runId, detail, req, mode, had ? state.pending.live : false, choices);
         state.phase = "awaiting-approval";
         if (!had)
@@ -460,7 +512,10 @@ function settleExit(state, event) {
     settleRunningTools(state, "unknown");
     state.pending = null;
     state.error = clip((payload.message || "").toString(), ENTRY_CAP);
-    if (pendingKind === "denied-by-mode") {
+    if (pendingKind === "deny-failed" || state.denyFailed) {
+        state.phase = "failed";
+        intents.push({ intent: "error" });
+    } else if (pendingKind === "denied-by-mode") {
         state.phase = "blocked";
         intents.push({ intent: "denied" });
     } else {
@@ -596,6 +651,31 @@ function replay(lines, opts) {
 // Reference definitions ("[x]: url") are dropped, and input above
 // MARKDOWN_CAP is shown as plain text instead (see markdownOk). All
 // operations are linear string splits, never backtracking regexes.
+function stripContainerMarkers(line) {
+    var t = line.replace(/^\s+/, "");
+    for (var n = 0; n < 30; n++) {
+        var c = t.charAt(0);
+        if (c === ">") {
+            t = t.slice(1).replace(/^\s+/, "");
+        } else if ((c === "-" || c === "*" || c === "+") && /\s/.test(t.charAt(1))) {
+            t = t.slice(1).replace(/^\s+/, "");
+        } else {
+            var m = /^\d{1,9}[.)]\s/.exec(t.slice(0, 12));
+            if (!m)
+                break;
+            t = t.slice(m[0].length).replace(/^\s+/, "");
+        }
+    }
+    return t;
+}
+
+// A link reference definition ("[x]: url"), also inside block quotes
+// and list items.
+function isReferenceDefinition(line) {
+    var t = stripContainerMarkers(line);
+    return t.charAt(0) === "[" && t.indexOf("]:") > 0 && t.indexOf("]:") < 200;
+}
+
 function safeMarkdown(text) {
     var s = (text === null || text === undefined) ? "" : text.toString();
     if (s.length > MARKDOWN_CAP)
@@ -605,8 +685,7 @@ function safeMarkdown(text) {
     var lines = s.split("\n");
     var kept = [];
     for (var i = 0; i < lines.length; i++) {
-        var t = lines[i].replace(/^\s+/, "");
-        if (t.charAt(0) === "[" && t.indexOf("]:") > 0 && t.indexOf("]:") < 200)
+        if (isReferenceDefinition(lines[i]))
             continue;
         kept.push(lines[i]);
     }

@@ -163,7 +163,7 @@ Scope {
         root.historyWriting = true;
         root.writingHistory = root.wantedHistory;
         const path = root.historyPath;
-        historyWriter.command = ["sh", "-c", "umask 077; d=\"$(dirname \"$1\")\"; mkdir -p -m 700 \"$d\" && tmp=\"$(mktemp \"$d/.chat.XXXXXX\")\" && cat > \"$tmp\" && mv -f \"$tmp\" \"$1\"", "sh", path];
+        historyWriter.command = ["sh", "-c", "umask 077; d=\"$(dirname \"$1\")\"; mkdir -p -m 700 \"$d\" && chmod 700 \"$d\" && tmp=\"$(mktemp \"$d/.chat.XXXXXX\")\" && cat > \"$tmp\" && mv -f \"$tmp\" \"$1\"", "sh", path];
         historyWriter.running = true;
     }
 
@@ -301,7 +301,7 @@ Scope {
         const rnd = Math.floor(Math.random() * 0xffffffff).toString(16);
         root.recordPath = `${root.voiceDir}/javi-voice-${Date.now()}-${rnd}.wav`;
         root.voiceFiles = root.voiceFiles.concat([root.recordPath]);
-        recordProcess.command = ["sh", "-c", "umask 077; mkdir -p -m 700 \"$1\" && exec pw-record --rate 16000 --channels 1 \"$2\"", "sh", root.voiceDir, root.recordPath];
+        recordProcess.command = ["sh", "-c", "umask 077; mkdir -p -m 700 \"$1\" && chmod 700 \"$1\" && exec pw-record --rate 16000 --channels 1 \"$2\"", "sh", root.voiceDir, root.recordPath];
         recordProcess.running = true;
         root.recordSeconds = 0;
         root.recording = true;
@@ -450,20 +450,72 @@ Scope {
         const partial = AssistantRun.answerText;
         const wasPending = AssistantRun.pendingDecision;
         AssistantRun.cancel();
+        root.clearPendingSnapshot();
+        if (partial !== "" && !wasPending)
+            root.pushHistory("assistant", partial + " ⏹");
         if (AssistantRun.isValidRunId(id)) {
-            stopProcess.command = ["horneroctl", "assistant", "stop", id, "--json"];
-            stopProcess.running = true;
+            root.stopRunOnGateway(id);
             root.sayIfClosed(qsTr("Stopped, including the Hermes run."), 5000);
+        } else if (askProcess.running) {
+            // The gateway has not told us the run id yet. Killing the
+            // process now would orphan a run that is about to start:
+            // keep it until the id arrives (the `run` frame), stop the
+            // run, then end it. A deadline kills it and says so.
+            root.stopWhenKnown = true;
+            stopDeadline.restart();
+            root.sayIfClosed(qsTr("Stopping as soon as the run id is known…"), 5000);
+            return;
         } else {
-            root.sayIfClosed(qsTr("Stopped locally; the run id was not known yet."), 5000);
+            AssistantRun.exited(AssistantRun.run.seq, 0);
+            return;
         }
         if (askProcess.running)
             askProcess.running = false;
         else
             AssistantRun.exited(AssistantRun.run.seq, 0);
-        if (partial !== "" && !wasPending)
-            root.pushHistory("assistant", partial + " ⏹");
-        root.clearPendingSnapshot();
+    }
+
+    // The id is captured into the command at the moment of the call.
+    property bool stopWhenKnown: false
+    property string stoppingRun: ""
+
+    function stopRunOnGateway(id: string): void {
+        if (!AssistantRun.isValidRunId(id))
+            return;
+        root.stoppingRun = id;
+        stopProcess.running = false;
+        stopProcess.command = ["horneroctl", "assistant", "stop", id, "--json"];
+        stopProcess.running = true;
+    }
+
+    Connections {
+        target: AssistantRun
+
+        function onRunIdChanged(): void {
+            if (root.stopWhenKnown && AssistantRun.isValidRunId(AssistantRun.runId)) {
+                root.stopWhenKnown = false;
+                stopDeadline.stop();
+                root.stopRunOnGateway(AssistantRun.runId);
+                if (askProcess.running)
+                    askProcess.running = false;
+                root.sayIfClosed(qsTr("Stopped, including the Hermes run."), 5000);
+            }
+        }
+    }
+
+    Timer {
+        id: stopDeadline
+
+        // fixed: how long a cancel waits for the run id before giving
+        // up (a safety deadline, not a preference).
+        interval: 8000
+        onTriggered: {
+            if (root.stopWhenKnown) {
+                root.stopWhenKnown = false;
+                askProcess.running = false;
+                root.sayIfClosed(qsTr("Stopped locally; the run may still be going on the gateway (its id was never known)."), 8000);
+            }
+        }
     }
 
     // ---- restart safety ---------------------------------------------
@@ -486,7 +538,7 @@ Scope {
         });
         // Private dir and file (umask 077): the snapshot names a run and a
         // redacted request, nothing else, but it is still user-private.
-        pendingWriter.exec(["sh", "-c", "umask 077; d=\"$(dirname \"$1\")\"; mkdir -p -m 700 \"$d\" && printf '%s' \"$2\" > \"$1.tmp\" && mv -f \"$1.tmp\" \"$1\"", "sh", root.pendingPath, text]);
+        pendingWriter.exec(["sh", "-c", "umask 077; d=\"$(dirname \"$1\")\"; mkdir -p -m 700 \"$d\" && chmod 700 \"$d\" && printf '%s' \"$2\" > \"$1.tmp\" && mv -f \"$1.tmp\" \"$1\"", "sh", root.pendingPath, text]);
     }
 
     function clearPendingSnapshot(): void {
@@ -791,6 +843,13 @@ Scope {
 
     Process {
         id: stopProcess
+
+        // A stop that the gateway did not accept is reported, never
+        // silently assumed to have worked.
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode !== 0)
+                CompanionStore.say(qsTr("The stop request for %1 was not accepted. It may still be running.").arg(root.stoppingRun), 9000);
+        }
     }
 
     Process {

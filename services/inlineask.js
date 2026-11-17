@@ -31,7 +31,7 @@ function parseLine(line) {
     // Typed run-control frames (horneroctl): the run id as soon as
     // it exists, and the moment the gateway asks for a decision.
     if (obj.type === "run")
-        return obj.text ? { kind: "run", runId: obj.text.toString() } : { kind: "ignore" };
+        return validRunId(obj.text) ? { kind: "run", runId: obj.text.toString() } : { kind: "ignore" };
     if (obj.type === "approval" || obj.type === "clarify")
         return { kind: "pending", pending: obj.type };
     // The final CommandResult always carries a boolean `ok`; any
@@ -96,4 +96,9 @@ function finishOutcome(text, finalPayload, cap) {
         return { text: current, errorText: "", failed: true };
     }
     return { text: current, errorText: "", failed: false };
+}
+
+// Strict shape for a run id that reaches an argv.
+function validRunId(id) {
+    return typeof id === "string" && /^[A-Za-z0-9._-]{1,64}$/.test(id) && id !== "." && id !== "..";
 }

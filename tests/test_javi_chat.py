@@ -225,7 +225,7 @@ def test_review_hardening_contracts():
     assert '"--request", pend.requestId' in BRIDGE
     assert 'pend.requestId === "" || pend.truncated' in BRIDGE
     # H3: every cancel path stops the gateway run
-    assert "stopRun()" in inline and "Component.onDestruction" in inline and "root.cancel();" in inline
+    assert "stopRun(" in inline and "Component.onDestruction" in inline and "root.cancel();" in inline
     assert "Component.onDestruction" in BRIDGE
     # M6/M8
     assert "umask 077" in BRIDGE and "mkdir -p -m 700" in BRIDGE
@@ -242,3 +242,18 @@ def test_history_is_written_via_stdin_and_marked_saved_only_on_success():
     assert "'${quoted}'" not in BRIDGE  # no shell-quoted payload
     assert "if (exitCode === 0)\n                root.lastSavedHistory" in BRIDGE
     assert 'id.replace(/[.*+?^${}()|[\\]\\\\]/g' in BRIDGE  # session id is regex-escaped
+
+
+def test_cancel_before_the_run_id_is_known_waits_for_it_and_reports_failed_stops():
+    inline = (ROOT / "services" / "InlineAsk.qml").read_text()
+    assert "stopPending" in inline and "deferTimer" in inline
+    assert 'stopProc.command = ["horneroctl", "assistant", "stop", id, "--json"]' in inline  # id captured at call time
+    assert "root.runId" not in inline.split("id: stopProc")[1].split("Process {")[0]  # no binding to a cleared runId
+    assert "onExited: (exitCode, exitStatus) =>" in inline.split("id: stopProc")[1]
+    assert "stopWhenKnown" in BRIDGE and "stopDeadline" in BRIDGE and "onRunIdChanged" in BRIDGE
+    assert 'stopProcess.command = ["horneroctl", "assistant", "stop", id, "--json"]' in BRIDGE
+    assert "was not accepted" in BRIDGE
+
+
+def test_private_dirs_are_chmodded_even_when_they_already_exist():
+    assert BRIDGE.count("chmod 700") >= 3

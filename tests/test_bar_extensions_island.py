@@ -76,10 +76,21 @@ def test_control_center_extensions_settings_match_tray():
 def test_fallback_layouts_render_the_island_not_a_bare_stack():
     bar = read("modules/bar/Bar.qml")
     end_block = bar.split("render the same island here")[0].rsplit("ExtensionsIsland {", 1)
-    assert len(end_block) == 2 and 'group.name === "end"' in end_block[1][:400]
+    assert len(end_block) == 2 and 'group.name === "end"' in end_block[1][:700]
     island = read("modules/bar/components/ExtensionsIsland.qml")
     assert "surfaceActive" in island
     assert "Config.bar.extensions.hiddenIcons" in island
     assert "Config.bar.extensions.recolour" in island
     widgets = read("modules/plugins/PluginBarWidgets.qml")
     assert "hiddenIds" in widgets
+
+
+def test_every_extensions_island_gets_the_shared_island_cross_size():
+    """The end-group fallback island once skipped `cross`, so it filled the
+    whole cell and sat wider than the other islands, without the edge inset."""
+    bar = read("modules/bar/Bar.qml")
+    blocks = bar.split("ExtensionsIsland {")[1:]
+    assert len(blocks) >= 2
+    for block in blocks:
+        head = block.split("\n            }")[0] if "\n            }" in block else block[:600]
+        assert "cross: root.islandCross" in head[:700], head[:200]

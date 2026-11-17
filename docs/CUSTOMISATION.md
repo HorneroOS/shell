@@ -71,3 +71,11 @@ edge); both default to centre. The panels keep their edge (hover regions and sli
 their position along it changes. Notification corner/edge is not offered yet: the popups, toasts and the notification
 centre share the top-right anchor with the sidebar. Needs a QA VM check for the concave corner decoration when a
 launcher is aligned left or right.
+
+## Event sounds (Notifications > Sounds)
+
+`sounds.*`: off by default (`enabled: false`), `volume` 0..1 (0.5), `theme` (directory under `/usr/share/sounds`, default
+`freedesktop`) and per-event toggles (`notification`, `battery`, `charger`). `services/Sounds.qml` plays
+`/usr/share/sounds/<theme>/stereo/<file>.oga` with `pw-play`; nothing is bundled or downloaded. Notification sounds
+stay silent when the popup is held (Focus, Gaming) or Do Not Disturb is on. The theme name is sanitised before it
+becomes a path. Not hooked yet: lock/unlock, screenshot, volume change.

@@ -120,3 +120,10 @@ Surfaces carrying the layer: launcher, dashboard, notification cards (inner high
 screen, Welcome, and the Control Center navigation rail and title bar. Empty states with the mascot: launcher (no
 results), sidebar and lock notification docks; greetings: dashboard station card and lock screen; session menu footer.
 Typography: `StyledText.tabular` turns on fixed-width figures (readouts, clocks) and display clocks are set a hair tighter.
+
+## Idle and battery thresholds (Power)
+
+`general.idle.timeouts` (lock 3 min, screen off 5 min, suspend 10 min) and `general.battery` warning levels
+(20 / 10 / 5 %) and hibernate level (3 %) are editable under Power > Idle and battery, with Reset per row. Rows
+are matched by action (lock, dpms off, suspend), so hand-edited or reordered lists keep working; a removed action
+leaves its row inert.

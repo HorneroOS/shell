@@ -402,7 +402,19 @@ Singleton {
     // tightened range/length, malformed shape) falls back to the
     // declared default — never coerced, never a crash.
     function migratedSettingValue(declaration: var, stored: var): var {
-        return root.settingValueValid(declaration, stored) ? stored : declaration.default;
+        // Lists read from shell.json are native variant lists whose
+        // Array.isArray() is false; hand plain arrays to validation and to
+        // extension code (a JSON round trip).
+        const value = declaration && (declaration.type === "list" || declaration.type === "strings") && stored !== undefined ? root.plain(stored) : stored;
+        return root.settingValueValid(declaration, value) ? value : declaration.default;
+    }
+
+    function plain(value: var): var {
+        try {
+            return JSON.parse(JSON.stringify(value));
+        } catch (e) {
+            return null;
+        }
     }
 
     // Manifest description for the Extensions pane cards (shell#470):

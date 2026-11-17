@@ -21,7 +21,7 @@ UI_TYPES = [
     "UiText", "UiEyebrow", "UiIcon", "UiCard", "UiWell", "UiButton", "UiToggle",
     "UiSlider", "UiTextField", "UiTextArea", "UiSpinBox", "UiComboBox", "UiMetric", "UiDetailRow", "UiActionRow", "UiChip",
     "UiProgress", "UiSegmentMeter", "UiMeterRow", "UiSparkline", "UiScope",
-    "UiPartition", "UiState", "UiTooltip", "UiPopover", "UiStack",
+    "UiPartition", "UiState", "UiTooltip", "UiPopover", "UiStack", "UiScrollArea",
 ]
 INTERACTIVE = ["UiButton", "UiToggle", "UiSlider", "UiActionRow", "UiTextField", "UiTextArea",
                "UiSpinBox", "UiComboBox"]

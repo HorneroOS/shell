@@ -506,19 +506,19 @@ def effective_surfaces(manifest: dict) -> dict[str, dict]:
 # display-only fields (title, group, unit, step, visibleWhen). The
 # new types and fields require `"pluginKit": 4` in the manifest.
 SETTING_TYPES_V3 = ("boolean", "integer", "number", "string", "enum")
-SETTING_TYPES_V4 = ("colour", "list", "text", "path")
+SETTING_TYPES_V4 = ("colour", "list", "text", "path", "strings")
 SETTING_TYPES = SETTING_TYPES_V3 + SETTING_TYPES_V4
 SETTING_STRING_MAX = 4096
 SETTING_ENUM_MAX_OPTIONS = 32
 SETTING_PATH_MAX = 1024
 SETTING_LIST_MAX_ITEMS = 32
 # Display-only fields valid on every type; constraints per type below.
-SETTING_DISPLAY_ALL = frozenset({"title", "group", "visibleWhen"})
+SETTING_DISPLAY_ALL = frozenset({"title", "group", "visibleWhen", "hidden"})
 SETTING_DISPLAY_NUMERIC = frozenset({"unit", "step"})
 SETTING_FIELDS = {
     "type", "default", "description",
     "minimum", "maximum", "minLength", "maxLength", "options",
-    "step", "unit", "title", "group", "visibleWhen",
+    "step", "unit", "title", "group", "visibleWhen", "hidden",
     "alpha", "minItems", "maxItems", "rows", "kind", "mustExist",
 }
 SETTING_CONSTRAINTS = {
@@ -531,9 +531,10 @@ SETTING_CONSTRAINTS = {
     "list": frozenset({"options", "minItems", "maxItems"}),
     "text": frozenset({"minLength", "maxLength", "rows"}),
     "path": frozenset({"kind", "mustExist"}),
+    "strings": frozenset({"minItems", "maxItems", "maxLength"}),
 }
 # Fields that exist only from PluginKit 4 on, whatever the type.
-SETTING_V4_FIELDS = frozenset({"title", "group", "visibleWhen", "step", "unit"})
+SETTING_V4_FIELDS = frozenset({"title", "group", "visibleWhen", "hidden", "step", "unit"})
 PATH_KINDS = ("file", "directory")
 COLOUR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 COLOUR_ALPHA_RE = re.compile(r"^#[0-9a-fA-F]{6}(?:[0-9a-fA-F]{2})?$")
@@ -583,6 +584,13 @@ def setting_value_valid(declaration: dict, value: object) -> bool:
         if any(not isinstance(item, str) or item not in options for item in value):
             return False
         return declaration.get("minItems", 0) <= len(value) <= declaration.get("maxItems", len(options))
+    elif kind == "strings":
+        if not isinstance(value, list) or len(value) > declaration.get("maxItems", SETTING_LIST_MAX_ITEMS):
+            return False
+        if len(value) < declaration.get("minItems", 0):
+            return False
+        limit = declaration.get("maxLength", 128)
+        return all(isinstance(item, str) and 0 < len(item) <= limit for item in value)
     elif kind == "path":
         return (
             isinstance(value, str)
@@ -707,6 +715,17 @@ def _validate_setting(key: str, setting: dict) -> None:
                 )
         if "minItems" in setting and "maxItems" in setting and setting["minItems"] > setting["maxItems"]:
             raise ValidationError(f"setting {key} minItems must not exceed maxItems")
+    if kind == "strings":
+        for bound, ceiling in (("minItems", SETTING_LIST_MAX_ITEMS), ("maxItems", SETTING_LIST_MAX_ITEMS), ("maxLength", 128)):
+            if bound in setting and (not _is_plain_int(setting[bound]) or not 0 <= setting[bound] <= ceiling):
+                raise ValidationError(f"setting {key} {bound} must be an integer between 0 and {ceiling}")
+        if "minItems" in setting and "maxItems" in setting and setting["minItems"] > setting["maxItems"]:
+            raise ValidationError(f"setting {key} minItems must not exceed maxItems")
+    if "hidden" in setting:
+        if not isinstance(setting["hidden"], bool):
+            raise ValidationError(f"setting {key} hidden must be a boolean")
+        if "visibleWhen" in setting:
+            raise ValidationError(f"setting {key} cannot be both hidden and visibleWhen")
     if kind == "colour" and "alpha" in setting and not isinstance(setting["alpha"], bool):
         raise ValidationError(f"setting {key} alpha must be a boolean")
     if kind == "path":

@@ -539,6 +539,15 @@ extension. `Desktop.anchor()` and `Desktop.geometry()` accept an instance key.
 
 `examples/plugins/example-instance-clock` is a complete example.
 
+### Content that does not fit: UiScrollArea
+
+A desktop widget gets a fixed frame the person can resize. Content taller
+than the frame must scroll, not clip: put it in a `UiScrollArea` sized to the
+host context (`width: hostAvailableWidth; height: hostAvailableHeight`) and
+add children to it. The thin track shows only while the content overflows,
+the wheel and Up/Down/PageUp/PageDown scroll it, and it is a tab stop only
+while it scrolls.
+
 ## Accessibility and keyboard contract
 
 Extension UI follows the same keyboard/focus rules as native shell
@@ -865,6 +874,7 @@ for its type:
 | `colour` | `#RRGGBB` (or `#RRGGBBAA` with `alpha: true`) | `alpha` | Swatch, hex field and the Signal palette as presets | 4 |
 | `list` | array of unique strings drawn from `options` | `options` (required, as for enum), `minItems`, `maxItems` | Multi-select toggle group, declared option order | 4 |
 | `text` | string, newlines allowed (max 4096 chars) | `minLength`, `maxLength`, `rows` (1–12) | Multi-line text area | 4 |
+| `strings` | array of non-empty strings (default max 32 items, 128 chars each) | `minItems`, `maxItems` (0–32), `maxLength` (1–128) | Text area, one entry per line | 4 |
 | `path` | empty or a safe relative path | `kind` (`file` or `directory`), `mustExist` (UI hint) | Text field, plus Browse for `kind: file` | 4 |
 
 Display-only fields available on **every** type (level 4; they never change
@@ -873,7 +883,7 @@ what is valid): `title` (label instead of the key, max 48 chars), `group`
 first, groups in first-declared order), `visibleWhen`
 (`{"key": "<other setting>", "equals": <value>}`: the control is shown only
 while that sibling equals the value; a hidden setting keeps its value and
-stays readable by the extension), and for numbers `unit` (suffix, max 8 chars)
+stays readable by the extension), `hidden` (the setting is stored, validated and readable like any other but never rendered in the generated UI and spared by its Reset all: use it for state an extension persists itself, such as a timer deadline; it cannot combine with `visibleWhen`), and for numbers `unit` (suffix, max 8 chars)
 and `step`. The validator rejects `visibleWhen` that names an unknown key,
 itself, a value its target cannot hold, or forms a cycle.
 

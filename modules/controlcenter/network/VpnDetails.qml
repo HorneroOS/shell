@@ -105,8 +105,8 @@ DeviceDetails {
                         TextButton {
                             Layout.fillWidth: true
                             text: qsTr("Edit Provider")
-                            inactiveColour: Signal.palette.cueWell
-                            inactiveOnColour: Signal.palette.onCueWell
+                            inactiveColour: Signal.palette.signalWell
+                            inactiveOnColour: Signal.palette.onSignalWell
 
                             onClicked: {
                                 editVpnDialog.editIndex = root.vpnProvider.index;

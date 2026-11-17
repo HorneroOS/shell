@@ -42,7 +42,7 @@ CollapsibleSection {
             Layout.fillWidth: true
             implicitHeight: customLookRow.implicitHeight + Appearance.padding.normal * 2
             radius: Appearance.rounding.small
-            color: Qt.alpha(Signal.tPalette.cueWell, 0.38)
+            color: Qt.alpha(Signal.tPalette.signalWell, 0.38)
 
             RowLayout {
                 id: customLookRow
@@ -256,7 +256,7 @@ CollapsibleSection {
 
                             StyledRect {
                                 radius: Appearance.rounding.small
-                                color: Signal.palette.cueWell
+                                color: Signal.palette.signalWell
                                 implicitWidth: modeChip.implicitWidth + Appearance.padding.small * 2
                                 implicitHeight: modeChip.implicitHeight + Appearance.padding.smaller * 2
 
@@ -267,7 +267,7 @@ CollapsibleSection {
                                     text: (themeItem.modelData.tags ?? []).indexOf("contrast") >= 0 ? qsTr("Contrast") : themeItem.modelData.darkMode ? qsTr("Night") : qsTr("Day")
                                     font.pointSize: Appearance.font.size.small
                                     font.capitalization: Font.AllUppercase
-                                    color: Signal.palette.onCueWell
+                                    color: Signal.palette.onSignalWell
                                 }
                             }
 

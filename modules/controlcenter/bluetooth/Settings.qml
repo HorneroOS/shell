@@ -203,7 +203,7 @@ ColumnLayout {
                         anchors.bottom: parent.bottom
                         implicitHeight: adapterPickerButton.expanded ? adapterList.implicitHeight : adapterPickerButton.implicitHeight
 
-                        color: Signal.palette.cueWell
+                        color: Signal.palette.signalWell
                         radius: Appearance.rounding.small
                         opacity: adapterPickerButton.expanded ? 1 : 0
                         scale: adapterPickerButton.expanded ? 1 : 0.7
@@ -250,12 +250,12 @@ ColumnLayout {
                                             Layout.fillWidth: true
                                             Layout.leftMargin: Appearance.padding.small
                                             text: adapter.modelData.name
-                                            color: Signal.palette.onCueWell
+                                            color: Signal.palette.onSignalWell
                                         }
 
                                         Glyph {
                                             name: "check"
-                                            color: Signal.palette.onCueWell
+                                            color: Signal.palette.onSignalWell
                                             visible: adapter.modelData === root.session.bt.currentAdapter
                                         }
                                     }
@@ -400,12 +400,12 @@ ColumnLayout {
                     implicitHeight: cancelEditIcon.implicitHeight + Appearance.padding.smaller * 2
 
                     radius: Appearance.rounding.small
-                    color: Signal.palette.cueWell
+                    color: Signal.palette.signalWell
                     opacity: root.session.bt.editingAdapterName ? 1 : 0
                     scale: root.session.bt.editingAdapterName ? 1 : 0.5
 
                     Interactive {
-                        color: Signal.palette.onCueWell
+                        color: Signal.palette.onSignalWell
                         disabled: !root.session.bt.editingAdapterName
 
                         function onClicked(): void {
@@ -420,7 +420,7 @@ ColumnLayout {
                         anchors.centerIn: parent
                         animate: true
                         name: "cancel"
-                        color: Signal.palette.onCueWell
+                        color: Signal.palette.onSignalWell
                     }
 
                     Behavior on opacity {

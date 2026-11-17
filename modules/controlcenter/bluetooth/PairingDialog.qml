@@ -132,8 +132,8 @@ Item {
 
                 TextButton {
                     Layout.fillWidth: true
-                    inactiveColour: Signal.palette.cueWell
-                    inactiveOnColour: Signal.palette.onCueWell
+                    inactiveColour: Signal.palette.signalWell
+                    inactiveOnColour: Signal.palette.onSignalWell
                     text: qsTr("Reject")
 
                     onClicked: root.session.bt.rejectPairing()

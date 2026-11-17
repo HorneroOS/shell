@@ -534,8 +534,8 @@ ColumnLayout {
                     Layout.topMargin: Appearance.spacing.normal
                     Layout.fillWidth: true
                     text: qsTr("Cancel")
-                    inactiveColour: Signal.palette.cueWell
-                    inactiveOnColour: Signal.palette.onCueWell
+                    inactiveColour: Signal.palette.signalWell
+                    inactiveOnColour: Signal.palette.onSignalWell
                     onClicked: vpnDialog.closeWithAnimation()
                 }
             }

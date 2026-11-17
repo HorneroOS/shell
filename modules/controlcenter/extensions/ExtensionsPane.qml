@@ -214,6 +214,28 @@ Item {
         return lines.join("\n");
     }
 
+    // PluginKit 3 compatibility, from facts only. The host refuses packages
+    // built for PluginKit 1/2 (schemaVersion), so an entry that reports
+    // schemaVersion 1/2, or a load failure naming PluginKit, is marked as
+    // needing a port. When neither the installed list nor the catalogue
+    // reports a schemaVersion the chip says "not reported" instead of
+    // guessing.
+    function kitStatus(entry): var {
+        const version = entry?.schemaVersion;
+        if (version === 3)
+            return { "label": qsTr("PluginKit 3"), "tone": "good", "icon": "circle-check" };
+        if (version === 1 || version === 2 || /built for PluginKit [12]/.test(entry?.detail ?? ""))
+            return { "label": qsTr("Needs PluginKit 3"), "tone": "bad", "icon": "alert-triangle" };
+        return { "label": qsTr("PluginKit: not reported"), "tone": "neutral", "icon": "help-circle" };
+    }
+
+    // Maturity from the version alone (semver: 0.y.z is initial
+    // development). No other maturity is declared by manifests today.
+    function maturityLabel(entry): string {
+        const major = parseInt(String(entry?.version ?? "").split(".")[0], 10);
+        return major === 0 ? qsTr("Pre-1.0") : "";
+    }
+
     function compatibilityText(entry): string {
         const marketplace = root.pluginMarketplace(entry);
         if (!marketplace || !marketplace.compatibility)
@@ -447,7 +469,7 @@ Item {
 
                 PaneHeader {
                     paneId: "extensions"
-                    intro: qsTr("Every enabled QML plugin runs as your user without a sandbox. Command and network declarations come from each plugin's manifest and are not enforced permissions. Review a plugin's source before enabling it.")
+                    intro: qsTr("Every enabled QML plugin runs as your user without a sandbox. Command and network declarations come from each plugin's manifest and are not enforced permissions. Review a plugin's source before enabling it. Extensions built for PluginKit 1 or 2 are refused until they are ported to PluginKit 3 (Hornero Signal).")
                 }
 
                 RowLayout {
@@ -657,6 +679,20 @@ Item {
                                         ExtensionChip {
                                             label: Plugins.safeMode && row.modelData.enabled ? qsTr("Safe mode") : !row.modelData.enabled && !row.modelData.requestedEnabled ? qsTr("Disabled") : row.modelData.state === "loaded" ? qsTr("Loaded") : row.modelData.state === "failed" ? qsTr("Failed") : row.modelData.state === "blocked" ? qsTr("Blocked") : qsTr("Pending")
                                             tone: !row.modelData.enabled && !row.modelData.requestedEnabled ? "neutral" : row.modelData.state === "loaded" ? "good" : row.modelData.state === "failed" || row.modelData.state === "blocked" ? "bad" : "neutral"
+                                        }
+
+                                        ExtensionChip {
+                                            readonly property var kit: root.kitStatus(row.modelData)
+                                            label: kit.label
+                                            tone: kit.tone
+                                            icon: kit.icon
+                                            Accessible.role: Accessible.StaticText
+                                            Accessible.name: qsTr("Compatibility: %1").arg(kit.label)
+                                        }
+
+                                        ExtensionChip {
+                                            visible: root.maturityLabel(row.modelData).length > 0
+                                            label: root.maturityLabel(row.modelData)
                                         }
 
                                         ExtensionChip {
@@ -1018,6 +1054,25 @@ Item {
                                 font.weight: 500
                             }
 
+                            Flow {
+                                Layout.fillWidth: true
+                                spacing: Appearance.spacing.small
+
+                                ExtensionChip {
+                                    readonly property var kit: root.kitStatus(catRow.modelData)
+                                    label: kit.label
+                                    tone: kit.tone
+                                    icon: kit.icon
+                                    Accessible.role: Accessible.StaticText
+                                    Accessible.name: qsTr("Compatibility: %1").arg(kit.label)
+                                }
+
+                                ExtensionChip {
+                                    visible: root.maturityLabel(catRow.modelData).length > 0
+                                    label: root.maturityLabel(catRow.modelData)
+                                }
+                            }
+
                             StyledText {
                                 Layout.fillWidth: true
                                 text: catRow.modelData.description || qsTr("No description provided.")
@@ -1251,6 +1306,8 @@ Item {
         implicitHeight: chipRow.implicitHeight + Appearance.padding.small
         radius: Appearance.rounding.small
         color: chip.tone === "neutral" ? Signal.tPalette.lifted : Qt.alpha(chip.fg, 0.14)
+        border.width: 1
+        border.color: chip.tone === "neutral" ? Signal.palette.rule : Qt.alpha(chip.fg, 0.5)
 
         Row {
             id: chipRow
@@ -1287,7 +1344,7 @@ Item {
         implicitWidth: fchipRow.implicitWidth + Appearance.padding.normal * 2
         implicitHeight: fchipRow.implicitHeight + Appearance.padding.small * 2
         radius: Appearance.rounding.small
-        color: fchip.selected ? Signal.palette.cueWell : "transparent"
+        color: fchip.selected ? Signal.palette.signalWell : "transparent"
         border.width: fchip.selected ? 0 : 1
         border.color: Signal.palette.rule
 
@@ -1297,7 +1354,7 @@ Item {
 
         Interactive {
             radius: fchip.radius
-            color: fchip.selected ? Signal.palette.onCueWell : Signal.palette.ink
+            color: fchip.selected ? Signal.palette.onSignalWell : Signal.palette.ink
             function onClicked(): void {
                 fchip.activated();
             }
@@ -1313,14 +1370,14 @@ Item {
                 visible: fchip.selected || fchip.icon.length > 0
                 anchors.verticalCenter: parent.verticalCenter
                 name: fchip.selected ? "check" : fchip.icon
-                color: fchip.selected ? Signal.palette.onCueWell : Signal.palette.inkMuted
+                color: fchip.selected ? Signal.palette.onSignalWell : Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.small
             }
 
             StyledText {
                 anchors.verticalCenter: parent.verticalCenter
                 text: fchip.label
-                color: fchip.selected ? Signal.palette.onCueWell : Signal.palette.inkMuted
+                color: fchip.selected ? Signal.palette.onSignalWell : Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.small
                 font.weight: 500
             }

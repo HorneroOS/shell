@@ -12,11 +12,17 @@ ColumnLayout {
 
     spacing: 0
 
-    StyledText {
+    Hairline {
+        Layout.fillWidth: true
         Layout.topMargin: Appearance.spacing.large
+    }
+
+    StyledText {
+        Layout.topMargin: Appearance.spacing.small
         text: root.title
         font.pointSize: Appearance.font.size.larger
-        font.weight: 500
+        font.weight: 600
+        Accessible.role: Accessible.Heading
     }
 
     StyledText {

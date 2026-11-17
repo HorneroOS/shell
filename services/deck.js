@@ -152,6 +152,9 @@ function compose(input) {
         return a.priority - b.priority;
     });
 
+    // Pass 1: the person's own geometry is placed first, so the default
+    // rails flow around it instead of under it.
+    var pending = [];
     for (var i = 0; i < list.length; i++) {
         var item = list[i];
         if (hidden.indexOf(item.id) >= 0) {
@@ -162,20 +165,30 @@ function compose(input) {
         if (geo && geo.fx !== null && geo.fy !== null) {
             var uw = geo.width !== null ? geo.width : Math.min(area.width, item.width);
             var uh = geo.height !== null ? geo.height : Math.min(area.height, item.height);
-            var ux = Math.round(geo.fx * Math.max(0, area.width - uw));
-            var uy = Math.round(geo.fy * Math.max(0, area.height - uh));
-            var userRect = { id: item.id, x: ux, y: uy, width: uw, height: uh, source: "user" };
+            var userRect = {
+                id: item.id,
+                x: Math.round(geo.fx * Math.max(0, area.width - uw)),
+                y: Math.round(geo.fy * Math.max(0, area.height - uh)),
+                width: uw,
+                height: uh,
+                source: "user"
+            };
             placed.push(userRect);
             placements.push(userRect);
-            continue;
+        } else {
+            pending.push({ item: item, geo: geo });
         }
+    }
 
-        var sides = item.side === "left" ? ["left", "right"] : ["right", "left"];
+    // Pass 2: defaults by priority, onto the rails.
+    for (var q = 0; q < pending.length; q++) {
+        var cand = pending[q];
+        var sides = cand.item.side === "left" ? ["left", "right"] : ["right", "left"];
         var rect = null;
         for (var s = 0; s < sides.length && !rect; s++)
-            rect = _tryRail(item, geo, sides[s], rails, area, reserved, placed);
+            rect = _tryRail(cand.item, cand.geo, sides[s], rails, area, reserved, placed);
         if (!rect) {
-            dropped.push({ id: item.id, reason: "no-room" });
+            dropped.push({ id: cand.item.id, reason: "no-room" });
             continue;
         }
         placed.push(rect);

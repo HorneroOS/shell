@@ -215,12 +215,34 @@ Singleton {
     readonly property var deckHidden: Deck.hiddenFor(Config.experience.deck, root.mode)
     readonly property bool deckCustomised: Deck.isCustomised(Config.experience.deck, root.mode)
 
+    function deckHiddenFor(id: string): var {
+        return Deck.hiddenFor(Config.experience.deck, id);
+    }
+
+    function deckCustomisedFor(id: string): bool {
+        return Deck.isCustomised(Config.experience.deck, id);
+    }
+
+    function deckItems(hints: var): var {
+        return Deck.items(hints);
+    }
+
+    function deckCompose(input: var): var {
+        return Deck.compose(input);
+    }
+
+    function deckStatus(composition: var, availability: var, hidden: var): var {
+        return Deck.status(composition, availability, hidden);
+    }
+
+    readonly property var deckCatalogue: Deck.ids()
+
     function deckSaved(screenName: string): var {
         return Deck.savedFor(Config.experience.deck, root.mode, screenName);
     }
 
-    function setDeckHidden(id: string, hide: bool): string {
-        const res = Deck.setHidden(Config.experience.deck, root.mode, id, hide);
+    function setDeckHidden(id: string, widgetId: string, hide: bool): string {
+        const res = Deck.setHidden(Config.experience.deck, id, widgetId, hide);
         if (!res.ok)
             return `error: ${res.error}`;
         Config.experience.deck = res.deck;
@@ -228,8 +250,10 @@ Singleton {
         return "ok";
     }
 
-    function setDeckGeometry(screenName: string, id: string, geometry: var): string {
-        const res = Deck.setGeometry(Config.experience.deck, root.mode, screenName, id, geometry);
+    // Geometry is always written for the active mode: it comes from the
+    // desktop edit mode, which only edits what is on screen.
+    function setDeckGeometry(screenName: string, widgetId: string, geometry: var): string {
+        const res = Deck.setGeometry(Config.experience.deck, root.mode, screenName, widgetId, geometry);
         if (!res.ok)
             return `error: ${res.error}`;
         Config.experience.deck = res.deck;
@@ -237,9 +261,9 @@ Singleton {
         return "ok";
     }
 
-    // screenName empty resets every screen and the hidden set of the mode.
-    function resetDeck(screenName: string): string {
-        Config.experience.deck = Deck.reset(Config.experience.deck, root.mode, screenName);
+    // screenName empty resets every screen and the hidden set of `id`.
+    function resetDeck(id: string, screenName: string): string {
+        Config.experience.deck = Deck.reset(Config.experience.deck, id, screenName);
         Config.save();
         return "ok";
     }
@@ -580,6 +604,29 @@ Singleton {
 
         function resetCustomisations(mode: string): string {
             return root.resetCustomisations(mode);
+        }
+
+        // Signal deck: JSON {mode, instruments, hidden: [id], customised}.
+        function deck(mode: string): string {
+            if (!Model.isMode(mode))
+                return `error: unknown mode: ${mode}`;
+            return JSON.stringify({
+                mode: mode,
+                instruments: root.profileFor(mode).fields["desktopWidgets"] === "instruments",
+                catalogue: root.deckCatalogue,
+                hidden: root.deckHiddenFor(mode),
+                customised: root.deckCustomisedFor(mode)
+            });
+        }
+
+        function setDeckHidden(mode: string, widget: string, hide: bool): string {
+            return root.setDeckHidden(mode, widget, hide);
+        }
+
+        function resetDeck(mode: string): string {
+            if (!Model.isMode(mode))
+                return `error: unknown mode: ${mode}`;
+            return root.resetDeck(mode, "");
         }
 
         function setAuto(enabled: bool): string {

@@ -313,3 +313,114 @@ def test_experience_persists_deck_overrides_through_config():
     assert "Deck.reset(Config.experience.deck, id" in EXPERIENCE
     default = json.loads((ROOT / "config" / "shell.default.json").read_text())
     assert default["experience"]["deck"] == {}
+
+
+# --- host wiring contracts ---------------------------------------------------
+
+HOST = (ROOT / "modules" / "plugins" / "PluginDesktopWidgets.qml").read_text()
+FRAME = (ROOT / "modules" / "plugins" / "DesktopWidgetFrame.qml").read_text()
+BACKGROUND = (ROOT / "modules" / "background" / "Background.qml").read_text()
+PLUGINS = (ROOT / "services" / "Plugins.qml").read_text()
+PANE = (ROOT / "modules" / "controlcenter" / "experience" / "ExperiencePane.qml").read_text()
+
+
+def test_user_geometry_is_placed_first_and_defaults_flow_around_it():
+    area = SCREENS["1080p@1"]
+    # The person parked the calendar where the system-insight rail would go.
+    saved = {"hornero-calendar": {"fx": 1.0, "fy": 0.0, "width": 320, "height": 416}}
+    res = compose(area, saved=saved)
+    assert_sane(res, area)
+    cal = next(p for p in res["placements"] if p["id"] == "hornero-calendar")
+    insight = next(p for p in res["placements"] if p["id"] == "hornero-system-insight")
+    assert cal["source"] == "user" and (cal["x"], cal["y"]) == (1888 - 320, 0)
+    assert not overlap(cal, insight)
+
+
+def test_deck_only_exists_in_the_instruments_profile():
+    exp = (ROOT / "services" / "experience.js").read_text()
+    # Only Signal ships `instruments`; every other mode hides or keeps the user's set.
+    assert exp.count('"desktopWidgets": "instruments"') == 1
+    assert 'Experience.instruments && Experience.desktopWidgetsVisible' in HOST
+    assert 'Experience.desktopWidgets === "user" && Experience.desktopWidgetsVisible' in HOST
+
+
+def test_gaming_and_focus_instantiate_nothing():
+    # `none` profiles: neither the user set nor the deck is wanted, the
+    # model is empty once the (<=90 ms at motion off) fade ends, and the
+    # frame keeps its Loader inactive so no widget draws or holds a lease.
+    assert "readonly property var widgets: root.userSet ? Plugins.desktopPlugins() : []" in HOST
+    assert "root.deckWanted ? Plugins.deckPlugins() : []" in HOST
+    assert "root.deckWanted || deckLayer.opacity > 0 ? root._deckLast : []" in HOST
+    assert 'readonly property bool suspended: Experience.desktopWidgets === "none"' in FRAME
+    assert "active: !root.suspended" in FRAME
+    exp = (ROOT / "services" / "experience.js").read_text()
+    for mode in ("focus", "gaming"):
+        block = exp[exp.index(f'"{mode}": _profile'):]
+        block = block[: block.index("}),")]
+        assert '"desktopWidgets": "none"' in block, mode
+    assert "!(gaming && fullscreenActive)" in EXPERIENCE
+
+
+def test_deck_enters_and_exits_with_the_shared_motion_primitives():
+    assert "import qs.components.motion" in FRAME and "import qs.components.motion" in HOST
+    assert "Choreography.rowDelay(root.channel - 1)" in FRAME
+    assert "Choreography.scanTravel" in FRAME
+    assert "FadeAnim" in HOST and "FadeAnim" in FRAME
+    assert "leaving: !root.deckWanted" in HOST
+
+
+def test_deck_geometry_never_touches_the_everyday_widget_layout():
+    assert "Experience.setDeckGeometry(root.screenName, root.pluginId, geometry)" in FRAME
+    assert "Experience.resetDeck(Experience.mode, root.screenName)" in HOST
+
+
+def test_host_keeps_the_desktop_clock_clear():
+    assert "reserved: clockLoader.item" in BACKGROUND
+    assert "desktopWidgets.hasContent" in BACKGROUND
+
+
+def test_missing_extensions_degrade_honestly():
+    for state in ("not-installed", "untrusted", "failed", "safe-mode"):
+        assert f'"{state}"' in PLUGINS
+    assert "Plugins.deckAvailability()" in PANE
+    assert "not installed" in PANE and "failed to load" in PANE
+
+
+def test_deck_never_writes_extension_lifecycle_state():
+    body = PLUGINS[PLUGINS.index("function deckEligible"): PLUGINS.index("function setDesktopEditing")]
+    assert "horneroctl" not in body and "Process" not in body
+
+
+def test_glow_stays_inside_amendment_2_limits():
+    # The deck never draws glow itself: PluginKit instruments lease it from
+    # GlowBudget (3 items, 4 px, 40 %), and only when Experience.glow holds.
+    for src in (HOST, FRAME):
+        assert "MultiEffect" not in src and "palette.glow" not in src and "DropShadow" not in src
+    kit = (ROOT / "plugin" / "qml" / "Hornero" / "PluginKit" / "GlowBudget.qml").read_text()
+    assert "readonly property int limit: 3" in kit
+    theme = (ROOT / "plugin" / "qml" / "Hornero" / "PluginKit" / "Theme.qml").read_text()
+    assert "glowBlur: 4" in theme and "glowAlpha: 0.4" in theme
+
+
+def test_idle_cpu_script_is_guarded_and_documented():
+    import os
+    script = ROOT / "scripts" / "perf-signal-deck.sh"
+    assert os.access(script, os.X_OK)
+    proc = subprocess.run(["bash", "-n", str(script)], capture_output=True, text=True)
+    assert proc.returncode == 0, proc.stderr
+    env = {k: v for k, v in os.environ.items() if k != "HORNERO_DISPOSABLE_SESSION"}
+    refused = subprocess.run([str(script)], capture_output=True, text=True, env=env)
+    assert refused.returncode == 3 and "HORNERO_DISPOSABLE_SESSION" in refused.stderr
+    body = script.read_text()
+    assert 'qs ipc call experience set' in body and "restore" in body
+    doc = (ROOT / "docs" / "EXPERIENCE.md").read_text()
+    assert "scripts/perf-signal-deck.sh" in doc and "vm.lock" in doc
+    assert "EXPERIENCE.md" in (ROOT / "docs" / "PLUGINS.md").read_text()
+
+
+def test_deck_ipc_is_documented_and_validated():
+    assert "function deck(mode: string)" in EXPERIENCE
+    assert "function resetDeck(mode: string)" in EXPERIENCE
+    ipc = (ROOT / "docs" / "IPC.md").read_text()
+    for fn in ("experience deck", "experience setDeckHidden", "experience resetDeck"):
+        assert f"`{fn}" in ipc

@@ -465,10 +465,21 @@ Geometry hints live on the desktop surface:
   Control Center (`plugins.desktopWidgetSlots`) resets the free position
   to that anchor; *Reset layout* in the edit toolbar returns every widget
   on that display to its anchor and default size.
-- **Experiences.** In the `signal` experience modules gain hairline
-  registration marks at their corners and instruments their luminous
-  accent; in `gaming` desktop widgets are suspended (unloaded, leases
-  released) so they never cost CPU under a game.
+- **Experiences.** The `desktopWidgets` field of the active experience
+  decides what the desktop layer holds ([EXPERIENCE.md](EXPERIENCE.md)):
+  `user` shows the extensions the person enabled; `instruments` (the
+  `signal` experience) shows the curated **Signal deck** instead (System
+  Insight, Network Scope, Audio Deck, Calendar, Agenda, Moon Phase),
+  placed per display by `services/deck.js` around the bar edge and the
+  desktop clock, with registration marks at the module corners and the
+  luminous accent on traces only (`GlowBudget`: three items, 4 px, 40 %,
+  static). The deck loads installed first-party packages with a trusted
+  payload without enabling them in Extensions; a missing or untrusted one is
+  reported in Settings, Experience and simply not drawn. `none` (`focus`,
+  `gaming`) instantiates no widget at all, so nothing draws and every
+  provider lease is released and nothing polls for the desktop.
+  Deck geometry is stored per mode in `experience.deck`, not in
+  `plugins.desktopWidgets`.
 - Desktop widgets live on the desktop layer, below windows; they never
   take keyboard focus from applications.
 

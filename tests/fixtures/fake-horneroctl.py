@@ -16,8 +16,8 @@ outside. Scenarios (ask/events):
   death           run, partial delta, then dies with no final line
   slow            deltas every 0.4 s for 60 s (cancel target)
 
-Gateway view ($DIR/gateway): connected (default) | disconnected | disabled |
-unsandboxed | incompatible.
+Gateway view ($DIR/gateway): connected (default) | disconnected |
+slow-disconnected | disabled | unsandboxed | incompatible.
 """
 import json
 import os
@@ -51,6 +51,10 @@ def log(line):
 
 def gateway_status():
     g = read("gateway", "connected")
+    if g == "slow-disconnected":
+        # Lets a harness observe the "reconnecting" probe state.
+        time.sleep(6)
+        g = "disconnected"
     base = {"enabled": "true", "endpoint": "http://127.0.0.1:8642", "workspace": "/home/user/.local/share/hornero/javi-workspaces/default"}
     if g == "disabled":
         out({"command": "assistant status", "ok": True, "message": "Assistant is disabled (default). Enable it explicitly: horneroctl assistant enable --yes", "data": {"enabled": "false"}})

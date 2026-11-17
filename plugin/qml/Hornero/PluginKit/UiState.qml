@@ -21,7 +21,7 @@ Column {
 
     UiIcon {
         anchors.horizontalCenter: parent.horizontalCenter
-        name: root.glyph.length > 0 ? root.glyph : root.kind === "loading" ? "hourglass" : root.kind === "error" ? "alert-triangle" : root.kind === "unavailable" ? "plug-off" : "circle"
+        name: root.glyph.length > 0 ? root.glyph : root.kind === "loading" ? "hourglass" : root.kind === "error" ? "alert-triangle" : root.kind === "unavailable" ? "plug-off" : "info-circle"
         size: Theme.font.size.large
         color: root.kind === "error" ? Theme.palette.alert : Theme.palette.inkMuted
     }

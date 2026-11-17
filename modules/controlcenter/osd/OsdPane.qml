@@ -128,6 +128,37 @@ Item {
                 }
 
                 ChannelPanel {
+                    title: qsTr("Placement")
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
+                        spacing: Appearance.spacing.small
+
+                        ChoiceRow {
+                            target: Config.osd
+                            key: "align"
+                            label: qsTr("Position on the right edge")
+                            defaultValue: "center"
+                            options: [
+                                {
+                                    id: "top",
+                                    label: qsTr("Top")
+                                },
+                                {
+                                    id: "center",
+                                    label: qsTr("Centre")
+                                },
+                                {
+                                    id: "bottom",
+                                    label: qsTr("Bottom")
+                                }
+                            ]
+                        }
+                    }
+                }
+
+                ChannelPanel {
                     title: qsTr("Slider size")
 
                     ColumnLayout {

@@ -77,3 +77,16 @@ def test_sizes_are_searchable():
     reg = (CC / "PaneRegistry.qml").read_text()
     for sid in ("launcher-sizes", "notification-sizes", "session-size", "lock-size"):
         assert f'id: "{sid}"' in reg
+
+
+def test_placement_choices_default_to_factory_and_are_consumed():
+    assert FACTORY["launcher"]["align"] == "center" and FACTORY["osd"]["align"] == "center"
+    panels = (ROOT / "modules" / "drawers" / "Panels.qml").read_text()
+    for needle in ("Config.launcher.align", "Config.osd.align"):
+        assert needle in panels
+    for pane, target, opts in (("launcher/Settings.qml", "Config.launcher", ("left", "center", "right")),
+                               ("osd/OsdPane.qml", "Config.osd", ("top", "center", "bottom"))):
+        qml = (CC / pane).read_text()
+        assert f"target: {target}" in qml and 'key: "align"' in qml and 'defaultValue: "center"' in qml
+        for o in opts:
+            assert f'id: "{o}"' in qml

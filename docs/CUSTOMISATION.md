@@ -63,3 +63,11 @@ mislead, so they are left out until the dashboard consumes them.
 - `appearance.anim.curveStyle` = `smooth` (factory) | `snappy` (no overshoot) | `bouncy` (a little more give on
   spatial motion only). Opacity/colour never overshoot, and reduced motion still wins.
 - The Cozy look uses the bouncy style; the Hornero look restores weight 0 and smooth.
+
+## Placement (Launcher, OSD)
+
+`launcher.align` (left | centre | right along the bottom edge) and `osd.align` (top | centre | bottom along the right
+edge); both default to centre. The panels keep their edge (hover regions and slide animations depend on it), only
+their position along it changes. Notification corner/edge is not offered yet: the popups, toasts and the notification
+centre share the top-right anchor with the sidebar. Needs a QA VM check for the concave corner decoration when a
+launcher is aligned left or right.

@@ -426,6 +426,7 @@
   "launcher": {
     "enabled": true,
     "showOnHover": false,
+    "align": "center",
     "maxShown": 8,
     "maxWallpapers": 9,
     "specialPrefix": "@",
@@ -688,6 +689,7 @@
   "osd": {
     "enabled": true,
     "hideDelay": 2000,
+    "align": "center",
     "enableBrightness": true,
     "enableMicrophone": false,
     "sizes": {

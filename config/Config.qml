@@ -546,6 +546,7 @@ Singleton {
         return {
             enabled: launcher.enabled,
             showOnHover: launcher.showOnHover,
+            align: launcher.align,
             maxShown: launcher.maxShown,
             maxWallpapers: launcher.maxWallpapers,
             specialPrefix: launcher.specialPrefix,
@@ -591,6 +592,7 @@ Singleton {
         return {
             enabled: osd.enabled,
             hideDelay: osd.hideDelay,
+            align: osd.align,
             enableBrightness: osd.enableBrightness,
             enableMicrophone: osd.enableMicrophone,
             sizes: {

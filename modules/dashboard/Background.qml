@@ -4,63 +4,52 @@ import qs.config
 import QtQuick
 import QtQuick.Shapes
 
+// Dashboard sheet (Signal Bezel §7.1): a top-attached `panel` surface with
+// a 1 px `rule` border on its three free edges and radius `small` on the
+// two lower corners. No concave "wings": the host still starts this path
+// `rounding` px left of the wrapper, so the first PathMove skips that
+// offset. Nothing is painted while the panel is closed.
 ShapePath {
     id: root
 
     required property Wrapper wrapper
     readonly property real rounding: Config.border.rounding
-    readonly property bool flatten: wrapper.height < rounding * 2
-    readonly property real roundingY: flatten ? wrapper.height / 2 : rounding
+    readonly property real r: Math.min(Appearance.rounding.small, wrapper.height / 2, wrapper.width / 2)
+    readonly property bool open: wrapper.width > 0 && wrapper.height > 0
 
-    strokeWidth: -1
-    // Paint nothing while the panel is closed: the concave corner arcs
-    // live outside the wrapper and would otherwise linger as stray wings
-    // on screens without the frame (frameEnabled false, clear bars).
-    fillColor: wrapper.width > 0 && wrapper.height > 0 ? Signal.surface(Signal.palette.base, "dashboard") : "transparent"
+    strokeWidth: open ? 1 : -1
+    strokeColor: Signal.palette.rule
+    fillColor: open ? Signal.surface(Signal.palette.panel, "dashboard") : "transparent"
 
-    PathArc {
+    PathMove {
         relativeX: root.rounding
-        relativeY: root.roundingY
-        radiusX: root.rounding
-        radiusY: Math.min(root.rounding, root.wrapper.height)
-    }
-
-    PathLine {
-        relativeX: 0
-        relativeY: root.wrapper.height - root.roundingY * 2
-    }
-
-    PathArc {
-        relativeX: root.rounding
-        relativeY: root.roundingY
-        radiusX: root.rounding
-        radiusY: Math.min(root.rounding, root.wrapper.height)
-        direction: PathArc.Counterclockwise
-    }
-
-    PathLine {
-        relativeX: root.wrapper.width - root.rounding * 2
         relativeY: 0
     }
-
-    PathArc {
-        relativeX: root.rounding
-        relativeY: -root.roundingY
-        radiusX: root.rounding
-        radiusY: Math.min(root.rounding, root.wrapper.height)
-        direction: PathArc.Counterclockwise
-    }
-
     PathLine {
         relativeX: 0
-        relativeY: -(root.wrapper.height - root.roundingY * 2)
+        relativeY: root.wrapper.height - root.r
     }
-
     PathArc {
-        relativeX: root.rounding
-        relativeY: -root.roundingY
-        radiusX: root.rounding
-        radiusY: Math.min(root.rounding, root.wrapper.height)
+        relativeX: root.r
+        relativeY: root.r
+        radiusX: root.r
+        radiusY: root.r
+        direction: PathArc.Counterclockwise
+    }
+    PathLine {
+        relativeX: root.wrapper.width - root.r * 2
+        relativeY: 0
+    }
+    PathArc {
+        relativeX: root.r
+        relativeY: -root.r
+        radiusX: root.r
+        radiusY: root.r
+        direction: PathArc.Counterclockwise
+    }
+    PathLine {
+        relativeX: 0
+        relativeY: -(root.wrapper.height - root.r)
     }
 
     Behavior on fillColor {

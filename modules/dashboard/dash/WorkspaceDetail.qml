@@ -9,8 +9,8 @@ import Quickshell
 import QtQuick
 import QtQuick.Layouts
 
-// Window list panel — sits inside a surfaceContainer card.
-// No background of its own (parent provides the card background).
+// Window list panel — sits inside an instrument Frame, which owns the
+// header and background.
 Item {
     id: root
 
@@ -26,38 +26,8 @@ Item {
         id: layout
 
         anchors.fill: parent
-        anchors.margins: Appearance.padding.large
 
         spacing: Appearance.spacing.normal
-
-        // Header
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: Appearance.spacing.small
-
-            Glyph {
-                name: "app-window"
-                color: Signal.palette.cue
-                font.pointSize: Appearance.font.size.large
-            }
-
-            StyledText {
-                text: qsTr("Windows")
-                font.pointSize: Appearance.font.size.normal
-                font.weight: 600
-                color: Signal.palette.ink
-                Layout.fillWidth: true
-            }
-
-            StyledText {
-                text: root.wsToplevels.length > 0
-                    ? qsTr("%1").arg(root.wsToplevels.length)
-                    : ""
-                font.pointSize: Appearance.font.size.small
-                color: Signal.palette.inkMuted
-                visible: root.wsToplevels.length > 0
-            }
-        }
 
         // Window list or empty state
         Item {

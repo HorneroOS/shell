@@ -35,12 +35,13 @@ Item {
 
         anchors.fill: parent
 
-        radius: Appearance.rounding.normal
-        color: root.isActive
-            ? Signal.tPalette.signalWell
-            : root.isSelected
-                ? Signal.tPalette.cueWell
-                : Signal.tPalette.raised
+        // Fixed rectangular cell (Signal Bezel §5): active = `raised` fill
+        // plus the on-air bar, selected = `ruleStrong` outline; empty cells
+        // stay quiet. State differs in fill, bar and outline, not colour.
+        radius: Appearance.rounding.small
+        color: root.isActive ? Signal.palette.raised : "transparent"
+        border.width: 1
+        border.color: root.isSelected && !root.isActive ? Signal.palette.ruleStrong : Signal.palette.rule
 
         Behavior on color {
             ColorAnimation {
@@ -48,11 +49,16 @@ Item {
             }
         }
 
+        OnAirBar {
+            edge: "top"
+            active: root.isActive
+        }
+
         StateLayer {
             color: root.isActive
-                ? Signal.palette.onSignalWell
+                ? Signal.palette.ink
                 : root.isSelected
-                    ? Signal.palette.onCueWell
+                    ? Signal.palette.ink
                     : Signal.palette.ink
 
             function onClicked(): void {
@@ -76,10 +82,10 @@ Item {
                     font.pointSize: Appearance.font.size.normal
                     font.weight: 700
                     color: root.isActive
-                        ? Signal.palette.onSignalWell
+                        ? Signal.palette.ink
                         : root.isSelected
-                            ? Signal.palette.onCueWell
-                            : Signal.palette.signal
+                            ? Signal.palette.ink
+                            : Signal.palette.ink
                 }
 
                 StyledText {
@@ -88,9 +94,9 @@ Item {
                     visible: !Compositor.isNiri && text !== ""
                     font.pointSize: Appearance.font.size.small
                     color: root.isActive
-                        ? Signal.palette.onSignalWell
+                        ? Signal.palette.ink
                         : root.isSelected
-                            ? Signal.palette.onCueWell
+                            ? Signal.palette.ink
                             : Signal.palette.inkMuted
                     elide: Text.ElideRight
                 }
@@ -100,7 +106,7 @@ Item {
                     text: root.windowCount > 0 ? String(root.windowCount) : ""
                     font.pointSize: Appearance.font.size.smaller
                     color: root.isActive
-                        ? Signal.palette.onSignalWell
+                        ? Signal.palette.ink
                         : Signal.palette.inkMuted
                     visible: root.windowCount > 0
                 }
@@ -119,9 +125,9 @@ Item {
 
                         name: Icons.getAppCategoryIcon(Compositor.isNiri ? root.wsToplevels[index]?.app_id ?? "" : root.wsToplevels[index]?.lastIpcObject?.class ?? "", "terminal")
                         color: root.isActive
-                            ? Signal.palette.onSignalWell
+                            ? Signal.palette.ink
                             : root.isSelected
-                                ? Signal.palette.onCueWell
+                                ? Signal.palette.ink
                                 : Signal.palette.inkMuted
                         font.pointSize: Appearance.font.size.normal
                         opacity: 0.85
@@ -133,7 +139,7 @@ Item {
                     text: qsTr("+%1").arg(root.wsToplevels.length - Config.dashboard.workspaces.maxAppIcons)
                     font.pointSize: Appearance.font.size.smaller
                     color: root.isActive
-                        ? Signal.palette.onSignalWell
+                        ? Signal.palette.ink
                         : Signal.palette.inkMuted
                     anchors.verticalCenter: parent.verticalCenter
                 }

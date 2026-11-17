@@ -3,55 +3,53 @@ import qs.services
 import qs.config
 import qs.utils
 import QtQuick
+import QtQuick.Layouts
 
+// Weather module. Shows what the weather service has; with no location or
+// no forecast it says so instead of drawing placeholder numbers.
 Item {
     id: root
 
-    anchors.centerIn: parent
-
-    implicitWidth: icon.implicitWidth + info.implicitWidth + info.anchors.leftMargin
+    readonly property bool live: Weather.ready
 
     Component.onCompleted: Weather.reload()
 
-    Glyph {
-        id: icon
-
-        anchors.verticalCenter: parent.verticalCenter
+    RowLayout {
         anchors.left: parent.left
-
-        animate: true
-        name: Weather.icon
-        color: Weather.lastError && !Weather.ready ? Signal.palette.alert : Signal.palette.cue
-        font.pointSize: Appearance.font.size.extraLarge * 2
-    }
-
-    Column {
-        id: info
-
+        anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
-        anchors.left: icon.right
-        anchors.leftMargin: Appearance.spacing.large
+        spacing: Appearance.spacing.large
 
-        spacing: Appearance.spacing.small
+        Glyph {
+            Layout.alignment: Qt.AlignVCenter
 
-        StyledText {
-            anchors.horizontalCenter: parent.horizontalCenter
-
-            animate: true
-            text: Weather.temp
-            color: Signal.palette.signal
-            font.pointSize: Appearance.font.size.extraLarge
-            font.weight: 500
+            name: Weather.icon
+            color: Weather.lastError && !root.live ? Signal.palette.alert : root.live ? Signal.palette.cue : Signal.palette.inkMuted
+            font.pointSize: Appearance.font.size.display * 0.8
         }
 
-        StyledText {
-            anchors.horizontalCenter: parent.horizontalCenter
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignVCenter
+            spacing: Appearance.spacing.small
 
-            animate: true
-            text: Weather.description
+            StyledText {
+                text: root.live ? Weather.temp : "\u2014"
+                color: root.live ? Signal.palette.ink : Signal.palette.inkMuted
+                font.family: Appearance.font.family.display
+                font.weight: Font.Medium
+                font.pointSize: Appearance.font.size.extraLarge * 1.3
+            }
 
-            elide: Text.ElideRight
-            width: Math.min(implicitWidth, root.parent.width - icon.implicitWidth - info.anchors.leftMargin - Appearance.padding.large * 2)
+            StyledText {
+                Layout.fillWidth: true
+
+                text: root.live ? Weather.description : Weather.lastError ? qsTr("Weather unavailable") : qsTr("Set a location in Settings")
+                color: Signal.palette.inkMuted
+                wrapMode: Text.WordWrap
+                maximumLineCount: 2
+                elide: Text.ElideRight
+            }
         }
     }
 }

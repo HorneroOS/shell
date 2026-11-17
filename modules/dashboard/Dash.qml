@@ -2,10 +2,19 @@ import qs.components
 import qs.components.filedialog
 import qs.services
 import qs.config
+import qs.modules.instruments as Instruments
 import "dash"
 import Quickshell
 import QtQuick.Layouts
 
+// Dashboard home (Signal Bezel): an instrument panel, not a card grid.
+// Three columns on the 4 px grid; every module is a `panel` frame with a
+// 1 px `rule` border and radius `small`, labelled by an eyebrow and bound
+// to real services only (clock, weather, system usage, MPRIS).
+//
+//   STATION  | CLOCK            | WEATHER
+//   CALENDAR | RESOURCES (scope, meters, dimension lines)
+//   MEDIA strip
 GridLayout {
     id: root
 
@@ -13,102 +22,110 @@ GridLayout {
     required property PersistentProperties state
     required property FileDialog facePicker
 
-    rowSpacing: Appearance.spacing.normal
-    columnSpacing: Appearance.spacing.normal
+    readonly property int leftWidth: 296
+    readonly property int midWidth: 336
+    readonly property int rightWidth: 320
 
-    Rect {
-        Layout.column: 2
-        Layout.columnSpan: 3
-        Layout.preferredWidth: userCol.implicitWidth
-        Layout.preferredHeight: userCol.implicitHeight
+    columns: 3
+    rowSpacing: Appearance.spacing.small
+    columnSpacing: Appearance.spacing.small
 
-        radius: Appearance.rounding.large
+    Instruments.Frame {
+        Layout.row: 0
+        Layout.column: 0
+        Layout.preferredWidth: root.leftWidth
+        Layout.fillHeight: true
+        implicitHeight: user.implicitHeight + headerHeight + 12
+        channel: "01"
+        title: qsTr("Station")
 
-        ColumnLayout {
-            id: userCol
-            spacing: 0
+        User {
+            id: user
 
-            User {
-                id: user
-
-                visibilities: root.visibilities
-                state: root.state
-                facePicker: root.facePicker
-            }
-
-            QuickToggles {
-                Layout.fillWidth: true
-            }
+            anchors.left: parent.left
+            anchors.right: parent.right
+            visibilities: root.visibilities
+            state: root.state
+            facePicker: root.facePicker
         }
     }
 
-    Rect {
+    Instruments.Frame {
         Layout.row: 0
-        Layout.columnSpan: 2
-        Layout.preferredWidth: Config.dashboard.sizes.weatherWidth
+        Layout.column: 1
+        Layout.preferredWidth: root.midWidth
         Layout.fillHeight: true
-
-        radius: Appearance.rounding.large * 1.5
-
-        Weather {}
-    }
-
-    Rect {
-        Layout.row: 1
-        Layout.preferredWidth: dateTime.implicitWidth
-        Layout.fillHeight: true
-
-        radius: Appearance.rounding.normal
+        implicitHeight: 148
+        channel: "02"
+        title: qsTr("Clock")
 
         DateTime {
-            id: dateTime
+            anchors.fill: parent
         }
     }
 
-    Rect {
-        Layout.row: 1
-        Layout.column: 1
-        Layout.columnSpan: 3
-        Layout.fillWidth: true
-        Layout.preferredHeight: calendar.implicitHeight
+    Instruments.Frame {
+        Layout.row: 0
+        Layout.column: 2
+        Layout.preferredWidth: root.rightWidth
+        Layout.fillHeight: true
+        implicitHeight: 148
+        channel: "03"
+        title: qsTr("Weather")
+        context: Weather.ready ? Weather.city : ""
 
-        radius: Appearance.rounding.large
+        Weather {
+            anchors.fill: parent
+        }
+    }
+
+    Instruments.Frame {
+        Layout.row: 1
+        Layout.column: 0
+        Layout.preferredWidth: root.leftWidth
+        Layout.fillHeight: true
+        implicitHeight: calendar.implicitHeight + 24
+        padding: 12
 
         Calendar {
             id: calendar
 
+            anchors.left: parent.left
+            anchors.right: parent.right
             state: root.state
         }
     }
 
-    Rect {
+    Instruments.Frame {
         Layout.row: 1
-        Layout.column: 4
-        Layout.preferredWidth: resources.implicitWidth
+        Layout.column: 1
+        Layout.columnSpan: 2
+        Layout.fillWidth: true
         Layout.fillHeight: true
-
-        radius: Appearance.rounding.normal
+        implicitHeight: resources.implicitHeight + headerHeight + 16
+        channel: "04"
+        title: qsTr("Resources")
+        context: resources.windowLabel
 
         Resources {
             id: resources
+
+            anchors.left: parent.left
+            anchors.right: parent.right
         }
     }
 
-    Rect {
-        Layout.row: 0
-        Layout.column: 5
-        Layout.rowSpan: 2
-        Layout.preferredWidth: media.implicitWidth
-        Layout.fillHeight: true
-
-        radius: Appearance.rounding.large * 2
+    Instruments.Frame {
+        Layout.row: 2
+        Layout.column: 0
+        Layout.columnSpan: 3
+        Layout.fillWidth: true
+        implicitHeight: 76
+        padding: 10
 
         Media {
-            id: media
+            anchors.fill: parent
+            visibilities: root.visibilities
         }
-    }
-
-    component Rect: StyledRect {
-        color: Signal.tPalette.panel
     }
 }

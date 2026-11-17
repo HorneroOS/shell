@@ -6,11 +6,13 @@ import qs.config
 import QtQuick
 import QtQuick.Shapes
 
-// Hourly temperature chart for the dashboard Weather tab: a smooth curve
-// with a fading fill, a dot and value per hour, and the hour and weather
-// icon underneath; scrolls horizontally through the next 24 hours.
+// Hourly temperature chart for the dashboard Weather tab (Signal Bezel):
+// a `sunken` well holding one straight 1.5 px trace between the forecast's
+// own hourly values — no smoothing, no fill — with a square marker and
+// value per hour, and the hour and weather glyph underneath; scrolls
+// horizontally through the next 24 hours.
 //
-// Design inspired by ItsXyzzy/Caelestia-Hourly-Weather (GPL-3.0,
+// Originally inspired by ItsXyzzy/Caelestia-Hourly-Weather (GPL-3.0,
 // https://github.com/ItsXyzzy/Caelestia-Hourly-Weather): cubic segments
 // with horizontal handles and a gradient under the curve. Hornero
 // implementation, reading the same Weather.hourlyForecast entries.
@@ -52,18 +54,17 @@ StyledRect {
             return "";
         let d = `M ${root.xAt(0)} ${root.yAt(root.temps[0])}`;
         for (let i = 1; i < n; i++) {
-            const x0 = root.xAt(i - 1);
-            const y0 = root.yAt(root.temps[i - 1]);
             const x1 = root.xAt(i);
             const y1 = root.yAt(root.temps[i]);
-            const cx = (x0 + x1) / 2;
-            d += ` C ${cx} ${y0}, ${cx} ${y1}, ${x1} ${y1}`;
+            d += ` L ${x1} ${y1}`;
         }
         return d;
     }
 
-    radius: Appearance.rounding.large
-    color: Signal.tPalette.panel
+    radius: Appearance.rounding.small
+    color: Signal.palette.sunken
+    border.width: 1
+    border.color: Signal.palette.rule
     implicitHeight: content.height + Appearance.padding.normal * 2
 
     Accessible.role: Accessible.Chart
@@ -92,41 +93,11 @@ StyledRect {
                 preferredRendererType: Shape.CurveRenderer
 
                 ShapePath {
-                    strokeWidth: 0
-                    strokeColor: "transparent"
-                    fillGradient: LinearGradient {
-                        x1: 0
-                        y1: 0
-                        x2: 0
-                        y2: root.chartH
-
-                        GradientStop {
-                            position: 0
-                            color: Qt.alpha(Signal.palette.signal, 0.26)
-                        }
-                        GradientStop {
-                            position: 1
-                            color: Qt.alpha(Signal.palette.signal, 0)
-                        }
-                    }
-
-                    PathSvg {
-                        path: root.curvePath ? `${root.curvePath} L ${root.xAt(root.temps.length - 1)} ${root.chartH} L ${root.xAt(0)} ${root.chartH} Z` : ""
-                    }
-                }
-            }
-
-            Shape {
-                width: content.width
-                height: root.chartH
-                preferredRendererType: Shape.CurveRenderer
-
-                ShapePath {
-                    strokeWidth: 3
+                    strokeWidth: 1.5
                     strokeColor: Signal.palette.signal
                     fillColor: "transparent"
-                    capStyle: ShapePath.RoundCap
-                    joinStyle: ShapePath.RoundJoin
+                    capStyle: ShapePath.FlatCap
+                    joinStyle: ShapePath.MiterJoin
 
                     PathSvg {
                         path: root.curvePath
@@ -151,11 +122,11 @@ StyledRect {
                     Rectangle {
                         x: (parent.width - width) / 2
                         y: root.yAt(point.temp) - height / 2
-                        width: point.emphasised ? 10 : 7
+                        width: point.emphasised ? 8 : 6
                         height: width
-                        radius: width / 2
-                        color: point.index === 0 ? Signal.palette.signal : Signal.palette.lifted
-                        border.width: 2
+                        radius: 1
+                        color: point.index === 0 ? Signal.palette.signal : Signal.palette.sunken
+                        border.width: 1
                         border.color: Signal.palette.signal
                     }
 

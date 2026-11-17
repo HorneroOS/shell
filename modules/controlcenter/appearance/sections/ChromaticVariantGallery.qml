@@ -31,7 +31,7 @@ ColumnLayout {
         ChromaticPreview.variantPreviewsWanted = true;
     }
     Component.onDestruction: {
-        ChromaticPreview.endHover();
+        ChromaticPreview.endHover("");
         ChromaticPreview.variantPreviewsWanted = false;
     }
 
@@ -84,7 +84,7 @@ ColumnLayout {
                 palette: flat
                 paletteLabel: scheme ? qsTr("Palette preview: ground %1, accent %2").arg(flat.ground ?? "").arg(flat.signal ?? "") : ""
                 onPreviewStarted: ChromaticPreview.hoverVariant(modelData.id === "auto" ? root.resolved : modelData.id)
-                onPreviewEnded: ChromaticPreview.endHover()
+                onPreviewEnded: ChromaticPreview.endHover(modelData.id === "auto" ? root.resolved : modelData.id)
                 onActivated: root.chosen(modelData.id)
                 onStep: direction => root.chosen(root.tiles[(index + direction + root.tiles.length) % root.tiles.length].id)
             }

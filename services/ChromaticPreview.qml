@@ -247,8 +247,11 @@ Singleton {
         }
     }
 
-    function endHover(): void {
-        if (hoveredVariant === "")
+    // `id` is the tile that was left ("" ends any hover); a tile entered a moment earlier keeps
+    // its preview (Qt may deliver the old tile's exit after the new tile's
+    // enter).
+    function endHover(id: string): void {
+        if (hoveredVariant === "" || (id && id !== hoveredVariant))
             return;
         hoveredVariant = "";
         // Back to the candidate the user was already previewing, else to the real theme.

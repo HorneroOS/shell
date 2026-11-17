@@ -279,14 +279,20 @@ ShellRoot {
         P.hoverVariant("neon");
         o.during = sig();
         o.duringPreviewing = Signal.previewing;
-        P.endHover();
+        // a stale exit from a tile left after another was entered must not
+        // cancel the new tile's preview (seen in the QA VM)
+        P.hoverVariant("muted");
+        P.endHover("neon");
+        o.staleExitKept = Signal.previewing && P.hoveredVariant === "muted";
+        P.endHover("muted");
+        P.endHover("");
         o.after = sig();
         o.afterPreviewing = Signal.previewing;
         // with a candidate already previewed, leaving the tile resumes it
         P.previewLive(true);
         o.candidate = sig();
         P.hoverVariant("muted");
-        P.endHover();
+        P.endHover("");
         o.resumed = sig();
         o.resumedPreviewing = Signal.previewing;
         P.previewLive(false);

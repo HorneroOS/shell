@@ -18,12 +18,67 @@ Singleton {
     property var history: Reactions.emptyHistory()
     // Last decision for diagnostics (`qs ipc call companion reactStatus`).
     property var lastDecision: ({ ok: false, reason: "none" })
+    // Extension/IPC sources that asked this session (plus any already
+    // muted), so Control Center can list them for muting.
+    property var seenSources: []
     property int shown: 0
     property int dropped: 0
 
     readonly property var catalog: Reactions.catalog()
     readonly property list<string> modeIds: Reactions.MODE_IDS
     readonly property list<string> levels: Reactions.LEVELS
+
+    // Translatable text: reactions.js owns the policy and the English
+    // defaults, these literals are what translators see.
+    function defaultBubble(kind: string): string {
+        switch (kind) {
+        case "battery.low":
+            return qsTr("Battery is getting low.");
+        case "battery.critical":
+            return qsTr("Battery is critical. Plug in soon.");
+        case "build.done":
+            return qsTr("Build finished.");
+        case "build.failed":
+            return qsTr("The build failed.");
+        case "download.done":
+            return qsTr("Download finished.");
+        default:
+            return "";
+        }
+    }
+
+    function label(kind: string): string {
+        switch (kind) {
+        case "notification":
+            return qsTr("New notification");
+        case "battery.low":
+            return qsTr("Battery low");
+        case "battery.critical":
+            return qsTr("Battery critical");
+        case "charger.plugged":
+            return qsTr("Charger connected");
+        case "charger.unplugged":
+            return qsTr("Charger removed");
+        case "mode.changed":
+            return qsTr("Experience mode changed");
+        case "build.done":
+            return qsTr("Build finished");
+        case "build.failed":
+            return qsTr("Build failed");
+        case "download.done":
+            return qsTr("Download finished");
+        case "device.connected":
+            return qsTr("Device connected");
+        case "device.disconnected":
+            return qsTr("Device disconnected");
+        case "task.done":
+            return qsTr("Task finished");
+        case "attention":
+            return qsTr("Needs your attention");
+        default:
+            return kind;
+        }
+    }
 
     function react(kind: string, source: string, text: string): bool {
         const now = Date.now();
@@ -37,14 +92,17 @@ Singleton {
             nowMs: now,
             minute: d.getHours() * 60 + d.getMinutes(),
             history: root.history,
-            hasAnimation: name => Companion.hasAnimation(CompanionStore.skin, name)
+            hasAnimation: name => Companion.hasAnimation(CompanionStore.effectiveSkin, name)
         });
         root.lastDecision = decision;
+        const src = Reactions.sourceKey(source);
+        if (src !== "" && src !== "shell" && root.seenSources.indexOf(src) < 0 && root.seenSources.length < 64)
+            root.seenSources = root.seenSources.concat([src]);
         if (!decision.ok) {
             root.dropped += 1;
             return false;
         }
-        if (!CompanionStore.playReaction(decision.anim, decision.bubble, decision.bubbleMs, decision.priority)) {
+        if (!CompanionStore.playReaction(decision.anim, (decision.bubble !== "" && !decision.custom) ? (root.defaultBubble(decision.kind) || decision.bubble) : decision.bubble, decision.bubbleMs, decision.priority)) {
             root.lastDecision = { ok: false, reason: "not-visible" };
             root.dropped += 1;
             return false;

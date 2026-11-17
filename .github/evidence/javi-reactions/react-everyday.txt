@@ -1,0 +1,3 @@
+ok: everyday
+true
+{"enabled":true,"mode":"everyday","level":"full","shown":3,"dropped":5,"last":{"ok":true,"kind":"attention","anim":"hop","bubble":"Look here","bubbleMs":5000,"priority":2,"source":"ipc"}}

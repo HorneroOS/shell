@@ -1083,6 +1083,22 @@ error details are redacted for credential-looking values
 before they are logged, stored, or shown, so diagnostics never need
 to carry secrets.
 
+A failed load reports the real QML error (for example
+`Main.qml:13:5: SomeType is not a type`, with the plugin's own directory
+stripped) rather than a generic message. Failure is tracked per surface:
+a package is `failed` while any of its entry points (background, bar,
+dashboard, desktop, launcher, settings) failed, even if the others load.
+Load time (`loadMs`) is measured from the moment a host starts
+instantiating the entrypoint, so a dashboard card that is only built when
+its tab opens is not reported as slow.
+
+Hosts build their delegates from a structurally stable list
+(`modules/plugins/StableList.qml`): a load-state report from one plugin
+never rebuilds another plugin's Loader. Desktop widgets that have no
+saved position and no chosen anchor start in distinct slots; the Extensions
+bar island collapses behind its chevron when it would take more than 40%
+of the bar.
+
 Performance budgets are advisory diagnostics, never enforcement —
 in-process QML cannot be preempted or sandboxed, so exceeding a
 budget is flagged, not punished:
@@ -1091,6 +1107,9 @@ budget is flagged, not punished:
   entrypoint reporting loaded/failed over 2000 ms flags `slow-load`.
 - **Load churn**: 5 or more load attempts within 60 s flags
   `load-churn` (the host-visible half of excessive polling).
+- **Payload size**: `scripts/validate_plugin.py` refuses a source file
+  (`.qml`, `.js`, `.json`) over 256 KiB or a package over 8 MiB; the
+  largest official extension source is about 12 KiB.
 - **Polling**: plugin-internal `Timer`s are not observable at
   runtime, so `scripts/validate_plugin.py` statically warns
   (`performance warning:`, never a failure) on literal Timer

@@ -259,7 +259,8 @@ JsonObject {
     }
 
     function quickTilesList(): var {
-        const list = Array.isArray(quickTiles) ? quickTiles : [];
+        const stored = plain(quickTiles);
+        const list = Array.isArray(stored) ? stored : [];
         const result = [];
         for (const key of list) {
             if (typeof key === "string" && validTileKey(key) && !result.includes(key))
@@ -284,8 +285,19 @@ JsonObject {
         return true;
     }
 
+    // Values read from shell.json arrive as native variant lists whose
+    // Array.isArray() is false; a JSON round trip yields plain JS arrays.
+    function plain(value: var): var {
+        try {
+            return JSON.parse(JSON.stringify(value));
+        } catch (e) {
+            return null;
+        }
+    }
+
     function instancesSource(): var {
-        return instances && typeof instances === "object" && !Array.isArray(instances) ? instances : ({});
+        const source = plain(instances);
+        return source && typeof source === "object" && !Array.isArray(source) ? source : ({});
     }
 
     // Normalised extra instances of one plugin: well-formed, unique,

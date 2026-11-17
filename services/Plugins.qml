@@ -859,7 +859,12 @@ Singleton {
             count: root.entries.length,
             loaded: root.entries.filter(e => e.state === "loaded").length,
             failed: root.entries.filter(e => e.state === "failed").length,
-            plugins: root.entries
+            plugins: root.entries.map(e => e.state === "pending" && !(e.hostLoadStartedAtMs > 0) ? Object.assign({}, e, {
+                instantiated: false,
+                detail: e.detail || qsTr("Not instantiated yet: this surface is built when it is shown (a dashboard card when the Extensions tab opens).")
+            }) : Object.assign({}, e, {
+                instantiated: e.state !== "disabled"
+            }))
         };
     }
 

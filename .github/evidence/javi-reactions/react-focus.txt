@@ -1,0 +1,3 @@
+ok: focus
+false
+{"enabled":true,"mode":"focus","level":"quiet","shown":1,"dropped":5,"last":{"ok":false,"reason":"mode-quiet"}}

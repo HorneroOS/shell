@@ -146,6 +146,7 @@
   "background": {
     "enabled": true,
     "wallpaperEnabled": true,
+    "wallpaperFit": "crop",
     "desktopClock": {
       "enabled": false,
       "scale": 1.0,

@@ -381,6 +381,7 @@ Singleton {
         return {
             enabled: background.enabled,
             wallpaperEnabled: background.wallpaperEnabled,
+            wallpaperFit: background.wallpaperFit,
             desktopClock: {
                 enabled: background.desktopClock.enabled,
                 scale: background.desktopClock.scale,

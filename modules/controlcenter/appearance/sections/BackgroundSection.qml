@@ -38,6 +38,53 @@ CollapsibleSection {
 
     StyledText {
         Layout.topMargin: Appearance.spacing.normal
+        text: qsTr("Wallpaper fit")
+        font.pointSize: Appearance.font.size.larger
+        font.weight: Appearance.font.weight.medium
+    }
+
+    Flow {
+        Layout.fillWidth: true
+        spacing: Appearance.spacing.small
+
+        Repeater {
+            model: [
+                {
+                    id: "crop",
+                    label: qsTr("Fill (crop)")
+                },
+                {
+                    id: "fit",
+                    label: qsTr("Fit")
+                },
+                {
+                    id: "stretch",
+                    label: qsTr("Stretch")
+                },
+                {
+                    id: "center",
+                    label: qsTr("Centre")
+                }
+            ]
+
+            TextButton {
+                required property var modelData
+
+                text: modelData.label
+                toggle: true
+                checked: Config.background.wallpaperFit === modelData.id
+                type: TextButton.Tonal
+                Accessible.name: qsTr("Wallpaper fit: %1").arg(modelData.label)
+                onClicked: {
+                    Config.background.wallpaperFit = modelData.id;
+                    Config.save();
+                }
+            }
+        }
+    }
+
+    StyledText {
+        Layout.topMargin: Appearance.spacing.normal
         text: qsTr("Desktop Clock")
         font.pointSize: Appearance.font.size.larger
         font.weight: Appearance.font.weight.medium

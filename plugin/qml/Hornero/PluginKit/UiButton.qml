@@ -126,7 +126,10 @@ Button {
             }
 
             Text {
-                visible: root.text.length > 0
+                // A narrow rail has no room for a label next to its glyph:
+                // the glyph stays (tooltip and accessible name carry the
+                // text) instead of an elided "Sun Ca..."
+                visible: root.text.length > 0 && !(root.railCompact && root.glyph.length > 0)
                 width: root.railCompact ? Math.min(implicitWidth, root.railWidth - root.leftPadding - root.rightPadding) : implicitWidth
                 text: root.text
                 color: root.labelColor

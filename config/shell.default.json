@@ -34,7 +34,8 @@
       }
     },
     "glow": {
-      "intensity": 1
+      "intensity": 1,
+      "limit": 3
     },
     "atmosphere": {
       "enabled": true,

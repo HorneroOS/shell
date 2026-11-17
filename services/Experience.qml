@@ -65,7 +65,7 @@ Singleton {
     // every native instrument and every PluginKit trace. Extension traces
     // leave `reserve` slots to the shell's own (on-air bar, dashboard
     // scopes), so opening the dashboard never has to take a lease away.
-    readonly property int glowLimit: 3
+    readonly property int glowLimit: Math.max(1, Math.min(6, Math.round(Config.appearance.glow.limit)))
     property var _glowHolders: []
     readonly property int glowHeld: root._glowHolders.length
 

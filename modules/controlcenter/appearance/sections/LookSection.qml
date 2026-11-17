@@ -130,6 +130,17 @@ CollapsibleSection {
             suffix: "×"
         }
 
+        SizeSlider {
+            target: Config.appearance.glow
+            key: "limit"
+            label: qsTr("Glowing items at once")
+            from: 1
+            to: 6
+            defaultValue: 3
+            stepSize: 1
+            suffix: ""
+        }
+
         StyledText {
             Layout.fillWidth: true
             text: qsTr("Scales the glows the experience mode already allows. 0 turns glow off; Gaming and Focus keep it off regardless.")

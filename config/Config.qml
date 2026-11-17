@@ -308,7 +308,8 @@ Singleton {
                 }
             },
             glow: {
-                intensity: appearance.glow.intensity
+                intensity: appearance.glow.intensity,
+                limit: appearance.glow.limit
             },
             atmosphere: {
                 enabled: appearance.atmosphere.enabled,

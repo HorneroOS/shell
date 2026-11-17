@@ -37,7 +37,7 @@ Item {
 
         Rectangle {
             anchors.fill: parent
-            radius: Appearance.rounding.full
+            radius: Appearance.rounding.small
 
             gradient: Gradient {
                 orientation: root.vertical ? Gradient.Vertical : Gradient.Horizontal
@@ -67,7 +67,7 @@ Item {
             anchors.right: root.vertical ? parent.right : undefined
             anchors.bottom: root.vertical ? undefined : parent.bottom
 
-            radius: Appearance.rounding.full
+            radius: Appearance.rounding.small
             implicitHeight: parent.height / 2
             implicitWidth: parent.width / 2
             opacity: root.vertical ? (view.contentY > 0 ? 0 : 1) : (view.contentX > 0 ? 0 : 1)
@@ -83,7 +83,7 @@ Item {
             anchors.right: root.vertical ? parent.right : undefined
             anchors.top: root.vertical ? undefined : parent.top
 
-            radius: Appearance.rounding.full
+            radius: Appearance.rounding.small
             implicitHeight: parent.height / 2
             implicitWidth: parent.width / 2
             opacity: root.vertical ? (view.contentY < view.contentHeight - parent.height + Appearance.padding.small ? 0 : 1) : (view.contentX < view.contentWidth - parent.width + Appearance.padding.small ? 0 : 1)
@@ -387,7 +387,7 @@ Item {
                 implicitHeight: root.vertical ? view.currentItem?.size ?? 0 : 0
 
                 color: Signal.palette.phosphor
-                radius: Appearance.rounding.full
+                radius: Appearance.rounding.small
 
                 Colouriser {
                     source: view

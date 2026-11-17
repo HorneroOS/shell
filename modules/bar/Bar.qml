@@ -524,7 +524,7 @@ Item {
             visible: !root.clear && (root.floating || !Config.border.frameEnabled)
             anchors.fill: parent
             color: Signal.surface(Signal.layer(Signal.palette.base, 1), "bar")
-            radius: root.floating ? Appearance.rounding.full : 0
+            radius: root.floating ? Appearance.rounding.normal : 0
         }
 
         BarGroup {

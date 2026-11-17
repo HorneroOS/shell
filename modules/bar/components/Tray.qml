@@ -48,7 +48,7 @@ StyledRect {
     implicitHeight: vertical ? nonAnimHeight : Config.bar.sizes.innerWidth
 
     color: Qt.alpha(Signal.tPalette.panel, (root.chip && items.count > 0) ? Signal.tPalette.panel.a : 0)
-    radius: Appearance.rounding.full
+    radius: Appearance.rounding.normal
 
     Loader {
         id: layout

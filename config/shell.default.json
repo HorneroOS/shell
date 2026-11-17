@@ -197,6 +197,11 @@
           ],
           "end": [
             {
+              "id": "modeIndicator",
+              "enabled": true,
+              "options": {}
+            },
+            {
               "id": "statusIcons",
               "enabled": true,
               "options": {}

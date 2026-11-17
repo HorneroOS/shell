@@ -22,6 +22,7 @@ var ENTRIES = {
     media: { label: "Media", icon: "music" },
     resources: { label: "Resources", icon: "chart-line" },
     kbLayout: { label: "Keyboard layout", icon: "keyboard" },
+    modeIndicator: { label: "Mode indicator", icon: "adjustments-horizontal" },
     weather: { label: "Weather", icon: "sun-low" },
     pinnedApps: { label: "Pinned apps", icon: "pin" },
     quickActions: { label: "Quick actions", icon: "bolt" },

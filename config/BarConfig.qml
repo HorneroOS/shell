@@ -20,7 +20,7 @@ JsonObject {
         groups: {
             start: [{id: "logo", enabled: true}, {id: "quickActions", enabled: true, options: {actions: ["screenshot", "layoutPicker", "settings"]}}, {id: "audioSlider", enabled: true, options: {showValue: true}}, {id: "brightnessSlider", enabled: true, options: {showValue: true}}],
             center: [{id: "clock", enabled: true, options: {showDate: true}}, {id: "weather", enabled: true}],
-            end: [{id: "statusIcons", enabled: true}, {id: "tray", enabled: true}, {id: "extensions", enabled: true}, {id: "power", enabled: true}]
+            end: [{id: "modeIndicator", enabled: true}, {id: "statusIcons", enabled: true}, {id: "tray", enabled: true}, {id: "extensions", enabled: true}, {id: "power", enabled: true}]
         }
     }, {
         edge: "bottom", style: "attached", reserve: true, margin: 8,

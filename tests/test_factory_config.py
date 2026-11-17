@@ -237,10 +237,11 @@ def test_factory_values_match_code_defaults():
         ("bar.bars.0.groups.start.0.id", "logo"),
         ("bar.bars.0.groups.center.0.id", "clock"),
         # Cockpit top-rail end order (presets/cockpit.json).
-        ("bar.bars.0.groups.end.0.id", "statusIcons"),
-        ("bar.bars.0.groups.end.1.id", "tray"),
-        ("bar.bars.0.groups.end.2.id", "extensions"),  # shell#441 island
-        ("bar.bars.0.groups.end.3.id", "power"),
+        ("bar.bars.0.groups.end.0.id", "modeIndicator"),  # shell#478, hidden in Everyday
+        ("bar.bars.0.groups.end.1.id", "statusIcons"),
+        ("bar.bars.0.groups.end.2.id", "tray"),
+        ("bar.bars.0.groups.end.3.id", "extensions"),  # shell#441 island
+        ("bar.bars.0.groups.end.4.id", "power"),
         ("bar.extensions.background", False),
         ("bar.extensions.compact", False),
         # border resolves Appearance tokens at scale 1: padding.normal=10,

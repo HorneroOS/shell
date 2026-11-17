@@ -58,6 +58,10 @@
           ],
           "end": [
             {
+              "id": "modeIndicator",
+              "enabled": true
+            },
+            {
               "id": "statusIcons",
               "enabled": true
             },

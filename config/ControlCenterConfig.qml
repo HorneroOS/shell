@@ -9,7 +9,7 @@ JsonObject {
     // Appearance-pane section disclosure: keys of expanded sections.
     // Default exposes Themes (the primary first-run task); the pane
     // persists user toggles here via Config.save().
-    property var appearanceExpandedSections: ["themes"]
+    property var appearanceOpenSections: ["themes"]
 
     component Sizes: JsonObject {
         property real heightMult: 0.7

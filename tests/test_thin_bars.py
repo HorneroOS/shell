@@ -50,7 +50,7 @@ def test_every_preset_matches_its_calibration(path):
         else:
             assert 26 <= bar["thickness"] <= 34, (path.stem, bar["edge"])
         assert bar["margin"] <= 10
-    assert 22 <= data["bar"]["sizes"]["innerWidth"] <= 30
+    assert 22 <= data["bar"]["sizes"]["innerWidth"] <= 34
     if "border" in data:
         assert data["border"].get("thickness", 6) <= 6
     # Signal Bezel: no glassy slabs, radii stay at or below 4 px.

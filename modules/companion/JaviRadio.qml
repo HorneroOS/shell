@@ -41,7 +41,8 @@ Singleton {
 
     function allowed(entry: string): bool {
         return Radio.mayOpen(root.settings, entry, {
-            "mode": Experience.mode
+            "mode": Experience.mode,
+            "fullscreen": Compositor.hasFullscreenOnFocusedOutput()
         });
     }
 

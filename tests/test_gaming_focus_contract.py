@@ -42,6 +42,7 @@ def test_exclusive_keyboard_focus_is_only_requested_by_intentional_surfaces():
     allowed = {
         "modules/areapicker/AreaPicker.qml",   # screenshot tool the person invoked
         "modules/companion/CompanionHost.qml",  # chat the person opened
+        "modules/companion/RadioPanel.qml",     # Javi Radio the person opened
         "modules/drawers/Drawers.qml",          # Niri-only keyboardIntent branch
     }
     files = {f for f, _ in hits(r"WlrKeyboardFocus\.Exclusive")}

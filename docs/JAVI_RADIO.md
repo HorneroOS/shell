@@ -31,6 +31,7 @@ one question.
   (approval or clarification) or the run is blocked, Radio stops. It shows
   that the request needs approval and offers "Open the Workbench"; the
   answer is never inferred, and nothing is approved on the way.
+- Nothing opens under a fullscreen window (the panel is on the Top layer, which a fullscreen window covers, and it would hold the keyboard unseen).
 - Extension requests (`plugin`) are not a user gesture, so they never open
   Radio in Focus or Gaming. The user's own shortcut, click, menu and
   launcher work in every mode.

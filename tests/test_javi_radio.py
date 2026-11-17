@@ -63,3 +63,10 @@ def test_escalation_never_answers_for_the_user():
     assert c({"ok": False, "message": "x"})["kind"] == "failed"
     assert c({}) ["kind"] == "failed" and c(None)["kind"] == "failed"
     assert len(c({"data": {"text": "x" * 9000}})["text"]) == 4000
+
+
+@NODE
+def test_nothing_opens_under_a_fullscreen_window():
+    for entry in ("shortcut", "javi", "bar", "launcher", "menu", "plugin"):
+        r = run_js(M, f"console.log(JSON.stringify(mayOpen(defaults(), {json.dumps(entry)}, {{mode: 'everyday', fullscreen: true}})));")
+        assert r is False, entry

@@ -73,7 +73,7 @@ def test_high_contrast_disclosure_limits_scope_to_shell() -> None:
 def test_high_contrast_keeps_clear_bars_legible_without_a_background() -> None:
     # RFC 0001 section 5.1: Cockpit Clear never paints a scrim, not even in
     # High Contrast. Legibility there comes from the forced Contrast style
-    # (2 px halo, SemiBold) on the foreground only.
+    # (3 px halo, SemiBold) on the foreground only.
     bar = BAR.read_text(encoding="utf-8")
     assert "scrim" not in bar.lower().replace("no scrim", "")
     ink = (ROOT / "services" / "ClearInk.qml").read_text(encoding="utf-8")

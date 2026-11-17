@@ -61,40 +61,39 @@ def test_polarity_follows_the_larger_contrast(mean, polarity):
 def test_auto_halo_and_detail_shadow():
     flat = run_js("return toneFor({mean: 0.05, dev: 0.02}, 'auto', false)")
     busy = run_js("return toneFor({mean: 0.05, dev: 0.2}, 'auto', false)")
-    assert flat["haloPx"] == 1 and flat["shadowPx"] == 0 and flat["haloAlpha"] == 0.88
-    assert busy["haloPx"] == 1 and busy["shadowPx"] == 4  # deviation > 0.12
+    assert flat["haloPx"] == 3 and flat["shadowPx"] == 0 and flat["haloAlpha"] == 0.96
+    assert busy["haloPx"] == 3 and busy["shadowPx"] == 5  # deviation > 0.12
 
 
 def test_foreground_styles():
     t = lambda style, mean=0.05: run_js(  # noqa: E731
         f"return toneFor({{mean: {mean}, dev: 0.3}}, '{style}', false)")
-    assert (t("outline")["haloPx"], t("outline")["shadowPx"]) == (1, 0)
-    assert (t("shadow")["haloPx"], t("shadow")["shadowPx"]) == (0, 2)
+    assert (t("outline")["haloPx"], t("outline")["shadowPx"]) == (3, 0)
+    assert (t("shadow")["haloPx"], t("shadow")["shadowPx"]) == (1, 4)
     contrast = t("contrast")
-    assert (contrast["haloPx"], contrast["weight"]) == (2, 600)
+    assert (contrast["haloPx"], contrast["shadowPx"], contrast["weight"]) == (3, 3, 600)
     # Unknown styles are Auto.
     assert t("bogus")["style"] == "auto"
 
 
-def test_shadow_falls_back_to_outline_below_the_contrast_floor():
-    # With the theme inks the worst mean (about 0.18) still reaches 3.6:1, so
-    # the fallback is a safety net; raise the floor to exercise it.
-    keep = run_js("return toneFor({mean: 0.18, dev: 0.01}, 'shadow', false)")
-    assert keep["haloPx"] == 0 and keep["shadowPx"] == 2
-    tone = run_js(
-        "SHADOW_MIN_CONTRAST = 4; return toneFor({mean: 0.18, dev: 0.01}, 'shadow', false)")
-    assert tone["haloPx"] == 1 and tone["shadowPx"] == 0
+def test_every_style_keeps_a_solid_ring_on_any_wallpaper():
+    # Legibility never depends on the wallpaper: every style draws an
+    # outline ring at every mean, so no style can fall to a bare glyph.
+    for style in ("auto", "outline", "shadow", "contrast"):
+        for mean in (0.0, 0.18, 0.5, 1.0):
+            tone = run_js(f"return toneFor({{mean: {mean}, dev: 0.01}}, '{style}', false)")
+            assert tone["haloPx"] >= 1 and tone["haloAlpha"] >= 0.9, (style, mean)
 
 
 def test_unknown_wallpaper_follows_theme_and_keeps_every_cue():
     night = run_js("return toneFor(null, 'auto', false)")
     day = run_js("return toneFor(null, 'auto', true)")
     assert (night["polarity"], day["polarity"]) == ("light", "dark")
-    assert night["known"] is False and night["haloPx"] == 1 and night["shadowPx"] == 4
+    assert night["known"] is False and night["haloPx"] == 3 and night["shadowPx"] == 5
 
 
 def test_halo_keeps_every_text_role_at_4_5_to_1_on_any_pixel():
-    # Worst case of §12.2: the 88 % halo composited over the opposite
+    # Worst case of §12.2: the 96 % halo composited over the opposite
     # extreme of the wallpaper (black for a light halo, white for dark).
     def mix(fg, bg, a):
         f = [int(fg[i:i + 2], 16) for i in (1, 3, 5)]
@@ -106,7 +105,7 @@ def test_halo_keeps_every_text_role_at_4_5_to_1_on_any_pixel():
         t = tones[polarity]
         # Light ink has a dark halo; the wallpaper pixel under the halo is
         # the opposite extreme (bright) in the worst case.
-        under = mix(t["halo"], wall, 0.88)
+        under = mix(t["halo"], wall, 0.96)
         for role in ("ink", "inkMuted"):
             assert hex_contrast(t[role], under) >= 4.5, (polarity, role)
 
@@ -142,8 +141,9 @@ def test_cover_rect_and_grid_rows():
 
 def test_effect_params_describe_a_glyph_shadow_not_a_box():
     flat = run_js("return effectParams(toneFor({mean: 0.05, dev: 0.02}, 'auto', false))")
-    assert flat["enabled"] and 0 < flat["blur"] < 0.3 and flat["opacity"] == 0.88
-    off = run_js("return effectParams({haloPx: 0, shadowPx: 0, haloAlpha: 0.88})")
+    assert flat["enabled"] and flat["outlinePx"] == 3 and flat["alpha"] == 0.96
+    assert flat["pad"] >= flat["outlinePx"] + 1  # the ring never clips
+    off = run_js("return effectParams({haloPx: 0, shadowPx: 0, haloAlpha: 0.96})")
     assert off["enabled"] is False
 
 
@@ -169,8 +169,10 @@ def test_clear_foreground_groups_paint_no_fill():
 
 
 def test_halo_is_a_glyph_silhouette_shadow_per_entry():
-    assert "layer.enabled: root.clear && wrapped.regionTone.effect.enabled" in BAR
-    assert "shadowColor: wrapped.regionTone.halo" in BAR
+    assert "visible: root.clear && wrapped.item !== null && halo.fx.enabled" in BAR
+    assert "clearinkhalo.frag.qsb" in BAR
+    assert "MultiEffect" not in BAR
+    assert (ROOT / "assets/shaders/clearinkhalo.frag.qsb").is_file()
 
 
 def test_popouts_stay_opaque():

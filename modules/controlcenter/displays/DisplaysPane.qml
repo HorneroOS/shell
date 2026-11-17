@@ -5,6 +5,8 @@ import "../components"
 import qs.components
 import qs.components.controls
 import qs.components.effects
+import Quickshell
+import qs.modules.instruments as Instruments
 import qs.components.containers
 import qs.config
 import qs.services
@@ -30,10 +32,31 @@ Item {
     property string actionText: ""
     property real brightness: 50
     property string brightnessText: qsTr("Reading brightness…")
+    property bool brightnessAvailable: false
     property string layoutCurrent: ""
     property string compositorText: ""
     property var animProfiles: []
     property string animCurrent: ""
+
+    // Real output inventory: Quickshell's screens (compositor-agnostic geometry)
+    // joined with Hyprland's own monitor record for refresh rate and scale.
+    // A field the session does not report stays empty and renders as an em
+    // dash, never as a guess.
+    readonly property var outputs: Quickshell.screens.map(s => {
+        const ipc = Hypr.monitorFor(s)?.lastIpcObject ?? null;
+        const hz = ipc && ipc.refreshRate !== undefined ? Number(ipc.refreshRate) : NaN;
+        const scale = ipc && ipc.scale !== undefined ? Number(ipc.scale) : NaN;
+        return {
+            "name": s.name,
+            "model": s.model || "",
+            "width": s.width,
+            "height": s.height,
+            "x": s.x,
+            "y": s.y,
+            "hz": hz,
+            "scale": scale
+        };
+    })
 
     function refreshExtra(): void {
         if (!brightProc.running) {
@@ -127,9 +150,11 @@ Item {
                 const d = payload.data ?? {};
                 const raw = d.brightness ?? d.percent ?? d.value ?? "";
                 const parsed = parseFloat(raw);
+                root.brightnessAvailable = payload.ok === true && !isNaN(parsed);
                 if (!isNaN(parsed))
                     root.brightness = parsed <= 1 ? parsed * 100 : parsed;
             } catch (e) {
+                root.brightnessAvailable = false;
                 root.brightnessText = qsTr("Brightness backend unavailable on this system.");
             }
         }
@@ -297,273 +322,264 @@ Item {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
-                spacing: Appearance.spacing.normal
+                spacing: Appearance.spacing.large
 
                 PaneHeader {
                     paneId: "displays"
                 }
 
-                StyledText {
-                    Layout.fillWidth: true
-                    text: root.statusText
-                    font.pointSize: Appearance.font.size.small
-                    color: Signal.palette.inkMuted
-                    wrapMode: Text.Wrap
+                ChannelPanel {
+                    title: qsTr("Outputs")
+                    readoutAvailable: root.outputs.length > 0
+                    readout: qsTr("%1 connected").arg(root.outputs.length)
+
+                    Repeater {
+                        model: root.outputs
+
+                        delegate: SettingRow {
+                            id: outputRow
+
+                            required property var modelData
+
+                            label: modelData.name.length > 0 ? modelData.name : qsTr("Unnamed output")
+                            description: modelData.model.length > 0 ? modelData.model : qsTr("model unavailable")
+
+                            below: [
+                                GridLayout {
+                                    Layout.fillWidth: true
+                                    columns: 4
+                                    columnSpacing: Appearance.spacing.normal
+                                    rowSpacing: Appearance.spacing.small
+
+                                    Instruments.Readout {
+                                        Layout.fillWidth: true
+                                        Layout.preferredWidth: 1
+                                        label: qsTr("Resolution")
+                                        value: outputRow.modelData.width > 0 ? `${outputRow.modelData.width}×${outputRow.modelData.height}` : ""
+                                        unit: "px"
+                                        valueSize: Appearance.font.size.large
+                                    }
+
+                                    Instruments.Readout {
+                                        Layout.fillWidth: true
+                                        Layout.preferredWidth: 1
+                                        label: qsTr("Refresh")
+                                        value: isNaN(outputRow.modelData.hz) ? "" : outputRow.modelData.hz.toFixed(2)
+                                        unit: "Hz"
+                                        valueSize: Appearance.font.size.large
+                                    }
+
+                                    Instruments.Readout {
+                                        Layout.fillWidth: true
+                                        Layout.preferredWidth: 1
+                                        label: qsTr("Scale")
+                                        value: isNaN(outputRow.modelData.scale) ? "" : outputRow.modelData.scale.toFixed(2)
+                                        unit: "×"
+                                        valueSize: Appearance.font.size.large
+                                    }
+
+                                    Instruments.Readout {
+                                        Layout.fillWidth: true
+                                        Layout.preferredWidth: 1
+                                        label: qsTr("Position")
+                                        value: `${outputRow.modelData.x},${outputRow.modelData.y}`
+                                        unit: ""
+                                        valueSize: Appearance.font.size.large
+                                    }
+                                }
+                            ]
+                        }
+                    }
+
+                    SettingRow {
+                        visible: root.outputs.length === 0
+                        label: qsTr("No displays reported")
+                        description: root.statusText
+                    }
+
+                    SettingRow {
+                        label: qsTr("Resolution, refresh and scale")
+                        description: qsTr("Read-only for now: horneroctl does not yet expose per-output mode editing, and this pane never hand-edits compositor config.")
+                    }
                 }
 
-                StyledRect {
-                    Layout.fillWidth: true
-                    radius: Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.panel, 1)
-                    implicitHeight: monCol.implicitHeight + Appearance.padding.large * 2
+                ChannelPanel {
+                    title: qsTr("Arrangement")
+                    readoutAvailable: root.outputs.length > 0
+                    readout: root.outputs.length > 1 ? qsTr("%1 outputs").arg(root.outputs.length) : qsTr("single output")
 
-                    ColumnLayout {
-                        id: monCol
+                    Item {
+                        id: map
 
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.large
-                        spacing: Appearance.spacing.small
+                        readonly property real pad: Appearance.padding.large
+                        readonly property real minX: Math.min(...root.outputs.map(o => o.x))
+                        readonly property real minY: Math.min(...root.outputs.map(o => o.y))
+                        readonly property real spanX: Math.max(1, Math.max(...root.outputs.map(o => o.x + o.width)) - minX)
+                        readonly property real spanY: Math.max(1, Math.max(...root.outputs.map(o => o.y + o.height)) - minY)
+                        readonly property real k: Math.min((width - pad * 2) / spanX, (height - pad * 2) / spanY)
 
-                        StyledText {
-                            text: qsTr("Connected displays")
-                            font.pointSize: Appearance.font.size.normal
-                            font.weight: 500
-                        }
+                        Layout.fillWidth: true
+                        implicitHeight: 160
+                        visible: root.outputs.length > 0
+
+                        Accessible.role: Accessible.Graphic
+                        Accessible.name: qsTr("Display arrangement: %1").arg(root.outputs.map(o => `${o.name} ${o.width}×${o.height} at ${o.x},${o.y}`).join("; "))
 
                         Repeater {
-                            model: root.monitors
+                            model: root.outputs
 
-                            delegate: StyledText {
+                            delegate: Well {
+                                id: tile
+
                                 required property var modelData
 
+                                x: map.pad + (modelData.x - map.minX) * map.k + (map.width - map.pad * 2 - map.spanX * map.k) / 2
+                                y: map.pad + (modelData.y - map.minY) * map.k + (map.height - map.pad * 2 - map.spanY * map.k) / 2
+                                width: modelData.width * map.k - 2
+                                height: modelData.height * map.k - 2
+                                color: Signal.palette.signalWell
+                                outline: Signal.palette.signal
+
+                                StyledText {
+                                    anchors.centerIn: parent
+                                    width: parent.width - 8
+                                    horizontalAlignment: Text.AlignHCenter
+                                    elide: Text.ElideRight
+                                    mono: true
+                                    text: tile.modelData.name.length > 0 ? tile.modelData.name : qsTr("Output")
+                                    color: Signal.palette.onSignalWell
+                                    font.pointSize: Appearance.font.size.small
+                                    Accessible.ignored: true
+                                }
+                            }
+                        }
+                    }
+
+                    SettingRow {
+                        label: qsTr("Arrange displays")
+                        description: qsTr("Applied through horneroctl (Hyprland). With a single display most modes change nothing.")
+
+                        below: [
+                            Flow {
                                 Layout.fillWidth: true
-                                text: "🖥  " + modelData.label
-                                font.family: Appearance.font.family.mono
+                                spacing: Appearance.spacing.small
+
+                                Repeater {
+                                    model: [
+                                        { "mode": "extend-right", "label": qsTr("Extend right") },
+                                        { "mode": "extend-left", "label": qsTr("Extend left") },
+                                        { "mode": "extend-above", "label": qsTr("Extend above") },
+                                        { "mode": "extend-below", "label": qsTr("Extend below") },
+                                        { "mode": "mirror", "label": qsTr("Mirror") },
+                                        { "mode": "internal-only", "label": qsTr("Internal only") },
+                                        { "mode": "external-only", "label": qsTr("External only") }
+                                    ]
+
+                                    delegate: TextButton {
+                                        required property var modelData
+
+                                        text: modelData.label
+                                        type: TextButton.Tonal
+                                        onClicked: root.applyMode(modelData.mode)
+                                    }
+                                }
+                            },
+                            StyledText {
+                                Layout.fillWidth: true
+                                visible: root.actionText !== ""
+                                text: root.actionText
                                 font.pointSize: Appearance.font.size.small
-                                color: Signal.palette.ink
+                                color: Signal.palette.inkMuted
                                 wrapMode: Text.Wrap
                             }
+                        ]
+                    }
+                }
+
+                ChannelPanel {
+                    title: qsTr("Brightness")
+                    readoutAvailable: root.brightnessAvailable
+                    readout: root.brightnessAvailable ? qsTr("%1 %").arg(Math.round(root.brightness)) : ""
+
+                    SettingRow {
+                        label: qsTr("Backlight")
+                        description: root.brightnessText
+
+                        below: [
+                            SliderInput {
+                                Layout.fillWidth: true
+                                visible: root.brightnessAvailable
+                                label: qsTr("Brightness")
+                                value: root.brightness
+                                from: 0
+                                to: 100
+                                stepSize: 1
+                                decimals: 0
+                                suffix: "%"
+                                enabled: root.brightnessAvailable
+                                validator: IntValidator {
+                                    bottom: 0
+                                    top: 100
+                                }
+                                onValueModified: newValue => {
+                                    root.brightness = newValue;
+                                    brightnessTimer.restart();
+                                }
+                            }
+                        ]
+                    }
+                }
+
+                ChannelPanel {
+                    title: qsTr("Compositor")
+                    readoutAvailable: root.layoutCurrent !== ""
+                    readout: root.layoutCurrent
+
+                    SettingRow {
+                        visible: root.layoutCurrent === ""
+                        label: qsTr("Unavailable on this session")
+                        description: qsTr("Layout and animation controls need the Hyprland backend; nothing is faked.")
+                    }
+
+                    SettingRow {
+                        visible: root.layoutCurrent !== ""
+                        label: qsTr("Layout")
+
+                        SegmentedControl {
+                            accessibleName: qsTr("Compositor layout")
+                            model: ["scrolling", "dwindle", "master"]
+                            currentIndex: Math.max(0, model.indexOf(root.layoutCurrent))
+                            onActivated: index => root.applyLayout(model[index])
                         }
 
                         TextButton {
-                            text: qsTr("Refresh")
-                            type: TextButton.Tonal
-                            onClicked: root.refresh()
+                            text: qsTr("Restore")
+                            type: TextButton.Text
+                            onClicked: root.restoreCompositor("layout")
                         }
                     }
-                }
 
-                StyledRect {
-                    Layout.fillWidth: true
-                    radius: Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.panel, 1)
-                    implicitHeight: arrCol.implicitHeight + Appearance.padding.large * 2
+                    SettingRow {
+                        visible: root.layoutCurrent !== "" && root.animProfiles.length > 0
+                        label: qsTr("Animation profile")
 
-                    ColumnLayout {
-                        id: arrCol
-
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.large
-                        spacing: Appearance.spacing.small
-
-                        StyledText {
-                            text: qsTr("Arrangement")
-                            font.pointSize: Appearance.font.size.normal
-                            font.weight: 500
+                        SegmentedControl {
+                            accessibleName: qsTr("Animation profile")
+                            model: root.animProfiles
+                            currentIndex: Math.max(0, root.animProfiles.indexOf(root.animCurrent))
+                            onActivated: index => root.applyAnimProfile(root.animProfiles[index])
                         }
 
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: qsTr("Applied through horneroctl (Hyprland). With a single display most modes change nothing. Per-output resolution and scale editing is coming in a later slice.")
-                            font.pointSize: Appearance.font.size.small
-                            color: Signal.palette.ruleStrong
-                            wrapMode: Text.Wrap
-                        }
-
-                        Flow {
-                            Layout.fillWidth: true
-                            spacing: Appearance.spacing.small
-
-                            Repeater {
-                                model: [
-                                    { "mode": "extend-right", "label": qsTr("Extend right") },
-                                    { "mode": "extend-left", "label": qsTr("Extend left") },
-                                    { "mode": "extend-above", "label": qsTr("Extend above") },
-                                    { "mode": "extend-below", "label": qsTr("Extend below") },
-                                    { "mode": "mirror", "label": qsTr("Mirror") },
-                                    { "mode": "internal-only", "label": qsTr("Internal only") },
-                                    { "mode": "external-only", "label": qsTr("External only") }
-                                ]
-
-                                delegate: TextButton {
-                                    required property var modelData
-
-                                    text: modelData.label
-                                    type: TextButton.Tonal
-                                    onClicked: root.applyMode(modelData.mode)
-                                }
-                            }
-                        }
-
-                        StyledText {
-                            Layout.fillWidth: true
-                            visible: root.actionText !== ""
-                            text: root.actionText
-                            font.pointSize: Appearance.font.size.small
-                            color: Signal.palette.inkMuted
-                            wrapMode: Text.Wrap
+                        TextButton {
+                            text: qsTr("Restore")
+                            type: TextButton.Text
+                            onClicked: root.restoreCompositor("animations")
                         }
                     }
-                }
 
-                StyledRect {
-                    Layout.fillWidth: true
-                    radius: Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.panel, 1)
-                    implicitHeight: brightCol.implicitHeight + Appearance.padding.large * 2
-
-                    ColumnLayout {
-                        id: brightCol
-
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.large
-                        spacing: Appearance.spacing.small
-
-                        StyledText {
-                            text: qsTr("Brightness")
-                            font.pointSize: Appearance.font.size.normal
-                            font.weight: 500
-                        }
-
-                        SliderInput {
-                            Layout.fillWidth: true
-                            label: qsTr("Brightness")
-                            value: root.brightness
-                            from: 0
-                            to: 100
-                            stepSize: 1
-                            decimals: 0
-                            suffix: "%"
-                            validator: IntValidator {
-                                bottom: 0
-                                top: 100
-                            }
-                            onValueModified: newValue => {
-                                root.brightness = newValue;
-                                brightnessTimer.restart();
-                            }
-                        }
-
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: root.brightnessText
-                            font.pointSize: Appearance.font.size.small
-                            color: Signal.palette.inkMuted
-                            wrapMode: Text.Wrap
-                        }
-                    }
-                }
-
-                StyledRect {
-                    Layout.fillWidth: true
-                    radius: Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.panel, 1)
-                    implicitHeight: compCol.implicitHeight + Appearance.padding.large * 2
-
-                    ColumnLayout {
-                        id: compCol
-
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.large
-                        spacing: Appearance.spacing.small
-
-                        StyledText {
-                            text: qsTr("Compositor (Hyprland)")
-                            font.pointSize: Appearance.font.size.normal
-                            font.weight: 500
-                        }
-
-                        StyledText {
-                            Layout.fillWidth: true
-                            visible: root.layoutCurrent === ""
-                            text: qsTr("Compositor controls are unavailable on this session; nothing is faked.")
-                            font.pointSize: Appearance.font.size.small
-                            color: Signal.palette.inkMuted
-                            wrapMode: Text.Wrap
-                        }
-
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            visible: root.layoutCurrent !== ""
-                            spacing: Appearance.spacing.small
-
-                            StyledText {
-                                text: qsTr("Layout")
-                                font.pointSize: Appearance.font.size.small
-                                color: Signal.palette.inkMuted
-                            }
-
-                            Flow {
-                                Layout.fillWidth: true
-                                spacing: Appearance.spacing.small
-
-                                Repeater {
-                                    model: ["scrolling", "dwindle", "master"]
-
-                                    delegate: TextButton {
-                                        required property string modelData
-
-                                        text: modelData
-                                        type: root.layoutCurrent === modelData ? TextButton.Filled : TextButton.Tonal
-                                        onClicked: root.applyLayout(modelData)
-                                    }
-                                }
-
-                                TextButton {
-                                    text: qsTr("Restore layout")
-                                    type: TextButton.Tonal
-                                    onClicked: root.restoreCompositor("layout")
-                                }
-                            }
-
-                            StyledText {
-                                text: qsTr("Animation profile")
-                                font.pointSize: Appearance.font.size.small
-                                color: Signal.palette.inkMuted
-                            }
-
-                            Flow {
-                                Layout.fillWidth: true
-                                spacing: Appearance.spacing.small
-
-                                Repeater {
-                                    model: root.animProfiles
-
-                                    delegate: TextButton {
-                                        required property string modelData
-
-                                        text: modelData
-                                        type: root.animCurrent === modelData ? TextButton.Filled : TextButton.Tonal
-                                        onClicked: root.applyAnimProfile(modelData)
-                                    }
-                                }
-
-                                TextButton {
-                                    text: qsTr("Restore animations")
-                                    type: TextButton.Tonal
-                                    onClicked: root.restoreCompositor("animations")
-                                }
-                            }
-                        }
-
-                        StyledText {
-                            Layout.fillWidth: true
-                            visible: root.compositorText !== ""
-                            text: root.compositorText
-                            font.pointSize: Appearance.font.size.small
-                            color: Signal.palette.inkMuted
-                            wrapMode: Text.Wrap
-                        }
+                    SettingRow {
+                        visible: root.layoutCurrent !== "" && root.compositorText !== ""
+                        label: root.compositorText
                     }
                 }
             }

@@ -215,167 +215,122 @@ Item {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
-                spacing: Appearance.spacing.normal
+                spacing: Appearance.spacing.large
 
                 PaneHeader {
                     paneId: "input"
                 }
 
-                StyledText {
-                    Layout.fillWidth: true
-                    text: qsTr("Keyboard layout, layout list and pointer/keyboard tuning; keybindings live in the Keybinds pane.")
-                    font.pointSize: Appearance.font.size.small
-                    color: Signal.palette.inkMuted
-                    wrapMode: Text.Wrap
-                }
+                ChannelPanel {
+                    title: qsTr("Keyboard layout")
+                    readoutAvailable: root.curLayout !== ""
+                    readout: root.curVariant !== "" ? `${root.curLayout} (${root.curVariant})` : root.curLayout
 
-                StyledRect {
-                    Layout.fillWidth: true
-                    radius: Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.panel, 1)
-                    implicitHeight: kbCol.implicitHeight + Appearance.padding.large * 2
+                    SettingRow {
+                        label: qsTr("Active layout")
+                        description: root.layoutText
 
-                    ColumnLayout {
-                        id: kbCol
-
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.large
-                        spacing: Appearance.spacing.small
-
-                        StyledText {
-                            text: qsTr("Keyboard layout")
-                            font.pointSize: Appearance.font.size.normal
-                            font.weight: 500
-                        }
-
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: root.layoutText
-                            font.family: Appearance.font.family.mono
-                            font.pointSize: Appearance.font.size.small
-                            color: Signal.palette.ink
-                            wrapMode: Text.Wrap
-                        }
-
-                        RowLayout {
-                            spacing: Appearance.spacing.small
-
-                            TextButton {
-                                text: qsTr("Switch layout")
-                                type: TextButton.Filled
-                                onClicked: {
-                                    actionProc.out = "";
-                                    actionProc.command = ["horneroctl", "hardware", "keyboard", "layout", "--toggle", "--yes", "--json"];
-                                    actionProc.running = true;
-                                }
-                            }
-
-                            TextButton {
-                                text: qsTr("Keyboard settings…")
-                                type: TextButton.Tonal
-                                onClicked: {
-                                    actionProc.out = "";
-                                    actionProc.command = ["horneroctl", "hardware", "keyboard", "settings", "--json"];
-                                    actionProc.running = true;
-                                }
-                            }
-
-                            TextButton {
-                                text: qsTr("Refresh")
-                                type: TextButton.Tonal
-                                onClicked: root.refresh()
+                        TextButton {
+                            text: qsTr("Switch layout")
+                            type: TextButton.Filled
+                            onClicked: {
+                                actionProc.out = "";
+                                actionProc.command = ["horneroctl", "hardware", "keyboard", "layout", "--toggle", "--yes", "--json"];
+                                actionProc.running = true;
                             }
                         }
 
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: qsTr("Layout list (comma-separated XKB names, e.g. us,latam)")
-                            font.pointSize: Appearance.font.size.small
-                            color: Signal.palette.inkMuted
-                            wrapMode: Text.Wrap
+                        TextButton {
+                            text: qsTr("Keyboard settings…")
+                            type: TextButton.Tonal
+                            onClicked: {
+                                actionProc.out = "";
+                                actionProc.command = ["horneroctl", "hardware", "keyboard", "settings", "--json"];
+                                actionProc.running = true;
+                            }
                         }
 
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: Appearance.spacing.small
+                        TextButton {
+                            text: qsTr("Refresh")
+                            type: TextButton.Text
+                            onClicked: root.refresh()
+                        }
+                    }
 
-                            StyledTextField {
+                    SettingRow {
+                        label: qsTr("Layout list")
+                        description: root.layoutCount > 0 ? qsTr("Comma-separated XKB names, e.g. us,latam. %1 layouts are available on this system.").arg(root.layoutCount) : qsTr("Comma-separated XKB names, e.g. us,latam")
+
+                        below: [
+                            RowLayout {
                                 Layout.fillWidth: true
-                                placeholderText: qsTr("us,latam")
-                                text: root.layoutsField
-                                onTextChanged: root.layoutsField = text
-                                onAccepted: root.applyLayoutSet()
+                                spacing: Appearance.spacing.small
+
+                                Well {
+                                    Layout.fillWidth: true
+                                    implicitHeight: layoutsInput.implicitHeight + Appearance.padding.small * 2
+                                    outline: layoutsInput.activeFocus ? Signal.palette.focus : Signal.palette.rule
+
+                                    StyledTextField {
+                                        id: layoutsInput
+
+                                        anchors.fill: parent
+                                        anchors.margins: Appearance.padding.small
+                                        placeholderText: qsTr("us,latam")
+                                        text: root.layoutsField
+                                        onTextChanged: root.layoutsField = text
+                                        onAccepted: root.applyLayoutSet()
+                                    }
+                                }
+
+                                Well {
+                                    Layout.preferredWidth: 160
+                                    implicitHeight: variantInput.implicitHeight + Appearance.padding.small * 2
+                                    outline: variantInput.activeFocus ? Signal.palette.focus : Signal.palette.rule
+
+                                    StyledTextField {
+                                        id: variantInput
+
+                                        anchors.fill: parent
+                                        anchors.margins: Appearance.padding.small
+                                        placeholderText: qsTr("Variant (intl,)")
+                                        text: root.variantField
+                                        onTextChanged: root.variantField = text
+                                        onAccepted: root.applyLayoutSet()
+                                    }
+                                }
+
+                                TextButton {
+                                    text: qsTr("Apply layouts")
+                                    type: TextButton.Filled
+                                    enabled: root.layoutsField.trim() !== ""
+                                    onClicked: root.applyLayoutSet()
+                                }
                             }
+                        ]
+                    }
 
-                            StyledTextField {
-                                Layout.preferredWidth: 140
-                                placeholderText: qsTr("Variant (intl,)")
-                                text: root.variantField
-                                onTextChanged: root.variantField = text
-                                onAccepted: root.applyLayoutSet()
-                            }
-
-                            TextButton {
-                                text: qsTr("Apply layouts")
-                                type: TextButton.Filled
-                                enabled: root.layoutsField.trim() !== ""
-                                onClicked: root.applyLayoutSet()
-                            }
-                        }
-
-                        StyledText {
-                            Layout.fillWidth: true
-                            visible: root.layoutCount > 0
-                            text: qsTr("%1 XKB layouts available on this system (horneroctl hardware keyboard layout --list)").arg(root.layoutCount)
-                            font.pointSize: Appearance.font.size.small
-                            color: Signal.palette.ruleStrong
-                            wrapMode: Text.Wrap
-                        }
-
-                        StyledText {
-                            Layout.fillWidth: true
-                            visible: root.actionText !== ""
-                            text: root.actionText
-                            font.pointSize: Appearance.font.size.small
-                            color: Signal.palette.inkMuted
-                            wrapMode: Text.Wrap
-                        }
+                    SettingRow {
+                        visible: root.actionText !== ""
+                        label: root.actionText
                     }
                 }
 
-                StyledRect {
-                    Layout.fillWidth: true
-                    radius: Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.panel, 1)
-                    implicitHeight: pointerCol.implicitHeight + Appearance.padding.large * 2
+                ChannelPanel {
+                    title: qsTr("Pointer and keys")
+                    readoutAvailable: root.compositor === "hyprland"
+                    readout: root.compositor === "hyprland" ? qsTr("live (Hyprland)") : ""
 
-                    ColumnLayout {
-                        id: pointerCol
+                    SettingRow {
+                        visible: root.compositor !== "hyprland"
+                        label: qsTr("Unavailable on this session")
+                        description: qsTr("Pointer tuning needs the Hyprland backend (horneroctl hypr input); nothing is faked.")
+                    }
 
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.large
-                        spacing: Appearance.spacing.small
+                    SettingRow {
+                        visible: root.compositor === "hyprland"
 
-                        StyledText {
-                            text: qsTr("Pointer & keyboard")
-                            font.pointSize: Appearance.font.size.normal
-                            font.weight: 500
-                        }
-
-                        StyledText {
-                            Layout.fillWidth: true
-                            visible: root.compositor !== "hyprland"
-                            text: qsTr("Pointer tuning needs the Hyprland backend (horneroctl hypr input); on this compositor it is unavailable and nothing is faked.")
-                            font.pointSize: Appearance.font.size.small
-                            color: Signal.palette.inkMuted
-                            wrapMode: Text.Wrap
-                        }
-
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            visible: root.compositor === "hyprland"
-                            spacing: Appearance.spacing.small
-
+                        below: [
                             SliderInput {
                                 Layout.fillWidth: true
                                 label: qsTr("Pointer sensitivity")
@@ -391,126 +346,107 @@ Item {
 
                                 onValueModified: newValue => root.setInput("--sensitivity", newValue.toString())
                             }
+                        ]
+                    }
 
-                            RowLayout {
-                                spacing: Appearance.spacing.small
+                    SettingRow {
+                        visible: root.compositor === "hyprland"
+                        label: qsTr("Acceleration")
 
-                                StyledText {
-                                    text: qsTr("Acceleration")
-                                    font.pointSize: Appearance.font.size.small
-                                }
+                        SegmentedControl {
+                            accessibleName: qsTr("Acceleration")
+                            model: [qsTr("Adaptive"), qsTr("Flat")]
+                            currentIndex: root.accelProfile === "adaptive" ? 0 : 1
+                            onActivated: index => root.setInput("--accel-profile", index === 0 ? "adaptive" : "flat")
+                        }
+                    }
 
-                                TextButton {
-                                    text: qsTr("Adaptive")
-                                    type: root.accelProfile === "adaptive" ? TextButton.Filled : TextButton.Tonal
-                                    onClicked: root.setInput("--accel-profile", "adaptive")
-                                }
+                    SettingRow {
+                        visible: root.compositor === "hyprland"
+                        label: qsTr("Key repeat rate")
+                        description: qsTr("Per second")
 
-                                TextButton {
-                                    text: qsTr("Flat")
-                                    type: root.accelProfile === "flat" ? TextButton.Filled : TextButton.Tonal
-                                    onClicked: root.setInput("--accel-profile", "flat")
-                                }
-                            }
+                        CustomSpinBox {
+                            min: 1
+                            max: 100
+                            step: 1
+                            value: root.repeatRate
+                            onValueModified: value => root.setInput("--repeat-rate", Math.round(value).toString())
+                        }
+                    }
 
-                            SpinBoxRow {
-                                label: qsTr("Key repeat rate (per second)")
-                                value: root.repeatRate
-                                min: 1
-                                max: 100
-                                onValueModified: value => {
-                                    root.setInput("--repeat-rate", Math.round(value).toString());
-                                }
-                            }
+                    SettingRow {
+                        visible: root.compositor === "hyprland"
+                        label: qsTr("Key repeat delay")
+                        description: qsTr("Milliseconds")
 
-                            SpinBoxRow {
-                                label: qsTr("Key repeat delay (ms)")
-                                value: root.repeatDelay
-                                min: 100
-                                max: 1000
-                                step: 50
-                                onValueModified: value => {
-                                    root.setInput("--repeat-delay", Math.round(value).toString());
-                                }
-                            }
+                        CustomSpinBox {
+                            min: 100
+                            max: 1000
+                            step: 50
+                            value: root.repeatDelay
+                            onValueModified: value => root.setInput("--repeat-delay", Math.round(value).toString())
+                        }
+                    }
 
-                            ToggleRow {
-                                label: qsTr("Touchpad natural scroll")
-                                checked: root.naturalScroll
-                                toggle.onToggled: {
-                                    root.setInput("--natural-scroll", checked ? "true" : "false");
-                                }
-                            }
+                    SettingRow {
+                        visible: root.compositor === "hyprland"
+                        label: qsTr("Touchpad natural scroll")
 
-                            ToggleRow {
-                                label: qsTr("Touchpad tap-to-click")
-                                checked: root.tapToClick
-                                toggle.onToggled: {
-                                    root.setInput("--tap-to-click", checked ? "true" : "false");
-                                }
-                            }
+                        StyledSwitch {
+                            Accessible.role: Accessible.CheckBox
+                            Accessible.name: qsTr("Touchpad natural scroll")
+                            Accessible.checked: checked
+                            checked: root.naturalScroll
+                            onToggled: root.setInput("--natural-scroll", checked ? "true" : "false")
+                        }
+                    }
 
-                            StyledText {
-                                Layout.fillWidth: true
-                                visible: root.actionText !== ""
-                                text: root.actionText
-                                font.pointSize: Appearance.font.size.small
-                                color: Signal.palette.inkMuted
-                                wrapMode: Text.Wrap
-                            }
+                    SettingRow {
+                        visible: root.compositor === "hyprland"
+                        label: qsTr("Touchpad tap-to-click")
+
+                        StyledSwitch {
+                            Accessible.role: Accessible.CheckBox
+                            Accessible.name: qsTr("Touchpad tap-to-click")
+                            Accessible.checked: checked
+                            checked: root.tapToClick
+                            onToggled: root.setInput("--tap-to-click", checked ? "true" : "false")
                         }
                     }
                 }
 
-                StyledRect {
-                    Layout.fillWidth: true
-                    radius: Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.panel, 1)
-                    implicitHeight: restoreCol.implicitHeight + Appearance.padding.large * 2
+                ChannelPanel {
+                    title: qsTr("Restore defaults")
 
-                    ColumnLayout {
-                        id: restoreCol
+                    SettingRow {
+                        label: qsTr("Re-apply saved settings")
+                        description: qsTr("Each restore asks for a second click to confirm.")
 
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.large
-                        spacing: Appearance.spacing.small
+                        below: [
+                            Flow {
+                                Layout.fillWidth: true
+                                spacing: Appearance.spacing.small
 
-                        StyledText {
-                            text: qsTr("Restore defaults")
-                            font.pointSize: Appearance.font.size.normal
-                            font.weight: 500
-                        }
+                                TextButton {
+                                    text: root.armedRestore === "keyboard" ? qsTr("Click again to restore layout") : qsTr("Restore keyboard layout")
+                                    type: root.armedRestore === "keyboard" ? TextButton.Filled : TextButton.Tonal
+                                    onClicked: root.restoreDefaults("keyboard", ["horneroctl", "hardware", "keyboard", "layout", "--restore", "--yes", "--json"])
+                                }
 
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: qsTr("Re-apply the persisted keyboard layout, pointer/keyboard tuning and cursor size. Each restore asks for a second click to confirm.")
-                            font.pointSize: Appearance.font.size.small
-                            color: Signal.palette.inkMuted
-                            wrapMode: Text.Wrap
-                        }
+                                TextButton {
+                                    text: root.armedRestore === "input" ? qsTr("Click again to restore tuning") : qsTr("Restore pointer & keyboard")
+                                    type: root.armedRestore === "input" ? TextButton.Filled : TextButton.Tonal
+                                    onClicked: root.restoreDefaults("input", ["horneroctl", "hypr", "input", "restore", "--yes", "--json"])
+                                }
 
-                        Flow {
-                            Layout.fillWidth: true
-                            spacing: Appearance.spacing.small
-
-                            TextButton {
-                                text: root.armedRestore === "keyboard" ? qsTr("Click again to restore layout") : qsTr("Restore keyboard layout")
-                                type: root.armedRestore === "keyboard" ? TextButton.Filled : TextButton.Tonal
-                                onClicked: root.restoreDefaults("keyboard", ["horneroctl", "hardware", "keyboard", "layout", "--restore", "--yes", "--json"])
+                                TextButton {
+                                    text: root.armedRestore === "cursor" ? qsTr("Click again to restore cursor") : qsTr("Restore cursor")
+                                    type: root.armedRestore === "cursor" ? TextButton.Filled : TextButton.Tonal
+                                    onClicked: root.restoreDefaults("cursor", ["horneroctl", "hypr", "cursor", "restore", "--yes", "--json"])
+                                }
                             }
-
-                            TextButton {
-                                text: root.armedRestore === "input" ? qsTr("Click again to restore tuning") : qsTr("Restore pointer & keyboard")
-                                type: root.armedRestore === "input" ? TextButton.Filled : TextButton.Tonal
-                                onClicked: root.restoreDefaults("input", ["horneroctl", "hypr", "input", "restore", "--yes", "--json"])
-                            }
-
-                            TextButton {
-                                text: root.armedRestore === "cursor" ? qsTr("Click again to restore cursor") : qsTr("Restore cursor")
-                                type: root.armedRestore === "cursor" ? TextButton.Filled : TextButton.Tonal
-                                onClicked: root.restoreDefaults("cursor", ["horneroctl", "hypr", "cursor", "restore", "--yes", "--json"])
-                            }
-                        }
+                        ]
                     }
                 }
             }

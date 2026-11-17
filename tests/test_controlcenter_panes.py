@@ -313,7 +313,6 @@ def test_flickable_column_content_uses_its_implicit_height():
         ("dashboard/DashboardPane.qml", "dashboardLayout"),
         ("taskbar/TaskbarPane.qml", "sidebarLayout"),
         ("appearance/AppearancePane.qml", "sidebarLayout"),
-        ("audio/AudioPane.qml", "leftContent"),
         ("audio/AudioPane.qml", "contentLayout"),
         ("launcher/LauncherPane.qml", "debugLayout"),
     ):
@@ -374,11 +373,15 @@ def test_power_tiles_fill_the_settings_column_before_aligning_actions():
     )
 
 
-def test_audio_stream_controls_listen_to_pipewire_volume_notifications():
+def test_audio_levels_are_bound_to_pipewire_nodes_with_honest_unavailable_state():
     pane = (CC / "audio" / "AudioPane.qml").read_text()
+    level = (CC / "components" / "StreamLevel.qml").read_text()
+    # Slider, readout and meter bind to the node volume; no imperative copy.
+    assert "level: Audio.getStreamVolume(modelData)" in pane
+    assert "level: Audio.volume" in pane and "level: Audio.sourceVolume" in pane
+    assert "SegmentMeter {" in level and "available: root.available" in level
+    assert 'qsTr("unavailable")' in level
     assert "function onAudioChanged()" not in pane
-    assert pane.count("target: modelData?.audio") == 2
-    assert pane.count("function onVolumesChanged()") == 2
 
 
 def test_terminal_settings_uses_available_rounded_clipping_component():
@@ -417,15 +420,14 @@ def test_power_tiles_keep_variable_icons_from_shifting_the_label_column():
 
 
 def test_audio_device_labels_keep_a_stable_icon_column():
-    pane = (CC / "audio" / "AudioPane.qml").read_text()
+    row = (CC / "components" / "DeviceRow.qml").read_text()
     slot_width = "Appearance.font.size.extraLarge * 1.5"
-
-    for section in ("outputRowLayout", "inputRowLayout"):
-        row = pane.split(f"id: {section}", 1)[1].split("StyledText {", 1)[0]
-        icon = row.split("Glyph {", 1)[1]
-        for constraint in ("minimumWidth", "preferredWidth", "maximumWidth"):
-            assert f"Layout.{constraint}: {slot_width}" in icon
-        assert "horizontalAlignment: Text.AlignHCenter" in icon
+    icon = row.split("Glyph {", 1)[1].split("ColumnLayout {", 1)[0]
+    for constraint in ("minimumWidth", "preferredWidth", "maximumWidth"):
+        assert f"Layout.{constraint}: {slot_width}" in icon
+    assert "horizontalAlignment: Text.AlignHCenter" in icon
+    pane = (CC / "audio" / "AudioPane.qml").read_text()
+    assert pane.count("DeviceRow {") == 2
 
 
 def test_control_center_navigation_uses_keyboard_accessible_interactive_controls():

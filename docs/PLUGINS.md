@@ -503,6 +503,42 @@ Geometry hints live on the desktop surface:
 - Desktop widgets live on the desktop layer, below windows; they never
   take keyboard focus from applications.
 
+### Instances of a desktop widget
+
+PluginKit 4 lets the person place the same desktop widget more than once, for
+example two clocks for two time zones, each with its own settings, position and
+size (RFC 0003 section 6).
+
+An extension opts in with `"instances": true` on its `desktop` surface (and
+`"pluginKit": 4`) and reads its settings per instance:
+
+```qml
+Item {
+    property string hostInstanceId: ""   // "" = main widget
+    Settings { pluginId: "my-clock"; instanceId: root.hostInstanceId }
+}
+```
+
+The validator refuses `instances: true` unless the desktop entrypoint declares
+`hostInstanceId` and binds an `instanceId`, so a second copy can never silently
+share the first one's state; an extension that did not opt in cannot get extra
+instances. Control Center › Extensions › Settings then shows an **Instances**
+block: select the main widget or an instance to retarget the generated
+settings and the live preview, **Add instance** (starts from the selected
+instance's stored settings), rename, and **Remove instance** (deletes its
+settings, position and size on every display). At most 8 extra instances.
+
+Storage: `plugins.instances` is `{ "<pluginId>": [{ "id": "i1", "label": "Home" }] }`
+in the shell config. An instance's key is `<pluginId>#<instanceId>`; settings
+(`plugins.settings`), geometry (`plugins.desktopWidgets`) and anchor
+(`plugins.desktopWidgetSlots`) are stored under that key, and the main widget
+keeps the plain plugin id, so nothing existing is migrated. Load state,
+diagnostics, safe mode and enable/disable stay per plugin; `qs ipc call plugins
+status` reports the plugin once. The curated Signal deck keeps one widget per
+extension. `Desktop.anchor()` and `Desktop.geometry()` accept an instance key.
+
+`examples/plugins/example-instance-clock` is a complete example.
+
 ## Accessibility and keyboard contract
 
 Extension UI follows the same keyboard/focus rules as native shell
@@ -615,6 +651,7 @@ also renders sensibly before/without injection.
 | `hostAvailableHeight` | `int` | Same for height (0 = uncapped, e.g. scrolling dashboard cards) |
 | `hostCompact` | `bool` | Narrow surface: any vertical rail, or a horizontal bar under the shell's compact width breakpoint. Drop secondary labels and stack rows when set |
 | `hostScreenName` | `string` | Display hosting this instance (a bar/desktop plugin is instantiated once per screen); empty when not screen-bound |
+| `hostInstanceId` | `string` | PluginKit 4: instance of a desktop widget — empty for the main widget, a short id for an extra [instance](#instances-of-a-desktop-widget) |
 
 Sizes are logical pixels, already corrected for output scale by Qt,
 so one layout serves every scale. On the bar, the cross-axis
@@ -942,7 +979,7 @@ minimum it needs with the optional top-level `"pluginKit"` integer (default
 | Level | Adds |
 | --- | --- |
 | 3 | Signal: Theme, glyphs, surfaces (bar, dashboard, desktop, background, launcher, settings), typed settings (boolean, integer, number, string, enum), data facades |
-| 4 | Settings schema v2 (colour, list, text, path; title, group, unit, step, visibleWhen), Control Center live preview |
+| 4 | Settings schema v2 (colour, list, text, path; title, group, unit, step, visibleWhen), Control Center live preview, per-instance desktop widgets (`surfaces.desktop.instances`, `hostInstanceId`, `Settings.instanceId`) |
 
 `scripts/validate_plugin.py` derives the level a manifest actually needs from
 the features it uses and rejects a package that under-declares; a value above

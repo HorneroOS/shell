@@ -1254,6 +1254,10 @@
           ],
           "default": "bottom-right",
           "description": "Desktop surface only: where the widget starts on a screen before the person moves it."
+        },
+        "instances": {
+          "type": "boolean",
+          "description": "Desktop surface only (PluginKit 4, RFC 0003). true declares that the extension reads its settings per instance (hostInstanceId + Settings.instanceId), so Control Center may add extra instances of the widget, each with its own settings, position and size. Requires pluginKit 4; scripts/validate_plugin.py checks the entrypoint reads hostInstanceId."
         }
       }
     }

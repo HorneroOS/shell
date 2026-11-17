@@ -53,12 +53,12 @@ Item {
         let priority = 0;
         for (const entry of userStable.list) {
             const hint = Plugins.surfaceFor(entry, "desktop") ?? ({});
-            const explicit = perScreen && typeof perScreen === "object" ? perScreen[entry.id] : undefined;
+            const explicit = perScreen && typeof perScreen === "object" ? perScreen[entry.instanceKey] : undefined;
             const slot = Config.plugins.allowedDesktopSlots.includes(explicit) ? explicit : (Config.plugins.allowedDesktopSlots.includes(hint.anchor) ? hint.anchor : "bottom-right");
             const minWidth = hint.minWidth ?? 160;
             const minHeight = hint.minHeight ?? 96;
             items.push({
-                id: entry.id,
+                id: entry.instanceKey,
                 priority: priority++,
                 side: slot.endsWith("left") ? "left" : "right",
                 edge: slot.startsWith("bottom") ? "bottom" : "top",
@@ -67,9 +67,9 @@ Item {
                 width: Math.max(minWidth, hint.width ?? 320),
                 height: Math.max(minHeight, hint.height ?? 300)
             });
-            const geometry = Config.plugins.desktopWidgetGeometry(entry.id, root.screenName);
+            const geometry = Config.plugins.desktopWidgetGeometry(entry.instanceKey, root.screenName);
             if (geometry)
-                saved[entry.id] = geometry;
+                saved[entry.instanceKey] = geometry;
         }
         return Experience.deckCompose({
             area: {
@@ -88,7 +88,7 @@ Item {
             byId[placement.id] = placement;
         return byId;
     }
-    readonly property var widgets: root.userSet ? userStable.list.filter(e => root.userPlacements[e.id] !== undefined) : []
+    readonly property var widgets: root.userSet ? userStable.list.filter(e => root.userPlacements[e.instanceKey] !== undefined) : []
     readonly property var noRoomIds: root.userComposition.dropped.map(d => d.id)
     onNoRoomIdsChanged: Plugins.desktopNoRoom = root.userSet ? root.noRoomIds : []
 
@@ -138,7 +138,7 @@ Item {
             entry: modelData
             screenName: root.screenName
             area: root
-            autoPlacement: root.userPlacements[modelData.id] ?? null
+            autoPlacement: root.userPlacements[modelData.instanceKey] ?? null
             // Channel numbers count from 01 in manifest order.
             channel: index + 1
         }
@@ -241,7 +241,7 @@ Item {
                         return;
                     }
                     for (const widget of root.widgets)
-                        Config.plugins.resetDesktopWidgetGeometry(widget.id, root.screenName);
+                        Config.plugins.resetDesktopWidgetGeometry(widget.instanceKey, root.screenName);
                 }
             }
 

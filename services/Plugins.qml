@@ -192,6 +192,11 @@ Singleton {
                             normalized[name].resizable = surface.resizable;
                         if (typeof surface.anchor === "string")
                             normalized[name].anchor = surface.anchor;
+                        // RFC 0003: the extension reads its settings per
+                        // instance (hostInstanceId), so extra instances
+                        // may be added in Control Center.
+                        if (surface.instances === true)
+                            normalized[name].instances = true;
                     }
                     if (name === "dashboard") {
                         if (["compact", "standard", "wide"].includes(surface.size))
@@ -687,8 +692,35 @@ Singleton {
         return root.pluginsForSurface("dashboard");
     }
 
+    // Desktop widgets, one host copy per instance (RFC 0003 section 6).
+    // The primary instance is the widget every enabled extension already
+    // has (instanceId "", key = plugin id). Extra instances exist only for
+    // an extension whose desktop surface declares `instances: true` (it
+    // reads its own settings through hostInstanceId), so an extension that
+    // never opted in can never render a second copy sharing one state.
+    // Every copy keeps `id` = the plugin id (load state, diagnostics and
+    // safe mode stay per plugin) and adds instanceId / instanceKey /
+    // instanceLabel for geometry, anchor and settings.
     function desktopPlugins(): var {
-        return root.pluginsForSurface("desktop");
+        const result = [];
+        for (const entry of root.pluginsForSurface("desktop")) {
+            const declared = root.surfaceFor(entry, "desktop");
+            result.push(Object.assign({}, entry, {
+                instanceId: "",
+                instanceKey: entry.id,
+                instanceLabel: ""
+            }));
+            if (!declared || declared.instances !== true)
+                continue;
+            for (const instance of Config.plugins.instancesOf(entry.id)) {
+                result.push(Object.assign({}, entry, {
+                    instanceId: instance.id,
+                    instanceKey: Config.plugins.instanceKey(entry.id, instance.id),
+                    instanceLabel: instance.label
+                }));
+            }
+        }
+        return result;
     }
 
     // Signal instrument deck (services/deck.js): the curated first-party

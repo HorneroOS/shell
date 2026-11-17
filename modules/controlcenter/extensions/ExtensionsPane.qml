@@ -956,6 +956,14 @@ Item {
                                 }
                             }
 
+                            PluginInstancesSection {
+                                id: instancesSection
+
+                                Layout.fillWidth: true
+                                visible: root.settingsPluginId === row.entry.id && root.hasPluginSettings(row.entry) && instancesSection.supported
+                                pluginId: row.entry.id
+                            }
+
                             PluginPreviewFrame {
                                 id: previewFrame
 
@@ -963,12 +971,14 @@ Item {
                                 visible: root.settingsPluginId === row.entry.id && root.hasPluginSettings(row.entry) && previewFrame.shown
                                 active: root.settingsPluginId === row.entry.id && root.hasPluginSettings(row.entry)
                                 pluginId: row.entry.id
+                                instanceId: instancesSection.supported ? instancesSection.selected : ""
                             }
 
                             PluginSettingsSection {
                                 Layout.fillWidth: true
                                 visible: root.settingsPluginId === row.entry.id && root.hasPluginSettings(row.entry)
                                 pluginId: row.entry.id
+                                storageKey: Config.plugins.instanceKey(row.entry.id, instancesSection.supported ? instancesSection.selected : "")
                                 settings: root.pluginSettings(row.entry)
                             }
 

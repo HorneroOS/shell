@@ -16,8 +16,11 @@ QtObject {
 
     // The anchor a widget starts from on a screen (one of nine names,
     // e.g. "top-right"), before the person moves it.
+    // `pluginId` may be an instance key (`<id>#<instanceId>`, RFC 0003
+    // section 6): pass `hostInstanceKey`-style keys through unchanged.
     function anchor(pluginId: string, screenName: string): string {
-        if (!Plugins.hasPlacement(pluginId, "desktop") && !Plugins.hasSurface(pluginId, "desktop"))
+        const base = String(pluginId).split("#")[0];
+        if (!Plugins.hasPlacement(base, "desktop") && !Plugins.hasSurface(base, "desktop"))
             return "bottom-right";
         return Config.plugins.desktopWidgetSlot(pluginId, screenName);
     }

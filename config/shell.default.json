@@ -804,6 +804,7 @@
   },
   "plugins": {
     "settings": {},
+    "instances": {},
     "desktopWidgetSlots": {},
     "desktopWidgets": {},
     "dashboardLayout": {},

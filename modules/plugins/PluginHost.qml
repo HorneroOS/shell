@@ -170,7 +170,7 @@ Scope {
                                     Plugins.markFailed(slot.modelData.id, `manifest surfaces.${name} must be an object`);
                                     return;
                                 }
-                                const desktopKeys = ["width", "height", "minWidth", "minHeight", "resizable", "anchor"];
+                                const desktopKeys = ["width", "height", "minWidth", "minHeight", "resizable", "anchor", "instances"];
                                 const extra = Object.keys(surface).filter(key => key !== "entrypoint" && key !== "enabled" && key !== "size" && key !== "category" && key !== "section" && !desktopKeys.includes(key));
                                 if (extra.length > 0) {
                                     Plugins.markFailed(slot.modelData.id, `manifest surfaces.${name} contains unknown fields: ${extra.join(", ")}`);
@@ -222,6 +222,10 @@ Scope {
                                 }
                                 if (surface.resizable !== undefined && typeof surface.resizable !== "boolean") {
                                     Plugins.markFailed(slot.modelData.id, "manifest surfaces.desktop.resizable must be a boolean");
+                                    return;
+                                }
+                                if (surface.instances !== undefined && (typeof surface.instances !== "boolean" || (surface.instances && !(Number.isInteger(manifest.pluginKit) && manifest.pluginKit >= 4)))) {
+                                    Plugins.markFailed(slot.modelData.id, "manifest surfaces.desktop.instances must be a boolean and requires pluginKit 4");
                                     return;
                                 }
                                 if (surface.anchor !== undefined && !["top-left", "top-center", "top-right", "middle-left", "middle-center", "middle-right", "bottom-left", "bottom-center", "bottom-right"].includes(surface.anchor)) {

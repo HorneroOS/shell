@@ -5,6 +5,13 @@ import QtQuick
 
 JsonObject {
     property string pluginId: ""
+    // Per-instance settings (RFC 0003 section 6): bind this to the host
+    // context property `hostInstanceId` of the widget root. Empty (the
+    // default) is the primary instance and reads/writes exactly what it
+    // always did; a non-empty id reads and writes that instance's own
+    // values, still validated against the plugin's declarations.
+    property string instanceId: ""
+    readonly property string namespaceKey: instanceId !== "" ? `${pluginId}#${instanceId}` : pluginId
 
     function value(key: string, fallback: var): var {
         if (!validKey(key))
@@ -16,7 +23,7 @@ JsonObject {
 
         const storedSettings = Config.plugins.settings;
         const storedPlugins = storedSettings && typeof storedSettings === "object" && !Array.isArray(storedSettings) ? storedSettings : null;
-        const candidateValues = storedPlugins ? storedPlugins[pluginId] : null;
+        const candidateValues = storedPlugins ? storedPlugins[namespaceKey] : null;
         const values = candidateValues && typeof candidateValues === "object" && !Array.isArray(candidateValues) ? candidateValues : null;
         const stored = values && Object.prototype.hasOwnProperty.call(values, key) ? values[key] : undefined;
         // Migration (shell#374): a stored value that no longer
@@ -34,7 +41,7 @@ JsonObject {
         if (!declaration || !validForDeclaration(value, declaration))
             return false;
 
-        return Config.plugins.setSetting(pluginId, key, value);
+        return Config.plugins.setSetting(namespaceKey, key, value);
     }
 
     // Reset (shell#374): removes the stored value so reads return
@@ -44,11 +51,11 @@ JsonObject {
         if (!validKey(key) || !Plugins.settingDeclaration(pluginId, key))
             return false;
 
-        return Config.plugins.resetSetting(pluginId, key);
+        return Config.plugins.resetSetting(namespaceKey, key);
     }
 
     function resetAll(): bool {
-        return Config.plugins.resetSettings(pluginId);
+        return Config.plugins.resetSettings(namespaceKey);
     }
 
     function validForDeclaration(value: var, declaration: var): bool {

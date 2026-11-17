@@ -79,7 +79,7 @@ def test_diagnostic_details_are_redacted_before_log_store_or_console():
     for needle in ("token", "password", "secret", "api[_-]?key", "Bearer", "<redacted>"):
         assert needle in SERVICE
     # markFailed must log the sanitized copy, never the raw detail.
-    assert "failed to load${surface ? ` (${surface})` : \"\"}: ${clean}`" in SERVICE
+    assert "failed to load${named ? ` (${surface})` : \"\"}: ${clean}`" in SERVICE
     assert "failed to load: ${detail}`" not in SERVICE
 
 

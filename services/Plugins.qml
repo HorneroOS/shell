@@ -700,8 +700,8 @@ Singleton {
         }) : e);
     }
 
-    function markLoaded(id: string, surface: string): void {
-        const key = surface || "main";
+    function markLoaded(id: string, surface: var): void {
+        const key = typeof surface === "string" && surface !== "" ? surface : "main";
         const current = root.entries.find(e => e.id === id);
         const failed = Object.assign({}, current ? current.failedSurfaces : null);
         delete failed[key];
@@ -714,12 +714,13 @@ Singleton {
             return;
         }
         root.setState(id, "loaded", "");
-        root.logDiagnostic(id, "loaded", surface || "");
+        root.logDiagnostic(id, "loaded", typeof surface === "string" ? surface : "");
     }
 
-    function markFailed(id: string, detail: string, surface: string): void {
+    function markFailed(id: string, detail: var, surface: var): void {
         const clean = root.sanitizeDetail(detail);
-        const key = surface || "main";
+        const named = typeof surface === "string" && surface !== "";
+        const key = named ? surface : "main";
         const current = root.entries.find(e => e.id === id);
         const failed = Object.assign({}, current ? current.failedSurfaces : null);
         failed[key] = clean;
@@ -727,8 +728,8 @@ Singleton {
             failedSurfaces: failed
         }) : e);
         root.setState(id, "failed", clean);
-        root.logDiagnostic(id, "failed", surface ? `${surface}: ${clean}` : clean);
-        console.warn(`[plugins] ${id} failed to load${surface ? ` (${surface})` : ""}: ${clean}`);
+        root.logDiagnostic(id, "failed", named ? `${surface}: ${clean}` : clean);
+        console.warn(`[plugins] ${id} failed to load${named ? ` (${surface})` : ""}: ${clean}`);
     }
 
     // Loader.errorString is empty for asynchronous loads, so failures used

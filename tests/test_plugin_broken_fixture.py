@@ -81,7 +81,7 @@ def test_host_marks_broken_failed_and_healthy_neighbour_loaded():
     assert "Plugins.markFailed(modelData.id" in BAR_HOST
     # markFailed records state + a bounded, redacted diagnostic entry.
     assert 'root.setState(id, "failed", clean)' in SERVICE
-    assert 'root.logDiagnostic(id, "failed", surface ? `${surface}: ${clean}` : clean)' in SERVICE
+    assert 'root.logDiagnostic(id, "failed", named ? `${surface}: ${clean}` : clean)' in SERVICE
     assert "slice(-50)" in SERVICE and "sanitizeDetail" in SERVICE
     assert "diagnosticsLog: root.diagnosticsLog" in SERVICE
 

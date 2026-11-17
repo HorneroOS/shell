@@ -77,3 +77,18 @@ def test_sizes_are_searchable():
     reg = (CC / "PaneRegistry.qml").read_text()
     for sid in ("launcher-sizes", "notification-sizes", "session-size", "lock-size"):
         assert f'id: "{sid}"' in reg
+
+
+def test_idle_and_battery_defaults_match_factory():
+    qml = (CC / "power" / "IdleBatteryPanel.qml").read_text()
+    idle = {t["idleAction"] if isinstance(t["idleAction"], str) else "suspend": t["timeout"]
+            for t in FACTORY["general"]["idle"]["timeouts"]}
+    assert (idle["lock"], idle["dpms off"], idle["suspend"]) == (180, 300, 600)
+    for kind, minutes in (("lock", 3), ("dpms", 5), ("suspend", 10)):
+        assert f'timeoutMinutes("{kind}", {minutes})' in qml and "factory: %d" % minutes in qml
+    levels = sorted((l["level"] for l in FACTORY["general"]["battery"]["warnLevels"]), reverse=True)
+    assert levels == [20, 10, 5]
+    assert FACTORY["general"]["battery"]["criticalLevel"] == 3
+    for n in (20, 10, 5, 3):
+        assert f"factory: {n}" in qml
+    assert "PowerPane" and "IdleBatteryPanel {}" in (CC / "power" / "PowerPane.qml").read_text()

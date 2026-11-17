@@ -259,6 +259,8 @@ Item {
                     }
                 }
 
+                IdleBatteryPanel {}
+
                 // ── Last action result ───────────────────────────────
                 StyledText {
                     visible: root.lastResult.length > 0

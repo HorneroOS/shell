@@ -1,5 +1,6 @@
 pragma Singleton
 
+import "reactions.js" as Reactions
 import qs.utils
 import Quickshell
 import QtQuick
@@ -143,6 +144,9 @@ Singleton {
         property string activityLevel: "normal"
         property bool wanderEnabled: false
         property bool sleepAtNest: false
+        // Reactions policy as one JSON document (validated by
+        // reactions.js sanitizeSettings on every read).
+        property string reactions: ""
         property bool nestEnabled: true
         property int nestStage: 0
         property int nestProgress: 0
@@ -175,8 +179,79 @@ Singleton {
     property alias wanderEnabled: persist.wanderEnabled
     property alias sleepAtNest: persist.sleepAtNest
     property alias nestEnabled: persist.nestEnabled
+    property alias reactionsJson: persist.reactions
     property alias nestStage: persist.nestStage
     property alias nestProgress: persist.nestProgress
+
+    // Reactions to real events (reactions.js is the policy; the
+    // CompanionReactions singleton is the bus). Always a complete,
+    // validated settings object.
+    readonly property var reactionSettings: {
+        let raw = {};
+        try {
+            raw = persist.reactions === "" ? {} : JSON.parse(persist.reactions);
+        } catch (e) {
+            raw = {};
+        }
+        return Reactions.sanitizeSettings(raw);
+    }
+
+    // Replaces the whole reactions document (validated before storing).
+    function setReactionSettings(next: var): void {
+        persist.reactions = JSON.stringify(Reactions.sanitizeSettings(next));
+        root.markDirty();
+    }
+
+    // Edits one top-level key (or modeBehaviour.<mode> / quietHours.<k>
+    // through the helpers below) without losing the others.
+    function patchReactions(key: string, value: var): void {
+        const next = Reactions.sanitizeSettings(root.reactionSettings);
+        next[key] = value;
+        root.setReactionSettings(next);
+    }
+
+    function setKindEnabled(kind: string, on: bool): void {
+        const next = Reactions.sanitizeSettings(root.reactionSettings);
+        next.kindsOff = next.kindsOff.filter(k => k !== kind);
+        if (!on)
+            next.kindsOff.push(kind);
+        root.setReactionSettings(next);
+    }
+
+    function setModeBehaviour(mode: string, level: string): void {
+        const next = Reactions.sanitizeSettings(root.reactionSettings);
+        next.modeBehaviour[mode] = level;
+        root.setReactionSettings(next);
+    }
+
+    function setQuietHours(field: string, value: var): void {
+        const next = Reactions.sanitizeSettings(root.reactionSettings);
+        next.quietHours[field] = value;
+        root.setReactionSettings(next);
+    }
+
+    // One reaction beat from the policy: a one-shot animation plus an
+    // optional bubble. Only while visible and settled; a sleeping
+    // companion is only woken by an important (priority 3) event, and a
+    // task state (listening/thinking/dragging ...) is never interrupted.
+    // Returns whether it was shown.
+    function playReaction(anim: string, bubble: string, bubbleMs: int, priority: int): bool {
+        if (!root.visible)
+            return false;
+        const s = persist.state;
+        const settled = s === "idle" || s === "hovering" || s === "talking";
+        if (!settled && !(s === "sleeping" && priority >= 3))
+            return false;
+        if (s === "sleeping")
+            persist.state = "idle";
+        if (anim !== "" && Companion.isKnownAnimation(anim))
+            persist.overrideAnim = anim;
+        if (bubble !== "")
+            root.say(bubble, bubbleMs);
+        persist.lastActiveMs = Date.now();
+        root.markDirty();
+        return true;
+    }
 
     // The animation the player should show right now.
     // NOTE: bare `persist` (not `root.persist`): qualified access through
@@ -479,7 +554,8 @@ Singleton {
             sleepAtNest: persist.sleepAtNest,
             nestEnabled: persist.nestEnabled,
             nestStage: persist.nestStage,
-            nestProgress: persist.nestProgress
+            nestProgress: persist.nestProgress,
+            reactions: persist.reactions
         });
     }
 
@@ -502,6 +578,14 @@ Singleton {
     // later loads must not clobber it.
     function adoptCurrent(): void {
         root._restored = true;
+    }
+
+    function _parseJson(text: string): var {
+        try {
+            return text === "" ? {} : JSON.parse(text);
+        } catch (e) {
+            return {};
+        }
     }
 
     // Tolerant versioned parse mirroring Welcome/State.qml: wrong types
@@ -554,6 +638,8 @@ Singleton {
                     persist.wanderEnabled = o.wanderEnabled;
                 if (typeof o.sleepAtNest === "boolean")
                     persist.sleepAtNest = o.sleepAtNest;
+                if (typeof o.reactions === "string")
+                    persist.reactions = JSON.stringify(Reactions.sanitizeSettings(root._parseJson(o.reactions)));
                 if (typeof o.nestEnabled === "boolean")
                     persist.nestEnabled = o.nestEnabled;
                 if (typeof o.nestStage === "number")

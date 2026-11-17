@@ -19,6 +19,11 @@ Singleton {
     readonly property list<Notif> popups: list.filter(n => n.popup)
     property alias dnd: props.dnd
 
+    // Emitted once per notification that is actually shown (not a
+    // collapsed duplicate, not held by DND or an Experience mode). The
+    // Companion listens to react; nothing else depends on it.
+    signal received(bool critical)
+
     // S12: hard bound on live notifications. A spammy sender must
     // not grow memory, the center list, or the persisted JSON
     // without limit; legitimate flows never hold this many live
@@ -166,6 +171,8 @@ Singleton {
                 notification: notif
             });
             root.list = [comp, ...root.list];
+            if (route.popup)
+                root.received(critical);
             if (notif.urgency !== NotificationUrgency.Critical)
                 root._enforcePerApp(notif.appName);
             if (root.list.length > root.maxListSize)

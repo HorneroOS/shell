@@ -33,6 +33,7 @@ Item {
 
         visible: false
         text: root.text
+        textFormat: Text.PlainText
         font.pixelSize: 13
     }
 
@@ -54,6 +55,7 @@ Item {
             anchors.topMargin: 10
             anchors.bottomMargin: 10
             text: root.text
+            textFormat: Text.PlainText
             color: root.fg
             font.pixelSize: 13
             wrapMode: Text.Wrap

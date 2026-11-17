@@ -111,7 +111,7 @@ Item {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
-                spacing: Appearance.spacing.normal
+                spacing: Appearance.spacing.large
 
                 PaneHeader {
                     paneId: "accessibility"
@@ -125,24 +125,15 @@ Item {
                     wrapMode: Text.Wrap
                 }
 
-                StyledRect {
-                    Layout.fillWidth: true
-                    radius: Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.panel, 1)
-                    implicitHeight: visionCol.implicitHeight + Appearance.padding.large * 2
+                ChannelPanel {
+                    title: qsTr("Vision")
 
                     ColumnLayout {
                         id: visionCol
 
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.large
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
                         spacing: Appearance.spacing.small
-
-                        StyledText {
-                            text: qsTr("Vision")
-                            font.pointSize: Appearance.font.size.normal
-                            font.weight: 500
-                        }
 
                         SwitchRow {
                             label: qsTr("High contrast")
@@ -198,24 +189,15 @@ Item {
                     }
                 }
 
-                StyledRect {
-                    Layout.fillWidth: true
-                    radius: Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.panel, 1)
-                    implicitHeight: motionCol.implicitHeight + Appearance.padding.large * 2
+                ChannelPanel {
+                    title: qsTr("Motion")
 
                     ColumnLayout {
                         id: motionCol
 
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.large
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
                         spacing: Appearance.spacing.small
-
-                        StyledText {
-                            text: qsTr("Motion")
-                            font.pointSize: Appearance.font.size.normal
-                            font.weight: 500
-                        }
 
                         SliderInput {
                             Layout.fillWidth: true
@@ -269,24 +251,15 @@ Item {
                     }
                 }
 
-                StyledRect {
-                    Layout.fillWidth: true
-                    radius: Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.panel, 1)
-                    implicitHeight: cursorCol.implicitHeight + Appearance.padding.large * 2
+                ChannelPanel {
+                    title: qsTr("Cursor")
 
                     ColumnLayout {
                         id: cursorCol
 
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.large
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
                         spacing: Appearance.spacing.small
-
-                        StyledText {
-                            text: qsTr("Cursor")
-                            font.pointSize: Appearance.font.size.normal
-                            font.weight: 500
-                        }
 
                         StyledText {
                             Layout.fillWidth: true

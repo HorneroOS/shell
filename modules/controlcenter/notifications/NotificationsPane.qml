@@ -49,7 +49,7 @@ Item {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
-                spacing: Appearance.spacing.normal
+                spacing: Appearance.spacing.large
 
                 RowLayout {
                     spacing: Appearance.spacing.normal
@@ -78,17 +78,14 @@ Item {
                 }
 
                 // ── Do Not Disturb ───────────────────────────────────────────
-                StyledRect {
-                    Layout.fillWidth: true
-                    radius: Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.panel, 1)
-                    implicitHeight: dndCol.implicitHeight + Appearance.padding.large * 2
+                ChannelPanel {
+                    title: qsTr("Do Not Disturb")
 
                     ColumnLayout {
                         id: dndCol
 
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.large
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
                         spacing: Appearance.spacing.small
 
                         SwitchRow {
@@ -102,24 +99,15 @@ Item {
                 }
 
                 // ── Behavior ─────────────────────────────────────────────────
-                StyledRect {
-                    Layout.fillWidth: true
-                    radius: Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.panel, 1)
-                    implicitHeight: behaviorCol.implicitHeight + Appearance.padding.large * 2
+                ChannelPanel {
+                    title: qsTr("Behavior")
 
                     ColumnLayout {
                         id: behaviorCol
 
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.large
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
                         spacing: Appearance.spacing.small
-
-                        StyledText {
-                            text: qsTr("Behavior")
-                            font.pointSize: Appearance.font.size.normal
-                            font.weight: 500
-                        }
 
                         SwitchRow {
                             label: qsTr("Auto-expire notifications")
@@ -163,24 +151,15 @@ Item {
                 }
 
                 // ── Lock screen ────────────────────────────────────────────
-                StyledRect {
-                    Layout.fillWidth: true
-                    radius: Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.panel, 1)
-                    implicitHeight: lockCol.implicitHeight + Appearance.padding.large * 2
+                ChannelPanel {
+                    title: qsTr("Lock screen")
 
                     ColumnLayout {
                         id: lockCol
 
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.large
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
                         spacing: Appearance.spacing.small
-
-                        StyledText {
-                            text: qsTr("Lock screen")
-                            font.pointSize: Appearance.font.size.normal
-                            font.weight: 500
-                        }
 
                         SwitchRow {
                             label: qsTr("Hide notifications on lock screen")
@@ -194,24 +173,15 @@ Item {
                 }
 
                 // ── Toast events ─────────────────────────────────────────────
-                StyledRect {
-                    Layout.fillWidth: true
-                    radius: Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.panel, 1)
-                    implicitHeight: toastsCol.implicitHeight + Appearance.padding.large * 2
+                ChannelPanel {
+                    title: qsTr("Toast events")
 
                     ColumnLayout {
                         id: toastsCol
 
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.large
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
                         spacing: Appearance.spacing.small
-
-                        StyledText {
-                            text: qsTr("Toast events")
-                            font.pointSize: Appearance.font.size.normal
-                            font.weight: 500
-                        }
 
                         SwitchRow {
                             label: qsTr("Charging changed")
@@ -315,17 +285,14 @@ Item {
                 }
 
                 // ── Recent notifications ──────────────────────────────────────
-                StyledRect {
-                    Layout.fillWidth: true
-                    radius: Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.panel, 1)
-                    implicitHeight: historyCol.implicitHeight + Appearance.padding.large * 2
+                ChannelPanel {
+                    title: qsTr("Recent notifications")
 
                     ColumnLayout {
                         id: historyCol
 
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.large
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
                         spacing: Appearance.spacing.small
 
                         RowLayout {

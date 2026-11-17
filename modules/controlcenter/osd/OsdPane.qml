@@ -49,30 +49,21 @@ Item {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
-                spacing: Appearance.spacing.normal
+                spacing: Appearance.spacing.large
 
                 PaneHeader {
                     paneId: "osd"
                 }
 
-                StyledRect {
-                    Layout.fillWidth: true
-                    radius: Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.panel, 1)
-                    implicitHeight: settingsCol.implicitHeight + Appearance.padding.large * 2
+                ChannelPanel {
+                    title: qsTr("Visibility")
 
                     ColumnLayout {
                         id: settingsCol
 
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.large
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
                         spacing: Appearance.spacing.small
-
-                        StyledText {
-                            text: qsTr("Visibility")
-                            font.pointSize: Appearance.font.size.normal
-                            font.weight: 500
-                        }
 
                         SwitchRow {
                             label: qsTr("Enabled")
@@ -103,24 +94,15 @@ Item {
                     }
                 }
 
-                StyledRect {
-                    Layout.fillWidth: true
-                    radius: Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.panel, 1)
-                    implicitHeight: timingCol.implicitHeight + Appearance.padding.large * 2
+                ChannelPanel {
+                    title: qsTr("Timing")
 
                     ColumnLayout {
                         id: timingCol
 
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.large
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
                         spacing: Appearance.spacing.small
-
-                        StyledText {
-                            text: qsTr("Timing")
-                            font.pointSize: Appearance.font.size.normal
-                            font.weight: 500
-                        }
 
                         SliderInput {
                             Layout.fillWidth: true
@@ -145,24 +127,15 @@ Item {
                     }
                 }
 
-                StyledRect {
-                    Layout.fillWidth: true
-                    radius: Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.panel, 1)
-                    implicitHeight: sizeCol.implicitHeight + Appearance.padding.large * 2
+                ChannelPanel {
+                    title: qsTr("Slider size")
 
                     ColumnLayout {
                         id: sizeCol
 
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.large
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
                         spacing: Appearance.spacing.small
-
-                        StyledText {
-                            text: qsTr("Slider size")
-                            font.pointSize: Appearance.font.size.normal
-                            font.weight: 500
-                        }
 
                         SliderInput {
                             Layout.fillWidth: true

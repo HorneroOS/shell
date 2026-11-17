@@ -21,6 +21,8 @@ ColumnLayout {
     property bool readoutAvailable: true
     property color readoutColor: Signal.palette.ink
     default property alias content: body.data
+    // Lets kit rows detect that they sit inside a panel and drop their own frame.
+    readonly property bool isChannelPanel: true
 
     Layout.fillWidth: true
     spacing: Appearance.spacing.small

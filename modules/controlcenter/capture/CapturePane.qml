@@ -146,7 +146,7 @@ Item {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
-                spacing: Appearance.spacing.normal
+                spacing: Appearance.spacing.large
 
                 PaneHeader {
                     paneId: "capture"
@@ -160,24 +160,15 @@ Item {
                     wrapMode: Text.Wrap
                 }
 
-                StyledRect {
-                    Layout.fillWidth: true
-                    radius: Appearance.rounding.small
-                    color: Signal.layer(Signal.palette.panel, 1)
-                    implicitHeight: capCol.implicitHeight + Appearance.padding.large * 2
+                ChannelPanel {
+                    title: qsTr("Screenshots")
 
                     ColumnLayout {
                         id: capCol
 
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.large
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
                         spacing: Appearance.spacing.small
-
-                        StyledText {
-                            text: qsTr("Screenshots")
-                            font.pointSize: Appearance.font.size.normal
-                            font.weight: 500
-                        }
 
                         StyledText {
                             Layout.fillWidth: true

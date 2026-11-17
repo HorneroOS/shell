@@ -144,8 +144,8 @@
         "edge": "top",
         "style": "inset",
         "reserve": true,
-        "margin": 4,
-        "thickness": 28,
+        "margin": 6,
+        "thickness": 34,
         "density": "values",
         "backdrop": "solid",
         "groups": {
@@ -226,10 +226,10 @@
       },
       {
         "edge": "bottom",
-        "style": "attached",
+        "style": "inset",
         "reserve": true,
         "margin": 6,
-        "thickness": 24,
+        "thickness": 26,
         "density": "values",
         "backdrop": "solid",
         "groups": {
@@ -325,7 +325,7 @@
       "background": false
     },
     "sizes": {
-      "innerWidth": 22,
+      "innerWidth": 24,
       "windowPreviewSize": 400,
       "trayMenuWidth": 300,
       "batteryWidth": 250,

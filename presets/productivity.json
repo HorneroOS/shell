@@ -1,0 +1,81 @@
+{
+  "_name": "Productivity",
+  "_description": "Calm focused-work rail: workspaces, the active window, the clock and only the essential tray",
+  "_icon": "💼",
+  "_glyph": "briefcase",
+  "bar": {
+    "persistent": true,
+    "showOnHover": true,
+    "sizes": {
+      "innerWidth": 24
+    },
+    "status": {
+      "showAudio": true,
+      "showMicrophone": false,
+      "showNetwork": true,
+      "showBluetooth": false,
+      "showBattery": true
+    },
+    "scrollActions": {
+      "workspaces": true,
+      "volume": true,
+      "brightness": false
+    },
+    "bars": [
+      {
+        "edge": "top",
+        "style": "inset",
+        "margin": 6,
+        "reserve": true,
+        "thickness": 32,
+        "density": "glyphs",
+        "backdrop": "solid",
+        "groups": {
+          "start": [
+            {
+              "id": "workspaces",
+              "enabled": true
+            },
+            {
+              "id": "activeWindow",
+              "enabled": true
+            }
+          ],
+          "center": [
+            {
+              "id": "clock",
+              "enabled": true,
+              "options": {
+                "showDate": true
+              }
+            }
+          ],
+          "end": [
+            {
+              "id": "tray",
+              "enabled": true
+            },
+            {
+              "id": "extensions",
+              "enabled": true
+            },
+            {
+              "id": "statusIcons",
+              "enabled": true
+            },
+            {
+              "id": "power",
+              "enabled": true
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "border": {
+    "frameEnabled": false
+  },
+  "notifs": {
+    "defaultExpireTimeout": 4000
+  }
+}

@@ -28,6 +28,10 @@ Singleton {
     readonly property int segmentPad: Model.segmentPadding(factor, false)
     readonly property int segmentPadRail: Model.segmentPadding(factor, true)
 
+    function pt(px: real): real {
+        return Model.pt(px);
+    }
+
     function thickness(base: real): int {
         return Model.thickness(base, factor);
     }

@@ -182,16 +182,15 @@ function validateField(key, value) {
     return undefined;
 }
 
-// Presets removed by the Signal audit (signal-visual-language section 14)
-// and the survivor a persisted selection moves to. Applied while overrides
-// are sanitised, so a stale `layout.preset` is rewritten once.
-var REMOVED_PRESETS = {
-    "floating-island": "cozy-minimal",
-    "productivity": "minimal-top"
-};
+// Presets that were genuinely retired, mapped to the survivor a persisted
+// selection moves to while overrides are sanitised. Floating Island and
+// Productivity were briefly listed here (shell#484) and are supported
+// presets again, so a saved selection of either is kept as is. Add an id
+// only when its preset file is deleted for good.
+var RETIRED_PRESETS = {};
 
 function migratePreset(id) {
-    return typeof id === "string" && Object.prototype.hasOwnProperty.call(REMOVED_PRESETS, id) ? REMOVED_PRESETS[id] : id;
+    return typeof id === "string" && Object.prototype.hasOwnProperty.call(RETIRED_PRESETS, id) ? RETIRED_PRESETS[id] : id;
 }
 
 // Drops unknown modes, unknown keys, invalid values, locked fields and

@@ -424,8 +424,7 @@ def test_icon_buttons_have_accessible_names():
     expected = {
         "modules/welcome/Window.qml": ["Close Welcome"],
         "modules/controlcenter/appearance/AppearancePane.qml": [
-            "Collapse all sections", "Reset pending appearance changes",
-            "Apply appearance changes"],
+            "Collapse all sections"],
         "modules/controlcenter/network/VpnSettings.qml": [
             "Move VPN provider down", "Remove VPN provider"],
         "modules/dashboard/dash/WsActionsBar.qml": [

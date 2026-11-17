@@ -809,6 +809,9 @@ Item {
                     }
 
                     RowLayout {
+                        // Changes apply on click, so there is nothing to confirm or
+                        // reset: the row only appears while applying or on failure.
+                        visible: root.pipelineBusy || root.applyFailed || root.hasPendingChanges
                         Layout.fillWidth: true
                         Layout.topMargin: Appearance.spacing.normal
                         spacing: Appearance.spacing.small
@@ -832,22 +835,6 @@ Item {
                             running: root.pipelineBusy
                             implicitSize: Appearance.font.size.large * 1.4
                             strokeWidth: Appearance.padding.small * 0.5
-                        }
-
-                        IconButton {
-                            icon: "refresh"
-                            type: IconButton.Text
-                            enabled: root.hasPendingChanges && !root.pipelineBusy
-                            accessibleName: qsTr("Reset pending appearance changes")
-                            onClicked: root.resetPendingSelections()
-                        }
-
-                        IconButton {
-                            icon: root.pipelineBusy ? "hourglass-high" : "check"
-                            type: IconButton.Filled
-                            enabled: root.canApply
-                            accessibleName: qsTr("Apply appearance changes")
-                            onClicked: root.commitPending()
                         }
                     }
                 }

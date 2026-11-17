@@ -1,0 +1,29 @@
+{
+  "comment": "Synthetic adversarial corpus (RFC 0002 §15), drawn by chromatic-corpus; no image files in git. 'golden' cases get golden files.",
+  "cases": [
+    { "name": "black", "file": "black.png", "golden": true, "expect": { "mode": "dark", "variant": "muted", "achromatic": true } },
+    { "name": "white", "file": "white.png", "golden": true, "expect": { "mode": "light", "variant": "muted", "achromatic": true } },
+    { "name": "grey50", "file": "grey50.png", "golden": true, "expect": { "variant": "muted", "achromatic": true, "hysteresis": true } },
+    { "name": "noise", "file": "noise.png", "golden": true, "expect": { "detailAbove": 0.08 } },
+    { "name": "split-complement", "file": "split-complement.png", "golden": true, "expect": { "twoSeedsApart": 50 } },
+    { "name": "dot-on-grey", "file": "dot-on-grey.png", "golden": true, "expect": { "primaryHue": [0, 45] } },
+    { "name": "neon-black", "file": "neon-black.png", "golden": true, "expect": { "mode": "dark", "suggestion": "neon" } },
+    { "name": "pastel-highkey", "file": "pastel-highkey.png", "golden": true, "expect": { "mode": "light" } },
+    { "name": "sepia", "file": "sepia.png", "golden": true, "expect": { "temperature": "warm" } },
+    { "name": "skin", "file": "skin.png", "golden": true, "expect": { "temperature": "warm" } },
+    { "name": "muddy-olive", "file": "muddy-olive.png", "golden": true, "expect": { "primaryNotOlive": true } },
+    { "name": "hue-sweep", "file": "hue-sweep.png", "golden": true, "expect": { "variant": "vibrant" } },
+    { "name": "red-dominant", "file": "red-dominant.png", "golden": true, "expect": { "signalAlertHueMin": 30 } },
+    { "name": "green-dominant", "file": "green-dominant.png", "golden": true, "expect": { "cuePhosphorHueMin": 30 } },
+    { "name": "alpha-half", "file": "alpha-half.png", "golden": true, "expect": { "sameSeedsAs": "alpha-half-ref.png" } },
+    { "name": "png16", "file": "png16.png", "golden": true, "expect": { "closeTo": "png16-ref8.png", "maxDeltaEOK": 0.005 } },
+    { "name": "cmyk-jpeg", "file": "cmyk-jpeg.jpg", "golden": false, "optional": true, "expect": { "decodesOrUnreadable": true } },
+    { "name": "p3-jpeg", "file": "p3-jpeg.jpg", "golden": true, "expect": { "differsFrom": "p3-untagged.jpg" } },
+    { "name": "gif-anim", "file": "gif-anim.gif", "golden": true, "expect": { "kind": "animated", "distinctSeedHues": 2 } },
+    { "name": "tiny", "file": "tiny.png", "golden": true, "expect": {} },
+    { "name": "strip", "file": "strip.png", "golden": true, "expect": {} },
+    { "name": "truncated", "file": "truncated.jpg", "golden": false, "expect": { "exit": 3 } },
+    { "name": "empty", "file": "empty.png", "golden": false, "expect": { "exit": 3 } },
+    { "name": "video", "file": "video.webm", "golden": false, "optional": true, "expect": { "kind": "video" } }
+  ]
+}

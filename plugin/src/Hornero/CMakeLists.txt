@@ -57,6 +57,7 @@ qml_module(hornero
         PkgConfig::Qalculate
 )
 
+add_subdirectory(Chromatic)
 add_subdirectory(Internal)
 add_subdirectory(Models)
 add_subdirectory(Services)

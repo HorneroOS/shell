@@ -7,3 +7,6 @@ target_compile_definitions(version PRIVATE
     DISTRIBUTOR="${DISTRIBUTOR}"
 )
 install(TARGETS version DESTINATION ${INSTALL_LIBDIR})
+
+# Hornero Chromatic helper (RFC 0002 §10.1), bench and tests.
+add_subdirectory(chromatic)

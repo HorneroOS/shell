@@ -70,10 +70,14 @@
     name = "hornero-extras${lib.optionalString debug "-debug"}";
     src = lib.fileset.toSource {
       root = ./..;
-      fileset = lib.fileset.union ./../CMakeLists.txt ./../extras;
+      # extras links the Hornero Chromatic engine (libs/chromatic) and builds
+      # its corpus generator and unit tests (tests/chromatic).
+      fileset = lib.fileset.unions [./../CMakeLists.txt ./../extras ./../libs ./../tests/chromatic];
     };
 
     nativeBuildInputs = [cmake ninja];
+    buildInputs = [qt6.qtbase];
+    dontWrapQtApps = true;
 
     cmakeFlags =
       [
@@ -88,7 +92,7 @@
     name = "hornero-qml-plugin${lib.optionalString debug "-debug"}";
     src = lib.fileset.toSource {
       root = ./..;
-      fileset = lib.fileset.union ./../CMakeLists.txt ./../plugin;
+      fileset = lib.fileset.unions [./../CMakeLists.txt ./../plugin ./../libs];
     };
 
     nativeBuildInputs = [cmake ninja pkg-config];

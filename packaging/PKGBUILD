@@ -39,10 +39,12 @@ optdepends=(
   'app2unit: launch apps as systemd user units'
   'brightnessctl: laptop backlight control'
   'ddcutil: external monitor brightness control'
+  'ffmpeg: Hornero Chromatic colours from video wallpapers (one frame)'
   'fish: shell used by helper scripts'
   'hyprland: compositor integration via hyprctl'
   'lm_sensors: temperature sensor readings'
   'networkmanager: network status via nmcli'
+  'qt6-imageformats: Hornero Chromatic colours from WebP, AVIF, TIFF and more wallpaper formats'
   'swappy: screenshot annotation'
   'wl-clipboard: clipboard integration via wl-copy'
 )

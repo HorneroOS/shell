@@ -123,6 +123,10 @@ same names the shell uses:
 | `Theme.glowEnabled`, `Theme.scanlines` | luminous accent gate: only in the `signal` experience, dark themes, not high contrast, motion allowed |
 | `Theme.telemetryIntervalMs` | shared instrument cadence: 1000 (500 in `signal`) |
 | `Theme.keyboardFocus` | true when the last input was the keyboard (focus rings show only then) |
+| `Theme.chromatic` | read-only status of the dynamic Hornero Chromatic palette (`{active, variant, mode, seeds, fingerprint}`), `null` for curated themes and under High Contrast; never a wallpaper path. Extensions cannot run the engine on images |
+| `Theme.revision` | integer that increments once per settled palette change (after the transition, not per step); repaint canvases when it changes |
+| `Theme.contrast(a, b)` | WCAG contrast ratio of two colours |
+| `Theme.ensureContrast(fg, bg, min)` | `fg` moved in lightness only until it reaches `min`:1 on `bg`; for data-driven colours, never for the palette roles |
 
 Rules of the language, enforced by review and partly by the validator:
 `signal` (amber) means *live / active / primary* and `cue` (celeste) means

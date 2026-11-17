@@ -29,6 +29,15 @@ function _linearToSrgb(c) {
     return Math.max(0, Math.min(1, v));
 }
 
+// "#RRGGBB" of a QML color (or any string Qt prints as #rrggbb or
+// #aarrggbb); anything else comes back unchanged.
+function toHex(c) {
+    var t = String(c);
+    if (/^#[0-9A-Fa-f]{8}$/.test(t))
+        t = "#" + t.substr(3);
+    return /^#[0-9A-Fa-f]{6}$/.test(t) ? t.toUpperCase() : t;
+}
+
 function hexToRgb(h) {
     return [parseInt(h.substr(1, 2), 16) / 255, parseInt(h.substr(3, 2), 16) / 255, parseInt(h.substr(5, 2), 16) / 255];
 }

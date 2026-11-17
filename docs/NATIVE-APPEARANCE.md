@@ -11,7 +11,7 @@ changing the wallpaper changes only the wallpaper. The optional
 **Hornero Chromatic** theme (`hornero-chromatic`,
 [RFC 0002](https://github.com/HorneroOS/docs/blob/main/development/rfc-0002-hornero-chromatic.md)) builds that table from the wallpaper, an image or a
 chosen colour; it is specified but not implemented yet (see
-[Hornero Chromatic](#hornero-chromatic-planned) below).
+[Hornero Chromatic](#hornero-chromatic) below).
 
 ## Colour roles — `services/Signal.qml`
 

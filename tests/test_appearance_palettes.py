@@ -48,7 +48,7 @@ def test_palette_tile_is_keyboard_and_assistive_tech_ready():
     assert "Accessible.checked: selected" in OPTION and "Accessible.name: title" in OPTION
     assert "Accessible.description" in OPTION and "Accessible.onPressAction" in OPTION
     # focus is a visible ring, selection is spelled out (glyph), no animation
-    assert "Signal.palette.focus" in OPTION and 'name: "check"' in OPTION
+    assert "Signal.palette.focus" in OPTION and '"heart" : "check"' in OPTION
     assert "Behavior" not in OPTION and "Anim" not in OPTION
     assert not re.search(r"\bMaterial\b|\bm3[A-Z]", OPTION + SWATCH)
 
@@ -112,3 +112,15 @@ def test_offscreen_editor_edits_previews_saves_and_resets(tmp_path):
     assert draft["schemaVersion"] == 2 and draft["id"] == "my-neon-copy" and draft["name"] == "My Neon Copy"
     assert draft["palette"]["signal"] == "#FF00AA" and len(draft["terminal"]) == 16 and draft["terminal"][3] == "#112233"
     assert "appearance chromatic import" in result["_ctl_log"] and "--id my-neon-copy" in result["_ctl_log"] and "--yes" in result["_ctl_log"]
+
+
+def test_cozy_chips_is_a_persisted_default_on_setting_with_a_switch():
+    import json
+
+    assert json.loads((ROOT / "config" / "shell.default.json").read_text())["appearance"]["cozyChips"] is True
+    assert "cozyChips: appearance.cozyChips" in (ROOT / "config" / "Config.qml").read_text()
+    themes = (SECTIONS / "ThemesSection.qml").read_text()
+    assert "Config.appearance.cozyChips = checked" in themes
+    # soft shapes only change radius and the selected glyph; the sharp Bezel stays one switch away
+    assert "Config.appearance.cozyChips ? Appearance.rounding.large" in OPTION
+    assert "Config.appearance.cozyChips ? Appearance.rounding.normal" in SWATCH

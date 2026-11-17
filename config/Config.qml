@@ -277,6 +277,7 @@ Singleton {
             theme: appearance.theme,
             highContrast: appearance.highContrast,
             reducedMotion: appearance.reducedMotion,
+            cozyChips: appearance.cozyChips,
             rounding: {
                 scale: appearance.rounding.scale
             },

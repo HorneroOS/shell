@@ -54,6 +54,7 @@ Well {
     color: root.role("ground")
     outline: root.role("ruleStrong")
     clip: true
+    radius: Config.appearance.cozyChips ? Appearance.rounding.normal : Appearance.rounding.small
     Accessible.ignored: true
 
     Rectangle {

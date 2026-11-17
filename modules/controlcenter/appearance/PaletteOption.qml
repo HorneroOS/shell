@@ -45,7 +45,7 @@ StyledRect {
 
     implicitWidth: horizontal ? 280 : 150
     implicitHeight: (horizontal ? Math.max(swatch.implicitHeight, textCol.implicitHeight) : swatch.implicitHeight + textCol.implicitHeight + Appearance.spacing.small) + Appearance.padding.normal * 2
-    radius: Appearance.rounding.small
+    radius: Config.appearance.cozyChips ? Appearance.rounding.large : Appearance.rounding.small
     color: selected ? Signal.palette.signalWell : hovered || activeFocus ? Signal.layer(Signal.palette.raised, 2) : Signal.layer(Signal.palette.raised, 1)
     border.width: selected || activeFocus ? 2 : 1
     border.color: activeFocus ? Signal.palette.focus : selected ? Signal.palette.signal : hovered ? Signal.palette.ruleStrong : Signal.palette.rule
@@ -124,7 +124,7 @@ StyledRect {
 
                 Glyph {
                     visible: root.selected
-                    name: "check"
+                    name: Config.appearance.cozyChips ? "heart" : "check"
                     color: Signal.palette.onSignalWell
                     font.pointSize: Appearance.font.size.normal
                 }

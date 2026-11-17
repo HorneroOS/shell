@@ -1,0 +1,2 @@
+false
+{"enabled":true,"mode":"everyday","level":"full","shown":1,"dropped":1,"last":{"ok":false,"reason":"native-only"}}

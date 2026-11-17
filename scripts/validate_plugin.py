@@ -56,7 +56,10 @@ PLACEMENTS = ("background", "bar", "dashboard", "desktop")
 # › Extensions; "launcher" (search/launcher action) is hosted by
 # PluginLauncherHost into the launcher provider registry, and
 # declaring one grants no privilege.
-SURFACES = PLACEMENTS + ("launcher", "settings")
+SURFACES = PLACEMENTS + ("launcher", "settings", "commands")
+# Surfaces that exist only from PluginKit 4 (RFC 0003): declaring one needs
+# `"pluginKit": 4`.
+SURFACES_V4 = ("commands",)
 # Dashboard card size classes (shell#378): preferred card width class a
 # dashboard surface may hint; the user's persisted layout wins.
 DASHBOARD_CARD_SIZES = ("compact", "standard", "wide")
@@ -169,6 +172,10 @@ def _validate_surfaces(
                 f"{', '.join(SURFACES)}; a bar popover/panel is shown from the "
                 "bar surface with PluginKit UiPopover, not a separate surface)"
             )
+        if name in SURFACES_V4 and manifest.get("pluginKit", 3) < 4:
+            raise ValidationError(
+                f'{where} is a PluginKit 4 surface; declare "pluginKit": 4 in the manifest'
+            )
         surface = _object(raw_surface, where)
         extra = set(surface) - {"entrypoint", "enabled", "size", "category", "section", *DESKTOP_KEYS}
         if extra:
@@ -270,6 +277,82 @@ def _validate_surfaces(
             )
         if "enabled" in surface and not isinstance(surface["enabled"], bool):
             raise ValidationError(f"{where}.enabled must be a boolean (true or false)")
+
+
+# Contributions (RFC 0003 section 4.1): declarative metadata the Shell can
+# list without running extension code. PluginKit 4 defines `commands`
+# (launcher rows, IPC, key bindings); other kinds are rejected until a
+# later level defines them, so an older validator never silently accepts
+# a contribution it cannot host.
+CONTRIBUTION_KINDS = ("commands",)
+COMMAND_ID = re.compile(r"^[a-z][a-zA-Z0-9]{0,31}$")
+MAX_COMMANDS = 16
+COMMAND_FIELDS = {"id", "title", "description", "glyph", "keywords"}
+
+
+def _validate_contributes(manifest: dict, declared_level: int) -> list[dict]:
+    """Validate `contributes`; returns the declared command list."""
+    surfaces = manifest.get("surfaces") or {}
+    has_surface = "commands" in surfaces
+    if "contributes" not in manifest:
+        if has_surface:
+            raise ValidationError(
+                "surfaces.commands needs contributes.commands: declare the commands "
+                "(id, title) the extension provides so the Shell can list them"
+            )
+        return []
+    if declared_level < 4:
+        raise ValidationError('contributes needs PluginKit 4; declare "pluginKit": 4 in the manifest')
+    contributes = _object(manifest["contributes"], "contributes")
+    if not contributes:
+        raise ValidationError("contributes must declare at least one contribution kind (remove it or add commands)")
+    unknown = set(contributes) - set(CONTRIBUTION_KINDS)
+    if unknown:
+        raise ValidationError(
+            f"contributes contains unknown kinds: {', '.join(sorted(unknown))} "
+            f"(known kinds: {', '.join(CONTRIBUTION_KINDS)})"
+        )
+    commands = contributes.get("commands", [])
+    if not isinstance(commands, list) or not commands or len(commands) > MAX_COMMANDS:
+        raise ValidationError(f"contributes.commands must be a list of 1 to {MAX_COMMANDS} commands")
+    seen: set[str] = set()
+    glyphs = glyph_names()
+    for index, raw in enumerate(commands):
+        where = f"contributes.commands[{index}]"
+        command = _object(raw, where)
+        extra = set(command) - COMMAND_FIELDS
+        if extra:
+            raise ValidationError(
+                f"{where} contains unknown fields: {', '.join(sorted(extra))} "
+                "(a command declares id, title and optional description, glyph, keywords)"
+            )
+        if not {"id", "title"} <= set(command):
+            raise ValidationError(f"{where} must contain id and title")
+        command_id = command["id"]
+        if not isinstance(command_id, str) or not COMMAND_ID.fullmatch(command_id):
+            raise ValidationError(f"{where}.id must match {COMMAND_ID.pattern}")
+        if command_id in seen:
+            raise ValidationError(f"{where}.id duplicates another command: {command_id}")
+        seen.add(command_id)
+        _string(command["title"], f"{where}.title", 48)
+        if "description" in command:
+            _string(command["description"], f"{where}.description", 120)
+        if "glyph" in command and (not isinstance(command["glyph"], str) or (glyphs and command["glyph"] not in glyphs)):
+            raise ValidationError(f"{where}.glyph must be a Hornero Glyph name (assets/fonts/hornero-glyphs.names)")
+        if "keywords" in command:
+            keywords = command["keywords"]
+            if (
+                not isinstance(keywords, list) or len(keywords) > 8
+                or any(not isinstance(k, str) or not k.strip() or len(k) > 24 for k in keywords)
+                or len(set(keywords)) != len(keywords)
+            ):
+                raise ValidationError(f"{where}.keywords must be at most 8 unique strings of at most 24 characters")
+    if not has_surface:
+        raise ValidationError(
+            "contributes.commands needs surfaces.commands: the entrypoint that implements "
+            "`function run(commandId: string, args: string): string`"
+        )
+    return commands
 
 
 def _unescape_qml_string(raw: str) -> str:
@@ -999,7 +1082,7 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
         "schemaVersion", "id", "name", "version", "description", "author",
         "license", "homepage", "entrypoint", "files", "capabilities", "placement",
         "signing", "surfaces", "translations", "marketplace", "theme",
-        "pluginKit",
+        "pluginKit", "contributes",
     }
     unknown = manifest.keys() - allowed
     missing = {
@@ -1076,6 +1159,8 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
     # placement+entrypoint and load identically; `surfaces` is rejected
     # under v1 so an older host/validator can never silently ignore it.
     _validate_surfaces(manifest, schema_version, placement, entrypoint, set(safe_files))
+    # Contributions (RFC 0003): declarative commands, level 4.
+    _validate_contributes(manifest, declared_level)
 
     # Plugin translations (shell#375): optional in every schema
     # version; pre-#375 manifests without the field stay valid.
@@ -1184,6 +1269,16 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
                 "surfaces.desktop.instances is true but the desktop entrypoint does not "
                 "read its instance: declare `property string hostInstanceId: \"\"` on the "
                 "root and bind `Settings { pluginId: ...; instanceId: root.hostInstanceId }`"
+            )
+
+    commands_surface = (manifest.get("surfaces") or {}).get("commands")
+    if commands_surface:
+        command_source = (root / commands_surface["entrypoint"]).read_text(encoding="utf-8")
+        if not re.search(r"\bfunction\s+run\s*\(", command_source):
+            raise ValidationError(
+                "surfaces.commands entrypoint must implement "
+                "`function run(commandId: string, args: string): string` "
+                "(return an empty string on success or a short error)"
             )
 
     for path in qml_files:

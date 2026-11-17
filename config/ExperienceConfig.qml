@@ -13,6 +13,11 @@ JsonObject {
     // utilities.toasts.gameModeChanged).
     property bool toasts: true
     property Auto auto: Auto {}
+    // Signal instrument deck overrides per mode (services/deck.js):
+    // hidden {mode: [pluginId]} and geometry {mode: {screen: {pluginId:
+    // {fx, fy, width, height}}}}. Written only when the person turns a
+    // widget off or moves/resizes one; a deck reset removes them.
+    property var deck: ({})
 
     component Auto: JsonObject {
         // Automatic switching is off by default and local-only: it reads

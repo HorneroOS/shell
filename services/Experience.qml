@@ -1,6 +1,7 @@
 pragma Singleton
 
 import "experience.js" as Model
+import "deck.js" as Deck
 import qs.services
 import qs.config
 import qs.utils
@@ -204,6 +205,41 @@ Singleton {
         if (!Model.isMode(id))
             return `error: unknown mode: ${id}`;
         Config.experience.modes = Model.clearOverrides(Config.experience.modes, id);
+        Config.experience.deck = Deck.reset(Config.experience.deck, id, "");
+        Config.save();
+        return "ok";
+    }
+
+    // Signal instrument deck (services/deck.js). Overrides are per mode and
+    // per screen; resetDeck restores the factory composition.
+    readonly property var deckHidden: Deck.hiddenFor(Config.experience.deck, root.mode)
+    readonly property bool deckCustomised: Deck.isCustomised(Config.experience.deck, root.mode)
+
+    function deckSaved(screenName: string): var {
+        return Deck.savedFor(Config.experience.deck, root.mode, screenName);
+    }
+
+    function setDeckHidden(id: string, hide: bool): string {
+        const res = Deck.setHidden(Config.experience.deck, root.mode, id, hide);
+        if (!res.ok)
+            return `error: ${res.error}`;
+        Config.experience.deck = res.deck;
+        Config.save();
+        return "ok";
+    }
+
+    function setDeckGeometry(screenName: string, id: string, geometry: var): string {
+        const res = Deck.setGeometry(Config.experience.deck, root.mode, screenName, id, geometry);
+        if (!res.ok)
+            return `error: ${res.error}`;
+        Config.experience.deck = res.deck;
+        Config.save();
+        return "ok";
+    }
+
+    // screenName empty resets every screen and the hidden set of the mode.
+    function resetDeck(screenName: string): string {
+        Config.experience.deck = Deck.reset(Config.experience.deck, root.mode, screenName);
         Config.save();
         return "ok";
     }

@@ -294,7 +294,7 @@ def test_legacy_toast_switch_moves_to_experience_toasts():
     defaults = json.loads((ROOT / "config" / "shell.default.json").read_text())
     assert "gameModeChanged" not in defaults["utilities"]["toasts"]
     assert defaults["experience"] == {
-        "modes": {}, "toasts": True, "auto": {"fullscreenGaming": False, "gamePatterns": []},
+        "modes": {}, "deck": {}, "toasts": True, "auto": {"fullscreenGaming": False, "gamePatterns": []},
     }
 
 

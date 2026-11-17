@@ -72,8 +72,14 @@ def test_debug_bars_report_every_screen_and_keep_local_geometry():
     assert "bar, island, group, and visual rectangle coordinates are local" in ipc
 
 
+def test_debug_handler_answers_for_every_output():
+    source = (ROOT / "modules" / "drawers" / "Drawers.qml").read_text()
+    assert 'scope.modelData.name ? "debug" : `debug.${scope.modelData.name}`' in source
+    assert "`debug.<output>`" in (ROOT / "docs" / "IPC.md").read_text()
+
+
 def _handler_functions(source, target):
-    m = re.search(r'target:\s*"' + re.escape(target) + r'"(.*?)(?=target:\s*"|\Z)',
+    m = re.search(r'target:[^\n]*"' + re.escape(target) + r'"[^\n]*\n(.*?)(?=\n\s*target:|\Z)',
                   source, re.S)
     assert m, f"no IpcHandler for target {target!r}"
     functions = {}

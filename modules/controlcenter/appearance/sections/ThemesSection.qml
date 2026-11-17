@@ -224,12 +224,20 @@ CollapsibleSection {
 
                             Column {
                                 Layout.fillWidth: true
+                                Layout.minimumWidth: 0
+                                Layout.preferredWidth: 0
                                 spacing: 2
 
                                 StyledText {
+                                    // Stay inside the column so the mode chip never overlaps
+                                    // the name or description (shell#514).
+                                    width: parent.width
                                     text: modelData.name ?? modelData.id ?? ""
                                     font.pointSize: Appearance.font.size.normal
                                     font.weight: 500
+                                    elide: Text.ElideRight
+                                    wrapMode: Text.WordWrap
+                                    maximumLineCount: 2
                                 }
 
                                 StyledText {

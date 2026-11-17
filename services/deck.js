@@ -20,6 +20,13 @@ var GAP = 16;
 // The middle of the screen stays open for windows and the wallpaper: the
 // deck is two rails on the flanks, never a wall.
 var MIN_CENTRE = 480;
+// On narrow displays the open middle may shrink to this share of the
+// width, so a 1366 px laptop still gets a deck instead of an empty rail.
+var MIN_CENTRE_SHARE = 0.3;
+
+function minCentre(areaWidth) {
+    return Math.min(MIN_CENTRE, Math.floor(areaWidth * MIN_CENTRE_SHARE));
+}
 
 // Curated instruments in priority order. `side` is the preferred rail,
 // `edge` which end of the rail the module stacks from. Default and minimum
@@ -212,7 +219,7 @@ function _tryRail(item, geo, side, rails, area, reserved, placed) {
     var wantH = geo && geo.height !== null ? geo.height : item.height;
     // Widest column this rail may grow to while the other rail keeps its
     // own and the centre stays open.
-    var avail = Math.max(area.width - other.width - MIN_CENTRE, rail.width);
+    var avail = Math.max(area.width - other.width - minCentre(area.width), rail.width);
     var w = Math.min(wantW, avail);
     if (w < item.minWidth)
         return null;

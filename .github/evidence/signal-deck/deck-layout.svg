@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="1436.0"><rect width="100%" height="100%" fill="#0A0C0E"/><text x="20" y="20" font-family="IBM Plex Mono,monospace" font-size="13" fill="#E6E8EA">1920x1080 @1 → logical 1920x1080, widget area 1824x944, shown 5/6, dropped 1</text>
+<rect x="20" y="30" width="345.59999999999997" height="194.4" fill="#0E1114" stroke="#3A4047"/>
+<rect x="20" y="30" width="345.59999999999997" height="7.199999999999999" fill="#1B2025" stroke="#3A4047"/>
+<rect x="28.64" y="45.84" width="328.32" height="169.92" fill="none" stroke="#3A4047" stroke-dasharray="3 3"/>
+<rect x="263.36" y="45.84" width="93.6" height="64.8" fill="#162029" stroke="#3FB6A8"/>
+<text x="268.36" y="58.84" font-size="9" fill="#E6E8EA" font-family="IBM Plex Mono,monospace">system-insight 520x360</text>
+<rect x="28.64" y="45.84" width="79.2" height="60.48" fill="#162029" stroke="#3FB6A8"/>
+<text x="33.64" y="58.84" font-size="9" fill="#E6E8EA" font-family="IBM Plex Mono,monospace">network-scope 440x336</text>
+<rect x="28.64" y="162.48000000000002" width="74.88" height="53.28" fill="#162029" stroke="#3FB6A8"/>
+<text x="33.64" y="175.48000000000002" font-size="9" fill="#E6E8EA" font-family="IBM Plex Mono,monospace">audio-deck 416x296</text>
+<rect x="299.35999999999996" y="113.52" width="57.599999999999994" height="74.88" fill="#162029" stroke="#3FB6A8"/>
+<text x="304.35999999999996" y="126.52" font-size="9" fill="#E6E8EA" font-family="IBM Plex Mono,monospace">calendar 320x416</text>
+<rect x="28.64" y="109.2" width="57.599999999999994" height="50.4" fill="#162029" stroke="#3FB6A8"/>
+<text x="33.64" y="122.2" font-size="9" fill="#E6E8EA" font-family="IBM Plex Mono,monospace">agenda 320x280</text>
+<text x="20" y="252.4" font-family="IBM Plex Mono,monospace" font-size="13" fill="#E6E8EA">1920x1080 @1 + desktop clock bottom-right → logical 1920x1080, widget area 1824x944, shown 4/6, dropped 2</text>
+<rect x="20" y="262.4" width="345.59999999999997" height="194.4" fill="#0E1114" stroke="#3A4047"/>
+<rect x="20" y="262.4" width="345.59999999999997" height="7.199999999999999" fill="#1B2025" stroke="#3A4047"/>
+<rect x="28.64" y="278.23999999999995" width="328.32" height="169.92" fill="none" stroke="#3A4047" stroke-dasharray="3 3"/>
+<rect x="281.36" y="404.9599999999999" width="75.6" height="43.199999999999996" fill="#2A2F35" stroke="#A8ABAD" stroke-dasharray="2 2"/><text x="285.36" y="416.9599999999999" font-size="9" fill="#A8ABAD" font-family="IBM Plex Mono,monospace">clock (reserved)</text>
+<rect x="263.36" y="278.23999999999995" width="93.6" height="64.8" fill="#162029" stroke="#3FB6A8"/>
+<text x="268.36" y="291.23999999999995" font-size="9" fill="#E6E8EA" font-family="IBM Plex Mono,monospace">system-insight 520x360</text>
+<rect x="28.64" y="278.23999999999995" width="79.2" height="60.48" fill="#162029" stroke="#3FB6A8"/>
+<text x="33.64" y="291.23999999999995" font-size="9" fill="#E6E8EA" font-family="IBM Plex Mono,monospace">network-scope 440x336</text>
+<rect x="28.64" y="394.87999999999994" width="74.88" height="53.28" fill="#162029" stroke="#3FB6A8"/>
+<text x="33.64" y="407.87999999999994" font-size="9" fill="#E6E8EA" font-family="IBM Plex Mono,monospace">audio-deck 416x296</text>
+<rect x="28.64" y="341.59999999999997" width="57.599999999999994" height="50.4" fill="#162029" stroke="#3FB6A8"/>
+<text x="33.64" y="354.59999999999997" font-size="9" fill="#E6E8EA" font-family="IBM Plex Mono,monospace">agenda 320x280</text>
+<text x="20" y="484.79999999999995" font-family="IBM Plex Mono,monospace" font-size="13" fill="#E6E8EA">2560x1440 @1.25 → logical 2048x1152, widget area 1952x1016, shown 5/6, dropped 1</text>
+<rect x="20" y="494.79999999999995" width="368.64" height="207.35999999999999" fill="#0E1114" stroke="#3A4047"/>
+<rect x="20" y="494.79999999999995" width="368.64" height="7.199999999999999" fill="#1B2025" stroke="#3A4047"/>
+<rect x="28.64" y="510.63999999999993" width="351.36" height="182.88" fill="none" stroke="#3A4047" stroke-dasharray="3 3"/>
+<rect x="286.4" y="510.63999999999993" width="93.6" height="64.8" fill="#162029" stroke="#3FB6A8"/>
+<text x="291.4" y="523.6399999999999" font-size="9" fill="#E6E8EA" font-family="IBM Plex Mono,monospace">system-insight 520x360</text>
+<rect x="28.64" y="510.63999999999993" width="79.2" height="60.48" fill="#162029" stroke="#3FB6A8"/>
+<text x="33.64" y="523.6399999999999" font-size="9" fill="#E6E8EA" font-family="IBM Plex Mono,monospace">network-scope 440x336</text>
+<rect x="28.64" y="640.2399999999999" width="74.88" height="53.28" fill="#162029" stroke="#3FB6A8"/>
+<text x="33.64" y="653.2399999999999" font-size="9" fill="#E6E8EA" font-family="IBM Plex Mono,monospace">audio-deck 416x296</text>
+<rect x="322.4" y="578.3199999999999" width="57.599999999999994" height="74.88" fill="#162029" stroke="#3FB6A8"/>
+<text x="327.4" y="591.3199999999999" font-size="9" fill="#E6E8EA" font-family="IBM Plex Mono,monospace">calendar 320x416</text>
+<rect x="28.64" y="576.8799999999999" width="57.599999999999994" height="60.48" fill="#162029" stroke="#3FB6A8"/>
+<text x="33.64" y="589.8799999999999" font-size="9" fill="#E6E8EA" font-family="IBM Plex Mono,monospace">agenda 320x336</text>
+<text x="20" y="730.16" font-family="IBM Plex Mono,monospace" font-size="13" fill="#E6E8EA">3840x2160 @2 → logical 1920x1080, widget area 1824x944, shown 5/6, dropped 1</text>
+<rect x="20" y="740.16" width="345.59999999999997" height="194.4" fill="#0E1114" stroke="#3A4047"/>
+<rect x="20" y="740.16" width="345.59999999999997" height="7.199999999999999" fill="#1B2025" stroke="#3A4047"/>
+<rect x="28.64" y="756.0" width="328.32" height="169.92" fill="none" stroke="#3A4047" stroke-dasharray="3 3"/>
+<rect x="263.36" y="756.0" width="93.6" height="64.8" fill="#162029" stroke="#3FB6A8"/>
+<text x="268.36" y="769.0" font-size="9" fill="#E6E8EA" font-family="IBM Plex Mono,monospace">system-insight 520x360</text>
+<rect x="28.64" y="756.0" width="79.2" height="60.48" fill="#162029" stroke="#3FB6A8"/>
+<text x="33.64" y="769.0" font-size="9" fill="#E6E8EA" font-family="IBM Plex Mono,monospace">network-scope 440x336</text>
+<rect x="28.64" y="872.64" width="74.88" height="53.28" fill="#162029" stroke="#3FB6A8"/>
+<text x="33.64" y="885.64" font-size="9" fill="#E6E8EA" font-family="IBM Plex Mono,monospace">audio-deck 416x296</text>
+<rect x="299.35999999999996" y="823.68" width="57.599999999999994" height="74.88" fill="#162029" stroke="#3FB6A8"/>
+<text x="304.35999999999996" y="836.68" font-size="9" fill="#E6E8EA" font-family="IBM Plex Mono,monospace">calendar 320x416</text>
+<rect x="28.64" y="819.36" width="57.599999999999994" height="50.4" fill="#162029" stroke="#3FB6A8"/>
+<text x="33.64" y="832.36" font-size="9" fill="#E6E8EA" font-family="IBM Plex Mono,monospace">agenda 320x280</text>
+<text x="20" y="962.56" font-family="IBM Plex Mono,monospace" font-size="13" fill="#E6E8EA">1366x768 @1 → logical 1366x768, widget area 1270x632, shown 4/6, dropped 2</text>
+<rect x="20" y="972.56" width="245.88" height="138.24" fill="#0E1114" stroke="#3A4047"/>
+<rect x="20" y="972.56" width="245.88" height="7.199999999999999" fill="#1B2025" stroke="#3A4047"/>
+<rect x="28.64" y="988.4" width="228.6" height="113.75999999999999" fill="none" stroke="#3A4047" stroke-dasharray="3 3"/>
+<rect x="163.64" y="988.4" width="93.6" height="64.8" fill="#162029" stroke="#3FB6A8"/>
+<text x="168.64" y="1001.4" font-size="9" fill="#E6E8EA" font-family="IBM Plex Mono,monospace">system-insight 520x360</text>
+<rect x="28.64" y="988.4" width="66.24" height="60.48" fill="#162029" stroke="#3FB6A8"/>
+<text x="33.64" y="1001.4" font-size="9" fill="#E6E8EA" font-family="IBM Plex Mono,monospace">network-scope 368x336</text>
+<rect x="28.64" y="1051.76" width="66.24" height="50.4" fill="#162029" stroke="#3FB6A8"/>
+<text x="33.64" y="1064.76" font-size="9" fill="#E6E8EA" font-family="IBM Plex Mono,monospace">audio-deck 368x280</text>
+<rect x="199.64" y="1056.08" width="57.599999999999994" height="46.08" fill="#162029" stroke="#3FB6A8"/>
+<text x="204.64" y="1069.08" font-size="9" fill="#E6E8EA" font-family="IBM Plex Mono,monospace">moon-phase 320x256</text>
+<text x="20" y="1138.8" font-family="IBM Plex Mono,monospace" font-size="13" fill="#E6E8EA">3440x1440 @1 ultrawide → logical 3440x1440, widget area 3344x1304, shown 6/6, dropped 0</text>
+<rect x="20" y="1148.8" width="619.1999999999999" height="259.2" fill="#0E1114" stroke="#3A4047"/>
+<rect x="20" y="1148.8" width="619.1999999999999" height="7.199999999999999" fill="#1B2025" stroke="#3A4047"/>
+<rect x="28.64" y="1164.6399999999999" width="601.92" height="234.72" fill="none" stroke="#3A4047" stroke-dasharray="3 3"/>
+<rect x="536.96" y="1164.6399999999999" width="93.6" height="64.8" fill="#162029" stroke="#3FB6A8"/>
+<text x="541.96" y="1177.6399999999999" font-size="9" fill="#E6E8EA" font-family="IBM Plex Mono,monospace">system-insight 520x360</text>
+<rect x="28.64" y="1164.6399999999999" width="79.2" height="60.48" fill="#162029" stroke="#3FB6A8"/>
+<text x="33.64" y="1177.6399999999999" font-size="9" fill="#E6E8EA" font-family="IBM Plex Mono,monospace">network-scope 440x336</text>
+<rect x="28.64" y="1346.08" width="74.88" height="53.28" fill="#162029" stroke="#3FB6A8"/>
+<text x="33.64" y="1359.08" font-size="9" fill="#E6E8EA" font-family="IBM Plex Mono,monospace">audio-deck 416x296</text>
+<rect x="572.9599999999999" y="1232.32" width="57.599999999999994" height="74.88" fill="#162029" stroke="#3FB6A8"/>
+<text x="577.9599999999999" y="1245.32" font-size="9" fill="#E6E8EA" font-family="IBM Plex Mono,monospace">calendar 320x416</text>
+<rect x="572.9599999999999" y="1338.8799999999999" width="57.599999999999994" height="60.48" fill="#162029" stroke="#3FB6A8"/>
+<text x="577.9599999999999" y="1351.8799999999999" font-size="9" fill="#E6E8EA" font-family="IBM Plex Mono,monospace">agenda 320x336</text>
+<rect x="28.64" y="1289.9199999999998" width="57.599999999999994" height="53.28" fill="#162029" stroke="#3FB6A8"/>
+<text x="33.64" y="1302.9199999999998" font-size="9" fill="#E6E8EA" font-family="IBM Plex Mono,monospace">moon-phase 320x296</text></svg>

@@ -43,11 +43,13 @@ How it is laid out (`services/deck.js`, executed headless in
   already insets for the bar edge and shell margin, so the deck never covers
   a bar. The desktop clock's box is passed as a reserved zone and is kept
   clear.
-- Two rails on the flanks; the middle (at least 480 px) stays open for
+- Two rails on the flanks; the middle (480 px, or 30 % of a narrow display) stays open for
   windows and the wallpaper. Widgets take the preferred rail, then the other
   one, shrinking toward their manifest minimums when space is short.
 - What does not fit is dropped by priority, never overlapped. A 1366×768
-  display shows four instruments; a 3840-wide ultrawide shows all six.
+  display shows four instruments; a 3440-wide ultrawide shows all six
+  (`.github/evidence/signal-deck/deck-layout.png`, a layout diagram, not a
+  render).
 - Every display is solved independently, so mixed resolutions and scales
   each get a deck that fits.
 - Each module is the PluginKit desktop frame: panel fill, hairline border,
@@ -55,9 +57,13 @@ How it is laid out (`services/deck.js`, executed headless in
 - Entering uses the shared motion primitives (`Choreography.rowDelay`
   stagger, `scanTravel`, `FadeAnim`); at motion level `off` they appear at
   once. Leaving the mode fades the deck layer out before the widgets unload.
-- Glow is drawn only by PluginKit traces that lease `GlowBudget` (three
-  items, 4 px blur, 40 % alpha, static) and only while `Experience.glow`
-  holds. The deck itself draws no glow.
+- Glow is drawn only by traces that lease the shell-wide budget
+  (`Experience.acquireGlow`: three items in total, 4 px, 40 % alpha, static)
+  and only while `Experience.glow` holds. The budget is shared by the native
+  instruments (on-air bar, dashboard scopes) and the extensions' traces;
+  extensions never take the last slot, so the shell's own instruments always
+  have one. A trace without a lease renders the same line without the halo.
+  The deck frame itself draws no glow.
 
 ### Extensions that are not there
 

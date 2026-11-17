@@ -12,6 +12,7 @@ import qs.utils
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
+import "../../../../services/chromatic.js" as Colour
 
 CollapsibleSection {
     id: sectionRoot
@@ -397,6 +398,97 @@ CollapsibleSection {
                         }
                     }
                 }
+            }
+        }
+
+        // Hornero Chromatic (RFC 0002): the dynamic theme is a card of its
+        // own after the catalogue (reserved id `hornero-chromatic`, no
+        // theme directory). Choosing it opens the Chromatic section; the
+        // palette is only applied from there.
+        StyledRect {
+            id: chromaticCard
+
+            readonly property bool isCurrent: Signal.themeStateReady && Signal.themeId === "hornero-chromatic"
+            readonly property var swatch: Colour.flatten({
+                "palette": ChromaticPreview.result ? ChromaticPreview.result.scheme.palette : {},
+                "terminal": ChromaticPreview.result ? ChromaticPreview.result.scheme.terminal : []
+            })
+
+            Layout.fillWidth: true
+            Layout.topMargin: Appearance.spacing.small
+            implicitHeight: chromaticRow.implicitHeight + Appearance.padding.normal * 2
+            radius: Appearance.rounding.small
+            color: isCurrent ? Signal.layer(Signal.palette.raised, 1) : "transparent"
+            border.width: 1
+            border.color: isCurrent ? Signal.palette.ruleStrong : Signal.palette.rule
+            activeFocusOnTab: true
+            Accessible.role: Accessible.Button
+            Accessible.name: qsTr("Hornero Chromatic, dynamic colour from your wallpaper")
+            Accessible.onPressAction: sectionRoot.session.navigateTo("appearance", "chromatic")
+            Keys.onPressed: event => {
+                if (event.key === Qt.Key_Space || event.key === Qt.Key_Return) {
+                    sectionRoot.session.navigateTo("appearance", "chromatic");
+                    event.accepted = true;
+                }
+            }
+
+            RowLayout {
+                id: chromaticRow
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.margins: Appearance.padding.normal
+                spacing: Appearance.spacing.normal
+
+                ThemeSwatch {
+                    Layout.alignment: Qt.AlignVCenter
+                    palette: chromaticCard.isCurrent ? ({}) : chromaticCard.swatch
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 2
+
+                    StyledText {
+                        text: qsTr("Hornero Chromatic")
+                        font.pointSize: Appearance.font.size.normal
+                        font.weight: 500
+                    }
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: qsTr("A palette built from your wallpaper, an image or one colour. Always Signal: same structure, contrast gates and anatomy. Not a curated look; you choose and preview it in Chromatic.")
+                        font.pointSize: Appearance.font.size.small
+                        color: Signal.palette.inkMuted
+                        wrapMode: Text.WordWrap
+                        maximumLineCount: 3
+                        elide: Text.ElideRight
+                    }
+                }
+
+                StyledRect {
+                    visible: chromaticCard.isCurrent
+                    radius: Appearance.rounding.small
+                    color: Signal.palette.signalWell
+                    implicitWidth: chromaticCurrent.implicitWidth + Appearance.padding.small * 2
+                    implicitHeight: chromaticCurrent.implicitHeight + Appearance.padding.smaller * 2
+
+                    StyledText {
+                        id: chromaticCurrent
+
+                        anchors.centerIn: parent
+                        text: qsTr("Current")
+                        font.pointSize: Appearance.font.size.smaller
+                        color: Signal.palette.onSignalWell
+                    }
+                }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: sectionRoot.session.navigateTo("appearance", "chromatic")
             }
         }
     }

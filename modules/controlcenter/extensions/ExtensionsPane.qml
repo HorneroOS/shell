@@ -171,16 +171,21 @@ Item {
         const declared = capabilities || {};
         const commands = Array.isArray(declared.processCommands) ? declared.processCommands : [];
         const hosts = Array.isArray(declared.networkHosts) ? declared.networkHosts : [];
+        const providers = Array.isArray(declared.providers) ? declared.providers : [];
         const settings = declared.settings && typeof declared.settings === "object" ? declared.settings : {};
-        const settingsSummary = Object.keys(settings).sort().map(key => `${key}: ${JSON.stringify(settings[key])}`).join(", ");
+        const keys = Object.keys(settings).sort();
+        // Names and types only: the full declaration (defaults, bounds,
+        // descriptions) is in Details and the plugin's own settings UI.
+        const settingsSummary = keys.length === 0 ? "" : keys.map(key => `${key} (${settings[key] && settings[key].type ? settings[key].type : "?"})`).join(", ");
         const provenance = verified === false
             ? qsTr("Unverified plugin-manifest declarations")
             : qsTr("Plugin-declared capabilities");
-        return qsTr("%1\nProcess commands: %2\nNetwork hosts: %3\nSettings: %4")
+        return qsTr("%1\nRuns commands: %2\nNetwork hosts: %3\nShared data read: %4\nSettings it stores: %5")
             .arg(provenance)
-            .arg(commands.length ? commands.join(", ") : qsTr("None declared"))
-            .arg(hosts.length ? hosts.join(", ") : qsTr("None declared"))
-            .arg(settingsSummary || qsTr("None declared"));
+            .arg(commands.length ? commands.join(", ") : qsTr("none"))
+            .arg(hosts.length ? hosts.join(", ") : qsTr("none"))
+            .arg(providers.length ? providers.join(", ") : qsTr("none"))
+            .arg(settingsSummary || qsTr("none"));
     }
 
     // Marketplace metadata (shell#379): installed entries carry the
@@ -783,10 +788,18 @@ Item {
                             StyledText {
                                 Layout.fillWidth: true
                                 visible: root.pendingEnable === row.entry.id
-                                text: qsTr("This plugin's QML will run as your user, without a sandbox. Enable only if you reviewed its source.\n%1")
-                                    .arg(root.declaredCapabilities(row.entry.capabilities, row.entry.capabilities_verified))
+                                text: qsTr("This plugin's QML will run as your user, without a sandbox. Enable only if you reviewed its source.")
                                 font.pointSize: Appearance.font.size.small
                                 color: Signal.palette.alert
+                                wrapMode: Text.Wrap
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                visible: root.pendingEnable === row.entry.id
+                                text: root.declaredCapabilities(row.entry.capabilities, row.entry.capabilities_verified)
+                                font.pointSize: Appearance.font.size.small
+                                color: Signal.palette.ink
                                 wrapMode: Text.Wrap
                             }
 

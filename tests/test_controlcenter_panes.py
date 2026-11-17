@@ -596,7 +596,7 @@ def test_extensions_marketplace_section():
     assert "declaredCapabilities" in pane
     assert "Confirm install" in pane
     assert "rollback_available" in pane
-    assert 'Settings: %4' in pane
+    assert 'Settings it stores: %5' in pane
     # Marketplace never writes receipts itself and never enables silently.
     assert "pendingInstall" in pane
     assert 'runLifecycle("enable"' in pane  # existing consent path untouched

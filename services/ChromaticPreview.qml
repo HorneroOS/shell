@@ -45,7 +45,20 @@ Singleton {
     property string notice: ""
     // The fingerprint of the candidate differs from what is applied.
     readonly property bool dirty: result !== null && result.fingerprint !== Signal.chromatic?.fingerprint
-    readonly property string helperPath: Quickshell.env("HORNERO_CHROMATIC_BIN") || "/usr/lib/hornero/hornero-chromatic"
+    // Where the helper may live, in order: HORNERO_CHROMATIC_BIN, the packaged
+    // /usr/lib/hornero/hornero-chromatic, then the person's own build in
+    // ~/.local/lib/hornero or ~/.local/bin (development or per-user install).
+    // The probe tries each in turn and settles on the first that answers
+    // `version`; only when none does is the engine reported as not installed.
+    readonly property var helperCandidates: {
+        const home = Quickshell.env("HOME") || "";
+        const list = [Quickshell.env("HORNERO_CHROMATIC_BIN"), "/usr/lib/hornero/hornero-chromatic"];
+        if (home)
+            list.push(home + "/.local/lib/hornero/hornero-chromatic", home + "/.local/bin/hornero-chromatic");
+        return list.filter(p => !!p);
+    }
+    property int helperIndex: 0
+    readonly property string helperPath: helperCandidates[Math.min(helperIndex, helperCandidates.length - 1)]
     readonly property string wallpaper: Wallpapers.actualCurrent
     readonly property var perMode: ({
             "dark": {
@@ -520,8 +533,16 @@ Singleton {
     Timer {
         id: probeTimeout
 
-        interval: 2500
+        interval: 1500
         onTriggered: {
+            if (!root.helperChecked && root.helperIndex + 1 < root.helperCandidates.length) {
+                // A path that cannot start never reports an exit: move on.
+                root.helperIndex += 1;
+                probeProc.running = false;
+                probeProc.running = true;
+                restart();
+                return;
+            }
             if (!root.helperChecked) {
                 root.helperAvailable = false;
                 root.helperChecked = true;
@@ -537,6 +558,13 @@ Singleton {
         stdout: StdioCollector {}
         onExited: exitCode => {
             probeTimeout.stop();
+            if (exitCode !== 0 && root.helperIndex + 1 < root.helperCandidates.length) {
+                // Not here: try the next known location.
+                root.helperIndex += 1;
+                probeTimeout.restart();
+                probeProc.running = true;
+                return;
+            }
             root.helperAvailable = exitCode === 0;
             root.helperChecked = true;
             if (root.helperAvailable)

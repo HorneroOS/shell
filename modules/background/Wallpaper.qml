@@ -61,8 +61,10 @@ Item {
                 anchors.centerIn: parent
                 width: Math.max(0, Math.min(420, parent.width - Appearance.padding.large * 2))
                 implicitHeight: emptyContent.implicitHeight + Appearance.padding.large * 2
-                radius: Appearance.rounding.large
+                radius: Appearance.rounding.small
                 color: Signal.palette.panel
+                border.width: 1
+                border.color: Signal.palette.rule
 
                 Column {
                     id: emptyContent
@@ -100,7 +102,7 @@ Item {
                         implicitWidth: selectWallText.implicitWidth + Appearance.padding.large * 2
                         implicitHeight: selectWallText.implicitHeight + Appearance.padding.small * 2
 
-                        radius: Appearance.rounding.full
+                        radius: Appearance.rounding.small
                         color: Signal.palette.signal
 
                         FileDialog {

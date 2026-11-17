@@ -242,7 +242,10 @@ Item {
                             border.width: isActive ? 2 : 1
                             border.color: isActive ? (Experience.glow ? Signal.palette.glow : Signal.palette.signal) : Qt.alpha(Signal.palette.ruleStrong, 0.35)
 
-                            StateLayer {
+                            Interactive {
+                                Accessible.role: Accessible.Button
+                                Accessible.name: qsTr("Inspect %1 mode").arg(modeCard.modelData.label)
+
                                 function onClicked(): void {
                                     root.selectedMode = modeCard.modelData.id;
                                 }

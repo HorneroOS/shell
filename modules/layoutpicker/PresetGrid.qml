@@ -34,6 +34,8 @@ Item {
 
     readonly property int cardWidth: 212
     readonly property int count: presets.length
+    // The preset the catalogue marks active (or null when none matches).
+    readonly property var currentPreset: presets.find(p => p.name === currentName) ?? null
     readonly property int columns: {
         const maxCols = availableWidth > 0 ? Math.floor((availableWidth + Appearance.spacing.normal) / (cardWidth + Appearance.spacing.normal)) : (count > 12 ? 5 : 4);
         return Math.max(1, Math.min(maxCols, Math.max(count, 1)));

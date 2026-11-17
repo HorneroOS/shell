@@ -119,6 +119,15 @@ ShellRoot {
                     expanded: true
                 }
 
+                AccentSection {
+                    id: accent
+
+                    Layout.fillWidth: true
+                    previewController: controller
+                    session: session
+                    expanded: true
+                }
+
                 ThemesSection {
                     id: themes
 
@@ -160,6 +169,8 @@ ShellRoot {
                 root.out.dbg = [ChromaticPreview.helperAvailable, ChromaticPreview.helperChecked, ChromaticPreview.busy, ChromaticPreview.variantPreviewsWanted, ChromaticPreview.errorCode, ChromaticPreview._variantSig.length, ChromaticPreview._variantCurrent];
                 if (Quickshell.env("HMANAGE") === "1") {
                     root.manageScenario();
+                if (Quickshell.env("HACCENT") === "1") {
+                    root.accentScenario();
                     return;
                 }
                 if (Quickshell.env("HEDIT") === "1") {
@@ -237,6 +248,27 @@ ShellRoot {
                 root.finish();
             }
         }
+    function accentScenario(): void {
+        const o = root.out;
+        Config.appearance.chromatic.transition = "instant";
+        const base = String(Signal.palette.signal);
+        o.base = base;
+        Config.appearance.accent.color = "#FFB5D2";
+        o.global = [String(Signal.palette.signal), String(Signal.palette.glow), String(Signal.palette.onSignal)];
+        Config.appearance.accent.perMode.dark = "#A6D6FF";
+        o.perModeBeatsGlobal = String(Signal.palette.signal);
+        Config.appearance.accent.perExperience = ({"everyday": "#B9E5A0"});
+        o.perExperienceBeatsMode = String(Signal.palette.signal);
+        o.ground = String(Signal.palette.ground);
+        o.ink = String(Signal.palette.ink);
+        Config.appearance.accent.perExperience = ({});
+        Config.appearance.accent.perMode.dark = "";
+        Config.appearance.accent.color = "not-a-colour";
+        o.invalidIgnored = String(Signal.palette.signal) === base;
+        Config.appearance.accent.color = "";
+        o.resetToTheme = String(Signal.palette.signal) === base;
+        o.ctxMode = Experience.mode;
+        root.finish();
     }
 
     Timer {

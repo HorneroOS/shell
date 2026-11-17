@@ -200,6 +200,43 @@ function frame(from, to, step, steps) {
     return out;
 }
 
+// The user's accent (appearance.accent, RFC 0001 amendment: user colour
+// choice) laid over a flattened palette: the accent role, its glow, the
+// text that sits on it and its well. Only the accent family changes, so
+// structure, ground, ink and status colours keep the theme's own gates.
+// `hex` must be #RRGGBB; anything else returns the palette untouched.
+function withAccent(flat, hex) {
+    if (!isHex(hex) || !flat || !flat.ground || !flat.ink)
+        return flat;
+    var accent = String(hex).toUpperCase();
+    var out = {};
+    for (var k in flat) {
+        if (Object.prototype.hasOwnProperty.call(flat, k))
+            out[k] = flat[k];
+    }
+    var well = mixHex(flat.panel || flat.ground, accent, 0.28);
+    out.signal = accent;
+    out.glow = accent;
+    out.onSignal = contrast(accent, flat.ground) >= contrast(accent, flat.ink) ? flat.ground : flat.ink;
+    out.signalWell = well;
+    out.onSignalWell = contrast(well, flat.ink) >= contrast(well, flat.ground) ? flat.ink : flat.ground;
+    return out;
+}
+
+// Which accent applies: an experience-mode choice beats a colour-mode
+// choice, which beats the global one; "" means the theme's own accent.
+function resolveAccent(prefs, experienceMode, themeMode) {
+    var p = prefs || {};
+    var byExp = p.perExperience || {};
+    var byMode = p.perMode || {};
+    var order = [byExp[experienceMode], byMode[themeMode], p.color];
+    for (var i = 0; i < order.length; i++) {
+        if (isHex(order[i]))
+            return String(order[i]).toUpperCase();
+    }
+    return "";
+}
+
 // Read-only status for PluginKit `Theme.chromatic`; never carries paths.
 function status(scheme) {
     var c = scheme && scheme.chromatic;

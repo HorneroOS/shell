@@ -329,6 +329,14 @@ Singleton {
                 layers: appearance.transparency.layers,
                 elements: appearance.transparency.elements
             },
+            accent: {
+                color: appearance.accent.color,
+                perMode: {
+                    dark: appearance.accent.perMode.dark,
+                    light: appearance.accent.perMode.light
+                },
+                perExperience: appearance.accent.perExperience
+            },
             chromatic: {
                 source: appearance.chromatic.source,
                 seeds: appearance.chromatic.seeds,

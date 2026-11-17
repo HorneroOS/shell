@@ -79,7 +79,7 @@ StackView {
                 implicitHeight: !hasEntry ? 0 : isSeparator ? 1 : children.implicitHeight
                 visible: hasEntry
 
-                radius: Appearance.rounding.full
+                radius: Appearance.rounding.small
                 color: isSeparator ? Signal.palette.rule : "transparent"
 
                 Loader {
@@ -191,7 +191,7 @@ StackView {
                         anchors.leftMargin: -Appearance.padding.smaller
                         anchors.rightMargin: -Appearance.padding.smaller * 2
 
-                        radius: Appearance.rounding.full
+                        radius: Appearance.rounding.small
                         color: Signal.palette.cueWell
 
                         StateLayer {

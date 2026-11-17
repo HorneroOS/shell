@@ -100,7 +100,7 @@ ColumnLayout {
                 anchors.verticalCenter: parent.verticalCenter
                 implicitHeight: parent.height - 4
 
-                radius: Appearance.rounding.full
+                radius: Appearance.rounding.small
                 enabled: !isDisabled
 
                 function onClicked(): void {

@@ -25,7 +25,7 @@ Item {
     Interactive {
         id: interaction
 
-        radius: Appearance.rounding.full
+        radius: Appearance.rounding.small
         Accessible.role: Accessible.Button
         Accessible.name: root.label
         onClicked: root.activated()

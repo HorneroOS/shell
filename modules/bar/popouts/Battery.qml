@@ -100,13 +100,13 @@ Column {
         implicitHeight: Math.max(saver.implicitHeight, balance.implicitHeight, perf.implicitHeight) + Appearance.padding.small * 2
 
         color: Signal.tPalette.panel
-        radius: Appearance.rounding.full
+        radius: Appearance.rounding.normal
 
         StyledRect {
             id: indicator
 
             color: Signal.palette.signal
-            radius: Appearance.rounding.full
+            radius: Appearance.rounding.small
             state: profiles.current
 
             states: [
@@ -192,7 +192,7 @@ Column {
         implicitHeight: icon.implicitHeight + Appearance.padding.small * 2
 
         StateLayer {
-            radius: Appearance.rounding.full
+            radius: Appearance.rounding.small
             color: profiles.current === parent.icon ? Signal.palette.onSignal : Signal.palette.ink
 
             function onClicked(): void {

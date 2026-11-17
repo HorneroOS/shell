@@ -22,7 +22,7 @@ Item {
         implicitWidth: implicitHeight
         implicitHeight: icon.implicitHeight + Appearance.padding.small * 2
 
-        radius: Appearance.rounding.full
+        radius: Appearance.rounding.small
 
         function onClicked(): void {
             root.visibilities.session = !root.visibilities.session;

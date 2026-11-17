@@ -155,7 +155,7 @@ ColumnLayout {
     StyledText {
         Layout.topMargin: Appearance.spacing.small
         text: qsTr("Presets")
-        font.weight: 500
+        font.weight: Appearance.font.weight.medium
     }
 
     Flow {
@@ -258,7 +258,7 @@ ColumnLayout {
     StyledText {
         Layout.topMargin: Appearance.spacing.small
         text: qsTr("Widgets")
-        font.weight: 500
+        font.weight: Appearance.font.weight.medium
     }
 
     Repeater {

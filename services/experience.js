@@ -182,6 +182,18 @@ function validateField(key, value) {
     return undefined;
 }
 
+// Presets removed by the Signal audit (signal-visual-language section 14)
+// and the survivor a persisted selection moves to. Applied while overrides
+// are sanitised, so a stale `layout.preset` is rewritten once.
+var REMOVED_PRESETS = {
+    "floating-island": "cozy-minimal",
+    "productivity": "minimal-top"
+};
+
+function migratePreset(id) {
+    return typeof id === "string" && Object.prototype.hasOwnProperty.call(REMOVED_PRESETS, id) ? REMOVED_PRESETS[id] : id;
+}
+
 // Drops unknown modes, unknown keys, invalid values, locked fields and
 // values equal to the factory profile. Never mutates its input.
 function sanitizeOverrides(raw) {
@@ -198,7 +210,7 @@ function sanitizeOverrides(raw) {
         for (var key in src) {
             if (!Object.prototype.hasOwnProperty.call(src, key) || isLocked(mode, key))
                 continue;
-            var v = validateField(key, src[key]);
+            var v = validateField(key, key === "layout.preset" ? migratePreset(src[key]) : src[key]);
             if (v === undefined || v === FACTORY[mode].fields[key])
                 continue;
             clean[key] = v;

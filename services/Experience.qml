@@ -351,6 +351,13 @@ Singleton {
                 return;
             }
             const first = !root.stateReady;
+            if (first) {
+                // One-shot: persisted selections of removed presets move to
+                // their survivor (services/experience.js REMOVED_PRESETS).
+                const mig = Model.sanitizeOverrides(Config.experience.modes);
+                if (JSON.stringify(mig) !== JSON.stringify(Config.experience.modes))
+                    Config.experience.modes = mig;
+            }
             root._adopt(st);
             root.stateReady = true;
             if (first) {

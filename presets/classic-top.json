@@ -27,7 +27,7 @@
         "style": "attached",
         "reserve": true,
         "margin": 8,
-        "thickness": 32,
+        "thickness": 36,
         "density": "values",
         "backdrop": "solid",
         "groups": {

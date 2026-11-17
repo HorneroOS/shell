@@ -24,7 +24,7 @@
         "style": "floating",
         "reserve": false,
         "margin": 14,
-        "thickness": 32,
+        "thickness": 30,
         "density": "values",
         "backdrop": "solid",
         "groups": {

@@ -211,10 +211,16 @@ def test_factory_values_match_code_defaults():
         ("background.visualiser.autoHide", True),
         ("background.video.enabled", True),
         ("background.video.batteryLimit", 20),
-        # bar (BarConfig.qml)
-        ("bar.bars.0.edge", "left"),
-        ("bar.bars.0.style", "attached"),
-        ("bar.bars.0.margin", 8),
+        # bar (BarConfig.qml) — factory default is the Cockpit layout
+        # (presets/cockpit.json): top rail to act, bottom strip to know.
+        ("bar.bars.0.edge", "top"),
+        ("bar.bars.0.style", "inset"),
+        ("bar.bars.0.margin", 6),
+        ("bar.bars.0.thickness", 36),
+        ("bar.bars.1.edge", "bottom"),
+        ("bar.bars.1.style", "attached"),
+        ("bar.bars.1.thickness", 30),
+        ("bar.bars.1.groups.start.0.id", "workspaces"),
         ("bar.workspaces.shown", 5),
         ("bar.workspaces.maxWindowIcons", 5),
         ("bar.activeWindow.inverted", False),
@@ -225,15 +231,16 @@ def test_factory_values_match_code_defaults():
         ("bar.workspaces.showWindowsOnSpecialWorkspaces", True),
         ("bar.workspaces.capitalisation", "preserve"),
         ("bar.status.showNetwork", True),
-        ("bar.status.showAudio", False),
-        ("bar.sizes.innerWidth", 40),
+        ("bar.status.showAudio", True),
+        ("bar.status.showBattery", False),
+        ("bar.sizes.innerWidth", 32),
         ("bar.bars.0.groups.start.0.id", "logo"),
-        # Default end order chosen on the reference machine (shell#468).
-        ("bar.bars.0.groups.end.0.id", "clock"),
-        ("bar.bars.0.groups.end.1.id", "statusIcons"),
-        ("bar.bars.0.groups.end.2.id", "tray"),
-        ("bar.bars.0.groups.end.3.id", "extensions"),  # shell#441 island
-        ("bar.bars.0.groups.end.4.id", "power"),
+        ("bar.bars.0.groups.center.0.id", "clock"),
+        # Cockpit top-rail end order (presets/cockpit.json).
+        ("bar.bars.0.groups.end.0.id", "statusIcons"),
+        ("bar.bars.0.groups.end.1.id", "tray"),
+        ("bar.bars.0.groups.end.2.id", "extensions"),  # shell#441 island
+        ("bar.bars.0.groups.end.3.id", "power"),
         ("bar.extensions.background", False),
         ("bar.extensions.compact", False),
         # border resolves Appearance tokens at scale 1: padding.normal=10,

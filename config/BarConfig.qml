@@ -8,13 +8,23 @@ JsonObject {
     property list<var> perScreen: []
 
     // Every bar is explicit, edge-unique, and grouped into start/center/end.
+    // Factory default is the Cockpit layout (presets/cockpit.json): act on
+    // top, glance below. Hornero Left/Right remain available as presets.
     property list<var> bars: [{
-        edge: "left", style: "attached", reserve: true, margin: 0,
-        thickness: 40, density: "values", backdrop: "solid",
+        edge: "top", style: "inset", reserve: true, margin: 6,
+        thickness: 36, density: "values", backdrop: "solid",
         groups: {
-            start: [{id: "logo", enabled: true}, {id: "workspaces", enabled: true}],
-            center: [{id: "activeWindow", enabled: true}],
-            end: [{id: "clock", enabled: true}, {id: "statusIcons", enabled: true}, {id: "tray", enabled: true}, {id: "extensions", enabled: true}, {id: "power", enabled: true}]
+            start: [{id: "logo", enabled: true}, {id: "quickActions", enabled: true, options: {actions: ["screenshot", "layoutPicker", "settings"]}}, {id: "audioSlider", enabled: true, options: {showValue: true}}, {id: "brightnessSlider", enabled: true, options: {showValue: true}}],
+            center: [{id: "clock", enabled: true, options: {showDate: true}}, {id: "weather", enabled: true}],
+            end: [{id: "statusIcons", enabled: true}, {id: "tray", enabled: true}, {id: "extensions", enabled: true}, {id: "power", enabled: true}]
+        }
+    }, {
+        edge: "bottom", style: "attached", reserve: true, margin: 8,
+        thickness: 30, density: "values", backdrop: "solid",
+        groups: {
+            start: [{id: "workspaces", enabled: true}],
+            center: [{id: "media", enabled: true}],
+            end: [{id: "kbLayout", enabled: true}, {id: "resources", enabled: true}, {id: "battery", enabled: true}]
         }
     }]
 
@@ -189,13 +199,15 @@ JsonObject {
     }
 
     component Status: JsonObject {
-        property bool showAudio: false
+        // Cockpit factory set: audio in the top rail cluster, battery has
+        // its own bottom-strip segment so it stays out of the cluster.
+        property bool showAudio: true
         property bool showMicrophone: false
         property bool showKbLayout: false
         property bool showNetwork: true
         property bool showWifi: true
         property bool showBluetooth: true
-        property bool showBattery: true
+        property bool showBattery: false
         property bool showLockStatus: true
     }
 
@@ -206,7 +218,7 @@ JsonObject {
     }
 
     component Sizes: JsonObject {
-        property int innerWidth: 40
+        property int innerWidth: 32
         property int windowPreviewSize: 400
         property int trayMenuWidth: 300
         property int batteryWidth: 250

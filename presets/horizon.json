@@ -76,7 +76,7 @@
           ]
         },
         "reserve": true,
-        "thickness": 40,
+        "thickness": 36,
         "density": "values",
         "backdrop": "solid"
       },
@@ -84,7 +84,7 @@
         "edge": "bottom",
         "style": "attached",
         "backdrop": "clear",
-        "thickness": 26,
+        "thickness": 24,
         "groups": {
           "start": [
             {

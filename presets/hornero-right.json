@@ -1,6 +1,6 @@
 {
   "_name": "Hornero Right",
-  "_description": "Right sidebar — full featured, mirrored reference shell style",
+  "_description": "Right sidebar — full featured, mirrored reference shell style — inspired by Caelestia's layout",
   "_icon": "🏠",
   "_iconMaterial": "layout-sidebar-right",
   "bar": {
@@ -93,5 +93,6 @@
     "spacing": {
       "scale": 1.0
     }
-  }
+  },
+  "_lineage": "Layout inspired by Caelestia (caelestia-shell); composition preserved with attribution, rendered in Hornero Signal"
 }

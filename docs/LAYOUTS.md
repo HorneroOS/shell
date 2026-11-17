@@ -59,10 +59,19 @@ the three groups provide the layout structure directly.
 `audioSlider.showValue`, `brightnessSlider.showValue`,
 `workspaces.style` (`pills` or `labels`), and `media.maxWidth`.
 
-Workspace indicators display their workspace name or number by default. The
-active indicator and occupied background communicate state without relying on
-icon-font glyphs. Set `workspaces.style` to `labels` for an always-labelled
-workspace row; the default pill style still keeps each workspace readable.
+Workspace indicators are fixed rectangular cells (signal-visual-language §5),
+never pills. Every state differs in at least two cues, so colour is never the
+only signal:
+
+| State | Numeral | Fill | Mark |
+| --- | --- | --- | --- |
+| Empty | `inkMuted` | none | none |
+| Occupied | `inkMuted` | none | 4 x 2 px tick, away from the content |
+| Active | `ink` | `raised` | 2 px `signal` on-air bar on the content-facing edge |
+| Visible on another monitor | `ink` | none | 1 px `ruleStrong` on the content-facing edge |
+| Urgent | `alert` | none | `alert` tick and bar until the workspace is visited |
+
+Set `workspaces.style` to `labels` for an always-labelled workspace row.
 
 Bar actions reference IDs in `services/ShellActions.qml`, never shell command
 strings. Current actions include launcher, layout picker, dashboard, session,
@@ -70,10 +79,22 @@ settings, and screenshot. Unknown actions are skipped with a warning.
 
 ## Shipped presets
 
-The installed catalogue contains 15 presets. It includes Hornero Left/Right,
-Cockpit and Cockpit Clear, Horizon, Islands, Cozy Minimal, Dock Bottom, and
-focused minimal, classic, gaming, floating, and productivity arrangements.
-Every preset is an explicit multi-bar specification and is validated by
+The installed catalogue contains 14 presets (Signal Bezel audit,
+signal-visual-language §14). It includes Hornero Left/Right (inspired by
+Caelestia's layout, preserved with attribution), Cockpit (36 px inset top
+rail, 30 px attached bottom strip) and Cockpit Clear (same anatomy, no bar
+backdrop at all — adaptive per-region ink only), Horizon, Islands, Minimal
+Float (formerly Cozy Minimal), Dock Bottom, Classic Top/Bottom, Minimal
+Top/Left, Studio, and Gaming. **Cockpit is the factory default**
+(`config/shell.default.json`, Experience profiles, `horneroctl` reset);
+Hornero Left/Right stay supported presets. Floating Island and Productivity were removed:
+their compositions duplicated Minimal Float and Minimal Top, and presets are
+applied by copying their bars into the user config, so existing desktops
+keep working unchanged — only the picker catalogue shrinks. A persisted
+Experience `layout.preset` naming a removed preset is migrated once
+(Floating Island to Minimal Float, Productivity to Minimal Top) by
+`services/experience.js`. Every preset is
+an explicit multi-bar specification and is validated by
 `tests/test_shell_layout.py`.
 
 `horneroctl shell preset list --full` reports display metadata and topology for

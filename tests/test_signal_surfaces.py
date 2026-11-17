@@ -97,3 +97,28 @@ def test_toasts_name_their_kind_in_words():
     src = _read("modules/utilities/toasts/ToastItem.qml")
     for word in ("Done", "Warning", "Error", "Note"):
         assert f'qsTr("{word}")' in src
+
+
+def test_osd_draws_only_the_changed_channel():
+    """VA-15: a volume change must not show brightness or the mic."""
+    content = _read("modules/osd/Content.qml")
+    wrapper = _read("modules/osd/Wrapper.qml")
+    assert 'shown: root.channel === "out"' in content
+    assert 'root.channel === "mic"' in content and 'root.channel === "bri"' in content
+    assert 'root.show("out")' in wrapper and 'root.show("bri")' in wrapper
+    assert "channel: root.channel" in wrapper
+
+
+def test_routine_toasts_are_quiet_by_default_and_migrated_once():
+    import json
+    toasts = json.loads((ROOT / "config" / "shell.default.json").read_text())["utilities"]["toasts"]
+    assert toasts["configLoaded"] is False and toasts["numLockChanged"] is False
+    assert toasts["routineQuiet"] is True
+    cfg = _read("config/Config.qml")
+    assert "migrateRoutineToasts" in cfg and "routineQuiet: utilities.toasts.routineQuiet" in cfg
+
+
+def test_toast_severities_share_one_edge():
+    src = _read("modules/utilities/toasts/ToastItem.qml")
+    assert "border.color: Signal.palette.rule" in src
+    assert "Toast.Error ? root.tone : Signal.palette.rule" not in src

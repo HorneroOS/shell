@@ -214,6 +214,26 @@ Singleton {
         return true;
     }
 
+    // One-shot: `Config loaded` and `Num lock` toasts were on by default and
+    // fire on every reload/boot (visual audit VA-15). Existing configs that
+    // still carry them are switched off once; the marker keeps a later
+    // opt-in from being reset.
+    function migrateRoutineToasts(raw: string): bool {
+        let data;
+        try {
+            data = JSON.parse(raw);
+        } catch (e) {
+            return false;
+        }
+        const toasts = data?.utilities?.toasts;
+        if (toasts?.routineQuiet === true)
+            return false;
+        adapter.utilities.toasts.configLoaded = false;
+        adapter.utilities.toasts.numLockChanged = false;
+        adapter.utilities.toasts.routineQuiet = true;
+        return true;
+    }
+
     // Pristine compiled defaults for the migration above.
     SessionConfig {
         id: sessionDefaults
@@ -636,7 +656,8 @@ Singleton {
                 kbLayoutChanged: utilities.toasts.kbLayoutChanged,
                 kbLimit: utilities.toasts.kbLimit,
                 vpnChanged: utilities.toasts.vpnChanged,
-                nowPlaying: utilities.toasts.nowPlaying
+                nowPlaying: utilities.toasts.nowPlaying,
+                routineQuiet: utilities.toasts.routineQuiet
             },
             vpn: {
                 enabled: utilities.vpn.enabled,
@@ -722,7 +743,8 @@ Singleton {
         onLoaded: {
             const migratedAppearance = root.migrateLegacyAppearance();
             const migratedExperience = root.migrateLegacyExperience(text());
-            if (migratedAppearance || migratedExperience)
+            const migratedToasts = root.migrateRoutineToasts(text());
+            if (migratedAppearance || migratedExperience || migratedToasts)
                 root.save();
             root.loaded = true;
             try {

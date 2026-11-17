@@ -21,7 +21,12 @@ Item {
     property bool sourceMuted
     property real brightness
 
-    function show(): void {
+    // Which channel changed last: "out", "mic" or "bri" (Content draws
+    // only this one).
+    property string channel: "out"
+
+    function show(channel: string): void {
+        root.channel = channel;
         visibilities.osd = true;
         timer.restart();
     }
@@ -83,22 +88,22 @@ Item {
         target: Audio
 
         function onMutedChanged(): void {
-            root.show();
+            root.show("out");
             root.muted = Audio.muted;
         }
 
         function onVolumeChanged(): void {
-            root.show();
+            root.show("out");
             root.volume = Audio.volume;
         }
 
         function onSourceMutedChanged(): void {
-            root.show();
+            root.show("mic");
             root.sourceMuted = Audio.sourceMuted;
         }
 
         function onSourceVolumeChanged(): void {
-            root.show();
+            root.show("mic");
             root.sourceVolume = Audio.sourceVolume;
         }
     }
@@ -107,7 +112,7 @@ Item {
         target: root.monitor
 
         function onBrightnessChanged(): void {
-            root.show();
+            root.show("bri");
             root.brightness = root.monitor?.brightness ?? 0;
         }
     }
@@ -160,6 +165,7 @@ Item {
             sourceVolume: root.sourceVolume
             sourceMuted: root.sourceMuted
             brightness: root.brightness
+            channel: root.channel
         }
     }
 }

@@ -133,3 +133,8 @@ leaves its row inert.
 `appearance.glow.limit` (1 to 6, default 3) is how many glowing items may show at once (`Experience.glowLimit`); the
 visual language default is three. Mode rules (no glow in Focus or Gaming, dark themes only) still decide whether any
 glow shows. `appearance.anim.mediaGifSpeedAdjustment` and `sessionGifSpeed` are not offered: nothing reads them today.
+
+## Wallpaper fit (Appearance > Background)
+
+`background.wallpaperFit`: `crop` (factory, fill and crop), `fit` (whole image), `stretch`, `center`. Applies to still,
+animated and video wallpapers (video has no pad mode, so centre plays as fit).

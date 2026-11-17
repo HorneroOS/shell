@@ -36,6 +36,15 @@ Singleton {
     // loadStartedAtMs, loadMs, attempts, diagnostics}
     // state: pending | loaded | failed | disabled | safe-mode
     property var entries: []
+    // id -> Date.now() at which a host first began instantiating that
+    // plugin's entrypoint since the last discovery. Kept OUT of `entries`
+    // on purpose: a Loader reports `Loading` synchronously while its
+    // Repeater delegate is being created, which happens inside the change
+    // notification of the very host list derived from `entries`
+    // (StableList.source, PluginDesktopWidgets.deckEntries). Writing
+    // `entries` from there re-entered those bindings ("Binding loop
+    // detected"). Nothing derives a model from this map.
+    property var hostLoadClock: ({})
     property bool discovered: false
     property string discoveryError: ""
     property string buffer: ""
@@ -992,15 +1001,18 @@ Singleton {
     // `surface` is "" for the primary/background entrypoint.
     function markLoading(id: string): void {
         const current = root.entries.find(e => e.id === id);
-        if (!current || current.hostLoadStartedAtMs > 0 && current.hostLoadStartedAtMs >= (current.loadStartedAtMs || 0))
+        if (!current)
+            return;
+        const started = root.hostLoadClock[id] ?? 0;
+        if (started > 0 && started >= (current.loadStartedAtMs || 0))
             return;
         // Honest timing: measured from the moment a host starts
         // instantiating the entrypoint, not from discovery (a dashboard
         // card that is only built when its tab opens is not "slow").
-        const now = Date.now();
-        root.entries = root.entries.map(e => e.id === id ? Object.assign({}, e, {
-            hostLoadStartedAtMs: now
-        }) : e);
+        // Recorded beside `entries`, never in it (see hostLoadClock).
+        const next = Object.assign({}, root.hostLoadClock);
+        next[id] = Date.now();
+        root.hostLoadClock = next;
     }
 
     function markLoaded(id: string, surface: var): void {
@@ -1087,7 +1099,8 @@ Singleton {
         const next = root.entries.map(e => {
             if (e.id !== id)
                 return e;
-            const startedAt = (e.hostLoadStartedAtMs || 0) >= (e.loadStartedAtMs || 0) && (e.hostLoadStartedAtMs || 0) > 0 ? e.hostLoadStartedAtMs : (e.loadStartedAtMs || root.startedAtMs);
+            const hostStarted = root.hostLoadClock[e.id] ?? 0;
+            const startedAt = hostStarted > 0 && hostStarted >= (e.loadStartedAtMs || 0) ? hostStarted : (e.loadStartedAtMs || root.startedAtMs);
             const loadMs = Math.max(0, Math.round(now - startedAt));
             return Object.assign({}, e, {
                 state: state,
@@ -1124,12 +1137,14 @@ Singleton {
             count: root.entries.length,
             loaded: root.entries.filter(e => e.state === "loaded").length,
             failed: root.entries.filter(e => e.state === "failed").length,
-            plugins: root.entries.map(e => e.state === "pending" && !(e.hostLoadStartedAtMs > 0) ? Object.assign({}, e, {
+            plugins: root.entries.map(e => e.state === "pending" && !((root.hostLoadClock[e.id] ?? 0) > 0) ? Object.assign({}, e, {
                 instantiated: false,
                 detail: e.detail || qsTr("Not instantiated yet: this surface is built when it is shown (a dashboard card when the Extensions tab opens).")
             }) : Object.assign({}, e, {
                 instantiated: e.state !== "disabled"
-            }))
+            })).map(e => (root.hostLoadClock[e.id] ?? 0) > 0 ? Object.assign({}, e, {
+                hostLoadStartedAtMs: root.hostLoadClock[e.id]
+            }) : e)
         };
     }
 
@@ -1164,6 +1179,7 @@ Singleton {
                 return;
             }
             const discoveredAtMs = Date.now();
+            root.hostLoadClock = ({});
             const previousById = ({});
             for (const prior of root.entries)
                 previousById[prior.id] = prior;

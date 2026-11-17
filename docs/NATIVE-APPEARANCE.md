@@ -6,8 +6,12 @@ tracked in [HorneroOS/.github#28](https://github.com/HorneroOS/.github/issues/28
 This page describes how the shell implements it: colour roles, typography,
 glyphs, motion, geometry, and the native layers that apply GTK settings.
 
-Colours never come from the wallpaper. A theme is a complete table of
-Signal roles; changing the wallpaper changes only the wallpaper.
+A theme is a complete table of Signal roles. With a curated theme,
+changing the wallpaper changes only the wallpaper. The optional
+**Hornero Chromatic** theme (`hornero-chromatic`,
+[RFC 0002](https://github.com/HorneroOS/docs/blob/main/development/rfc-0002-hornero-chromatic.md)) builds that table from the wallpaper, an image or a
+chosen colour; it is specified but not implemented yet (see
+[Hornero Chromatic](#hornero-chromatic-planned) below).
 
 ## Colour roles — `services/Signal.qml`
 
@@ -68,7 +72,8 @@ ${XDG_STATE_HOME:-~/.local/state}/hornero/signal/scheme.json
 ```
 
 - `horneroctl appearance theme apply <id>` writes it atomically for catalogue
-  themes; the shell writes it for built-ins (`Signal.persistScheme`, an
+  themes (and, once RFC 0002 ships, horneroctl writes it for the
+  `hornero-chromatic` theme); the shell writes it for built-ins (`Signal.persistScheme`, an
   atomic `mv`) and on first run when the file is missing.
 - `Signal` watches the file and applies any complete schema-v2 scheme.
   Incomplete or legacy (schema 1, M3) files are ignored and the configured
@@ -100,6 +105,29 @@ render under Signal and are not offered.
   Light/Dark actions now apply `hornero-signal-day`/`hornero-signal-night`.
 - The persisted motion curve table is no longer serialized and disappears
   on the next save.
+
+## Hornero Chromatic (planned)
+
+[RFC 0002](https://github.com/HorneroOS/docs/blob/main/development/rfc-0002-hornero-chromatic.md) adds dynamic colour as an option next to the curated
+themes. Nothing below exists in this repository yet; it is tracked in
+[shell#525](https://github.com/HorneroOS/shell/issues/525) (engine) and
+[shell#526](https://github.com/HorneroOS/shell/issues/526) (UI and
+PluginKit).
+
+- One native engine, written once in C++: `libs/chromatic/` (Qt Core/Gui
+  only), used in-process by the QML module `Hornero.Chromatic` for previews
+  and by the `hornero-chromatic` helper (`/usr/lib/hornero`) that horneroctl
+  runs for every apply. No Python and no external colour library.
+- Output is the Signal role set above, `glow` and `term0`…`term15`, plus
+  optional additive `chromatic`, `minSurfaceAlpha` and `clearInk` blocks in
+  the live scheme.
+- The shell previews in memory only (`Signal.beginPreview` /
+  `cancelPreview`); cancelling writes nothing. Apply always goes
+  through horneroctl's Chromatic apply verb (RFC 0002 §10); horneroctl stays
+  the only writer of the live scheme for Chromatic.
+- `appearance.highContrast` keeps showing the curated
+  `hornero-signal-contrast` table. Cockpit Clear bars stay at zero opacity;
+  Chromatic only changes their foreground ink.
 
 ## Typography — `config/AppearanceConfig.qml`
 

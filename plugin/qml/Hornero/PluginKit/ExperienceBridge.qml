@@ -14,4 +14,14 @@ QtObject {
     readonly property bool scanlines: Experience.scanlines
     readonly property int telemetryIntervalMs: Experience.telemetryIntervalMs
     readonly property bool telemetryPaused: Experience.telemetryPaused
+    readonly property int glowLimit: Experience.glowLimit
+    readonly property int glowHeld: Experience.glowHeld
+
+    function acquireGlow(owner: var, reserve: int): bool {
+        return Experience.acquireGlow(owner, reserve);
+    }
+
+    function releaseGlow(owner: var): void {
+        Experience.releaseGlow(owner);
+    }
 }

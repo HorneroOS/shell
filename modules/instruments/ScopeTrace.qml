@@ -20,7 +20,23 @@ Well {
     property color traceColor: Signal.palette.phosphor
     property bool glow: false
     property bool scanlines: false
-    readonly property bool glowAllowed: glow && !Signal.light && !Config.appearance.highContrast
+    readonly property bool glowWanted: glow && !Signal.light && !Config.appearance.highContrast && root.visible && samples.length > 1
+    // Glow is rationed shell-wide (visual language §9): a trace without a
+    // lease renders the same line without the halo.
+    property bool _granted: false
+    readonly property bool glowAllowed: root.glowWanted && root._granted
+    onGlowWantedChanged: root._syncGlow()
+    Component.onCompleted: root._syncGlow()
+    Component.onDestruction: Experience.releaseGlow(root)
+
+    function _syncGlow(): void {
+        if (root.glowWanted)
+            root._granted = Experience.acquireGlow(root, 0);
+        else {
+            Experience.releaseGlow(root);
+            root._granted = false;
+        }
+    }
 
     clip: true
 

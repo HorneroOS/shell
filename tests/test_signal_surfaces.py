@@ -42,7 +42,7 @@ def test_meters_never_invent_values():
 def test_scope_glow_is_rationed():
     src = (KIT / "ScopeTrace.qml").read_text()
     # Glow: opt-in, never in light or high-contrast themes, alpha <= 40 %.
-    assert "glowAllowed: glow && !Signal.light && !Config.appearance.highContrast" in src
+    assert "glowWanted: glow && !Signal.light && !Config.appearance.highContrast" in src
     for alpha in re.findall(r"Qt\.alpha\(Signal\.palette\.glow,\s*([0-9.]+)\)", src):
         assert float(alpha) <= 0.4
     # Persistence is the previous real window at 22 %.

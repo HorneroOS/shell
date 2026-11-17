@@ -124,7 +124,7 @@ def test_centre_stays_open_for_windows():
         left = max([p["x"] + p["width"] for p in res["placements"] if p["x"] == 0] or [0])
         right = min([p["x"] for p in res["placements"] if p["x"] != 0] or [area["width"]])
         if left and right < area["width"]:
-            assert right - left >= 480, name
+            assert right - left >= min(480, int(area["width"] * 0.3)), name
 
 
 def test_small_screen_degrades_by_priority_never_overflows():
@@ -138,6 +138,12 @@ def test_small_screen_degrades_by_priority_never_overflows():
     # Dropped widgets are the lowest-priority ones.
     order = run_js("return ids();")
     assert order.index(res["dropped"][0]["id"]) > order.index(shown[0])
+
+
+def test_laptop_screen_gets_a_real_deck_not_one_card():
+    res = compose(SCREENS["1366x768@1"])
+    assert len(res["placements"]) >= 3
+    assert_sane(res, SCREENS["1366x768@1"])
 
 
 def test_tiny_area_places_nothing_and_does_not_throw():

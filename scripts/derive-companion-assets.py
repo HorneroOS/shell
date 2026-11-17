@@ -26,6 +26,7 @@ import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import companion_nest as nest_mod  # noqa: E402
 import companion_poses as poses_mod  # noqa: E402
 
 try:
@@ -150,7 +151,7 @@ def transform(im: Image.Image, step: dict) -> Image.Image:
         x0, y0, x1, y1 = bbox
         crop = im.crop((x0 + int((x1 - x0) * 0.38), y0, x1,
                         y0 + int((y1 - y0) * 0.62)))
-        return crop
+        return fade_edges(crop, left=int(crop.size[0] * 0.18), bottom=int(crop.size[1] * 0.16))
     sy = step.get("sy", 1.0)
     if sy != 1.0:
         w, h = im.size
@@ -192,31 +193,67 @@ def place(im: Image.Image, anchor: str, dy: int, size: int) -> Image.Image:
 
 
 def nest_image(stage: int) -> Image.Image:
-    im = Image.new("RGBA", (CANVAS, CANVAS), (0, 0, 0, 0))
-    d = ImageDraw.Draw(im)
-    out = (62, 36, 23, 255)
-    d.rectangle([120, FEET_Y, 392, FEET_Y + 10], fill=(92, 58, 32, 255))
-    if stage == 1:
-        for x1, y1, x2, y2 in ((196, 470, 286, 446), (216, 472, 300, 456),
-                               (246, 472, 316, 448), (206, 466, 268, 470)):
-            d.line([x1, y1, x2, y2], fill=(92, 58, 32, 255), width=8)
-    if stage == 2:
-        d.pieslice([188, 404, 324, 510], 180, 360, fill=(138, 90, 52, 255), outline=out, width=6)
-        d.pieslice([206, 422, 306, 510], 180, 360, fill=(110, 69, 37, 255))
-    if stage >= 3:
-        d.pieslice([176, 358, 336, 520], 180, 360, fill=(138, 90, 52, 255), outline=out, width=6)
-        d.ellipse([276, 414, 310, 448], fill=(46, 28, 16, 255))
-    if stage == 4:
-        d.polygon([(292, 430), (338, 438), (338, 458), (292, 448)],
-                  fill=(110, 69, 37, 255), outline=out)
-        d.ellipse([214, 386, 238, 398], fill=(217, 140, 78, 255))
+    return nest_mod.nest_image(stage)
+
+
+def despeckle(im: Image.Image, min_area: int = 900) -> Image.Image:
+    """Drop isolated opaque specks (chroma-key leftovers) away from the body."""
+    im = im.convert("RGBA")
+    a = im.getchannel("A")
+    w, h = im.size
+    px = a.load()
+    seen = bytearray(w * h)
+    comps = []
+    for y in range(h):
+        for x in range(w):
+            if px[x, y] > 24 and not seen[y * w + x]:
+                stack = [(x, y)]
+                seen[y * w + x] = 1
+                pts = []
+                while stack:
+                    cx, cy = stack.pop()
+                    pts.append((cx, cy))
+                    for nx, ny in ((cx + 1, cy), (cx - 1, cy), (cx, cy + 1), (cx, cy - 1),
+                                   (cx + 1, cy + 1), (cx - 1, cy - 1), (cx + 1, cy - 1), (cx - 1, cy + 1)):
+                        if 0 <= nx < w and 0 <= ny < h and px[nx, ny] > 24 and not seen[ny * w + nx]:
+                            seen[ny * w + nx] = 1
+                            stack.append((nx, ny))
+                comps.append(pts)
+    if len(comps) < 2:
+        return im
+    biggest = max(len(c) for c in comps)
+    out = im.load()
+    for c in comps:
+        if len(c) < min_area and len(c) < biggest // 100:
+            for x, y in c:
+                out[x, y] = (0, 0, 0, 0)
+    return im
+
+
+def fade_edges(im: Image.Image, left: int = 0, bottom: int = 0) -> Image.Image:
+    """Soften a hard crop edge with an alpha ramp instead of a straight cut."""
+    im = im.convert("RGBA")
+    w, h = im.size
+    px = im.load()
+    for y in range(h):
+        for x in range(w):
+            r, g, b, al = px[x, y]
+            if not al:
+                continue
+            f = 1.0
+            if left and x < left:
+                f = min(f, x / left)
+            if bottom and y > h - bottom:
+                f = min(f, (h - y) / bottom)
+            if f < 1.0:
+                px[x, y] = (r, g, b, int(al * f))
     return im
 
 
 def _load_keyframes() -> dict[str, Image.Image]:
     out = {}
     for path in sorted(POSES_DIR.glob("*.png")):
-        out[path.stem] = chroma_key(Image.open(path))
+        out[path.stem] = despeckle(chroma_key(Image.open(path)))
     return out
 
 
@@ -224,7 +261,7 @@ def _load_orig() -> dict[tuple[str, str], Image.Image]:
     out = {}
     for path in sorted(ORIG_DIR.glob("*.png")):
         skin, _, anim = path.stem.rpartition("-")
-        out[(skin, anim)] = Image.open(path).convert("RGBA")
+        out[(skin, anim)] = despeckle(Image.open(path).convert("RGBA"))
     return out
 
 
@@ -324,6 +361,8 @@ def derive(out_dir: Path) -> dict:
         "skins": manifest_skins,
         "assistantStates": dict(poses_mod.ASSISTANT_STATES),
         "nests": nests,
+        "nestLights": nest_mod.lights_manifest(),
+        "nestScreen": list(nest_mod.SCREEN_RECT),
     }
     (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     return manifest

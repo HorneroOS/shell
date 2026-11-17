@@ -938,11 +938,11 @@
             {
               "file": "frames/argentina-peek-01.png",
               "size": [
-                392,
+                390,
                 430
               ],
               "offset": [
-                60,
+                61,
                 42
               ],
               "anchorPx": [
@@ -2528,11 +2528,11 @@
             {
               "file": "frames/blue-gold-peek-01.png",
               "size": [
-                392,
+                390,
                 430
               ],
               "offset": [
-                60,
+                61,
                 42
               ],
               "anchorPx": [
@@ -3652,11 +3652,11 @@
             {
               "file": "frames/default-greet-02.png",
               "size": [
-                332,
+                330,
                 429
               ],
               "offset": [
-                90,
+                91,
                 42
               ],
               "anchorPx": [
@@ -4120,11 +4120,11 @@
             {
               "file": "frames/default-peek-01.png",
               "size": [
-                392,
+                390,
                 430
               ],
               "offset": [
-                60,
+                61,
                 42
               ],
               "anchorPx": [
@@ -5710,11 +5710,11 @@
             {
               "file": "frames/gaucho-peek-01.png",
               "size": [
-                392,
+                390,
                 430
               ],
               "offset": [
-                60,
+                61,
                 42
               ],
               "anchorPx": [
@@ -7299,11 +7299,11 @@
             {
               "file": "frames/mono-peek-01.png",
               "size": [
-                392,
+                390,
                 430
               ],
               "offset": [
-                60,
+                61,
                 42
               ],
               "anchorPx": [
@@ -8888,11 +8888,11 @@
             {
               "file": "frames/nocturnal-peek-01.png",
               "size": [
-                392,
+                390,
                 430
               ],
               "offset": [
-                60,
+                61,
                 42
               ],
               "anchorPx": [
@@ -10478,11 +10478,11 @@
             {
               "file": "frames/red-peek-01.png",
               "size": [
-                392,
+                390,
                 430
               ],
               "offset": [
-                60,
+                61,
                 42
               ],
               "anchorPx": [
@@ -12067,11 +12067,11 @@
             {
               "file": "frames/retro-terminal-peek-01.png",
               "size": [
-                392,
+                390,
                 430
               ],
               "offset": [
-                60,
+                61,
                 42
               ],
               "anchorPx": [
@@ -12759,5 +12759,43 @@
     "cup": "frames/nest-cup.png",
     "dome": "frames/nest-dome.png",
     "home": "frames/nest-home.png"
-  }
+  },
+  "nestLights": {
+    "link": {
+      "x": 96,
+      "y": 438,
+      "r": 6,
+      "role": "assistant-link"
+    },
+    "run": {
+      "x": 118,
+      "y": 438,
+      "r": 6,
+      "role": "assistant-run"
+    },
+    "approval": {
+      "x": 440,
+      "y": 436,
+      "r": 6,
+      "role": "approval"
+    },
+    "radio": {
+      "x": 462,
+      "y": 436,
+      "r": 6,
+      "role": "radio"
+    },
+    "mode": {
+      "x": 300,
+      "y": 392,
+      "r": 5,
+      "role": "mode"
+    }
+  },
+  "nestScreen": [
+    58,
+    372,
+    138,
+    424
+  ]
 }

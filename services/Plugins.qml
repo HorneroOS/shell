@@ -243,12 +243,13 @@ Singleton {
             colour: ["alpha"],
             list: ["options", "minItems", "maxItems"],
             text: ["minLength", "maxLength", "rows"],
-            path: ["kind", "mustExist"]
+            path: ["kind", "mustExist"],
+            strings: ["minItems", "maxItems", "maxLength"]
         };
         if (!Object.prototype.hasOwnProperty.call(allowed, declaration.type))
             return false;
         const keys = Object.keys(declaration);
-        const known = ["type", "default", "description", "title", "group", "visibleWhen"].concat(allowed[declaration.type]);
+        const known = ["type", "default", "description", "title", "group", "visibleWhen", "hidden"].concat(allowed[declaration.type]);
         if (!keys.every(key => known.includes(key)) || !keys.includes("default"))
             return false;
         if (declaration.description !== undefined
@@ -259,6 +260,18 @@ Singleton {
             if (declaration[field] !== undefined
                     && (typeof declaration[field] !== "string" || declaration[field].length > limit
                         || !/\S/.test(declaration[field])))
+                return false;
+        }
+        if (declaration.hidden !== undefined && (typeof declaration.hidden !== "boolean" || declaration.visibleWhen !== undefined))
+            return false;
+        if (declaration.type === "strings") {
+            for (const [bound, ceiling] of [["minItems", 32], ["maxItems", 32], ["maxLength", 128]]) {
+                const limit = declaration[bound];
+                if (limit !== undefined && (!Number.isInteger(limit) || limit < 0 || limit > ceiling))
+                    return false;
+            }
+            if (declaration.minItems !== undefined && declaration.maxItems !== undefined
+                    && declaration.minItems > declaration.maxItems)
                 return false;
         }
         if (declaration.visibleWhen !== undefined) {
@@ -378,6 +391,14 @@ Singleton {
             const most = typeof declaration.maxItems === "number" ? declaration.maxItems : options.length;
             const least = typeof declaration.minItems === "number" ? declaration.minItems : 0;
             return value.length >= least && value.length <= most;
+        } else if (declaration.type === "strings") {
+            if (!Array.isArray(value))
+                return false;
+            const most = typeof declaration.maxItems === "number" ? declaration.maxItems : 32;
+            const least = typeof declaration.minItems === "number" ? declaration.minItems : 0;
+            const longest = typeof declaration.maxLength === "number" ? declaration.maxLength : 128;
+            return value.length >= least && value.length <= most
+                && value.every(item => typeof item === "string" && item.length > 0 && item.length <= longest);
         } else if (declaration.type === "path") {
             return typeof value === "string" && value.length <= 1024 && !/[\u0000-\u001f\u007f]/.test(value);
         } else {

@@ -336,7 +336,8 @@
                   "colour",
                   "list",
                   "text",
-                  "path"
+                  "path",
+                  "strings"
                 ]
               },
               "default": {
@@ -451,6 +452,10 @@
               },
               "mustExist": {
                 "type": "boolean"
+              },
+              "hidden": {
+                "type": "boolean",
+                "description": "Display only (PluginKit 4): the setting is stored, validated and readable like any other but is not rendered in the generated Control Center UI nor wiped by its Reset all. Use it for state an extension persists itself (timers, last-seen markers). Cannot combine with visibleWhen."
               }
             },
             "oneOf": [
@@ -1087,6 +1092,76 @@
                     {
                       "required": [
                         "rows"
+                      ]
+                    }
+                  ]
+                }
+              },
+              {
+                "properties": {
+                  "type": {
+                    "const": "strings"
+                  },
+                  "default": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    },
+                    "maxItems": 32
+                  }
+                },
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "minimum"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "maximum"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "minLength"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "options"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "step"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "unit"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "alpha"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "rows"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "kind"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "mustExist"
                       ]
                     }
                   ]

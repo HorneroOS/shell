@@ -147,7 +147,7 @@ def test_schema_and_validator_agree_on_the_closed_type_set():
     declared = set(setting_schema["additionalProperties"]["properties"]["type"]["enum"])
     assert declared == set(VALIDATOR.SETTING_TYPES) == {
         "boolean", "integer", "number", "string", "enum",
-        "colour", "list", "text", "path",
+        "colour", "list", "text", "path", "strings",
     }
     for kind in declared:
         assert f'"{kind}"' in SERVICE, f"runtime must mirror setting type {kind}"
@@ -238,7 +238,7 @@ def test_reset_removes_stored_values_and_saves():
     assert "Config.plugins.resetSettings(namespaceKey)" in FACADE
     # Generated UI reset (per-field and confirmed reset-all).
     assert "Config.plugins.resetSetting(root.storageKey, field.key)" in SECTION
-    assert "Config.plugins.resetSettings(root.storageKey)" in SECTION
+    assert "Config.plugins.resetSetting(root.storageKey, key)" in SECTION  # Reset all spares hidden state
     assert "confirmResetAll" in SECTION
 
 
@@ -254,7 +254,7 @@ def test_generated_ui_covers_every_type_with_native_controls():
     # Generation is driven by the declarations, sorted for stability,
     # and every value flows through the shared validation/storage.
     assert "Plugins.normalizeSettings(root.settings)" in SECTION
-    assert "Object.keys(root.declarations).sort()" in SECTION
+    assert "Object.keys(root.declarations).filter(key => root.declarations[key].hidden !== true).sort()" in SECTION
     assert "Plugins.migratedSettingValue(decl, stored)" in SECTION
     assert "Plugins.settingValueValid(decl, value)" in SECTION
     assert "Config.plugins.setSetting(root.storageKey, key, value)" in SECTION

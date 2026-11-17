@@ -30,7 +30,7 @@ UI_FILES = [
     "UiDetailRow.qml", "UiActionRow.qml", "UiChip.qml", "UiProgress.qml",
     "UiSegmentMeter.qml", "UiMeterRow.qml", "UiSparkline.qml", "UiScope.qml",
     "UiPartition.qml", "UiState.qml", "UiTooltip.qml", "UiPopover.qml",
-    "UiStack.qml",
+    "UiStack.qml", "UiScrollArea.qml",
     # Shared anchored-surface solver imported by UiTooltip/UiPopover.
     "Placement.js",
     # Byte-identical copy of services/chromatic.js (Theme.contrast).

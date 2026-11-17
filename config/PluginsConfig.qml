@@ -269,7 +269,8 @@ JsonObject {
     }
 
     function quickTilesList(): var {
-        const list = Array.isArray(quickTiles) ? quickTiles : [];
+        const stored = plain(quickTiles);
+        const list = Array.isArray(stored) ? stored : [];
         const result = [];
         for (const key of list) {
             if (typeof key === "string" && validTileKey(key) && !result.includes(key))
@@ -292,6 +293,16 @@ JsonObject {
         quickTiles = placed ? current.concat([key]) : current.filter(k => k !== key);
         saveRequested();
         return true;
+    }
+
+    // Values read from shell.json arrive as native variant lists whose
+    // Array.isArray() is false; a JSON round trip yields plain JS arrays.
+    function plain(value: var): var {
+        try {
+            return JSON.parse(JSON.stringify(value));
+        } catch (e) {
+            return null;
+        }
     }
 
     function instancesSource(): var {

@@ -102,6 +102,21 @@ the Layout Picker. `horneroctl shell preset apply <name> --yes` applies a
 preset to the user-owned Shell settings file; installed system presets are
 read-only and are never changed.
 
+## Segments and the mode indicator
+
+Bar entries are **segments** (signal-visual-language §4.1): 12 px horizontal
+padding (8 px vertical in left/right rails), no spacing in the group, and a
+1 px `rule` between segments inset 8 px from the bar edges (20 px tall in a
+36 px rail). Adjacent icon-only entries (`quickActions`, `statusIcons`,
+`tray`, `extensions`) form one segment with a 12 px gap and no rule.
+Cockpit Clear draws no rules.
+
+`modeIndicator` is a compact experience-mode indicator (shell#478): the
+mode glyph and, outside `icons` density, a three-letter eyebrow (`FOC`,
+`SIG`, `GAM`, `STU`). It is hidden in Everyday and shown in every other
+mode; `options.always: true` keeps it visible. Cockpit and Cockpit Clear
+ship it first in the top rail's end group. Click opens Settings.
+
 ## Cockpit Clear
 
 `backdrop: "clear"` bars have a genuinely absent background (RFC 0001 §5.1):

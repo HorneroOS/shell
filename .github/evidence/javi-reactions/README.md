@@ -11,3 +11,18 @@ deployed from branch `feat/javi-pluginkit-hook` (docs commit `a07c886`). Not run
   and idle 154 ticks (5.1 %), companion hidden 103 ticks (3.4 %). The difference includes the
   existing idle bob animation, which moves the layer-shell margin every frame; see the PR
   description for the follow-up.
+
+## Control Center sections (added with the per-mode PR)
+
+`pane-section-a|b|c.png` were captured in the QA VM from a scratch copy of the pane with the
+Reactions (a, c) and "Look per Experience mode" (b) panels moved above General, because
+scripted scrolling does not reach the pane content in the VM. Variant c omits the per-event
+switch list so the per-mode Full/Quiet/Silent rows show. The component code is the PR's.
+
+## Idle bob CPU (whole `qs`, 30 s, QA VM, ticks of 100/s)
+
+| Build | hidden | visible idle | extra |
+| ----- | ------ | ------------ | ----- |
+| main (60 fps margin tween) | 104 | 151 | 47 |
+| sprite tween, no margin change | 99 | 146 | 47 |
+| stepped bob (PR #616) | 122 | 123 | 1 |

@@ -24,12 +24,22 @@ Item {
     // Orientation of the owning bar (set by Bar.qml); defaults to the
     // primary bar for standalone use.
     property bool vertical: Config.bar.isVerticalFor(screen.name)
+    // Owning bar edge; §5 cell marks sit on/away from the content edge.
+    property string edge: Config.bar.positionFor(screen.name)
+    // §5 state maps keyed by workspace id (set by Workspaces).
+    property var urgent: ({})
+    property var visibleElsewhere: ({})
     // Labels style: always the workspace number, plus an underline (accent
     // when active, faint when occupied). Set by Workspaces.
     property bool labels: false
     readonly property bool isActive: activeWsId === ws
+    readonly property bool isUrgent: !isActive && (niriMode ? (workspaceData?.is_urgent ?? false) : (urgent[ws] ?? false))
+    readonly property bool isVisibleElsewhere: !isActive && (visibleElsewhere[ws] ?? false)
+    // The cell edge facing the desktop content, per owning bar edge.
+    readonly property bool contentAtTop: edge === "bottom"
+    readonly property bool contentAtLeft: edge === "right"
     readonly property bool isWorkspace: true // Flag for finding workspace children
-    readonly property string accessibleState: root.isActive ? qsTr("current") : root.isOccupied ? qsTr("occupied") : qsTr("empty")
+    readonly property string accessibleState: root.isActive ? qsTr("current") : root.isUrgent ? qsTr("urgent") : root.isVisibleElsewhere ? qsTr("visible on another monitor") : root.isOccupied ? qsTr("occupied") : qsTr("empty")
     // Unanimated prop for others to use as reference (main-axis size)
     readonly property int size: (vertical ? implicitHeight : implicitWidth) + (hasWindows ? Appearance.padding.small : 0)
 
@@ -88,9 +98,14 @@ Item {
                 return root.activeWsId === root.ws ? activeLabel : root.isOccupied ? occupiedLabel : label;
             }
             color: {
+                // §5: urgent numeral in alert; active and visible-elsewhere
+                // in ink; occupied and empty in inkMuted (the tick and the
+                // edge marks carry the remaining distinction).
+                if (root.isUrgent)
+                    return Signal.palette.alert;
                 if (root.labels)
                     return root.isActive ? Signal.palette.signal : root.isOccupied ? Signal.palette.ink : Signal.palette.inkMuted;
-                return Config.bar.workspaces.occupiedBg || root.isOccupied || root.isActive ? Signal.palette.ink : Signal.palette.inkMuted;
+                return root.isActive || root.isVisibleElsewhere ? Signal.palette.ink : Signal.palette.inkMuted;
             }
             verticalAlignment: Qt.AlignVCenter
             horizontalAlignment: Qt.AlignHCenter
@@ -192,6 +207,32 @@ Item {
                 }
             }
         }
+    }
+
+    // §5 occupancy tick: 4 × 2 px, 4 px from the edge away from the
+    // content. Alert-coloured while urgent.
+    Rectangle {
+        visible: root.isOccupied && !root.isActive
+        width: root.vertical ? 2 : 4
+        height: root.vertical ? 4 : 2
+        x: root.vertical ? (root.contentAtLeft ? root.width - width - 4 : 4) : (root.width - width) / 2
+        y: root.vertical ? (root.height - height) / 2 : (root.contentAtTop ? root.height - height - 4 : 4)
+        color: root.isUrgent ? Signal.palette.alert : Signal.palette.inkMuted
+
+        Behavior on color {
+            CAnim {}
+        }
+    }
+
+    // §5 visible on another monitor: 1 px ruleStrong outline on the
+    // content-facing edge, no fill.
+    Rectangle {
+        visible: root.isVisibleElsewhere
+        width: root.vertical ? 1 : root.width
+        height: root.vertical ? root.height : 1
+        x: root.vertical ? (root.contentAtLeft ? 0 : root.width - 1) : 0
+        y: root.vertical ? 0 : (root.contentAtTop ? 0 : root.height - 1)
+        color: Signal.palette.ruleStrong
     }
 
     Interactive {

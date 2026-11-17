@@ -644,6 +644,7 @@ Item {
                             sourceComponent: Workspaces {
                                 screen: root.screen
                                 vertical: root.vertical
+                                edge: root.edge
                                 options: workspacesLoader.options
                                 clear: root.clear
                             }

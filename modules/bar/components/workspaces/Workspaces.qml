@@ -16,6 +16,9 @@ StyledClippingRect {
     // Orientation of the owning bar (set by Bar.qml); defaults to the
     // primary bar for standalone use.
     property bool vertical: Config.bar.isVerticalFor(screen.name)
+    // Owning bar edge (set by Bar.qml); drives which cell edge faces the
+    // content for the §5 on-air bar / visible-elsewhere outline / tick.
+    property string edge: Config.bar.positionFor(screen.name)
     // Per-entry options (docs/LAYOUTS.md). style "labels": workspace
     // numbers + app glyphs with an underline, no pill (Polybar lineage);
     // default "pills".
@@ -33,6 +36,27 @@ StyledClippingRect {
         acc[curr.id] = Compositor.workspaceHasWindows(curr);
         return acc;
     }, {})
+    // §5 urgent: HyprlandWorkspace.urgent / niri is_urgent, keyed by ws id.
+    readonly property var urgent: workspaceItems.reduce((acc, curr) => {
+        acc[curr.id] = niriMode ? (curr.is_urgent ?? false) : (curr.urgent ?? false);
+        return acc;
+    }, {})
+    // §5 visible on another monitor: active on some other output. Niri
+    // workspaces are per-output, so this only applies under Hyprland.
+    readonly property var visibleElsewhere: {
+        if (niriMode || !Compositor.isHyprland)
+            return {};
+        const mine = Hypr.monitorFor(screen);
+        const out = {};
+        for (const mon of Hypr.monitors.values) {
+            if (mine && mon.id === mine.id)
+                continue;
+            const id = mon.activeWorkspace?.id;
+            if (id !== undefined && id !== null)
+                out[id] = true;
+        }
+        return out;
+    }
     readonly property int groupOffset: niriMode || activeWsId === null ? 0 : Math.floor((activeWsId - 1) / Config.bar.workspaces.shown) * Config.bar.workspaces.shown
 
     property real blur: onSpecial ? 1 : 0
@@ -93,9 +117,12 @@ StyledClippingRect {
                     workspaceData: root.niriMode ? modelData : null
 
                     vertical: root.vertical
+                    edge: root.edge
                     labels: root.labels
                     activeWsId: root.activeWsId
                     occupied: root.occupied
+                    urgent: root.urgent
+                    visibleElsewhere: root.visibleElsewhere
                     groupOffset: root.groupOffset
                 }
             }
@@ -113,13 +140,15 @@ StyledClippingRect {
                 readonly property Item ws: workspaces.itemAt(index)
                 readonly property bool isActive: ws?.isActive ?? false
 
-                visible: !!ws && (isActive || ws.isOccupied)
+                // §5: active carries the 2 px on-air bar; occupied is
+                // carried by the cell tick, urgent by an alert bar.
+                visible: !!ws && (isActive || ws.isUrgent)
                 x: root.vertical ? layout.x + layout.width + 2 : layout.x + (ws?.x ?? 0)
                 y: root.vertical ? layout.y + (ws?.y ?? 0) : layout.y + layout.height + 2
-                width: root.vertical ? (isActive ? 3 : 2) : (ws?.width ?? 0)
-                height: root.vertical ? (ws?.height ?? 0) : (isActive ? 3 : 2)
-                radius: Appearance.rounding.full
-                color: isActive ? Signal.palette.signal : Signal.palette.rule
+                width: root.vertical ? 2 : (ws?.width ?? 0)
+                height: root.vertical ? (ws?.height ?? 0) : 2
+                radius: 0
+                color: isActive ? Signal.palette.signal : Signal.palette.alert
 
                 Behavior on color {
                     CAnim {}
@@ -136,6 +165,7 @@ StyledClippingRect {
             sourceComponent: ActiveIndicator {
                 screen: root.screen
                 vertical: root.vertical
+                edge: root.edge
                 activeWsId: root.activeWsId
                 workspaces: workspaces
                 mask: layout

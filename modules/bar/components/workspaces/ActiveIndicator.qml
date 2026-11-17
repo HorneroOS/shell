@@ -17,6 +17,8 @@ StyledRect {
     // Orientation of the owning bar (set by Bar.qml); defaults to the
     // primary bar for standalone use.
     property bool vertical: Config.bar.isVerticalFor(screen.name)
+    // Owning bar edge; the §5 on-air bar sits on the content-facing edge.
+    property string edge: Config.bar.positionFor(screen.name)
 
     readonly property int currentWsIdx: {
         let i = activeWsId - 1;
@@ -52,14 +54,26 @@ StyledRect {
     y: vertical ? offset + mask.y : 0
     implicitWidth: vertical ? Config.bar.sizes.innerWidth - Appearance.padding.small * 2 : size
     implicitHeight: vertical ? size : Config.bar.sizes.innerWidth - Appearance.padding.small * 2
-    // Signal Bezel §5: fixed rectangular cells, never pills.
+    // Signal Bezel §5: fixed rectangular cells, never pills. The active
+    // cell is a raised fill with the numeral in ink — not a signal slab.
     radius: Appearance.rounding.small
-    color: Signal.palette.signal
+    color: Signal.palette.raised
+
+    // §5 on-air bar: 2 px signal across the full cell on the edge facing
+    // the content (top edge for a bottom strip, bottom for a top rail,
+    // inner edge for rails).
+    Rectangle {
+        width: root.vertical ? 2 : root.width
+        height: root.vertical ? root.height : 2
+        x: root.vertical ? (root.edge === "right" ? 0 : root.width - 2) : 0
+        y: root.vertical ? 0 : (root.edge === "bottom" ? 0 : root.height - 2)
+        color: Signal.palette.signal
+    }
 
     Colouriser {
         source: root.mask
         sourceColor: Signal.palette.ink
-        colorizationColor: Signal.palette.onSignal
+        colorizationColor: Signal.palette.ink
 
         x: root.vertical ? 0 : -parent.offset
         y: root.vertical ? -parent.offset : 0

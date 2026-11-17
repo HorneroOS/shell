@@ -25,7 +25,7 @@ Slider {
     // overrides them with ink so amber only marks a live interaction.
     property color fillColour: Signal.palette.signal
     property color thumbColour: Signal.palette.signal
-    // Rule track (Cockpit Clear, shell#536): a 1 px line with square ends and a
+    // Rule track (Cockpit Clear): a 1 px line with square ends and a
     // slim thumb instead of the capsule track, so the glyph halo stays light.
     property bool ruleTrack: false
 

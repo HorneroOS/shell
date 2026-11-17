@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import "Placement.js" as Placement
 
 // Host-owned anchored popover for PluginKit: a compact trigger (the
 // `target` item, e.g. a bar indicator UiButton) opens a rich panel
@@ -24,8 +25,10 @@ Popup {
 
     required property Item target
     property string accessibleName: ""
-    // "auto" picks right/left beside rail triggers and below/above by
-    // vertical half; an explicit side is flipped only when it clips.
+    // "auto" | "below" | "above" | "left" | "right". "auto" opens away
+    // from the owning bar (beside rail triggers, below/above horizontal
+    // bars) and by free vertical half elsewhere; an explicit side flips
+    // once only when it would clip.
     property string preferredSide: "auto"
     // Popout framing (visual language §7.1): 16 px sides.
     property int contentPadding: Theme.padding.large
@@ -113,47 +116,43 @@ Popup {
         close();
     }
 
-    // Pure placement: given the target rect and popover size in surface
-    // coordinates, return the clamped position and the side used.
-    // Same rules as UiTooltip.placementFor.
-    function placementFor(tx, ty, tw, th, tipW, tipH, availW, availH, gap, margin) {
-        const centerX = tx + tw / 2;
-        const centerY = ty + th / 2;
-        let side = root.preferredSide;
-        if (side === "auto") {
-            if (centerX < availW * 0.18 && tx + tw + gap + tipW + margin <= availW)
-                side = "right";
-            else if (centerX > availW * 0.82 && tx - gap - tipW >= margin)
-                side = "left";
-            else
-                side = centerY < availH / 2 ? "below" : "above";
+    // The bar (if any) that owns the trigger: the nearest ancestor that
+    // publishes `surfaceOwner` (the shell's bars do). Its edge decides
+    // the side, exactly like the shell's own popouts and tooltips.
+    readonly property var _ownerBar: {
+        let p = root.target ? root.target.parent : null;
+        while (p) {
+            if (p.surfaceOwner !== undefined)
+                return p.surfaceOwner;
+            p = p.parent;
         }
-        if (side === "below" && ty + th + gap + tipH > availH - margin && ty - gap - tipH >= margin)
-            side = "above";
-        else if (side === "above" && ty - gap - tipH < margin && ty + th + gap + tipH <= availH - margin)
-            side = "below";
-        else if (side === "right" && tx + tw + gap + tipW > availW - margin && tx - gap - tipW >= margin)
-            side = "left";
-        else if (side === "left" && tx - gap - tipW < margin && tx + tw + gap + tipW <= availW - margin)
-            side = "right";
+        return null;
+    }
 
-        let newX = centerX - tipW / 2;
-        let newY = centerY - tipH / 2;
-        if (side === "below")
-            newY = ty + th + gap;
-        else if (side === "above")
-            newY = ty - tipH - gap;
-        else if (side === "right")
-            newX = tx + tw + gap;
-        else if (side === "left")
-            newX = tx - tipW - gap;
-
-        const maxX = Math.max(margin, availW - tipW - margin);
-        const maxY = Math.max(margin, availH - tipH - margin);
+    // Placement through the shell's shared anchored-surface solver
+    // (Placement.js, a verbatim copy of components/placement/Placement.js;
+    // RFC 0001 §4): given the target rect and popover size in surface
+    // coordinates, return the clamped position and the side used. Bar
+    // triggers open away from their bar; elsewhere "auto" prefers the
+    // free vertical half; an explicit side flips once when it clips.
+    function placementFor(tx, ty, tw, th, tipW, tipH, availW, availH, gap, margin) {
+        const auto = root.preferredSide === "auto";
+        const owner = auto ? root._ownerBar : null;
+        const side = auto ? (ty + th / 2 < availH / 2 ? "below" : "above") : root.preferredSide;
+        const placed = Placement.solve({
+            trigger: { x: tx, y: ty, width: tw, height: th },
+            bar: owner ? Object.assign({}, owner, { floating: true, item: undefined }) : null,
+            preferredSide: side,
+            previousSide: root.actualSide,
+            screen: { x: 0, y: 0, width: availW, height: availH, reserved: {} },
+            size: { width: tipW, height: tipH },
+            gutter: margin,
+            gap: gap
+        });
         return {
-            "x": Math.max(margin, Math.min(newX, maxX)),
-            "y": Math.max(margin, Math.min(newY, maxY)),
-            "side": side
+            "x": placed.x,
+            "y": placed.y,
+            "side": placed.side
         };
     }
 

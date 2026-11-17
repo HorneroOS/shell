@@ -31,6 +31,8 @@ UI_FILES = [
     "UiSegmentMeter.qml", "UiMeterRow.qml", "UiSparkline.qml", "UiScope.qml",
     "UiPartition.qml", "UiState.qml", "UiTooltip.qml", "UiPopover.qml",
     "UiStack.qml",
+    # Shared anchored-surface solver imported by UiTooltip/UiPopover.
+    "Placement.js",
 ]
 
 

@@ -273,10 +273,14 @@ def test_status_popout_keyboard_intent_does_not_steal_focus_on_hover():
     assert "Accessible.role: Accessible.Button" in status
     assert "Keys.onReturnPressed" in status and "Keys.onSpacePressed" in status
     assert "root.popoutRequested(name, this)" in status
-    assert "popouts.keyboardIntent = true" in bar
+    assert 'openPopout(name, anchor, "keyboard")' in bar
     hover_handler = bar.split("function checkPopoutAt", 1)[1].split("function handleWheelAt", 1)[0]
     assert hover_handler.index("popouts.keyboardIntent = false") < hover_handler.index("const hit = entryAt")
-    assert "if (!hasCurrent)" in wrapper and "keyboardIntent = false" in wrapper
+    assert 'openPopout(icon.name, icon, "hover")' in hover_handler
+    # Only explicit (click/keyboard) requests carry keyboard intent; hover
+    # opens never do, and closing clears it.
+    assert 'root.keyboardIntent = how !== "hover"' in wrapper
+    assert "if (!hasCurrent) {" in wrapper and "keyboardIntent = false" in wrapper
     assert "panels.popouts.keyboardIntent && panels.popouts.hasCurrent" in drawers
 
 

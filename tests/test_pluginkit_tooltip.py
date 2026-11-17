@@ -57,18 +57,15 @@ def test_uitooltip_accessible_role_and_description():
         assert "Accessible.description: root.tooltipText" in src, name
 
 
-def test_uitooltip_placement_flips_and_clamps():
+def test_uitooltip_placement_uses_the_shared_solver():
+    """RFC 0001 §4 rule 7: extensions get the shell's own solver, so a
+    plugin tooltip flips, clamps and follows its bar exactly like the
+    shell's (the arithmetic is unit tested in tests/placement/)."""
+    assert 'import "Placement.js" as Placement' in SRC
     assert "function placementFor(" in SRC
-    # Auto side: rails get right/left, bars get below/above by half.
-    assert "availW * 0.18" in SRC
-    assert "availW * 0.82" in SRC
-    assert '"below" : "above"' in SRC or '? "below" : "above"' in SRC
-    # Chosen side flips when it would clip the surface.
-    for side in ("above", "below", "left", "right"):
-        assert f'side = "{side}"' in SRC, side
-    # Final position is always clamped inside the surface margins.
-    assert "Math.max(margin, Math.min(newX, maxX))" in SRC
-    assert "Math.max(margin, Math.min(newY, maxY))" in SRC
+    assert "Placement.solve({" in SRC
+    assert "p.surfaceOwner !== undefined" in SRC
+    assert '? "below" : "above"' in SRC
     assert "mapToItem(parent" in SRC
 
 

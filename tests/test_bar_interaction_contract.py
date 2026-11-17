@@ -5,35 +5,64 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 
 
-def test_popout_reveals_from_the_owning_bar_edge():
-    src = (ROOT / "modules/bar/popouts/Content.qml").read_text()
-    assert "readonly property point anchorPoint" in src
-    assert "anchor.mapToItem(popout, anchor.width / 2, anchor.height / 2)" in src
-    assert "property real revealScale: 0.94" in src
-    assert 'popout.barPosition === "top" ? 0 : popout.height' in src
-    assert 'popout.barPosition === "left" ? 0 : popout.width' in src
-    assert 'anchors.bottom: !barVertical && barPosition === "top"' in src
-    assert 'anchors.top: !barVertical && barPosition === "bottom"' in src
+def test_bar_popouts_are_one_anchored_surface():
+    """Every bar popout is a page of one AnchoredSurface placed by the
+    shared solver (RFC 0001 §4); no layout positions popouts itself."""
+    wrapper = (ROOT / "modules/bar/popouts/Wrapper.qml").read_text()
+    content = (ROOT / "modules/bar/popouts/Content.qml").read_text()
+    panels = (ROOT / "modules/drawers/Panels.qml").read_text()
+    assert "AnchoredSurface {" in wrapper
+    assert "component Popout: SurfacePage {" in content
+    # No hand-rolled reveal: no scale, no per-edge anchors in the pages.
+    assert "revealScale" not in content and "Scale {" not in content
+    assert "anchors.bottom" not in content
+    # Panels only describe the screen; x/y come from the solver.
+    block = panels.split("BarPopouts.Wrapper {", 1)[1].split("Utilities.Wrapper {", 1)[0]
+    assert "bounds:" in block and "reserved:" in block
+    assert "x:" not in block and "y:" not in block
+    assert not (ROOT / "modules/bar/popouts/Background.qml").exists()
 
 
 def test_popout_owner_keeps_a_live_trigger_reference():
     wrapper = (ROOT / "modules/bar/popouts/Wrapper.qml").read_text()
     bar = (ROOT / "modules/bar/Bar.qml").read_text()
+    tracker = (ROOT / "components/placement/AnchorTracker.qml").read_text()
     assert "property Item currentAnchor" in wrapper
-    assert "currentAnchor = null" in wrapper
-    assert bar.count("popouts.currentAnchor =") >= 4
-    assert "property bool geometryReady" in wrapper
-    assert "Qt.callLater" in wrapper
-    assert sum(line.strip() == "enabled: root.geometryReady" for line in wrapper.splitlines()) == 2
-    assert wrapper.count("enabled: root.geometryReady && root.implicitWidth > 0") == 2
+    assert "anchorItem: isDetached ? null : currentAnchor" in wrapper
+    # The bar publishes itself as the owner; its slab is the live anchor line.
+    assert "readonly property var surfaceOwner" in bar
+    assert "item: root" in bar
+    assert "popouts.openFor(name, anchor, root.surfaceOwner, how)" in bar
+    assert "centerBinding" not in bar and "claimPopouts" not in bar
+    # Live anchor: every ancestor's geometry is a dependency.
+    assert "void p.x;" in tracker and "void p.width;" in tracker
 
 
-def test_standalone_popouts_use_a_lifted_surface_and_connected_ones_keep_the_bar_surface():
-    background = (ROOT / "modules/drawers/Backgrounds.qml").read_text()
-    shape = (ROOT / "modules/bar/popouts/Background.qml").read_text()
-    assert 'visible: wrapper.visible && !wrapper.usesConnectedBackground' in background
-    assert 'Signal.surface(Signal.palette.panel, "bar")' in background
-    assert 'Signal.palette.base, "bar") : "transparent"' in shape
+def test_hover_intent_and_close_grace():
+    """RFC §4 rule 6: 120 ms open intent, 240 ms close grace bridged across
+    the gap; switching between triggers while open morphs immediately."""
+    wrapper = (ROOT / "modules/bar/popouts/Wrapper.qml").read_text()
+    interactions = (ROOT / "modules/drawers/Interactions.qml").read_text()
+    chore = (ROOT / "components/motion/Choreography.qml").read_text()
+    assert "readonly property int hoverOpenDelay: 120" in chore
+    assert "readonly property int hoverCloseGrace: 240" in chore
+    assert "interval: Choreography.hoverOpenDelay" in wrapper
+    assert "interval: Choreography.hoverCloseGrace" in wrapper
+    assert "if (hover && !root.hasCurrent)" in wrapper
+    assert "popouts.hoverLeave()" in interactions
+    assert "popouts.holdOpen()" in interactions
+    assert "popouts.hasCurrent = false" not in interactions
+
+
+def test_attached_popouts_omit_the_attached_border_and_draw_the_notch():
+    frame = (ROOT / "components/placement/SurfaceFrame.qml").read_text()
+    surface = (ROOT / "components/placement/AnchoredSurface.qml").read_text()
+    assert "color: Signal.palette.signal" in frame
+    assert "clip: root.attached" in frame
+    assert "RectangularShadow {" in frame and "layer.enabled" not in frame
+    assert "Qt.alpha(Signal.palette.shadow, 0.35)" in frame
+    # Popouts are opaque panels, including from Cockpit Clear bars.
+    assert "property color fill: Signal.palette.panel" in surface
 
 
 def test_icon_bar_buttons_have_visual_and_accessible_names():
@@ -45,14 +74,13 @@ def test_icon_bar_buttons_have_visual_and_accessible_names():
     assert "text: root.label" in src
 
 
-def test_tooltips_flip_to_the_free_edge_and_stay_on_screen():
+def test_tooltips_use_the_shared_solver_and_stay_on_screen():
     src = (ROOT / "components/controls/Tooltip.qml").read_text()
-    assert "onLeftEdge" in src and "onRightEdge" in src
-    assert "QsWindow.window?.contentItem" in src
-    assert "targetPos.y + target.height + gap" in src
-    assert "parent.height - tooltipHeight - padding" in src
-    assert "Math.min(newX, maxX)" in src
-    assert "Math.min(newY, maxY)" in src
+    assert "AnchoredSurface {" in src
+    assert "target?.Window.contentItem" in src
+    assert "p.surfaceOwner !== undefined" in src
+    assert "morphs: false" in src and "travelDuration: Choreography.quick" in src
+    assert "elevation: 4" in src and "Signal.palette.lifted" in src
 
 
 def test_inline_bar_sliders_explain_current_value_and_input():
@@ -90,6 +118,8 @@ def test_vertical_active_window_stays_compact_and_exposes_the_full_title():
 
 
 def test_motion_and_bar_affordances_are_documented():
-    src = (ROOT / "docs/INTERACTION.md").read_text()
-    assert "unfold from" in src
+    src = " ".join((ROOT / "docs/INTERACTION.md").read_text().split())
+    assert "Direction follows the owning bar" in src
+    assert "Grows from the trigger notch" in src
+    assert "120 ms" in src and "240 ms" in src
     assert "hover tooltip and an accessible label" in src

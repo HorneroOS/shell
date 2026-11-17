@@ -43,23 +43,24 @@ def test_uipopover_is_host_owned_popup_not_a_window():
     assert "mapToItem(parent" in SRC
 
 
-def test_uipopover_placement_flips_and_clamps_like_tooltip():
+def test_uipopover_placement_uses_the_shared_solver_like_tooltip():
     tooltip = (KIT / "UiTooltip.qml").read_text(encoding="utf-8")
-    assert "function placementFor(" in SRC
-    assert "function placementFor(" in tooltip
-    # Same auto-side thresholds and clamp as UiTooltip.placementFor.
-    for snippet in (
-        "availW * 0.18",
-        "availW * 0.82",
-        '? "below" : "above"',
-        "Math.max(margin, Math.min(newX, maxX))",
-        "Math.max(margin, Math.min(newY, maxY))",
-    ):
-        assert snippet in SRC, snippet
-        assert snippet in tooltip, snippet
-    for side in ("above", "below", "left", "right"):
-        assert f'side = "{side}"' in SRC, side
+    for src in (SRC, tooltip):
+        assert 'import "Placement.js" as Placement' in src
+        assert "function placementFor(" in src
+        assert "Placement.solve({" in src
+    assert "previousSide: root.actualSide" in SRC
     assert "root.actualSide = placed.side" in SRC
+
+
+def test_pluginkit_solver_is_a_verbatim_copy_of_the_shell_solver():
+    """PluginKit is installed as its own QML module, so it ships a copy of
+    the solver; the copy must never drift from the shell's."""
+    shell = (ROOT / "components/placement/Placement.js").read_bytes()
+    kit = (KIT / "Placement.js").read_bytes()
+    assert kit == shell
+    cmake = (ROOT / "plugin/CMakeLists.txt").read_text(encoding="utf-8")
+    assert 'PATTERN "*.js"' in cmake
 
 
 def test_uipopover_repositions_on_move_and_resize():

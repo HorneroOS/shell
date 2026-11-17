@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
-import qs.components
+import qs.components.placement
+import qs.components.motion
 import qs.services
 import qs.config
 import qs.modules.windowinfo
@@ -10,60 +11,99 @@ import Quickshell.Wayland
 import Quickshell.Hyprland
 import QtQuick
 
-Item {
+// The bar popout surface of one screen: a single AnchoredSurface shared
+// by every bar of the screen (docs/INTERACTION.md). Bars ask for a popout
+// with openFor(); the surface places itself with the shared solver from
+// the owning bar, grows from the trigger notch, morphs between adjacent
+// triggers and closes with the hover grace. Detached windows (window info,
+// Control Center) are centred pages of the same surface.
+AnchoredSurface {
     id: root
 
     required property ShellScreen screen
 
-    readonly property real nonAnimWidth: children.find(c => c.shouldBeActive)?.implicitWidth ?? 0
-    readonly property real nonAnimHeight: children.find(c => c.shouldBeActive)?.implicitHeight ?? 0
-    readonly property Item current: content.item?.current ?? null
-
-    // The bar that opened the current popout (set by Bar.claimPopouts); the
-    // popout grows from that bar's edge. Defaults to the primary bar.
-    property string ownerEdge: Config.bar.positionFor(screen.name)
-    property string ownerStyle: Config.bar.styleFor(screen.name)
-    property string ownerBackdrop: "solid"
-    readonly property bool barVertical: ownerEdge === "left" || ownerEdge === "right"
-    readonly property string barPosition: ownerEdge
-    // Clear owners have no strip to grow from: their popouts are cards.
-    readonly property bool usesConnectedBackground: Config.border.frameEnabled && ownerStyle === "attached" && ownerBackdrop !== "clear" && barVertical
+    // ---- Public state (bars, drawers, tray menus, launcher) ----
 
     property string currentName
-    property real currentCenter
     property Item currentAnchor
     property bool hasCurrent
-    // The first frame has no useful position/size yet. Snap the wrapper to
-    // the trigger on open, then animate later anchor/size changes normally.
-    property bool geometryReady
-    // Explicit keyboard activation may grab focus; hover-opened cards never do.
+    // Explicit keyboard/click activation may hold the keyboard; hover
+    // opens never do (RFC §4 rule 5).
     property bool keyboardIntent: false
 
-    onHasCurrentChanged: {
-        if (!hasCurrent) {
-            keyboardIntent = false;
-            currentAnchor = null;
-        } else {
-            geometryReady = false;
-            Qt.callLater(() => {
-                if (root.hasCurrent)
-                    root.geometryReady = true;
-            });
-        }
-    }
+    // Owning bar of the current popout (Bar.surfaceOwner): edge, style,
+    // backdrop and its slab item for the live anchor line.
+    property var ownerSpec: null
+    readonly property string ownerEdge: ownerSpec?.edge ?? Config.bar.positionFor(screen.name)
+    readonly property string ownerStyle: ownerSpec?.style ?? Config.bar.styleFor(screen.name)
+    readonly property string ownerBackdrop: ownerSpec?.clear ? "clear" : "solid"
+    readonly property bool barVertical: ownerEdge === "left" || ownerEdge === "right"
+    readonly property string barPosition: ownerEdge
 
+    readonly property Item current: popoutContent.current
+    // Final (not animating) size and trigger centre along the bar.
+    readonly property real nonAnimWidth: target.width
+    readonly property real nonAnimHeight: target.height
+    readonly property real currentCenter: barVertical ? anchorRect.y + anchorRect.height / 2 : anchorRect.x + anchorRect.width / 2
 
     property string detachedMode
     property string queuedMode
     readonly property bool isDetached: detachedMode.length > 0
 
-    property int animLength: Appearance.anim.durations.medium
-    property list<real> animCurve: Appearance.anim.curves.standard
+    // ---- Requests ----
+
+    // Open (or switch to) popout `name` anchored on `anchor`, owned by the
+    // bar described by `owner`. Hover requests honour the 120 ms intent
+    // delay when nothing is open; while a popout is open they switch at
+    // once and the frame morphs (visual language §11.1 rule 5).
+    function openFor(name: string, anchor: Item, owner: var, how: string): void {
+        if (!anchor)
+            return;
+        closeGrace.stop();
+        const hover = how === "hover";
+        if (hover && !root.hasCurrent) {
+            if (pending.name === name && pending.anchor === anchor && openIntent.running)
+                return;
+            pending.name = name;
+            pending.anchor = anchor;
+            pending.owner = owner;
+            openIntent.restart();
+            return;
+        }
+        openIntent.stop();
+        pending.clear();
+        root._apply(name, anchor, owner, how);
+    }
+
+    function _apply(name: string, anchor: Item, owner: var, how: string): void {
+        root.ownerSpec = owner;
+        root.intent = root.hasCurrent ? root.intent : how;
+        root.keyboardIntent = how !== "hover";
+        root.currentName = name;
+        root.currentAnchor = anchor;
+        root.hasCurrent = true;
+    }
+
+    // Pointer left the bar and the surface: close after the grace period
+    // unless it comes back (RFC §4 rule 6). Explicitly opened surfaces
+    // ignore hover and close on Escape, outside click or their trigger.
+    function hoverLeave(): void {
+        openIntent.stop();
+        pending.clear();
+        if (!root.hasCurrent || root.keyboardIntent || root.isDetached)
+            return;
+        if (!closeGrace.running)
+            closeGrace.restart();
+    }
+
+    // Pointer is over the surface or its trigger: keep it open.
+    function holdOpen(): void {
+        closeGrace.stop();
+    }
 
     function detach(mode: string): void {
         if (mode === "winfo" && !Compositor.supports("nativeWindowThumbnails"))
             return;
-        animLength = Appearance.anim.durations.long;
         if (mode === "winfo") {
             detachedMode = mode;
         } else {
@@ -74,38 +114,101 @@ Item {
     }
 
     function close(): void {
+        openIntent.stop();
+        closeGrace.stop();
+        pending.clear();
         hasCurrent = false;
-        currentName = "";
-        currentCenter = 0;
-        currentAnchor = null;
-        animLength = Appearance.anim.durations.medium;
         detachedMode = "";
-        animCurve = Appearance.anim.curves.standard;
     }
 
-    visible: width > 0 && height > 0
-    clip: true
+    // ---- Surface wiring ----
 
-    implicitWidth: nonAnimWidth
-    implicitHeight: nonAnimHeight
+    anchorItem: isDetached ? null : currentAnchor
+    centred: isDetached
+    owner: isDetached ? null : ownerSpec
+    ownerItem: isDetached ? null : (ownerSpec?.item ?? null)
+    open: hasCurrent || isDetached
+    key: isDetached ? `detached:${detachedMode}` : currentName
+    keyboardFocused: (keyboardIntent && hasCurrent) || isDetached
+    preferredWidth: isDetached ? (detachedMode === "winfo" ? winfoPage : sheetPage).preferredWidth : popoutContent.preferredWidth
+    preferredHeight: isDetached ? (detachedMode === "winfo" ? winfoPage : sheetPage).preferredHeight : popoutContent.preferredHeight
+    devicePixelRatio: screen?.devicePixelRatio ?? 1
+    // Detached windows are full sheets (radius large, visual language §7.1).
+    radius: isDetached ? Appearance.rounding.large : Appearance.rounding.small
+    notch: !isDetached
+
+    onHasCurrentChanged: {
+        if (!hasCurrent) {
+            keyboardIntent = false;
+            closeGrace.stop();
+        }
+    }
+    onClosed: {
+        if (!hasCurrent && !isDetached) {
+            currentName = "";
+            currentAnchor = null;
+            intent = "click";
+        }
+    }
 
     focus: hasCurrent || isDetached
-    Keys.onEscapePressed: {
-        // Forward escape to password popout if active, otherwise close
-        if (currentName === "wirelesspassword" && content.item) {
-            const passwordPopout = content.item.children.find(c => c.name === "wirelesspassword");
-            if (passwordPopout && passwordPopout.item) {
-                passwordPopout.item.closeDialog();
+    Keys.onEscapePressed: event => {
+        // Inner transient state first (escape cascade): the password
+        // dialog steps back to the network list.
+        if (currentName === "wirelesspassword") {
+            const page = popoutContent.pageFor("wirelesspassword");
+            if (page?.item) {
+                page.item.closeDialog();
                 return;
             }
         }
+        const trigger = currentAnchor;
         close();
+        // Keyboard-opened surfaces return focus to their trigger.
+        if (trigger && trigger.activeFocusOnTab)
+            trigger.forceActiveFocus();
     }
 
     Keys.onPressed: event => {
-        // Don't intercept keys when password popout is active - let it handle them
-        if (currentName === "wirelesspassword") {
+        // The password page handles its own keys.
+        if (currentName === "wirelesspassword")
             event.accepted = false;
+    }
+
+    QtObject {
+        id: pending
+
+        property string name: ""
+        property Item anchor: null
+        property var owner: null
+
+        function clear(): void {
+            name = "";
+            anchor = null;
+            owner = null;
+        }
+    }
+
+    // RFC §4 rule 6: 120 ms hover intent before a popout opens.
+    Timer {
+        id: openIntent
+
+        interval: Choreography.hoverOpenDelay
+        onTriggered: {
+            if (pending.anchor)
+                root._apply(pending.name, pending.anchor, pending.owner, "hover");
+            pending.clear();
+        }
+    }
+
+    // ...and a 240 ms close grace bridged across the trigger/surface gap.
+    Timer {
+        id: closeGrace
+
+        interval: Choreography.hoverCloseGrace
+        onTriggered: {
+            if (!root.keyboardIntent)
+                root.hasCurrent = false;
         }
     }
 
@@ -131,26 +234,20 @@ Item {
         value: WlrKeyboardFocus.OnDemand
     }
 
-    Comp {
-        id: content
+    Content {
+        id: popoutContent
 
-        shouldBeActive: root.hasCurrent && !root.detachedMode
-        // Hug the edge adjacent to the bar so the popout grows outwards from it
-        anchors.right: root.barVertical && root.barPosition === "left" ? parent.right : undefined
-        anchors.left: root.barVertical && root.barPosition === "right" ? parent.left : undefined
-        anchors.bottom: !root.barVertical && root.barPosition === "top" ? parent.bottom : undefined
-        anchors.top: !root.barVertical && root.barPosition === "bottom" ? parent.top : undefined
-        anchors.verticalCenter: root.barVertical ? parent.verticalCenter : undefined
-        anchors.horizontalCenter: root.barVertical ? undefined : parent.horizontalCenter
-
-        sourceComponent: Content {
-            wrapper: root
-        }
+        wrapper: root
     }
 
-    Comp {
-        shouldBeActive: root.detachedMode === "winfo"
-        anchors.centerIn: parent
+    SurfacePage {
+        id: winfoPage
+
+        surface: root
+        current: root.detachedMode === "winfo"
+        pageKey: "detached:winfo"
+        hPadding: 0
+        vPadding: 0
 
         sourceComponent: WindowInfo {
             screen: root.screen
@@ -158,9 +255,14 @@ Item {
         }
     }
 
-    Comp {
-        shouldBeActive: root.detachedMode === "any"
-        anchors.centerIn: parent
+    SurfacePage {
+        id: sheetPage
+
+        surface: root
+        current: root.detachedMode === "any"
+        pageKey: "detached:any"
+        hPadding: 0
+        vPadding: 0
 
         sourceComponent: ControlCenter {
             screen: root.screen
@@ -170,89 +272,5 @@ Item {
                 root.close();
             }
         }
-    }
-
-    Behavior on x {
-        enabled: root.geometryReady
-
-        Anim {
-            duration: root.animLength
-            easing.bezierCurve: root.animCurve
-        }
-    }
-
-    Behavior on y {
-        enabled: root.geometryReady && root.implicitWidth > 0
-
-        Anim {
-            duration: root.animLength
-            easing.bezierCurve: root.animCurve
-        }
-    }
-
-    Behavior on implicitWidth {
-        enabled: root.geometryReady
-
-        Anim {
-            duration: root.animLength
-            easing.bezierCurve: root.animCurve
-        }
-    }
-
-    Behavior on implicitHeight {
-        enabled: root.geometryReady && root.implicitWidth > 0
-
-        Anim {
-            duration: root.animLength
-            easing.bezierCurve: root.animCurve
-        }
-    }
-
-    component Comp: Loader {
-        id: comp
-
-        property bool shouldBeActive
-
-        active: false
-        opacity: 0
-
-        states: State {
-            name: "active"
-            when: comp.shouldBeActive
-
-            PropertyChanges {
-                comp.opacity: 1
-                comp.active: true
-            }
-        }
-
-        transitions: [
-            Transition {
-                from: ""
-                to: "active"
-
-                SequentialAnimation {
-                    PropertyAction {
-                        property: "active"
-                    }
-                    Anim {
-                        property: "opacity"
-                    }
-                }
-            },
-            Transition {
-                from: "active"
-                to: ""
-
-                SequentialAnimation {
-                    Anim {
-                        property: "opacity"
-                    }
-                    PropertyAction {
-                        property: "active"
-                    }
-                }
-            }
-        ]
     }
 }

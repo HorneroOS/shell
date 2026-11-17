@@ -183,17 +183,30 @@ Item {
     }
 
     function resetPopout(): void {
-        popouts.hasCurrent = false;
-        popouts.currentName = "";
-        popouts.currentCenter = 0;
+        if (popouts.ownerSpec?.item === root)
+            popouts.close();
         closeTray();
         closeExtensionIslands(null);
     }
 
-    function claimPopouts(): void {
-        popouts.ownerEdge = root.edge;
-        popouts.ownerStyle = root.style;
-        popouts.ownerBackdrop = root.spec.backdrop;
+    // This bar as the owner of an anchored surface (RFC 0001 §4): the
+    // solver derives expansion direction, anchor line and attachment from
+    // it; `item` is the live slab so the anchor line follows bar motion.
+    readonly property var surfaceOwner: ({
+            edge: root.edge,
+            style: root.style,
+            thickness: root.pillThickness,
+            margin: root.floatGap,
+            floating: root.floating,
+            clear: root.clear,
+            item: root
+        })
+
+    // Every bar popout goes through here: `how` is "hover", "click" or
+    // "keyboard" (hover honours the intent delay; click/keyboard may take
+    // focus).
+    function openPopout(name: string, anchor: Item, how: string): void {
+        popouts.openFor(name, anchor, root.surfaceOwner, how);
     }
 
     // Extension popouts (shell#449) share the native popout panel. A host
@@ -226,15 +239,10 @@ Item {
         return false;
     }
 
-    function openPluginPopout(loader: Item, keyboard: bool): void {
+    function openPluginPopout(loader: Item, how: string): void {
         if (!loader || !loader.hostPopoutContent)
             return;
-        claimPopouts();
-        popouts.currentName = loader.name;
-        popouts.currentCenter = centerBinding(loader, 0);
-        popouts.currentAnchor = loader;
-        popouts.hasCurrent = true;
-        popouts.keyboardIntent = keyboard;
+        openPopout(loader.name, loader, how);
     }
 
     property Item openPluginLoader: null
@@ -257,9 +265,9 @@ Item {
             if (!root.isOwnLoader(loader))
                 return;
             if (open)
-                root.openPluginPopout(loader, FocusMode.keyboard);
+                root.openPluginPopout(loader, FocusMode.keyboard ? "keyboard" : "click");
             else if (popouts.currentAnchor === loader)
-                popouts.hasCurrent = false;
+                popouts.close();
         }
     }
 
@@ -280,31 +288,15 @@ Item {
     function openStatusPopout(name: string, anchor: Item): void {
         if (!Config.bar.popouts.statusIcons || !anchor)
             return;
-        claimPopouts();
-        popouts.currentName = name;
-        popouts.currentCenter = centerBinding(anchor, 0);
-        popouts.currentAnchor = anchor;
-        popouts.hasCurrent = true;
-        popouts.keyboardIntent = true;
-    }
-
-    function centerBinding(ref: Item, len: real): var {
-        return Qt.binding(() => {
-            try {
-                if (!ref || typeof ref.mapToItem !== "function")
-                    return 0;
-                return root.vertical ? ref.mapToItem(null, 0, (len > 0 ? len : ref.implicitHeight) / 2).y : ref.mapToItem(null, (len > 0 ? len : ref.implicitWidth) / 2, 0).x;
-            } catch (e) {
-                return 0;
-            }
-        });
+        openPopout(name, anchor, "keyboard");
     }
 
     // Popout trigger at a bar-local point.
     function checkPopoutAt(lx: real, ly: real): void {
         // Pointer hover is a fresh, non-keyboard intent even when it moves
         // between triggers without closing the currently visible popout.
-        popouts.keyboardIntent = false;
+        if (!popouts.isDetached)
+            popouts.keyboardIntent = false;
         try {
             const hit = entryAt(lx, ly);
             const ch = hit?.loader ?? null;
@@ -315,7 +307,7 @@ Item {
             closeExtensionIslands(extIsland);
 
             if (!ch) {
-                popouts.hasCurrent = false;
+                popouts.hoverLeave();
                 return;
             }
 
@@ -328,7 +320,6 @@ Item {
             const pluginHit = (id === "statusIcons" || id === "tray" || id === "activeWindow") ? null : pluginLoaderAt(item, lx, ly);
             const axisPos = vertical ? hit.pt.y : hit.pt.x;
             const start = vertical ? ch.y : ch.x;
-            const itemLength = vertical ? item.implicitHeight : item.implicitWidth;
 
             if (id === "statusIcons" && Config.bar.popouts.statusIcons) {
                 const items = item?.items;
@@ -340,15 +331,13 @@ Item {
                     // Extension in the status island: native popout when it
                     // has a popover, nothing (like a popout-less icon) otherwise.
                     if (icon.hostPopoutContent)
-                        openPluginPopout(icon, false);
+                        openPluginPopout(icon, "hover");
                     else
-                        popouts.hasCurrent = false;
+                        popouts.hoverLeave();
                 } else if (icon) {
-                    claimPopouts();
-                    popouts.currentName = icon.name;
-                    popouts.currentCenter = centerBinding(icon, 0);
-                    popouts.currentAnchor = icon;
-                    popouts.hasCurrent = true;
+                    openPopout(icon.name, icon, "hover");
+                } else {
+                    popouts.hoverLeave();
                 }
             } else if (id === "tray" && Config.bar.popouts.tray) {
                 if (!item || !item.expandIcon)
@@ -359,17 +348,12 @@ Item {
                     const count = item.items?.count ?? 0;
                     const index = Math.floor(((axisPos - start - item.padding * 2 + item.spacing) / layoutLength) * count);
                     const trayItem = item.items?.itemAt(index) ?? null;
-                    if (trayItem) {
-                        claimPopouts();
-                        popouts.currentName = `traymenu${index}`;
-                        popouts.currentCenter = centerBinding(trayItem, 0);
-                        popouts.currentAnchor = trayItem;
-                        popouts.hasCurrent = true;
-                    } else {
-                        popouts.hasCurrent = false;
-                    }
+                    if (trayItem)
+                        openPopout(`traymenu${index}`, trayItem, "hover");
+                    else
+                        popouts.hoverLeave();
                 } else {
-                    popouts.hasCurrent = false;
+                    popouts.hoverLeave();
                     item.expanded = true;
                 }
             } else if (pluginHit !== null || extIsland !== null || id === "clock" || id === "quickActions") {
@@ -378,28 +362,26 @@ Item {
                 if (extIsland && extIsland.compact) {
                     const overExpandIcon = extIsland.expandIcon.contains(root.mapToItem(extIsland.expandIcon, lx, ly));
                     if (!extIsland.expanded || overExpandIcon) {
-                        popouts.hasCurrent = false;
+                        popouts.hoverLeave();
                         extIsland.expanded = true;
                         return;
                     }
                 }
                 // Extensions in their own island or joined to a native one.
                 if (pluginHit && pluginHit.hostPopoutContent)
-                    openPluginPopout(pluginHit, false);
+                    openPluginPopout(pluginHit, "hover");
                 else
-                    popouts.hasCurrent = false;
+                    popouts.hoverLeave();
             } else if (id === "activeWindow" && Config.bar.popouts.activeWindow) {
                 if (!item)
                     return;
-                claimPopouts();
-                popouts.currentName = id.toLowerCase();
-                popouts.currentCenter = centerBinding(item, itemLength);
-                popouts.currentAnchor = item;
-                popouts.hasCurrent = true;
+                openPopout(id.toLowerCase(), item, "hover");
+            } else {
+                popouts.hoverLeave();
             }
         } catch (e) {
             // During layout transitions the bar items may be temporarily undefined
-            popouts.hasCurrent = false;
+            popouts.hoverLeave();
         }
     }
 

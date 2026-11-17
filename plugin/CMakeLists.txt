@@ -4,4 +4,4 @@ add_subdirectory(src/Hornero)
 # modules so third-party plugins can import only the reviewed public surface.
 install(DIRECTORY qml/Hornero/PluginKit
     DESTINATION "${INSTALL_QMLDIR}/Hornero"
-    FILES_MATCHING PATTERN "*.qml" PATTERN "qmldir")
+    FILES_MATCHING PATTERN "*.qml" PATTERN "*.js" PATTERN "qmldir")

@@ -100,34 +100,21 @@ Item {
         anchors.top: parent.top
     }
 
+    // Bar popouts place themselves with the shared solver
+    // (components/placement): this panel only tells the surface where the
+    // screen and the bars are, in its own coordinates.
     BarPopouts.Wrapper {
         id: popouts
         objectName: "popouts"
 
         screen: root.screen
-
-        // Card popouts (anything not grown from the frame) keep a breathing
-        // gap from the screen edges along the bar; connected ones must touch.
-        readonly property real edgeGap: usesConnectedBackground ? 0 : Appearance.spacing.large
-
-        x: {
-            if (isDetached)
-                return (root.width - nonAnimWidth) / 2;
-            if (barVertical)
-                return barPosition === "right" ? root.width - nonAnimWidth : 0;
-
-            const off = Math.round(currentCenter - root.x - nonAnimWidth / 2);
-            return Math.max(edgeGap, Math.min(off, root.width - nonAnimWidth - edgeGap));
-        }
-        y: {
-            if (isDetached)
-                return (root.height - nonAnimHeight) / 2;
-            if (!barVertical)
-                return barPosition === "bottom" ? root.height - nonAnimHeight : 0;
-
-            const off = Math.round(currentCenter - root.y - nonAnimHeight / 2);
-            return Math.max(edgeGap, Math.min(off, root.height - nonAnimHeight - edgeGap));
-        }
+        bounds: Qt.rect(-root.x, -root.y, root.parent?.width ?? 0, root.parent?.height ?? 0)
+        reserved: ({
+                top: root.bar.marginTop,
+                bottom: root.bar.marginBottom,
+                left: root.bar.marginLeft,
+                right: root.bar.marginRight
+            })
     }
 
     Utilities.Wrapper {

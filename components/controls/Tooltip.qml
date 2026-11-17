@@ -1,13 +1,19 @@
 import ".."
-import qs.components.effects
+import qs.components.placement
+import qs.components.motion
 import qs.services
 import qs.config
 import QtQuick
-import QtQuick.Controls
-import QtQuick.Layouts
-import Quickshell
 
-Popup {
+// Hover tooltip on the shared anchored-surface contract (RFC 0001 §4):
+// placed by the same solver as popouts, so it opens away from the owning
+// bar (down from top bars, up from bottom bars, inward from rails),
+// flips once when the preferred side cannot fit and stays clamped to the
+// screen. Elsewhere it prefers the free vertical half. It lives in the
+// window's root item so clipped bar islands never crop it, tracks its
+// trigger live, and fades with 4 px travel from the anchor (enter 90 ms,
+// exit 90 ms; visual language §11.2). Never takes focus or input.
+AnchoredSurface {
     id: root
 
     required property Item target
@@ -16,197 +22,89 @@ Popup {
     property int timeout: 0
 
     property bool tooltipVisible: false
-    property Timer showTimer: Timer {
+
+    // The bar (if any) that owns the trigger: nearest ancestor that
+    // publishes `surfaceOwner` (modules/bar/Bar.qml).
+    readonly property var _ownerBar: {
+        let p = target?.parent ?? null;
+        while (p) {
+            if (p.surfaceOwner !== undefined)
+                return p;
+            p = p.parent;
+        }
+        return null;
+    }
+
+    parent: target?.Window.contentItem ?? target
+    z: 100000
+
+    anchorItem: target
+    // Tooltips never attach to a bar: they keep the 4 px gap.
+    owner: _ownerBar ? Object.assign({}, _ownerBar.surfaceOwner, {
+        floating: true
+    }) : null
+    ownerItem: _ownerBar
+    preferredSide: {
+        if (!target || !parent)
+            return "below";
+        const r = anchorRect;
+        return r.y + r.height / 2 < parent.height / 2 ? "below" : "above";
+    }
+    preferredWidth: label.implicitWidth + Appearance.padding.normal * 2
+    preferredHeight: label.implicitHeight + Appearance.padding.smaller * 2
+    open: tooltipVisible && text.length > 0 && (target?.visible ?? false)
+    intent: "hover"
+    key: text
+    morphs: false
+    travelDuration: Choreography.quick
+    notch: false
+    elevation: 4
+    fill: Signal.palette.lifted
+    gap: Appearance.spacing.small
+    enabled: false
+
+    Accessible.role: Accessible.ToolTip
+    Accessible.name: text
+
+    Timer {
+        id: showTimer
+
         interval: root.delay
         onTriggered: root.tooltipVisible = true
     }
-    property Timer hideTimer: Timer {
+
+    Timer {
+        id: hideTimer
+
         interval: root.timeout
         onTriggered: root.tooltipVisible = false
     }
 
-    // Popup properties - doesn't affect layout
-    parent: {
-        // Bar triggers sit inside clipped islands, so their nearest
-        // anchors.fill ancestor is often only the 48 px bar itself. Keep
-        // the tooltip in the owning layer-surface coordinate space instead
-        // of clipping it to that island.
-        const windowContent = QsWindow.window?.contentItem;
-        if (windowContent)
-            return windowContent;
+    // Hover of the trigger itself, whatever kind of item it is (buttons,
+    // sliders, switches): a passive handler never steals the press.
+    HoverHandler {
+        id: hover
 
-        let p = target;
-        // Walk up to find the root Item (usually has anchors.fill: parent)
-        while (p && p.parent) {
-            const parentItem = p.parent;
-            // Check if this looks like a root pane Item
-            if (parentItem && parentItem.anchors && parentItem.anchors.fill !== undefined) {
-                return parentItem;
-            }
-            p = parentItem;
-        }
-        // Fallback
-        return target.parent?.parent?.parent ?? target.parent?.parent ?? target.parent ?? target;
-    }
-
-    visible: tooltipVisible
-    modal: false
-    closePolicy: Popup.NoAutoClose
-    padding: 0
-    margins: 0
-    background: Item {}
-
-    // Update position when target moves or tooltip becomes visible
-    onTooltipVisibleChanged: {
-        if (tooltipVisible) {
-            Qt.callLater(updatePosition);
-        }
-    }
-    Connections {
-        target: root.target
-        function onXChanged() {
-            if (root.tooltipVisible)
-                root.updatePosition();
-        }
-        function onYChanged() {
-            if (root.tooltipVisible)
-                root.updatePosition();
-        }
-        function onWidthChanged() {
-            if (root.tooltipVisible)
-                root.updatePosition();
-        }
-        function onHeightChanged() {
-            if (root.tooltipVisible)
-                root.updatePosition();
-        }
-    }
-
-    function updatePosition() {
-        if (!target || !parent)
-            return;
-
-        // Wait for tooltipRect to have its size calculated
-        Qt.callLater(() => {
-            if (!target || !parent || !tooltipRect)
-                return;
-
-            // The target can be destroyed between the hover event and this
-            // call (layout switches, entry reloads) — bail out instead of
-            // throwing a TypeError from mapToItem.
-            try {
-                // Get target position in parent's coordinate system
-                const targetPos = target.mapToItem(parent, 0, 0);
-                const targetCenterX = targetPos.x + target.width / 2;
-
-            // Get tooltip size (use width/height if available, otherwise implicit)
-            const tooltipWidth = tooltipRect.width > 0 ? tooltipRect.width : tooltipRect.implicitWidth;
-            const tooltipHeight = tooltipRect.height > 0 ? tooltipRect.height : tooltipRect.implicitHeight;
-
-            const padding = Appearance.padding.normal;
-            const gap = Appearance.spacing.small;
-            const targetCenterY = targetPos.y + target.height / 2;
-            const onLeftEdge = targetCenterX < parent.width * 0.18;
-            const onRightEdge = targetCenterX > parent.width * 0.82;
-            let newX = targetCenterX - tooltipWidth / 2;
-            let newY = targetPos.y - tooltipHeight - gap;
-
-            // Rails read best with the tooltip beside the trigger. If there
-            // is not room, fall back to the vertical placement used by bars.
-            if (onLeftEdge && parent.width - targetPos.x - target.width >= tooltipWidth + gap + padding) {
-                newX = targetPos.x + target.width + gap;
-                newY = targetCenterY - tooltipHeight / 2;
-            } else if (onRightEdge && targetPos.x >= tooltipWidth + gap + padding) {
-                newX = targetPos.x - tooltipWidth - gap;
-                newY = targetCenterY - tooltipHeight / 2;
-            } else if (targetCenterY < parent.height / 2) {
-                newY = targetPos.y + target.height + gap;
-            }
-
-            // Flip if the preferred side is clipped, then clamp to the
-            // surface. This keeps top, bottom, left and right bars usable.
-            const maxX = Math.max(padding, parent.width - tooltipWidth - padding);
-            const maxY = Math.max(padding, parent.height - tooltipHeight - padding);
-            if (newY + tooltipHeight > parent.height - padding)
-                newY = targetPos.y - tooltipHeight - gap;
-            x = Math.max(padding, Math.min(newX, maxX));
-            y = Math.max(padding, Math.min(newY, maxY));
-            } catch (e) {
-                // Target destroyed mid-layout — skip this positioning pass
-            }
-        });
-    }
-
-    enter: Transition {
-        Anim {
-            property: "opacity"
-            from: 0
-            to: 1
-            duration: Appearance.anim.durations.settleFast
-            easing.bezierCurve: Appearance.anim.curves.settleFast
-        }
-    }
-
-    exit: Transition {
-        Anim {
-            property: "opacity"
-            from: 1
-            to: 0
-            duration: Appearance.anim.durations.settleFast
-            easing.bezierCurve: Appearance.anim.curves.settleFast
-        }
-    }
-
-    // Monitor hover state
-    Connections {
-        target: root.target
-        function onHoveredChanged() {
-            if (target.hovered) {
-                showTimer.start();
-                if (timeout > 0) {
-                    hideTimer.stop();
-                    hideTimer.start();
-                }
+        parent: root.target
+        onHoveredChanged: {
+            if (hovered) {
+                showTimer.restart();
+                if (root.timeout > 0)
+                    hideTimer.restart();
             } else {
                 showTimer.stop();
                 hideTimer.stop();
-                tooltipVisible = false;
+                root.tooltipVisible = false;
             }
         }
     }
 
-    contentItem: StyledRect {
-        id: tooltipRect
+    StyledText {
+        id: label
 
-        implicitWidth: tooltipText.implicitWidth + Appearance.padding.normal * 2
-        implicitHeight: tooltipText.implicitHeight + Appearance.padding.smaller * 2
-
-        color: Signal.palette.lifted
-        radius: Appearance.rounding.small
-        antialiasing: true
-
-        // Add elevation for depth
-        Elevation {
-            anchors.fill: parent
-            radius: parent.radius
-            z: -1
-            level: 3
-        }
-
-        StyledText {
-            id: tooltipText
-
-            anchors.centerIn: parent
-
-            text: root.text
-            color: Signal.palette.ink
-            font.pointSize: Appearance.font.size.small
-        }
-    }
-
-    Component.onCompleted: {
-        if (tooltipVisible) {
-            updatePosition();
-        }
+        anchors.centerIn: parent
+        text: root.text
+        color: Signal.palette.ink
+        font.pointSize: Appearance.font.size.small
     }
 }

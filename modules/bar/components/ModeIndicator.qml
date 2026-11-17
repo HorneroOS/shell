@@ -35,6 +35,9 @@ Item {
     readonly property color accent: Experience.mode === "everyday" ? root.tone.inkMuted : root.tone.signal
 
     visible: root.shown
+    // Signal adds instrumentation: a live telemetry scope, fine corner
+    // brackets and a glowing on-air rule. Calm modes stay a plain chip.
+    readonly property bool instrumented: Experience.immersive && !root.vertical
     implicitWidth: root.shown ? layout.implicitWidth + Appearance.padding.small * 2 : 0
     implicitHeight: root.shown ? Math.max(layout.implicitHeight, Density.inner - Appearance.padding.small * 2) : 0
 
@@ -76,6 +79,44 @@ Item {
             font.pointSize: Density.microPt
             font.weight: root.tone.weight > Font.Normal ? root.tone.weight : Font.Medium
             font.letterSpacing: 0.8
+        }
+
+        BarScope {
+            visible: root.instrumented
+            Layout.alignment: Qt.AlignVCenter
+            tone: root.tone
+        }
+    }
+
+    // Corner brackets: 1 px, 4 px arms, `signal` at 70 %; Signal only.
+    Repeater {
+        model: root.instrumented ? 4 : 0
+
+        Item {
+            id: bracket
+
+            required property int index
+            readonly property bool right: index % 2 === 1
+            readonly property bool bottom: index >= 2
+
+            x: right ? root.width - 4 : 0
+            y: bottom ? root.height - 4 : 0
+            width: 4
+            height: 4
+
+            Rectangle {
+                width: 4
+                height: 1
+                y: bracket.bottom ? 3 : 0
+                color: Qt.alpha(root.tone.signal, 0.7)
+            }
+
+            Rectangle {
+                width: 1
+                height: 4
+                x: bracket.right ? 3 : 0
+                color: Qt.alpha(root.tone.signal, 0.7)
+            }
         }
     }
 }

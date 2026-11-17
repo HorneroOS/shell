@@ -77,3 +77,38 @@ def test_offscreen_gallery_renders_all_variant_palettes(tmp_path):
     log = result["_helper_log"]
     for variant in ("balanced", "vibrant", "expressive", "faithful", "muted", "monochrome", "high-contrast", "neon"):
         assert f"--variant {variant}" in log, variant
+
+
+EDITOR = (SECTIONS / "ThemeEditorSection.qml").read_text()
+
+
+def test_editor_is_wired_into_the_pane_and_search():
+    pane = (APP / "AppearancePane.qml").read_text()
+    assert "ThemeEditorSection {" in pane and "themeEditor: themeEditorSection" in pane
+    assert '"themeEditor"' in pane.split("_sectionKeys", 1)[1].split("]", 1)[0]
+    assert 'section: "themeEditor"' in (ROOT / "modules" / "controlcenter" / "PaneRegistry.qml").read_text()
+
+
+def test_editor_never_writes_without_save_and_uses_the_gated_cli():
+    assert "chromatic import" in EDITOR and "themeImportTail" in EDITOR
+    assert "Component.onDestruction" in EDITOR and "Signal.cancelPreview()" in EDITOR
+    assert "Reset all" in EDITOR and 'qsTr("Reset")' in EDITOR
+    assert "Accessible.name" in EDITOR and "activeFocusOnTab" in EDITOR
+    assert not re.search(r"#[0-9A-Fa-f]{6}\b", EDITOR)
+
+
+@requires_qs
+def test_offscreen_editor_edits_previews_saves_and_resets(tmp_path):
+    result = run_gallery(tmp_path, HEDIT=1)
+    assert result["sourceEditable"] is True
+    edit = result["edit"]
+    # an invalid hex is ignored; the accent re-derives readable text and glow
+    assert edit["signal"] == "#FF00AA" and edit["term3"] == "#112233" and edit["ink"] != "NOT-A-COLOUR"
+    assert edit["onSignal"] != "#FF00AA" and edit["glow"] == "#FF00AA"
+    assert result["previewing"] is True and result["previewingAfter"] is False
+    assert result["status"].startswith("Saved") and result["statusIsError"] is False
+    assert result["afterReset"] is True
+    draft = result["_draft"]
+    assert draft["schemaVersion"] == 2 and draft["id"] == "my-neon-copy" and draft["name"] == "My Neon Copy"
+    assert draft["palette"]["signal"] == "#FF00AA" and len(draft["terminal"]) == 16 and draft["terminal"][3] == "#112233"
+    assert "appearance chromatic import" in result["_ctl_log"] and "--id my-neon-copy" in result["_ctl_log"] and "--yes" in result["_ctl_log"]

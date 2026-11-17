@@ -12,7 +12,7 @@ from pathlib import Path
 from chromatic_ui_harness import QS, ROOT, build_root, requires_qs, seed_xdg  # noqa: F401
 
 
-def run_gallery(tmp_path: Path, helper: str | None = None, png: Path | None = None, theme: str = "hornero-signal-night") -> dict:
+def run_gallery(tmp_path: Path, helper: str | None = None, png: Path | None = None, theme: str = "hornero-signal-night", **extra_env) -> dict:
     root = build_root(tmp_path / "root")
     (root / "shell.qml").write_text((ROOT / "tests" / "qml" / "palettes" / "harness.qml").read_text())
     xdg = tmp_path / "xdg"
@@ -38,6 +38,8 @@ def run_gallery(tmp_path: Path, helper: str | None = None, png: Path | None = No
         "FAKE_LOG": str(tmp_path / "helper.log"),
         "HTHEME": theme,
     }
+    env.update({k: str(v) for k, v in extra_env.items()})
+    env.setdefault("FAKE_CTL_LOG", str(tmp_path / "ctl.log"))
     if png:
         env["HOUT"] = str(png)
     proc = subprocess.run(["dbus-run-session", "--", QS, "-p", str(root), "--no-duplicate"], capture_output=True, text=True, timeout=120, env=env, cwd=tmp_path)
@@ -46,5 +48,8 @@ def run_gallery(tmp_path: Path, helper: str | None = None, png: Path | None = No
     assert lines, f"harness produced no result:\n{log[-3000:]}"
     result = json.loads(lines[-1].split("HRESULT ", 1)[1])
     result["_helper_log"] = (tmp_path / "helper.log").read_text() if (tmp_path / "helper.log").exists() else ""
+    result["_ctl_log"] = (tmp_path / "ctl.log").read_text() if (tmp_path / "ctl.log").exists() else ""
+    result["_draft"] = next(iter((xdg / "state" / "hornero" / "shell" / "theme-draft").glob("*.json")), None)
+    result["_draft"] = json.loads(result["_draft"].read_text()) if result["_draft"] else None
     result["_log"] = log
     return result

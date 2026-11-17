@@ -66,7 +66,7 @@ ShellRoot {
 
         visible: true
         width: 900
-        height: 1500
+        height: 2600
         color: Signal.palette.ground
 
         Flickable {
@@ -103,6 +103,15 @@ ShellRoot {
 
                 GtkColorSchemeSection {
                     id: gtk
+
+                    Layout.fillWidth: true
+                    previewController: controller
+                    session: session
+                    expanded: true
+                }
+
+                ThemeEditorSection {
+                    id: editor
 
                     Layout.fillWidth: true
                     previewController: controller
@@ -149,16 +158,60 @@ ShellRoot {
                 root.out.variantFailed = Object.keys(ChromaticPreview.variantFailed).sort();
                 root.out.themeId = Signal.themeId;
                 root.out.dbg = [ChromaticPreview.helperAvailable, ChromaticPreview.helperChecked, ChromaticPreview.busy, ChromaticPreview.variantPreviewsWanted, ChromaticPreview.errorCode, ChromaticPreview._variantSig.length, ChromaticPreview._variantCurrent];
-                const path = Quickshell.env("HOUT");
-                if (path) {
-                    win.contentItem.grabToImage(img => {
-                        root.out.saved = img.saveToFile(path);
-                        root.emit();
-                    });
-                } else {
-                    root.emit();
+                if (Quickshell.env("HEDIT") === "1") {
+                    root.editScenario();
+                    return;
                 }
+                root.finish();
             }
+        }
+    }
+
+    function editScenario(): void {
+        const o = root.out;
+        editor.chooseSource("hornero-signal-night");
+        o.sourceEditable = editor.editable;
+        editor.setRole("signal", "#FF00AA");
+        editor.setRole("term3", "#112233");
+        editor.setRole("ink", "not-a-colour");
+        o.edit = {"count": editor.editCount, "signal": editor.scheme.palette.signal, "onSignal": editor.scheme.palette.onSignal, "term3": editor.scheme.terminal[3], "ink": editor.scheme.palette.ink, "glow": editor.scheme.palette.glow};
+        editor.setPreviewing(true);
+        o.previewing = Signal.previewing;
+        o.previewSignal = String(Signal.palette.signal);
+        editor.nameText = "My Neon Copy";
+        editor.run("new");
+        editWait.start();
+    }
+
+    Timer {
+        id: editWait
+
+        interval: 200
+        repeat: true
+        onTriggered: {
+            if (editor.busy)
+                return;
+            editWait.stop();
+            root.out.status = editor.status;
+            root.out.statusIsError = editor.statusIsError;
+            editor.setRole("signal", "#00FF00");
+            editor.resetRole("signal");
+            root.out.afterReset = editor.scheme.palette.signal === Signal.builtInThemes["hornero-signal-night"].palette.signal;
+            editor.setPreviewing(false);
+            root.out.previewingAfter = Signal.previewing;
+            root.finish();
+        }
+    }
+
+    function finish(): void {
+        const path = Quickshell.env("HOUT");
+        if (path) {
+            win.contentItem.grabToImage(img => {
+                root.out.saved = img.saveToFile(path);
+                root.emit();
+            });
+        } else {
+            root.emit();
         }
     }
 }

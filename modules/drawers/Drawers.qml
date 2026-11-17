@@ -419,8 +419,11 @@ Variants {
                 }
             }
 
+            // One handler per output: the first output answers as `debug`,
+            // every other as `debug.<output name>` (shell#516), so a second
+            // output's popout geometry can be asserted too.
             IpcHandler {
-                target: "debug"
+                target: Quickshell.screens[0]?.name === scope.modelData.name ? "debug" : `debug.${scope.modelData.name}`
 
                 function borders(): string {
                     debugBorders.visible = !debugBorders.visible;

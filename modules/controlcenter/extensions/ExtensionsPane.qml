@@ -178,9 +178,9 @@ Item {
         // descriptions) is in Details and the plugin's own settings UI.
         const settingsSummary = keys.length === 0 ? "" : keys.map(key => `${key} (${settings[key] && settings[key].type ? settings[key].type : "?"})`).join(", ");
         const provenance = verified === false
-            ? qsTr("Unverified plugin-manifest declarations")
-            : qsTr("Plugin-declared capabilities");
-        return qsTr("%1\nRuns commands: %2\nNetwork hosts: %3\nShared data read: %4\nSettings it stores: %5")
+            ? qsTr("What the manifest says it uses (unverified, not enforced)")
+            : qsTr("What the extension says it uses (not enforced)");
+        return qsTr("%1\nCommands it may run: %2\nNetwork hosts: %3\nShared data it reads: %4\nSettings it stores: %5")
             .arg(provenance)
             .arg(commands.length ? commands.join(", ") : qsTr("none"))
             .arg(hosts.length ? hosts.join(", ") : qsTr("none"))
@@ -516,6 +516,16 @@ Item {
 
                 StyledText {
                     Layout.fillWidth: true
+                    visible: Plugins.desktopNoRoom.length > 0
+                    text: qsTr("Hidden, no room on the desktop: %1. Move or resize other widgets (Edit widgets) to bring them back.")
+                        .arg(Plugins.desktopNoRoom.map(id => (Plugins.entryFor(id)?.name ?? id)).join(", "))
+                    font.pointSize: Appearance.font.size.small
+                    color: Signal.palette.alert
+                    wrapMode: Text.Wrap
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
                     visible: Plugins.kitBlocked
                     text: Plugins.kitMessage
                     font.pointSize: Appearance.font.size.small
@@ -785,10 +795,22 @@ Item {
                                 wrapMode: Text.Wrap
                             }
 
+                            // Enable consent: a short heading, one plain sentence about
+                            // trust, then the declared uses. Alert colour is kept for
+                            // the trust sentence only.
+                            StyledText {
+                                Layout.fillWidth: true
+                                Layout.topMargin: Appearance.spacing.small
+                                visible: root.pendingEnable === row.entry.id
+                                text: qsTr("Before you enable this extension")
+                                font.pointSize: Appearance.font.size.normal
+                                font.weight: 600
+                            }
+
                             StyledText {
                                 Layout.fillWidth: true
                                 visible: root.pendingEnable === row.entry.id
-                                text: qsTr("This plugin's QML will run as your user, without a sandbox. Enable only if you reviewed its source.")
+                                text: qsTr("It runs as you, with no sandbox. Only enable extensions whose source you have read.")
                                 font.pointSize: Appearance.font.size.small
                                 color: Signal.palette.alert
                                 wrapMode: Text.Wrap
@@ -799,7 +821,8 @@ Item {
                                 visible: root.pendingEnable === row.entry.id
                                 text: root.declaredCapabilities(row.entry.capabilities, row.entry.capabilities_verified)
                                 font.pointSize: Appearance.font.size.small
-                                color: Signal.palette.ink
+                                color: Signal.palette.inkMuted
+                                lineHeight: 1.25
                                 wrapMode: Text.Wrap
                             }
 

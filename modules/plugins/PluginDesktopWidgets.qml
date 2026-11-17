@@ -177,13 +177,14 @@ Item {
         }
     }
 
-    // Edit toolbar: a lifted strip centred at the top of the widget area.
+    // Edit toolbar: a lifted strip in the middle of the widget area, where the
+    // solver keeps the centre open (a strip at the top covered the header of
+    // top-row widgets). The hint line only shows when the screen is wide.
     Rectangle {
         id: toolbar
 
         visible: Plugins.desktopEditing && root.hasContent
-        anchors.horizontalCenter: parent.horizontalCenter
-        y: 0
+        anchors.centerIn: parent
         width: toolbarRow.implicitWidth + Appearance.padding.larger * 2
         height: 36
         radius: Appearance.rounding.small
@@ -219,7 +220,16 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 font.pointSize: Appearance.font.size.small
                 color: Signal.palette.inkMuted
+                visible: root.width >= 1500
                 text: qsTr("Drag to move · corner to resize · 8 px grid")
+            }
+
+            StyledText {
+                anchors.verticalCenter: parent.verticalCenter
+                visible: root.noRoomIds.length > 0
+                font.pointSize: Appearance.font.size.small
+                color: Signal.palette.alert
+                text: qsTr("%n hidden: no room", "", root.noRoomIds.length)
             }
 
             ToolbarButton {

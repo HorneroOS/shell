@@ -2,7 +2,7 @@
   "_name": "Studio",
   "_description": "Top bar for creative work — media and audio at hand, stable reserved canvas",
   "_icon": "🎬",
-  "_iconMaterial": "movie",
+  "_glyph": "movie",
   "bar": {
     "persistent": true,
     "showOnHover": true,

@@ -1,7 +1,7 @@
 {
   "_name": "Minimal Float",
   "_description": "Soft floating top ribbon — workspaces, centred time, a few tools",
-  "_iconMaterial": "armchair",
+  "_glyph": "armchair",
   "_lineage": "Waybar cozy-minimal profile",
   "bar": {
     "persistent": true,

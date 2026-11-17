@@ -2,7 +2,7 @@
   "_name": "Minimal Left",
   "_description": "Clean left sidebar — workspaces and power only",
   "_icon": "✨",
-  "_iconMaterial": "layout-sidebar",
+  "_glyph": "layout-sidebar",
   "bar": {
     "persistent": true,
     "showOnHover": true,

@@ -19,7 +19,7 @@ LITERAL = re.compile(r'''(["'`])([a-z][a-z0-9-]*)\1''')
 # Literals that are compared against, not rendered.
 COMPARISON = re.compile(r'(===|!==|==|!=|\bcase|includes\(|indexOf\(|startsWith\(|endsWith\(|typeof\s+\w+\s*===)\s*$')
 ICON_KEY = re.compile(
-    r'''(\b[A-Za-z_]*[Ii]con(?!s)[A-Za-z_]*\b|"_iconMaterial"|"[A-Za-z_]*[Ii]con(?!s)[A-Za-z_]*")\s*(:|=(?!=)|\?\?)''')
+    r'''(\b[A-Za-z_]*[Ii]con(?!s)[A-Za-z_]*\b|"_glyph"|"[A-Za-z_]*[Ii]con(?!s)[A-Za-z_]*")\s*(:|=(?!=)|\?\?)''')
 # Values that are icon-typed properties but not glyph names
 # enum-like roles/colours).
 NOT_GLYPHS = {"body", "small", "large", "string", "transparent"}

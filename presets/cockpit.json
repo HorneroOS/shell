@@ -2,7 +2,7 @@
   "_name": "Cockpit",
   "_description": "Two bars: act on top, glance below — a classic desktop composition",
   "_icon": "🛫",
-  "_iconMaterial": "layout-rows",
+  "_glyph": "layout-rows",
   "_lineage": "Polybar default + Waybar default profiles",
   "bar": {
     "persistent": true,

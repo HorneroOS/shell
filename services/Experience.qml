@@ -87,6 +87,26 @@ Singleton {
         root._glowHolders = next;
     }
 
+    // Mode chrome: the accent the bar wears (palette role), the edge facing
+    // the content (off | hairline | glow) and the accent wash strength. All
+    // user-tunable per mode. The glow edge needs `glow` (so it follows the
+    // same dark-theme, motion and High Contrast gates and draws from the
+    // shared budget); without it the edge degrades to a hairline. High
+    // Contrast drops the wash and keeps a hairline so a mode stays legible.
+    readonly property string chromeAccent: fields["chrome.accent"]
+    readonly property string chromeEdge: {
+        const e = fields["chrome.edge"];
+        if (root.chromeAccent === "none")
+            return "off";
+        return e === "glow" && !root.glow ? "hairline" : e;
+    }
+    readonly property real chromeWash: root.chromeAccent === "none" || Config.appearance.highContrast ? 0 : Math.max(0, Math.min(Model.CHROME_WASH_MAX, Number(fields["chrome.wash"]) || 0))
+    // Bar scanlines are a texture, not a pattern: the shared scanline tile
+    // at a quarter of full strength (the user's Atmosphere strength never
+    // exceeds 0.06 of it).
+    readonly property real scanlineOpacity: 0.22
+    readonly property bool chromeActive: root.chromeEdge !== "off" || root.chromeWash > 0 || root.scanlines
+
     // Scope scanlines (§10): Signal mode only, never in day themes.
     readonly property bool scanlines: fields["scanlines"] && !Signal.light && !Config.appearance.highContrast
 

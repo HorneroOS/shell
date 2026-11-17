@@ -20,7 +20,7 @@ FIELDS = [
     "telemetry.pauseWhenHidden", "desktopWidgets", "notifications.hold",
     "notifications.suppressFullscreen", "layout.preset", "layout.apply",
     "idle.inhibitFullscreen", "power.suggest", "hooks.hyprlandTuning",
-    "hooks.studioAudio",
+    "hooks.studioAudio", "chrome.accent", "chrome.edge", "chrome.wash",
 ]
 
 

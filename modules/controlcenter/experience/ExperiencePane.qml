@@ -566,6 +566,70 @@ Item {
                         onToggled: checked => root.customise("scanlines", checked)
                     }
 
+                    EnumRow {
+                        label: qsTr("Mode accent")
+                        value: root.field("chrome.accent")
+                        options: [
+                            {
+                                "value": "none",
+                                "label": qsTr("None")
+                            },
+                            {
+                                "value": "ink",
+                                "label": qsTr("Ink")
+                            },
+                            {
+                                "value": "signal",
+                                "label": qsTr("Amber")
+                            },
+                            {
+                                "value": "cue",
+                                "label": qsTr("Cue")
+                            },
+                            {
+                                "value": "phosphor",
+                                "label": qsTr("Phosphor")
+                            },
+                            {
+                                "value": "alert",
+                                "label": qsTr("Alert")
+                            }
+                        ]
+                        onPicked: v => root.customise("chrome.accent", v)
+                    }
+
+                    EnumRow {
+                        label: qsTr("Bar edge line")
+                        value: root.field("chrome.edge")
+                        options: [
+                            {
+                                "value": "off",
+                                "label": qsTr("Off")
+                            },
+                            {
+                                "value": "hairline",
+                                "label": qsTr("Hairline")
+                            },
+                            {
+                                "value": "glow",
+                                "label": qsTr("Glow")
+                            }
+                        ]
+                        onPicked: v => root.customise("chrome.edge", v)
+                    }
+
+                    SliderInput {
+                        Layout.fillWidth: true
+
+                        label: qsTr("Accent wash")
+                        value: Number(root.field("chrome.wash") ?? 0)
+                        from: 0
+                        to: 0.2
+                        stepSize: 0.01
+                        decimals: 2
+                        onValueModified: newValue => root.customise("chrome.wash", Math.round(newValue * 100) / 100)
+                    }
+
                     StyledText {
                         Layout.fillWidth: true
                         visible: root.locked("glow") || root.locked("scanlines") || root.locked("motion")

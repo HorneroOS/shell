@@ -33,6 +33,13 @@ Item {
         return out;
     }
 
+    // Icon size in logical px (options.iconSize, 16..40). Defaults to the
+    // bar icon size; the Console dock ships larger tiles.
+    readonly property int pinPx: {
+        const v = Number(options.iconSize);
+        return v > 0 ? Math.max(16, Math.min(40, Math.round(v))) : Density.iconPx;
+    }
+
     visible: apps.length > 0
     implicitWidth: visible ? layout.implicitWidth : 0
     implicitHeight: visible ? layout.implicitHeight : 0
@@ -52,7 +59,9 @@ Item {
 
                 iconSource: Quickshell.iconPath(modelData.icon, "application-x-executable")
                 label: modelData.name
-                iconSize: Density.iconPt
+                iconSize: Density.pt(root.pinPx)
+                // Tile = icon + 4 px air each side (hover fill hugs the icon)
+                implicitHeight: root.pinPx + 8
                 onActivated: modelData.execute()
             }
         }

@@ -11,7 +11,7 @@
       {
         "edge": "top",
         "style": "islands",
-        "margin": 5,
+        "margin": 8,
         "groups": {
           "start": [
             {
@@ -72,13 +72,13 @@
           ]
         },
         "reserve": true,
-        "thickness": 26,
+        "thickness": 32,
         "density": "values",
         "backdrop": "solid"
       }
     ],
     "sizes": {
-      "innerWidth": 22
+      "innerWidth": 24
     },
     "status": {
       "showAudio": true,

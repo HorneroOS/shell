@@ -11,8 +11,8 @@
       {
         "edge": "bottom",
         "style": "dock",
-        "margin": 6,
-        "thickness": 34,
+        "margin": 8,
+        "thickness": 46,
         "groups": {
           "start": [
             {
@@ -33,7 +33,8 @@
                   "kitty",
                   "thunar",
                   "firefox"
-                ]
+                ],
+                "iconSize": 28
               }
             },
             {
@@ -76,7 +77,7 @@
       }
     ],
     "sizes": {
-      "innerWidth": 26
+      "innerWidth": 30
     },
     "status": {
       "showAudio": true,
@@ -96,18 +97,13 @@
   },
   "appearance": {
     "rounding": {
-      "scale": 1.5
+      "scale": 1.2
     },
     "padding": {
       "scale": 1.2
     },
     "spacing": {
       "scale": 1.2
-    },
-    "transparency": {
-      "enabled": true,
-      "base": 0.85,
-      "layers": 0.4
     }
   }
 }

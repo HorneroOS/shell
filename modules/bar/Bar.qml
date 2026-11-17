@@ -522,11 +522,24 @@ Item {
 
         // Own background unless an attached strip is backed by the frame or
         // the bar is clear
+        // Floating, inset and island slabs carry a 1 px `rule` hairline all
+        // round (Signal Bezel); an attached strip keeps the hairline on its
+        // inner edge only, so it reads as a bezel, not a box.
         StyledRect {
             visible: !root.clear && (root.floating || !Config.border.frameEnabled)
             anchors.fill: parent
             color: Signal.surface(Signal.layer(Signal.palette.base, 1), "bar")
             radius: root.floating ? Appearance.rounding.small : 0
+            border.width: root.floating ? 1 : 0
+            border.color: Signal.palette.rule
+        }
+        Rectangle {
+            visible: !root.clear && !root.floating && !Config.border.frameEnabled
+            color: Signal.palette.rule
+            x: root.vertical ? (root.edge === "left" ? parent.width - 1 : 0) : 0
+            y: root.vertical ? 0 : (root.edge === "top" ? parent.height - 1 : 0)
+            width: root.vertical ? 1 : parent.width
+            height: root.vertical ? parent.height : 1
         }
 
         BarGroup {

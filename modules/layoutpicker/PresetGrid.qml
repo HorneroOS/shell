@@ -56,10 +56,10 @@ Item {
             "horizon": "layout-rows",
             "hornero-left": "layout-sidebar",
             "hornero-right": "layout-sidebar-right",
-            "islands": "app-window",
+            "islands": "layout-columns",
             "minimal-left": "layout-sidebar",
             "minimal-top": "minimize",
-            "productivity": "layout-columns",
+            "productivity": "briefcase",
             "studio": "music"
         })
 

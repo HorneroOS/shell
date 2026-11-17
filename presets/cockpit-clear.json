@@ -9,7 +9,7 @@
     "bars": [
       {
         "edge": "top",
-        "style": "attached",
+        "style": "inset",
         "backdrop": "clear",
         "groups": {
           "start": [
@@ -80,15 +80,15 @@
           ]
         },
         "reserve": true,
-        "margin": 4,
-        "thickness": 28,
+        "margin": 6,
+        "thickness": 34,
         "density": "values"
       },
       {
         "edge": "bottom",
-        "style": "attached",
+        "style": "inset",
         "backdrop": "clear",
-        "thickness": 24,
+        "thickness": 26,
         "groups": {
           "start": [
             {
@@ -122,7 +122,7 @@
       }
     ],
     "sizes": {
-      "innerWidth": 22
+      "innerWidth": 24
     },
     "status": {
       "showAudio": true,

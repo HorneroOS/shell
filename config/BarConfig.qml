@@ -15,16 +15,16 @@ JsonObject {
     // Factory default is the Cockpit layout (presets/cockpit.json): act on
     // top, glance below. Hornero Left/Right remain available as presets.
     property list<var> bars: [{
-        edge: "top", style: "inset", reserve: true, margin: 4,
-        thickness: 28, density: "values", backdrop: "solid",
+        edge: "top", style: "inset", reserve: true, margin: 6,
+        thickness: 34, density: "values", backdrop: "solid",
         groups: {
             start: [{id: "logo", enabled: true}, {id: "quickActions", enabled: true, options: {actions: ["screenshot", "layoutPicker", "settings"]}}, {id: "audioSlider", enabled: true, options: {showValue: true}}, {id: "brightnessSlider", enabled: true, options: {showValue: true}}],
             center: [{id: "clock", enabled: true, options: {showDate: true}}, {id: "weather", enabled: true}],
             end: [{id: "modeIndicator", enabled: true}, {id: "statusIcons", enabled: true}, {id: "tray", enabled: true}, {id: "extensions", enabled: true}, {id: "power", enabled: true}]
         }
     }, {
-        edge: "bottom", style: "attached", reserve: true, margin: 6,
-        thickness: 24, density: "values", backdrop: "solid",
+        edge: "bottom", style: "inset", reserve: true, margin: 6,
+        thickness: 26, density: "values", backdrop: "solid",
         groups: {
             start: [{id: "workspaces", enabled: true}],
             center: [{id: "media", enabled: true}],
@@ -222,7 +222,7 @@ JsonObject {
     }
 
     component Sizes: JsonObject {
-        property int innerWidth: 22
+        property int innerWidth: 24
         // Density (services/Density.qml): follow the screen's logical height,
         // times a user multiplier (0.75..1.5).
         property bool autoDensity: true

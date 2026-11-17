@@ -29,9 +29,11 @@ KNOWN_ACTIONS = set(
 
 
 def test_preset_count():
-    # signal-visual-language §14: floating-island and productivity were
-    # removed (successors cozy-minimal / minimal-top); 14 survive.
-    assert len(PRESETS) == 14, f"expected 14 presets, found {len(PRESETS)}"
+    # 16 presets: the 14 of the Signal audit plus Floating Island and
+    # Productivity, restored in Signal Bezel (docs/LAYOUTS.md).
+    assert len(PRESETS) == 16, f"expected 16 presets, found {len(PRESETS)}"
+    names = {p.stem for p in PRESETS}
+    assert {"floating-island", "productivity"} <= names
 
 
 def check_entry(path, entry, where, allow_spacer):

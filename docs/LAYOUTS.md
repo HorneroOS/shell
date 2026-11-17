@@ -11,8 +11,8 @@ schema.
 {
   "edge": "top",
   "style": "inset",
-  "margin": 4,
-  "thickness": 28,
+  "margin": 6,
+  "thickness": 34,
   "reserve": true,
   "density": "values",
   "backdrop": "solid",
@@ -57,7 +57,7 @@ the three groups provide the layout structure directly.
 
 `options` are component-specific. Examples include `clock.showDate`,
 `audioSlider.showValue`, `brightnessSlider.showValue`,
-`workspaces.style` (`pills` or `labels`), and `media.maxWidth`.
+`workspaces.style` (`pills` or `labels`), `media.maxWidth`, and `pinnedApps.iconSize` (16 to 40 px).
 
 Workspace indicators are fixed rectangular cells (signal-visual-language §5),
 never pills. Every state differs in at least two cues, so colour is never the
@@ -79,23 +79,53 @@ settings, and screenshot. Unknown actions are skipped with a warning.
 
 ## Shipped presets
 
-The installed catalogue contains 14 presets (Signal Bezel audit,
-signal-visual-language §14). It includes Hornero Left/Right (inspired by
-Caelestia's layout, preserved with attribution), Cockpit (28 px inset top
-rail, 24 px attached bottom strip) and Cockpit Clear (same anatomy, no bar
-backdrop at all — adaptive per-region ink only), Horizon, Islands, Minimal
-Float (formerly Cozy Minimal), Dock Bottom, Classic Top/Bottom, Minimal
-Top/Left, Studio, and Gaming. **Cockpit is the factory default**
-(`config/shell.default.json`, Experience profiles, `horneroctl` reset);
-Hornero Left/Right stay supported presets. Floating Island and Productivity were removed:
-their compositions duplicated Minimal Float and Minimal Top, and presets are
-applied by copying their bars into the user config, so existing desktops
-keep working unchanged — only the picker catalogue shrinks. A persisted
-Experience `layout.preset` naming a removed preset is migrated once
-(Floating Island to Minimal Float, Productivity to Minimal Top) by
-`services/experience.js`. Every preset is
-an explicit multi-bar specification and is validated by
-`tests/test_shell_layout.py`.
+The installed catalogue contains 16 presets. It includes Hornero Left/Right
+(inspired by Caelestia's layout, preserved with attribution), Cockpit (an inset
+top rail to act and an inset bottom strip to know) and Cockpit Clear (same
+anatomy, no bar backdrop at all — adaptive per-region ink only), Horizon,
+Islands, Floating Island, Minimal Float (formerly Cozy Minimal), Dock Bottom,
+Classic Top/Bottom, Minimal Top/Left, Productivity, Studio, and Gaming.
+**Cockpit is the factory default** (`config/shell.default.json`, Experience
+profiles, `horneroctl` reset); Hornero Left/Right stay supported presets.
+
+Floating Island and Productivity were removed in the first Signal audit
+(shell#484) and are restored here, redesigned in Signal Bezel: hairline
+frames, 3 px radii, no glass. A persisted Experience `layout.preset` naming
+either is kept; `services/experience.js` only migrates ids listed in
+`RETIRED_PRESETS`, which is empty because no shipped preset is retired. Every
+preset is an explicit multi-bar specification and is validated by
+`tests/test_shell_layout.py` and `tests/test_thin_bars.py`.
+
+### Proportions
+
+Bars are refined, not infinitesimal. Thickness is the bar body; the margin is
+the gap to the screen edge (floating and inset styles) and is added to the
+reservation. Every slab carries a 1 px `rule` hairline (all round when
+floating or inset, inner edge only when attached), radii are at most 4 px and
+nothing is translucent glass.
+
+| Preset | Edge: style, thickness, margin | Personality |
+| --- | --- | --- |
+| Cockpit | top: inset 34, 6 / bottom: inset 26, 6 | Flagship: act on top, know below, two floating bezels |
+| Cockpit Clear | same geometry, no slab | Same muscle memory, only adaptive ink |
+| Horizon | top: inset 32, 6 / bottom (clear): inset 26, 6 | One instrument line plus a clear workspace line |
+| Classic Top / Bottom | attached 32 | Conventional single bar |
+| Minimal Top | top: attached 30 | Quiet: workspaces, clock, power |
+| Minimal Float | top: floating 30, 8 | One quiet floating strip |
+| Floating Island | top: floating 34, 10 | One compact centred module: workspaces, clock, status |
+| Islands | top: islands 32, 8 | Three separate rack modules |
+| Productivity | top: inset 32, 6 | Calm focused work: workspaces, active window, clock, essential tray |
+| Studio | top: attached 32 | Media and meters beside the clock |
+| Gaming | bottom: floating 28, 8 (no reservation) | Out of the way overlay |
+| Dock Bottom | bottom: dock 46, 8 | Console dock with 28 px app tiles |
+| Hornero Left / Right | attached 48 | Generous Caelestia-inspired rail with the frame |
+| Minimal Left | left: attached 38 | Instrument rail |
+
+The density factor (`services/density.js`) scales these gently: at most 6 %
+smaller on a 720p screen and 10 % larger at 2160p. Primary text never drops
+below 12 px, bar icons stay between 15 and 18 px, segment padding never below
+8 px (6 px in rails), and a bar is never thinner than the 24 px hit area.
+`bar.sizes.densityScale` (0.75 to 1.5) multiplies on top.
 
 `horneroctl shell preset list --full` reports display metadata and topology for
 the Layout Picker. `horneroctl shell preset apply <name> --yes` applies a
@@ -104,10 +134,10 @@ read-only and are never changed.
 
 ## Segments and the mode indicator
 
-Bar entries are **segments** (signal-visual-language §4.1): 10 px horizontal
-padding (6 px vertical in left/right rails), no spacing in the group, and a
-1 px `rule` between segments inset 6 px from the bar edges (16 px tall in a
-28 px rail). Adjacent icon-only entries (`quickActions`, `statusIcons`,
+Bar entries are **segments** (signal-visual-language §4.1): 12 px horizontal
+padding (8 px vertical in left/right rails), no spacing in the group, and a
+1 px `rule` between segments inset 6 px from the bar edges (22 px tall in a
+34 px rail). Adjacent icon-only entries (`quickActions`, `statusIcons`,
 `tray`, `extensions`) form one segment with a 10 px gap and no rule.
 Cockpit Clear draws no rules.
 

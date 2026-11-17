@@ -439,7 +439,7 @@ Singleton {
             const first = !root.stateReady;
             if (first) {
                 // One-shot: persisted selections of removed presets move to
-                // their survivor (services/experience.js REMOVED_PRESETS).
+                // their survivor (services/experience.js RETIRED_PRESETS).
                 const mig = Model.sanitizeOverrides(Config.experience.modes);
                 if (JSON.stringify(mig) !== JSON.stringify(Config.experience.modes))
                     Config.experience.modes = mig;

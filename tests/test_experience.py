@@ -235,21 +235,22 @@ def test_transition_tracks_previous_and_rejects_unknown_modes():
     assert out["bad"] is False
 
 
-# --- Removed preset migration ----------------------------------------------
+# --- Retired preset migration ----------------------------------------------
 
-def test_removed_presets_migrate_once_to_their_survivor():
+def test_restored_presets_keep_the_persisted_selection():
     out = run_js(
         'return {'
         'a: sanitizeOverrides({everyday: {"layout.preset": "floating-island"}}),'
         'b: sanitizeOverrides({focus: {"layout.preset": "productivity"}}),'
         'c: sanitizeOverrides({studio: {"layout.preset": "classic-top"}}),'
-        'again: sanitizeOverrides(sanitizeOverrides({everyday: {"layout.preset": "floating-island"}}))}'
+        'retired: RETIRED_PRESETS}'
     )
-    assert out["a"] == {"everyday": {"layout.preset": "cozy-minimal"}}
-    # minimal-top is the focus factory layout, so the override disappears.
-    assert out["b"] == {}
+    # Floating Island and Productivity are supported presets again: no
+    # one-shot migration may move users off them.
+    assert out["a"] == {"everyday": {"layout.preset": "floating-island"}}
+    assert out["b"] == {"focus": {"layout.preset": "productivity"}}
     assert out["c"] == {"studio": {"layout.preset": "classic-top"}}
-    assert out["again"] == out["a"]
+    assert out["retired"] == {}
     assert "Model.sanitizeOverrides(Config.experience.modes)" in QML
 
 

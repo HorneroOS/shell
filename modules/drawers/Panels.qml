@@ -126,6 +126,9 @@ Item {
         objectName: "popouts"
 
         screen: root.screen
+        // Attached popouts grow out of their bar (machined fillet).
+        fillet: root.bar.filletOn(popouts.edge)
+        filletRule: root.bar.filletRule(popouts.edge)
         bounds: Qt.rect(-root.x, -root.y, root.parent?.width ?? 0, root.parent?.height ?? 0)
         reserved: ({
                 top: root.bar.marginTop,

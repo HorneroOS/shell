@@ -417,7 +417,8 @@
     "frameEnabled": true,
     "thickness": 10,
     "rounding": 25,
-    "edgeWidth": 1
+    "edgeWidth": 1,
+    "fillet": 6
   },
   "dashboard": {
     "enabled": true,

@@ -29,6 +29,10 @@ Shape {
 
     Osd.Background {
         wrapper: root.panels.osd
+        // Only against the frame: next to an open session or sidebar the
+        // neighbour's own outline would cross the fillet.
+        fillet: root.panels.session.width > 0 || root.panels.sidebar.width > 0 ? 0 : root.bar.filletOn("right")
+        rule: root.bar.filletRule("right")
 
         startX: root.width - root.panels.session.width - root.panels.sidebar.width
         startY: (root.height - wrapper.height) / 2 - rounding
@@ -44,6 +48,8 @@ Shape {
 
     Session.Background {
         wrapper: root.panels.session
+        fillet: root.panels.sidebar.width > 0 ? 0 : root.bar.filletOn("right")
+        rule: root.bar.filletRule("right")
 
         startX: root.width - root.panels.sidebar.width
         startY: (root.height - wrapper.height) / 2 - rounding
@@ -51,6 +57,8 @@ Shape {
 
     Launcher.Background {
         wrapper: root.panels.launcher
+        fillet: root.bar.filletOn("bottom")
+        rule: root.bar.filletRule("bottom")
 
         // Track the wrapper's outer edge: identical to the panel edge when the
         // bar is attached, but stops at the wrapper when the bar floats
@@ -61,6 +69,8 @@ Shape {
 
     Dashboard.Background {
         wrapper: root.panels.dashboard
+        fillet: root.bar.filletOn("top")
+        rule: root.bar.filletRule("top")
 
         startX: (root.width - wrapper.width) / 2 - rounding
         startY: wrapper.y
@@ -69,6 +79,11 @@ Shape {
     Utilities.Background {
         wrapper: root.panels.utilities
         sidebar: sidebar
+        fillet: root.bar.filletOn("bottom")
+        rule: root.bar.filletRule("bottom")
+        // The right-edge junction is shared with the sidebar while it is open.
+        filletEnd: root.panels.sidebar.width > 0 ? 0 : root.bar.filletOn("right")
+        ruleEnd: root.bar.filletRule("right")
 
         startX: root.width
         startY: wrapper.y + wrapper.height
@@ -79,6 +94,8 @@ Shape {
 
         wrapper: root.panels.sidebar
         panels: root.panels
+        fillet: root.bar.filletOn("right")
+        rule: root.bar.filletRule("right")
 
         startX: root.width
         startY: root.panels.notifications.height

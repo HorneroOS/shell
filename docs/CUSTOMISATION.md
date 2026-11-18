@@ -58,6 +58,7 @@ service and a pane-by-pane table are in `docs/CONTROL-CENTER-APPLY.md`.
 | Bar popup widths | `bar.sizes.{trayMenuWidth,batteryWidth,networkWidth,kbLayoutWidth,windowPreviewSize}` | Bars > Popup sizes | see pane | 300/250/320/320/400 |
 | Control Center window | `controlCenter.sizes.{heightMult,ratio}` | Appearance > Look | 0.5-0.95 / 1.2-2.4 | 0.7 / 16:9 |
 | How long Undo stays after a change | `controlCenter.undoSeconds` | Appearance > Look | 3-60 s | 10 |
+| Machined fillet where a drawer or popout meets the bar or frame (0 = flush) | `border.fillet` | Appearance > Border | 0-16 px | 6 |
 | Preview on hover/focus in Appearance | `controlCenter.appearanceHoverPreview` | Appearance > Look | on / off | on |
 
 Note: `dashboard.sizes.*` are not listed because nothing in the shell reads them today; exposing dead settings would

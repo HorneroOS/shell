@@ -73,6 +73,10 @@ Item {
     property int elevation: 2
     property color fill: Signal.palette.panel
     property real radius: Appearance.rounding.small
+    // Machined fillet at an attached junction (SurfaceFrame), 0 = flush,
+    // and the junction outline's offset from the anchor line.
+    property real fillet: 0
+    property real filletRule: 0
 
     // ---- Outputs ----
 
@@ -436,6 +440,8 @@ Item {
         attached: root.placement.attached
         fill: root.fill
         radius: root.radius
+        fillet: root.fillet
+        filletRule: root.filletRule
         elevation: root.elevation
         focused: root.keyboardFocused
         // The notch follows the live trigger, not the final rect, so it

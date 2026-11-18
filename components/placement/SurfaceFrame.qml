@@ -2,18 +2,23 @@ import qs.services
 import qs.config
 import QtQuick
 import QtQuick.Effects
+import QtQuick.Shapes
+import "Fillet.js" as Fillet
 
 // The morphing background of an anchored surface (Signal visual language
 // §7.1, §7.2, §15): `panel` fill, 1 px `rule` border, radius `small`,
 // one restrained shadow cast away from the anchor, and the notch — a
 // 2 px `signal` line exactly as wide as the trigger on the anchor edge —
 // so the surface visibly originates from its trigger even with motion
-// off. Attached surfaces sit flush against their bar: that edge has no
-// border and square corners.
+// off. Attached surfaces sit against their bar: that edge has no border
+// and square corners. With a machined fillet (`fillet` > 0, attached only)
+// the two junction corners flare into the bar through concave quarter
+// arcs tangent to the bar's outline (`filletRule` px inside the anchor line),
+// so the 1 px rule runs from the bezel through the arc into the frame.
 //
-// Everything is plain Rectangles plus one analytic RectangularShadow:
-// no layers, no offscreen passes, so animating the frame's geometry
-// costs a few vertices per frame.
+// Everything is plain Rectangles plus one analytic RectangularShadow,
+// and one small Shape path when a fillet is drawn: no layers, no
+// offscreen passes, so animating the frame's geometry stays cheap.
 Item {
     id: root
 
@@ -33,8 +38,14 @@ Item {
     // 0 none, 2 panel, 4 lifted (visual language §7.2).
     property int elevation: 2
 
+    // Machined fillet radius at the attached junction (0 = flush) and the
+    // junction outline's offset from the anchor line into the surface.
+    property real fillet: 0
+    property real filletRule: 0
+
     readonly property bool horizontalEdge: edge === "top" || edge === "bottom"
     readonly property real _cut: radius + 1
+    readonly property bool _filleted: attached && fillet > 0 && edge !== ""
 
     RectangularShadow {
         anchors.fill: parent
@@ -54,6 +65,7 @@ Item {
     // there and squares its corners.
     Item {
         anchors.fill: parent
+        visible: !root._filleted
         clip: root.attached
 
         Rectangle {
@@ -67,6 +79,84 @@ Item {
             border.width: 1
             border.color: root.rule
             antialiasing: true
+        }
+    }
+
+    // Filleted body, drawn in anchor-edge coordinates (u along the anchor
+    // edge, v away from it) and mapped onto the frame's edge. Strokes run
+    // 0.5 px inside the frame, where the Rectangle above draws its border.
+    Shape {
+        id: filleted
+
+        readonly property real len: root.horizontalEdge ? root.width : root.height
+        readonly property real depth: root.horizontalEdge ? root.height : root.width
+        readonly property real s: 0.5
+        readonly property real rc: Math.max(0, Math.min(root.radius - 0.5, len / 2 - s, depth / 2 - s))
+        readonly property real c: root.filletRule
+        readonly property real f: Fillet.fit(root.fillet, depth, s + rc, c)
+
+        visible: root._filleted && root.width > 1 && root.height > 1
+        preferredRendererType: Shape.CurveRenderer
+        transform: Matrix4x4 {
+            matrix: root.edge === "bottom" ? Qt.matrix4x4(1, 0, 0, 0, 0, -1, 0, root.height, 0, 0, 1, 0, 0, 0, 0, 1)
+                : root.edge === "left" ? Qt.matrix4x4(0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)
+                : root.edge === "right" ? Qt.matrix4x4(0, -1, 0, root.width, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)
+                : Qt.matrix4x4()
+        }
+
+        ShapePath {
+            strokeWidth: 1
+            strokeColor: root.rule
+            fillColor: root.fill
+            startX: filleted.s - filleted.f
+            startY: 0
+
+            PathLine {
+                x: filleted.s - filleted.f
+                y: filleted.c
+            }
+            PathArc {
+                x: filleted.s
+                y: filleted.c + filleted.f
+                radiusX: filleted.f
+                radiusY: filleted.f
+            }
+            PathLine {
+                x: filleted.s
+                y: filleted.depth - filleted.s - filleted.rc
+            }
+            PathArc {
+                x: filleted.s + filleted.rc
+                y: filleted.depth - filleted.s
+                radiusX: filleted.rc
+                radiusY: filleted.rc
+                direction: PathArc.Counterclockwise
+            }
+            PathLine {
+                x: filleted.len - filleted.s - filleted.rc
+                y: filleted.depth - filleted.s
+            }
+            PathArc {
+                x: filleted.len - filleted.s
+                y: filleted.depth - filleted.s - filleted.rc
+                radiusX: filleted.rc
+                radiusY: filleted.rc
+                direction: PathArc.Counterclockwise
+            }
+            PathLine {
+                x: filleted.len - filleted.s
+                y: filleted.c + filleted.f
+            }
+            PathArc {
+                x: filleted.len - filleted.s + filleted.f
+                y: filleted.c
+                radiusX: filleted.f
+                radiusY: filleted.f
+            }
+            PathLine {
+                x: filleted.len - filleted.s + filleted.f
+                y: 0
+            }
         }
     }
 

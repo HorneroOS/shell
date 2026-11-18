@@ -197,15 +197,19 @@ such as `Error`/`Enter a value`, not a result, and the registry
 has no disabled-row concept — this is deliberately unlike the
 built-in calc row, which always shows one row for its own
 expression. There is no plugin activation hook in the contract,
-so activation copies `result.text` via `wl-copy`
-(`Quickshell.execDetached(["wl-copy", …])`), exactly the
-built-in calc provider's convention, and closes the launcher.
+so activation copies `result.text` via `wl-copy`, the
+built-in calc provider's convention, and closes the launcher. The host
+writes the text to `wl-copy`'s stdin rather than passing it as an
+argument, so extension-supplied text can never be parsed as a `wl-copy`
+option (a row whose text is `--clear` copies the literal string) and
+never appears in the process list.
 
 **Several rows (`results`).** An entrypoint that has more than one
 answer (a clipboard history, an emoji search) exposes a readonly var
 property `results` instead of, or next to, `result`: an array of
-`{ text, title?, subtitle?, glyph? }`. When `results` is an array it
-wins; each valid entry becomes one row (at most 24), `title` defaults to
+`{ text, title?, subtitle?, glyph? }`. When `results` is a list (a JS
+array or a QML `list<var>`, which reaches JavaScript as an array-like
+rather than a true array) it wins; each valid entry becomes one row (at most 24), `title` defaults to
 the one-line form of `text`, `subtitle` to the extension name and `glyph`
 to the extension icon (a Hornero Glyph name). Entries without a non-empty
 string `text` are dropped, `text` is bounded to 16 KiB and labels to 200

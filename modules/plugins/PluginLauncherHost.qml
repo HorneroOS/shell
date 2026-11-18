@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import qs.modules.launcher.services
 import qs.services
 import Quickshell
+import Quickshell.Io
 import QtQuick
 
 // Launcher plugin host (shell#250 follow-up, completing the
@@ -18,7 +19,10 @@ import QtQuick
 // { ok: bool, text: string }. This host sets query and reads
 // result; there is no plugin activation hook, so activation
 // copies the row's text with wl-copy, the built-in calc provider's
-// convention (see docs/LAUNCHER.md). An entrypoint may expose a
+// convention (see docs/LAUNCHER.md). The text is written to
+// wl-copy's stdin, never passed in argv: plugin-supplied text cannot
+// be read as a wl-copy option (e.g. a row text of "--clear") and does
+// not show up in the process list. An entrypoint may expose a
 // `results` array instead for several rows (additive, see
 // launcherplugin.js).
 //
@@ -45,6 +49,43 @@ Item {
     id: root
 
     visible: false
+
+    // Copy plugin row text to the clipboard through wl-copy's stdin.
+    // One copier is shared by every plugin; a copy requested while the
+    // previous one is still being handed over runs right after it, and
+    // only the latest pending text is kept.
+    function copyText(text: string): void {
+        copier.pending = text;
+        if (!copier.running)
+            copier.begin();
+    }
+
+    Process {
+        id: copier
+
+        property string pending: ""
+        property string sending: ""
+
+        function begin(): void {
+            copier.sending = copier.pending;
+            copier.pending = "";
+            copier.stdinEnabled = true;
+            copier.running = true;
+        }
+
+        command: ["wl-copy"]
+        stdinEnabled: true
+        onStarted: {
+            copier.write(copier.sending);
+            copier.sending = "";
+            // Closing stdin ends the paste data; wl-copy then serves it.
+            copier.stdinEnabled = false;
+        }
+        onRunningChanged: {
+            if (!copier.running && copier.pending !== "")
+                copier.begin();
+        }
+    }
 
     StableList {
         id: stable
@@ -79,7 +120,7 @@ Item {
                 if (!Providers.builtinsRegistered)
                     return;
                 if (!Providers.launcherContractOk(item)) {
-                    Plugins.logDiagnostic(slot.pluginId, "launcher-contract-missing", "launcher entrypoint must expose a settable string 'query' and a readonly var 'result' shaped {ok: bool, text: string}; provider not registered");
+                    Plugins.logDiagnostic(slot.pluginId, "launcher-contract-missing", "launcher entrypoint must expose a settable string 'query' and either a readonly var 'results' list of {text, title?, subtitle?, glyph?} or a readonly var 'result' shaped {ok: bool, text: string}; provider not registered");
                     return;
                 }
                 const ok = Providers.registerProvider({
@@ -101,10 +142,10 @@ Item {
                     "activate": (result, list) => {
                         // No plugin activation hook exists in the
                         // contract: copy the result text, exactly
-                        // like the built-in calc provider row
-                        // (wl-copy via Quickshell.execDetached).
+                        // like the built-in calc provider row, but via
+                        // wl-copy's stdin (root.copyText), never argv.
                         if (result && result.payload && typeof result.payload.text === "string" && result.payload.text !== "")
-                            Quickshell.execDetached(["wl-copy", result.payload.text]);
+                            root.copyText(result.payload.text);
                         if (list)
                             list.visibilities.launcher = false;
                     }

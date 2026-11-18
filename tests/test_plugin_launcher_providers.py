@@ -82,6 +82,9 @@ def test_contract_is_the_established_query_result_shape():
 def test_contract_missing_skipped_with_diagnostic_not_failed():
     assert "launcher-contract-missing" in HOST
     assert "Plugins.logDiagnostic(slot.pluginId, \"launcher-contract-missing\"" in HOST
+    # The diagnostic names both accepted shapes, not only `result`.
+    line = next(l for l in HOST.splitlines() if '"launcher-contract-missing"' in l)
+    assert "'results'" in line and "'result'" in line
     # Skip path must not markFailed (that would fail other surfaces).
     body = HOST[HOST.index("if (!Providers.launcherContractOk(item))"):]
     assert "markFailed" not in body[: body.index("registerProvider")]
@@ -165,7 +168,16 @@ console.log(JSON.stringify([
 
 
 def test_activation_copies_result_text_wl_copy_like_calc():
-    assert 'Quickshell.execDetached(["wl-copy", result.payload.text])' in HOST
+    # Plugin text goes to wl-copy's stdin, never into argv: a row text
+    # such as "--clear" must not be parsed as a wl-copy option.
+    assert "root.copyText(result.payload.text)" in HOST
+    assert 'command: ["wl-copy"]' in HOST
+    assert "stdinEnabled: true" in HOST
+    assert "copier.write(copier.sending)" in HOST
+    assert "copier.stdinEnabled = false" in HOST
+    assert "import Quickshell.Io" in HOST
+    assert 'execDetached(["wl-copy"' not in HOST
+    assert '"wl-copy", result' not in HOST and '"wl-copy", text' not in HOST
     calc_item = (ROOT / "modules/launcher/items/CalcItem.qml").read_text()
     assert 'Quickshell.execDetached(["wl-copy", root.result.text])' in calc_item
     assert "list.visibilities.launcher = false" in HOST
@@ -205,6 +217,27 @@ console.log(JSON.stringify([
     assert out[5] == 24  # bounded
     assert out[6] == 16384 and out[7] == 200
     assert out[8] == [] and out[9] == []
+
+
+def test_multi_row_accepts_qml_array_likes():
+    # QML list<var>/QVariantList properties reach JS as array-likes that
+    # fail Array.isArray; they must still count as `results`.
+    out = _run_js("""
+const arrayLike = {length: 2, 0: {text: "one"}, 1: {text: "two", title: "Two"}};
+console.log(JSON.stringify([
+  launcherContractOk({query: "", results: arrayLike}),
+  launcherRows("p", "P", "puzzle", {query: "", results: arrayLike}).map(r => r.title),
+  launcherContractOk({query: "", results: {length: 0}}),
+  launcherRows("p", "P", "puzzle", {query: "", results: {length: 0}, result: {ok: true, text: "x"}}),
+  launcherContractOk({query: "", results: "abc"}),
+  launcherRows("p", "P", "puzzle", {query: "", results: "abc", result: {ok: true, text: "x"}}).length,
+  launcherContractOk({query: "", results: {length: "2"}})
+]));""")
+    assert out[0] is True
+    assert out[1] == ["one", "Two"]
+    assert out[2] is True and out[3] == []  # empty list wins over result
+    assert out[4] is False and out[5] == 1  # a string is not a list
+    assert out[6] is False
 
 
 # --- Fault isolation -------------------------------------------------------

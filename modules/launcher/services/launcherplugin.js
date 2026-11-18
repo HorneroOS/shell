@@ -13,7 +13,8 @@
 // Optional multi-row form (additive): an entrypoint may instead (or as
 // well) expose a readonly var property `results`, an array of
 // { text: string, title?: string, subtitle?: string, glyph?: string }.
-// When `results` is an array it wins over `result`, each entry becomes
+// When `results` is a list (a JS array, or the array-like a QML
+// `list<var>`/QVariantList property hands back) it wins over `result`, each entry becomes
 // one row (at most MAX_ROWS) and activating a row copies that entry's
 // `text`. An entrypoint exposing only `result` behaves exactly as before.
 
@@ -26,12 +27,25 @@ function launcherPrefixFor(pluginId) {
     return id.startsWith("hornero-") ? id.slice("hornero-".length) : id;
 }
 
+// `results` as a plain JS array, or null when it is not a list. QML hands a
+// `list<var>`/QVariantList property back as an array-like sequence that
+// fails Array.isArray, so anything object-typed with a numeric length is
+// copied into a real array; strings (which also have a length) are not
+// lists.
+function _resultsList(value) {
+    if (Array.isArray(value))
+        return value;
+    if (value && typeof value === "object" && typeof value.length === "number" && value.length >= 0)
+        return Array.from(value);
+    return null;
+}
+
 function launcherContractOk(item) {
     if (!item || typeof item !== "object")
         return false;
     if (!("query" in item))
         return false;
-    if ("results" in item && Array.isArray(item.results))
+    if ("results" in item && _resultsList(item.results) !== null)
         return true;
     if (!("result" in item))
         return false;
@@ -71,12 +85,13 @@ function launcherRows(pluginId, displayName, icon, item) {
         return [];
     const fallbackIcon = typeof icon === "string" && icon.length > 0 ? icon : "puzzle";
     const fallbackSubtitle = typeof displayName === "string" && displayName.length > 0 ? displayName : pluginId;
-    if (!Array.isArray(item.results)) {
+    const list = _resultsList(item.results);
+    if (list === null) {
         const row = launcherRow(pluginId, displayName, icon, item.result);
         return row ? [row] : [];
     }
     const rows = [];
-    for (const entry of item.results) {
+    for (const entry of list) {
         if (rows.length >= MAX_ROWS)
             break;
         if (!entry || typeof entry !== "object" || typeof entry.text !== "string" || entry.text.length === 0)

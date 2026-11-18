@@ -62,10 +62,12 @@ central drawer cascade closing the launcher) and **leaving the
 `>ai` route or typing a new query** cancel the in-flight run.
 Only the final CommandResult line resolves the run.
 
-**Modes.** This is Ask mode: read-only, one-shot, no
-attachments, and the shell executes nothing for it. The inline ask
-always passes `--mode ask` (hornero#414/#415: horneroctl auto-denies
-approvals and stops a run that tries a tool in that mode); on a
+**Modes.** This is Ask mode: one-shot, no attachments, and the shell
+executes nothing for it. The inline ask always passes `--mode ask`
+(hornero#414/#415): horneroctl auto-denies every approval request and
+stops the run when it sees a tool execution. That is not a sandbox:
+Hermes may already have run a tool that needs no approval before
+horneroctl sees it and stops the run. On a
 horneroctl too old to know the flag the ask fails closed instead of
 running in the agent default. The surface never approves,
 clarifies or runs commands. When the gateway asks for a decision (a

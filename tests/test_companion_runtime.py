@@ -79,7 +79,7 @@ def test_idle_scheduler_and_manifest_v2_contract():
     assert "o.manifestVersion === 2" in RESOLVER
     assert "durations" in RESOLVER and "durations" in PLAYER
     assert "holdStill" in PLAYER
-    assert "followEvents" in HOST and "assistantBridge.events(" not in HOST
+    assert "followEvents" not in HOST and "assistantBridge.events(" not in HOST  # S2: no IPC follow
     assert "IdleScheduler {" in HOST
     assert "nestSource" in HOST and "nestSource" in RESOLVER
     # Live-host regressions: restored transient states normalize at
@@ -244,12 +244,14 @@ def test_assistant_bridge_horneroctl_mediated():
 
 def test_assistant_ipc_surface():
     assert "AssistantBridge" in HOST
-    for fn in ("ask(", "askStop(", "events("):
+    for fn in ("ask(", "askStop("):
         assert f"function {fn}" in HOST, f"companion IPC missing {fn}"
+    # S2: no IPC follows an arbitrary run.
+    assert "function events(" not in HOST
     # No IPC can decide a request (card-only, bound to the displayed one).
     for fn in ("approve(", "clarify(", "deny("):
         assert f"function {fn}" not in HOST, f"companion IPC must not expose {fn}"
-    assert 'askWith((text ?? "").toString(), "ask")' in HOST
+    assert 'askWith((text ?? "").toString(), "ask", [])' in HOST
     doc = (ROOT / "docs" / "IPC.md").read_text()
     assert "askStop()" in doc
 

@@ -21,6 +21,9 @@ Item {
 
     signal textEdited(string text)
     signal editingFinished
+    // Enter/Return only. editingFinished also fires on focus loss, so
+    // anything that sends or submits must use accepted.
+    signal accepted
 
     // Focus the inner text field (focusing the wrapper Item alone
     // leaves typing with nowhere to go).
@@ -82,6 +85,8 @@ Item {
             onEditingFinished: {
                 root.editingFinished();
             }
+
+            onAccepted: root.accepted()
         }
     }
 }

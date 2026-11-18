@@ -141,7 +141,15 @@ function escapeAction(busy) {
 
 // One line, bounded, no control characters (the question is user text).
 function cleanQuestion(text) {
-    var t = String(text === undefined || text === null ? "" : text).replace(/[\u0000-\u001f\u007f-\u009f\u2028-\u202e\u2066-\u2069]/g, " ").replace(/\s+/g, " ").trim();
+    var t = String(text === undefined || text === null ? "" : text)
+        .replace(/[\u0000-\u001f\u007f-\u009f\u2028-\u202e\u2066-\u2069]/g, " ")
+        // Invisible format characters (zero-width, joiners, word joiner,
+        // invisible operators, BOM, variation selectors, tag characters)
+        // could hide text from the user: dropped, never sent.
+        .replace(/[\u200b-\u200f\u2060-\u2064\ufeff\ufe00-\ufe0f]/g, "")
+        .replace(/\udb40[\udc00-\udc7f]/g, "")
+        .replace(/\udb40[\udd00-\uddef]/g, "")
+        .replace(/\s+/g, " ").trim();
     return t.length > QUESTION_MAX ? t.slice(0, QUESTION_MAX) : t;
 }
 

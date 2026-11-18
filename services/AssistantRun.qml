@@ -86,12 +86,17 @@ Singleton {
         }));
     }
 
-    function decided(ok: bool, denied: bool, message: string): void {
+    // runId/requestId/detail name the request the decision was made on;
+    // a result for any other request is dropped (assistantrun.js).
+    function decided(ok: bool, denied: bool, message: string, runId: string, requestId: string, detail: string): void {
         root.apply(Run.reduce(root.run, {
             "type": "decision",
             "ok": ok,
             "denied": denied,
-            "message": message
+            "message": message,
+            "runId": runId,
+            "requestId": requestId,
+            "detail": detail
         }));
     }
 
@@ -131,6 +136,12 @@ Singleton {
     // Strict id shape for anything that reaches an argv or a URL path.
     function isValidRunId(id: string): bool {
         return Run.isValidRunId(id);
+    }
+
+    // Hidden characters made visible (⟦U+…⟧) for any untrusted text
+    // shown where it could disguise itself.
+    function visibleText(text: string): string {
+        return Run.visibleText(text, Run.DETAIL_CAP).text;
     }
 
     function isSafeLink(link: string): bool {

@@ -166,7 +166,7 @@ def test_malformed_lines_never_throw():
     assert out["state"]["text"] == "ok" and out["state"]["phase"] == "completed"
 
 
-def test_pending_survives_trace_lines_but_answer_text_clears_it():
+def test_pending_survives_trace_lines_and_answer_text():
     out = run_js("""
       let s = initial(); let r = reduce(s,{type:'begin'}); s=r.state; const q=s.seq;
       const L = o => { r = reduce(s,{type:'line',seq:q,line:JSON.stringify(o)}); s=r.state; };
@@ -175,17 +175,20 @@ def test_pending_survives_trace_lines_but_answer_text_clears_it():
       L({type:'delta',text:'moved on'});
       console.log(JSON.stringify({stillPending, after:s.phase, pending:s.pending}));
     """)
-    assert out["stillPending"] is True and out["after"] == "streaming" and out["pending"] is None
+    # Text never clears the card: only a decision on that request, a newer
+    # request or the final result does.
+    assert out["stillPending"] is True and out["after"] == "awaiting-approval" and out["pending"]["detail"] == "x"
 
 
 def test_decision_success_resumes_and_failure_keeps_request_with_error():
     out = run_js("""
       let s = initial(); let r = reduce(s,{type:'begin'}); s=r.state; const q=s.seq;
       r = reduce(s,{type:'line',seq:q,line:JSON.stringify({type:'run',text:'r10'})}); s=r.state;
+      r = reduce(s,{type:'line',seq:q,line:JSON.stringify({type:'approval.control',text:'p1@1'})}); s=r.state;
       r = reduce(s,{type:'line',seq:q,line:JSON.stringify({type:'approval',text:'x'})}); s=r.state;
-      r = reduce(s,{type:'decision',ok:false,message:'HTTP 409'}); s=r.state;
+      r = reduce(s,{type:'decision',ok:false,message:'HTTP 409',runId:'r10',requestId:'p1@1'}); s=r.state;
       const keep = {phase:s.phase, err:s.pending.error};
-      r = reduce(s,{type:'decision',ok:true}); s=r.state;
+      r = reduce(s,{type:'decision',ok:true,runId:'r10',requestId:'p1@1'}); s=r.state;
       console.log(JSON.stringify({keep, phase:s.phase, pending:s.pending}));
     """)
     assert out["keep"] == {"phase": "awaiting-approval", "err": "HTTP 409"}
@@ -196,7 +199,7 @@ def test_denied_decision_uses_denied_intent():
     out = run_js("""
       let s = initial(); let r = reduce(s,{type:'begin'}); s=r.state;
       r = reduce(s,{type:'line',seq:s.seq,line:JSON.stringify({type:'approval',text:'x'})}); s=r.state;
-      r = reduce(s,{type:'decision',ok:true,denied:true});
+      r = reduce(s,{type:'decision',ok:true,denied:true,runId:'',requestId:''});
       console.log(JSON.stringify(r.intents));
     """)
     assert out == [{"intent": "denied"}]
@@ -390,7 +393,7 @@ def test_replaced_request_never_merges_and_resets_decision_state():
       const L=o=>{ r=reduce(s,{type:'line',seq:q,line:JSON.stringify(o)}); s=r.state; };
       L({type:'run',text:'r1'}); L({type:'mode',text:'agent'});
       L({type:'approval.control',text:'p1@1'}); L({type:'approval',text:'first'});
-      r=reduce(s,{type:'decision',ok:false,message:'boom'}); s=r.state;
+      r=reduce(s,{type:'decision',ok:false,message:'boom',runId:'r1',requestId:'p1@1'}); s=r.state;
       const err=s.pending.error;
       L({type:'approval.control',text:'p2@1'}); L({type:'approval',text:'second'});
       console.log(JSON.stringify({err, id:s.pending.requestId, detail:s.pending.detail, e2:s.pending.error, dec:s.pending.deciding}));

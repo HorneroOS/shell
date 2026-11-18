@@ -80,7 +80,10 @@ var STRINGS = {
     "mic.idle": { en: "Microphone off", es: "Micrófono apagado" },
     "mic.cancel": { en: "Discard recording", es: "Descartar grabación" },
     "mic.send": { en: "Stop and send", es: "Detener y enviar" },
-    "mic.auto-stopped": { en: "Recording stopped after 2 minutes.", es: "La grabación se detuvo a los 2 minutos." },
+    "mic.auto-stopped": { en: "Recording stopped after 2 minutes. Attach it or discard it.", es: "La grabación se detuvo a los 2 minutos. Adjúntala o descártala." },
+    "mic.held": { en: "Recording stopped at 2 minutes. Not attached yet.", es: "La grabación se detuvo a los 2 minutos. Aún no está adjunta." },
+    "mic.attach": { en: "Attach", es: "Adjuntar" },
+    "mic.discard": { en: "Discard", es: "Descartar" },
 
     "timeline.title": { en: "Activity", es: "Actividad" },
     "timeline.empty": { en: "No activity yet.", es: "Todavía no hay actividad." },

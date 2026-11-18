@@ -213,7 +213,10 @@ function parseFrame(line) {
 // "name: delta" (progress).
 function classifyTool(text) {
     var first = text.charAt(0);
-    var body = text.slice(1).trim();
+    // Only a status glyph is stripped; a progress line ("name: delta")
+    // starts with the tool name itself.
+    var glyph = first === "▸" || first === "✓" || first === "✗";
+    var body = glyph ? text.slice(1).trim() : text.trim();
     var name = body;
     var preview = "";
     var idx = body.indexOf(": ");
@@ -320,7 +323,11 @@ function reduce(prev, event) {
     }
 
     if (event.type === "decision") {
-        if (!state.pending)
+        // A decision result applies only to the request it was made on:
+        // the same run, and the same bound request id (approval) or the
+        // same question text (clarification). A late result for an
+        // earlier request never clears a newer one.
+        if (!state.pending || !decisionMatches(state.pending, event))
             return result(state, intents);
         if (event.ok) {
             state.pending = null;
@@ -371,14 +378,13 @@ function reduce(prev, event) {
         }
         if (f.kind === "delta") {
             state.text = (state.text + f.text).slice(-TEXT_CAP);
-            // Answer text after a pending request means the run moved
-            // on (decided elsewhere, e.g. the CLI). Trace lines alone
-            // never clear a pending request: it stays answerable.
-            if (isPending(state))
-                state.pending = null;
-            if (state.phase === "starting" || isPending(state))
+            // Text never clears a pending request: only a decision on
+            // that exact request, a newer request or the final result
+            // does. The card stays until then.
+            if (state.phase === "starting")
                 state.phase = "streaming";
-            intents.push({ intent: state.activeTools > 0 ? "acting" : "speaking" });
+            if (!isPending(state))
+                intents.push({ intent: state.activeTools > 0 ? "acting" : "speaking" });
         } else if (f.kind === "thinking") {
             var last = state.timeline[state.timeline.length - 1];
             if (last && last.kind === "thinking") {
@@ -500,17 +506,29 @@ function handoffRecord(info) {
     var kind = info.kind === "approval" || info.kind === "clarify" ? info.kind : "blocked";
     var v = visibleText(info.detail, DETAIL_CAP);
     var src = info.source === "radio" ? "radio" : "launcher";
+    var vq = visibleText(q, TEXT_CAP);
     return {
         source: src,
-        question: clip(q, TEXT_CAP),
+        question: vq.text,
+        questionFlagged: vq.flagged,
         kind: kind,
         detail: v.text,
         truncated: v.truncated,
-        flagged: v.flagged,
+        flagged: v.flagged || vq.flagged,
         runId: isValidRunId(info.runId) ? info.runId : "",
         mode: "ask",
         actionable: false
     };
+}
+
+// event: {runId, requestId, detail}. Approvals are matched by run and
+// bound request id; clarifications by run and the displayed question.
+function decisionMatches(pending, event) {
+    if (!event || pending.runId !== (event.runId || ""))
+        return false;
+    if (pending.kind === "approval")
+        return (event.requestId || "") === pending.requestId;
+    return (event.detail || "") === pending.detail;
 }
 
 function settleExit(state, event) {

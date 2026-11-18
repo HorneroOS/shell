@@ -18,6 +18,26 @@ ColumnLayout {
 
     readonly property string lang: root.bridge.lang
 
+    // The answer goes to the question shown here, never to one that
+    // replaced it (the bridge compares the text).
+    function send(): void {
+        const pend = root.bridge.pendingClarify;
+        if (!pend || clarifyInput.text.trim() === "")
+            return;
+        root.bridge.clarify(pend.runId, clarifyInput.text, root.answeringDetail !== "" ? root.answeringDetail : root.shownDetail);
+        clarifyInput.text = "";
+        root.answeringDetail = "";
+    }
+
+    readonly property string shownDetail: root.bridge.pendingClarify ? root.bridge.pendingClarify.detail : ""
+    // The question on screen when the user started typing the answer.
+    property string answeringDetail: ""
+    onShownDetailChanged: {
+        // A different question: drop the half-typed answer to the old one.
+        clarifyInput.text = "";
+        root.answeringDetail = "";
+    }
+
     Layout.fillWidth: true
     visible: root.bridge.pendingClarify !== null
     spacing: Appearance.spacing.small
@@ -48,11 +68,12 @@ ColumnLayout {
 
             Layout.fillWidth: true
             horizontalAlignment: TextInput.AlignLeft
-            onEditingFinished: {
-                if (text.trim() !== "" && root.bridge.pendingClarify) {
-                    root.bridge.clarify(root.bridge.pendingClarify.runId, text);
-                    text = "";
-                }
+            // Enter only: an answer is never sent because focus left the
+            // field (editingFinished fires on blur too).
+            onAccepted: root.send()
+            onTextEdited: {
+                if (root.answeringDetail === "")
+                    root.answeringDetail = root.shownDetail;
             }
         }
 
@@ -60,12 +81,7 @@ ColumnLayout {
             text: AssistantCopy.t("clarify.send", root.lang)
             type: TextButton.Filled
             enabled: !root.bridge.decisionBusy
-            onClicked: {
-                if (root.bridge.pendingClarify) {
-                    root.bridge.clarify(root.bridge.pendingClarify.runId, clarifyInput.text);
-                    clarifyInput.text = "";
-                }
-            }
+            onClicked: root.send()
         }
     }
 }

@@ -154,7 +154,8 @@ Singleton {
         property int tipIndex: 0
         property int chatHistoryLimit: 50
         property bool chatStreaming: true
-        property string chatMode: "agent"
+        // Fail closed: read-only Ask until the user picks Agent.
+        property string chatMode: "ask"
         // Visual reboot (schemaVersion 2): living-companion behavior.
         property bool idleAnimEnabled: true
         property string activityLevel: "normal"
@@ -390,7 +391,7 @@ Singleton {
         if (persist.chatHistoryLimit < 0 || persist.chatHistoryLimit > 500)
             persist.chatHistoryLimit = 50;
         if (!["ask", "agent", "chat"].includes(persist.chatMode))
-            persist.chatMode = "agent";
+            persist.chatMode = "ask";
         if (!["calm", "normal", "lively"].includes(persist.activityLevel))
             persist.activityLevel = "normal";
         if (persist.nestStage < 0 || persist.nestStage > 4)
@@ -521,7 +522,7 @@ Singleton {
     }
 
     function setChatMode(mode: string): void {
-        persist.chatMode = ["ask", "agent", "chat"].includes(mode) ? mode : "agent";
+        persist.chatMode = ["ask", "agent", "chat"].includes(mode) ? mode : "ask";
     }
 
     function setSkin(skin: string): void {
@@ -761,7 +762,7 @@ Singleton {
                 if (typeof o.chatStreaming === "boolean")
                     persist.chatStreaming = o.chatStreaming;
                 if (typeof o.chatMode === "string")
-                    persist.chatMode = o.chatMode;
+                    persist.chatMode = ["ask", "agent", "chat"].includes(o.chatMode) ? o.chatMode : "ask";
                 if (typeof o.idleAnimEnabled === "boolean")
                     persist.idleAnimEnabled = o.idleAnimEnabled;
                 if (typeof o.activityLevel === "string")

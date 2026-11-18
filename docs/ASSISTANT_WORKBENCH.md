@@ -18,7 +18,7 @@ gateway key and never decides policy.
 | Streaming answer | `ask --json --stream` NDJSON `delta` frames + final CommandResult | `AssistantBridge` -> `AssistantRun` | live text, capped |
 | Activity trace | `thinking`/`tool`/`commentary` frames from `assistant_event_trace` | timeline in Workbench, trace toggle in panel | gateway-emitted activity, not raw reasoning |
 | Sessions | `sessions`/`sessions new\|use`, continuity key per session and workspace | session bar, History tab | Hermes owns conversations; shell keeps a capped presentation cache |
-| Modes Ask/Agent/Chat | `ask --mode` + session mode; Ask read-only and auto-denies approvals, Chat no authority; escalation guard | mode buttons (panel + Workbench), inline ask uses `--mode ask` | gateway has no per-run tool suppression: horneroctl stops a run that runs tools in Ask/Chat (documented residual) |
+| Modes Ask/Agent/Chat | `ask --mode` + session mode; Ask auto-denies approvals (not a sandbox, see §5), Chat no authority; escalation guard | mode buttons (panel + Workbench), inline ask uses `--mode ask` | gateway has no per-run tool suppression: horneroctl stops a run that runs tools in Ask/Chat (documented residual) |
 | Attachments | `--attach` (allowlist, caps, secret-path refusal) | paperclip, chips, Artifacts tab | the backend lists no agent-created files |
 | Voice notes | audio attachment, Hermes transcribes | explicit mic, elapsed time, discard, 2 min cap, file removed after the run | no ambient mic, no wake word, no TTS (not backed) |
 | Approvals | `approval.request` -> `approve <run-id> approve\|deny` (maps to gateway `once`, never session/always); policy ABAC, capability broker, audit log | `ApprovalCard` | one decision, one action |
@@ -206,6 +206,21 @@ as read-only).
 
 ## 5. Security notes
 
+- Ask mode means approvals are auto-denied and the run is stopped when a
+  tool execution is seen. It is not a sandbox: Hermes may run a tool that
+  needs no approval before horneroctl sees it and stops the run.
+- Nothing typed outside the panel sends by itself: text staged by IPC
+  (`workbenchDraft`) or "Edit first" never takes focus, never replaces what
+  you are typing, and is sent only by the Send button, which names the mode.
+  Enter sends; losing focus never does (here and in the clarify card).
+- The default mode is Ask; Agent is used only when you pick it. A voice
+  message is always sent as an Ask run. Attachments go only with the panel's
+  own Send: IPC, hand-off, retry and voice never send queued files, and a clip
+  kept by the 2-minute auto-stop waits for Attach or Discard.
+- Decisions are bound to the request on screen: Allow/Deny carry the request
+  id displayed through the arm delay, clarify answers the question shown when
+  you started typing, and a decision result clears only that request. Stop is
+  disabled while a decision is being sent. There is no IPC to follow a run.
 - No secrets in QML: the shell reads status/model/session through horneroctl;
   detail strings are redacted in horneroctl before they reach the shell.
 - No silent screenshot or clipboard: copy is an explicit button; screenshots

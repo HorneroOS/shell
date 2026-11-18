@@ -125,7 +125,7 @@ cockpit preset and Signal Night theme itself).
 | `toaster` | `modules/Shortcuts.qml` | `info/success/warn/error(title, message, icon)` |
 | `picker` | `modules/areapicker/AreaPicker.qml` | `open()`, `openFreeze()` (+ close variants per file) |
 | `lock` | `modules/lock/Lock.qml` | `lock()`, `unlock()` |
-| `companion` | `modules/companion/CompanionHost.qml` | `summon()`, `hide()`, `toggle()`, `say(text, timeoutMs)`, `tip()`, `play(animation)`, `setState(state)`, `setSkin(skin)`, `resetPosition()`, `status()`, `ask(text)`, `askStop()`, `events(runId)`, `workbench()`, `workbenchDraft(text)`, `react(kind, text)`, `reactStatus()` |
+| `companion` | `modules/companion/CompanionHost.qml` | `summon()`, `hide()`, `toggle()`, `say(text, timeoutMs)`, `tip()`, `play(animation)`, `setState(state)`, `setSkin(skin)`, `resetPosition()`, `status()`, `ask(text)`, `askStop()`, `workbench()`, `workbenchDraft(text)`, `react(kind, text)`, `reactStatus()` |
 | `plugincommands` | `modules/plugins/PluginCommandHost.qml` | `list()` (JSON of every extension command), `run(pluginId, commandId, args)` (`ok` or a one-line error) |
 | `plugins` | `modules/plugins/PluginHost.qml` | `status()`, `reload()`, `reloadPlugin(id)`, `editDesktop()`, `doneDesktop()`, `toggleEditDesktop()`, `telemetry()` |
 | `debug` (first output), `debug.<output>` (every other output) | `modules/drawers/Drawers.qml` | `borders()`, `bars()`, `dump()`, `focusState()` (debug only) |
@@ -184,14 +184,18 @@ functions. The quick assistant entry point is Javi Radio
 (`javiradio`, below).
 
 External callers cannot start agent work or decide anything:
-`companion ask <text>` always runs in read-only **Ask** mode whatever
-the panel's mode is, and there is deliberately **no** IPC to approve,
-deny or answer a request: decisions happen only on the approval card
-in the shell UI, bound to the exact request displayed. A bar module or
-a PluginKit action can reach `workbench` and `workbenchDraft` (open
-UI, stage text), the `javiradio` calls and read-only `ask`; none of
-them can approve, deny, attach files or start an agent run. The shell
-writes no keybinding. See `docs/ASSISTANT_WORKBENCH.md`.
+`companion ask <text>` always runs in **Ask** mode (approvals
+auto-denied; not a sandbox) with no attachments, whatever the panel's
+mode is, and there is deliberately **no** IPC to approve, deny, answer
+a request or follow a run: decisions happen only on the approval card
+in the shell UI, bound to the exact request displayed. Text staged by
+`workbenchDraft` never takes focus, never replaces typed text and is
+sent only by the panel's Send button, which names the mode. A bar
+module or a PluginKit action can reach `workbench` and
+`workbenchDraft` (open UI, stage text), the `javiradio` calls and the
+Ask-mode `ask`; none of them can approve, deny, attach files or start
+an agent run. The shell writes no keybinding. See
+`docs/ASSISTANT_WORKBENCH.md`.
 
 ## Global shortcuts
 

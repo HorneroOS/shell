@@ -38,11 +38,19 @@ Rectangle {
             armTimer.restart();
     }
 
+    // The request id that has been on screen for the whole arm delay:
+    // decisions carry it, and the bridge refuses them if it is no longer
+    // the request that is waiting.
+    property string armedRequest: ""
+
     Timer {
         id: armTimer
 
         interval: 700
-        onTriggered: root.armed = true
+        onTriggered: {
+            root.armedRequest = root.pend ? root.pend.requestId : "";
+            root.armed = true;
+        }
     }
 
     readonly property var pend: root.bridge.pendingApproval
@@ -220,7 +228,7 @@ Rectangle {
             Row2 {
                 visible: root.lastTool() !== ""
                 label: qsTr("Tool")
-                value: root.lastTool()
+                value: AssistantRun.visibleText(root.lastTool())
             }
             Row2 {
                 label: AssistantCopy.t("approval.mode", root.lang)
@@ -278,14 +286,14 @@ Rectangle {
                 text: AssistantCopy.t("approval.deny", root.lang)
                 type: TextButton.Tonal
                 enabled: root.armed && !root.bridge.decisionBusy
-                onClicked: root.bridge.approve(root.pend.runId, "deny")
+                onClicked: root.bridge.approve(root.pend.runId, "deny", root.armedRequest)
             }
 
             TextButton {
                 text: AssistantCopy.t("approval.allow", root.lang)
                 type: TextButton.Tonal
                 enabled: root.armed && !root.bridge.decisionBusy && root.pend !== null && root.pend.mode === "agent" && root.pend.requestId !== "" && !root.pend.truncated
-                onClicked: root.bridge.approve(root.pend.runId, "approve")
+                onClicked: root.bridge.approve(root.pend.runId, "approve", root.armedRequest)
             }
         }
     }

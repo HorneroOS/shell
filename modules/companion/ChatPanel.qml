@@ -27,6 +27,10 @@ Item {
 
     readonly property int cardWidth: 392
     property string pendingLink: ""
+    // The input holds text staged from outside the panel (IPC
+    // `workbenchDraft`, a hand-off "Edit first"). Such text is sent only
+    // by the Send button, which names the mode; Enter does not send it.
+    property bool fromDraft: false
     // The conversation yields height to a pending decision so the
     // card is always fully on screen.
     readonly property int listHeight: AssistantRun.pendingDecision ? 96 : Math.min(360, Math.max(140, Screen.height - 520))
@@ -73,11 +77,18 @@ Item {
         target: root.bridge
 
         function onDraftChanged(): void {
-            if (root.bridge.draft !== "") {
-                input.text = root.bridge.draft;
-                root.bridge.draft = "";
-                input.forceActiveFocus();
+            if (root.bridge.draft === "")
+                return;
+            const staged = root.bridge.draft;
+            root.bridge.draft = "";
+            // Never replace what the user is typing, and never take the
+            // keyboard for text that came from outside.
+            if (input.text.trim() !== "") {
+                CompanionStore.say(qsTr("Kept what you were typing; the staged text was not inserted."), 5000);
+                return;
             }
+            input.text = AssistantRun.visibleText(staged);
+            root.fromDraft = true;
         }
     }
 
@@ -91,6 +102,16 @@ Item {
             return;
         root.bridge.ask(text);
         input.text = "";
+        root.fromDraft = false;
+    }
+
+    // Enter in the input. Staged text needs the Send button.
+    function acceptInput(): void {
+        if (root.fromDraft) {
+            CompanionStore.say(qsTr("This text was staged for you. Check it, then press Send (%1).").arg(root.t("mode." + CompanionStore.chatMode)), 6000);
+            return;
+        }
+        root.sendCurrent();
     }
 
     StyledRect {
@@ -559,7 +580,7 @@ Item {
                 StyledText {
                     Layout.fillWidth: true
                     Layout.minimumWidth: 0
-                    text: root.pendingLink
+                    text: AssistantRun.visibleText(root.pendingLink)
                     textFormat: Text.PlainText
                     font.family: Appearance.font.family.mono
                     font.pointSize: Appearance.font.size.smaller
@@ -580,6 +601,34 @@ Item {
                     text: qsTr("Cancel")
                     type: TextButton.Text
                     onClicked: root.pendingLink = ""
+                }
+            }
+
+            // -- Voice clip held after the 2-minute auto-stop -------------
+            RowLayout {
+                Layout.fillWidth: true
+                visible: root.bridge.heldClip !== ""
+                spacing: Appearance.spacing.small
+
+                StyledText {
+                    Layout.fillWidth: true
+                    Layout.minimumWidth: 0
+                    text: root.t("mic.held")
+                    font.pointSize: Appearance.font.size.smaller
+                    color: Signal.palette.ink
+                    wrapMode: Text.Wrap
+                }
+
+                TextButton {
+                    text: root.t("mic.attach")
+                    type: TextButton.Tonal
+                    onClicked: root.bridge.attachHeldClip()
+                }
+
+                TextButton {
+                    text: root.t("mic.discard")
+                    type: TextButton.Text
+                    onClicked: root.bridge.dropHeldClip()
                 }
             }
 
@@ -628,7 +677,13 @@ Item {
                     Layout.fillWidth: true
                     Layout.minimumWidth: 48
                     horizontalAlignment: TextInput.AlignLeft
-                    onEditingFinished: root.sendCurrent()
+                    // Enter only: editingFinished also fires when focus
+                    // leaves the field, which must never send anything.
+                    onAccepted: root.acceptInput()
+                    onTextChanged: {
+                        if (text === "")
+                            root.fromDraft = false;
+                    }
 
                     Keys.onEscapePressed: root.bridge.chatOpen = false
                 }
@@ -637,11 +692,15 @@ Item {
                     visible: root.bridge.busy || AssistantRun.pendingDecision
                     text: root.t("action.stop")
                     type: TextButton.Tonal
+                    // Not while a decision is on its way (it may already
+                    // be approved); the bridge refuses it too.
+                    enabled: !root.bridge.decisionBusy
                     onClicked: root.bridge.askStop()
                 }
 
                 TextButton {
-                    text: qsTr("Send")
+                    // The mode is always on the button that sends.
+                    text: qsTr("Send") + " · " + root.t("mode." + CompanionStore.chatMode)
                     type: TextButton.Filled
                     enabled: input.text.trim() !== "" || root.bridge.attachments.length > 0
                     onClicked: root.sendCurrent()
@@ -746,7 +805,8 @@ Item {
 
     onVisibleChanged: {
         if (visible) {
-            input.forceActiveFocus();
+            if (!root.fromDraft && root.bridge.draft === "")
+                input.forceActiveFocus();
             root.bridge.refreshStatus();
         }
     }

@@ -124,8 +124,10 @@ def test_pane_policy_controls_are_real_horneroctl_calls():
 
 
 def test_chat_modes_are_real_and_cannot_escalate():
-    assert 'askWith(text, CompanionStore.chatMode)' in BRIDGE and '"--mode", runMode' in BRIDGE
-    assert 'property string chatMode: "agent"' in STORE
+    assert 'root.askWith(text, CompanionStore.chatMode, files)' in BRIDGE and '"--mode", runMode' in BRIDGE
+    # Fail closed: Ask by default and for any unknown/corrupt value.
+    assert 'property string chatMode: "ask"' in STORE and 'chatMode: "agent"' not in STORE
+    assert ': "agent";' not in STORE
     assert "setChatMode" in STORE
     for mode in ('"ask"', '"agent"', '"chat"'):
         assert mode in PANEL
@@ -178,7 +180,7 @@ def test_approval_card_has_no_bulk_or_auto_consent():
     card = "\n".join(l for l in CARD.lower().splitlines() if not l.strip().startswith("//"))
     for banned in ("approve all", "always allow", "remember", "autoapprove", "auto-approve", "session\"", "always\""):
         assert banned not in card
-    assert 'bridge.approve(root.pend.runId, "approve")' in CARD
+    assert 'bridge.approve(root.pend.runId, "approve", root.armedRequest)' in CARD
     assert "forceActiveFocus" not in CARD and "focus: true" not in CARD
 
 
@@ -221,7 +223,10 @@ def test_companion_ipc_cannot_decide_anything():
     row = [l for l in doc.splitlines() if l.startswith("| `companion` |")][0]
     assert "approve(" not in row and "clarify(" not in row
     # External asks are always read-only.
-    assert 'assistantBridge.askWith((text ?? "").toString(), "ask")' in ipc
+    assert 'assistantBridge.askWith((text ?? "").toString(), "ask", [])' in ipc
+    # No IPC can follow an arbitrary run either (S2).
+    assert "function events(" not in ipc and "followEvents" not in ipc
+    assert "events(runId)" not in row
 
 
 def test_decision_follows_events_only_when_stream_is_gone_and_run_unsettled():
@@ -301,7 +306,7 @@ def test_radio_handoff_lands_in_the_workbench_with_the_request_visible():
     assert "approve(" not in card and "approval.allow" not in card
     assert "continueHandoff()" in card and "textFormat: Text.PlainText" in card
     cont = BRIDGE.split("function continueHandoff()")[1].split("function editHandoff")[0]
-    assert 'root.askWith(rec.question, "agent")' in cont
+    assert 'root.askWith(rec.question, "agent", [])' in cont
 
 
 def test_allow_is_only_for_agent_runs_in_the_shell_too():

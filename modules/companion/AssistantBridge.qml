@@ -82,7 +82,7 @@ Scope {
     function newChatSession(): void {
         const title = qsTr("Chat %1").arg(new Date().toLocaleTimeString());
         sessionActionProc.out = "";
-        sessionActionProc.command = ["horneroctl", "assistant", "sessions", "new", title, "--json"];
+        sessionActionProc.command = ["horneroctl", "assistant", "sessions", "new", "--json", "--", title];
         sessionActionProc.running = true;
         root.clearHistory();
     }
@@ -91,7 +91,7 @@ Scope {
         if (id === root.currentSession)
             return;
         sessionActionProc.out = "";
-        sessionActionProc.command = ["horneroctl", "assistant", "sessions", "use", id, "--json"];
+        sessionActionProc.command = ["horneroctl", "assistant", "sessions", "use", "--json", "--", id];
         sessionActionProc.running = true;
         root.clearHistory();
     }
@@ -184,23 +184,28 @@ Scope {
     // run (see services/assistantrun.js).
     property int askSeq: 0
 
+    // The panel's Send: the panel's mode and the files the user attached
+    // in the panel. Every other path (IPC, hand-off, retry, voice) calls
+    // askWith with its own explicit mode and attachment list.
     function ask(text: string): void {
-        root.askWith(text, CompanionStore.chatMode);
+        const files = root.attachments.slice();
+        root.attachments = [];
+        root.askWith(text, CompanionStore.chatMode, files);
     }
 
-    // `mode` is explicit per call: external entry points (IPC) always
-    // pass "ask", so nothing outside the panel can start an agent run.
-    function askWith(text: string, mode: string): void {
+    // `mode` and `files` are explicit per call: external entry points
+    // (IPC) always pass "ask" and no files, so nothing outside the panel
+    // can start an agent run or send a file the user queued.
+    function askWith(text: string, mode: string, files: var): void {
         const prompt = (text ?? "").toString().trim();
-        if (prompt === "" && root.attachments.length === 0)
+        const sentAttachments = Array.isArray(files) ? files.map(f => f.toString()) : [];
+        if (prompt === "" && sentAttachments.length === 0)
             return;
         if (root.busy || AssistantRun.pendingDecision) {
             CompanionStore.say(AssistantCopy.t("status.running", root.lang), 4000);
             return;
         }
         const runMode = ["ask", "agent", "chat"].includes(mode) ? mode : "ask";
-        const sentAttachments = root.attachments.slice();
-        root.attachments = [];
         root.lastPrompt = prompt;
         const shown = prompt === "" ? qsTr("(attachment)") : prompt;
         root.pushHistory("user", sentAttachments.length > 0 ? `${shown} 📎 ${sentAttachments.length}` : shown);
@@ -246,7 +251,7 @@ Scope {
         const rec = AssistantRun.handoffRecord;
         if (!rec || root.busy || AssistantRun.pendingDecision)
             return;
-        root.askWith(rec.question, "agent");
+        root.askWith(rec.question, "agent", []);
     }
 
     // Put the handed-off question in the input instead (edit before
@@ -284,7 +289,11 @@ Scope {
     function copyLastAnswer(): void {
         for (let i = root.history.length - 1; i >= 0; i--) {
             if (root.history[i].role === "assistant") {
-                copyProcess.command = ["wl-copy", root.history[i].text.toString()];
+                // Via stdin: the answer never appears in an argv (visible
+                // to every process of the user in /proc).
+                root.copyText = root.history[i].text.toString();
+                copyProcess.running = false;
+                copyProcess.command = ["wl-copy"];
                 copyProcess.running = true;
                 CompanionStore.say("Answer copied.", 3000);
                 return;
@@ -293,9 +302,13 @@ Scope {
         CompanionStore.say("Nothing to copy yet.", 3000);
     }
 
+    property string copyText: ""
+
+    // Retry re-sends the text only (no attachments), in the mode the
+    // panel shows now.
     function retryLast(): void {
         if (root.lastPrompt !== "" && !root.busy)
-            root.ask(root.lastPrompt);
+            root.askWith(root.lastPrompt, CompanionStore.chatMode, []);
     }
 
     function addAttachment(path: string): void {
@@ -354,13 +367,33 @@ Scope {
         recordProcess.running = false;
         CompanionStore.requestState("idle");
         if (send && root.recordPath !== "") {
-            root.addAttachment(root.recordPath);
-            root.ask(qsTr("Transcribe the attached audio and treat the transcription as my message. Answer it."));
+            // A spoken message is always a read-only Ask run: speech is
+            // not a reviewed, typed instruction, so it never acts.
+            root.askWith(qsTr("Transcribe the attached audio and treat the transcription as my message. Answer it."), "ask", [root.recordPath]);
         } else if (keep === true && root.recordPath !== "") {
-            root.addAttachment(root.recordPath);
+            // Auto-stop: the clip is kept for the user to confirm
+            // (Attach) or drop; it is never attached on its own.
+            root.heldClip = root.recordPath;
         } else {
             root.discardRecording();
         }
+    }
+
+    // A clip held after the 2-minute auto-stop, waiting for the user.
+    property string heldClip: ""
+
+    function attachHeldClip(): void {
+        if (root.heldClip === "")
+            return;
+        root.addAttachment(root.heldClip);
+        root.heldClip = "";
+    }
+
+    function dropHeldClip(): void {
+        if (root.heldClip === "")
+            return;
+        root.removeVoiceFile(root.heldClip);
+        root.heldClip = "";
     }
 
     function discardRecording(): void {
@@ -410,9 +443,13 @@ Scope {
     // actions on a specific run. Nothing here answers Hermes on its
     // own, there is no "approve all", and `approve` is the single
     // action `once` on the backend.
-    function approve(runId: string, decision: string): void {
+    // `shownRequest` is the request id the card displayed when the user
+    // clicked: the decision is refused unless it is still the one
+    // waiting.
+    function approve(runId: string, decision: string, shownRequest: string): void {
         const id = (runId ?? "").toString().trim();
         const choice = (decision ?? "").toString().trim();
+        const shown = (shownRequest ?? "").toString();
         if (!AssistantRun.isValidRunId(id) || (choice !== "approve" && choice !== "deny")) {
             CompanionStore.say("I need a valid run id and an approve or deny decision.", 6000);
             return;
@@ -422,7 +459,7 @@ Scope {
         // The decision must name the run AND the exact request that
         // is waiting: a stale card cannot decide another request.
         const pend = AssistantRun.pending;
-        if (!pend || pend.kind !== "approval" || pend.runId !== id) {
+        if (AssistantRun.phase !== "awaiting-approval" || !pend || pend.kind !== "approval" || pend.runId !== id || pend.requestId !== shown) {
             CompanionStore.say(qsTr("That request is no longer waiting."), 5000);
             return;
         }
@@ -443,6 +480,8 @@ Scope {
         root.decisionKind = "approval";
         root.decisionDenied = choice === "deny";
         root.decisionDetail = pend.detail;
+        root.decisionRun = id;
+        root.decisionRequest = pend.requestId;
         let cmd = ["horneroctl", "assistant", "approve", id, choice, "--json"];
         if (pend.requestId !== "")
             cmd = cmd.concat(["--request", pend.requestId]);
@@ -450,13 +489,15 @@ Scope {
         decisionProcess.running = true;
     }
 
-    function clarify(runId: string, answer: string): void {
+    // `shownDetail` is the question the card displayed when the user
+    // answered: an answer is never sent to a different question.
+    function clarify(runId: string, answer: string, shownDetail: string): void {
         const id = (runId ?? "").toString().trim();
         const text = (answer ?? "").toString().trim();
         if (!AssistantRun.isValidRunId(id) || text === "" || root.decisionBusy)
             return;
         const pend = AssistantRun.pending;
-        if (!pend || pend.kind !== "clarify" || pend.runId !== id) {
+        if (AssistantRun.phase !== "awaiting-clarification" || !pend || pend.kind !== "clarify" || pend.runId !== id || pend.detail !== (shownDetail ?? "").toString()) {
             CompanionStore.say(qsTr("That question is no longer waiting."), 5000);
             return;
         }
@@ -465,10 +506,14 @@ Scope {
         root.decisionKind = "clarify";
         root.decisionDenied = false;
         root.decisionDetail = pend.detail;
+        root.decisionRun = id;
+        root.decisionRequest = "";
         decisionProcess.command = ["horneroctl", "assistant", "clarify", id, "--json", "--", text];
         decisionProcess.running = true;
     }
 
+    property string decisionRun: ""
+    property string decisionRequest: ""
     property string decisionKind: ""
     property bool decisionDenied: false
     property string decisionDetail: ""
@@ -488,6 +533,12 @@ Scope {
     function askStop(): void {
         if (!root.busy && !AssistantRun.pendingDecision)
             return;
+        // A decision is on its way to the gateway: stopping now would
+        // race it (the action may already be approved). Wait for it.
+        if (root.decisionBusy) {
+            CompanionStore.say(qsTr("A decision is being sent; stop once it is recorded."), 5000);
+            return;
+        }
         const id = AssistantRun.runId;
         const partial = AssistantRun.answerText;
         const wasPending = AssistantRun.pendingDecision;
@@ -573,18 +624,41 @@ Scope {
         const pend = AssistantRun.pending;
         if (!pend)
             return;
-        const text = JSON.stringify({
+        root.writeSnapshot(JSON.stringify({
             "runId": pend.runId,
             "kind": pend.kind,
             "detail": pend.detail
-        });
-        // Private dir and file (umask 077): the snapshot names a run and a
-        // redacted request, nothing else, but it is still user-private.
-        pendingWriter.exec(["sh", "-c", "umask 077; d=\"$(dirname \"$1\")\"; mkdir -p -m 700 \"$d\" && chmod 700 \"$d\" && printf '%s' \"$2\" > \"$1.tmp\" && mv -f \"$1.tmp\" \"$1\"", "sh", root.pendingPath, text]);
+        }));
     }
 
     function clearPendingSnapshot(): void {
-        pendingWriter.exec(["rm", "-f", "--", root.pendingPath]);
+        root.writeSnapshot("");
+    }
+
+    // One writer at a time, last request wins: `wantedSnapshot` is what
+    // the file should hold ("" = no file). A request made while a write
+    // runs is applied when it exits, never by restarting the process
+    // mid-write. The text goes through stdin (never argv, which other
+    // processes of the user can read), into a private dir/file.
+    property string wantedSnapshot: ""
+    property string writingSnapshot: ""
+    property bool snapshotDirty: false
+
+    function writeSnapshot(text: string): void {
+        root.wantedSnapshot = text;
+        root.snapshotDirty = true;
+        if (!pendingWriter.running)
+            root.flushSnapshot();
+    }
+
+    function flushSnapshot(): void {
+        if (!root.snapshotDirty || pendingWriter.running)
+            return;
+        root.snapshotDirty = false;
+        root.writingSnapshot = root.wantedSnapshot;
+        pendingWriter.stdinEnabled = true;
+        pendingWriter.command = root.writingSnapshot === "" ? ["rm", "-f", "--", root.pendingPath] : ["sh", "-c", "umask 077; d=\"$(dirname \"$1\")\"; mkdir -p -m 700 \"$d\" && chmod 700 \"$d\" && cat > \"$1.tmp\" && mv -f \"$1.tmp\" \"$1\"", "sh", root.pendingPath];
+        pendingWriter.running = true;
     }
 
     function verifyRestoredRequest(snap: var): void {
@@ -660,11 +734,13 @@ Scope {
     Process {
         id: pendingWriter
 
-        function exec(cmd: var): void {
-            pendingWriter.running = false;
-            pendingWriter.command = cmd;
-            pendingWriter.running = true;
+        stdinEnabled: true
+        onStarted: {
+            if (root.writingSnapshot !== "")
+                pendingWriter.write(root.writingSnapshot);
+            pendingWriter.stdinEnabled = false;
         }
+        onExited: (exitCode, exitStatus) => root.flushSnapshot()
     }
 
     Process {
@@ -806,7 +882,7 @@ Scope {
         const m = (id ?? "").toString().trim();
         if (m === "" || m.indexOf(" ") !== -1)
             return;
-        modelSetProc.command = ["horneroctl", "assistant", "model", "set", m, "--yes", "--json"];
+        modelSetProc.command = ["horneroctl", "assistant", "model", "set", "--yes", "--json", "--", m];
         modelSetProc.running = true;
     }
 
@@ -839,6 +915,16 @@ Scope {
 
     Process {
         id: copyProcess
+
+        stdinEnabled: true
+        onStarted: {
+            copyProcess.write(root.copyText);
+            copyProcess.stdinEnabled = false;
+        }
+        onExited: (exitCode, exitStatus) => {
+            root.copyText = "";
+            copyProcess.stdinEnabled = true;
+        }
     }
     Process {
         id: recordProcess
@@ -914,7 +1000,7 @@ Scope {
             const ok = !!(payload && payload.ok === true);
             const message = payload && payload.message ? payload.message.toString() : qsTr("The decision was not recorded. Check: horneroctl assistant status");
             if (ok) {
-                const runId = AssistantRun.runId;
+                const runId = root.decisionRun;
                 // The original stream may still be open (the gateway
                 // keeps it while waiting): then it simply continues.
                 // Only a closed stream needs a follow-up events call.
@@ -930,14 +1016,14 @@ Scope {
                             "detail": root.decisionDetail,
                             "ts": Date.now()
                         }]).slice(-30);
-                AssistantRun.decided(true, root.decisionDenied, message);
+                AssistantRun.decided(true, root.decisionDenied, message, root.decisionRun, root.decisionRequest, root.decisionDetail);
                 root.sayIfClosed(message, 9000);
                 // The run continues after a decision; follow its events
                 // only when its stream is gone and it is still unsettled.
                 if (runId !== "" && needFollow)
                     root.followEvents(runId);
             } else {
-                AssistantRun.decided(false, false, message);
+                AssistantRun.decided(false, false, message, root.decisionRun, root.decisionRequest, root.decisionDetail);
                 root.sayIfClosed(message, 9000);
             }
         }

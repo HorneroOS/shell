@@ -1126,7 +1126,7 @@ Scope {
             CompanionStore.summon();
             CompanionStore.forceVisible = true;
             assistantBridge.chatOpen = true;
-            assistantBridge.askWith((text ?? "").toString(), "ask");
+            assistantBridge.askWith((text ?? "").toString(), "ask", []);
         }
 
         // Level C: the conversation panel expanded into the Workbench
@@ -1163,9 +1163,8 @@ Scope {
         function askStop(): void {
             assistantBridge.askStop();
         }
-
-        function events(runId: string): void {
-            assistantBridge.followEvents((runId ?? "").toString());
-        }
+        // No `events(runId)`: following an arbitrary run from IPC could
+        // put another run's request in front of the user. Runs are
+        // followed only by the bridge itself, after a decision.
     }
 }

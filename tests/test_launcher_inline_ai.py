@@ -162,7 +162,8 @@ def test_ai_registered_as_builtin_provider():
     assert '"prefix": "ai"' in PROVIDERS
     assert '"icon": "feather"' in PROVIDERS
     assert "InlineAsk.ask" in PROVIDERS
-    assert "InlineAsk.stop()" in PROVIDERS
+    # Stop only the launcher's own run (S9).
+    assert 'InlineAsk.cancel("launcher")' in PROVIDERS and "InlineAsk.stop()" not in PROVIDERS
     # Built-ins register before builtinsRegistered flips (plugins after).
     ai_at = PROVIDERS.index('"id": "ai"')
     flip_at = PROVIDERS.index("root.builtinsRegistered = true")
@@ -189,8 +190,8 @@ def test_ai_row_shows_thinking_and_streamed_text():
     assert "Javi is thinking" in AI_ITEM
     assert "InlineAsk.text" in AI_ITEM
     assert "InlineAsk.errorText" in AI_ITEM
-    assert "InlineAsk.ask(root.question)" in AI_ITEM
-    assert "InlineAsk.stop()" in AI_ITEM
+    assert 'InlineAsk.ask(root.question, "launcher")' in AI_ITEM
+    assert 'InlineAsk.cancel("launcher")' in AI_ITEM and "InlineAsk.stop()" not in AI_ITEM
 
 
 # --- Quick surface never escalates (typed frames) ---------------------
@@ -259,4 +260,5 @@ def test_handoff_is_emitted_only_by_the_user_and_only_for_the_launchers_own_run(
     # No IPC round-trip any more: the record goes straight to the bridge.
     assert "workbenchDraft" not in INLINE_QML
     ai = (ROOT / "modules/launcher/items/AiItem.qml").read_text()
-    assert 'InlineAsk.needsWorkbench && InlineAsk.owner === "launcher"' in ai
+    assert 'readonly property bool mine: InlineAsk.owner === "launcher"' in ai
+    assert "InlineAsk.needsWorkbench && root.mine" in ai

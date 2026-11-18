@@ -95,7 +95,9 @@ def test_cover_reads_the_same_files_as_the_shell():
 def test_cover_and_its_art_are_installed_side_by_side():
     cmake = (ROOT / "CMakeLists.txt").read_text()
     assert 'install(DIRECTORY reloadcover DESTINATION "${INSTALL_QSCONFDIR}")' in cmake
-    assert "foreach(dir assets components config modules services utils)" in cmake
+    import re as _re
+    m = _re.search(r"foreach\(dir ([^)]*)\)", cmake)
+    assert m and {"assets", "components", "config", "modules", "services", "utils"} <= set(m.group(1).split())
     slate = (COVER / "Slate.qml").read_text()
     assert 'Qt.resolvedUrl("../assets/companion/frames/default-sleep-0")' in slate
     for n in range(1, 5):

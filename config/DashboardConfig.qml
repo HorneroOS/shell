@@ -3,6 +3,10 @@ import Quickshell.Io
 JsonObject {
     property bool enabled: true
     property bool showOnHover: true
+    // Home composition: "console" (clock, tall media deck hero, thin weather
+    // strip), "classic" (the earlier even grid) or "compact" (classic
+    // without the media row).
+    property string composition: "console"
     property int mediaUpdateInterval: 500
     property int resourceUpdateInterval: 1000
     // Probes that fork a process (sensors, GPU read) and the lsblk disk scan

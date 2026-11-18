@@ -120,6 +120,9 @@ Item {
                     rootItem: root
                 }
 
+                // Home composition (dashboard.composition)
+                CompositionSection {}
+
                 // Media deck (dashboard.media)
                 MediaDeckSection {}
 

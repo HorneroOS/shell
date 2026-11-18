@@ -542,6 +542,7 @@ Singleton {
         return {
             enabled: dashboard.enabled,
             showOnHover: dashboard.showOnHover,
+            composition: dashboard.composition,
             mediaUpdateInterval: dashboard.mediaUpdateInterval,
             resourceUpdateInterval: dashboard.resourceUpdateInterval,
             sensorUpdateInterval: dashboard.sensorUpdateInterval,

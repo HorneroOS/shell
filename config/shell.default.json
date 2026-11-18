@@ -422,6 +422,7 @@
   "dashboard": {
     "enabled": true,
     "showOnHover": true,
+    "composition": "console",
     "mediaUpdateInterval": 500,
     "resourceUpdateInterval": 1000,
     "sensorUpdateInterval": 2000,

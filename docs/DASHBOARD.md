@@ -49,3 +49,23 @@ Control Center > Dashboard > Media deck. Each value persists in
 The spectrum is motion, so it is not drawn when motion is off (Gaming mode,
 `appearance.reducedMotion`, or the system reduced-motion preference). Javi
 also needs the mascot (Appearance > Atmosphere).
+
+## Composition
+
+Control Center > Dashboard > Layout, `dashboard.composition`, with a
+reset. The open dashboard follows the choice live.
+
+| Choice | Layout |
+| --- | --- |
+| Console (default) | The clock (display numerals and a seconds ruler) and the station on top, calendar and resources below, a thin weather strip across the bottom, and the media deck as the tall hero on the right spanning every row. |
+| Classic | The earlier even grid: station, clock and weather on top, calendar and resources below, the media deck as a strip at the bottom. |
+| Compact | Classic without the media deck. |
+
+Every frame keeps radius 3 and its channel eyebrow (`01 · CLOCK`, ...);
+hierarchy comes from size and position, not rounding. Gaps between frames
+are `spacing.normal` (12 at scale 1). Frames are declared in reading order,
+so keyboard focus follows it.
+
+The seconds ruler under the console clock has 60 hairline ticks, every
+fifth taller; the elapsed ones are `signal` amber. It steps once a second
+and never sweeps.

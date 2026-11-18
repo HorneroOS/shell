@@ -82,7 +82,7 @@ StyledRect {
         height: root.vertical ? root.tickLength : 2
         x: root.vertical ? (root.edge === "right" ? root.tickGap : root.width - 2 - root.tickGap) : Math.round((root.width - width) / 2)
         y: root.vertical ? Math.round((root.height - height) / 2) : (root.edge === "bottom" ? root.tickGap : root.height - 2 - root.tickGap)
-        radius: 1
+        radius: 1 // fixed: 2 px tick end rounding, not a theme corner
         color: root.tone.signal
     }
 

@@ -253,7 +253,7 @@ Item {
         height: root.vertical ? len : 2
         x: root.vertical ? (root.contentAtLeft ? 1 : root.width - 3) : Math.round((root.numeralBox - width) / 2)
         y: root.vertical ? Math.round((root.numeralBox - height) / 2) : (root.contentAtTop ? 1 : root.height - 3)
-        radius: 1
+        radius: 1 // fixed: 2 px tick end rounding, not a theme corner
         color: root.tone.active ? root.tone.inkMuted : Signal.palette.ruleStrong
     }
 

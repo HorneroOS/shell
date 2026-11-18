@@ -119,6 +119,13 @@ surface with no keyboard focus sized to the sprite, so it never
 steals clicks or input. Reduced motion holds still frames and
 replaces bob/bounce/fly transitions with jump cuts.
 
+`companion status` reports `suppressed` plus a `suppressors` object
+(`locked`, `fullscreen`, `gameMode`, `areaPicker`, `controlCenter`) so a
+hidden companion always says why. The session-lock input is re-read from
+the authoritative lock state on the upstream notify and on a slow poll
+that only runs while locked, because the notify is not emitted on every
+unlock (shell#652). The rules live in `modules/companion/suppression.js`.
+
 Character bible (visual reboot, refined): the original painterly
 rufous hornero stays the reference — single visible eye in 3/4
 profile facing right (mirror is runtime), cream belly vs russet

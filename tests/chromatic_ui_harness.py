@@ -33,12 +33,41 @@ def _strip_panel_windows(root: Path) -> None:
         p.write_text(t)
 
 
+# The scenes drive ChromaticPreview through the fixture helper. A machine
+# with hornero-shell installed (packaged /usr/lib/hornero/hornero-chromatic
+# helper and the Hornero.Chromatic in-process engine, e.g. the CI
+# `shell-load` job) would otherwise answer with the real engine, so the
+# fixture's exit codes and logs are never seen. Pin the copy to the fixture.
+_INPROCESS_STUB = """import QtQuick
+
+// Test copy: the in-process engine is disabled so scenes use the helper.
+QtObject {
+    readonly property bool available: false
+    readonly property string version: ""
+    signal finished(var result)
+    signal failed(string code, string message)
+    function generate(request: var): void {}
+    function cancel(): void {}
+}
+"""
+
+
+def _pin_chromatic_to_fixture(root: Path) -> None:
+    (root / "services" / "ChromaticInProcess.qml").write_text(_INPROCESS_STUB)
+    preview = root / "services" / "ChromaticPreview.qml"
+    text = preview.read_text()
+    packaged = ', "/usr/lib/hornero/hornero-chromatic"]'
+    assert packaged in text, "ChromaticPreview helper candidates changed; update the harness"
+    preview.write_text(text.replace(packaged, "]"))
+
+
 def build_root(dest: Path) -> Path:
     def ignore(_dir, names):
         return [n for n in names if n in {".git", "tests", "docs", "build", "__pycache__"}]
 
     shutil.copytree(ROOT, dest, ignore=ignore, symlinks=True, ignore_dangling_symlinks=True)
     _strip_panel_windows(dest)
+    _pin_chromatic_to_fixture(dest)
     shutil.copy(ROOT / "tests" / "qml" / "chromatic" / "harness.qml", dest / "shell.qml")
     return dest
 

@@ -100,6 +100,62 @@ jobs:
       - name: Test suite
         run: python3 -m pytest tests/ -q
 
+  shell-load:
+    # Loads the REAL shell.qml with real Quickshell + Qt 6 inside a headless
+    # sway, plus every offscreen/qmltestrunner test the ubuntu runners skip
+    # (no Quickshell there). Catches QML the engine rejects but qmllint
+    # passes, e.g. the illegal `escape` method of #665.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container:
+      # Pinned image; packages come from the Arch Linux Archive snapshot in
+      # scripts/ci_arch_shell_deps.sh (quickshell 0.3.2, Qt 6.12).
+      image: archlinux@sha256:d4594bb2300cba11f41c2f27923eb56f63d9988909c402f9c95517d1e362c899
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - name: Restore pacman package cache
+        id: pkgcache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: /var/cache/pacman/pkg
+          key: arch-pkgs-${{ hashFiles('scripts/ci_arch_shell_deps.sh') }}
+      - name: Install pinned Quickshell + Qt 6 stack
+        run: ./scripts/ci_arch_shell_deps.sh
+      # Saved right after install so a red test run still warms the cache.
+      - name: Save pacman package cache
+        if: steps.pkgcache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: /var/cache/pacman/pkg
+          key: arch-pkgs-${{ hashFiles('scripts/ci_arch_shell_deps.sh') }}
+      # Again, now that git is installed: tests use `git ls-files`.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - name: Build + install the Hornero QML plugin
+        run: |
+          cmake -S . -B build -G Ninja -D DISTRIBUTOR="ci" \
+            -D CMAKE_BUILD_TYPE=RelWithDebInfo -D CMAKE_INSTALL_PREFIX=/usr \
+            -D INSTALL_LIBDIR=/usr/lib/hornero -D INSTALL_QMLDIR=/usr/lib/qt6/qml \
+            -D INSTALL_QSCONFDIR=/etc/xdg/quickshell/hornero
+          cmake --build build
+          cmake --install build
+      - name: Full shell load + offscreen test suite
+        # Unprivileged user: the compositor and shell run as a normal session.
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          useradd -m ci
+          chown -R ci: .
+          mkdir -p shell-load-logs && chown ci: shell-load-logs
+          su ci -c "HORNERO_SHELL_LOAD_LOG=$PWD/shell-load-logs/shell.log \
+            python3 -m pytest tests/ -q -rs -p no:cacheprovider"
+      - name: Upload shell load log
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+        with:
+          name: shell-load-log
+          path: shell-load-logs/
+          if-no-files-found: ignore
+
   lint:
     runs-on: ubuntu-latest
     steps:

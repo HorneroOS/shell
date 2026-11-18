@@ -102,7 +102,16 @@ Singleton {
             root.dropped += 1;
             return false;
         }
-        if (!CompanionStore.playReaction(decision.anim, (decision.bubble !== "" && !decision.custom) ? (root.defaultBubble(decision.kind) || decision.bubble) : decision.bubble, decision.bubbleMs, decision.priority)) {
+        // Built-in bubbles become Javi's line in the user's language and
+        // tone (falling back to the translated default); an external
+        // sender's own text (decision.custom) is never replaced (it is
+        // only shown, bounded and sanitised).
+        let bubble = decision.bubble;
+        if (bubble !== "" && !decision.custom) {
+            const spoken = JaviVoice.line("reaction." + decision.kind);
+            bubble = spoken.indexOf("reaction.") !== 0 ? spoken : (root.defaultBubble(decision.kind) || decision.bubble);
+        }
+        if (!CompanionStore.playReaction(decision.anim, bubble, decision.bubbleMs, decision.priority)) {
             root.lastDecision = { ok: false, reason: "not-visible" };
             root.dropped += 1;
             return false;

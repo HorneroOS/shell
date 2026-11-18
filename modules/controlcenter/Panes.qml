@@ -21,6 +21,7 @@ import "terminal"
 import "vpn"
 import "notifications"
 import "osd"
+import "companion"
 import "layout"
 import qs.components
 import qs.services

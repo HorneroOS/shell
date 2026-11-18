@@ -62,6 +62,11 @@ FAILURE_PATTERNS = [
     )
 ]
 ANSI = re.compile(r"\x1b\[[0-9;]*m")
+# A binding loop loads fine but re-evaluates in a cycle and floods the log
+# (shell 1.3.1: `Binding loop detected for property "placement"` on the bar
+# popouts, from the machined-fillet binding in Panels.qml). The load gate
+# rejects any.
+BINDING_LOOP = re.compile(r"Binding loop detected")
 
 needs_stack = pytest.mark.skipif(
     not (QS and SWAY and DBUS),
@@ -192,5 +197,7 @@ def test_full_shell_loads_without_qml_errors(tmp_path):
     tail = "\n".join(log.splitlines()[-80:])
     failures = _failures(log)
     assert not failures, "shell.qml failed to load:\n" + "\n".join(failures[:40]) + "\n--- log tail ---\n" + tail
+    loops = [ln for ln in log.splitlines() if BINDING_LOOP.search(ln)]
+    assert not loops, "binding loops while the shell loads:\n" + "\n".join(loops[:40])
     assert LOADED in log, f"no '{LOADED}' within {LOAD_TIMEOUT:.0f}s:\n{tail}"
     assert alive, f"shell exited within {SETTLE_SECONDS:.0f}s of loading:\n{tail}"

@@ -126,9 +126,14 @@ Item {
         objectName: "popouts"
 
         screen: root.screen
-        // Attached popouts grow out of their bar (machined fillet).
-        fillet: root.bar.filletOn(popouts.edge)
-        filletRule: root.bar.filletRule(popouts.edge)
+        // Attached popouts grow out of their bar (machined fillet). Keyed on
+        // the owning bar's edge, which is known before placement: reading
+        // the solved `edge` here made the fillet a dependent of
+        // `placement` while it was being evaluated (binding loop on
+        // "placement" at startup). An attached popout's anchor edge is
+        // always its bar's edge, so the radius is the same.
+        fillet: root.bar.filletOn(popouts.ownerEdge)
+        filletRule: root.bar.filletRule(popouts.ownerEdge)
         bounds: Qt.rect(-root.x, -root.y, root.parent?.width ?? 0, root.parent?.height ?? 0)
         reserved: ({
                 top: root.bar.marginTop,

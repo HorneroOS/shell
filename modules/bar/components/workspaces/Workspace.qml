@@ -41,6 +41,17 @@ Item {
     // Cell plates are drawn by CellPlates (under the active mark); without
     // them (Cockpit Clear, labels style) the cell carries its own marks.
     property bool plated: false
+    // The sliding plate inks the numeral it covers (PlateInk), so the
+    // active numeral keeps its resting colour underneath.
+    property bool inkThrough: false
+    // Special workspace open: the strip recedes to inkMuted.
+    property bool receded: false
+    // Hidden empty cell (bar.workspaces.showUnoccupied off).
+    property bool hidden: false
+    // A dimension break sits before this cell (non-contiguous numbers).
+    property bool gapBefore: false
+    // Extra main-axis room before the cell for the break mark (GapBreaks).
+    readonly property int breakSpace: gapBefore ? Math.max(6, Math.round(Density.textPx * 0.75)) : 0
     readonly property bool isActive: activeWsId === ws
     readonly property bool isUrgent: !isActive && (niriMode ? (workspaceData?.is_urgent ?? false) : (urgent[ws] ?? false))
     readonly property bool isVisibleElsewhere: !isActive && (visibleElsewhere[ws] ?? false)
@@ -87,13 +98,18 @@ Item {
     readonly property real groupY: group.y
     readonly property real groupW: group.width
     readonly property real groupH: group.height
+    // The numeral item, copied in ink by PlateInk.
+    readonly property Item numeral: indicator
 
     function iconForWindow(window: var): string {
         const appId = niriMode ? window.app_id : window.lastIpcObject.class;
         return Icons.getAppCategoryIcon(appId, "terminal");
     }
 
+    visible: !root.hidden
     Layout.alignment: vertical ? Qt.AlignHCenter : Qt.AlignVCenter
+    Layout.leftMargin: vertical ? 0 : root.breakSpace
+    Layout.topMargin: vertical ? root.breakSpace : 0
     Layout.preferredHeight: vertical ? size : implicitHeight
     Layout.preferredWidth: vertical ? implicitWidth : size
     implicitWidth: vertical ? root.cellCross : root.mainSize
@@ -154,8 +170,12 @@ Item {
     readonly property color numeralColor: {
         if (root.isUrgent)
             return root.tone.alert;
+        if (root.receded)
+            return root.tone.inkMuted;
         if (root.labels)
             return root.isActive ? root.tone.signal : root.isOccupied ? root.tone.ink : root.tone.inkMuted;
+        if (root.isActive && root.inkThrough)
+            return root.tone.inkMuted;
         return root.isActive || root.isVisibleElsewhere ? root.tone.ink : root.tone.inkMuted;
     }
 
@@ -205,7 +225,7 @@ Item {
                     anchors.centerIn: parent
                     size: Density.pt(root.glyphPx)
                     name: root.iconForWindow(parent.modelData)
-                    color: root.isActive ? root.tone.ink : root.tone.inkMuted
+                    color: root.isActive && !root.receded ? root.tone.ink : root.tone.inkMuted
                 }
             }
         }
@@ -223,7 +243,7 @@ Item {
                 font.weight: Density.textWeight
                 font.pointSize: Density.pt(Math.max(8, root.glyphPx - 1))
                 text: "+" + root.overflowCount
-                color: root.isActive ? root.tone.ink : root.tone.inkMuted
+                color: root.isActive && !root.receded ? root.tone.ink : root.tone.inkMuted
             }
         }
     }

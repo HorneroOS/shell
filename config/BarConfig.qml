@@ -184,7 +184,17 @@ JsonObject {
         property bool occupiedBg: true
         property bool showWindows: true
         property bool showWindowsOnSpecialWorkspaces: showWindows
-        property bool activeTrail: false
+        // "Needle travel": the active plate's leading edge moves first and
+        // the trailing edge follows `trailRatio` times slower, so the plate
+        // stretches across the cells it passes, then lands as one cell.
+        // Only at motion levels full/standard; instant under reduced motion.
+        property bool activeTrail: true
+        // Trailing-edge duration over the leading edge's (1.0..2.5).
+        property real trailRatio: 1.6
+        // Show empty workspaces; off hides empty cells (not the active one).
+        property bool showUnoccupied: true
+        // Broken-dimension-line mark where shown numbers skip (1, 2, 5).
+        property bool gapBreaks: true
         // Inset of the active-workspace highlight inside its track, px at
         // density 1 (0..8). Cockpit Clear ships 0: its underline is flush.
         property int activeInset: 4

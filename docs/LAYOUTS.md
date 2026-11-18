@@ -296,6 +296,33 @@ the Taskbar pane. `tests/test_workspace_render.py` renders Cockpit, Hornero
 Left and Cockpit Clear offscreen and checks that cells do not overlap and
 glyphs stay inside their cell.
 
+#### Needle travel, dimension breaks and the special recede
+
+- Needle travel (`bar.workspaces.activeTrail`, default on): when you switch
+  workspaces, the edge of the active plate that faces the target moves first,
+  on `settleFast`. The far edge follows `bar.workspaces.trailRatio` times
+  slower (1.0 to 2.5, default 1.6) on `sweep`. The plate stretches across the
+  cells it passes and then lands as exactly one cell. The signal tick rides
+  the leading third while the plate moves and recentres when it lands.
+  Numerals under the plate turn ink on every frame. This uses a clipped ink
+  copy of the numerals, not a shader effect. At motion level `reduced` both
+  edges move together. Under reduced motion the plate jumps.
+- Dimension breaks (`bar.workspaces.gapBreaks`, default on): with "Show empty
+  workspaces" (`bar.workspaces.showUnoccupied`) off, empty cells are hidden.
+  Where the shown numbers skip (1, 2, 5), the gap widens to hold a short
+  broken dimension line in `inkFaint`: a 1 px line broken in the middle, with
+  2 px end ticks on either side.
+- Special workspace: while it is open, the strip dims to `inkMuted` and moves
+  2 px away from the content. It is never scaled or blurred.
+- Cockpit Clear keeps all three foreground-only: no plate fill, only the
+  tick, the underline and the ink numerals travel.
+
+Controls (Control Center, Taskbar, Workspaces): "Needle travel", "Needle trail
+ratio" (with Reset), "Show empty workspaces" and "Gap breaks".
+`tests/test_workspace_needle.py` switches workspaces offscreen and checks the
+stretch at 110 ms, the one-cell landing, the ink under the plate, the single
+break and the 2 px recede.
+
 ### Every value is a control
 
 The defaults above are only defaults. Control Center, Bars, "Size & shape"

@@ -6,7 +6,6 @@ import qs.components
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Effects
 
 StyledClippingRect {
     id: root
@@ -64,7 +63,49 @@ StyledClippingRect {
     }
     readonly property int groupOffset: niriMode || activeWsId === null ? 0 : Math.floor((activeWsId - 1) / Config.bar.workspaces.shown) * Config.bar.workspaces.shown
 
-    property real blur: onSpecial ? 1 : 0
+    // Special workspace open: the strip recedes (dims to inkMuted and steps
+    // 2 px away from the content), never scaled or blurred (SVL: content is
+    // never scaled).
+    readonly property bool receded: onSpecial
+    readonly property int recedeShift: 2
+    readonly property real recedeX: !receded || !vertical ? 0 : edge === "right" ? recedeShift : -recedeShift
+    readonly property real recedeY: !receded || vertical ? 0 : edge === "top" ? -recedeShift : recedeShift
+
+    // Strip cells by model order: their ids and the numbers they read as.
+    readonly property var cellIds: niriMode ? workspaceItems.map(w => w.id) : Array.from({
+            length: Config.bar.workspaces.shown
+        }, (_, i) => groupOffset + i + 1)
+    readonly property var cellNumbers: niriMode ? workspaceItems.map(w => w.idx ?? w.id) : cellIds
+    // Cells shown: every one, or (showUnoccupied off) only the active,
+    // occupied, urgent and visible-elsewhere ones.
+    readonly property var shownCells: {
+        const all = Config.bar.workspaces.showUnoccupied;
+        const out = {};
+        for (const id of cellIds)
+            out[id] = all || id === activeWsId || (occupied[id] ?? false) || (urgent[id] ?? false) || (visibleElsewhere[id] ?? false);
+        return out;
+    }
+    // Ids with a dimension break before them: the shown numbers jump.
+    readonly property var gapBefore: {
+        const out = {};
+        if (!Config.bar.workspaces.gapBreaks)
+            return out;
+        let prev = null;
+        for (let i = 0; i < cellIds.length; i++) {
+            const id = cellIds[i];
+            if (!shownCells[id])
+                continue;
+            const n = cellNumbers[i];
+            if (prev !== null && n - prev > 1)
+                out[id] = true;
+            prev = n;
+        }
+        return out;
+    }
+    // The sliding active plate (needle travel). In the labels style (Cockpit
+    // Clear's strip) it stays invisible and only lends its travelling
+    // geometry to the active underline: foreground only.
+    readonly property bool needleActive: Config.bar.workspaces.activeIndicator && !root.niriMode
 
     // Track cross-axis size (Density.chip, set by Bar.qml) and the cell
     // inside it: the active highlight keeps `activeInset` from the track
@@ -82,15 +123,22 @@ StyledClippingRect {
     radius: Appearance.rounding.small
 
     Item {
-        anchors.fill: parent
-        scale: root.onSpecial ? 0.8 : 1
-        opacity: root.onSpecial ? 0.5 : 1
+        id: strip
 
-        layer.enabled: root.blur > 0
-        layer.effect: MultiEffect {
-            blurEnabled: true
-            blur: root.blur
-            blurMax: 32
+        anchors.fill: parent
+        opacity: root.receded ? 0.55 : 1
+
+        transform: Translate {
+            x: root.recedeX
+            y: root.recedeY
+
+            Behavior on x {
+                Anim {}
+            }
+
+            Behavior on y {
+                Anim {}
+            }
         }
 
         // Cell plates and the sliding active plate sit under the numerals.
@@ -108,9 +156,11 @@ StyledClippingRect {
         }
 
         Loader {
+            id: plateLoader
+
             anchors.horizontalCenter: root.vertical ? parent.horizontalCenter : undefined
             anchors.verticalCenter: root.vertical ? undefined : parent.verticalCenter
-            active: Config.bar.workspaces.activeIndicator && !root.labels && !root.niriMode
+            active: root.needleActive
 
             sourceComponent: ActiveIndicator {
                 screen: root.screen
@@ -118,6 +168,8 @@ StyledClippingRect {
                 edge: root.edge
                 tone: root.tone
                 clear: root.clear
+                receded: root.receded
+                visible: !root.labels
                 inset: root.activeInset
                 crossSize: root.cross
                 activeWsId: root.activeWsId
@@ -142,6 +194,8 @@ StyledClippingRect {
                 model: root.niriMode ? root.workspaceItems : Config.bar.workspaces.shown
 
                 Workspace {
+                    id: cell
+
                     screen: root.screen
                     niriMode: root.niriMode
                     workspaceData: root.niriMode ? modelData : null
@@ -157,8 +211,36 @@ StyledClippingRect {
                     urgent: root.urgent
                     visibleElsewhere: root.visibleElsewhere
                     groupOffset: root.groupOffset
+                    inkThrough: root.needleActive && !root.labels
+                    receded: root.receded
+                    hidden: !(root.shownCells[cell.ws] ?? true)
+                    gapBefore: root.gapBefore[cell.ws] ?? false
                 }
             }
+        }
+
+        // Numerals under the plate in ink, over the strip (needle travel).
+        Loader {
+            anchors.fill: parent
+            active: root.needleActive && !root.labels
+
+            sourceComponent: PlateInk {
+                tone: root.tone
+                receded: root.receded
+                plate: plateLoader.item
+                plateHost: plateLoader
+                workspaces: workspaces
+                cells: layout
+            }
+        }
+
+        GapBreaks {
+            anchors.fill: parent
+            tone: root.tone
+            vertical: root.vertical
+            workspaces: workspaces
+            cells: layout
+            spacing: root.vertical ? layout.rowSpacing : layout.columnSpacing
         }
 
         // Labels style underline under each active/occupied workspace, on the
@@ -173,9 +255,10 @@ StyledClippingRect {
                 readonly property Item ws: workspaces.itemAt(index)
                 readonly property bool isActive: ws?.isActive ?? false
 
-                // §5: active carries the 2 px on-air bar; occupied is
-                // carried by the cell tick, urgent by an alert bar.
-                visible: !!ws && (isActive || ws.isUrgent)
+                // §5: active carries the 2 px on-air bar (the travelling
+                // one below when the plate is loaded); occupied is carried
+                // by the cell tick, urgent by an alert bar.
+                visible: !!ws && ws.visible && ((isActive && !plateLoader.item) || ws.isUrgent)
                 x: root.vertical ? layout.x + layout.width + 2 : layout.x + (ws?.x ?? 0)
                 y: root.vertical ? layout.y + (ws?.y ?? 0) : layout.y + layout.height + 2
                 width: root.vertical ? 2 : (ws?.width ?? 0)
@@ -189,8 +272,22 @@ StyledClippingRect {
             }
         }
 
-        Behavior on scale {
-            Anim {}
+        // Labels style active underline: rides the plate's travelling edges,
+        // so it stretches toward the target and lands under one cell.
+        Rectangle {
+            readonly property Item plate: root.labels ? plateLoader.item : null
+
+            visible: !!plate
+            x: root.vertical ? layout.x + layout.width + 2 : layout.x + (plate?.startEdge ?? 0)
+            y: root.vertical ? layout.y + (plate?.startEdge ?? 0) : layout.y + layout.height + 2
+            width: root.vertical ? 2 : (plate?.length ?? 0)
+            height: root.vertical ? (plate?.length ?? 0) : 2
+            radius: 0 // fixed: square 2 px on-air bar, like the per-cell one
+            color: root.receded ? root.tone.inkMuted : root.tone.signal
+
+            Behavior on color {
+                CAnim {}
+            }
         }
 
         Behavior on opacity {
@@ -206,7 +303,6 @@ StyledClippingRect {
 
         active: opacity > 0 && Compositor.capabilities.specialWorkspaces
 
-        scale: root.onSpecial ? 1 : 0.5
         opacity: root.onSpecial ? 1 : 0
 
         sourceComponent: SpecialWorkspaces {
@@ -216,18 +312,8 @@ StyledClippingRect {
             tone: root.tone
         }
 
-        Behavior on scale {
-            Anim {}
-        }
-
         Behavior on opacity {
             Anim {}
-        }
-    }
-
-    Behavior on blur {
-        Anim {
-            duration: Appearance.anim.durations.short
         }
     }
 }

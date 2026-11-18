@@ -19,7 +19,7 @@ def test_active_cell_is_raised_with_signal_tick_inside_the_cell():
     assert "Signal.palette.raised" in ACTIVE
     assert "root.tone.signal" in ACTIVE  # 2 px tick inset in the cell
     assert "tickLength" in ACTIVE and "Colouriser" not in ACTIVE
-    assert "(root.width - width) / 2" in ACTIVE  # centred along the bar
+    assert "(root.length - tickLength) / 2" in ACTIVE  # centred along the bar at rest
     assert "Qt.alpha(root.tone.signal, 0.3)" in ACTIVE  # signal-tinted plate
     assert "onSignal" not in ACTIVE  # no signal-filled slab
 

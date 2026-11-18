@@ -7255,6 +7255,10 @@ Snapshot del plugin: %3</translation>
         <translation>Intentos de huella</translation>
     </message>
     <message>
+        <source>Diagonal brand hairline</source>
+        <translation>Línea fina diagonal de la marca</translation>
+    </message>
+    <message>
         <source>12-hour clock (AM/PM)</source>
         <translation>Reloj de 12 horas (AM/PM)</translation>
     </message>

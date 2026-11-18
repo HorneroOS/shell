@@ -113,20 +113,24 @@ jobs:
       image: archlinux@sha256:d4594bb2300cba11f41c2f27923eb56f63d9988909c402f9c95517d1e362c899
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-      - name: Restore pacman package cache
+      - name: Restore pacman package + sync database cache
         id: pkgcache
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
-          path: /var/cache/pacman/pkg
+          path: |
+            /var/cache/pacman/pkg
+            /var/lib/pacman/sync
           key: arch-pkgs-${{ hashFiles('scripts/ci_arch_shell_deps.sh') }}
       - name: Install pinned Quickshell + Qt 6 stack
         run: ./scripts/ci_arch_shell_deps.sh
       # Saved right after install so a red test run still warms the cache.
-      - name: Save pacman package cache
+      - name: Save pacman package + sync database cache
         if: steps.pkgcache.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
-          path: /var/cache/pacman/pkg
+          path: |
+            /var/cache/pacman/pkg
+            /var/lib/pacman/sync
           key: arch-pkgs-${{ hashFiles('scripts/ci_arch_shell_deps.sh') }}
       # Again, now that git is installed: tests use `git ls-files`.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1

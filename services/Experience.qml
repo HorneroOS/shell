@@ -87,6 +87,26 @@ Singleton {
         root._glowHolders = next;
     }
 
+    // Mode chrome: the accent the bar wears (palette role), the edge facing
+    // the content (off | hairline | glow) and the accent wash strength. All
+    // user-tunable per mode. The glow edge needs `glow` (so it follows the
+    // same dark-theme, motion and High Contrast gates and draws from the
+    // shared budget); without it the edge degrades to a hairline. High
+    // Contrast drops the wash and keeps a hairline so a mode stays legible.
+    readonly property string chromeAccent: fields["chrome.accent"]
+    readonly property string chromeEdge: {
+        const e = fields["chrome.edge"];
+        if (root.chromeAccent === "none")
+            return "off";
+        return e === "glow" && !root.glow ? "hairline" : e;
+    }
+    readonly property real chromeWash: root.chromeAccent === "none" || Config.appearance.highContrast ? 0 : Math.max(0, Math.min(Model.CHROME_WASH_MAX, Number(fields["chrome.wash"]) || 0))
+    // Bar scanlines are a texture, not a pattern: the shared scanline tile
+    // at a quarter of full strength (the user's Atmosphere strength never
+    // exceeds 0.06 of it).
+    readonly property real scanlineOpacity: 0.22
+    readonly property bool chromeActive: root.chromeEdge !== "off" || root.chromeWash > 0 || root.scanlines
+
     // Scope scanlines (§10): Signal mode only, never in day themes.
     readonly property bool scanlines: fields["scanlines"] && !Signal.light && !Config.appearance.highContrast
 
@@ -221,6 +241,7 @@ Singleton {
         const res = root.set(Model.DEFAULT_MODE, "reset");
         if (res.startsWith("error"))
             return res;
+        layoutProc.layoutId = Model.FACTORY_LAYOUT;
         layoutProc.exec(["horneroctl", "shell", "preset", "apply", Model.FACTORY_LAYOUT, "--yes"]);
         ThemePipeline.applyTheme(Model.FACTORY_THEME, "");
         return `ok: ${Model.DEFAULT_MODE} + ${Model.FACTORY_LAYOUT} + ${Model.FACTORY_THEME}`;
@@ -376,8 +397,10 @@ Singleton {
     // Applies the mode's preferred layout preset. Always an explicit act
     // (or the per-mode layout.apply opt-in): presets rewrite the bars.
     function applyPreferredLayout(): void {
-        if (root.preferredLayout.length > 0)
+        if (root.preferredLayout.length > 0) {
+            layoutProc.layoutId = root.preferredLayout;
             layoutProc.exec(["horneroctl", "shell", "preset", "apply", root.preferredLayout, "--yes"]);
+        }
     }
 
     function probeStudioAudio(): void {
@@ -577,7 +600,11 @@ Singleton {
     Process {
         id: layoutProc
 
+        property string layoutId: ""
+
         onExited: exitCode => {
+            if (exitCode === 0)
+                Layouts.reapplyAfterPreset(layoutProc.layoutId);
             if (exitCode !== 0)
                 Toaster.toast(qsTr("Layout not applied"), qsTr("horneroctl shell preset apply failed (exit %1).").arg(exitCode), "layout-dashboard", Toast.Warning);
         }

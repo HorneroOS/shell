@@ -867,5 +867,8 @@
       "battery": true,
       "charger": true
     }
+  },
+  "layouts": {
+    "overrides": {}
   }
 }

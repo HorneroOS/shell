@@ -61,6 +61,9 @@ Every profile has the same fields (factory values in
 | `motion` | `full` `standard` `reduced` `off` | `Appearance.anim.level`; `appearance.reducedMotion` or the system preference still force `off` |
 | `density` | `icons` `values` `labels` | instrumentation density; bars map `icons` to their `glyphs` density |
 | `glow`, `scanlines` | bool | luminous accents / scope scanlines; always off in day themes and high contrast; glow also off below `standard` motion |
+| `chrome.accent` | `none` `ink` `signal` `cue` `phosphor` `alert` | palette role the bar wears in the mode (wash, edge line); `none` turns the mode chrome off |
+| `chrome.edge` | `off` `hairline` `glow` | line on the bar edge facing the content; `glow` needs `glow` on (dark theme, motion, shared glow budget) and falls back to a hairline otherwise |
+| `chrome.wash` | 0–0.2 | strength of the accent wash over bar slabs; dropped in High Contrast |
 | `telemetry.rateHz` | 0.2–4 | shared SystemUsage/NetworkUsage poll rate |
 | `telemetry.pauseWhenHidden` | bool | pause those providers while a fullscreen window covers the focused output |
 | `desktopWidgets` | `none` `user` `instruments` | hide the desktop layer, keep the user's widgets, or add the Signal instrument deck |

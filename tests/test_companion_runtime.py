@@ -154,7 +154,7 @@ def test_host_single_companion_overlay():
 def test_host_suppression_inputs():
     assert "Experience.gaming" in HOST
     assert "hasFullscreen" in HOST
-    assert "lock.locked" in HOST or "lock !== null" in HOST
+    assert "reconcileLock(" in HOST and "lock.locked" in (COMPANION / "suppression.js").read_text()
     assert "areaPickerOpen" in STORE
     assert "CompanionStore.areaPickerOpen = active" in \
         (ROOT / "modules" / "areapicker" / "AreaPicker.qml").read_text()
@@ -345,7 +345,7 @@ def test_settings_open_suppresses_companion():
     # The Bottom-layer companion still needs explicit suppression for
     # floating Settings windows, which are above it in the compositor.
     assert "property bool controlCenterOpen: false" in STORE
-    assert "|| root.controlCenterOpen" in STORE
+    assert "controlCenter: root.controlCenterOpen" in STORE
 
 
 def test_window_factory_syncs_companion_open_state():

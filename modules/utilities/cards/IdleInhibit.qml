@@ -98,6 +98,7 @@ StyledRect {
                 anchors.centerIn: parent
                 text: qsTr("Active since %1").arg(Qt.formatTime(IdleInhibitor.enabledSince, Config.services.useTwelveHourClock ? "hh:mm a" : "hh:mm"))
                 color: Signal.palette.onSignal
+                tabular: true
                 font.pointSize: Math.round(Appearance.font.size.small * 0.9)
             }
         }

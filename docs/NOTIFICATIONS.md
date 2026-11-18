@@ -58,6 +58,20 @@ presence without content).
   cannot bury the rest of the list. Critical-urgency notifications
   are exempt from both rules and still pop up under DND, so a
   battery/VPN-critical alert survives a flood.
+- Popup timeout: one clock per notification (`Notifs.Notif.timer`,
+  `notifs.defaultExpireTimeout` unless the sender sets one). Pointing
+  at or dragging a card holds it; leaving resumes from where it
+  stopped. Critical-urgency popups never expire: they stay until
+  dismissed.
+- Timeout line (`notifs.timeoutTick`, on by default, Control Center >
+  Notifications > Behavior): a 2 px `signal` line on the card's top
+  edge drains with that clock and freezes while held. Critical cards
+  have none. With motion off it steps in quarters.
+- Leaving (signal-visual-language §11.2): a card swiped past
+  `notifs.clearThreshold` is thrown on along its swipe (one card width,
+  `exit`); a card that timed out or was closed fades in 90 ms where it
+  is. The cards below close the gap with `settle`. Reduced motion keeps
+  4 px of travel plus the fade; off is the capped fade only.
 
 ## Admission test
 

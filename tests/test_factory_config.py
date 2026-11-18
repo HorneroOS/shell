@@ -284,6 +284,7 @@ def test_factory_values_match_code_defaults():
         ("notifs.defaultExpireTimeout", 5000),
         ("notifs.clearThreshold", 0.3),
         ("notifs.openExpanded", False),
+        ("notifs.timeoutTick", True),
         ("notifs.sizes.badge", 20),
         ("osd.hideDelay", 2000),
         ("osd.enableMicrophone", False),

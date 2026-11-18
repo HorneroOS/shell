@@ -737,6 +737,7 @@
     "actionOnClick": false,
     "groupPreviewNum": 3,
     "openExpanded": false,
+    "timeoutTick": true,
     "sizes": {
       "width": 400,
       "image": 41,

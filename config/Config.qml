@@ -641,6 +641,7 @@ Singleton {
             actionOnClick: notifs.actionOnClick,
             groupPreviewNum: notifs.groupPreviewNum,
             openExpanded: notifs.openExpanded,
+            timeoutTick: notifs.timeoutTick,
             sizes: {
                 width: notifs.sizes.width,
                 image: notifs.sizes.image,

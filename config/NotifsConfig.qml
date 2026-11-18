@@ -10,6 +10,9 @@ JsonObject {
     // Where popups appear along the top edge: "right", "center" or "left".
     property string align: "right"
     property bool openExpanded: false // Show the notifichation in expanded state when opening
+    // Timeout line (Signal visual language §11.2): a 2 px `signal` line on
+    // each expiring popup that drains with its timeout and freezes on hover.
+    property bool timeoutTick: true
     property Sizes sizes: Sizes {}
 
     component Sizes: JsonObject {

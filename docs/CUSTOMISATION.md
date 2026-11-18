@@ -54,6 +54,7 @@ service and a pane-by-pane table are in `docs/CONTROL-CENTER-APPLY.md`.
 |---------|-----------|-------|-------|---------|
 | Launcher max items / wallpapers / drag | `launcher.maxShown` / `maxWallpapers` / `dragThreshold` | Launcher | 3-16 / 3-15 / 10-200 | 8 / 9 / 50 |
 | Notifications per group, expand threshold | `notifs.groupPreviewNum` / `expandThreshold` | Notifications | 1-8 / 5-80 | 3 / 20 |
+| Timeout line on expiring popups | `notifs.timeoutTick` | Notifications > Behavior | on / off | on |
 | Toasts on screen | `utilities.maxToasts` | Notifications | 1-8 | 4 |
 | Bar popup widths | `bar.sizes.{trayMenuWidth,batteryWidth,networkWidth,kbLayoutWidth,windowPreviewSize}` | Bars > Popup sizes | see pane | 300/250/320/320/400 |
 | Control Center window | `controlCenter.sizes.{heightMult,ratio}` | Appearance > Look | 0.5-0.95 / 1.2-2.4 | 0.7 / 16:9 |

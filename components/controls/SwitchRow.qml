@@ -64,8 +64,12 @@ StyledRect {
         spacing: Appearance.spacing.normal
 
         StyledText {
+            // Take the room left by the switch and wrap, so a long label
+            // never runs under the switch.
             Layout.fillWidth: true
+            Layout.preferredWidth: 0
             text: root.label
+            wrapMode: Text.WordWrap
         }
 
         StyledSwitch {

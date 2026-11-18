@@ -21,6 +21,7 @@ import Quickshell.Widgets
 import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
+import "../../../services/chromaticcli.js" as Cli
 
 Item {
     id: root
@@ -46,7 +47,10 @@ Item {
     // Config.controlCenter.appearanceOpenSections (default: Themes).
     // _sectionsReady guards write-back while initial state is restored.
     property bool _sectionsReady: false
-    readonly property var _sectionKeys: ["chromatic", "themes", "themeEditor", "accent", "gtkTheme", "gtkColorScheme", "iconTheme", "look", "atmosphere", "fonts", "animations", "scales", "transparency", "border", "background", "health"]
+    // Section order (docs/APPEARANCE-PANE.md): what you pick first comes
+    // first. Colour (Themes, then Chromatic, then the tools that adjust the
+    // palette in use), Wallpaper, Look & feel, Type & motion, Apps, Health.
+    readonly property var _sectionKeys: ["themes", "chromatic", "accent", "themeEditor", "background", "look", "atmosphere", "transparency", "border", "fonts", "scales", "animations", "gtkTheme", "gtkColorScheme", "iconTheme", "health"]
     property var sectionItems: ({})
     property var sectionScroll: null
 
@@ -118,8 +122,45 @@ Item {
             Qt.callLater(() => root.revealSection(root.session.requestedSection));
     }
 
+    // The preview has three states the user can tell apart at a glance
+    // (AppearancePreviewPane banner, NowUsingStrip note):
+    //   "now"        it shows what is applied
+    //   "previewing" it shows something you are pointing at or focusing;
+    //                nothing is applied until you click
+    //   "applying"   a click is being applied
+    readonly property bool hoverPreviewEnabled: Config.controlCenter.appearanceHoverPreview
+    readonly property bool previewIsApplied: {
+        if (!previewActive || previewSource === "current")
+            return true;
+        if (previewSource === "theme")
+            return !!previewThemeId && previewThemeId === Signal.themeId && !Signal.previewing;
+        if (previewSource === "wallpaper")
+            return previewWallpaperPath === Wallpapers.actualCurrent;
+        if (previewSource === "gtk-color-scheme")
+            return normalizeGtkColorScheme(previewGtkColorScheme) === normalizeGtkColorScheme(GtkSettings.liveColorScheme || pendingGtkColorScheme);
+        return false;
+    }
+    readonly property bool chromaticPointed: ChromaticPreview.hoveredVariant !== ""
+    readonly property string previewState: (ThemePipeline.busy || ChromaticPreview.applying) ? "applying" : chromaticPointed ? "previewing" : previewIsApplied ? "now" : "previewing"
+
+    // A hover/focus preview ended: go back to showing what is applied
+    // (never to an empty card), unless something else took over.
+    // A pointed Chromatic tile shows on the live desktop (ChromaticPreview).
+    function endPreviewFor(source: string): void {
+        if (previewSource !== source)
+            return;
+        clearPreview();
+        syncCurrentThemePreview();
+    }
+
+    // Hover/focus entry points honour the user's preview-on-hover setting.
+    function hoverThemePreview(modelData: var, resolvedWallpaper: string, readinessDetails: string): void {
+        if (hoverPreviewEnabled)
+            startThemePreview(modelData, resolvedWallpaper, readinessDetails);
+    }
+
     function syncCurrentThemePreview(): void {
-        if (!ThemeCatalogue.loaded || !Signal.themeStateReady)
+        if (!Signal.themeStateReady)
             return;
 
         // Keep an explicit hover/focus preview authoritative. This refresh
@@ -133,14 +174,30 @@ Item {
                 return;
         }
 
+        // Chromatic has no catalogue card: show its applied palette by name.
+        if (Signal.themeId === "hornero-chromatic") {
+            previewActive = true;
+            previewSource = "current";
+            resetPreviewRecipe();
+            previewTitle = qsTr("Chromatic");
+            const style = Cli.appliedStyle(Signal.chromatic);
+            previewSubtitle = style ? qsTr("%1 · built from your wallpaper or colour").arg(Cli.styleLabel(style)) : qsTr("Built from your wallpaper or colour");
+            previewMode = Signal.light ? "light" : "dark";
+            previewWallpaperPath = Wallpapers.actualCurrent;
+            previewWallpaperLabel = previewWallpaperPath ? previewWallpaperPath.split("/").pop() : "";
+            previewPalette = root.liveColors();
+            previewTerminal = root.liveTerminal();
+            return;
+        }
+
+        if (!ThemeCatalogue.loaded)
+            return;
+
         const theme = Signal.themeId ? Themes.themeById(Signal.themeId) : null;
         if (theme) {
             if (previewSource === "theme" && previewThemeId === theme.id)
                 return;
             startThemePreview(theme, Themes.palettePreviewPathFor(theme, true), "");
-            previewSubtitle = previewSubtitle
-                ? `${previewSubtitle} · ${qsTr("Current look")}`
-                : qsTr("Current look");
             return;
         }
 
@@ -160,10 +217,28 @@ Item {
         previewThemeId = "";
         previewTags = [];
         previewWallpaperCount = 0;
+        previewPalette = root.liveColors();
+        previewTerminal = root.liveTerminal();
+    }
+
+    // The applied roles (Signal's pre-preview snapshot while a Chromatic
+    // style is shown on the live shell).
+    function liveColors(): var {
+        const snap = Signal.previewing ? Signal._snapshot : null;
         const colors = {};
         for (const role of Signal.roles)
-            colors[role] = Signal.current[role];
-        previewPalette = colors;
+            colors[role] = snap ? snap.palette[role] : String(Signal.current[role]);
+        return colors;
+    }
+
+    function liveTerminal(): var {
+        const snap = Signal.previewing ? Signal._snapshot : null;
+        if (snap)
+            return snap.terminal ?? [];
+        const t = [];
+        for (let i = 0; i < 16; i++)
+            t.push(String(Signal.current[`term${i}`]));
+        return t;
     }
 
     // Signal role table a theme would apply, for the preview swatches.
@@ -192,12 +267,22 @@ Item {
         function onThemesChanged(): void {
             root.syncCurrentThemePreview();
         }
+        function onLoadedChanged(): void {
+            root.syncCurrentThemePreview();
+        }
     }
 
     Connections {
         target: Signal
         function onThemeIdChanged(): void {
             root.syncCurrentThemePreview();
+        }
+        function onThemeStateReadyChanged(): void {
+            root.syncCurrentThemePreview();
+        }
+        function onChromaticChanged(): void {
+            if (root.previewSource === "current")
+                root.syncCurrentThemePreview();
         }
     }
 
@@ -263,6 +348,7 @@ Item {
     property var previewTags: []
     property int previewWallpaperCount: 0
     property var previewPalette: ({})
+    property var previewTerminal: []
 
     anchors.fill: parent
 
@@ -309,7 +395,8 @@ Item {
         previewIconTheme = pendingIconTheme;
         previewWallpaperPath = previewWallpaperPath || pendingWallpaperPath;
         previewWallpaperLabel = pendingWallpaperPath ? pendingWallpaperPath.split("/").pop() : "";
-        previewPalette = {};
+        previewPalette = liveColors();
+        previewTerminal = liveTerminal();
     }
 
     // Wallpapers never recolour the shell: the preview keeps the current
@@ -331,7 +418,8 @@ Item {
             previewIconTheme = pendingIconTheme;
             previewGtkColorScheme = pendingGtkColorScheme;
             previewGtkPrefer = pendingGtkColorScheme;
-            previewPalette = {};
+            previewPalette = liveColors();
+            previewTerminal = liveTerminal();
         }
         previewWallpaperPath = path;
         previewWallpaperLabel = label || path.split("/").pop();
@@ -362,11 +450,11 @@ Item {
         previewTags = modelData.tags ?? [];
         previewWallpaperCount = Array.isArray(modelData.wallpapers) ? modelData.wallpapers.length : 0;
         previewPalette = paletteForTheme(modelData);
+        previewTerminal = terminalForTheme(modelData);
     }
 
     function clearPreviewFor(source: string): void {
-        if (previewSource === source)
-            clearPreview();
+        endPreviewFor(source);
     }
 
     function clearPreview(): void {
@@ -379,6 +467,7 @@ Item {
         previewWallpaperPath = "";
         resetPreviewRecipe();
         previewPalette = {};
+        previewTerminal = [];
     }
 
     // What Undo puts back for the apply now running (services/Undo.qml).
@@ -449,7 +538,8 @@ Item {
         iconDirty = false;
         gtkColorSchemeDirty = false;
         stagedThemeWallpaper = "";
-        clearPreview();
+        // Keep showing the clicked choice: the banner reads "Applying…"
+        // and then "Now using" once it is live (previewIsApplied).
     }
 
     // Apply staged changes immediately (click-to-apply). If the pipeline is busy,
@@ -627,8 +717,13 @@ Item {
 
                 AppearancePreviewPane {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: root.previewSource === "theme" || rightAppearanceFlickable.width < 600 ? 400 : 340
+                    // Large and stable: the specimen gets most of the column
+                    // and never jumps in size between "now" and "previewing".
+                    Layout.preferredHeight: Math.max(540, rightAppearanceFlickable.height * 0.7)
                     Layout.bottomMargin: Appearance.spacing.normal
+
+                    previewState: root.previewState
+                    hoverEnabled: root.hoverPreviewEnabled
 
                     active: root.previewActive
                     source: root.previewSource
@@ -691,230 +786,271 @@ Item {
 
         leftContent: Component {
 
-            StyledFlickable {
-                id: sidebarFlickable
-                readonly property var rootPane: root
-                flickableDirection: Flickable.VerticalFlick
-                contentHeight: sidebarLayout.height
+            ColumnLayout {
+                id: leftColumn
 
-                StyledScrollBar.vertical: StyledScrollBar {
-                    flickable: sidebarFlickable
+                spacing: Appearance.spacing.normal
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Appearance.spacing.smaller
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: qsTr("Appearance")
+                        font.pointSize: Appearance.font.size.large
+                        font.weight: Appearance.font.weight.medium
+                        Accessible.role: Accessible.Heading
+                    }
+
+                    IconButton {
+                        icon: sidebarLayout.allSectionsExpanded ? "fold" : "selector"
+                        accessibleName: sidebarLayout.allSectionsExpanded ? qsTr("Collapse all sections") : qsTr("Expand all sections")
+                        type: IconButton.Text
+                        label.animate: true
+                        onClicked: {
+                            // Assigns all sections + persists once. The
+                            // allSectionsExpanded binding refreshes the icon.
+                            root.setAllSections(!sidebarLayout.allSectionsExpanded);
+                        }
+                    }
                 }
 
-                ColumnLayout {
-                    id: sidebarLayout
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    height: implicitHeight
-                    spacing: Appearance.spacing.small
+                // Pinned: always visible while the sections scroll below.
+                NowUsingStrip {
+                    Layout.fillWidth: true
+                    rootPane: root
+                }
 
-                    readonly property var rootPane: sidebarFlickable.rootPane
-                    readonly property var sections: ({
-                        themes: themesSection,
-                        themeEditor: themeEditorSection,
-                        accent: accentSection,
-                        gtkTheme: gtkThemeSection,
-                        gtkColorScheme: gtkColorSchemeSection,
-                        chromatic: chromaticSection,
-                        iconTheme: iconThemeSection,
-                        look: lookSection,
-                        atmosphere: atmosphereSection,
-                        fonts: fontsSection,
-                        animations: animationsSection,
-                        scales: scalesSection,
-                        transparency: transparencySection,
-                        border: borderSection,
-                        background: backgroundSection,
-                        health: healthSection
-                    })
+                StyledFlickable {
+                    id: sidebarFlickable
 
-                    readonly property bool allSectionsExpanded: chromaticSection.expanded && themesSection.expanded && themeEditorSection.expanded && accentSection.expanded && gtkThemeSection.expanded && gtkColorSchemeSection.expanded && iconThemeSection.expanded && lookSection.expanded && atmosphereSection.expanded && fontsSection.expanded && animationsSection.expanded && scalesSection.expanded && transparencySection.expanded && borderSection.expanded && backgroundSection.expanded && healthSection.expanded
+                    readonly property var rootPane: root
 
-                    Component.onCompleted: {
-                        root.sectionItems = sidebarLayout.sections;
-                        root.sectionScroll = sidebarFlickable;
-                        if (root.session.active === "appearance" && root.session.requestedSection)
-                            Qt.callLater(() => root.revealSection(root.session.requestedSection));
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    clip: true
+                    flickableDirection: Flickable.VerticalFlick
+                    contentHeight: sidebarLayout.height
+
+                    StyledScrollBar.vertical: StyledScrollBar {
+                        flickable: sidebarFlickable
                     }
 
-                    RowLayout {
-                        spacing: Appearance.spacing.smaller
+                    ColumnLayout {
+                        id: sidebarLayout
 
-                        StyledText {
-                            text: qsTr("Appearance")
-                            font.pointSize: Appearance.font.size.large
-                            font.weight: Appearance.font.weight.medium
-                        }
-
-                        Item {
-                            Layout.fillWidth: true
-                        }
-
-                        IconButton {
-                            icon: sidebarLayout.allSectionsExpanded ? "fold" : "selector"
-                            accessibleName: sidebarLayout.allSectionsExpanded ? qsTr("Collapse all sections") : qsTr("Expand all sections")
-                            type: IconButton.Text
-                            label.animate: true
-                            onClicked: {
-                                // Assigns all sections + persists once. The
-                                // allSectionsExpanded binding refreshes the icon.
-                                root.setAllSections(!sidebarLayout.allSectionsExpanded);
-                            }
-                        }
-                    }
-
-                    ChromaticSection {
-                        id: chromaticSection
-                        session: root.session
-                        previewController: root
-                        // Open by default while Chromatic is the active theme,
-                        // unless the user collapsed it (remembered as the
-                        // "chromatic:closed" marker next to the open list).
-                        Component.onCompleted: expanded = root.isSectionExpanded("chromatic") || (Config.appearance.theme === "hornero-chromatic" && !root.isSectionExpanded("chromatic:closed"))
-                        onExpandedChanged: {
-                            root.persistSection("chromatic", expanded);
-                            root.persistSection("chromatic:closed", !expanded);
-                        }
-                    }
-
-                    ThemesSection {
-                        id: themesSection
-                        session: root.session
-                        previewController: root
-                        Component.onCompleted: expanded = root.isSectionExpanded("themes")
-                        onExpandedChanged: root.persistSection("themes", expanded)
-                    }
-
-                    GtkThemeSection {
-                        id: gtkThemeSection
-                        session: root.session
-                        previewController: root
-                        Component.onCompleted: expanded = root.isSectionExpanded("gtkTheme")
-                        onExpandedChanged: root.persistSection("gtkTheme", expanded)
-                    }
-
-                    ThemeEditorSection {
-                        id: themeEditorSection
-                        session: root.session
-                        previewController: root
-                        Component.onCompleted: expanded = root.isSectionExpanded("themeEditor")
-                        onExpandedChanged: root.persistSection("themeEditor", expanded)
-                    }
-
-                    AccentSection {
-                        id: accentSection
-                        session: root.session
-                        previewController: root
-                        Component.onCompleted: expanded = root.isSectionExpanded("accent")
-                        onExpandedChanged: root.persistSection("accent", expanded)
-                    }
-
-                    GtkColorSchemeSection {
-                        id: gtkColorSchemeSection
-                        session: root.session
-                        previewController: root
-                        Component.onCompleted: expanded = root.isSectionExpanded("gtkColorScheme")
-                        onExpandedChanged: root.persistSection("gtkColorScheme", expanded)
-                    }
-
-                    IconThemeSection {
-                        id: iconThemeSection
-                        session: root.session
-                        previewController: root
-                        Component.onCompleted: expanded = root.isSectionExpanded("iconTheme")
-                        onExpandedChanged: root.persistSection("iconTheme", expanded)
-                    }
-
-                    LookSection {
-                        id: lookSection
-                        rootPane: sidebarFlickable.rootPane
-                        Component.onCompleted: expanded = root.isSectionExpanded("look")
-                        onExpandedChanged: root.persistSection("look", expanded)
-                    }
-
-                    AtmosphereSection {
-                        id: atmosphereSection
-                        rootPane: sidebarFlickable.rootPane
-                        Component.onCompleted: expanded = root.isSectionExpanded("atmosphere")
-                        onExpandedChanged: root.persistSection("atmosphere", expanded)
-                    }
-
-                    FontsSection {
-                        id: fontsSection
-                        rootPane: sidebarFlickable.rootPane
-                        Component.onCompleted: expanded = root.isSectionExpanded("fonts")
-                        onExpandedChanged: root.persistSection("fonts", expanded)
-                    }
-
-                    AnimationsSection {
-                        id: animationsSection
-                        rootPane: sidebarFlickable.rootPane
-                        Component.onCompleted: expanded = root.isSectionExpanded("animations")
-                        onExpandedChanged: root.persistSection("animations", expanded)
-                    }
-
-                    ScalesSection {
-                        id: scalesSection
-                        rootPane: sidebarFlickable.rootPane
-                        Component.onCompleted: expanded = root.isSectionExpanded("scales")
-                        onExpandedChanged: root.persistSection("scales", expanded)
-                    }
-
-                    TransparencySection {
-                        id: transparencySection
-                        rootPane: sidebarFlickable.rootPane
-                        Component.onCompleted: expanded = root.isSectionExpanded("transparency")
-                        onExpandedChanged: root.persistSection("transparency", expanded)
-                    }
-
-                    BorderSection {
-                        id: borderSection
-                        rootPane: sidebarFlickable.rootPane
-                        Component.onCompleted: expanded = root.isSectionExpanded("border")
-                        onExpandedChanged: root.persistSection("border", expanded)
-                    }
-
-                    BackgroundSection {
-                        id: backgroundSection
-                        rootPane: sidebarFlickable.rootPane
-                        Component.onCompleted: expanded = root.isSectionExpanded("background")
-                        onExpandedChanged: root.persistSection("background", expanded)
-                    }
-
-                    HealthSection {
-                        id: healthSection
-                        session: root.session
-                        Component.onCompleted: expanded = root.isSectionExpanded("health")
-                        onExpandedChanged: root.persistSection("health", expanded)
-                    }
-
-                    RowLayout {
-                        // Changes apply on click, so there is nothing to confirm or
-                        // reset: the row only appears while applying or on failure.
-                        visible: root.pipelineBusy || root.applyFailed || root.hasPendingChanges
-                        Layout.fillWidth: true
-                        Layout.topMargin: Appearance.spacing.normal
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        height: implicitHeight
                         spacing: Appearance.spacing.small
 
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: root.footerStatusText
-                            color: {
-                                if (root.applyFailed)
-                                    return Signal.palette.alert;
-                                if (root.pipelineBusy || root.hasPendingChanges)
-                                    return Signal.palette.signal;
-                                return Signal.palette.ruleStrong;
-                            }
-                            font.pointSize: Appearance.font.size.small
-                            wrapMode: Text.WordWrap
+                        readonly property var rootPane: sidebarFlickable.rootPane
+                        readonly property var sections: ({
+                                themes: themesSection,
+                                chromatic: chromaticSection,
+                                accent: accentSection,
+                                themeEditor: themeEditorSection,
+                                background: backgroundSection,
+                                look: lookSection,
+                                atmosphere: atmosphereSection,
+                                transparency: transparencySection,
+                                border: borderSection,
+                                fonts: fontsSection,
+                                scales: scalesSection,
+                                animations: animationsSection,
+                                gtkTheme: gtkThemeSection,
+                                gtkColorScheme: gtkColorSchemeSection,
+                                iconTheme: iconThemeSection,
+                                health: healthSection
+                            })
+
+                        readonly property bool allSectionsExpanded: themesSection.expanded && chromaticSection.expanded && accentSection.expanded && themeEditorSection.expanded && backgroundSection.expanded && lookSection.expanded && atmosphereSection.expanded && transparencySection.expanded && borderSection.expanded && fontsSection.expanded && scalesSection.expanded && animationsSection.expanded && gtkThemeSection.expanded && gtkColorSchemeSection.expanded && iconThemeSection.expanded && healthSection.expanded
+
+                        Component.onCompleted: {
+                            root.sectionItems = sidebarLayout.sections;
+                            root.sectionScroll = sidebarFlickable;
+                            if (root.session.active === "appearance" && root.session.requestedSection)
+                                Qt.callLater(() => root.revealSection(root.session.requestedSection));
                         }
 
-                        CircularIndicator {
-                            visible: root.pipelineBusy
-                            running: root.pipelineBusy
-                            implicitSize: Appearance.font.size.large * 1.4
-                            strokeWidth: Appearance.padding.small * 0.5
+                        AppearanceGroupLabel {
+                            label: qsTr("Colour")
+                            first: true
+                        }
+                        ThemesSection {
+                            id: themesSection
+                            objectName: "appearanceSection"
+                            property string sectionKey: "themes"
+                            session: root.session
+                            previewController: root
+                            Component.onCompleted: expanded = root.isSectionExpanded("themes")
+                            onExpandedChanged: root.persistSection("themes", expanded)
+                        }
+                        ChromaticSection {
+                            id: chromaticSection
+                            objectName: "appearanceSection"
+                            property string sectionKey: "chromatic"
+                            session: root.session
+                            previewController: root
+                            // Open by default while Chromatic is the active theme,
+                            // unless the user collapsed it (remembered as the
+                            // "chromatic:closed" marker next to the open list).
+                            Component.onCompleted: expanded = root.isSectionExpanded("chromatic") || (Config.appearance.theme === "hornero-chromatic" && !root.isSectionExpanded("chromatic:closed"))
+                            onExpandedChanged: {
+                                root.persistSection("chromatic", expanded);
+                                root.persistSection("chromatic:closed", !expanded);
+                            }
+                        }
+                        AccentSection {
+                            id: accentSection
+                            objectName: "appearanceSection"
+                            property string sectionKey: "accent"
+                            session: root.session
+                            previewController: root
+                            Component.onCompleted: expanded = root.isSectionExpanded("accent")
+                            onExpandedChanged: root.persistSection("accent", expanded)
+                        }
+                        ThemeEditorSection {
+                            id: themeEditorSection
+                            objectName: "appearanceSection"
+                            property string sectionKey: "themeEditor"
+                            session: root.session
+                            previewController: root
+                            Component.onCompleted: expanded = root.isSectionExpanded("themeEditor")
+                            onExpandedChanged: root.persistSection("themeEditor", expanded)
+                        }
+                        AppearanceGroupLabel {
+                            label: qsTr("Wallpaper & desktop")
+                        }
+                        BackgroundSection {
+                            id: backgroundSection
+                            objectName: "appearanceSection"
+                            property string sectionKey: "background"
+                            rootPane: sidebarFlickable.rootPane
+                            Component.onCompleted: expanded = root.isSectionExpanded("background")
+                            onExpandedChanged: root.persistSection("background", expanded)
+                        }
+                        AppearanceGroupLabel {
+                            label: qsTr("Look & feel")
+                        }
+                        LookSection {
+                            id: lookSection
+                            objectName: "appearanceSection"
+                            property string sectionKey: "look"
+                            rootPane: sidebarFlickable.rootPane
+                            Component.onCompleted: expanded = root.isSectionExpanded("look")
+                            onExpandedChanged: root.persistSection("look", expanded)
+                        }
+                        AtmosphereSection {
+                            id: atmosphereSection
+                            objectName: "appearanceSection"
+                            property string sectionKey: "atmosphere"
+                            rootPane: sidebarFlickable.rootPane
+                            Component.onCompleted: expanded = root.isSectionExpanded("atmosphere")
+                            onExpandedChanged: root.persistSection("atmosphere", expanded)
+                        }
+                        TransparencySection {
+                            id: transparencySection
+                            objectName: "appearanceSection"
+                            property string sectionKey: "transparency"
+                            rootPane: sidebarFlickable.rootPane
+                            Component.onCompleted: expanded = root.isSectionExpanded("transparency")
+                            onExpandedChanged: root.persistSection("transparency", expanded)
+                        }
+                        BorderSection {
+                            id: borderSection
+                            objectName: "appearanceSection"
+                            property string sectionKey: "border"
+                            rootPane: sidebarFlickable.rootPane
+                            Component.onCompleted: expanded = root.isSectionExpanded("border")
+                            onExpandedChanged: root.persistSection("border", expanded)
+                        }
+                        AppearanceGroupLabel {
+                            label: qsTr("Type & motion")
+                        }
+                        FontsSection {
+                            id: fontsSection
+                            objectName: "appearanceSection"
+                            property string sectionKey: "fonts"
+                            rootPane: sidebarFlickable.rootPane
+                            Component.onCompleted: expanded = root.isSectionExpanded("fonts")
+                            onExpandedChanged: root.persistSection("fonts", expanded)
+                        }
+                        ScalesSection {
+                            id: scalesSection
+                            objectName: "appearanceSection"
+                            property string sectionKey: "scales"
+                            rootPane: sidebarFlickable.rootPane
+                            Component.onCompleted: expanded = root.isSectionExpanded("scales")
+                            onExpandedChanged: root.persistSection("scales", expanded)
+                        }
+                        AnimationsSection {
+                            id: animationsSection
+                            objectName: "appearanceSection"
+                            property string sectionKey: "animations"
+                            rootPane: sidebarFlickable.rootPane
+                            Component.onCompleted: expanded = root.isSectionExpanded("animations")
+                            onExpandedChanged: root.persistSection("animations", expanded)
+                        }
+                        AppearanceGroupLabel {
+                            label: qsTr("Apps: GTK, Qt and icons")
+                        }
+                        GtkThemeSection {
+                            id: gtkThemeSection
+                            objectName: "appearanceSection"
+                            property string sectionKey: "gtkTheme"
+                            session: root.session
+                            previewController: root
+                            Component.onCompleted: expanded = root.isSectionExpanded("gtkTheme")
+                            onExpandedChanged: root.persistSection("gtkTheme", expanded)
+                        }
+                        GtkColorSchemeSection {
+                            id: gtkColorSchemeSection
+                            objectName: "appearanceSection"
+                            property string sectionKey: "gtkColorScheme"
+                            session: root.session
+                            previewController: root
+                            Component.onCompleted: expanded = root.isSectionExpanded("gtkColorScheme")
+                            onExpandedChanged: root.persistSection("gtkColorScheme", expanded)
+                        }
+                        IconThemeSection {
+                            id: iconThemeSection
+                            objectName: "appearanceSection"
+                            property string sectionKey: "iconTheme"
+                            session: root.session
+                            previewController: root
+                            Component.onCompleted: expanded = root.isSectionExpanded("iconTheme")
+                            onExpandedChanged: root.persistSection("iconTheme", expanded)
+                        }
+                        AppearanceGroupLabel {
+                            label: qsTr("Health")
+                        }
+                        HealthSection {
+                            id: healthSection
+                            objectName: "appearanceSection"
+                            property string sectionKey: "health"
+                            session: root.session
+                            Component.onCompleted: expanded = root.isSectionExpanded("health")
+                            onExpandedChanged: root.persistSection("health", expanded)
+                        }
+
+                        RowLayout {
+                            // Changes apply on click; progress lives in the
+                            // "Now using" strip. Only a failure stays here.
+                            visible: root.applyFailed
+                            Layout.fillWidth: true
+                            Layout.topMargin: Appearance.spacing.normal
+                            spacing: Appearance.spacing.small
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: root.footerStatusText
+                                color: Signal.palette.alert
+                                font.pointSize: Appearance.font.size.small
+                                wrapMode: Text.WordWrap
+                                Accessible.role: Accessible.AlertMessage
+                            }
                         }
                     }
                 }

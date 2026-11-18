@@ -16,7 +16,8 @@ def test_themes_section_lists_the_reserved_chromatic_card_after_the_catalogue():
 def test_appearance_pane_hosts_and_registers_the_chromatic_section():
     pane = (APP / "AppearancePane.qml").read_text()
     assert "ChromaticSection {" in pane and 'isSectionExpanded("chromatic")' in pane
-    assert '"chromatic", "themes"' in pane and "chromatic: chromaticSection" in pane
+    # Themes first, Chromatic right after (docs/APPEARANCE-PANE.md)
+    assert '"themes", "chromatic"' in pane and "chromatic: chromaticSection" in pane
     registry = (ROOT / "modules" / "controlcenter" / "PaneRegistry.qml").read_text()
     assert 'id: "chromatic"' in registry and 'section: "chromatic"' in registry
 

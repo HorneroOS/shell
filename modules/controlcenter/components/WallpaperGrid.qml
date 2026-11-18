@@ -118,7 +118,7 @@ Item {
                 id: previewDebounce
                 interval: 120
                 onTriggered: {
-                    if (grid.pendingPreviewPath)
+                    if (grid.pendingPreviewPath && root.previewController.hoverPreviewEnabled !== false)
                         root.previewController.startWallpaperPreview(grid.pendingPreviewPath, grid.pendingPreviewName);
                 }
             }
@@ -165,6 +165,9 @@ Item {
                 grid.pendingPreviewPath = "";
                 grid.pendingPreviewName = "";
                 previewDebounce.stop();
+                // Back to what is applied (Appearance's "Now using").
+                if (typeof root.previewController.endPreviewFor === "function")
+                    root.previewController.endPreviewFor("wallpaper");
             }
         }
 

@@ -468,7 +468,8 @@
     "undoSeconds": 10,
     "appearanceOpenSections": [
       "themes"
-    ]
+    ],
+    "appearanceHoverPreview": true
   },
   "launcher": {
     "enabled": true,

@@ -15,6 +15,11 @@ JsonObject {
     // persists user toggles here via Config.save().
     property var appearanceOpenSections: ["themes"]
 
+    // Appearance: pointing at (or focusing) a theme, wallpaper, colour
+    // scheme or Chromatic variant previews it until the pointer leaves.
+    // Off: nothing changes until you click (docs/APPEARANCE-PANE.md).
+    property bool appearanceHoverPreview: true
+
     component Sizes: JsonObject {
         property real heightMult: 0.7
         property real ratio: 16 / 9

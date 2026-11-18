@@ -146,5 +146,7 @@ def test_theme_card_chips_wrap_under_the_text():
     the text column, never beside it, so they cannot squeeze or overlap it."""
     src = (ROOT / "modules" / "controlcenter" / "appearance" / "sections" / "ThemesSection.qml").read_text()
     flow = src.index("id: chipFlow")
-    for chip in ("modeChip", "currentChip", "stagedChip"):
-        assert src.index(f"id: {chip}") > flow
+    assert src.index("id: modeChip") > flow
+    # "In use", "Previewing · Click to use" and "Applying" chips
+    first_state_chip = src.index("StateChip {")
+    assert first_state_chip > flow and src.count("StateChip {") >= 3

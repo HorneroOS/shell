@@ -83,7 +83,12 @@ ColumnLayout {
                 pending: !scheme && !unavailable
                 palette: flat
                 paletteLabel: scheme ? qsTr("Palette preview: ground %1, accent %2").arg(flat.ground ?? "").arg(flat.signal ?? "") : ""
-                onPreviewStarted: ChromaticPreview.hoverVariant(modelData.id === "auto" ? root.resolved : modelData.id)
+                // Previews on the live desktop while pointed at or focused,
+                // unless the user turned hover previews off.
+                onPreviewStarted: {
+                    if (Config.controlCenter.appearanceHoverPreview)
+                        ChromaticPreview.hoverVariant(modelData.id === "auto" ? root.resolved : modelData.id);
+                }
                 onPreviewEnded: ChromaticPreview.endHover(modelData.id === "auto" ? root.resolved : modelData.id)
                 onActivated: root.chosen(modelData.id)
                 onStep: direction => root.chosen(root.tiles[(index + direction + root.tiles.length) % root.tiles.length].id)

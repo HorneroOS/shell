@@ -89,7 +89,14 @@ CollapsibleSection {
                     previewController.stageGtkColorScheme(modelData.id);
                     previewController.commitPending();
                 }
-                onPreviewStarted: previewController.startGtkColorSchemePreview(modelData.id)
+                onPreviewStarted: {
+                    if (previewController.hoverPreviewEnabled !== false)
+                        previewController.startGtkColorSchemePreview(modelData.id);
+                }
+                onPreviewEnded: {
+                    if (typeof previewController.endPreviewFor === "function")
+                        previewController.endPreviewFor("gtk-color-scheme");
+                }
             }
         }
 

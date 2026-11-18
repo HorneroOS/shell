@@ -283,6 +283,21 @@ def _run_fixture(
                 )
             else:
                 raise ValueError(f"unsupported process_config fixture: {process_config}")
+        elif fixture_proc_root is None:
+            # The fixture "shell" PID is this pytest process. Never let the
+            # script read pytest's real cmdline/environ: `pytest -p plugin`
+            # parses as `qs -p <path>` and `-c file` as `qs -c <name>`, which
+            # silently redirects the QML count. Keep real memory figures.
+            pid = shell_pid or str(os.getpid())
+            fixture_proc_root = root / "proc"
+            process_dir = fixture_proc_root / pid
+            process_dir.mkdir(parents=True)
+            (process_dir / "cmdline").write_bytes(b"/usr/bin/quickshell\0")
+            (process_dir / "environ").write_bytes(b"")
+            (process_dir / "cwd").symlink_to(root, target_is_directory=True)
+            smaps = Path("/proc") / pid / "smaps_rollup"
+            if smaps.exists():
+                (process_dir / "smaps_rollup").symlink_to(smaps)
         _write_executable(
             bindir / "pgrep",
             """

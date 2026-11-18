@@ -31,6 +31,7 @@ sed -i 's/^#\?CleanMethod.*/CleanMethod = KeepInstalled/' /etc/pacman.conf
 pacman -Syyuu --noconfirm --needed \
     base-devel cmake ninja pkgconf git \
     qt6-base qt6-declarative qt6-svg qt6-wayland qt6-tools \
+    qt6-multimedia qt6-multimedia-ffmpeg \
     quickshell sway dbus \
     libqalculate pipewire aubio fftw \
     ttf-ibm-plex \

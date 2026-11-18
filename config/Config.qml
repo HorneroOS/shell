@@ -482,7 +482,10 @@ Singleton {
                 recolour: bar.extensions.recolour,
                 compact: bar.extensions.compact,
                 iconSubs: bar.extensions.iconSubs,
-                hiddenIcons: bar.extensions.hiddenIcons
+                hiddenIcons: bar.extensions.hiddenIcons,
+                itemMaxWidth: bar.extensions.itemMaxWidth,
+                sectionBudget: bar.extensions.sectionBudget,
+                islandBudget: bar.extensions.islandBudget
             },
             status: {
                 showAudio: bar.status.showAudio,

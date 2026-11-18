@@ -40,9 +40,11 @@ StyledRect {
     readonly property bool chip: Config.bar.extensions.background && !clear
     // Overflow guard: many enabled indicators used to run over the bar's
     // other groups (18 text indicators overlapped the left group and the
-    // clock). When the row would take more than 40% of the bar's main axis
+    // clock). When the row would take more than its budget of the bar's main axis
     // it collapses behind the chevron exactly like bar.extensions.compact.
-    readonly property real crowdedLimit: (root.vertical ? root.screen.height : root.screen.width) * 0.4
+    // The budget is bar.extensions.islandBudget (default 40%). The island is
+    // also the overflow sink of the other islands (shell#531).
+    readonly property real crowdedLimit: (root.vertical ? root.screen.height : root.screen.width) * Config.bar.extensions.islandBudget / 100
     readonly property bool crowded: !Config.bar.extensions.compact && root.count > 1
         && (root.vertical ? layout.implicitHeight : layout.implicitWidth) + root.padding * 2 > root.crowdedLimit
     readonly property bool compact: Config.bar.extensions.compact || root.crowded
@@ -77,6 +79,31 @@ StyledRect {
 
     Accessible.role: Accessible.Grouping
     Accessible.name: qsTr("Extensions")
+
+    // Overflow sink (shell#531): while this island renders, other islands
+    // of the same bar may hand it the indicators they cannot fit. Keyed per
+    // bar ("<screen>|<edge>"), matching PluginBarWidgets.barKey.
+    property string barEdge: root.hostEdge
+    readonly property string sinkKey: `${root.hostScreenName !== "" ? root.hostScreenName : (root.screen?.name ?? "")}|${root.barEdge}`
+    // null while not registered.
+    property var registeredSink: null
+    function syncSink(): void {
+        const want = root.surfaceActive && root.screen ? root.sinkKey : null;
+        if (want === root.registeredSink)
+            return;
+        if (root.registeredSink !== null)
+            Plugins.setOverflowSink(root.registeredSink, false);
+        root.registeredSink = want;
+        if (want !== null)
+            Plugins.setOverflowSink(want, true);
+    }
+    onSurfaceActiveChanged: root.syncSink()
+    onSinkKeyChanged: root.syncSink()
+    Component.onCompleted: root.syncSink()
+    Component.onDestruction: {
+        if (root.registeredSink !== null)
+            Plugins.setOverflowSink(root.registeredSink, false);
+    }
 
     Loader {
         id: layout
@@ -129,6 +156,7 @@ StyledRect {
 
                 vertical: root.vertical
                 section: "end"
+                acceptOverflow: true
                 centerChildren: true
                 surfaceActive: root.surfaceActive
                 fallbackSections: root.fallbackSections
@@ -139,6 +167,7 @@ StyledRect {
                 iconSize: Density.iconPt
                 textSize: Density.textPt
                 edge: root.hostEdge
+                barEdge: root.barEdge
                 compact: root.hostCompact
                 thickness: root.hostThickness > 0 ? root.hostThickness : Density.inner
                 screenName: root.hostScreenName !== "" ? root.hostScreenName : root.screen.name
@@ -179,6 +208,7 @@ StyledRect {
 
                 vertical: root.vertical
                 section: "end"
+                acceptOverflow: true
                 centerChildren: true
                 surfaceActive: root.surfaceActive
                 fallbackSections: root.fallbackSections
@@ -189,6 +219,7 @@ StyledRect {
                 iconSize: Density.iconPt
                 textSize: Density.textPt
                 edge: root.hostEdge
+                barEdge: root.barEdge
                 compact: root.hostCompact
                 thickness: root.hostThickness > 0 ? root.hostThickness : Density.inner
                 screenName: root.hostScreenName !== "" ? root.hostScreenName : root.screen.name

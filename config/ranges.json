@@ -19,6 +19,24 @@
       "step": 1,
       "default": 3
     },
+    "bar.extensions.islandBudget": {
+      "min": 15,
+      "max": 60,
+      "step": 1,
+      "default": 40
+    },
+    "bar.extensions.itemMaxWidth": {
+      "min": 60,
+      "max": 320,
+      "step": 10,
+      "default": 160
+    },
+    "bar.extensions.sectionBudget": {
+      "min": 8,
+      "max": 40,
+      "step": 1,
+      "default": 18
+    },
     "bar.sizes.batteryWidth": {
       "min": 200,
       "max": 500,

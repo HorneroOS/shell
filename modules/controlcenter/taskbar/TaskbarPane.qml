@@ -726,6 +726,39 @@ Item {
                                     }
                                 ]
                             }
+
+                            SizeSlider {
+                                target: Config.bar.extensions
+                                key: "itemMaxWidth"
+                                label: qsTr("Widest indicator")
+                                from: 60
+                                to: 320
+                                defaultValue: 160
+                                stepSize: 10
+                                suffix: "px"
+                            }
+
+                            SizeSlider {
+                                target: Config.bar.extensions
+                                key: "sectionBudget"
+                                label: qsTr("Room per island before indicators move to Extensions")
+                                from: 8
+                                to: 40
+                                defaultValue: 18
+                                stepSize: 1
+                                suffix: "%"
+                            }
+
+                            SizeSlider {
+                                target: Config.bar.extensions
+                                key: "islandBudget"
+                                label: qsTr("Room for the Extensions island before it collapses")
+                                from: 15
+                                to: 60
+                                defaultValue: 40
+                                stepSize: 1
+                                suffix: "%"
+                            }
                         }
                     }
                 }

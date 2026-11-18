@@ -370,7 +370,10 @@
       "recolour": true,
       "compact": false,
       "iconSubs": [],
-      "hiddenIcons": []
+      "hiddenIcons": [],
+      "itemMaxWidth": 160,
+      "sectionBudget": 18,
+      "islandBudget": 40
     },
     "status": {
       "showAudio": true,

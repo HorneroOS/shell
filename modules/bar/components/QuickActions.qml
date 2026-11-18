@@ -14,6 +14,9 @@ Item {
     property var tone: ClearInk.neutral
 
     property bool vertical
+    property string screenName: ""
+    // Bar edge, for the per-bar overflow key (shell#531).
+    property string barEdge: ""
     property var options: ({})
     readonly property var actions: {
         // Options arrive as QML-wrapped sequences (Array.isArray is false);
@@ -60,7 +63,8 @@ Item {
             iconSize: Density.iconPt
             textSize: Density.textPt
             thickness: Density.inner
-            screenName: ""
+            screenName: root.screenName
+            barEdge: root.barEdge
         }
     }
 }

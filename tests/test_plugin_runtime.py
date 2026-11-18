@@ -79,13 +79,14 @@ def test_all_rendering_placements_inherit_themed_foreground_and_clip():
     # Vertical bars cap plugin width so single-line bar plugins cannot
     # overflow the pill; horizontal bars get a sane maximum too. Since
     # #372 the caps are the host's reported available space (cross-axis
-    # from the bar's real thickness, 64 fallback; main-axis 240), not
+    # from the bar's real thickness, 64 fallback; main-axis the configurable item width), not
     # literals duplicated at the Loader.
     bar = _loader_block(WIDGETS)
     assert "Layout.maximumWidth: root.availableWidth" in bar
     assert "Layout.maximumHeight: root.availableHeight" in bar
     assert "thickness > 0 ? thickness : 64" in WIDGETS
-    assert "availableMain: 240" in WIDGETS
+    # main-axis: bar.extensions.itemMaxWidth (default 160, shell#531).
+    assert "availableMain: Config.bar.extensions.itemMaxWidth" in WIDGETS
 
 
 def test_bar_placement_contract():

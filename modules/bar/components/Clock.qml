@@ -15,6 +15,8 @@ Item {
     property var tone: ClearInk.neutral
 
     required property ShellScreen screen
+    // Bar edge, for the per-bar overflow key (shell#531).
+    property string barEdge: ""
 
     property color colour: root.tone.ink
     // Orientation of the owning bar (set by Bar.qml); defaults to the
@@ -190,6 +192,7 @@ Item {
             textSize: Density.textPt
             thickness: Density.inner
             screenName: root.screen.name
+            barEdge: root.barEdge
         }
     }
 }

@@ -19,6 +19,8 @@ StyledRect {
     property var tone: ClearInk.neutral
 
     required property ShellScreen screen
+    // Bar edge, for the per-bar overflow key (shell#531).
+    property string barEdge: ""
 
     property color colour: root.tone.ink
     readonly property alias items: iconGrid
@@ -354,6 +356,7 @@ StyledRect {
             textSize: Density.textPt
             thickness: Density.inner
             screenName: root.screen.name
+            barEdge: root.barEdge
         }
     }
 

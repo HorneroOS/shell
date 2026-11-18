@@ -53,7 +53,7 @@ def test_presets_with_a_tray_also_get_the_island():
 def test_extensions_config_mirrors_tray_keys_and_defaults():
     cfg = read("config/BarConfig.qml")
     tray = cfg.split("component Tray: JsonObject {")[1].split("}")[0]
-    ext = cfg.split("component Extensions: JsonObject {")[1].split("}")[0]
+    ext = cfg.split("component Extensions: JsonObject {")[1].split("\n    }")[0]
     for key in ("background", "recolour", "compact", "iconSubs", "hiddenIcons"):
         assert key in tray and key in ext, key
     assert "property bool background: false" in ext
@@ -62,7 +62,10 @@ def test_extensions_config_mirrors_tray_keys_and_defaults():
         assert f"bar.extensions.{key}" in persisted, key
     import json as _json
     factory = _json.loads(read("config/shell.default.json"))
-    assert factory["bar"]["extensions"] == factory["bar"]["tray"]
+    # The island adds only the overflow limits (shell#531) to the tray's keys.
+    limits = {"itemMaxWidth", "sectionBudget", "islandBudget"}
+    assert {k: v for k, v in factory["bar"]["extensions"].items() if k not in limits} == factory["bar"]["tray"]
+    assert limits <= set(factory["bar"]["extensions"])
 
 
 def test_control_center_extensions_settings_match_tray():

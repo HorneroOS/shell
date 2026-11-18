@@ -744,6 +744,7 @@ Item {
                             sourceComponent: ExtensionsIsland {
                                 cross: root.islandCross
                                 screen: root.screen
+                                barEdge: root.edge
                                 vertical: root.vertical
                                 clear: root.clear
                                 fallbackSections: ["status", "actions", "clock"].filter(s => !root.presentSections.includes(s))
@@ -757,6 +758,7 @@ Item {
 
                             sourceComponent: Clock {
                                 screen: root.screen
+                                barEdge: root.edge
                                 vertical: root.vertical
                                 options: clockLoader.options
                             }
@@ -768,6 +770,7 @@ Item {
                             sourceComponent: StatusIcons {
                                 cross: root.islandCross
                                 screen: root.screen
+                                barEdge: root.edge
                                 vertical: root.vertical
                                 clear: root.clear
                                 onPopoutRequested: (name, anchor) => root.openStatusPopout(name, anchor)
@@ -870,6 +873,8 @@ Item {
 
                             sourceComponent: QuickActions {
                                 vertical: root.vertical
+                                screenName: root.screen?.name ?? ""
+                                barEdge: root.edge
                                 options: actionsLoader.options
                             }
                         }

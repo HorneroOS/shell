@@ -1,5 +1,9 @@
 pragma Singleton
 
+import "habitat.js" as Habitat
+import "prefsdoc.js" as PrefsDoc
+import "javivoice.js" as Voice
+import "radio.js" as Radio
 import "reactions.js" as Reactions
 import qs.services
 import qs.utils
@@ -148,6 +152,10 @@ Singleton {
         // Reactions policy as one JSON document (validated by
         // reactions.js sanitizeSettings on every read).
         property string reactions: ""
+        // Voice, habitat and radio preferences as one JSON document, each
+        // section validated by its own pure module on every read
+        // (javivoice.js, habitat.js, radio.js).
+        property string prefs: ""
         // Per-Experience-mode look (visible / size multiplier / skin).
         property string modeLook: ""
         property bool nestEnabled: true
@@ -183,6 +191,7 @@ Singleton {
     property alias sleepAtNest: persist.sleepAtNest
     property alias nestEnabled: persist.nestEnabled
     property alias reactionsJson: persist.reactions
+    property alias prefsJson: persist.prefs
     property alias nestStage: persist.nestStage
     property alias nestProgress: persist.nestProgress
 
@@ -197,6 +206,48 @@ Singleton {
             raw = {};
         }
         return Reactions.sanitizeSettings(raw);
+    }
+
+    // Voice, habitat and radio preferences: always complete, validated.
+    readonly property var prefs: root._sanitizePrefs(PrefsDoc.parseObject(persist.prefs))
+    readonly property var voiceSettings: root.prefs.voice
+    readonly property var habitatSettings: root.prefs.habitat
+    readonly property var radioSettings: root.prefs.radio
+
+    // One complete, validated preference document from any parsed value
+    // (each section by its own pure module).
+    function _sanitizePrefs(raw: var): var {
+        const doc = PrefsDoc.asObject(raw);
+        return {
+            "voice": Voice.sanitize(doc.voice),
+            "habitat": Habitat.sanitize(doc.habitat),
+            "radio": Radio.sanitize(doc.radio)
+        };
+    }
+
+    // Edits one preference by dotted path ("habitat.anchor",
+    // "habitat.modeLevel.focus"); the whole document is re-validated, so an
+    // invalid value is dropped back to the previous or default one. Paths
+    // with __proto__/constructor/prototype segments, empty segments or no
+    // existing parent object are rejected (prefsdoc.js setPath).
+    function patchPref(section: string, path: string, value: var): void {
+        if (["voice", "habitat", "radio"].indexOf(section) < 0)
+            return;
+        const next = JSON.parse(JSON.stringify(root.prefs));
+        if (!PrefsDoc.setPath(next[section], path, value))
+            return;
+        persist.prefs = JSON.stringify(root._sanitizePrefs(next));
+        root.markDirty();
+    }
+
+    // Puts one section back to its defaults (the other sections keep theirs).
+    function resetPref(section: string): void {
+        if (["voice", "habitat", "radio"].indexOf(section) < 0)
+            return;
+        const next = JSON.parse(JSON.stringify(root.prefs));
+        next[section] = {};
+        persist.prefs = JSON.stringify(root._sanitizePrefs(next));
+        root.markDirty();
     }
 
     // Per-mode look (see reactions.js sanitizeModeLook).
@@ -494,7 +545,10 @@ Singleton {
         persist.tipIndex = (persist.tipIndex + 1) % root.tips.length;
         root.markActive();
         root.markDirty();
-        return entry.text;
+        // Spoken in the user's language and tone (javivoice.js); the
+        // catalogue text above is only the source-of-truth fallback.
+        const spoken = JaviVoice.line("tip." + entry.page);
+        return spoken.indexOf("tip.") === 0 ? entry.text : spoken;
     }
 
     function tipPage(): string {
@@ -582,6 +636,7 @@ Singleton {
             nestStage: persist.nestStage,
             nestProgress: persist.nestProgress,
             reactions: persist.reactions,
+            prefs: persist.prefs,
             modeLook: persist.modeLook
         });
     }
@@ -667,6 +722,11 @@ Singleton {
                     persist.sleepAtNest = o.sleepAtNest;
                 if (typeof o.reactions === "string")
                     persist.reactions = JSON.stringify(Reactions.sanitizeSettings(root._parseJson(o.reactions)));
+                // _parseJson may hand back null/array/scalar for valid but
+                // non-object JSON; _sanitizePrefs reads those as {} so one bad
+                // value cannot abort the rest of the restore.
+                if (typeof o.prefs === "string")
+                    persist.prefs = JSON.stringify(root._sanitizePrefs(root._parseJson(o.prefs)));
                 if (typeof o.modeLook === "string")
                     persist.modeLook = JSON.stringify(Reactions.sanitizeModeLook(root._parseJson(o.modeLook)));
                 if (typeof o.nestEnabled === "boolean")

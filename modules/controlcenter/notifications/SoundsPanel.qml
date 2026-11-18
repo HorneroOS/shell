@@ -3,7 +3,6 @@ import qs.components
 import qs.components.controls
 import qs.config
 import qs.services
-import Qt.labs.folderlistmodel
 import QtQuick
 import QtQuick.Layouts
 
@@ -14,26 +13,17 @@ ChannelPanel {
 
     title: qsTr("Sounds")
 
-    FolderListModel {
-        id: themes
+    Component.onCompleted: Sounds.refreshThemes()
 
-        folder: "file:///usr/share/sounds"
-        showFiles: false
-        showDirs: true
-        showDotAndDotDot: false
-    }
-
-    // Installed themes that carry the stereo files we play.
+    // Real sound themes only (index.theme or the stereo file we play), never
+    // every folder under /usr/share/sounds. A missing file falls back to the
+    // freedesktop theme (sound naming spec inheritance), see sounds.js.
     readonly property var themeOptions: {
-        const out = [];
-        for (let i = 0; i < themes.count; i++) {
-            const n = themes.get(i, "fileName");
-            out.push({
-                id: n,
-                label: n
-            });
-        }
-        if (!out.some(o => o.id === Config.sounds.theme))
+        const out = Sounds.themes.map(n => ({
+                    id: n,
+                    label: n
+                }));
+        if (Config.sounds.theme.length > 0 && !out.some(o => o.id === Config.sounds.theme))
             out.push({
                 id: Config.sounds.theme,
                 label: Config.sounds.theme
@@ -94,6 +84,15 @@ ChannelPanel {
             }
         }
 
+        SwitchRow {
+            label: qsTr("Chime even when the app plays its own sound")
+            checked: Config.sounds.alwaysChime
+            onToggled: checked => {
+                Config.sounds.alwaysChime = checked;
+                Config.save();
+            }
+        }
+
         ChoiceRow {
             target: Config.sounds
             key: "theme"
@@ -113,7 +112,7 @@ ChannelPanel {
 
             StyledText {
                 Layout.fillWidth: true
-                text: qsTr("Quiet while Do Not Disturb is on and in Focus and Gaming modes.")
+                text: Sounds.previewStatus === "no-player" ? qsTr("pw-play was not found: install PipeWire tools to hear sounds.") : Sounds.previewStatus === "no-file" ? qsTr("No sound file found in this theme or in freedesktop.") : Sounds.previewStatus === "failed" ? qsTr("The sound could not be played.") : qsTr("Quiet while Do Not Disturb is on and in Focus and Gaming modes; a critical battery warning still chimes.")
                 font.pointSize: Appearance.font.size.small
                 color: Signal.palette.inkMuted
                 wrapMode: Text.WordWrap

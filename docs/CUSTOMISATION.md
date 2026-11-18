@@ -168,8 +168,19 @@ it is open.
 
 ## Event sounds (Notifications > Sounds)
 
-`sounds.*`: off by default (`enabled: false`), `volume` 0..1 (0.5), `theme` (directory under `/usr/share/sounds`, default
-`freedesktop`) and per-event toggles (`notification`, `battery`, `charger`). `services/Sounds.qml` plays
-`/usr/share/sounds/<theme>/stereo/<file>.oga` with `pw-play`; nothing is bundled or downloaded. Notification sounds
-stay silent when the popup is held (Focus, Gaming) or Do Not Disturb is on. The theme name is sanitised before it
-becomes a path. Not hooked yet: lock/unlock, screenshot, volume change.
+`sounds.*`: off by default (`enabled: false`), `volume` 0..1 (0.5), `theme` (default `freedesktop`), `alwaysChime`
+(off) and per-event toggles (`notification`, `battery`, `charger`). `services/Sounds.qml` plays
+`/usr/share/sounds/<theme>/stereo/<file>.oga` with `pw-play`, falling back to the `freedesktop` theme when the chosen
+theme lacks the file (sound naming spec inheritance); nothing is bundled or downloaded. Policy (`services/sounds.js`):
+
+- Quiet while Do Not Disturb is on or popups are held (Focus, Gaming), for all three events. Deliberate exception: a
+  critical battery warning chimes through DND, because it precedes hibernation and possible data loss.
+- Notification hints: `suppress-sound` always silences; `sound-name` / `sound-file` mean the app plays its own sound,
+  so the shell stays silent unless `alwaysChime` is on.
+- At most one play per event kind every 500 ms, and one process per kind, so a burst never overlaps players. Crossing
+  several battery levels at once (resume) chimes once.
+- The theme list shows only real sound themes (a directory with `index.theme` or `stereo/message-new-instant.oga`).
+  Theme names are single directory names; `..`, slashes and other characters are rejected. Test reports a missing
+  `pw-play` or a missing file.
+
+Not hooked yet: lock/unlock, screenshot, volume change.

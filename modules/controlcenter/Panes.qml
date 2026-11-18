@@ -109,6 +109,10 @@ ClippingRectangle {
 
         implicitWidth: root.width
         implicitHeight: root.height
+        // Neighbouring panes stay loaded in one tall stack. A pane whose
+        // content outgrows its viewport (an unclipped Flickable) would
+        // otherwise paint over the next pane's header (shell#650).
+        clip: true
 
         function updateActive(): void {
             const diff = Math.abs(root.session.activeIndex - pane.paneIndex);

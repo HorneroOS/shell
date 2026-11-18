@@ -7,9 +7,9 @@ import QtQuick
 
 // One plate per workspace cell, drawn under the active mark and the cell
 // content, so every state is the same rounded rectangle at the cell's own
-// size: empty is a hairline, occupied a quiet plate, active (when no sliding
-// indicator is shown) the raised plate, urgent an alert hairline and
-// visible-elsewhere a strong hairline. Never drawn on Cockpit Clear.
+// size: empty draws nothing, occupied is a quiet plate, active (when no
+// sliding indicator is shown) the signal-tinted plate, urgent an alert
+// hairline with one gentle pulse. Never drawn on Cockpit Clear.
 Item {
     id: root
 
@@ -21,6 +21,9 @@ Item {
     required property Item cells
     // Draw the active cell as a plate here (no sliding ActiveIndicator).
     property bool markActive: false
+    // The active plate: signal-tinted so it reads at a glance (shared with
+    // ActiveIndicator).
+    readonly property color activeFill: Qt.tint(Signal.palette.raised, Qt.alpha(root.tone.signal, 0.3))
 
     Repeater {
         model: root.workspaces.count
@@ -32,7 +35,6 @@ Item {
             readonly property Item cell: root.workspaces.count > 0 ? root.workspaces.itemAt(index) : null
             readonly property bool active: root.markActive && (cell?.isActive ?? false)
             readonly property bool urgent: cell?.isUrgent ?? false
-            readonly property bool elsewhere: cell?.isVisibleElsewhere ?? false
             readonly property bool occupied: cell?.isOccupied ?? false
 
             visible: !!cell
@@ -42,9 +44,44 @@ Item {
             height: cell?.height ?? 0
             radius: Appearance.rounding.small
 
-            color: active ? Qt.tint(Signal.palette.raised, Qt.alpha(root.tone.ink, 0.1)) : occupied ? Signal.layer(Signal.palette.raised, 2) : "transparent"
-            border.width: active ? 0 : 1
-            border.color: urgent ? root.tone.alert : elsewhere ? Signal.palette.ruleStrong : occupied ? "transparent" : Signal.palette.rule
+            // Empty cells draw nothing (just the muted numeral); visible-elsewhere
+            // is a small mark drawn by the cell, not an outline.
+            color: active ? root.activeFill : occupied ? Signal.layer(Signal.palette.raised, 2) : "transparent"
+            border.width: urgent ? 1 : 0
+            border.color: urgent ? root.tone.alert : "transparent"
+
+            onUrgentChanged: {
+                if (urgent && !Appearance.anim.reduced)
+                    pulse.restart();
+            }
+
+            // One gentle pulse when a workspace turns urgent (never looping,
+            // never under reduced motion).
+            Rectangle {
+                id: flash
+
+                anchors.fill: parent
+                radius: parent.radius
+                color: root.tone.alert
+                opacity: 0
+
+                SequentialAnimation {
+                    id: pulse
+
+                    NumberAnimation {
+                        target: flash
+                        property: "opacity"
+                        to: 0.35
+                        duration: Appearance.anim.durations.medium
+                    }
+                    NumberAnimation {
+                        target: flash
+                        property: "opacity"
+                        to: 0
+                        duration: Appearance.anim.durations.long
+                    }
+                }
+            }
 
             Behavior on color {
                 CAnim {}

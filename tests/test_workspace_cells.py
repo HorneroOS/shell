@@ -18,13 +18,16 @@ def test_cells_are_rectangular_never_pills():
 def test_active_cell_is_raised_with_signal_tick_inside_the_cell():
     assert "Signal.palette.raised" in ACTIVE
     assert "root.tone.signal" in ACTIVE  # 2 px tick inset in the cell
-    assert "tickInset" in ACTIVE and "Colouriser" not in ACTIVE
+    assert "tickLength" in ACTIVE and "Colouriser" not in ACTIVE
+    assert "(root.width - width) / 2" in ACTIVE  # centred along the bar
+    assert "Qt.alpha(root.tone.signal, 0.3)" in ACTIVE  # signal-tinted plate
     assert "onSignal" not in ACTIVE  # no signal-filled slab
 
 
 def test_urgent_and_visible_elsewhere_states():
     assert "isUrgent" in CELL and "root.tone.alert" in CELL
     assert "isVisibleElsewhere" in CELL and "Signal.palette.ruleStrong" in CELL
+    assert "root.numeralBox / 3" in CELL  # short mark, not an outline
     assert "visibleElsewhere" in STRIP and "urgent" in STRIP
 
 
@@ -58,8 +61,9 @@ def test_cells_have_no_negative_margins_and_one_rhythm():
 
 def test_plates_share_one_shape_and_use_signal_tokens():
     assert "Appearance.rounding.small" in PLATES
-    assert "Signal.palette.rule" in PLATES and "Signal.palette.ruleStrong" in PLATES
+    assert "border.width: urgent ? 1 : 0" in PLATES  # empty: no plate, no outline
     assert "root.tone.alert" in PLATES
+    assert "Appearance.anim.reduced" in PLATES and "loops" not in PLATES  # one pulse only
     for src in (CELL, ACTIVE, PLATES, STRIP):
         assert '"#' not in src and "Material" not in src
 

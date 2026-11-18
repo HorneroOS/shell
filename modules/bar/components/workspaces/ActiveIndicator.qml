@@ -21,7 +21,9 @@ StyledRect {
     property int crossSize: Density.inner
     // The signal tick sits this far inside the plate (0 flush on Clear).
     readonly property int tickGap: clear ? 0 : 2
-    readonly property int tickInset: clear ? 0 : Math.max(3, Math.round(Density.textPx / 3))
+    // Tick length along the bar: half the cell, centred (full cell, flush,
+    // on Clear, matching its underline reference).
+    readonly property real tickLength: clear ? (vertical ? height : width) : Math.round((vertical ? height : width) / 2)
 
     required property int activeWsId
     required property Repeater workspaces
@@ -70,16 +72,17 @@ StyledRect {
     // Signal Bezel §5: fixed rectangular cells, never pills. The active
     // cell is a raised fill with the numeral in ink — not a signal slab.
     radius: Appearance.rounding.small
-    color: root.clear ? "transparent" : Qt.tint(Signal.palette.raised, Qt.alpha(root.tone.ink, 0.1))
+    color: root.clear ? "transparent" : Qt.tint(Signal.palette.raised, Qt.alpha(root.tone.signal, 0.3))
 
-    // Signal tick: 2 px across the cell on the edge facing the content (top
-    // edge for a bottom strip, bottom for a top rail, inner edge for rails),
-    // inset inside the plate; flush and full width on Cockpit Clear.
+    // Signal tick: 2 px, half the cell long and centred along the bar, on the
+    // edge facing the content (top edge for a bottom strip, bottom for a top
+    // rail, inner edge for rails), inside the plate; flush on Cockpit Clear.
     Rectangle {
-        width: root.vertical ? 2 : Math.max(0, root.width - root.tickInset * 2)
-        height: root.vertical ? Math.max(0, root.height - root.tickInset * 2) : 2
-        x: root.vertical ? (root.edge === "right" ? root.tickGap : root.width - 2 - root.tickGap) : root.tickInset
-        y: root.vertical ? root.tickInset : (root.edge === "bottom" ? root.tickGap : root.height - 2 - root.tickGap)
+        width: root.vertical ? 2 : root.tickLength
+        height: root.vertical ? root.tickLength : 2
+        x: root.vertical ? (root.edge === "right" ? root.tickGap : root.width - 2 - root.tickGap) : Math.round((root.width - width) / 2)
+        y: root.vertical ? Math.round((root.height - height) / 2) : (root.edge === "bottom" ? root.tickGap : root.height - 2 - root.tickGap)
+        radius: 1
         color: root.tone.signal
     }
 

@@ -244,14 +244,16 @@ Item {
         }
     }
 
-    // §5 visible on another monitor: 1 px ruleStrong outline on the
-    // content-facing edge, no fill (plated cells outline the plate instead).
+    // §5 visible on another monitor: a short 2 px mark centred on the
+    // content-facing edge (never an outline, so it cannot read as active).
     Rectangle {
-        visible: root.isVisibleElsewhere && !root.plated
-        width: root.vertical ? 1 : root.width
-        height: root.vertical ? root.height : 1
-        x: root.vertical ? (root.contentAtLeft ? 0 : root.width - 1) : 0
-        y: root.vertical ? 0 : (root.contentAtTop ? 0 : root.height - 1)
+        visible: root.isVisibleElsewhere
+        readonly property real len: Math.max(4, Math.round(root.numeralBox / 3))
+        width: root.vertical ? 2 : len
+        height: root.vertical ? len : 2
+        x: root.vertical ? (root.contentAtLeft ? 1 : root.width - 3) : Math.round((root.numeralBox - width) / 2)
+        y: root.vertical ? Math.round((root.numeralBox - height) / 2) : (root.contentAtTop ? 1 : root.height - 3)
+        radius: 1
         color: root.tone.active ? root.tone.inkMuted : Signal.palette.ruleStrong
     }
 

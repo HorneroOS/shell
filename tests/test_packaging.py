@@ -104,10 +104,10 @@ def test_hornero_runtime_dependencies_are_packaged():
     match = re.search(r"^depends=\((.*?)\)", text, re.MULTILINE | re.DOTALL)
     assert match, "depends array not found"
     depends = match.group(1)
-    assert "'hornero-config>=0.4.0'" in depends, (
+    assert "'hornero-config>=0.4.1'" in depends, (
         "the Shell must require the AUR-owned system catalogue"
     )
-    assert "'horneroctl-bin>=0.2.0_preview46'" in depends, (
+    assert "'horneroctl-bin>=0.2.0_preview47'" in depends, (
         "the Shell must require the AUR-owned CLI runtime"
     )
     assert "'ttf-ibm-plex'" in depends, "Signal typography (RFC 0001 3.3)"

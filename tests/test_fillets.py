@@ -75,7 +75,7 @@ def test_every_attached_sheet_takes_a_fillet():
     barset = (ROOT / "modules/bar/BarSet.qml").read_text()
     assert "Fillet.radius(Config.border.fillet, root.openOn(edge), root.frameVisible" in barset
     panels = (ROOT / "modules/drawers/Panels.qml").read_text()
-    assert "fillet: root.bar.filletOn(popouts.edge)" in panels
+    assert "fillet: root.bar.filletOn(popouts.ownerEdge)" in panels
     frame = (ROOT / "components/placement/SurfaceFrame.qml").read_text()
     assert "visible: !root._filleted" in frame and "_filleted: attached && fillet > 0" in frame
 

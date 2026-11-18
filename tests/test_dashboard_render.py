@@ -61,3 +61,39 @@ def test_classic_strip_deck_renders(tree, playing):
                             {"dashboard": {"composition": "classic"}}, 1366, 768, playing)
     assert "SpectrumMeter" not in log or "is not a type" not in log, log[-2000:]
     assert data["w"] <= 1366 - 32 and data["h"] <= 768 - 32, data
+
+
+RESOLUTIONS = [(1366, 768), (1920, 1080), (2560, 1440)]
+
+
+@pytest.mark.parametrize("composition", ["console", "classic", "compact"])
+@pytest.mark.parametrize("size", RESOLUTIONS, ids=lambda s: f"{s[0]}x{s[1]}")
+def test_compositions_fit_and_keep_rhythm(tree, composition, size):
+    w, h = size
+    data, out, log = render(tree, f"dash-{composition}-{w}x{h}", {"dashboard": {"composition": composition}}, w, h, True)
+    assert data["w"] <= w - 32 and data["h"] <= h - 32, data
+    frames = data["frames"]
+    titled = {f["title"]: f for f in frames if f["title"]}
+    # Frames never overlap.
+    for i, a in enumerate(frames):
+        for b in frames[i + 1:]:
+            overlap = min(a["x"] + a["w"], b["x"] + b["w"]) - max(a["x"], b["x"]) > 0.5 and \
+                min(a["y"] + a["h"], b["y"] + b["h"]) - max(a["y"], b["y"]) > 0.5
+            assert not overlap, (a, b)
+    if composition == "console":
+        deck = titled["Deck"]
+        area = deck["w"] * deck["h"]
+        assert all(area > f["w"] * f["h"] for f in frames if f is not deck), "the deck is the largest frame"
+        clock, station = titled["Clock"], titled["Station"]
+        # Gaps are spacing.normal (12) at scale 1.
+        assert abs(station["x"] - (clock["x"] + clock["w"]) - 12) < 0.5
+        assert abs(deck["x"] - (station["x"] + station["w"]) - 12) < 0.5
+        assert titled["Resources"]["w"] >= 400, "the resources scope gets the wide middle column"
+    if composition == "compact":
+        assert "Deck" not in titled
+
+
+def test_console_idle_deck_says_no_signal(tree):
+    data, out, log = render(tree, "dash-console-idle-1920x1080", {"dashboard": {"composition": "console"}}, 1920, 1080, False)
+    titled = {f["title"]: f for f in data["frames"] if f["title"]}
+    assert "Deck" in titled

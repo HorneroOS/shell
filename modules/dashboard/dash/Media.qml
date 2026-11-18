@@ -54,7 +54,7 @@ Item {
     }
 
     implicitWidth: tower ? 300 : 640
-    implicitHeight: tower ? towerLayout.implicitHeight : 56
+    implicitHeight: tower ? towerLayout.implicitHeight : 60
 
     Timer {
         running: root.playing && root.visibilities.dashboard
@@ -84,6 +84,7 @@ Item {
         }
 
         Identity {
+            Layout.fillWidth: false
             Layout.preferredWidth: 240
             Layout.alignment: Qt.AlignVCenter
         }
@@ -218,7 +219,7 @@ Item {
                 StyledText {
                     anchors.horizontalCenter: parent.horizontalCenter
 
-                    visible: root.tower || !root.dozing
+                    visible: root.tower
                     mono: true
                     text: qsTr("NO SIGNAL")
                     color: Signal.palette.inkMuted
@@ -276,11 +277,12 @@ Item {
             horizontalAlignment: root.tower ? Text.AlignHCenter : Text.AlignLeft
         }
 
+        // The player, or NO SIGNAL on the strip (the tower says it in the well).
         Instruments.Eyebrow {
             Layout.fillWidth: true
 
-            visible: root.hasPlayer
-            label: root.hasPlayer ? Players.getIdentity(root.player) + (root.player.isPlaying ? "" : " · " + qsTr("paused")) : ""
+            visible: root.hasPlayer || !root.tower
+            label: root.hasPlayer ? Players.getIdentity(root.player) + (root.player.isPlaying ? "" : " · " + qsTr("paused")) : qsTr("NO SIGNAL")
             horizontalAlignment: root.tower ? Text.AlignHCenter : Text.AlignLeft
         }
     }

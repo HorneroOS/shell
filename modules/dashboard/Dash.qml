@@ -19,7 +19,7 @@ import QtQuick.Layouts
 // dashboard.composition (Control Center > Dashboard > Layout):
 //
 //   console (default)                     classic
-//   CLOCK (wide) | STATION   | DECK       STATION  | CLOCK     | WEATHER
+//   CLOCK        | STATION   | DECK       STATION  | CLOCK     | WEATHER
 //   CALENDAR     | RESOURCES | (tall)     CALENDAR | RESOURCES
 //   WEATHER strip            |            MEDIA strip
 //
@@ -46,14 +46,16 @@ Item {
         sourceComponent: root.composition === "console" ? consoleLayout : gridLayout
     }
 
-    // --- console: wide clock, tall deck hero, thin weather strip ----------
+    // --- console: clock with seconds ruler, tall deck hero, weather strip --
     Component {
         id: consoleLayout
 
         GridLayout {
+            // The middle column carries the resources scope, which needs the
+            // room; the deck hero is tall rather than wide.
             readonly property int clockWidth: 336
-            readonly property int stationWidth: 296
-            readonly property int deckWidth: 320
+            readonly property int stationWidth: 404
+            readonly property int deckWidth: 300
 
             columns: 3
             rowSpacing: root.gap
@@ -290,7 +292,7 @@ Item {
                 Layout.columnSpan: 3
                 Layout.fillWidth: true
                 visible: root.composition !== "compact"
-                implicitHeight: 76
+                implicitHeight: 80
                 padding: 10
 
                 Media {

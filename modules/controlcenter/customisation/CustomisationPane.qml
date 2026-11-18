@@ -147,6 +147,7 @@ Item {
 
         anchors.fill: parent
         anchors.margins: Appearance.padding.large
+        clip: true
         flickableDirection: Flickable.VerticalFlick
         contentHeight: content.implicitHeight
 

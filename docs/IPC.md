@@ -17,6 +17,7 @@ other HorneroOS components script against; renames must update
 | `hypr` | `services/Hypr.qml` | `refreshDevices()`, `cycleSpecialWorkspace(direction)`, `listSpecialWorkspaces()` |
 | `experience` | `services/Experience.qml` | `get()`, `set(mode)`, `toggle(mode)`, `revert()`, `reset()`, `list()`, `profile(mode)`, `status()`, `customise(mode, field, json)`, `resetCustomisations(mode)`, `setAuto(enabled)`, `deck(mode)`, `setDeckHidden(mode, widget, hide)`, `setDeckAnchor`, `moveDeckWidget`, `setDeckStyle`, `deckPresets`, `applyDeckBuiltin`, `saveDeckPreset`, `applyDeckPreset`, `deleteDeckPreset`, `resetDeck(mode)` — see [Experience modes](#experience-modes) |
 | `signal` | `services/Signal.qml` | `reload()` (re-read the live scheme), `mode()` (`dark`/`light`), `theme()` (applied theme id), `previewing()` (true while a Chromatic candidate is shown in memory) |
+| `keybinds` | `modules/keybinds/KeybindsOverlay.qml` | `toggle()`, `open(query)`, `close()`, `isOpen()` — the keybinding overlay ([docs/KEYBINDINGS.md](KEYBINDINGS.md)); also the `hornero:keybinds` global shortcut |
 | `brightness` | `services/Brightness.qml` | `get()`, `getFor(query)`, `set(value)` (+ `setFor` per file) |
 
 ## Experience modes

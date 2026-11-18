@@ -42,6 +42,16 @@ JsonObject {
             dangerous: false
         },
         {
+            name: "Javi Radio",
+            icon: "feather",
+            description: "Ask Javi a quick question (read-only, nothing runs without you)",
+            // Handled in-process by the launcher (Actions.qml), never
+            // over IPC, so it counts as the user's own gesture.
+            command: ["javiradio"],
+            enabled: true,
+            dangerous: false
+        },
+        {
             name: "Ask Hornero",
             icon: "feather",
             description: "Ask the Hornero assistant (needs horneroctl assistant enable)",

@@ -1,6 +1,7 @@
 pragma Singleton
 
 import ".."
+import qs.modules.companion
 import qs.services
 import qs.config
 import qs.utils
@@ -87,6 +88,11 @@ Searcher {
                     Experience.revert();
                 else
                     Experience.set(command[1], "user");
+            } else if (command[0] === "javiradio") {
+                // In-process, so the open is the user's launcher gesture
+                // (an IPC call could come from any process).
+                list.visibilities.launcher = false;
+                Qt.callLater(() => JaviRadio.openFrom("launcher"));
             } else if (command[0] === "layoutpicker") {
                 list.visibilities.launcher = false;
                 Visibilities.getForActive().layoutPicker = true;

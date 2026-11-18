@@ -202,3 +202,13 @@ The shell also *spawns* processes; the stable outbound contracts are:
   `notify-send …`, `systemctl …`, and the configured terminal from
   `Config.general.apps.terminal` (Kitty by default) through `app2unit` when
   available, with a direct-launch fallback.
+
+`javiradio` (`modules/companion/RadioPanel.qml`): `open()`, `toggle()`,
+`openFrom(entry)`, `prefill(entry, text)`, `close()`, `status()`. IPC
+cannot be authenticated, so every call is the untrusted `plugin` entry
+whatever it names, except the opt-in `keybind` entry for compositor key
+bindings (off by default, just as forgeable). Both are refused in Focus,
+Gaming and under fullscreen, and a disabled entry returns `refused`.
+`plugin` opens without keyboard focus. No call sends a question: `prefill`
+only puts text in the input for the user to send (see
+`docs/JAVI_RADIO.md`).

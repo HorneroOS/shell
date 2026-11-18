@@ -94,6 +94,48 @@ Scope {
         }
     }
 
+    // Radio hands a question that needs more than a quick answer (for
+    // example an approval) to the one conversation surface. The user asked
+    // for this by pressing "Open the Workbench". The pending payload (run
+    // id + what is pending) goes to the bridge so the chat shows the
+    // approval or clarification card; notePayload only records it, and the
+    // user decides there. Nothing is answered or approved on the way.
+    Connections {
+        target: JaviRadio
+
+        function onHandoffRequested(payload): void {
+            if (payload)
+                assistantBridge.notePayload(payload);
+            CompanionStore.summon();
+            CompanionStore.forceVisible = true;
+            assistantBridge.chatOpen = true;
+        }
+    }
+
+    // Nest habitat hook (shell#634). When the habitat is in the tree it is
+    // published as `root.habitat`; Radio then lights its radio LED and owns
+    // the "radio" click action (the habitat skips its chat fallback while
+    // radioHandlesNest is true). Without the habitat, `root.habitat` is
+    // undefined and both bindings below are inert.
+    readonly property bool radioHandlesNest: true
+
+    Connections {
+        target: root.habitat ?? null
+        ignoreUnknownSignals: true
+
+        function onActivated(action: string): void {
+            if (action === "radio")
+                JaviRadio.openFrom("nest");
+        }
+    }
+
+    Binding {
+        target: root.habitat ?? null
+        property: "radioBusy"
+        value: JaviRadio.busy
+        when: (root.habitat ?? null) !== null
+    }
+
     // Restart durability for the store (snapshot file I/O lives here,
     // never in the store itself).
     CompanionPersist {}
@@ -812,8 +854,20 @@ Scope {
                                 menu.open();
                                 return;
                             }
-                            // Plain click (no drag): excited + a tip.
+                            // Plain click (no drag): the user's chosen
+                            // action (Javi Radio by default; falls back to
+                            // a tip when Radio is switched off).
                             if (!win.dragging && !mouse.moved && CompanionStore.state !== "peeking") {
+                                const action = CompanionStore.radioSettings.clickOnJavi;
+                                if (action === "radio" && JaviRadio.openFrom("javi"))
+                                    return;
+                                if (action === "chat") {
+                                    assistantBridge.chatOpen = !assistantBridge.chatOpen;
+                                    CompanionStore.forceVisible = assistantBridge.chatOpen;
+                                    return;
+                                }
+                                if (action === "none")
+                                    return;
                                 CompanionStore.requestState("excited");
                                 const t = CompanionStore.tip();
                                 if (t !== "")
@@ -924,6 +978,15 @@ Scope {
                             onChosen: {
                                 menu.close();
                                 CompanionStore.resetPosition();
+                            }
+                        }
+                        Entry {
+                            visible: JaviRadio.allowed("menu")
+                            height: visible ? implicitHeight : 0
+                            label: qsTr("Javi Radio")
+                            onChosen: {
+                                menu.close();
+                                JaviRadio.openFrom("menu");
                             }
                         }
                         Entry {

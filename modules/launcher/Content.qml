@@ -208,7 +208,7 @@ Item {
                         // Closing the launcher (including the
                         // central Escape cascade) cancels any
                         // in-flight inline ask.
-                        InlineAsk.cancel();
+                        InlineAsk.cancel("launcher");
                     }
                 }
 

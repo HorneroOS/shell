@@ -56,6 +56,11 @@ var CATALOG = {
             "radio.unavailable": "The assistant is not available right now.",
             "radio.handoff": "This needs your approval. Open the Workbench to continue.",
             "radio.disabled": "Javi Radio is switched off in settings.",
+            "radio.workbench": "Open the Workbench",
+            "radio.stop": "Stop",
+            "radio.close": "Close",
+            "radio.superseded": "Another quick question took the line. Ask again when ready.",
+            "radio.clickToType": "Click here to type your question.",
             "voice.quiet": "Quiet hours are on. I will keep it down."
         },
         plain: {
@@ -91,6 +96,11 @@ var CATALOG = {
             "radio.unavailable": "The assistant is unavailable.",
             "radio.handoff": "Approval needed. Open the Workbench to continue.",
             "radio.disabled": "Javi Radio is disabled in settings.",
+            "radio.workbench": "Open the Workbench",
+            "radio.stop": "Stop",
+            "radio.close": "Close",
+            "radio.superseded": "Replaced by another quick question.",
+            "radio.clickToType": "Click to type.",
             "voice.quiet": "Quiet hours are on."
         }
     },
@@ -128,6 +138,11 @@ var CATALOG = {
             "radio.unavailable": "El asistente no está disponible ahora.",
             "radio.handoff": "Esto necesita tu aprobación. Abrí el Workbench para seguir.",
             "radio.disabled": "La Radio de Javi está apagada en los ajustes.",
+            "radio.workbench": "Abrir el Workbench",
+            "radio.stop": "Parar",
+            "radio.close": "Cerrar",
+            "radio.superseded": "Otra pregunta rápida ocupó la línea. Preguntá de nuevo.",
+            "radio.clickToType": "Hacé clic acá para escribir tu pregunta.",
             "voice.quiet": "Hay horas de silencio. Voy bajito."
         },
         plain: {
@@ -163,6 +178,11 @@ var CATALOG = {
             "radio.unavailable": "El asistente no está disponible.",
             "radio.handoff": "Se necesita aprobación. Abrí el Workbench para seguir.",
             "radio.disabled": "La Radio de Javi está desactivada en los ajustes.",
+            "radio.workbench": "Abrir el Workbench",
+            "radio.stop": "Detener",
+            "radio.close": "Cerrar",
+            "radio.superseded": "Reemplazada por otra pregunta rápida.",
+            "radio.clickToType": "Hacé clic para escribir.",
             "voice.quiet": "Hay horas de silencio."
         }
     }

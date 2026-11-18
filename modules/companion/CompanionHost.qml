@@ -96,16 +96,44 @@ Scope {
 
     // Radio hands a question that needs more than a quick answer (for
     // example an approval) to the one conversation surface. The user asked
-    // for this by pressing "Open the Workbench"; nothing is answered or
-    // approved on the way.
+    // for this by pressing "Open the Workbench". The pending payload (run
+    // id + what is pending) goes to the bridge so the chat shows the
+    // approval or clarification card; notePayload only records it, and the
+    // user decides there. Nothing is answered or approved on the way.
     Connections {
         target: JaviRadio
 
-        function onHandoffRequested(): void {
+        function onHandoffRequested(payload): void {
+            if (payload)
+                assistantBridge.notePayload(payload);
             CompanionStore.summon();
             CompanionStore.forceVisible = true;
             assistantBridge.chatOpen = true;
         }
+    }
+
+    // Nest habitat hook (shell#634). When the habitat is in the tree it is
+    // published as `root.habitat`; Radio then lights its radio LED and owns
+    // the "radio" click action (the habitat skips its chat fallback while
+    // radioHandlesNest is true). Without the habitat, `root.habitat` is
+    // undefined and both bindings below are inert.
+    readonly property bool radioHandlesNest: true
+
+    Connections {
+        target: root.habitat ?? null
+        ignoreUnknownSignals: true
+
+        function onActivated(action: string): void {
+            if (action === "radio")
+                JaviRadio.openFrom("nest");
+        }
+    }
+
+    Binding {
+        target: root.habitat ?? null
+        property: "radioBusy"
+        value: JaviRadio.busy
+        when: (root.habitat ?? null) !== null
     }
 
     // Restart durability for the store (snapshot file I/O lives here,

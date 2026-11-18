@@ -84,7 +84,7 @@ StyledListView {
         // any in-flight inline ask; the singleton keeps only the
         // last partial text in memory.
         if (state !== "ai")
-            InlineAsk.cancel();
+            InlineAsk.cancel("launcher");
         if (state === "appearance")
             Themes.reload();
     }

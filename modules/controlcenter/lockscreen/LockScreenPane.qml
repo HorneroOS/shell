@@ -13,7 +13,8 @@ import QtQuick
 import QtQuick.Layouts
 
 // Control Center › Lock screen: every Config.lock knob in one place
-// (logo recolour, notification privacy, fingerprint unlock), bound
+// (logo recolour, notification privacy, fingerprint unlock, the optional
+// diagonal hairline), bound
 // directly to the shell config the lock surface actually reads.
 Item {
     id: root
@@ -119,6 +120,15 @@ Item {
                             parseValueFunction: text => parseInt(text)
                             onValueModified: newValue => {
                                 Config.lock.maxFprintTries = Math.round(newValue);
+                                Config.save();
+                            }
+                        }
+
+                        SwitchRow {
+                            label: qsTr("Diagonal brand hairline")
+                            checked: Config.lock.diagonalRule
+                            onToggled: checked => {
+                                Config.lock.diagonalRule = checked;
                                 Config.save();
                             }
                         }

@@ -803,6 +803,7 @@
     "hideNotifs": true,
     "enableFprint": true,
     "maxFprintTries": 3,
+    "diagonalRule": false,
     "sizes": {
       "heightMult": 0.7,
       "ratio": 1.7777777777777777,

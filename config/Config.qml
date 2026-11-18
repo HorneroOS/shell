@@ -706,6 +706,7 @@ Singleton {
             hideNotifs: lock.hideNotifs,
             enableFprint: lock.enableFprint,
             maxFprintTries: lock.maxFprintTries,
+            diagonalRule: lock.diagonalRule,
             sizes: {
                 heightMult: lock.sizes.heightMult,
                 ratio: lock.sizes.ratio,

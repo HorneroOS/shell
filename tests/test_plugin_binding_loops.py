@@ -80,7 +80,7 @@ def test_hosts_start_without_binding_loops(tmp_path: Path):
         "XDG_CACHE_HOME": str(xdg / "cache"),
         "XDG_RUNTIME_DIR": str(xdg / "rt"),
         "HOME": str(xdg / "home"),
-        "QML2_IMPORT_PATH": str(root / "plugin" / "qml"),
+        "QML2_IMPORT_PATH": os.pathsep.join(filter(None, [str(root / "plugin" / "qml"), os.environ.get("HORNERO_PLUGIN_QML", "")])),
         "QT_QPA_PLATFORM": "offscreen",
         "LIBGL_ALWAYS_SOFTWARE": "1",
     }

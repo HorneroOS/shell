@@ -196,7 +196,7 @@ def render(tmp_path: Path, width: int, count: int = FIXTURE_COUNT, shrink_after_
         "XDG_CONFIG_HOME": str(xdg / "config"), "XDG_STATE_HOME": str(xdg / "state"),
         "XDG_DATA_HOME": str(xdg / "data"), "XDG_CACHE_HOME": str(xdg / "cache"),
         "XDG_RUNTIME_DIR": str(xdg / "rt"), "HOME": str(xdg / "home"),
-        "QML2_IMPORT_PATH": str(root / "plugin" / "qml"),
+        "QML2_IMPORT_PATH": os.pathsep.join(filter(None, [str(root / "plugin" / "qml"), os.environ.get("HORNERO_PLUGIN_QML", "")])),
         "QT_QPA_PLATFORM": "offscreen", "LIBGL_ALWAYS_SOFTWARE": "1",
         "OV_W": str(width), "OV_REPORT_MS": str(report_ms),
     }

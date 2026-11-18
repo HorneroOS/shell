@@ -52,7 +52,7 @@ def render(tmp: Path, edge: str, style: str, name: str, out: Path | None = None,
         "XDG_CONFIG_HOME": str(xdg / "config"), "XDG_STATE_HOME": str(xdg / "state"),
         "XDG_DATA_HOME": str(xdg / "data"), "XDG_CACHE_HOME": str(xdg / "cache"),
         "XDG_RUNTIME_DIR": str(xdg / "rt"), "HOME": str(xdg / "home"),
-        "QML2_IMPORT_PATH": str(root / "plugin" / "qml"),
+        "QML2_IMPORT_PATH": os.pathsep.join(filter(None, [str(root / "plugin" / "qml"), os.environ.get("HORNERO_PLUGIN_QML", "")])),
         "QT_QPA_PLATFORM": "offscreen", "LIBGL_ALWAYS_SOFTWARE": "1",
         "PO_EDGE": edge, "PO_STYLE": style, "PO_NAME": name, "PO_W": str(SW), "PO_H": str(SH),
     }

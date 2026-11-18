@@ -276,4 +276,7 @@ Preferences for voice, nest and Radio are stored as one JSON document
 (`prefs`) in the companion state snapshot. Each section is re-validated by
 its pure module (`javivoice.js`, `habitat.js`, `radio.js`) on every read
 and on restore, so a corrupt or hand-edited file degrades per key to the
-shipped defaults.
+shipped defaults; a `prefs` value that is not a JSON object (`null`, an
+array, a number) reads as empty and never aborts the rest of the restore.
+Edits by dotted path (`patchPref`) only walk existing keys and reject
+`__proto__`, `constructor` and `prototype` segments (`prefsdoc.js`).

@@ -1,6 +1,7 @@
 pragma Singleton
 
 import "habitat.js" as Habitat
+import "prefsdoc.js" as PrefsDoc
 import "javivoice.js" as Voice
 import "radio.js" as Radio
 import "reactions.js" as Reactions
@@ -208,47 +209,34 @@ Singleton {
     }
 
     // Voice, habitat and radio preferences: always complete, validated.
-    readonly property var prefs: {
-        let raw = {};
-        try {
-            raw = persist.prefs === "" ? {} : JSON.parse(persist.prefs);
-        } catch (e) {
-            raw = {};
-        }
-        if (raw === null || typeof raw !== "object" || Array.isArray(raw))
-            raw = {};
-        return {
-            "voice": Voice.sanitize(raw.voice),
-            "habitat": Habitat.sanitize(raw.habitat),
-            "radio": Radio.sanitize(raw.radio)
-        };
-    }
+    readonly property var prefs: root._sanitizePrefs(PrefsDoc.parseObject(persist.prefs))
     readonly property var voiceSettings: root.prefs.voice
     readonly property var habitatSettings: root.prefs.habitat
     readonly property var radioSettings: root.prefs.radio
 
+    // One complete, validated preference document from any parsed value
+    // (each section by its own pure module).
+    function _sanitizePrefs(raw: var): var {
+        const doc = PrefsDoc.asObject(raw);
+        return {
+            "voice": Voice.sanitize(doc.voice),
+            "habitat": Habitat.sanitize(doc.habitat),
+            "radio": Radio.sanitize(doc.radio)
+        };
+    }
+
     // Edits one preference by dotted path ("habitat.anchor",
     // "habitat.modeLevel.focus"); the whole document is re-validated, so an
-    // invalid value is dropped back to the previous or default one.
+    // invalid value is dropped back to the previous or default one. Paths
+    // with __proto__/constructor/prototype segments, empty segments or no
+    // existing parent object are rejected (prefsdoc.js setPath).
     function patchPref(section: string, path: string, value: var): void {
         if (["voice", "habitat", "radio"].indexOf(section) < 0)
             return;
         const next = JSON.parse(JSON.stringify(root.prefs));
-        const parts = path.split(".");
-        let node = next[section];
-        for (let i = 0; i < parts.length - 1; i++) {
-            if (node === null || typeof node !== "object")
-                return;
-            node = node[parts[i]];
-        }
-        if (node === null || typeof node !== "object")
+        if (!PrefsDoc.setPath(next[section], path, value))
             return;
-        node[parts[parts.length - 1]] = value;
-        persist.prefs = JSON.stringify({
-            "voice": Voice.sanitize(next.voice),
-            "habitat": Habitat.sanitize(next.habitat),
-            "radio": Radio.sanitize(next.radio)
-        });
+        persist.prefs = JSON.stringify(root._sanitizePrefs(next));
         root.markDirty();
     }
 
@@ -258,11 +246,7 @@ Singleton {
             return;
         const next = JSON.parse(JSON.stringify(root.prefs));
         next[section] = {};
-        persist.prefs = JSON.stringify({
-            "voice": Voice.sanitize(next.voice),
-            "habitat": Habitat.sanitize(next.habitat),
-            "radio": Radio.sanitize(next.radio)
-        });
+        persist.prefs = JSON.stringify(root._sanitizePrefs(next));
         root.markDirty();
     }
 
@@ -738,14 +722,11 @@ Singleton {
                     persist.sleepAtNest = o.sleepAtNest;
                 if (typeof o.reactions === "string")
                     persist.reactions = JSON.stringify(Reactions.sanitizeSettings(root._parseJson(o.reactions)));
-                if (typeof o.prefs === "string") {
-                    const rawPrefs = root._parseJson(o.prefs);
-                    persist.prefs = JSON.stringify({
-                        "voice": Voice.sanitize(rawPrefs.voice),
-                        "habitat": Habitat.sanitize(rawPrefs.habitat),
-                        "radio": Radio.sanitize(rawPrefs.radio)
-                    });
-                }
+                // _parseJson may hand back null/array/scalar for valid but
+                // non-object JSON; _sanitizePrefs reads those as {} so one bad
+                // value cannot abort the rest of the restore.
+                if (typeof o.prefs === "string")
+                    persist.prefs = JSON.stringify(root._sanitizePrefs(root._parseJson(o.prefs)));
                 if (typeof o.modeLook === "string")
                     persist.modeLook = JSON.stringify(Reactions.sanitizeModeLook(root._parseJson(o.modeLook)));
                 if (typeof o.nestEnabled === "boolean")

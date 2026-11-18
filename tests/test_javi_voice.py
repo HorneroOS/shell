@@ -80,8 +80,55 @@ def test_store_persists_and_revalidates_prefs():
     store = (comp / "CompanionStore.qml").read_text()
     assert "prefs: persist.prefs" in store and "o.prefs" in store
     for mod in ("Voice.sanitize", "Habitat.sanitize", "Radio.sanitize"):
-        assert store.count(mod) >= 3, mod
+        assert mod in store, mod
     assert "function patchPref(" in store and "function resetPref(" in store
+    # Every write path goes through the one validated-document builder.
+    assert store.count("JSON.stringify(root._sanitizePrefs(") >= 3
+    # Restore tolerates non-object JSON (null, arrays, scalars).
+    assert "persist.prefs = JSON.stringify(root._sanitizePrefs(root._parseJson(o.prefs)))" in store
+    assert "PrefsDoc.asObject(raw)" in store
+    # patchPref walks paths only through the guarded helper.
+    body = store[store.index("function patchPref("):store.index("function resetPref(")]
+    assert "PrefsDoc.setPath(next[section], path, value)" in body
+    assert "path.split" not in body
+
+
+@NODE
+def test_prefs_document_guards_shape():
+    r = run_js("prefsdoc.js", """
+console.log(JSON.stringify([
+  parseObject(""), parseObject("null"), parseObject("[1,2]"), parseObject("5"),
+  parseObject("{bad"), parseObject('{"voice":{"tone":"warm"}}'),
+  asObject(null), asObject([]), asObject("x"), asObject({a: 1})
+]));""")
+    assert r[:5] == [{}, {}, {}, {}, {}]
+    assert r[5] == {"voice": {"tone": "warm"}}
+    assert r[6:9] == [{}, {}, {}] and r[9] == {"a": 1}
+
+
+@NODE
+def test_patch_path_rejects_prototype_segments():
+    r = run_js("prefsdoc.js", """
+const out = [];
+for (const p of ["__proto__.polluted", "constructor.prototype.polluted", "prototype",
+                 "a.__proto__", "modeLevel.constructor", "", "a..b", ".a", "a."]) {
+  const doc = {a: {b: 1}, modeLevel: {focus: 1}};
+  out.push([p, setPath(doc, p, "x"), JSON.stringify(doc)]);
+}
+const ok = {anchor: "left", modeLevel: {focus: 1}};
+out.push(["anchor", setPath(ok, "anchor", "right"), JSON.stringify(ok)]);
+out.push(["modeLevel.focus", setPath(ok, "modeLevel.focus", 2), JSON.stringify(ok)]);
+out.push(["missing.child", setPath(ok, "missing.child", 1), JSON.stringify(ok)]);
+out.push(["anchor.child", setPath(ok, "anchor.child", 1), JSON.stringify(ok)]);
+out.push(["polluted", ({}).polluted === undefined && Object.prototype.polluted === undefined]);
+console.log(JSON.stringify(out));""")
+    for path, accepted, doc in r[:9]:
+        assert accepted is False, path
+        assert doc == '{"a":{"b":1},"modeLevel":{"focus":1}}', path
+    assert r[9][1] is True and r[9][2] == '{"anchor":"right","modeLevel":{"focus":1}}'
+    assert r[10][1] is True and r[10][2] == '{"anchor":"right","modeLevel":{"focus":2}}'
+    assert r[11][1] is False and r[12][1] is False
+    assert r[13][1] is True
 
 
 def test_voice_section_is_in_the_pane():

@@ -128,7 +128,7 @@ Scope {
                 anchors.fill: parent
                 focus: true
                 Keys.onEscapePressed: event => {
-                    JaviRadio.escape();
+                    JaviRadio.pressEscape();
                     event.accepted = true;
                 }
 

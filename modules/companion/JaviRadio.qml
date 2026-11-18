@@ -121,7 +121,7 @@ Singleton {
             root.close();
     }
 
-    function escape(): void {
+    function pressEscape(): void {
         if (Radio.escapeAction(root.busy) === "cancel")
             root.cancel();
         else

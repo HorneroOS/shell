@@ -117,7 +117,7 @@ def test_keyboard_is_on_demand_with_focus_loss_and_escape_always_works():
     # Escape lives on an always-enabled FocusScope around the card
     scope = PANEL.split("FocusScope {")[1]
     assert scope.index("Keys.onEscapePressed") < scope.index("id: card")
-    assert "JaviRadio.escape()" in scope and "enabled:" not in scope.split("id: card")[0]
+    assert "JaviRadio.pressEscape()" in scope and "enabled:" not in scope.split("id: card")[0]
     assert "input.Keys.onEscapePressed" not in PANEL
     # clicks claim the keyboard (an IPC open starts without it)
     assert PANEL.count("JaviRadio.claimKeyboard()") == 2

@@ -236,7 +236,7 @@ Item {
         id: gridLayout
 
         GridLayout {
-            id: grid
+            id: classicGrid
 
             readonly property int leftWidth: 296
             readonly property int midWidth: 336
@@ -252,7 +252,7 @@ Item {
             Instruments.Frame {
                 Layout.row: 0
                 Layout.column: 0
-                Layout.preferredWidth: grid.leftWidth
+                Layout.preferredWidth: classicGrid.leftWidth
                 Layout.fillHeight: true
                 implicitHeight: gridUser.implicitHeight + headerHeight + Appearance.padding.larger
                 channel: "01"
@@ -272,9 +272,9 @@ Item {
             Instruments.Frame {
                 Layout.row: 0
                 Layout.column: 1
-                Layout.preferredWidth: grid.midWidth
+                Layout.preferredWidth: classicGrid.midWidth
                 Layout.fillHeight: true
-                implicitHeight: grid.topRowContent + headerHeight + padding
+                implicitHeight: classicGrid.topRowContent + headerHeight + padding
                 channel: "02"
                 title: qsTr("Clock")
 
@@ -288,9 +288,9 @@ Item {
             Instruments.Frame {
                 Layout.row: 0
                 Layout.column: 2
-                Layout.preferredWidth: grid.rightWidth
+                Layout.preferredWidth: classicGrid.rightWidth
                 Layout.fillHeight: true
-                implicitHeight: grid.topRowContent + headerHeight + padding
+                implicitHeight: classicGrid.topRowContent + headerHeight + padding
                 channel: "03"
                 title: qsTr("Weather")
                 context: Weather.ready ? Weather.city : ""
@@ -305,7 +305,7 @@ Item {
             Instruments.Frame {
                 Layout.row: 1
                 Layout.column: 0
-                Layout.preferredWidth: grid.leftWidth
+                Layout.preferredWidth: classicGrid.leftWidth
                 Layout.fillHeight: true
                 implicitHeight: gridCalendar.implicitHeight + padding * 2
                 padding: Appearance.padding.larger

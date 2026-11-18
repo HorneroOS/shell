@@ -120,6 +120,9 @@ Item {
     property string arrangeMode: ""
     property string arrangeQueued: ""
     property var arrangeSnap: []
+    // One `monitors set` per choice, whichever of the snapshot and the guard
+    // timer comes first.
+    property bool arrangeStarted: false
 
     function applyMode(mode: string): void {
         if (snapProc.running || setProc.running) {
@@ -127,6 +130,8 @@ Item {
             return;
         }
         root.arrangeMode = mode;
+        root.arrangeStarted = false;
+        root.arrangeSnap = [];
         root.actionText = qsTr("Applying %1…").arg(mode);
         snapProc.out = "";
         snapProc.running = true;
@@ -137,8 +142,9 @@ Item {
     // cannot start (another compositor), apply without Undo after a moment.
     function proceedArrange(): void {
         snapGuard.stop();
-        if (setProc.running)
+        if (root.arrangeStarted || setProc.running)
             return;
+        root.arrangeStarted = true;
         setProc.out = "";
         setProc.command = ["horneroctl", "hypr", "monitors", "set", root.arrangeMode, "--yes", "--json"];
         setProc.running = true;
@@ -148,26 +154,36 @@ Item {
         id: snapGuard
 
         interval: 1500
-        onTriggered: {
-            root.arrangeSnap = [];
-            root.proceedArrange();
-        }
+        onTriggered: root.proceedArrange()
     }
 
-    function monitorKeyword(m: var): string {
+    // One `keyword monitor` rule per output, from `hyprctl monitors all -j`.
+    // `mirrorOf` there is an output id; the rule wants the output name.
+    function monitorKeyword(m: var, all: var): string {
         if (m.disabled)
             return `keyword monitor ${m.name},disable`;
         const refresh = Number(m.refreshRate ?? 60).toFixed(2);
-        const mirror = m.mirrorOf && m.mirrorOf !== "none" ? `,mirror,${m.mirrorOf}` : "";
-        return `keyword monitor ${m.name},${m.width}x${m.height}@${refresh},${m.x}x${m.y},${m.scale}${mirror}`;
+        let mirror = "";
+        if (m.mirrorOf !== undefined && m.mirrorOf !== null && String(m.mirrorOf) !== "none" && String(m.mirrorOf) !== "") {
+            const src = all.find(o => String(o.id) === String(m.mirrorOf) || o.name === String(m.mirrorOf));
+            if (src)
+                mirror = `,mirror,${src.name}`;
+        }
+        const transform = Number(m.transform ?? 0) !== 0 ? `,transform,${Number(m.transform)}` : "";
+        return `keyword monitor ${m.name},${m.width}x${m.height}@${refresh},${m.x}x${m.y},${m.scale}${transform}${mirror}`;
     }
 
-    function restoreArrangement(snap: var): bool {
-        if (snap.length === 0)
-            return false;
-        restoreProc.command = ["hyprctl", "--batch", snap.map(m => root.monitorKeyword(m)).join(" ; ")];
-        restoreProc.running = true;
-        return true;
+    function restoreArgs(snap: var): var {
+        return ["hyprctl", "--batch", snap.map(m => root.monitorKeyword(m, snap)).join(" ; ")];
+    }
+
+    Connections {
+        target: Undo
+
+        function onCommandFinished(key: string, ok: bool): void {
+            if (key === "displays")
+                root.refresh();
+        }
     }
 
     Component.onCompleted: {
@@ -338,21 +354,11 @@ Item {
             } catch (e) {
                 snap = [];
             }
+            // Too late for this choice: it already applied without Undo.
+            if (root.arrangeStarted)
+                return;
             root.arrangeSnap = Array.isArray(snap) ? snap : [];
             root.proceedArrange();
-        }
-    }
-
-    Process {
-        id: restoreProc
-
-        stderr: StdioCollector {
-            id: restoreErr
-        }
-        onExited: (exitCode, exitStatus) => {
-            if (exitCode !== 0)
-                Undo.report("displays", qsTr("Could not undo the display arrangement"), restoreErr.text.trim().split("\n").slice(-1)[0] || qsTr("hyprctl refused the previous layout."));
-            root.refresh();
         }
     }
 
@@ -381,7 +387,8 @@ Item {
             if (!ok)
                 Undo.report("displays", qsTr("Display arrangement was not changed"), root.actionText);
             else if (snap.length > 0)
-                Undo.offer("displays", qsTr("Displays: %1").arg(root.arrangeMode), () => root.restoreArrangement(snap), qsTr("Undo puts every screen back where it was."));
+                // Undo runs the inverse hyprctl batch itself (it outlives this pane).
+                Undo.offerCommand("displays", qsTr("Displays: %1").arg(root.arrangeMode), root.restoreArgs(snap), qsTr("Undo puts every screen back where it was."));
             root.refresh();
             const next = root.arrangeQueued;
             root.arrangeQueued = "";

@@ -49,15 +49,6 @@ Item {
         root.setPath(path, fac);
     }
 
-    // Put the exact earlier values back and save once.
-    function restoreValues(snap: var): bool {
-        for (const entry of snap)
-            root.setPath(entry.path, entry.value);
-        Config.save();
-        root.revision++;
-        return true;
-    }
-
     property string packText: ""
     property string packMessage: ""
 
@@ -78,23 +69,16 @@ Item {
         const r = Customisation.validatePack(pack, root.factory, root.ranges);
         const before = r.accepted.map(a => ({
                     "path": a.path,
-                    "value": JSON.parse(JSON.stringify(root.valueAt(a.path)))
+                    "value": Undo.valueAt(a.path)
                 }));
         for (const a of r.accepted)
             root.setPath(a.path, a.value);
         if (r.accepted.length > 0) {
             Config.save();
-            Undo.offer("customisation-import", qsTr("Imported look (%n setting(s))", "", r.accepted.length), () => root.restoreValues(before), qsTr("Undo puts every imported setting back."));
+            Undo.offerPaths("customisation-import", qsTr("Imported look (%n setting(s))", "", r.accepted.length), before, qsTr("Undo puts every imported setting back."));
         }
         root.revision++;
         root.packMessage = r.rejected.length > 0 ? qsTr("Applied %1 setting(s); skipped %2 (%3).").arg(r.accepted.length).arg(r.rejected.length).arg(r.rejected[0].reason) : qsTr("Applied %1 setting(s).").arg(r.accepted.length);
-    }
-
-    function valueAt(path: string): var {
-        let obj = Config;
-        for (const p of path.split("."))
-            obj = obj[p];
-        return obj;
     }
 
     // Reset applies at once and offers Undo with the exact earlier values;
@@ -110,7 +94,18 @@ Item {
             root.resetPath(it.path);
         Config.save();
         root.revision++;
-        Undo.offer("customisation-reset", list.length === 1 ? qsTr("Reset %1").arg(list[0].label) : qsTr("Reset %n setting(s)", "", list.length), () => root.restoreValues(before), qsTr("Your apps, files and layouts are not touched."));
+        // The values live in Undo (by Config path), so Undo still works after
+        // this pane is unloaded.
+        Undo.offerPaths("customisation-reset", list.length === 1 ? qsTr("Reset %1").arg(list[0].label) : qsTr("Reset %n setting(s)", "", list.length), before, qsTr("Your apps, files and layouts are not touched."));
+    }
+
+    // A Customisation Undo changes Config; re-read the list.
+    Connections {
+        target: Undo
+
+        function onUndone(key: string): void {
+            root.revision++;
+        }
     }
 
     anchors.fill: parent

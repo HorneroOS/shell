@@ -130,6 +130,36 @@ Singleton {
         applyThemeCliProc.running = true;
     }
 
+    // Undo of an Appearance change (services/Undo.qml): put back exactly
+    // what was live before it, through the same jobs. `snap` = {theme,
+    // wallpaper, gtk, icons, scheme, kinds:{theme,wallpaper,gtk,icons,scheme}}.
+    // Busy while a job runs, so the Undo waits instead of racing it.
+    function restoreAppearance(snap: var): var {
+        if (root.busy)
+            return Undo.busy;
+        const k = snap.kinds;
+        if (k.theme && snap.theme === "hornero-chromatic") {
+            // A Chromatic palette is derived, not a catalogue theme: rebuild it.
+            const back = ChromaticPreview._restoreSnapshot({
+                "active": true,
+                "request": ChromaticPreview.request
+            });
+            if (back !== true)
+                return back;
+        } else if (k.theme && snap.theme) {
+            root.applyTheme(snap.theme, snap.wallpaper);
+        } else if (k.wallpaper && snap.wallpaper) {
+            root.setWallpaper(snap.wallpaper);
+        }
+        if (k.gtk && snap.gtk)
+            root.setGtk(snap.gtk);
+        if (k.icons && snap.icons)
+            root.setIcons(snap.icons);
+        if (k.scheme && snap.scheme)
+            root.setGtkColorScheme(snap.scheme);
+        return true;
+    }
+
     function applyThemeFromIpc(id: string, wallpaperPath: string): void {
         if (!id)
             return;

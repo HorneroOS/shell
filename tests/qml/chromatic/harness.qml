@@ -159,15 +159,54 @@ ShellRoot {
         interval: 1600
         repeat: true
         onTriggered: {
+            const o = root.out;
             if (undoWait.phase === 0) {
-                root.out.pausedStillActive = Undo.active;
-                Undo.paused = false;
+                // Two holds, one release: still paused.
+                o.pausedStillActive = Undo.active;
+                // The strip was destroyed while holding: nothing may stay paused.
+                Undo.releaseAll();
                 undoWait.phase = 1;
+            } else if (undoWait.phase === 1) {
+                o.expired = !Undo.active;
+                o.holdsAfterReleaseAll = Undo.holds;
+                // A busy restore keeps the offer and retries until it can run.
+                root.busyLeft = 3;
+                Config.controlCenter.undoSeconds = 10;
+                Undo.offer("i", "I", () => {
+                    if (root.busyLeft-- > 0)
+                        return Undo.busy;
+                    return true;
+                }, "");
+                Undo.undo();
+                o.whileBusy = Undo.kind;
+                undoWait.phase = 2;
+            } else if (undoWait.phase === 2) {
+                o.afterBusy = [Undo.kind, root.busyLeft];
+                // Undo owns restore commands; a failing one says so.
+                Undo.offerCommand("j", "J", ["sh", "-c", "echo nope >&2; exit 4"], "");
+                Undo.undo();
+                undoWait.phase = 3;
+            } else if (undoWait.phase === 3) {
+                o.cmdFail = [Undo.kind, Undo.reason];
+                Undo.offerCommand("k", "K", ["true"], "");
+                Undo.undo();
+                undoWait.phase = 4;
             } else {
-                root.out.expired = !Undo.active;
+                o.cmdOk = [Undo.kind, root.cmdFinished];
                 undoWait.stop();
                 root.emit();
             }
+        }
+    }
+
+    property int busyLeft: 0
+    property string cmdFinished: ""
+
+    Connections {
+        target: Undo
+
+        function onCommandFinished(key: string, ok: bool): void {
+            root.cmdFinished += key + ":" + ok + ";";
         }
     }
 
@@ -343,10 +382,29 @@ ShellRoot {
                 Config.controlCenter.undoSeconds = 42;
                 restore();
                 o.restorer = Config.controlCenter.undoSeconds;
-                // Timing: paused strips wait, free ones expire.
+                // Paths and singleton calls are restored from Undo itself.
+                Config.controlCenter.undoSeconds = 10;
+                Undo.offerPaths("p", "P", [{"path": "controlCenter.undoSeconds", "value": 10}], "");
+                Config.controlCenter.undoSeconds = 33;
+                Undo.undo();
+                o.paths = [Undo.kind, Config.controlCenter.undoSeconds];
+                Undo.offerCalls("q", "Q", [[Undo, "valueAt", ["controlCenter.undoSeconds"]]], "");
+                Undo.undo();
+                o.callsOk = Undo.kind;
+                Undo.offerCalls("r", "R", [[Undo, "setPath", ["controlCenter.undoSeconds", 10]], [Experience, "set", ["no-such-mode", "user"]]], "");
+                Undo.undo();
+                o.callsError = Undo.kind;
+                Undo.offer("w", "W", () => true, "");
+                Undo.withdraw("other");
+                o.withdrawOther = Undo.active;
+                Undo.withdraw("w");
+                o.withdrawSame = Undo.active;
+                // Timing: held strips wait (counted), free ones expire.
                 Config.controlCenter.undoSeconds = 1;
                 Undo.offer("h", "H", () => true, "");
-                Undo.paused = true;
+                Undo.hold();
+                Undo.hold();
+                Undo.release();
                 undoWait.start();
             } else if (root.scene === "cost") {
                 const from = Signal._currentFlat();

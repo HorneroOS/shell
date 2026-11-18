@@ -916,9 +916,21 @@ Item {
                                 selectByMouse: true
                                 text: assistantPrompt.text
                                 // Saved when the editor loses focus (no Save button); Undo restores the old text.
+                                // Saved shortly after the editor loses focus. Pressing Reload
+                                // (which also takes focus) cancels that save: Reload means
+                                // "throw my edits away", not "save them first".
                                 onActiveFocusChanged: {
                                     if (!activeFocus)
-                                        root.applyPrompt(promptEditor.text);
+                                        promptSave.restart();
+                                    else
+                                        promptSave.stop();
+                                }
+
+                                Timer {
+                                    id: promptSave
+
+                                    interval: 400
+                                    onTriggered: root.applyPrompt(promptEditor.text)
                                 }
                             }
                         }
@@ -930,7 +942,11 @@ Item {
                             TextButton {
                                 text: qsTr("Reload")
                                 type: TextButton.Tonal
-                                onClicked: assistantPrompt.refresh()
+                                onClicked: {
+                                    promptSave.stop();
+                                    promptEditor.text = Qt.binding(() => assistantPrompt.text);
+                                    assistantPrompt.refresh();
+                                }
                             }
 
                             StyledText {
@@ -1524,10 +1540,7 @@ Item {
             if (job && job.undo) {
                 const u = job.undo;
                 if (exitCode === 0)
-                    Undo.offer(u.key, u.title, () => {
-                        assistantCtl.run(u.restore, null);
-                        return true;
-                    }, u.detail);
+                    Undo.offerCommand(u.key, u.title, u.restore, u.detail);
                 else
                     Undo.report(u.key, qsTr("%1 was not applied").arg(u.title), assistantCtlErr.text.trim().split("\n").slice(-1)[0] || qsTr("horneroctl refused the change."));
             }
@@ -1540,6 +1553,17 @@ Item {
             assistantCtl.queued = null;
             if (next)
                 assistantCtl.run(next.cmd, next.undo);
+        }
+    }
+
+    Connections {
+        target: Undo
+
+        function onCommandFinished(key: string, ok: bool): void {
+            if (key === "assistant-model")
+                assistantModelConfig.refresh();
+            else if (key === "assistant-prompt")
+                assistantPrompt.refresh();
         }
     }
 

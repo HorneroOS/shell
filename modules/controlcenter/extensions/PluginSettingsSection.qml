@@ -126,17 +126,15 @@ ColumnLayout {
         const before = [];
         for (const key of root.settingKeys()) {
             if (root.hasStored(key))
-                before.push([key, root.storedValues()[key]]);
+                before.push([key, JSON.parse(JSON.stringify(root.storedValues()[key]))]);
         }
         // Hidden state (timers, markers) is not the person's setting:
         // Reset all clears only the visible controls.
         for (const key of root.settingKeys())
             Config.plugins.resetSetting(root.storageKey, key);
-        Undo.offer("plugin-settings-" + root.storageKey, qsTr("Plugin settings reset"), () => {
-            for (const kv of before)
-                Config.plugins.setSetting(root.storageKey, kv[0], kv[1]);
-            return true;
-        }, qsTr("Undo brings back %n setting(s).", "", before.length));
+        // The calls run from Undo on Config.plugins (a singleton), so they
+        // still work after this section is unloaded.
+        Undo.offerCalls("plugin-settings-" + root.storageKey, qsTr("Plugin settings reset"), before.map(kv => [Config.plugins, "setSetting", [root.storageKey, kv[0], kv[1]]]), qsTr("Undo brings back %n setting(s).", "", before.length));
     }
 
     function anyStored(): bool {

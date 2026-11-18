@@ -22,6 +22,8 @@ Item {
             return `${Microcopy.line("undo.applied")} · ${Undo.title}`;
         if (Undo.kind === "undone")
             return `${Microcopy.line("undo.undone")} · ${Undo.title}`;
+        if (Undo.kind === "undoing")
+            return qsTr("Undoing %1…").arg(Undo.title);
         return Undo.title;
     }
     readonly property string accessibleText: {
@@ -30,6 +32,25 @@ Item {
     }
 
     visible: shown || strip.opacity > 0
+
+    // The offer never outlives the window that showed it: closing the
+    // Control Center (hiding or destroying it) dismisses it and frees any
+    // hover/focus hold, so nothing stays paused or undoable in the dark.
+    function windowGone(): void {
+        Undo.releaseAll();
+        Undo.dismiss();
+    }
+
+    Component.onDestruction: root.windowGone()
+
+    Connections {
+        target: root.Window.window
+
+        function onVisibleChanged(): void {
+            if (!root.Window.window || !root.Window.window.visible)
+                root.windowGone();
+        }
+    }
     implicitWidth: strip.implicitWidth
     implicitHeight: strip.implicitHeight
 
@@ -60,7 +81,19 @@ Item {
 
         readonly property bool holding: hover.hovered || undoButton.stateLayer.activeFocus || dismissButton.stateLayer.activeFocus
 
-        onHoldingChanged: Undo.paused = strip.holding
+        // Counted holds: this strip adds one while hovered or focused and
+        // always gives it back, including when the window goes away.
+        property bool counted: false
+
+        onHoldingChanged: {
+            if (strip.holding && !strip.counted) {
+                strip.counted = true;
+                Undo.hold();
+            } else if (!strip.holding && strip.counted) {
+                strip.counted = false;
+                Undo.release();
+            }
+        }
 
         HoverHandler {
             id: hover

@@ -17,7 +17,7 @@ CASES = ROOT / "tests/placement/placement.test.mjs"
 def test_solver_unit_tests_pass_under_node():
     node = shutil.which("node")
     assert node, "node is required to execute the Placement.js unit tests"
-    proc = subprocess.run([node, "--test", "--test-reporter=tap", str(CASES)], capture_output=True, text=True, timeout=120, check=False)
+    proc = subprocess.run([node, "--test", "--test-reporter=tap", str(CASES), str(CASES.with_name("matrix.test.mjs"))], capture_output=True, text=True, timeout=120, check=False)
     assert proc.returncode == 0, proc.stdout[-6000:] + proc.stderr[-2000:]
     assert "# fail 0" in proc.stdout
 

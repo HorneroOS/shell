@@ -110,10 +110,14 @@ Item {
         root.runRebind(root.editOld, root.newCombo.trim());
     }
 
+    function rebindArgs(oldCombo: string, newCombo: string): var {
+        return ["horneroctl", "hardware", "keyboard", "rebind", "set", "--old", oldCombo, "--new", newCombo, "--yes", "--json"];
+    }
+
     function runRebind(oldCombo: string, newCombo: string): void {
         root.actionText = qsTr("Applying…");
         actionProc.out = "";
-        actionProc.command = ["horneroctl", "hardware", "keyboard", "rebind", "set", "--old", oldCombo, "--new", newCombo, "--yes", "--json"];
+        actionProc.command = root.rebindArgs(oldCombo, newCombo);
         actionProc.running = true;
     }
 
@@ -141,6 +145,15 @@ Item {
     }
 
     Component.onCompleted: root.refresh()
+
+    Connections {
+        target: Undo
+
+        function onCommandFinished(key: string, ok: bool): void {
+            if (key === "keybind")
+                root.refresh();
+        }
+    }
 
     Process {
         id: keysProc
@@ -213,18 +226,11 @@ Item {
             } catch (e) {
                 root.actionText = qsTr("horneroctl rebind unavailable on this system.");
             }
-            if (undo && ok && !undo.restoring) {
-                Undo.offer("keybind", qsTr("%1 now %2").arg(undo.from).arg(undo.to), () => {
-                    root.rebindUndo = {
-                        "from": undo.to,
-                        "to": undo.from,
-                        "restoring": true
-                    };
-                    root.runRebind(undo.to, undo.from);
-                    return true;
-                }, qsTr("Undo moves it back to %1.").arg(undo.from));
+            if (undo && ok) {
+                // Undo runs the inverse move itself (it outlives this pane).
+                Undo.offerCommand("keybind", qsTr("%1 now %2").arg(undo.from).arg(undo.to), root.rebindArgs(undo.to, undo.from), qsTr("Undo moves it back to %1.").arg(undo.from));
             } else if (undo && !ok) {
-                Undo.report("keybind", undo.restoring ? qsTr("Could not undo the keybinding") : qsTr("Keybinding was not changed"), root.actionText);
+                Undo.report("keybind", qsTr("Keybinding was not changed"), root.actionText);
             }
             root.refresh();
         }

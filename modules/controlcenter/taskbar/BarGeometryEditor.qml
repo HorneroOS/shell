@@ -42,12 +42,13 @@ ColumnLayout {
     }
 
     function resetBar(): void {
-        const before = root.bars;
+        Undo.offerValues("bar-reset", qsTr("Bar reset to the layout default"), [
+            {
+                "obj": Config.bar,
+                "keys": ["bars"]
+            }
+        ], qsTr("Undo brings back this bar's thickness, gap, style and density."));
         root.commitBars(Geo.resetBar(root.bars, root.barIndex, root.preset));
-        Undo.offer("bar-reset", qsTr("Bar reset to the layout default"), () => {
-            root.commitBars(before);
-            return true;
-        }, qsTr("Undo brings back this bar's thickness, gap, style and density."));
     }
 
     function setSize(name: string, value: real): void {
@@ -67,7 +68,7 @@ ColumnLayout {
 
     function resetGlobals(): void {
         const g = root.presetGlobals;
-        const restore = Undo.restorer([
+        Undo.offerValues("bar-sizes-reset", qsTr("Sizes reset to the layout default"), [
             {
                 "obj": Config.bar.sizes,
                 "keys": ["innerWidth", "islandInset", "contentScale", "iconScale", "textScale", "itemSpacing", "textWeight", "densityScale", "autoDensity"]
@@ -92,8 +93,8 @@ ColumnLayout {
                 "obj": Config.appearance.padding,
                 "keys": ["scale"]
             }
-        ]);
-        Undo.offer("bar-sizes-reset", qsTr("Sizes reset to the layout default"), restore, qsTr("Undo brings back your cell size, scales, text face, radius, gap and padding."));
+        ], qsTr("Undo brings back your cell size, scales, text face, radius, gap and padding."));
+
         Config.bar.sizes.innerWidth = g.innerWidth;
         Config.bar.sizes.islandInset = g.islandInset;
         Config.bar.workspaces.activeInset = g.activeInset;

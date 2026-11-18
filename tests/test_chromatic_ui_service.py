@@ -97,3 +97,14 @@ def test_in_process_engine_is_optional_and_never_writes():
     # The service loads it at runtime so a missing module only means fallback.
     assert "Qt.createComponent(Qt.resolvedUrl(\"ChromaticInProcess.qml\"))" in SERVICE
     assert "import Hornero.Chromatic" not in SERVICE
+
+
+def test_helper_probe_tries_the_per_user_locations_before_giving_up():
+    """A host without the package (a per-user build in ~/.local/bin) used to
+    show 'Chromatic engine not installed' because only /usr/lib/hornero was
+    looked at."""
+    assert "helperCandidates" in SERVICE and "/usr/lib/hornero/hornero-chromatic" in SERVICE
+    assert '"/.local/bin/hornero-chromatic"' in SERVICE and '"/.local/lib/hornero/hornero-chromatic"' in SERVICE
+    assert "HORNERO_CHROMATIC_BIN" in SERVICE
+    # the probe advances on a failed exit and on a path that never starts
+    assert SERVICE.count("root.helperIndex += 1") == 2

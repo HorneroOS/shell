@@ -65,6 +65,12 @@ The policy therefore chooses immediacy with a safety net for the risky tier, not
 | Duration setting (3 to 60 s, default 10, validated by `config/ranges.json`) | `config/ControlCenterConfig.qml`, Appearance > Look |
 | Voice (plain and cozy lines, plain line used for the accessible name) | `services/Microcopy.qml` (`undo.applied`, `undo.undone`) |
 
+Restores never live in a pane (panes unload when you navigate away and die with the window). Callers describe
+them as data and a singleton runs them: `offerCommand` (an argv Undo runs itself), `offerValues` and `offerPaths`
+(remembered Config values), `offerCalls` (methods of singletons such as `ThemePipeline`, `Experience`).
+A restore whose subsystem is busy answers `Undo.busy`: the offer stays and the undo retries for up to 10 s. Closing
+the Control Center dismisses the offer and frees any hover hold (holds are counted, `Undo.releaseAll()`).
+
 Rules the service enforces (and `tests/test_cc_apply_policy.py` runs against the real singleton): one offer at a
 time; the same key coalesces and keeps the first restore point (dragging through five accents undoes all five);
 a restore that returns `false`, a reason string or throws becomes a failure strip and changes nothing else.
@@ -73,15 +79,16 @@ How each risky change is made transactional:
 
 | Change | Snapshot | Restore |
 |--------|----------|---------|
-| Layout preset | `shell.json` and the active-preset pointer copied to `$XDG_STATE_HOME/hornero/shell/undo/<ts>/` (last 3 kept) before `horneroctl shell preset apply` | copy to a temp file next to the target, then `mv -f` (atomic rename) |
+| Layout preset (`services/PresetApply.qml`) | `shell.json` and the active-preset pointer copied (a missing file is recorded with an `.absent` marker, so a fresh account works) to `$XDG_STATE_HOME/hornero/shell/undo/<ts>/` (last 3 kept) before `horneroctl shell preset apply` | copy to a temp file next to the target, then `mv -f` (atomic rename) |
 | Theme, wallpaper, GTK, icons, GTK scheme | live ids read before the pipeline job | the same `ThemePipeline` jobs with the old ids (Chromatic is re-derived) |
 | Chromatic | theme id plus saved Chromatic preferences | `horneroctl appearance chromatic apply` with the old request, or the old theme and preferences if Chromatic was off |
 | Look, atmosphere, bar sizes, plugin settings, customisation resets and imports | exact previous values (`Undo.restorer`) | write them back, one save |
 | Keyboard layout, keybinding, assistant model and prompt, night-light schedule, power profile | previous value read from the CLI or pane | the inverse CLI call |
 | Display arrangement | `hyprctl monitors all -j` | `hyprctl --batch keyword monitor …` per output |
 
-Known limits, stated plainly: a layout Undo restores the whole `shell.json` as it was before the preset, so any
-other setting changed inside the Undo window is rolled back with it; and Mode-driven layouts (a mode that applies
+Known limits, stated plainly: a layout Undo restores the whole `shell.json` as it was before the preset, so it
+refuses, with a reason, when `shell.json` changed after the apply settled (its hash is recorded then) instead of
+rolling those other changes back; and Mode-driven layouts (a mode that applies
 its preferred layout when it starts) go through the Experience service, which has no strip, so the mode Undo
 reverts the mode, not the layout.
 

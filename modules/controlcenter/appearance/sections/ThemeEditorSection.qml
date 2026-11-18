@@ -162,14 +162,36 @@ CollapsibleSection {
         proc.running = true;
     }
 
+    // The re-import that puts a deleted palette back (argv only; the draft
+    // file is written next to the other theme drafts).
+    function restoreArgs(t: var): var {
+        const dir = `${Paths.state}/shell/theme-draft`;
+        return ["sh", "-c", 'd=$1; j=$2; shift 2; mkdir -p "$d" && printf "%s\\n" "$j" > "$d/theme-draft.json" && exec horneroctl appearance chromatic import "$d/theme-draft.json" "$@"', "sh", dir, JSON.stringify(t.doc)].concat(Cli.themeImportTail(t.id, false, false));
+    }
+
     function undoDelete(): void {
         if (!trash || proc.running)
             return;
         proc.mode = "restore";
         proc.draftDir = `${Paths.state}/shell/theme-draft`;
-        proc.command = ["sh", "-c", 'd=$1; j=$2; shift 2; mkdir -p "$d" && printf "%s\\n" "$j" > "$d/theme-draft.json" && exec horneroctl appearance chromatic import "$d/theme-draft.json" "$@"', "sh", proc.draftDir, JSON.stringify(trash.doc)].concat(Cli.themeImportTail(trash.id, false, false));
+        proc.command = root.restoreArgs(trash);
         status = "";
         proc.running = true;
+    }
+
+    Connections {
+        target: Undo
+
+        function onCommandFinished(key: string, ok: bool): void {
+            if (key !== "theme-delete")
+                return;
+            if (ok) {
+                root.status = qsTr("Restored.");
+                root.statusIsError = false;
+                root.trash = null;
+            }
+            Themes.reload();
+        }
     }
 
     // mode: "check" (dry run), "new" (save as a new theme) or "replace".
@@ -219,10 +241,10 @@ CollapsibleSection {
                     root.status = qsTr("Deleted.");
                     root.sourceId = "";
                     root.overrides = ({});
-                    Undo.offer("theme-delete", qsTr("Palette “%1” deleted").arg(root.trash?.doc.name ?? ""), () => {
-                        root.undoDelete();
-                        return true;
-                    }, qsTr("Undo puts the whole palette back."));
+                    // Undo re-imports the exact deleted document itself, so it still
+                    // works after this section is gone.
+                    if (root.trash)
+                        Undo.offerCommand("theme-delete", qsTr("Palette “%1” deleted").arg(root.trash.doc.name ?? ""), root.restoreArgs(root.trash), qsTr("Undo puts the whole palette back."));
                 } else if (proc.mode === "restore") {
                     root.status = qsTr("Restored.");
                     root.trash = null;

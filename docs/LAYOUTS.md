@@ -297,3 +297,18 @@ preset ships (read from the preset JSON next to the shell), or to the factory
 fallbacks when the layout is custom. The pure logic lives in
 `modules/controlcenter/taskbar/bargeometry.js`; the controls edit the global
 bar set (per-screen overrides keep their own values).
+
+### My tweaks for a layout
+
+A layout preset rewrites the bars and sizes, so a person who tuned them loses the tuning on every switch. Control
+Center, Layout, "My tweaks for this layout" saves the current values as that layout's override row
+(`layouts.overrides.<layout id>` in `shell.json`, empty by default). Layers, lowest first: factory defaults, preset,
+layout override, experience-mode override, user edits.
+
+Overridable keys (validated and clamped like their controls): `bar.sizes.{innerWidth, contentScale, iconScale,
+textScale, textWeight, itemSpacing, densityScale, autoDensity}`, `bar.typeface`, `appearance.{rounding, spacing,
+padding}.scale`. Bar topology (edges, styles, groups, per-bar thickness) is the preset's and is never overridden.
+After a preset applied from the shell (Layout pane, quick picker, an experience mode's preferred layout, factory
+reset) succeeds, the row is applied about 0.9 s later, once the rewritten `shell.json` has been reloaded. A preset
+applied directly with `horneroctl` does not go through the shell: use "Use my tweaks now" (it offers Undo). "Forget" returns the layout
+to its preset. Logic: `services/layouts.js`, shell wiring `services/Layouts.qml`.

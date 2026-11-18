@@ -1,11 +1,9 @@
 # Repo policy for the HorneroOS deterministic PR-governance engine.
 # Merged over safe defaults; see HorneroOS/.github governance/danger.
 #
-# NOTE: services/Colours.qml flagship M3 tables are GENERATED from the
-# HorneroOS/config brand seed via scripts/gen-flagship-m3.py (--check
-# gate in CI), but the source lives in another repo, so no
-# generated_paths pair is declared here; the shell CI gate owns that
-# drift check.
+# NOTE: the shell has no generated colour tables: Hornero Signal roles are
+# read from the applied schema-v2 theme at runtime (docs/NATIVE-APPEARANCE.md),
+# so no generated_paths pair is declared here.
 
 version: 1
 kind: shell

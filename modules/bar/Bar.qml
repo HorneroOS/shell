@@ -547,6 +547,14 @@ Item {
             height: root.vertical ? parent.height : 1
         }
 
+        // Experience-mode chrome (accent wash, content-facing edge line,
+        // Signal scanlines). Clear bars have no slab to wear it on.
+        ModeChrome {
+            visible: !root.clear && Experience.chromeActive
+            edge: root.edge === "top" ? "bottom" : root.edge === "bottom" ? "top" : root.edge === "left" ? "right" : "left"
+            radius: root.spec.radius >= 0 ? root.spec.radius : root.floating ? Appearance.rounding.small : 0
+        }
+
         BarGroup {
             id: startGroup
 

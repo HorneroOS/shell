@@ -24,6 +24,11 @@ var MOTION_LEVELS = ["full", "standard", "reduced", "off"];
 var DENSITIES = ["icons", "values", "labels"];
 var DESKTOP_WIDGETS = ["none", "user", "instruments"];
 var POWER_HINTS = ["", "performance", "power-saver"];
+// Mode chrome: the accent the bar wears in a mode (palette roles), how the
+// edge facing the content is drawn, and the strength of the accent wash.
+var CHROME_ACCENTS = ["none", "ink", "signal", "cue", "phosphor", "alert"];
+var CHROME_EDGES = ["off", "hairline", "glow"];
+var CHROME_WASH_MAX = 0.2;
 var STATE_SOURCES = ["user", "auto", "cli", "reset", "migration"];
 // `horneroctl studio mode audio` ids (HorneroOS/hornero studio_mode.v).
 var STUDIO_AUDIO_MODES = ["balanced", "low-latency", "advanced"];
@@ -42,6 +47,9 @@ var FIELDS = {
     "desktopWidgets": { type: "enum", values: DESKTOP_WIDGETS },
     "notifications.hold": { type: "bool" },
     "notifications.suppressFullscreen": { type: "bool" },
+    "chrome.accent": { type: "enum", values: CHROME_ACCENTS },
+    "chrome.edge": { type: "enum", values: CHROME_EDGES },
+    "chrome.wash": { type: "number", min: 0, max: CHROME_WASH_MAX },
     "layout.preset": { type: "string" },
     "layout.apply": { type: "bool" },
     "idle.inhibitFullscreen": { type: "bool" },
@@ -71,6 +79,9 @@ var FACTORY = {
             "telemetry.rateHz": 1,
             "telemetry.pauseWhenHidden": true,
             "desktopWidgets": "none",
+            "chrome.accent": "ink",
+            "chrome.edge": "hairline",
+            "chrome.wash": 0,
             "notifications.hold": true,
             "notifications.suppressFullscreen": true,
             "layout.preset": "minimal-top",
@@ -89,6 +100,9 @@ var FACTORY = {
             "telemetry.rateHz": 1,
             "telemetry.pauseWhenHidden": false,
             "desktopWidgets": "user",
+            "chrome.accent": "none",
+            "chrome.edge": "off",
+            "chrome.wash": 0,
             "notifications.hold": false,
             "notifications.suppressFullscreen": false,
             "layout.preset": "cockpit",
@@ -107,6 +121,9 @@ var FACTORY = {
             "telemetry.rateHz": 2,
             "telemetry.pauseWhenHidden": false,
             "desktopWidgets": "instruments",
+            "chrome.accent": "signal",
+            "chrome.edge": "glow",
+            "chrome.wash": 0.07,
             "notifications.hold": false,
             "notifications.suppressFullscreen": false,
             "layout.preset": "cockpit",
@@ -125,6 +142,9 @@ var FACTORY = {
             "telemetry.rateHz": 1,
             "telemetry.pauseWhenHidden": true,
             "desktopWidgets": "none",
+            "chrome.accent": "cue",
+            "chrome.edge": "hairline",
+            "chrome.wash": 0,
             "notifications.hold": true,
             "notifications.suppressFullscreen": true,
             "layout.preset": "gaming",
@@ -143,6 +163,9 @@ var FACTORY = {
             "telemetry.rateHz": 1,
             "telemetry.pauseWhenHidden": false,
             "desktopWidgets": "user",
+            "chrome.accent": "phosphor",
+            "chrome.edge": "hairline",
+            "chrome.wash": 0.04,
             "notifications.hold": false,
             "notifications.suppressFullscreen": true,
             "layout.preset": "studio",

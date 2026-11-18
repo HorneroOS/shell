@@ -9,7 +9,9 @@ Item {
     required property Item panels
 
     visible: height > 0
-    implicitWidth: Math.max(panels.sidebar.width, content.implicitWidth)
+    // The sidebar only widens the tray when it shares the right edge.
+    readonly property bool onRight: Config.notifs.align !== "left" && Config.notifs.align !== "center"
+    implicitWidth: onRight ? Math.max(panels.sidebar.width, content.implicitWidth) : content.implicitWidth
     implicitHeight: content.implicitHeight
 
     states: State {

@@ -18,6 +18,7 @@ CC = ROOT / "modules" / "controlcenter"
 UNDO = (ROOT / "services" / "Undo.qml").read_text()
 STRIP = (CC / "components" / "UndoStrip.qml").read_text()
 DOC = (ROOT / "docs" / "CONTROL-CENTER-APPLY.md").read_text()
+PRESET = (ROOT / "services" / "PresetApply.qml").read_text()
 
 LABEL = re.compile(r'\btext:\s*(?:\w+\s*\?\s*)?qsTr\("([^"]*)"')
 
@@ -79,6 +80,7 @@ CREATE_FORMS = {
     "experience/DeckManager.qml",                   # Save preset
     "network/VpnDetails.qml",                       # VPN provider dialog
     "network/VpnList.qml",                          # VPN provider dialog
+    "layout/LayoutTweaksRow.qml",                   # Save my tweaks (a per-layout record)
 }
 
 
@@ -114,7 +116,7 @@ def test_undo_service_contract():
         assert fn in UNDO, fn
     # Coalescing keeps the first restore point; pause on hover/focus.
     assert "Same change continuing: keep the first restore point." in UNDO
-    assert "if (root.paused)" in UNDO
+    assert "if (root.paused)" in UNDO and "readonly property bool paused: holds > 0" in UNDO
     # Duration is a user setting, never hard-coded.
     assert "Config.controlCenter.undoSeconds" in UNDO
 
@@ -124,7 +126,7 @@ def test_undo_strip_is_accessible_and_motion_aware():
     assert 'sequence: "Ctrl+Z"' in STRIP
     assert 'typeof focused.selectAll === "function"' in STRIP  # text fields keep Ctrl+Z
     assert "Appearance.anim.reduced" in STRIP
-    assert "Undo.paused" in STRIP
+    assert "Undo.hold()" in STRIP and "Undo.release()" in STRIP
     # Both buttons are real controls with keyboard focus (TextButton -> Interactive).
     assert STRIP.count("TextButton {") == 2
     assert "qsTr(" in STRIP and "Microcopy.line(" in STRIP
@@ -148,23 +150,24 @@ def test_undo_duration_is_a_documented_validated_setting():
 
 def test_risky_changes_offer_undo():
     expect = {
-        "appearance/AppearancePane.qml": 'Undo.offer("appearance"',
-        "appearance/sections/LookSection.qml": 'Undo.offer("look"',
-        "appearance/sections/AtmosphereSection.qml": 'Undo.offer("atmosphere-reset"',
-        "customisation/CustomisationPane.qml": 'Undo.offer("customisation-reset"',
-        "input/InputPane.qml": 'Undo.offer("input-layout"',
-        "keybinds/KeybindsPane.qml": 'Undo.offer("keybind"',
-        "displays/DisplaysPane.qml": 'Undo.offer("displays"',
-        "gaming/GamingPane.qml": 'Undo.offer("power-profile"',
-        "nightlight/NightLightPane.qml": 'Undo.offer("night-light"',
-        "companion/CompanionPane.qml": 'Undo.offer(u.key',
-        "experience/ExperiencePane.qml": 'Undo.offer("experience-mode"',
-        "taskbar/BarGeometryEditor.qml": 'Undo.offer("bar-reset"',
+        "appearance/AppearancePane.qml": 'Undo.offerCalls("appearance"',
+        "appearance/sections/LookSection.qml": 'Undo.offerValues("look"',
+        "appearance/sections/AtmosphereSection.qml": 'Undo.offerValues("atmosphere-reset"',
+        "customisation/CustomisationPane.qml": 'Undo.offerPaths("customisation-reset"',
+        "input/InputPane.qml": 'Undo.offerCommand("input-layout"',
+        "keybinds/KeybindsPane.qml": 'Undo.offerCommand("keybind"',
+        "displays/DisplaysPane.qml": 'Undo.offerCommand("displays"',
+        "gaming/GamingPane.qml": 'Undo.offerCommand("power-profile"',
+        "nightlight/NightLightPane.qml": 'Undo.offerCommand("night-light"',
+        "companion/CompanionPane.qml": 'Undo.offerCommand(u.key',
+        "experience/ExperiencePane.qml": 'Undo.offerCalls("experience-mode"',
+        "taskbar/BarGeometryEditor.qml": 'Undo.offerValues("bar-reset"',
     }
     for rel, needle in expect.items():
         assert needle in (CC / rel).read_text(), (rel, needle)
     grid = (ROOT / "modules" / "layoutpicker" / "PresetGrid.qml").read_text()
-    assert 'Undo.offer("layout"' in grid and "offerUndo" in grid
+    assert "PresetApply.apply(" in grid and "offerUndo" in grid
+    assert 'Undo.offer("layout"' in PRESET
     assert "offerUndo: true" in (CC / "layout" / "LayoutPane.qml").read_text()
     assert 'Undo.offer("chromatic"' in (ROOT / "services" / "ChromaticPreview.qml").read_text()
 
@@ -173,16 +176,15 @@ def test_failures_say_why_through_the_same_service():
     for rel in ("input/InputPane.qml", "displays/DisplaysPane.qml", "nightlight/NightLightPane.qml",
                 "companion/CompanionPane.qml", "gaming/GamingPane.qml"):
         assert "Undo.report(" in (CC / rel).read_text(), rel
-    assert "Undo.report(" in (ROOT / "modules" / "layoutpicker" / "PresetGrid.qml").read_text()
+    assert "Undo.report(" in PRESET
     assert "Undo.report(" in (ROOT / "services" / "ChromaticPreview.qml").read_text()
 
 
 def test_layout_apply_is_snapshotted_and_restored_atomically():
-    grid = (ROOT / "modules" / "layoutpicker" / "PresetGrid.qml").read_text()
     # Copy aside first; restore by temp file + rename (atomic on one filesystem).
-    assert 'cp -p "$2" "$d/shell.json"' in grid
-    assert 'mv -f "$2.undo.tmp" "$2"' in grid
-    assert "_queued" in grid, "a newer choice made while busy must win, not be dropped"
+    assert 'cp -p "$2" "$d/shell.json"' in PRESET
+    assert 'mv -f "$2.undo.tmp" "$2"' in PRESET
+    assert "_queued" in PRESET, "a newer choice made while busy must win, not be dropped"
 
 
 def test_wallpaper_follow_does_not_replace_the_wallpaper_undo():
@@ -191,8 +193,7 @@ def test_wallpaper_follow_does_not_replace_the_wallpaper_undo():
 
 
 def test_layout_burst_keeps_the_first_snapshot():
-    grid = (ROOT / "modules" / "layoutpicker" / "PresetGrid.qml").read_text()
-    assert "continuing" in grid and "root._begin(q, true)" in grid
+    assert "continuing" in PRESET and "root._next(true)" in PRESET
 
 
 def test_policy_doc_lists_every_pane():
@@ -238,3 +239,154 @@ def test_failed_chromatic_apply_reports_why_and_offers_no_undo(tmp_path):
     assert "gates failed" in r["applyError"]
     assert r["undoKind"] == "failed" and "gates failed" in r["undoReason"]
     assert r["canUndo"] is False
+
+
+# ---- review fixes (B1-B5, S1-S5) -------------------------------------------
+
+PANE_FILES = [p for p in CC.rglob("*.qml")]
+
+
+def test_b2_no_pane_owns_a_restore_closure():
+    """Panes unload on navigation and die with the window: their Undo must be
+    data run by a singleton (offerCommand/offerValues/offerPaths/offerCalls)."""
+    for path in PANE_FILES:
+        text = path.read_text()
+        assert "Undo.offer(" not in text, f"{path.relative_to(CC)} hands Undo a pane closure"
+    for singleton in ("services/ChromaticPreview.qml", "services/PresetApply.qml", "modules/companion/CompanionStore.qml"):
+        assert "pragma Singleton" in (ROOT / singleton).read_text(), singleton
+
+
+def test_b1_holds_are_counted_and_freed_when_the_window_goes():
+    assert "function releaseAll()" in UNDO and "root.holds = 0" in UNDO
+    assert "Component.onDestruction: root.windowGone()" in STRIP
+    assert "onVisibleChanged" in STRIP and "Undo.dismiss()" in STRIP and "Undo.releaseAll()" in STRIP
+    assert "Undo.paused =" not in STRIP
+
+
+def test_b3_undo_and_turn_off_cancel_pending_chromatic_applies():
+    svc = (ROOT / "services" / "ChromaticPreview.qml").read_text()
+    cancel = svc[svc.index("function _cancelPending()"):svc.index("function _restoreSnapshot")]
+    for needle in ("applyQuiet.stop()", "_applyWanted = false", "_applyAgain = false"):
+        assert needle in cancel, needle
+    restore = svc[svc.index("function _restoreSnapshot"):svc.index("// Persist through horneroctl.")]
+    assert "_cancelPending()" in restore and "request = snap.request" in restore
+    assert "return Undo.busy" in restore
+    off = svc[svc.index("function turnOff()"):svc.index("// `undoWith`")]
+    assert "_cancelPending()" in off and "_offQueued = true" in off
+
+
+def test_b5_tweaks_reapply_only_after_a_successful_apply():
+    apply_exit = PRESET[PRESET.index("id: applyProc"):PRESET.index("id: settle")]
+    assert "Layouts.reapplyAfterPreset(root._target)" in apply_exit
+    assert apply_exit.index("exitCode !== 0") < apply_exit.index("Layouts.reapplyAfterPreset")
+    restore_exit = PRESET[PRESET.index("id: restoreProc"):]
+    assert "reapplyAfterPreset" not in restore_exit
+
+
+def test_s2_experience_preferred_layout_goes_through_the_undo_path():
+    pane = (CC / "experience" / "ExperiencePane.qml").read_text()
+    assert "PresetApply.apply(v, v, true)" in pane
+    assert "Experience.applyPreferredLayout()" not in pane
+
+
+def test_s3_busy_restores_wait_instead_of_failing():
+    assert "return root.busy;" in UNDO and "id: retry" in UNDO
+    svc = (ROOT / "services" / "ChromaticPreview.qml").read_text()
+    assert "? true : Undo.busy" in svc  # rollback via runCtl
+    assert "return Undo.busy" in PRESET
+    assert "restoreProc.running" in PRESET.split("readonly property bool applying:")[1].split("\n")[0]
+
+
+def test_s5_display_restore_keeps_transform_and_mirror_names():
+    pane = (CC / "displays" / "DisplaysPane.qml").read_text()
+    assert ",transform," in pane and "o.name === String(m.mirrorOf)" in pane
+    assert "arrangeStarted" in pane
+
+
+# ---- the preset snapshot / restore scripts, run for real -----------------
+
+import shutil
+import subprocess
+
+
+def _script(name):
+    """The sh program PresetApply.qml builds for `<name>.command`."""
+    start = PRESET.index(f"{name}.command = [\"sh\", \"-c\", ")
+    seg = PRESET[start:PRESET.index(",\n            \"sh\",", start)]
+    return "".join(re.findall(r"'((?:[^'\\]|\\.)*)'", seg))
+
+
+def _run(script, *args):
+    return subprocess.run(["sh", "-c", script, "sh", *args], capture_output=True, text=True)
+
+
+def _sha(path):
+    import hashlib
+    return hashlib.sha256(path.read_bytes()).hexdigest() if path.exists() else "absent"
+
+
+def test_b4_fresh_account_without_shell_json_can_apply_and_undo(tmp_path):
+    snap, restore = _script("snapProc"), _script("restoreProc")
+    cfg, ptr, root = tmp_path / "shell.json", tmp_path / "current-shell-preset", tmp_path / "undo"
+    d = root / "1"
+    r = _run(snap, str(d), str(cfg), str(ptr), "-")
+    assert r.returncode == 0, r.stderr
+    assert (d / "shell.json.absent").exists() and (d / "current-shell-preset.absent").exists()
+    # horneroctl then creates both files; Undo removes them again.
+    cfg.write_text("{\"bar\": 1}\n")
+    ptr.write_text("cockpit\n")
+    r = _run(restore, str(d), str(cfg), str(ptr), _sha(cfg))
+    assert r.returncode == 0, r.stderr
+    assert not cfg.exists() and not ptr.exists()
+
+
+def test_s1_layout_undo_refuses_when_shell_json_changed_since(tmp_path):
+    snap, restore = _script("snapProc"), _script("restoreProc")
+    cfg, ptr, d = tmp_path / "shell.json", tmp_path / "ptr", tmp_path / "undo" / "1"
+    cfg.write_text("before\n")
+    ptr.write_text("hornero-left\n")
+    assert _run(snap, str(d), str(cfg), str(ptr), "-").returncode == 0
+    cfg.write_text("after preset\n")
+    expect = _sha(cfg)
+    cfg.write_text("after preset + another setting\n")
+    r = _run(restore, str(d), str(cfg), str(ptr), expect)
+    assert r.returncode == 3, "a later change must make Undo refuse, not roll it back"
+    assert cfg.read_text() == "after preset + another setting\n"
+    cfg.write_text("after preset\n")
+    r = _run(restore, str(d), str(cfg), str(ptr), expect)
+    assert r.returncode == 0 and cfg.read_text() == "before\n" and ptr.read_text() == "hornero-left\n"
+    assert not list(tmp_path.glob("*.undo.tmp"))
+
+
+def test_s4_pruning_never_removes_the_snapshot_the_offer_points_to(tmp_path):
+    snap = _script("snapProc")
+    cfg, ptr, root = tmp_path / "shell.json", tmp_path / "ptr", tmp_path / "undo"
+    cfg.write_text("x\n")
+    import time
+    _run(snap, str(root / "100"), str(cfg), str(ptr), "-")
+    for n in range(101, 107):
+        time.sleep(0.02)
+        assert _run(snap, str(root / str(n)), str(cfg), str(ptr), str(root / "100")).returncode == 0
+    left = sorted(p.name for p in root.iterdir())
+    assert "100" in left, "the live offer's copy was pruned"
+    assert "106" in left and len(left) <= 4
+
+
+def test_s4_snapshot_failure_starts_the_next_choice_fresh():
+    snap_exit = PRESET[PRESET.index("id: snapProc"):PRESET.index("id: applyProc")]
+    assert "root._next(false)" in snap_exit and 'root._snapDir = ""' in snap_exit
+    assert "root._snapDir !== \"\"" in PRESET  # continuing only with a real copy
+
+
+@requires_qs
+def test_undo_service_holds_busy_retry_and_commands(tmp_path):
+    r, _, _ = run_scene(tmp_path, "undo")
+    assert r["paths"] == ["undone", 10]
+    assert r["callsOk"] == "undone"
+    assert r["callsError"] == "failed", "a singleton call that answers error: fails the undo"
+    assert r["withdrawOther"] is True and r["withdrawSame"] is False
+    assert r["holdsAfterReleaseAll"] == 0
+    assert r["whileBusy"] == "undoing"
+    assert r["afterBusy"] == ["undone", -1], "a busy restore is retried, not failed"
+    assert r["cmdFail"][0] == "failed" and "nope" in r["cmdFail"][1]
+    assert r["cmdOk"][0] == "undone" and "k:true" in r["cmdOk"][1]

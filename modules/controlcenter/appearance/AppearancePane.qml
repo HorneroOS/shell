@@ -397,34 +397,6 @@ Item {
         root.undoTitle = kinds.theme ? (Themes.themeById(root.pendingThemeId)?.name ?? qsTr("Theme")) : kinds.wallpaper ? qsTr("Wallpaper") : kinds.gtk ? qsTr("GTK theme") : kinds.icons ? qsTr("Icon theme") : qsTr("GTK colour scheme");
     }
 
-    // Put back exactly what was live before the change (theme or wallpaper
-    // through the same pipeline, then GTK/icon/scheme overrides).
-    function _restoreUndo(snap: var): var {
-        if (ThemePipeline.busy)
-            return qsTr("Another appearance change is still running. Try again in a moment.");
-        const k = snap.kinds;
-        if (k.theme && snap.theme === "hornero-chromatic") {
-            // A Chromatic palette is derived, not a catalogue theme: rebuild it.
-            const back = ChromaticPreview._restoreSnapshot({
-                "active": true,
-                "request": ChromaticPreview.request
-            });
-            if (typeof back === "string")
-                return back;
-        } else if (k.theme && snap.theme)
-            ThemePipeline.applyTheme(snap.theme, snap.wallpaper);
-        else if (k.wallpaper && snap.wallpaper)
-            ThemePipeline.setWallpaper(snap.wallpaper);
-        if (k.gtk && snap.gtk)
-            ThemePipeline.setGtk(snap.gtk);
-        if (k.icons && snap.icons)
-            ThemePipeline.setIcons(snap.icons);
-        if (k.scheme && snap.scheme)
-            ThemePipeline.setGtkColorScheme(snap.scheme);
-        root.undoSnap = null;
-        return true;
-    }
-
     function commitSelection(): void {
         // ThemePipeline.applyTheme applies a complete Signal role table
         // (plus the theme's wallpaper/GTK recipe). GTK/icon overrides only
@@ -1055,6 +1027,24 @@ Item {
         }
     }
 
+    // Undo writes Config directly; pull the pane's working copies back so a
+    // later saveConfig() cannot write the old values again.
+    function resyncFromConfig(): void {
+        root.animDurationsScale = Config.appearance.anim.durations.scale ?? 1;
+        root.fontSizeScale = Config.appearance.font.size.scale ?? 1;
+        root.paddingScale = Config.appearance.padding.scale ?? 1;
+        root.roundingScale = Config.appearance.rounding.scale ?? 1;
+        root.spacingScale = Config.appearance.spacing.scale ?? 1;
+    }
+
+    Connections {
+        target: Undo
+
+        function onUndone(key: string): void {
+            root.resyncFromConfig();
+        }
+    }
+
     Connections {
         target: ThemePipeline
 
@@ -1064,7 +1054,9 @@ Item {
             if (ok && root.undoSnap) {
                 const snap = root.undoSnap;
                 root.undoSnap = null;
-                Undo.offer("appearance", root.undoTitle, () => root._restoreUndo(snap), "");
+                // The restore runs in ThemePipeline, so it still works after
+                // this pane is unloaded or the window closes.
+                Undo.offerCalls("appearance", root.undoTitle, [[ThemePipeline, "restoreAppearance", [snap]]], "");
             } else if (!ok && root.undoSnap) {
                 root.undoSnap = null;
                 Undo.report("appearance", qsTr("Appearance was not changed"), ThemePipeline.lastError || qsTr("Appearance apply failed"));

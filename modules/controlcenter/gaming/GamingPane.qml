@@ -131,12 +131,14 @@ Item {
             return;
         const prev = root.performanceCurrent;
         root.runPerformance(profile, () => {
+            // Undo runs the inverse command itself (it outlives this pane).
             if (prev !== "")
-                Undo.offer("power-profile", qsTr("Power profile %1").arg(profile), () => {
-                    root.runPerformance(prev, null);
-                    return true;
-                }, qsTr("Undo returns to %1.").arg(prev));
+                Undo.offerCommand("power-profile", qsTr("Power profile %1").arg(profile), root.performanceArgs(prev), qsTr("Undo returns to %1.").arg(prev));
         });
+    }
+
+    function performanceArgs(profile: string): var {
+        return ["horneroctl", "--json", "apps", "performance", "mode", "set", profile, "--yes"];
     }
 
     function runPerformance(profile: string, done: var): void {
@@ -146,11 +148,20 @@ Item {
         root.actionError = "";
         root.setDone = done;
         root.setTitle = qsTr("Power profile %1").arg(profile);
-        setProc.command = ["horneroctl", "--json", "apps", "performance", "mode", "set", profile, "--yes"];
+        setProc.command = root.performanceArgs(profile);
         setProc.running = true;
     }
 
     Component.onCompleted: root.refresh()
+
+    Connections {
+        target: Undo
+
+        function onCommandFinished(key: string, ok: bool): void {
+            if (key === "power-profile")
+                root.refresh();
+        }
+    }
 
     Process {
         id: doctorProc

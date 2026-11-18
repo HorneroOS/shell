@@ -52,32 +52,6 @@ CollapsibleSection {
         return eq(cur.lamp, a.lamp) && eq(cur.warmth, a.warmth) && eq(cur.innerLight, a.innerLight) && eq(cur.vignette, a.vignette) && eq(cur.grain, a.grain) && eq(cur.scanlines, a.scanlines) && eq(cur.plateTracking, a.plateTracking) && cur.mascot === a.mascot && cur.tone === a.tone;
     }
 
-    // The scalars a look sets, as they are now (what Undo puts back).
-    function currentLook(): var {
-        const p = root.rootPane;
-        return {
-            rounding: p.roundingScale,
-            spacing: p.spacingScale,
-            padding: p.paddingScale,
-            font: p.fontSizeScale,
-            motion: p.animDurationsScale,
-            glow: Config.appearance.glow.intensity,
-            weight: Config.appearance.font.weight.shift,
-            curve: Config.appearance.anim.curveStyle,
-            atmosphere: {
-                lamp: Config.appearance.atmosphere.lamp,
-                warmth: Config.appearance.atmosphere.warmth,
-                innerLight: Config.appearance.atmosphere.innerLight,
-                vignette: Config.appearance.atmosphere.vignette,
-                grain: Config.appearance.atmosphere.grain,
-                scanlines: Config.appearance.atmosphere.scanlines,
-                plateTracking: Config.appearance.atmosphere.plateTracking,
-                mascot: Config.appearance.atmosphere.mascot,
-                tone: Config.appearance.atmosphere.tone
-            }
-        };
-    }
-
     function writeLook(look: var): bool {
         const p = root.rootPane;
         p.roundingScale = look.rounding;
@@ -94,11 +68,48 @@ CollapsibleSection {
         return true;
     }
 
-    // Applies at once and offers Undo with the exact previous values.
+    // Applies at once and offers Undo with the exact previous values. The
+    // values are remembered in Undo (Config objects only), not in this pane.
     function apply(look: var): void {
-        const before = root.currentLook();
+        Undo.offerValues("look", qsTr("Look: %1").arg(look.label), [
+            {
+                "obj": Config.appearance.rounding,
+                "keys": ["scale"]
+            },
+            {
+                "obj": Config.appearance.spacing,
+                "keys": ["scale"]
+            },
+            {
+                "obj": Config.appearance.padding,
+                "keys": ["scale"]
+            },
+            {
+                "obj": Config.appearance.font.size,
+                "keys": ["scale"]
+            },
+            {
+                "obj": Config.appearance.anim.durations,
+                "keys": ["scale"]
+            },
+            {
+                "obj": Config.appearance.glow,
+                "keys": ["intensity"]
+            },
+            {
+                "obj": Config.appearance.font.weight,
+                "keys": ["shift"]
+            },
+            {
+                "obj": Config.appearance.anim,
+                "keys": ["curveStyle"]
+            },
+            {
+                "obj": Config.appearance.atmosphere,
+                "keys": Object.keys(look.atmosphere)
+            }
+        ], qsTr("Undo restores every scale, the glow and the atmosphere knobs."));
         root.writeLook(look);
-        Undo.offer("look", qsTr("Look: %1").arg(look.label), () => root.writeLook(before), qsTr("Undo restores every scale, the glow and the atmosphere knobs."));
     }
 
     title: qsTr("Look")

@@ -55,18 +55,22 @@ Item {
             "variant": root.curVariant,
             "title": root.layoutsField.trim()
         };
-        root.runLayoutSet(root.layoutsField, root.variantField, false);
+        root.runLayoutSet(root.layoutsField, root.variantField);
     }
 
-    function runLayoutSet(layouts: string, variant: string, restoring: bool): void {
-        root.actionText = qsTr("Applying…");
+    // Without --variant the CLI clears the variant, so an empty one is simply left out.
+    function layoutArgs(layouts: string, variant: string): var {
         const cmd = ["horneroctl", "hardware", "keyboard", "layout", "--set", layouts.trim()];
         if (variant.trim() !== "")
             cmd.push("--variant", variant.trim());
         cmd.push("--yes", "--json");
+        return cmd;
+    }
+
+    function runLayoutSet(layouts: string, variant: string): void {
+        root.actionText = qsTr("Applying…");
         actionProc.out = "";
-        actionProc.restoring = restoring;
-        actionProc.command = cmd;
+        actionProc.command = root.layoutArgs(layouts, variant);
         actionProc.running = true;
     }
     property real sensitivity: 0
@@ -106,6 +110,18 @@ Item {
     }
 
     Component.onCompleted: root.refresh()
+
+    Connections {
+        target: Undo
+
+        function onCommandFinished(key: string, ok: bool): void {
+            if (key === "input-layout") {
+                root.layoutsField = "";
+                root.variantField = "";
+                root.refresh();
+            }
+        }
+    }
 
     Process {
         id: layoutProc
@@ -186,7 +202,6 @@ Item {
         id: actionProc
 
         property string out: ""
-        property bool restoring: false
 
         stdout: SplitParser {
             onRead: data => {
@@ -210,21 +225,12 @@ Item {
                 root.layoutUndo = null;
                 if (!ok) {
                     // The CLI validates before it writes: nothing changed.
-                    Undo.report("input-layout", actionProc.restoring ? qsTr("Could not undo the keyboard layout") : qsTr("Keyboard layout was not changed"), message || qsTr("horneroctl refused the layout list."));
+                    Undo.report("input-layout", qsTr("Keyboard layout was not changed"), message || qsTr("horneroctl refused the layout list."));
                     root.layoutsField = undo.layout;
                     root.variantField = undo.variant;
-                } else if (!actionProc.restoring) {
-                    Undo.offer("input-layout", qsTr("Keyboard layout %1").arg(undo.title), () => {
-                        root.layoutsField = undo.layout;
-                        root.variantField = undo.variant;
-                        root.layoutUndo = {
-                            "layout": undo.layout,
-                            "variant": undo.variant,
-                            "title": undo.layout
-                        };
-                        root.runLayoutSet(undo.layout, undo.variant, true);
-                        return true;
-                    }, qsTr("Undo returns to %1.").arg(undo.layout || qsTr("the previous layout")));
+                } else if (undo.layout !== "") {
+                    // Undo runs the inverse command itself (it outlives this pane).
+                    Undo.offerCommand("input-layout", qsTr("Keyboard layout %1").arg(undo.title), root.layoutArgs(undo.layout, undo.variant), qsTr("Undo returns to %1.").arg(undo.layout));
                 }
             }
             root.refresh();

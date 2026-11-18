@@ -121,6 +121,15 @@ Item {
 
     Component.onCompleted: root.refresh()
 
+    Connections {
+        target: Undo
+
+        function onCommandFinished(key: string, ok: bool): void {
+            if (key === "night-light")
+                root.refresh();
+        }
+    }
+
     Process {
         id: statusProc
 
@@ -210,10 +219,8 @@ Item {
                 Undo.report("night-light", qsTr("Night light was not changed"), message || setErr.text.trim().split("\n").slice(-1)[0]);
             } else if (job && job.undo) {
                 const u = job.undo;
-                Undo.offer("night-light", u.title, () => {
-                    root.send(u.restore, null);
-                    return true;
-                }, u.detail);
+                // Undo runs the inverse command itself (it outlives this pane).
+                Undo.offerCommand("night-light", u.title, u.restore, u.detail);
             }
             root.refresh();
             const next = root.queuedJob;

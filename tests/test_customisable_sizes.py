@@ -93,6 +93,18 @@ def test_idle_and_battery_defaults_match_factory():
         assert f"factory: {n}" in qml
     assert "PowerPane" and "IdleBatteryPanel {}" in (CC / "power" / "PowerPane.qml").read_text()
 
+def test_notification_placement_default_and_consumed():
+    assert FACTORY["notifs"]["align"] == "right"
+    assert "property string align: \"right\"" in (ROOT / "config" / "NotifsConfig.qml").read_text()
+    assert "align: notifs.align" in (ROOT / "config" / "Config.qml").read_text()
+    panels = (ROOT / "modules" / "drawers" / "Panels.qml").read_text()
+    assert "Config.notifs.align" in panels and "anchors.left: align" in panels
+    qml = (CC / "notifications" / "NotificationsPane.qml").read_text()
+    assert "target: Config.notifs" in qml and 'key: "align"' in qml and 'defaultValue: "right"' in qml
+    for o in ("left", "center", "right"):
+        assert f'id: "{o}"' in qml
+
+
 def test_placement_choices_default_to_factory_and_are_consumed():
     assert FACTORY["launcher"]["align"] == "center" and FACTORY["osd"]["align"] == "center"
     panels = (ROOT / "modules" / "drawers" / "Panels.qml").read_text()

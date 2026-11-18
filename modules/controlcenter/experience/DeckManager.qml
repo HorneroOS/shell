@@ -125,11 +125,8 @@ ColumnLayout {
                 const before = JSON.parse(JSON.stringify(Config.experience.deck ?? {}));
                 const mode = root.mode;
                 root.report(Experience.resetDeck(mode, ""));
-                Undo.offer("deck-reset", qsTr("Dashboard layout reset"), () => {
-                    Config.experience.deck = before;
-                    Config.save();
-                    return true;
-                }, qsTr("Undo brings back your widget arrangement."));
+                // Undo restores only this mode's arrangement, from Experience.
+                Undo.offerCalls("deck-reset", qsTr("Dashboard layout reset"), [[Experience, "restoreDeckMode", [mode, before]]], qsTr("Undo brings back your widget arrangement for this mode."));
             }
         }
 

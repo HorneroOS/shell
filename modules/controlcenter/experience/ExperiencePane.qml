@@ -63,11 +63,18 @@ Item {
         root.actionMessage = res.startsWith("error") ? res : "";
         root.selectedMode = id;
         if (!res.startsWith("error") && Experience.mode !== from)
-            Undo.offer("experience-mode", qsTr("%1 mode").arg(Experience.label), () => {
-                const back = Experience.revert();
+            // Undo switches back to exactly the mode that was active, from the
+            // Experience singleton (it outlives this pane).
+            Undo.offerCalls("experience-mode", qsTr("%1 mode").arg(Experience.label), [[Experience, "set", [from, "user"]]], qsTr("Undo returns to the previous mode."));
+    }
+
+    Connections {
+        target: Undo
+
+        function onUndone(key: string): void {
+            if (key === "experience-mode")
                 root.selectedMode = Experience.mode;
-                return back.startsWith("error") ? back : true;
-            }, qsTr("Undo returns to the previous mode."));
+        }
     }
 
     onSelectedModeChanged: {
@@ -573,6 +580,70 @@ Item {
                         onToggled: checked => root.customise("scanlines", checked)
                     }
 
+                    EnumRow {
+                        label: qsTr("Mode accent")
+                        value: root.field("chrome.accent")
+                        options: [
+                            {
+                                "value": "none",
+                                "label": qsTr("None")
+                            },
+                            {
+                                "value": "ink",
+                                "label": qsTr("Ink")
+                            },
+                            {
+                                "value": "signal",
+                                "label": qsTr("Amber")
+                            },
+                            {
+                                "value": "cue",
+                                "label": qsTr("Cue")
+                            },
+                            {
+                                "value": "phosphor",
+                                "label": qsTr("Phosphor")
+                            },
+                            {
+                                "value": "alert",
+                                "label": qsTr("Alert")
+                            }
+                        ]
+                        onPicked: v => root.customise("chrome.accent", v)
+                    }
+
+                    EnumRow {
+                        label: qsTr("Bar edge line")
+                        value: root.field("chrome.edge")
+                        options: [
+                            {
+                                "value": "off",
+                                "label": qsTr("Off")
+                            },
+                            {
+                                "value": "hairline",
+                                "label": qsTr("Hairline")
+                            },
+                            {
+                                "value": "glow",
+                                "label": qsTr("Glow")
+                            }
+                        ]
+                        onPicked: v => root.customise("chrome.edge", v)
+                    }
+
+                    SliderInput {
+                        Layout.fillWidth: true
+
+                        label: qsTr("Accent wash")
+                        value: Number(root.field("chrome.wash") ?? 0)
+                        from: 0
+                        to: 0.2
+                        stepSize: 0.01
+                        decimals: 2
+                        onValueModified: newValue => root.customise("chrome.wash", Math.round(newValue * 100) / 100)
+                    }
+
                     StyledText {
                         Layout.fillWidth: true
                         visible: root.locked("glow") || root.locked("scanlines") || root.locked("motion")
@@ -700,9 +771,10 @@ Item {
                                 }))
                         onPicked: v => {
                             root.customise("layout.preset", v);
-                            // With "apply on switch" on, the active mode takes it now.
+                            // With "apply on switch" on, the active mode takes it now,
+                            // through the same safety copy + Undo as the Layout pane.
                             if (root.selActive && root.field("layout.apply"))
-                                Experience.applyPreferredLayout();
+                                PresetApply.apply(v, v, true);
                         }
                     }
 

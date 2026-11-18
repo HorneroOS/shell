@@ -60,7 +60,20 @@ Singleton {
     property string notice: ""
     // The fingerprint of the candidate differs from what is applied.
     readonly property bool dirty: result !== null && result.fingerprint !== Signal.chromatic?.fingerprint
-    readonly property string helperPath: Quickshell.env("HORNERO_CHROMATIC_BIN") || "/usr/lib/hornero/hornero-chromatic"
+    // Where the helper may live, in order: HORNERO_CHROMATIC_BIN, the packaged
+    // /usr/lib/hornero/hornero-chromatic, then the person's own build in
+    // ~/.local/lib/hornero or ~/.local/bin (development or per-user install).
+    // The probe tries each in turn and settles on the first that answers
+    // `version`; only when none does is the engine reported as not installed.
+    readonly property var helperCandidates: {
+        const home = Quickshell.env("HOME") || "";
+        const list = [Quickshell.env("HORNERO_CHROMATIC_BIN"), "/usr/lib/hornero/hornero-chromatic"];
+        if (home)
+            list.push(home + "/.local/lib/hornero/hornero-chromatic", home + "/.local/bin/hornero-chromatic");
+        return list.filter(p => !!p);
+    }
+    property int helperIndex: 0
+    readonly property string helperPath: helperCandidates[Math.min(helperIndex, helperCandidates.length - 1)]
     readonly property string wallpaper: Wallpapers.actualCurrent
     readonly property var perMode: ({
             "dark": {
@@ -461,14 +474,27 @@ Singleton {
         };
     }
 
+    // Nothing queued may re-apply over an Undo or a Turn off: the quiet
+    // timer, a wanted apply and a repeat apply are all dropped.
+    function _cancelPending(): void {
+        applyQuiet.stop();
+        _applyWanted = false;
+        _applyAgain = false;
+    }
+
     function _restoreSnapshot(snap: var): var {
-        if (applying)
-            return qsTr("Another palette change is still running. Try again in a moment.");
+        // Still applying or running a verb: Undo waits and retries.
+        if (applying || ctlProc.running)
+            return Undo.busy;
+        _cancelPending();
         if (snap.active) {
+            request = snap.request;
             _undoing = true;
             _runApply(snap.request, true);
             return true;
         }
+        if (ThemePipeline.busy)
+            return Undo.busy;
         // Chromatic was off: bring the old theme back, then the old preferences.
         ThemePipeline.applyTheme(snap.themeId, "");
         const p = snap.prefs;
@@ -540,25 +566,44 @@ Singleton {
         runCtl("import", Cli.importArgs(path.trim(), ""), qsTr("Imported. It appears in the saved palettes."));
     }
 
-    function rollback(): void {
-        runCtl("rollback", Cli.rollbackArgs(), qsTr("Rolled back to the previous palette."));
+    // `Undo.busy` while another verb runs, so an Undo of a follow waits.
+    function rollback(): var {
+        return runCtl("rollback", Cli.rollbackArgs(), qsTr("Rolled back to the previous palette.")) ? true : Undo.busy;
+    }
+
+    // Turning off wins over anything still queued; an apply already running
+    // finishes first and the off runs right after it.
+    property bool _offQueued: false
+    property bool _askNoticeShown: false
+
+    function _runQueuedOff(): void {
+        if (!_offQueued)
+            return;
+        _offQueued = false;
+        Qt.callLater(turnOff);
     }
 
     function turnOff(): void {
+        _cancelPending();
+        if (applying || ctlProc.running) {
+            _offQueued = true;
+            return;
+        }
         runCtl("off", Cli.offArgs(), qsTr("Chromatic is off. The fallback theme is applied."), _snapshot());
     }
 
     // `undoWith`: a snapshot to restore, or null for verbs that undo
     // through the palette history (`follow`) or have no undo (`save`).
-    function runCtl(kind: string, command: var, doneText: string, undoWith: var): void {
+    function runCtl(kind: string, command: var, doneText: string, undoWith: var): bool {
         if (ctlProc.running)
-            return;
+            return false;
         ctlProc.kind = kind;
         ctlProc.doneText = doneText;
         ctlProc.snap = undoWith ?? null;
         ctlProc.command = command;
         notice = "";
         ctlProc.running = true;
+        return true;
     }
 
     // Wallpaper follow policy. `auto` (and the retired `ask`, which now
@@ -568,6 +613,12 @@ Singleton {
         if (Config.appearance.theme !== "hornero-chromatic")
             return;
         const policy = Config.appearance.chromatic.follow;
+        if (policy === "ask" && !root._askNoticeShown) {
+            // People who chose "Ask me first" learn once per session that the
+            // palette now follows at once, with Undo instead of a question.
+            root._askNoticeShown = true;
+            Toaster.toast(qsTr("Palette follows the wallpaper"), qsTr("Chromatic no longer asks first: it recolours at once and Settings offers Undo. Turn following off in Appearance › Chromatic."), "palette");
+        }
         if (policy === "auto" || policy === "ask")
             runCtl("follow", Cli.followArgs(), "");
     }
@@ -594,8 +645,16 @@ Singleton {
     Timer {
         id: probeTimeout
 
-        interval: 2500
+        interval: 1500
         onTriggered: {
+            if (!root.helperChecked && root.helperIndex + 1 < root.helperCandidates.length) {
+                // A path that cannot start never reports an exit: move on.
+                root.helperIndex += 1;
+                probeProc.running = false;
+                probeProc.running = true;
+                restart();
+                return;
+            }
             if (!root.helperChecked) {
                 root.helperAvailable = false;
                 root.helperChecked = true;
@@ -611,6 +670,13 @@ Singleton {
         stdout: StdioCollector {}
         onExited: exitCode => {
             probeTimeout.stop();
+            if (exitCode !== 0 && root.helperIndex + 1 < root.helperCandidates.length) {
+                // Not here: try the next known location.
+                root.helperIndex += 1;
+                probeTimeout.restart();
+                probeProc.running = true;
+                return;
+            }
             root.helperAvailable = exitCode === 0;
             root.helperChecked = true;
             if (root.helperAvailable)
@@ -685,6 +751,7 @@ Singleton {
                 root._applyAgain = false;
                 root.applyFailed(code, root.applyError);
                 Undo.report("chromatic", undoing ? qsTr("Could not undo the Chromatic palette") : qsTr("Chromatic was not applied"), qsTr("%1 Your previous palette is still in place.").arg(root.applyError));
+                root._runQueuedOff();
                 return;
             }
             const fp = String(doc?.fingerprint ?? "");
@@ -698,7 +765,9 @@ Singleton {
                 const snap = applyProc.snap;
                 Undo.offer("chromatic", qsTr("Chromatic palette"), () => root._restoreSnapshot(snap), root.result ? qsTr("%1, %2").arg(root.result.inference?.variant ?? request.variant).arg(root.result.scheme.mode ?? "") : "");
             }
-            if (root._applyAgain) {
+            if (root._offQueued) {
+                root._runQueuedOff();
+            } else if (root._applyAgain) {
                 root._applyAgain = false;
                 root.apply(true);
             }
@@ -746,7 +815,7 @@ Singleton {
                 const folded = Undo.kind === "undone" || (Undo.kind === "applied" && Undo.key === "appearance");
                 if (ctlProc.kind === "follow") {
                     if (!folded)
-                        Undo.offer("chromatic", qsTr("Palette follows the wallpaper"), () => root.rollback() || true, qsTr("Undo returns to the previous palette."));
+                        Undo.offer("chromatic", qsTr("Palette follows the wallpaper"), () => root.rollback(), qsTr("Undo returns to the previous palette."));
                 } else if (ctlProc.kind === "off" && ctlProc.snap) {
                     const snap = ctlProc.snap;
                     Undo.offer("chromatic", qsTr("Chromatic turned off"), () => root._restoreSnapshot(snap), "");
@@ -762,6 +831,7 @@ Singleton {
                 if (ctlProc.kind === "follow" || ctlProc.kind === "off")
                     Undo.report("chromatic", qsTr("Chromatic did not change"), root.notice);
             }
+            root._runQueuedOff();
         }
     }
 

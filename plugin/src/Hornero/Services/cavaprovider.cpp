@@ -8,9 +8,24 @@
 #include <cmath>
 #include <cava/cavacore.h>
 #include <cstddef>
+#include <mutex>
 #include <qdebug.h>
 
 namespace hornero::services {
+
+namespace {
+
+// FFTW's planner (inside cava_init / cava_destroy) is not thread-safe, and
+// every CavaProvider runs its processor on its own thread (the mono
+// spectrum and the deck's stereo one can start together), so plan creation
+// and destruction are serialised. cava_execute only runs existing plans,
+// which FFTW allows concurrently.
+std::mutex& planMutex() {
+    static std::mutex m;
+    return m;
+}
+
+} // namespace
 
 CavaProcessor::CavaProcessor(QObject* parent)
     : AudioProcessor(parent)
@@ -107,6 +122,7 @@ void CavaProcessor::reload() {
 
 void CavaProcessor::cleanup() {
     if (m_plan) {
+        const std::lock_guard lock(planMutex());
         cava_destroy(m_plan);
         m_plan = nullptr;
     }
@@ -122,7 +138,10 @@ void CavaProcessor::initCava() {
         return;
     }
 
-    m_plan = cava_init(m_bars, ac::SAMPLE_RATE, m_channels, 1, 0.85, 50, 10000);
+    {
+        const std::lock_guard lock(planMutex());
+        m_plan = cava_init(m_bars, ac::SAMPLE_RATE, m_channels, 1, 0.85, 50, 10000);
+    }
     m_out = new double[static_cast<size_t>(m_bars * m_channels)];
 }
 

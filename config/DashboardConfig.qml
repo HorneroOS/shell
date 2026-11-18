@@ -15,7 +15,7 @@ JsonObject {
     property Workspaces workspaces: Workspaces {}
     property Media media: Media {}
 
-    // The home media deck (docs/DASHBOARD.md "Media deck").
+    // The home media deck (docs/DASHBOARD.md, "Media deck").
     component Media: JsonObject {
         // Stereo spectrum columns beside the cover well. Drawn only when
         // motion is not off (Gaming and reduced motion keep the deck still).

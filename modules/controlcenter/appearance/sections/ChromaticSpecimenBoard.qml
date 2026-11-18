@@ -210,7 +210,7 @@ Item {
 
                         Text {
                             anchors.centerIn: parent
-                            text: qsTr("Apply")
+                            text: qsTr("Play")
                             font.family: root.sansFamily
                             font.pixelSize: 11
                             font.weight: Font.Medium

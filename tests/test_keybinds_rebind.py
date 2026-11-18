@@ -15,7 +15,7 @@ def pane_text() -> str:
 def test_pane_uses_rebind_backend() -> None:
     text = pane_text()
     assert '"horneroctl", "hardware", "keyboard", "rebind", "status", "--json"' in text
-    assert '"rebind", "set", "--old", root.editOld, "--new", root.newCombo' in text
+    assert '"rebind", "set", "--old", oldCombo, "--new", newCombo' in text
     assert '"rebind", "reset", "--yes", "--json"' in text
 
 

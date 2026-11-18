@@ -148,7 +148,8 @@ ink, preferences) is implemented in this repository.
 - Preferences live in `appearance.chromatic` (see
   `config/AppearanceConfig.qml` and `config/shell.default.json`): `source`,
   `seeds`, `variant`, `mode`, `contrast`, `surfaceDepth`, `chroma`,
-  `hueShift`, `follow` (`off`/`auto`/`ask`), `perMode`, `fallback`,
+  `hueShift`, `follow` (`off`/`auto`; a stored `ask` behaves as `auto`),
+  `perMode`, `fallback`,
   `transition`. A missing block takes these defaults.
 - Control Center, Appearance > Chromatic
   (`modules/controlcenter/appearance/sections/Chromatic*.qml`,
@@ -163,12 +164,16 @@ ink, preferences) is implemented in this repository.
   The inference readout lists what Hornero chose (mode, variant, contrast,
   personality, reasons) and every item has a control that overrides it
   (Auto means follow the image). Mode, contrast, surface depth, intensity
-  and hue shift; per-mode variant preference; recolour policy (off / auto /
-  ask with preview and Keep current); smooth-transition toggle. Apply runs
-  `horneroctl appearance chromatic apply … --json --yes` only; Preview on
-  desktop is in-memory (`Signal.beginPreview`), Cancel or Escape restores
-  the previous palette and writes nothing, and a failed apply restores it
-  too. Save, Export, Import and Roll back are horneroctl verbs. Honest
+  and hue shift; per-mode variant preference; recolour policy (off / auto);
+  smooth-transition toggle. There is no Apply button
+  (`docs/CONTROL-CENTER-APPLY.md`): a choice rebuilds the candidate and, once
+  the controls have been quiet for 350 ms, applies the newest one through
+  `horneroctl appearance chromatic apply … --json --yes` only, one apply at a
+  time, then offers "Applied · Undo". Hovering or focusing a variant tile is a
+  transient in-memory preview (`Signal.beginPreview`), Escape or moving away
+  restores the previous palette and writes nothing, and a failed apply
+  restores it too and says why. "Use Chromatic" switches the dynamic palette on
+  or off. Save, Export, Import and Previous palette are horneroctl verbs. Honest
   states: helper missing, unreadable image, video without ffmpeg, no
   wallpaper, gates failing, High Contrast active. Renaming and deleting
   saved palettes are not available yet (no horneroctl verb).

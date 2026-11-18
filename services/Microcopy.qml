@@ -37,7 +37,9 @@ Singleton {
             "greeting.evening": qsTr("Good evening"),
             "greeting.night": qsTr("Good night"),
             "lock.welcome": qsTr("Welcome back"),
-            "session.hint": qsTr("Choose what happens next")
+            "session.hint": qsTr("Choose what happens next"),
+            "undo.applied": qsTr("Applied"),
+            "undo.undone": qsTr("Undone")
         })
 
     readonly property var warm: ({
@@ -49,7 +51,9 @@ Singleton {
             "greeting.evening": qsTr("Good evening. Settle in"),
             "greeting.night": qsTr("Late shift. Dim lights, steady hands"),
             "lock.welcome": qsTr("Welcome back. Everything kept its place"),
-            "session.hint": qsTr("Rest, restart, or carry on")
+            "session.hint": qsTr("Rest, restart, or carry on"),
+            "undo.applied": qsTr("All set"),
+            "undo.undone": qsTr("Put back")
         })
 
     // `key` -> line in the active voice (falls back to plain).

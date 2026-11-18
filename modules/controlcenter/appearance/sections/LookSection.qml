@@ -52,7 +52,7 @@ CollapsibleSection {
         return eq(cur.lamp, a.lamp) && eq(cur.warmth, a.warmth) && eq(cur.innerLight, a.innerLight) && eq(cur.vignette, a.vignette) && eq(cur.grain, a.grain) && eq(cur.scanlines, a.scanlines) && eq(cur.plateTracking, a.plateTracking) && cur.mascot === a.mascot && cur.tone === a.tone;
     }
 
-    function apply(look: var): void {
+    function writeLook(look: var): bool {
         const p = root.rootPane;
         p.roundingScale = look.rounding;
         p.spacingScale = look.spacing;
@@ -65,6 +65,51 @@ CollapsibleSection {
         for (const k of Object.keys(look.atmosphere))
             Config.appearance.atmosphere[k] = look.atmosphere[k];
         p.saveConfig();
+        return true;
+    }
+
+    // Applies at once and offers Undo with the exact previous values. The
+    // values are remembered in Undo (Config objects only), not in this pane.
+    function apply(look: var): void {
+        Undo.offerValues("look", qsTr("Look: %1").arg(look.label), [
+            {
+                "obj": Config.appearance.rounding,
+                "keys": ["scale"]
+            },
+            {
+                "obj": Config.appearance.spacing,
+                "keys": ["scale"]
+            },
+            {
+                "obj": Config.appearance.padding,
+                "keys": ["scale"]
+            },
+            {
+                "obj": Config.appearance.font.size,
+                "keys": ["scale"]
+            },
+            {
+                "obj": Config.appearance.anim.durations,
+                "keys": ["scale"]
+            },
+            {
+                "obj": Config.appearance.glow,
+                "keys": ["intensity"]
+            },
+            {
+                "obj": Config.appearance.font.weight,
+                "keys": ["shift"]
+            },
+            {
+                "obj": Config.appearance.anim,
+                "keys": ["curveStyle"]
+            },
+            {
+                "obj": Config.appearance.atmosphere,
+                "keys": Object.keys(look.atmosphere)
+            }
+        ], qsTr("Undo restores every scale, the glow and the atmosphere knobs."));
+        root.writeLook(look);
     }
 
     title: qsTr("Look")
@@ -179,6 +224,16 @@ CollapsibleSection {
             stepSize: 0.05
             suffix: "×"
             decimals: 2
+        }
+        SizeSlider {
+            target: Config.controlCenter
+            key: "undoSeconds"
+            label: qsTr("How long Undo stays after a change")
+            from: 3
+            to: 60
+            defaultValue: 10
+            stepSize: 1
+            suffix: " s"
         }
     }
 

@@ -381,6 +381,16 @@ Singleton {
     }
 
     // screenName empty resets every screen and the hidden set of `id`.
+    // Undo of a deck reset: put back only that mode's arrangement as it was
+    // in `before` (a copy of experience.deck); other modes stay as they are now.
+    function restoreDeckMode(id: string, before: var): string {
+        if (!Model.isMode(id))
+            return `error: unknown mode: ${id}`;
+        Config.experience.deck = Deck._withState(Config.experience.deck, id, Deck._stateOf(before, id));
+        Config.save();
+        return "ok";
+    }
+
     function resetDeck(id: string, screenName: string): string {
         Config.experience.deck = Deck.reset(Config.experience.deck, id, screenName);
         Config.save();

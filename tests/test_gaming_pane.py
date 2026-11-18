@@ -32,9 +32,11 @@ def test_gaming_selection_installs_nothing_and_steam_is_optin():
     assert "never deletes your files, settings, or games" in PANE
 
 
-def test_gaming_performance_mode_is_two_step_and_reversible():
-    assert "armedProfile" in PANE
-    assert "Confirm %1" in PANE
+def test_gaming_performance_mode_applies_at_once_and_is_undoable():
+    # No confirm step (docs/CONTROL-CENTER-APPLY.md): applies, then offers Undo.
+    assert "armedProfile" not in PANE
+    assert "Confirm %1" not in PANE
+    assert 'Undo.offerCommand("power-profile"' in PANE
     assert "pick another profile to change back" in PANE
     assert "no improvement is guaranteed" in PANE.lower()
     for profile in ("power-saver", "balanced", "performance"):

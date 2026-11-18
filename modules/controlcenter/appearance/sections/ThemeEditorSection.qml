@@ -76,7 +76,6 @@ CollapsibleSection {
 
     function chooseSource(id: string): void {
         sourceId = id;
-        confirmingDelete = false;
         overrides = ({});
         nameField.text = sourceIsUser ? (Themes.themeById(id)?.name ?? id) : qsTr("%1 copy").arg(sourceFor(id)?.name ?? id);
         status = "";
@@ -131,9 +130,8 @@ CollapsibleSection {
         }
     }
 
-    // A deleted theme, kept in memory so Undo can put it back for 30 s.
+    // A deleted theme, kept in memory so the shared Undo strip can put it back.
     property var trash: null
-    property bool confirmingDelete: false
 
     function renameSaved(): void {
         if (!sourceIsUser || proc.running)
@@ -152,7 +150,6 @@ CollapsibleSection {
     function deleteSaved(): void {
         if (!sourceIsUser || proc.running)
             return;
-        confirmingDelete = false;
         // The whole theme, as it is saved now (not the unsaved edits), so
         // Undo restores exactly what was deleted.
         trash = {
@@ -165,14 +162,36 @@ CollapsibleSection {
         proc.running = true;
     }
 
+    // The re-import that puts a deleted palette back (argv only; the draft
+    // file is written next to the other theme drafts).
+    function restoreArgs(t: var): var {
+        const dir = `${Paths.state}/shell/theme-draft`;
+        return ["sh", "-c", 'd=$1; j=$2; shift 2; mkdir -p "$d" && printf "%s\\n" "$j" > "$d/theme-draft.json" && exec horneroctl appearance chromatic import "$d/theme-draft.json" "$@"', "sh", dir, JSON.stringify(t.doc)].concat(Cli.themeImportTail(t.id, false, false));
+    }
+
     function undoDelete(): void {
         if (!trash || proc.running)
             return;
         proc.mode = "restore";
         proc.draftDir = `${Paths.state}/shell/theme-draft`;
-        proc.command = ["sh", "-c", 'd=$1; j=$2; shift 2; mkdir -p "$d" && printf "%s\\n" "$j" > "$d/theme-draft.json" && exec horneroctl appearance chromatic import "$d/theme-draft.json" "$@"', "sh", proc.draftDir, JSON.stringify(trash.doc)].concat(Cli.themeImportTail(trash.id, false, false));
+        proc.command = root.restoreArgs(trash);
         status = "";
         proc.running = true;
+    }
+
+    Connections {
+        target: Undo
+
+        function onCommandFinished(key: string, ok: bool): void {
+            if (key !== "theme-delete")
+                return;
+            if (ok) {
+                root.status = qsTr("Restored.");
+                root.statusIsError = false;
+                root.trash = null;
+            }
+            Themes.reload();
+        }
     }
 
     // mode: "check" (dry run), "new" (save as a new theme) or "replace".
@@ -203,14 +222,6 @@ CollapsibleSection {
         onTriggered: root.setPreviewing(false)
     }
 
-    // Undo is offered for 30 s after a delete, then the copy is dropped.
-    Timer {
-        id: undoTimer
-
-        interval: 30000
-        onTriggered: root.trash = null
-    }
-
     Process {
         id: proc
 
@@ -227,14 +238,16 @@ CollapsibleSection {
             if (exitCode === 0) {
                 root.statusIsError = false;
                 if (proc.mode === "delete") {
-                    root.status = qsTr("Deleted. You can undo this for a short while.");
+                    root.status = qsTr("Deleted.");
                     root.sourceId = "";
                     root.overrides = ({});
-                    undoTimer.restart();
+                    // Undo re-imports the exact deleted document itself, so it still
+                    // works after this section is gone.
+                    if (root.trash)
+                        Undo.offerCommand("theme-delete", qsTr("Palette “%1” deleted").arg(root.trash.doc.name ?? ""), root.restoreArgs(root.trash), qsTr("Undo puts the whole palette back."));
                 } else if (proc.mode === "restore") {
                     root.status = qsTr("Restored.");
                     root.trash = null;
-                    undoTimer.stop();
                 } else if (proc.mode === "rename") {
                     root.status = qsTr("Renamed.");
                 } else {
@@ -367,25 +380,6 @@ CollapsibleSection {
                     paletteLabel: qsTr("Palette preview")
                     onActivated: root.chooseSource(modelData.id)
                 }
-            }
-        }
-
-        RowLayout {
-            Layout.fillWidth: true
-            visible: root.trash !== null
-            spacing: Appearance.spacing.small
-
-            StyledText {
-                Layout.fillWidth: true
-                text: qsTr("Deleted “%1”.").arg(root.trash?.doc.name ?? "")
-                color: Signal.palette.inkMuted
-                wrapMode: Text.WordWrap
-            }
-
-            TextButton {
-                text: qsTr("Undo")
-                type: TextButton.Filled
-                onClicked: root.undoDelete()
             }
         }
 
@@ -571,24 +565,10 @@ CollapsibleSection {
                 }
 
                 TextButton {
-                    visible: root.sourceIsUser && !root.confirmingDelete
+                    visible: root.sourceIsUser
                     text: qsTr("Delete")
                     type: TextButton.Text
-                    onClicked: root.confirmingDelete = true
-                }
-
-                TextButton {
-                    visible: root.sourceIsUser && root.confirmingDelete
-                    text: qsTr("Really delete?")
-                    type: TextButton.Filled
                     onClicked: root.deleteSaved()
-                }
-
-                TextButton {
-                    visible: root.sourceIsUser && root.confirmingDelete
-                    text: qsTr("Keep")
-                    type: TextButton.Text
-                    onClicked: root.confirmingDelete = false
                 }
 
                 TextButton {
@@ -615,7 +595,7 @@ CollapsibleSection {
                 wrapMode: Text.WordWrap
                 color: Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.small
-                text: qsTr("Saved palettes are ordinary themes and also appear under Themes. Hornero checks contrast before saving; a failing colour is reported here. Rename changes the name only; the id stays. Delete can be undone for 30 seconds, and the theme in use cannot be deleted.")
+                text: qsTr("Saved palettes are ordinary themes and also appear under Themes. Hornero checks contrast before saving; a failing colour is reported here. Rename changes the name only; the id stays. Delete applies at once and Undo puts the palette back; the theme in use cannot be deleted.")
             }
         }
     }

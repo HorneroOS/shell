@@ -42,6 +42,12 @@ ColumnLayout {
     }
 
     function resetBar(): void {
+        Undo.offerValues("bar-reset", qsTr("Bar reset to the layout default"), [
+            {
+                "obj": Config.bar,
+                "keys": ["bars"]
+            }
+        ], qsTr("Undo brings back this bar's thickness, gap, style and density."));
         root.commitBars(Geo.resetBar(root.bars, root.barIndex, root.preset));
     }
 
@@ -62,6 +68,33 @@ ColumnLayout {
 
     function resetGlobals(): void {
         const g = root.presetGlobals;
+        Undo.offerValues("bar-sizes-reset", qsTr("Sizes reset to the layout default"), [
+            {
+                "obj": Config.bar.sizes,
+                "keys": ["innerWidth", "islandInset", "contentScale", "iconScale", "textScale", "itemSpacing", "textWeight", "densityScale", "autoDensity"]
+            },
+            {
+                "obj": Config.bar.workspaces,
+                "keys": ["activeInset"]
+            },
+            {
+                "obj": Config.bar,
+                "keys": ["typeface"]
+            },
+            {
+                "obj": Config.appearance.rounding,
+                "keys": ["scale"]
+            },
+            {
+                "obj": Config.appearance.spacing,
+                "keys": ["scale"]
+            },
+            {
+                "obj": Config.appearance.padding,
+                "keys": ["scale"]
+            }
+        ], qsTr("Undo brings back your cell size, scales, text face, radius, gap and padding."));
+
         Config.bar.sizes.innerWidth = g.innerWidth;
         Config.bar.sizes.islandInset = g.islandInset;
         Config.bar.workspaces.activeInset = g.activeInset;

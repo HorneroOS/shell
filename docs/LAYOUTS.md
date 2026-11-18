@@ -310,5 +310,5 @@ textScale, textWeight, itemSpacing, densityScale, autoDensity}`, `bar.typeface`,
 padding}.scale`. Bar topology (edges, styles, groups, per-bar thickness) is the preset's and is never overridden.
 After a preset applied from the shell (Layout pane, quick picker, an experience mode's preferred layout, factory
 reset) succeeds, the row is applied about 0.9 s later, once the rewritten `shell.json` has been reloaded. A preset
-applied directly with `horneroctl` does not go through the shell: use "Apply my tweaks". "Forget" returns the layout
+applied directly with `horneroctl` does not go through the shell: use "Use my tweaks now" (it offers Undo). "Forget" returns the layout
 to its preset. Logic: `services/layouts.js`, shell wiring `services/Layouts.qml`.

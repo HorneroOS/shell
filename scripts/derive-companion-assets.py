@@ -427,7 +427,11 @@ def _structural_check() -> int:
 
 
 def check() -> int:
-    with tempfile.TemporaryDirectory(dir=COMPANION) as tmp:
+    # The fresh render lives OUTSIDE the source tree (system temp dir,
+    # honouring $TMPDIR): a check killed mid-render (e.g. a test timeout)
+    # must never leave a stray assets/companion/tmp*/ behind for a later
+    # `git add` to sweep into a commit.
+    with tempfile.TemporaryDirectory(prefix="hornero-companion-check-") as tmp:
         fresh = Path(tmp)
         derive(fresh)
         problems = []

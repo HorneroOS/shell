@@ -124,7 +124,7 @@ def test_inline_ask_uses_only_existing_horneroctl_stream_contract():
 
 
 def test_inline_ask_cancel_and_new_query_semantics():
-    assert "function cancel()" in INLINE_QML
+    assert "function cancel(who: string)" in INLINE_QML
     assert "function stop()" in INLINE_QML
     # Cancel kills the process and the exit handler ignores stale runs.
     assert "proc.running = false" in INLINE_QML
@@ -170,7 +170,7 @@ def test_applist_routes_ai_via_registry_and_cancels_on_exit():
     assert 'name: "ai"' in APPLIST
     assert "aiItem" in APPLIST
     assert 'if (state !== "ai")' in APPLIST
-    assert "InlineAsk.cancel()" in APPLIST
+    assert 'InlineAsk.cancel("launcher")' in APPLIST
     # Registry migration must not disturb the other routes.
     for pid in ("calc", "win", "file"):
         assert f'providerState === "{pid}"' in APPLIST
@@ -178,7 +178,7 @@ def test_applist_routes_ai_via_registry_and_cancels_on_exit():
 
 def test_launcher_close_cancels_inflight_ask():
     close_body = CONTENT.split("function onLauncherChanged()")[1].split("}")[0]
-    assert "InlineAsk.cancel()" in close_body
+    assert 'InlineAsk.cancel("launcher")' in close_body
 
 
 def test_ai_row_shows_thinking_and_streamed_text():

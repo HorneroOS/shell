@@ -124,7 +124,7 @@ Item {
                         spacing: Appearance.spacing.small
 
                         StyledText {
-                            text: qsTr("JAVI · EL HORNERO")
+                            text: qsTr("JAVI · THE HORNERO")
                             font.family: Appearance.font.family.mono
                             font.pointSize: Appearance.font.size.normal
                             font.bold: true
@@ -154,7 +154,7 @@ Item {
                     }
 
                     StyledText {
-                        text: root.bridge.busy ? qsTr("pensando") + ".".repeat(root.dotPhase) : (root.bridge.gatewayReachable ? qsTr("Hermes conectado") : qsTr("Hermes no disponible"))
+                        text: root.bridge.busy ? qsTr("thinking", "chat status") + ".".repeat(root.dotPhase) : (root.bridge.gatewayReachable ? qsTr("Hermes connected") : qsTr("Hermes unavailable"))
                         font.family: Appearance.font.family.mono
                         font.pointSize: Appearance.font.size.smaller
                         color: root.bridge.gatewayReachable ? Signal.palette.signal : Signal.palette.alert
@@ -451,7 +451,7 @@ Item {
                             anchors.right: parent.right
                             anchors.verticalCenter: parent.verticalCenter
                             anchors.margins: Appearance.padding.large
-                            text: root.bridge.streamText !== "" ? root.bridge.streamText : qsTr("Javi está pensando") + ".".repeat(root.dotPhase)
+                            text: root.bridge.streamText !== "" ? root.bridge.streamText : qsTr("Javi is thinking") + ".".repeat(root.dotPhase)
                             textFormat: Text.MarkdownText
                             font.pointSize: Appearance.font.size.small
                             color: Signal.palette.ink
@@ -467,7 +467,7 @@ Item {
                         spacing: Appearance.spacing.small
 
                         Repeater {
-                            model: [qsTr("¿Qué updates hay pendientes?"), qsTr("¿Por qué está lenta la máquina?"), qsTr("Mostrame los themes GTK"), qsTr("¿Qué podés hacer?")]
+                            model: [qsTr("What updates are pending?"), qsTr("Why is the machine slow?"), qsTr("Show me the GTK themes"), qsTr("What can you do?")]
 
                             delegate: TextButton {
                                 required property var modelData
@@ -489,7 +489,7 @@ Item {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: qsTr("Javi necesita tu OK:")
+                    text: qsTr("Javi needs your OK:")
                     font.family: Appearance.font.family.mono
                     font.pointSize: Appearance.font.size.smaller
                     color: Signal.palette.alert
@@ -648,7 +648,7 @@ Item {
 
                 StyledText {
                     visible: root.bridge.recording
-                    text: qsTr("● Grabando… tocá el mic para enviar")
+                    text: qsTr("● Recording… tap the mic to send")
                     font.family: Appearance.font.family.mono
                     font.pointSize: Appearance.font.size.smaller
                     color: Signal.palette.alert

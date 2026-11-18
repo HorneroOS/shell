@@ -306,8 +306,8 @@ QtObject {
             readonly property string icon: "info-circle"
             readonly property string component: "system/SystemPane.qml"
             readonly property string category: "system"
-            readonly property string description: qsTr("System information and diagnostics")
-            readonly property list<string> keywords: ["about", "hardware", "diagnostics", "version", "doctor", "logs"]
+            readonly property string description: qsTr("Language, system information and diagnostics")
+            readonly property list<string> keywords: ["about", "hardware", "diagnostics", "version", "doctor", "logs", "language", "locale", "translation", "english", "spanish", "idioma", "español", "lenguaje", "traducción"]
         },
         QtObject {
             readonly property string id: "updates"

@@ -41,12 +41,12 @@ Scope {
                 if (p <= level.level && !level.warned) {
                     level.warned = true;
                     CompanionReactions.react(level.critical ? "battery.critical" : "battery.low", "shell", "");
-                    Toaster.toast(level.title ?? qsTr("Battery warning"), level.message ?? qsTr("Battery level is low"), level.icon ?? "battery-exclamation", level.critical ? Toast.Error : Toast.Warning);
+                    Toaster.toast(level.title ? qsTr(level.title) : qsTr("Battery warning"), level.message ? qsTr(level.message) : qsTr("Battery level is low"), level.icon ?? "battery-exclamation", level.critical ? Toast.Error : Toast.Warning);
                     // Critical levels also file a durable, DND-aware
                     // notification (shell#224); plain warnings stay
                     // momentary toasts.
                     if (level.critical)
-                        Notifs.promoteCritical(level.title ?? qsTr("Battery warning"), level.message ?? qsTr("Battery level is low"), level.icon ?? "battery-exclamation");
+                        Notifs.promoteCritical(level.title ? qsTr(level.title) : qsTr("Battery warning"), level.message ? qsTr(level.message) : qsTr("Battery level is low"), level.icon ?? "battery-exclamation");
                 }
             }
 

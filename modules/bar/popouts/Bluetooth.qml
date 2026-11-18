@@ -26,11 +26,10 @@ ColumnLayout {
             return qsTr("Looking for nearby devices…");
         const devices = Bluetooth.devices.values;
         if (devices.length > 0) {
-            let available = qsTr("%1 device%2 available").arg(devices.length).arg(devices.length === 1 ? "" : "s");
             const connected = devices.filter(d => d.connected).length;
             if (connected > 0)
-                available += qsTr(" (%1 connected)").arg(connected);
-            return available;
+                return qsTr("%n device(s) available, %1 connected", "", devices.length).arg(connected);
+            return qsTr("%n device(s) available", "", devices.length);
         }
         return qsTr("No nearby devices. Turn on Discovering to search.");
     }

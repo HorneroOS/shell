@@ -11,6 +11,7 @@ import "modules/plugins"
 import "modules/lock"
 import "modules/polkit"
 import "modules/welcome"
+import qs.services
 import Quickshell
 
 ShellRoot {
@@ -19,6 +20,9 @@ ShellRoot {
     // session-lock acquisition and this shell's requestLock() no-ops.
     // Unset (default) keeps the in-shell lock exactly as before.
     readonly property bool externalLock: ["1", "true"].includes((Quickshell.env("HORNERO_EXTERNAL_LOCK") ?? "").toLowerCase())
+    // Instantiates the Language service at startup so the UI language
+    // (Config.general.language, docs/I18N.md) is installed before panes open.
+    readonly property string uiLanguage: Language.active
 
     Background {}
     Drawers {}

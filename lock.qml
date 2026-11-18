@@ -3,6 +3,7 @@
 
 import "modules"
 import "modules/lock"
+import qs.services
 import Quickshell
 
 // Standalone lock process (shell#257): a lock-only quickshell instance
@@ -17,6 +18,9 @@ import Quickshell
 // no-op, so the two never fight over acquisition (single-locker policy,
 // docs/LOCKING.md). Unlock stays PAM-only inside this process (shell#404).
 ShellRoot {
+    // Same UI language as the main shell (docs/I18N.md).
+    readonly property string uiLanguage: Language.active
+
     Lock {
         id: lock
 

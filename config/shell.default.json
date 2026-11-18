@@ -91,6 +91,7 @@
   },
   "general": {
     "logo": "",
+    "language": "auto",
     "apps": {
       "terminal": [
         "kitty"

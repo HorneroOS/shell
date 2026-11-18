@@ -105,7 +105,9 @@ def test_offscreen_meter_lights_segments_then_sleeps(tmp_path):
     # Motion off: no frame clock at all.
     assert r["stillFrames"] == 0 and r["stillSettled"] is True
 
+    # sliceStart/sliceLength pick the right half (silent): nothing magenta.
     img = Image.open(out).convert("RGB")
+    assert all(img.getpixel((x, y)) != (255, 0, 255) for x in range(0, 40) for y in range(110, 120))
     band_w = (180 - 3 * 10) / 4
 
     def column(i):

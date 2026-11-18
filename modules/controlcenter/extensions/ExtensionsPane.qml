@@ -788,7 +788,7 @@ Item {
                                 visible: root.outcomeText(row.entry.id).length > 0
                                 text: root.outcomeText(row.entry.id)
                                 font.pointSize: Appearance.font.size.small
-                                color: ExtensionStore.outcome(row.entry.id)?.ok ? Signal.palette.signal : Signal.palette.alert
+                                color: ExtensionStore.outcome(row.entry.id)?.ok ? Signal.palette.phosphor : Signal.palette.alert
                                 wrapMode: Text.Wrap
                             }
 
@@ -1475,11 +1475,14 @@ Item {
                                         required property var modelData
 
                                         width: Math.min(catCol.width, 360)
-                                        height: 180
+                                        // Height follows the image's own aspect (capped), so a
+                                        // wide capture leaves no empty band above and below.
+                                        height: status === Image.Ready && implicitWidth > 0 ? Math.min(180, width * implicitHeight / implicitWidth) : 0
                                         source: modelData.source
                                         sourceSize.width: 720
                                         fillMode: Image.PreserveAspectFit
                                         horizontalAlignment: Image.AlignLeft
+                                        verticalAlignment: Image.AlignTop
                                         asynchronous: true
                                         Accessible.role: Accessible.Graphic
                                         Accessible.name: modelData.alt
@@ -1610,7 +1613,7 @@ Item {
                                 visible: root.outcomeText(catRow.modelData.id).length > 0
                                 text: root.outcomeText(catRow.modelData.id)
                                 font.pointSize: Appearance.font.size.small
-                                color: ExtensionStore.outcome(catRow.modelData.id)?.ok ? Signal.palette.signal : Signal.palette.alert
+                                color: ExtensionStore.outcome(catRow.modelData.id)?.ok ? Signal.palette.phosphor : Signal.palette.alert
                                 wrapMode: Text.Wrap
                             }
 

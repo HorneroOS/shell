@@ -69,7 +69,7 @@ function progressText(verb, name, seconds, es) {
 var GUIDANCE = {
     "catalogue-changed": ["The catalogue changed while you were reading it. Refresh it and review the new version.", "El catálogo cambió mientras lo leías. Actualizalo y revisá la versión nueva."],
     "catalogue-unavailable": ["The catalogue could not be fetched. Check the network and try Refresh catalogue.", "No se pudo descargar el catálogo. Revisá la red y probá Actualizar catálogo."],
-    "hash-mismatch": ["The downloaded files do not match the catalogue hash, so nothing was installed.", "Los archivos descargados no coinciden con el hash del catálogo, así que no se instaló nada."],
+    "hash-mismatch": ["The downloaded files do not match the catalogue hash, so nothing was changed.", "Los archivos descargados no coinciden con el hash del catálogo, así que no se cambió nada."],
     "validation-failed": ["The package failed the shell's contract check, so nothing changed.", "El paquete no pasó la verificación del shell, así que no cambió nada."],
     "already-installed": ["It is already installed. Remove it first to reinstall.", "Ya está instalada. Quitala primero para reinstalarla."],
     "not-installed": ["It is not installed any more. Reload the list.", "Ya no está instalada. Recargá la lista."],

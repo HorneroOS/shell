@@ -58,7 +58,7 @@ Item {
 
                 PaneHeader {
                     paneId: "companion"
-                    title: qsTr("Javi · the Hornero")
+                    title: qsTr("Javi · el Hornero")
                 }
 
                 StyledText {

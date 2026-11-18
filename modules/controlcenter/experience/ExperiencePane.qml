@@ -308,7 +308,7 @@ Item {
 
                                     StyledText {
                                         Layout.fillWidth: true
-                                        text: modeCard.modelData.description
+                                        text: qsTr(modeCard.modelData.description)
                                         font.pointSize: Appearance.font.size.small
                                         color: Signal.palette.inkMuted
                                         wrapMode: Text.WordWrap

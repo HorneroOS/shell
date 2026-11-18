@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import ".."
 import "../components"
 import "."
+import "../../../services/extensionstore.js" as Store
 import qs.components
 import qs.modules.plugins
 import qs.components.controls
@@ -16,14 +17,16 @@ import Quickshell.Io
 import Quickshell
 import Quickshell.Widgets
 
-// Control Center › Extensions: community plugin lifecycle.
+// Control Center › Extensions: browse the official catalogue, install,
+// update, roll back, remove, trust, enable and disable extensions.
 // horneroctl stays the single writer of plugin lifecycle state: this
-// pane never writes receipts or payloads itself, it only invokes
-// `horneroctl plugin enable|disable|trust <id> --yes` — the exact CLI
-// commands — and re-reads state through the Plugins service. Enable
-// (the direction that runs third-party QML as your user) requires an
-// explicit inline confirmation, mirroring the CLI --yes gate.
-// Install and remove stay CLI-only.
+// pane never writes receipts or payloads itself. Every verb goes through
+// ExtensionStore, which runs the documented `horneroctl --json plugin …
+// --yes` argv asynchronously, one at a time, and re-reads state through
+// the Plugins service. Each verb is a command without an inverse (it
+// copies, runs or deletes code), so each keeps a two-step guard: the
+// first click shows what will happen in plain language, the second runs
+// it (Control Center apply policy, docs/CONTROL-CENTER-APPLY.md).
 Item {
     id: root
 
@@ -32,18 +35,19 @@ Item {
     property string pendingEnable: ""
     property string pendingTrust: ""
     property string pendingInstall: ""
+    // "update:<id>", "rollback:<id>" or "remove:<id>" while that verb's
+    // first step (the consent text) is showing.
     property string pendingCatalogAction: ""
-    property string actionError: ""
-    property var actionEnvelope: null
-    property var catalogEntries: []
-    property string catalogError: ""
-    property string catalogRevision: ""
+    readonly property var catalogEntries: ExtensionStore.catalogue
+    readonly property string catalogError: ExtensionStore.catalogueError
+    readonly property string catalogRevision: ExtensionStore.catalogueRevision
     property string catalogSearch: ""
-    property string actionMessage: ""
+    readonly property bool es: Config.plugins.storeSpanish()
     property string pluginSearch: ""
     property string pluginTrustFilter: "all"
     property string pluginPlacementFilter: "all"
     property string expandedPluginId: ""
+    property string expandedCatalogId: ""
     property string settingsPluginId: ""
     property string customSettingsPluginId: ""
     // Open extension panel ("<pluginId>:<panelId>"), one at a time.
@@ -335,111 +339,42 @@ Item {
     }
 
     function refreshCatalog() {
-        root.catalogError = "";
-        root.catalogRevision = "";
-        catalogProc.command = ["horneroctl", "--json", "plugin", "catalog"];
-        catalogProc.running = true;
+        ExtensionStore.refreshCatalogue();
     }
 
+    function nameOf(pluginId): string {
+        const entry = root.installedEntry(pluginId) || ExtensionStore.entry(pluginId);
+        return entry ? String(entry.name || pluginId) : pluginId;
+    }
+
+    // Second (confirming) step of a guarded catalogue verb: install,
+    // update and roll back. Install and update pin the catalogue revision
+    // the person was reading (ExtensionStore passes --revision), so a
+    // catalogue that changed in between is refused, never applied.
     function runCatalogAction(action, pluginId) {
-        root.actionError = "";
-        root.actionMessage = "";
-        catalogInstallProc.command = ["horneroctl", "--json", "plugin", "catalog", action, pluginId];
-        if (action === "install" || action === "update")
-            catalogInstallProc.command.push("--revision", root.catalogRevision);
-        catalogInstallProc.command.push("--yes");
-        catalogInstallProc.running = true;
+        root.pendingInstall = "";
+        root.pendingCatalogAction = "";
+        ExtensionStore.run(action, pluginId, root.nameOf(pluginId));
     }
 
+    // Second step of a guarded lifecycle verb: enable, disable, trust,
+    // remove.
     function runLifecycle(action, pluginId) {
-        root.actionError = "";
-        root.actionEnvelope = null;
-        lifecycleProc.command = ["horneroctl", "--json", "plugin", action, pluginId, "--yes"];
-        lifecycleProc.running = true;
+        root.pendingEnable = "";
+        root.pendingTrust = "";
+        root.pendingCatalogAction = "";
+        ExtensionStore.run(action, pluginId, root.nameOf(pluginId));
     }
 
-    Process {
-        id: lifecycleProc
-
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try {
-                    root.actionEnvelope = JSON.parse(text);
-                } catch (e) {
-                    root.actionEnvelope = null;
-                }
-            }
-        }
-        onExited: (exitCode, exitStatus) => {
-            const env = root.actionEnvelope;
-            if (env && env.ok === true) {
-                root.pendingEnable = "";
-                root.pendingTrust = "";
-                root.actionError = "";
-                Plugins.reload();
-            } else {
-                root.actionError = (env && env.message) ? String(env.message) : qsTr("Plugin action failed (exit %1).").arg(exitCode);
-            }
-        }
+    function catalogueEntryFor(pluginId): var {
+        return ExtensionStore.entry(pluginId);
     }
 
-    Process {
-        id: catalogProc
-
-        property string out: ""
-
-        stdout: SplitParser {
-            onRead: data => {
-                catalogProc.out += data;
-            }
-        }
-        onStarted: catalogProc.out = ""
-        onExited: (exitCode, exitStatus) => {
-            try {
-                const env = JSON.parse(catalogProc.out.trim());
-                if (env.ok === true) {
-                    root.catalogEntries = JSON.parse((env.data && env.data.plugins) || "[]");
-                    root.catalogRevision = (env.data && env.data.revision) ? String(env.data.revision) : "";
-                } else {
-                    root.catalogError = (env.message || "Catalogue unavailable").toString();
-                }
-            } catch (e) {
-                root.catalogError = qsTr("Catalogue unavailable (network or horneroctl).");
-            }
-        }
-    }
-
-    Process {
-        id: catalogInstallProc
-
-        property string out: ""
-
-        stdout: SplitParser {
-            onRead: data => {
-                catalogInstallProc.out += data;
-            }
-        }
-        onStarted: catalogInstallProc.out = ""
-        onExited: (exitCode, exitStatus) => {
-            try {
-                const env = JSON.parse(catalogInstallProc.out.trim());
-                if (env.ok === true) {
-                    root.pendingInstall = "";
-                    root.pendingCatalogAction = "";
-                    const data = env.data || {};
-                    root.actionMessage = [env.message || qsTr("Catalogue action completed."),
-                        data.revision ? qsTr("Catalogue revision: %1").arg(data.revision) : "",
-                        data.sha256 ? qsTr("Payload SHA-256: %1").arg(data.sha256) : ""]
-                        .filter(Boolean).join("\n");
-                    Plugins.reload();
-                    root.refreshCatalog();
-                } else {
-                    root.actionError = (env.message || "Install failed").toString();
-                }
-            } catch (e) {
-                root.actionError = qsTr("Install failed.");
-            }
-        }
+    function outcomeText(pluginId): string {
+        const o = ExtensionStore.outcome(pluginId);
+        if (!o)
+            return "";
+        return [o.message, o.guidance].filter(Boolean).join("\n");
     }
 
     // Deep link from Control Center › Experience › Desktop widgets: the
@@ -477,9 +412,13 @@ Item {
     }
 
     Component.onCompleted: {
-        root.refreshCatalog();
+        if (Config.plugins.storeRefreshOnOpen && !ExtensionStore.catalogueLoading)
+            root.refreshCatalog();
         root.openRequestedPlugin();
+        Plugins.telemetryWatchers += 1;
     }
+
+    Component.onDestruction: Plugins.telemetryWatchers = Math.max(0, Plugins.telemetryWatchers - 1)
 
     anchors.fill: parent
 
@@ -572,28 +511,18 @@ Item {
                     wrapMode: Text.Wrap
                 }
 
-                StyledText {
+                // One verb at a time (ExtensionStore): the running verb,
+                // its real steps and elapsed seconds. horneroctl does not
+                // stream progress, so no percentage is invented.
+                StoreProgress {
                     Layout.fillWidth: true
-                    visible: root.actionError.length > 0
-                    text: root.actionError
-                    font.pointSize: Appearance.font.size.small
-                    color: Signal.palette.alert
-                    wrapMode: Text.Wrap
-                }
-
-                StyledText {
-                    Layout.fillWidth: true
-                    visible: root.actionMessage.length > 0
-                    text: root.actionMessage
-                    font.pointSize: Appearance.font.size.small
-                    color: Signal.palette.signal
-                    wrapMode: Text.Wrap
+                    visible: ExtensionStore.busy
                 }
 
                 StyledText {
                     Layout.fillWidth: true
                     visible: Plugins.discovered && Plugins.entries.length === 0 && Plugins.discoveryError.length === 0
-                    text: qsTr("No plugins installed. Add one with: horneroctl plugin install <path>")
+                    text: qsTr("No extensions installed yet. Browse the official catalogue below and install one; it stays off until you enable it.")
                     font.pointSize: Appearance.font.size.small
                     color: Signal.palette.inkMuted
                     wrapMode: Text.Wrap
@@ -784,6 +713,23 @@ Item {
                                             icon: (["untrusted", "stale-trust", "modified", "unverified"].includes(row.entry.trust)) ? "alert-triangle" : "rosette-discount-check"
                                             tone: (["untrusted", "stale-trust", "modified", "unverified"].includes(row.entry.trust)) ? "bad" : "neutral"
                                         }
+
+                                        ExtensionChip {
+                                            readonly property var cat: root.catalogueEntryFor(row.entry.id)
+                                            visible: !!cat && cat.update_available === true
+                                            label: cat ? Store.updateText(cat, root.es) : ""
+                                            icon: "download"
+                                            tone: "good"
+                                        }
+
+                                        ExtensionChip {
+                                            visible: Config.plugins.storeShowCost && typeof row.entry.loadMs === "number" && row.entry.loadMs >= 0
+                                            label: Store.t("load", root.es, row.entry.loadMs)
+                                            icon: "gauge"
+                                            tone: (row.entry.diagnostics ?? []).includes("slow-load") ? "bad" : "neutral"
+                                            Accessible.role: Accessible.StaticText
+                                            Accessible.name: qsTr("Measured load time: %1 ms").arg(row.entry.loadMs)
+                                        }
                                     }
                                 }
                             }
@@ -834,6 +780,39 @@ Item {
                                 wrapMode: Text.Wrap
                             }
 
+                            // Result of the last verb run on this extension, inline
+                            // where it was started: the CLI message plus what to do
+                            // next for a known error code.
+                            StyledText {
+                                Layout.fillWidth: true
+                                visible: root.outcomeText(row.entry.id).length > 0
+                                text: root.outcomeText(row.entry.id)
+                                font.pointSize: Appearance.font.size.small
+                                color: ExtensionStore.outcome(row.entry.id)?.ok ? Signal.palette.signal : Signal.palette.alert
+                                wrapMode: Text.Wrap
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                visible: ExtensionStore.busy && ExtensionStore.job?.id === row.entry.id
+                                text: ExtensionStore.progressText()
+                                font.pointSize: Appearance.font.size.small
+                                color: Signal.palette.inkMuted
+                                wrapMode: Text.Wrap
+                            }
+
+                            // First step of Update / Roll back / Remove: what the
+                            // verb does, in plain language, before it runs.
+                            StyledText {
+                                Layout.fillWidth: true
+                                readonly property string verb: root.pendingCatalogAction.endsWith(":" + row.entry.id) ? root.pendingCatalogAction.split(":")[0] : ""
+                                visible: verb.length > 0
+                                text: Store.consentText(verb, row.entry, root.es)
+                                font.pointSize: Appearance.font.size.small
+                                color: verb === "remove" ? Signal.palette.alert : Signal.palette.ink
+                                wrapMode: Text.Wrap
+                            }
+
                             // Enable consent: a short heading, one plain sentence about
                             // trust, then the declared uses. Alert colour is kept for
                             // the trust sentence only.
@@ -869,6 +848,28 @@ Item {
                                 Layout.fillWidth: true
                                 visible: root.expandedPluginId === row.entry.id
                                 text: root.pluginDetail(row.entry)
+                                font.pointSize: Appearance.font.size.small
+                                color: Signal.palette.inkMuted
+                                wrapMode: Text.Wrap
+                            }
+
+                            // Who vouches for the code, and what it costs: the
+                            // measured load time and the measured cost of the
+                            // shared data it reads. Own CPU and memory are not
+                            // measurable per extension and say so.
+                            StyledText {
+                                Layout.fillWidth: true
+                                visible: root.expandedPluginId === row.entry.id
+                                text: Store.signerText(row.entry, root.es)
+                                font.pointSize: Appearance.font.size.small
+                                color: Signal.palette.ink
+                                wrapMode: Text.Wrap
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                visible: root.expandedPluginId === row.entry.id && Config.plugins.storeShowCost
+                                text: Store.costText(row.entry, Plugins.providerTelemetry, root.es)
                                 font.pointSize: Appearance.font.size.small
                                 color: Signal.palette.inkMuted
                                 wrapMode: Text.Wrap
@@ -1096,18 +1097,17 @@ Item {
 
                                 TextButton {
                                     visible: !row.entry.enabled && (["untrusted", "stale-trust", "modified", "unverified"].includes(row.entry.trust)) && root.pendingTrust !== row.entry.id
-                                    enabled: !lifecycleProc.running
+                                    enabled: !ExtensionStore.busy
                                     text: qsTr("Trust…")
                                     type: TextButton.Tonal
                                     onClicked: {
-                                        root.actionError = "";
                                         root.pendingTrust = row.entry.id;
                                     }
                                 }
 
                                 TextButton {
                                     visible: root.pendingTrust === row.entry.id
-                                    enabled: !lifecycleProc.running
+                                    enabled: !ExtensionStore.busy
                                     text: qsTr("Confirm trust")
                                     type: TextButton.Filled
                                     onClicked: root.runLifecycle("trust", row.entry.id)
@@ -1115,7 +1115,7 @@ Item {
 
                                 TextButton {
                                     visible: root.pendingTrust === row.entry.id
-                                    enabled: !lifecycleProc.running
+                                    enabled: !ExtensionStore.busy
                                     text: qsTr("Cancel")
                                     type: TextButton.Text
                                     onClicked: root.pendingTrust = ""
@@ -1123,18 +1123,17 @@ Item {
 
                                 TextButton {
                                     visible: !row.entry.enabled && !row.entry.requestedEnabled && root.pendingEnable !== row.entry.id
-                                    enabled: !lifecycleProc.running
+                                    enabled: !ExtensionStore.busy
                                     text: qsTr("Enable…")
                                     type: TextButton.Tonal
                                     onClicked: {
-                                        root.actionError = "";
                                         root.pendingEnable = row.entry.id;
                                     }
                                 }
 
                                 TextButton {
                                     visible: root.pendingEnable === row.entry.id
-                                    enabled: !lifecycleProc.running
+                                    enabled: !ExtensionStore.busy
                                     text: qsTr("Confirm enable")
                                     type: TextButton.Filled
                                     onClicked: root.runLifecycle("enable", row.entry.id)
@@ -1142,10 +1141,67 @@ Item {
 
                                 TextButton {
                                     visible: root.pendingEnable === row.entry.id
-                                    enabled: !lifecycleProc.running
+                                    enabled: !ExtensionStore.busy
                                     text: qsTr("Cancel")
                                     type: TextButton.Text
                                     onClicked: root.pendingEnable = ""
+                                }
+
+                                TextButton {
+                                    readonly property var cat: root.catalogueEntryFor(row.entry.id)
+                                    visible: !!cat && cat.update_available === true && root.pendingCatalogAction !== "update:" + row.entry.id
+                                    enabled: !ExtensionStore.busy && root.catalogRevision.length > 0
+                                    text: qsTr("Update…")
+                                    type: TextButton.Tonal
+                                    onClicked: root.pendingCatalogAction = "update:" + row.entry.id
+                                }
+
+                                TextButton {
+                                    visible: row.entry.rollback_available === true && root.pendingCatalogAction !== "rollback:" + row.entry.id
+                                    enabled: !ExtensionStore.busy
+                                    text: qsTr("Roll back…")
+                                    type: TextButton.Text
+                                    onClicked: root.pendingCatalogAction = "rollback:" + row.entry.id
+                                }
+
+                                TextButton {
+                                    visible: root.pendingCatalogAction !== "remove:" + row.entry.id
+                                    enabled: !ExtensionStore.busy
+                                    text: qsTr("Remove…")
+                                    type: TextButton.Text
+                                    onClicked: root.pendingCatalogAction = "remove:" + row.entry.id
+                                }
+
+                                TextButton {
+                                    visible: root.pendingCatalogAction === "update:" + row.entry.id
+                                    enabled: !ExtensionStore.busy && root.catalogRevision.length > 0
+                                    text: qsTr("Confirm update")
+                                    type: TextButton.Filled
+                                    onClicked: root.runCatalogAction("update", row.entry.id)
+                                }
+
+                                TextButton {
+                                    visible: root.pendingCatalogAction === "rollback:" + row.entry.id
+                                    enabled: !ExtensionStore.busy
+                                    text: qsTr("Confirm rollback")
+                                    type: TextButton.Filled
+                                    onClicked: root.runCatalogAction("rollback", row.entry.id)
+                                }
+
+                                TextButton {
+                                    visible: root.pendingCatalogAction === "remove:" + row.entry.id
+                                    enabled: !ExtensionStore.busy
+                                    text: qsTr("Confirm remove")
+                                    type: TextButton.Filled
+                                    onClicked: root.runLifecycle("remove", row.entry.id)
+                                }
+
+                                TextButton {
+                                    visible: root.pendingCatalogAction.endsWith(":" + row.entry.id)
+                                    enabled: !ExtensionStore.busy
+                                    text: qsTr("Cancel")
+                                    type: TextButton.Text
+                                    onClicked: root.pendingCatalogAction = ""
                                 }
 
                                 TextButton {
@@ -1157,7 +1213,7 @@ Item {
 
                                 TextButton {
                                     visible: row.entry.enabled || row.entry.requestedEnabled
-                                    enabled: !lifecycleProc.running
+                                    enabled: !ExtensionStore.busy
                                     text: qsTr("Disable")
                                     type: TextButton.Tonal
                                     onClicked: root.runLifecycle("disable", row.entry.id)
@@ -1198,17 +1254,84 @@ Item {
                     onTextChanged: root.catalogSearch = text
                 }
 
-                TextButton {
-                    text: qsTr("Refresh catalogue")
-                    type: TextButton.Tonal
-                    enabled: !catalogProc.running
-                    onClicked: root.refreshCatalog()
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Appearance.spacing.small
+
+                    TextButton {
+                        text: ExtensionStore.catalogueLoading ? qsTr("Refreshing catalogue…") : qsTr("Refresh catalogue")
+                        type: TextButton.Tonal
+                        enabled: !ExtensionStore.catalogueLoading
+                        onClicked: root.refreshCatalog()
+                    }
+
+                    Item {
+                        Layout.fillWidth: true
+                    }
+
+                    StyledText {
+                        text: qsTr("Fetch on open")
+                        font.pointSize: Appearance.font.size.small
+                        color: Signal.palette.inkMuted
+                    }
+
+                    StyledSwitch {
+                        Accessible.name: qsTr("Fetch the catalogue when this pane opens")
+                        checked: Config.plugins.storeRefreshOnOpen
+                        onToggled: Config.plugins.setStoreOption("storeRefreshOnOpen", checked)
+                    }
+
+                    StyledText {
+                        text: qsTr("Show cost")
+                        font.pointSize: Appearance.font.size.small
+                        color: Signal.palette.inkMuted
+                    }
+
+                    StyledSwitch {
+                        Accessible.name: qsTr("Show measured extension cost")
+                        checked: Config.plugins.storeShowCost
+                        onToggled: Config.plugins.setStoreOption("storeShowCost", checked)
+                    }
+                }
+
+                // Language of the store's own lines (permissions, consent,
+                // guidance, cost): system locale by default.
+                Flow {
+                    Layout.fillWidth: true
+                    spacing: Appearance.spacing.small
+
+                    StyledText {
+                        text: qsTr("Store language")
+                        font.pointSize: Appearance.font.size.small
+                        color: Signal.palette.inkMuted
+                    }
+
+                    Repeater {
+                        model: Config.plugins.allowedStoreLanguages
+
+                        delegate: FilterChip {
+                            required property var modelData
+
+                            label: modelData === "auto" ? qsTr("System") : modelData === "es" ? "Español" : "English"
+                            selected: Config.plugins.storeLanguage === modelData
+                            onActivated: Config.plugins.setStoreOption("storeLanguage", modelData)
+                        }
+                    }
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
+                    visible: !ExtensionStore.catalogueLoaded && !ExtensionStore.catalogueLoading && root.catalogError.length === 0
+                    text: qsTr("The catalogue is not loaded. Refresh catalogue fetches it from HorneroOS/plugins.")
+                    font.pointSize: Appearance.font.size.small
+                    color: Signal.palette.inkMuted
+                    wrapMode: Text.Wrap
                 }
 
                 StyledText {
                     Layout.fillWidth: true
                     visible: root.catalogError.length > 0
-                    text: root.catalogError
+                    text: [root.catalogError, Store.guidance(ExtensionStore.catalogueErrorCode, root.es)].filter(Boolean).join("\n")
                     font.pointSize: Appearance.font.size.small
                     color: Signal.palette.alert
                     wrapMode: Text.Wrap
@@ -1230,6 +1353,9 @@ Item {
                         id: catRow
 
                         required property var modelData
+                        readonly property string rowState: Store.rowState(catRow.modelData, root.installedEntry(catRow.modelData.id))
+                        readonly property bool installed: catRow.rowState !== "available"
+                        readonly property bool expanded: root.expandedCatalogId === catRow.modelData.id
 
                         Layout.fillWidth: true
                         radius: Appearance.rounding.small
@@ -1243,14 +1369,37 @@ Item {
                             anchors.margins: Appearance.padding.large
                             spacing: Appearance.spacing.small
 
-                            StyledText {
-                                text: `${catRow.modelData.name} ${catRow.modelData.version} · ${catRow.modelData.trust}`
-                                font.weight: Appearance.font.weight.medium
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Appearance.spacing.small
+
+                                StyledText {
+                                    text: catRow.modelData.name
+                                    font.weight: Appearance.font.weight.medium
+                                }
+
+                                StyledText {
+                                    Layout.fillWidth: true
+                                    text: `v${catRow.modelData.version}`
+                                    font.pointSize: Appearance.font.size.small
+                                    color: Signal.palette.inkMuted
+                                }
                             }
 
                             Flow {
                                 Layout.fillWidth: true
                                 spacing: Appearance.spacing.small
+
+                                ExtensionChip {
+                                    label: catRow.rowState === "update" ? Store.updateText(catRow.modelData, root.es) : catRow.rowState === "installed" ? Store.t("installed", root.es) : Store.t("available", root.es)
+                                    icon: catRow.rowState === "update" ? "download" : catRow.rowState === "installed" ? "circle-check" : ""
+                                    tone: catRow.rowState === "available" ? "neutral" : "good"
+                                }
+
+                                ExtensionChip {
+                                    label: root.trustLabel(catRow.modelData.trust)
+                                    icon: "rosette-discount-check"
+                                }
 
                                 ExtensionChip {
                                     readonly property var kit: root.kitStatus(catRow.modelData)
@@ -1265,6 +1414,12 @@ Item {
                                     visible: root.maturityLabel(catRow.modelData).length > 0
                                     label: root.maturityLabel(catRow.modelData)
                                 }
+
+                                ExtensionChip {
+                                    visible: !!catRow.modelData.placement
+                                    label: root.placementLabel(catRow.modelData.placement)
+                                    icon: root.placementIcon(catRow.modelData.placement)
+                                }
                             }
 
                             StyledText {
@@ -1277,11 +1432,10 @@ Item {
 
                             StyledText {
                                 Layout.fillWidth: true
-                                text: qsTr("By %1 · %2 · %3 · %4")
+                                text: qsTr("By %1 · %2 · %3")
                                     .arg(catRow.modelData.author || qsTr("Unknown author"))
                                     .arg(catRow.modelData.license || qsTr("License not listed"))
                                     .arg(catRow.modelData.category || qsTr("Uncategorized"))
-                                    .arg(catRow.modelData.placement || qsTr("Placement not listed"))
                                 font.pointSize: Appearance.font.size.small
                                 color: Signal.palette.inkMuted
                                 wrapMode: Text.Wrap
@@ -1289,18 +1443,17 @@ Item {
 
                             StyledText {
                                 Layout.fillWidth: true
-                                text: root.declaredCapabilities(catRow.modelData.capabilities)
+                                text: Store.signerText(catRow.modelData, root.es)
                                 font.pointSize: Appearance.font.size.small
-                                color: Signal.palette.inkMuted
+                                color: Signal.palette.ink
                                 wrapMode: Text.Wrap
                             }
 
-                            // Marketplace detail (shell#379):
-                            // deprecation blocks new installs below,
-                            // screenshots are plain Images from the
-                            // installed package when present (never a
-                            // loaded entrypoint), and rollback stays
-                            // gated by rollback_available only.
+                            // Marketplace detail (shell#379): deprecation blocks new
+                            // installs below; screenshots are plain Images of local
+                            // files horneroctl hash-verified (never a URL, never a
+                            // loaded entrypoint); rollback stays gated by
+                            // rollback_available only.
                             StyledText {
                                 Layout.fillWidth: true
                                 visible: root.isDeprecated(catRow.modelData)
@@ -1310,34 +1463,98 @@ Item {
                                 wrapMode: Text.Wrap
                             }
 
-                            Repeater {
-                                model: root.screenshotSources(catRow.modelData)
+                            Flow {
+                                Layout.fillWidth: true
+                                spacing: Appearance.spacing.small
+                                visible: Store.screenshotSources(catRow.modelData, Plugins.pluginsDir, catRow.installed).length > 0
 
-                                delegate: Image {
+                                Repeater {
+                                    model: Store.screenshotSources(catRow.modelData, Plugins.pluginsDir, catRow.installed).slice(0, catRow.expanded ? 6 : 1)
+
+                                    delegate: Image {
+                                        required property var modelData
+
+                                        width: Math.min(catCol.width, 360)
+                                        height: 180
+                                        source: modelData.source
+                                        sourceSize.width: 720
+                                        fillMode: Image.PreserveAspectFit
+                                        horizontalAlignment: Image.AlignLeft
+                                        asynchronous: true
+                                        Accessible.role: Accessible.Graphic
+                                        Accessible.name: modelData.alt
+                                    }
+                                }
+                            }
+
+                            // What it declares it uses, in plain language and in
+                            // the store language: curated reasons from the
+                            // catalogue for programs and network hosts.
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: Store.t("declares", root.es)
+                                font.pointSize: Appearance.font.size.small
+                                font.weight: Appearance.font.weight.medium
+                            }
+
+                            Repeater {
+                                model: Store.permissionLines(catRow.modelData, root.es)
+
+                                delegate: RowLayout {
+                                    id: permRow
+
                                     required property var modelData
 
                                     Layout.fillWidth: true
-                                    Layout.preferredHeight: 180
-                                    source: modelData.source
-                                    fillMode: Image.PreserveAspectFit
-                                    asynchronous: true
-                                    Accessible.role: Accessible.Graphic
-                                    Accessible.name: modelData.alt
+                                    spacing: Appearance.spacing.small
+
+                                    Glyph {
+                                        Layout.alignment: Qt.AlignTop
+                                        name: permRow.modelData.kind === "program" ? "terminal" : permRow.modelData.kind === "network" ? "world" : permRow.modelData.kind === "settings" ? "settings" : permRow.modelData.kind === "action" ? "bolt" : "chart-bar"
+                                        color: permRow.modelData.kind === "program" || permRow.modelData.kind === "network" ? Signal.palette.alert : Signal.palette.inkMuted
+                                        font.pointSize: Appearance.font.size.small
+                                    }
+
+                                    StyledText {
+                                        Layout.fillWidth: true
+                                        text: permRow.modelData.text
+                                        font.pointSize: Appearance.font.size.small
+                                        color: Signal.palette.inkMuted
+                                        wrapMode: Text.Wrap
+                                    }
                                 }
                             }
 
                             StyledText {
                                 Layout.fillWidth: true
-                                visible: root.screenshotSources(catRow.modelData).length === 0 && root.screenshotCaptions(catRow.modelData).length > 0
-                                text: root.screenshotCaptions(catRow.modelData)
+                                visible: Store.permissionLines(catRow.modelData, root.es).length === 0
+                                text: Store.t("declaresNothing", root.es)
                                 font.pointSize: Appearance.font.size.small
                                 color: Signal.palette.inkMuted
                                 wrapMode: Text.Wrap
                             }
 
+                            // Version history from the catalogue: the newest entry
+                            // always, the rest with More.
+                            Repeater {
+                                model: Store.changelog(catRow.modelData, catRow.expanded ? 20 : 1)
+
+                                delegate: StyledText {
+                                    required property var modelData
+
+                                    Layout.fillWidth: true
+                                    text: `${modelData.version} · ${modelData.notes}`
+                                    font.pointSize: Appearance.font.size.small
+                                    color: Signal.palette.inkMuted
+                                    wrapMode: Text.Wrap
+                                    maximumLineCount: catRow.expanded ? 8 : 2
+                                    elide: Text.ElideRight
+                                }
+                            }
+
                             StyledText {
                                 Layout.fillWidth: true
-                                visible: root.compatibilityText(catRow.modelData).length > 0
+                                visible: catRow.expanded && root.compatibilityText(catRow.modelData).length > 0
                                 text: root.compatibilityText(catRow.modelData)
                                 font.pointSize: Appearance.font.size.small
                                 color: Signal.palette.inkMuted
@@ -1346,8 +1563,8 @@ Item {
 
                             StyledText {
                                 Layout.fillWidth: true
-                                visible: root.changelogText(catRow.modelData).length > 0
-                                text: root.changelogText(catRow.modelData)
+                                visible: catRow.expanded
+                                text: root.declaredCapabilities(catRow.modelData.capabilities)
                                 font.pointSize: Appearance.font.size.small
                                 color: Signal.palette.inkMuted
                                 wrapMode: Text.Wrap
@@ -1355,14 +1572,66 @@ Item {
 
                             StyledText {
                                 Layout.fillWidth: true
-                                text: root.permissionExplanations(catRow.modelData)
+                                visible: catRow.expanded
+                                text: qsTr("Source: %1\nPayload SHA-256: %2\nPlugin snapshot: %3")
+                                    .arg(catRow.modelData.homepage || qsTr("Not listed"))
+                                    .arg(catRow.modelData.sha256 || qsTr("Not listed"))
+                                    .arg(catRow.modelData.generatedFrom || qsTr("Not listed"))
+                                font.pointSize: Appearance.font.size.smaller
+                                font.family: Appearance.font.family.mono
+                                color: Signal.palette.inkMuted
+                                wrapMode: Text.WrapAnywhere
+                            }
+
+                            // First step of Install / Update / Roll back: the
+                            // consent text. Installing code is a command with
+                            // consequences, so it is never one click.
+                            StyledText {
+                                Layout.fillWidth: true
+                                Layout.topMargin: Appearance.spacing.small
+                                visible: root.pendingInstall === catRow.modelData.id
+                                text: Store.t("beforeInstall", root.es, catRow.modelData.name)
+                                font.pointSize: Appearance.font.size.normal
+                                font.weight: Appearance.font.weight.strong
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                readonly property string verb: root.pendingInstall === catRow.modelData.id ? "install" : root.pendingCatalogAction === "update:" + catRow.modelData.id ? "update" : root.pendingCatalogAction === "rollback:" + catRow.modelData.id ? "rollback" : ""
+                                visible: verb.length > 0
+                                text: Store.consentText(verb, catRow.modelData, root.es) + (verb === "install" && Store.hasProgramsOrNetwork(catRow.modelData) ? "\n" + Store.t("checkDeclared", root.es) : "")
+                                font.pointSize: Appearance.font.size.small
+                                color: verb === "install" ? Signal.palette.alert : Signal.palette.ink
+                                wrapMode: Text.Wrap
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                visible: root.outcomeText(catRow.modelData.id).length > 0
+                                text: root.outcomeText(catRow.modelData.id)
+                                font.pointSize: Appearance.font.size.small
+                                color: ExtensionStore.outcome(catRow.modelData.id)?.ok ? Signal.palette.signal : Signal.palette.alert
+                                wrapMode: Text.Wrap
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                visible: ExtensionStore.busy && ExtensionStore.job?.id === catRow.modelData.id
+                                text: ExtensionStore.progressText()
                                 font.pointSize: Appearance.font.size.small
                                 color: Signal.palette.inkMuted
                                 wrapMode: Text.Wrap
                             }
 
-                            RowLayout {
+                            Flow {
+                                Layout.fillWidth: true
                                 spacing: Appearance.spacing.small
+
+                                TextButton {
+                                    text: catRow.expanded ? qsTr("Less") : qsTr("More")
+                                    type: TextButton.Text
+                                    onClicked: root.expandedCatalogId = catRow.expanded ? "" : catRow.modelData.id
+                                }
 
                                 TextButton {
                                     visible: root.replacedById(catRow.modelData).length > 0
@@ -1372,7 +1641,7 @@ Item {
                                 }
 
                                 TextButton {
-                                    visible: catRow.modelData.state === "installed" && root.installedEntry(catRow.modelData.id) && root.hasPluginSettings(root.installedEntry(catRow.modelData.id))
+                                    visible: catRow.installed && root.installedEntry(catRow.modelData.id) && root.hasPluginSettings(root.installedEntry(catRow.modelData.id))
                                     text: qsTr("Settings")
                                     type: TextButton.Text
                                     onClicked: {
@@ -1380,33 +1649,10 @@ Item {
                                         root.settingsPluginId = catRow.modelData.id;
                                     }
                                 }
-                            }
-
-                            StyledText {
-                                Layout.fillWidth: true
-                                text: qsTr("Source: %1\nPayload SHA-256: %2\nPlugin snapshot: %3")
-                                    .arg(catRow.modelData.homepage || qsTr("Not listed"))
-                                    .arg(catRow.modelData.sha256 || qsTr("Not listed"))
-                                    .arg(catRow.modelData.generatedFrom || qsTr("Not listed"))
-                                font.pointSize: Appearance.font.size.smaller
-                                color: Signal.palette.inkMuted
-                                wrapMode: Text.Wrap
-                            }
-
-                            StyledText {
-                                Layout.fillWidth: true
-                                text: qsTr("%1 · %2 · %3").arg(catRow.modelData.category || "").arg(catRow.modelData.placement || "").arg(catRow.modelData.state || "")
-                                font.pointSize: Appearance.font.size.small
-                                color: Signal.palette.inkMuted
-                                wrapMode: Text.Wrap
-                            }
-
-                            RowLayout {
-                                spacing: Appearance.spacing.small
 
                                 TextButton {
                                     visible: catRow.modelData.state !== "installed" && !root.isDeprecated(catRow.modelData) && root.pendingInstall !== catRow.modelData.id
-                                    enabled: !catalogInstallProc.running && root.catalogRevision.length > 0
+                                    enabled: !ExtensionStore.busy && root.catalogRevision.length > 0
                                     text: qsTr("Install…")
                                     type: TextButton.Tonal
                                     onClicked: root.pendingInstall = catRow.modelData.id
@@ -1414,7 +1660,7 @@ Item {
 
                                 TextButton {
                                     visible: root.pendingInstall === catRow.modelData.id && !root.isDeprecated(catRow.modelData)
-                                    enabled: !catalogInstallProc.running && root.catalogRevision.length > 0
+                                    enabled: !ExtensionStore.busy && root.catalogRevision.length > 0
                                     text: qsTr("Confirm install")
                                     type: TextButton.Filled
                                     onClicked: {
@@ -1424,15 +1670,15 @@ Item {
 
                                 TextButton {
                                     visible: root.pendingInstall === catRow.modelData.id
-                                    enabled: !catalogInstallProc.running
+                                    enabled: !ExtensionStore.busy
                                     text: qsTr("Cancel")
                                     type: TextButton.Text
                                     onClicked: root.pendingInstall = ""
                                 }
 
                                 TextButton {
-                                    visible: catRow.modelData.state === "installed" && root.pendingCatalogAction !== "update:" + catRow.modelData.id
-                                    enabled: !catalogInstallProc.running
+                                    visible: catRow.rowState === "update" && root.pendingCatalogAction !== "update:" + catRow.modelData.id
+                                    enabled: !ExtensionStore.busy
                                     text: qsTr("Update…")
                                     type: TextButton.Tonal
                                     onClicked: root.pendingCatalogAction = "update:" + catRow.modelData.id
@@ -1440,7 +1686,7 @@ Item {
 
                                 TextButton {
                                     visible: root.pendingCatalogAction === "update:" + catRow.modelData.id
-                                    enabled: !catalogInstallProc.running && root.catalogRevision.length > 0
+                                    enabled: !ExtensionStore.busy && root.catalogRevision.length > 0
                                     text: qsTr("Confirm update")
                                     type: TextButton.Filled
                                     onClicked: root.runCatalogAction("update", catRow.modelData.id)
@@ -1448,7 +1694,7 @@ Item {
 
                                 TextButton {
                                     visible: catRow.modelData.state === "installed" && catRow.modelData.rollback_available && root.pendingCatalogAction !== "rollback:" + catRow.modelData.id
-                                    enabled: !catalogInstallProc.running
+                                    enabled: !ExtensionStore.busy
                                     text: qsTr("Roll back…")
                                     type: TextButton.Tonal
                                     onClicked: root.pendingCatalogAction = "rollback:" + catRow.modelData.id
@@ -1456,7 +1702,7 @@ Item {
 
                                 TextButton {
                                     visible: catRow.modelData.rollback_available && root.pendingCatalogAction === "rollback:" + catRow.modelData.id
-                                    enabled: !catalogInstallProc.running
+                                    enabled: !ExtensionStore.busy
                                     text: qsTr("Confirm rollback")
                                     type: TextButton.Filled
                                     onClicked: root.runCatalogAction("rollback", catRow.modelData.id)
@@ -1464,15 +1710,15 @@ Item {
 
                                 TextButton {
                                     visible: root.pendingCatalogAction === "update:" + catRow.modelData.id || root.pendingCatalogAction === "rollback:" + catRow.modelData.id
-                                    enabled: !catalogInstallProc.running
+                                    enabled: !ExtensionStore.busy
                                     text: qsTr("Cancel")
                                     type: TextButton.Text
                                     onClicked: root.pendingCatalogAction = ""
                                 }
 
                                 StyledText {
-                                    visible: catRow.modelData.state === "installed"
-                                    text: qsTr("Installed — enable it in the list above")
+                                    visible: catRow.installed && !(root.installedEntry(catRow.modelData.id)?.enabled ?? false)
+                                    text: Store.t("installedOff", root.es)
                                     font.pointSize: Appearance.font.size.small
                                     color: Signal.palette.inkMuted
                                 }
@@ -1484,6 +1730,41 @@ Item {
                 CommunityRegistrySection {
                     Layout.fillWidth: true
                 }
+            }
+        }
+    }
+
+    // Store progress strip: the running verb, its real steps and elapsed
+    // seconds, announced politely to assistive technology.
+    component StoreProgress: StyledRect {
+        implicitHeight: progressRow.implicitHeight + Appearance.padding.normal * 2
+        radius: Appearance.rounding.small
+        color: Qt.alpha(Signal.palette.signal, 0.10)
+        border.width: 1
+        border.color: Qt.alpha(Signal.palette.signal, 0.45)
+
+        Accessible.role: Accessible.StatusBar
+        Accessible.name: ExtensionStore.progressText()
+
+        RowLayout {
+            id: progressRow
+
+            anchors.fill: parent
+            anchors.margins: Appearance.padding.normal
+            spacing: Appearance.spacing.small
+
+            Glyph {
+                name: "refresh"
+                color: Signal.palette.signal
+                font.pointSize: Appearance.font.size.normal
+            }
+
+            StyledText {
+                Layout.fillWidth: true
+                text: ExtensionStore.progressText()
+                font.pointSize: Appearance.font.size.small
+                color: Signal.palette.ink
+                wrapMode: Text.Wrap
             }
         }
     }

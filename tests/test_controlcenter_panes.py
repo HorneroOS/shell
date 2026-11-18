@@ -571,26 +571,31 @@ def test_settings_close_releases_window_and_uses_registered_titles():
 
 def test_extensions_pane_lifecycle_goes_through_horneroctl_with_consent():
     pane = (CC / "extensions" / "ExtensionsPane.qml").read_text()
-    assert "Plugins.entries" in pane and "Plugins.reload()" in pane
-    # horneroctl stays the single writer: the pane never writes receipts
-    # or payloads; enable/disable go through the exact CLI argv (with
-    # --json first), and enable requires an inline confirmation step
-    # mirroring the CLI --yes gate. Install/remove stay CLI-only.
-    assert '["horneroctl", "--json", "plugin", action, pluginId,' in pane
-    assert 'if (action === "install" || action === "update")' in pane
-    assert 'command.push("--revision", root.catalogRevision)' in pane
+    store = (ROOT / "services" / "ExtensionStore.qml").read_text()
+    lib = (ROOT / "services" / "extensionstore.js").read_text()
+    assert "Plugins.entries" in pane and "Plugins.reload()" in store
+    # horneroctl stays the single writer: neither the pane nor the store
+    # writes receipts or payloads; every verb is the documented argv
+    # (--json first, --yes last) built in one place, and every verb keeps
+    # a two-step guard in the pane (gap #4: install and remove are now
+    # in the GUI, behind the same guard as enable).
+    assert 'var argv = ["horneroctl", "--json", "plugin"];' in lib
+    assert 'argv.push("--revision", revision);' in lib
+    assert "Store.commandFor(verb, pluginId, needsRevision ? root.catalogueRevision : \"\")" in store
     assert "pendingEnable" in pane and "Confirm enable" in pane
     assert "runLifecycle(\"enable\"" in pane and "runLifecycle(\"disable\"" in pane
-    for banned in ('"plugin", "install', '"plugin", "remove',
-                   "plugins-receipts"):
-        assert banned not in pane, f"extensions pane must not do this itself: {banned}"
+    assert 'runLifecycle("remove", row.entry.id)' in pane and "Confirm remove" in pane
+    for banned in ("plugins-receipts", "FileView", "writeFile"):
+        assert banned not in store, f"the store must not write plugin state itself: {banned}"
+    assert "Process {" not in pane, "verbs run in ExtensionStore, not in the pane"
     assert "without a sandbox" in pane
 
 
 def test_extensions_marketplace_section():
     pane = (ROOT / "modules/controlcenter/extensions/ExtensionsPane.qml").read_text()
     assert "Official catalogue" in pane
-    assert '"plugin", "catalog"' in pane
+    store = (ROOT / "services" / "ExtensionStore.qml").read_text()
+    assert '["horneroctl", "--json", "plugin", "catalog"]' in store
     assert 'runCatalogAction("install", catRow.modelData.id)' in pane
     assert "Payload SHA-256" in pane
     assert "declaredCapabilities" in pane
@@ -651,8 +656,9 @@ def test_extensions_expandable_detail_is_truthful_and_reuses_lifecycle():
     assert 'qsTr("Hide details")' in pane and 'qsTr("Details")' in pane
     # No new fake actions: detail adds none, existing lifecycle/catalogue
     # actions remain the only writers.
-    assert pane.count("catalogInstallProc.command =") == 1
-    assert pane.count("lifecycleProc.command =") == 1
+    store = (ROOT / "services" / "ExtensionStore.qml").read_text()
+    assert store.count("jobProc.command = argv") == 1
+    assert "Process {" not in pane
     assert "runLifecycle(\"enable\"" in pane and "runLifecycle(\"disable\"" in pane
     assert 'runCatalogAction("install"' in pane and 'runCatalogAction("update"' in pane
 

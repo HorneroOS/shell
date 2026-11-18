@@ -1332,6 +1332,73 @@ unsigned list. The product key is not shipped yet; see
 [`hornero/docs/PLUGIN_REGISTRY.md`](https://github.com/HorneroOS/hornero/blob/main/docs/PLUGIN_REGISTRY.md)
 for the current client boundary and maintainer gate.
 
+## Managing extensions from Control Center
+
+Control Center > Extensions installs, updates, rolls back, removes, trusts,
+enables and disables official extensions without a terminal. The pane never
+writes plugin state itself: `services/ExtensionStore.qml` runs the documented
+`horneroctl --json plugin …` verbs asynchronously, one at a time, and re-reads
+state from horneroctl and the plugin host afterwards. The argv for each verb is
+built in one place, `services/extensionstore.js` (`commandFor`).
+
+| In the pane | horneroctl verb |
+| --- | --- |
+| Install… then Confirm install | `plugin catalog install <id> --revision <displayed catalogue commit> --yes` |
+| Update… then Confirm update | `plugin catalog update <id> --revision <displayed catalogue commit> --yes` |
+| Roll back… then Confirm rollback | `plugin catalog rollback <id> --yes` |
+| Remove… then Confirm remove | `plugin remove <id> --yes` |
+| Trust… / Enable… then Confirm | `plugin trust <id> --yes` / `plugin enable <id> --yes` |
+
+Every verb is a command without an inverse (it copies, runs or deletes code),
+so each keeps a two-step guard instead of Undo, as the Control Center apply
+policy requires: the first click shows what will happen in plain language, the
+second runs it. Install and update pin the catalogue revision you were reading;
+if the catalogue changed meanwhile, horneroctl refuses and the card says so.
+
+Each catalogue card shows, before install:
+
+- **Signer**: who vouches for the code (the reviewed official catalogue with a
+  pinned commit and SHA-256, a verified author key id, your own trust record,
+  or nobody).
+- **What it declares it uses**: one line per declared program, network host,
+  shared data domain, broker action and settings block. Program and network
+  lines are curated reasons from the catalogue (HorneroOS/plugins
+  `catalog-permissions.json`), in English and Spanish. They are review text,
+  not enforced permissions.
+- **Changelog**: the newest entry, the full history under More.
+- **Screenshots**: catalogue captures that horneroctl verified against their
+  SHA-256 and cached under `$XDG_CACHE_HOME/hornero/plugins/catalog-screenshots/`.
+  The pane shows only those local files; it never fetches an image.
+- **State**: Available, Installed, or "Update available: 1.0.0 → 1.1.0".
+
+While a verb runs, a strip at the top and the card show the real steps and
+elapsed seconds (horneroctl does not stream progress, so there is no
+percentage). The result appears on the card that started it. A failure shows
+the horneroctl message plus guidance chosen from its stable error code
+(`data.error`, for example `catalogue-changed`, `hash-mismatch`,
+`locally-modified`; the list is in hornero `docs/PLUGIN_LIFECYCLE_JSON.md`).
+A failed verb never touches the running shell: extensions stay isolated in
+their own Loaders.
+
+**Cost**. Installed cards show the measured load time of the entrypoint and,
+under Details, the measured cost of the shared data domains the extension reads
+(PluginKit `Providers.cost`: milliseconds per sample, sampling period, and how
+many extensions share the lease). Own CPU and memory are not measured per
+extension: every extension runs in the one shell process, so the pane says
+so instead of estimating. The provider telemetry is sampled every 2 s only
+while the pane is open (`Plugins.telemetryWatchers`).
+
+Preferences, next to Refresh catalogue (`plugins` in `shell.json`):
+
+| Key | Default | Meaning |
+| --- | --- | --- |
+| `storeRefreshOnOpen` | `true` | Fetch the catalogue when the pane opens. Off: only on Refresh catalogue, so opening the pane makes no network request. |
+| `storeShowCost` | `true` | Show the load-time chip and the cost lines. |
+| `storeLanguage` | `"auto"` | Language of the store's own lines: `auto` (system locale), `en` or `es`. |
+
+Removing keeps the extension's settings in `shell.json`, so a reinstall picks
+them up; it also deletes the kept rollback copy.
+
 The extension import surface is intentionally narrow: Qt Quick and Quickshell
 public modules plus `Hornero.PluginKit`. Imports from Hornero's internal
 implementation and unknown PluginKit submodules are rejected. The checker also

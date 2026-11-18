@@ -547,6 +547,30 @@ Scope {
     }
     }
 
+    function providerTelemetry(): var {
+        const out = {};
+        for (const domain of Kit.Providers.domains) {
+            const cost = Kit.Providers.cost(domain);
+            out[domain] = {
+                leases: Kit.Providers.subscriberCount(domain),
+                intervalMs: Kit.Providers.refreshIntervalMs(domain),
+                samples: cost.samples,
+                meanMs: Math.round(cost.meanMs * 1000) / 1000
+            };
+        }
+        return out;
+    }
+
+    // Feeds Plugins.providerTelemetry while Control Center › Extensions
+    // shows cost readouts; stopped otherwise.
+    Timer {
+        running: Plugins.telemetryWatchers > 0
+        repeat: true
+        triggeredOnStart: true
+        interval: 2000
+        onTriggered: Plugins.providerTelemetry = root.providerTelemetry()
+    }
+
     IpcHandler {
         target: "plugins"
 
@@ -580,17 +604,7 @@ Scope {
         // Shared provider leases and measured PluginKit-side cost per
         // sample (JSON): {domain: {leases, intervalMs, samples, meanMs}}.
         function telemetry(): string {
-            const out = {};
-            for (const domain of Kit.Providers.domains) {
-                const cost = Kit.Providers.cost(domain);
-                out[domain] = {
-                    leases: Kit.Providers.subscriberCount(domain),
-                    intervalMs: Kit.Providers.refreshIntervalMs(domain),
-                    samples: cost.samples,
-                    meanMs: Math.round(cost.meanMs * 1000) / 1000
-                };
-            }
-            return JSON.stringify(out);
+            return JSON.stringify(root.providerTelemetry());
         }
     }
 }

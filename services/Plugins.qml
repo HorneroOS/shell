@@ -65,6 +65,13 @@ Singleton {
     // is flagged in status/UI, never enforced by killing plugin QML
     // (in-process QML cannot be preempted; see trust label above).
     readonly property int slowLoadBudgetMs: 2000
+    // Shared provider telemetry for the Extensions cost readout (gap #4):
+    // {domain: {leases, intervalMs, samples, meanMs}}, the same shape as
+    // `qs ipc call plugins telemetry`. PluginHost refreshes it every 2 s
+    // only while a viewer holds a watch (telemetryWatchers > 0), so an
+    // idle shell pays nothing for it.
+    property var providerTelemetry: ({})
+    property int telemetryWatchers: 0
     readonly property int churnAttemptBudget: 5
     readonly property int churnWindowMs: 60000
     // Bounded, secret-redacted event log: {atMs, id, event, detail}.

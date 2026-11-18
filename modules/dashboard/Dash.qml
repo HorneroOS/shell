@@ -120,7 +120,7 @@ GridLayout {
         Layout.column: 0
         Layout.columnSpan: 3
         Layout.fillWidth: true
-        implicitHeight: 76
+        implicitHeight: 80
         padding: 10
 
         Media {

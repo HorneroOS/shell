@@ -45,8 +45,11 @@ Item {
         onTriggered: root.player?.positionChanged()
     }
 
+    readonly property bool playing: hasPlayer && (player.isPlaying ?? false)
+
+    // Sample audio only while something plays and the dashboard is open.
     ServiceRef {
-        service: Audio.cava
+        service: root.playing && root.visibilities.dashboard ? Audio.cava : null
     }
 
     Instruments.Frame {
@@ -307,45 +310,25 @@ Item {
                     }
                 }
 
-                // Spectrum: one column of 3 px segments per cava band.
+                // Spectrum: one column of 3 px segments per cava band, drawn
+                // by one scene-graph item that sleeps once it settles.
                 Instruments.Well {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 56
                     clip: true
 
-                    Row {
+                    Instruments.Spectrum {
                         anchors.fill: parent
                         anchors.margins: 6
-                        spacing: 2
 
-                        Repeater {
-                            model: Config.services.visualiserBars
-
-                            Item {
-                                id: band
-
-                                required property int index
-                                readonly property real level: Math.max(0, Math.min(1, Audio.cava.values[index] ?? 0))
-
-                                width: Math.max(2, (parent.width - (Config.services.visualiserBars - 1) * 2) / Config.services.visualiserBars)
-                                height: parent.height
-
-                                Instruments.SegmentMeter {
-                                    anchors.bottom: parent.bottom
-                                    anchors.horizontalCenter: parent.horizontalCenter
-
-                                    vertical: true
-                                    count: Math.max(1, Math.floor((band.height + 2) / 5))
-                                    segmentWidth: 3
-                                    segmentLength: band.width
-                                    gap: 2
-                                    value: band.level
-                                    available: root.hasPlayer && (root.player.isPlaying ?? false)
-                                    onColor: Signal.palette.phosphor
-                                    threshold: 2
-                                }
-                            }
-                        }
+                        values: Audio.cava.values
+                        active: root.playing
+                        offColor: Signal.palette.rule
+                        hotThreshold: 2
+                        peakHold: false
+                        segment: 3
+                        segmentGap: 2
+                        bandGap: 2
                     }
                 }
             }

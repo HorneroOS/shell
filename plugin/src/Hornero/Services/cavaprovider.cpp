@@ -4,6 +4,8 @@
 #include "audioprovider.hpp"
 #include <QMetaObject>
 #include <QVector>
+#include <algorithm>
+#include <cmath>
 #include <cava/cavacore.h>
 #include <cstddef>
 #include <qdebug.h>
@@ -28,6 +30,19 @@ void CavaProcessor::process() {
     }
 
     const int count = static_cast<int>(AudioCollector::instance().readChunk(m_in));
+
+    // Silence that has already drained (below one segment): skip the FFT.
+    // A paused or idle stream delivers exact zeros, so this is the common
+    // idle case and keeps the sampler, and every spectrum fed by it, asleep.
+    const bool silentIn = std::all_of(m_in, m_in + count, [](double s) { return std::fpclassify(s) == FP_ZERO; });
+    const bool drained = std::all_of(m_values.cbegin(), m_values.cend(), [](double v) { return v < 1e-3; });
+    if (silentIn && drained) {
+        if (std::any_of(m_values.cbegin(), m_values.cend(), [](double v) { return v > 0.0; })) {
+            m_values.fill(0.0);
+            emit valuesChanged(m_values);
+        }
+        return;
+    }
 
     // Process in data via cava
     cava_execute(m_in, count, m_out, m_plan);

@@ -200,7 +200,7 @@ StyledRect {
     Behavior on border.color {
         enabled: !Appearance.anim.reduced
         ColorAnimation {
-            duration: Appearance.anim.durations.small
+            duration: Appearance.anim.durations.short
         }
     }
 
@@ -311,7 +311,7 @@ StyledRect {
                         Rectangle {
                             width: 18
                             height: 18
-                            radius: 3
+                            radius: 3 // fixed: 18 px contrast sample tile, not a theme corner
                             color: check.modelData.bg
                             border.width: 1
                             border.color: Signal.palette.rule
@@ -320,7 +320,7 @@ StyledRect {
                             Text {
                                 anchors.centerIn: parent
                                 text: "Aa"
-                                font.pixelSize: 9
+                                font.pixelSize: 9 // fixed: "Aa" glyph sized to the 18 px sample tile
                                 font.bold: true
                                 color: check.modelData.fg
                             }

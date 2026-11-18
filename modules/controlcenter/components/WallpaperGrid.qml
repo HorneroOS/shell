@@ -299,6 +299,7 @@ Item {
             smooth: true
 
             Behavior on border.width {
+                enabled: !Appearance.anim.reduced
                 NumberAnimation {
                     duration: 150
                     easing.type: Easing.OutQuad
@@ -311,7 +312,8 @@ Item {
                 anchors.margins: Appearance.padding.small
 
                 visible: isCurrent
-                name: "circle-check"
+                // Same selection mark as every Appearance chooser.
+                name: Config.appearance.cozyChips ? "heart" : "circle-check"
                 color: Signal.palette.signal
                 font.pointSize: Appearance.font.size.large
             }

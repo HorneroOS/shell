@@ -123,7 +123,7 @@ StyledRect {
         anchors.bottom: parent.bottom
         anchors.margins: 1
         width: 3
-        radius: 1.5
+        radius: 1.5 // fixed: 3 px status rail end rounding, not a theme corner
         color: root.busy ? Signal.palette.cue : Signal.palette.signal
     }
 
@@ -153,7 +153,7 @@ StyledRect {
 
                     width: 12
                     height: 12
-                    radius: Config.appearance.cozyChips ? 6 : 2
+                    radius: Config.appearance.cozyChips ? 6 : 2 // fixed: 12 px colour dot (round when cozy), not a theme corner
                     color: root.role(modelData)
                     border.width: 1
                     border.color: Signal.palette.rule

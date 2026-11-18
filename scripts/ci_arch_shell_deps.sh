@@ -34,9 +34,14 @@ pacman -Syyuu --noconfirm --needed \
     quickshell sway dbus \
     libqalculate pipewire aubio fftw \
     ttf-ibm-plex \
-    python python-pytest python-jsonschema python-fonttools
+    python python-pytest python-jsonschema python-fonttools python-pillow \
+    nodejs
 
 pacman -Q quickshell qt6-base qt6-declarative qt6-wayland sway
+
+# sway ships with file capabilities (cap_sys_nice); container runtimes refuse
+# to exec such binaries from an unprivileged user (EPERM). Drop them here.
+setcap -r /usr/bin/sway 2>/dev/null || true
 
 if pkg-config --exists libcava; then
     echo "libcava $(pkg-config --modversion libcava) already installed"

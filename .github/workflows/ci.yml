@@ -114,12 +114,22 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       - name: Restore pacman package cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        id: pkgcache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
           path: /var/cache/pacman/pkg
           key: arch-pkgs-${{ hashFiles('scripts/ci_arch_shell_deps.sh') }}
       - name: Install pinned Quickshell + Qt 6 stack
         run: ./scripts/ci_arch_shell_deps.sh
+      # Saved right after install so a red test run still warms the cache.
+      - name: Save pacman package cache
+        if: steps.pkgcache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: /var/cache/pacman/pkg
+          key: arch-pkgs-${{ hashFiles('scripts/ci_arch_shell_deps.sh') }}
+      # Again, now that git is installed: tests use `git ls-files`.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       - name: Build + install the Hornero QML plugin
         run: |
           cmake -S . -B build -G Ninja -D DISTRIBUTOR="ci" \

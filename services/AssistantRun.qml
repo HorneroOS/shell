@@ -122,6 +122,17 @@ Singleton {
         return Run.safeMarkdown(text);
     }
 
+    // Whether untrusted text may go through the Markdown renderer at all
+    // (above the cap it is shown as plain text).
+    function markdownOk(text: string): bool {
+        return Run.markdownOk(text);
+    }
+
+    // Strict id shape for anything that reaches an argv or a URL path.
+    function isValidRunId(id: string): bool {
+        return Run.isValidRunId(id);
+    }
+
     function isSafeLink(link: string): bool {
         return Run.isSafeLink(link);
     }

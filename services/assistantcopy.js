@@ -96,7 +96,7 @@ var STRINGS = {
     "tab.approvals": { en: "Approvals", es: "Aprobaciones" },
     "tab.artifacts": { en: "Artifacts", es: "Artefactos" },
     "tab.history": { en: "Session", es: "Sesi\u00f3n" },
-    "handoff.title": { en: "Handed over from a quick question", es: "Traído desde una pregunta rápida" },
+    "handoff.title": { en: "Hand-off", es: "Traspaso" },
     "handoff.from.radio": { en: "From Javi Radio", es: "Desde Javi Radio" },
     "handoff.from.launcher": { en: "From the launcher", es: "Desde el lanzador" },
     "handoff.question": { en: "Question", es: "Pregunta" },

@@ -599,7 +599,7 @@ Item {
                         }
 
                         StyledText {
-                            text: qsTr("Quick assistant").toUpperCase()
+                            text: qsTr("Workbench").toUpperCase()
                             font.family: Appearance.font.family.mono
                             font.pointSize: Appearance.font.size.smaller
                             color: Signal.palette.inkMuted
@@ -607,7 +607,7 @@ Item {
 
                         StyledText {
                             Layout.fillWidth: true
-                            text: qsTr("Javi Radio opens the launcher straight into a read-only question; it never acts. Bind it to any key in your compositor config; the shell writes no keybinding. Approvals, attachments and long runs continue in the Workbench.")
+                            text: qsTr("Quick questions (Javi Radio, the launcher) are read-only and never act. When one needs approval, it hands you over to the Workbench, where you decide on each request. The shell writes no keybinding; bind the Workbench yourself if you want a key.")
                             font.pointSize: Appearance.font.size.smaller
                             color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
@@ -615,7 +615,7 @@ Item {
 
                         StyledText {
                             Layout.fillWidth: true
-                            text: "qs ipc call companion quick\nqs ipc call companion workbench"
+                            text: "qs ipc call companion workbench"
                             textFormat: Text.PlainText
                             font.family: Appearance.font.family.mono
                             font.pointSize: Appearance.font.size.smaller

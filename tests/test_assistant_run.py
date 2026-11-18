@@ -501,3 +501,17 @@ def test_handoff_needs_a_question_and_a_new_run_clears_it():
         "console.log(JSON.stringify([none, h.handoff.kind, h.handoff.source, b, r]));"
     )
     assert out == [None, "blocked", "launcher", None, None]
+
+
+def test_every_assistantrun_call_in_qml_is_defined():
+    # A call to a function the singleton does not define is a runtime
+    # TypeError that qmllint does not catch (found offscreen: approve,
+    # stop and restore all threw on AssistantRun.isValidRunId).
+    import re
+    qml = (ROOT / "services" / "AssistantRun.qml").read_text()
+    defined = set(re.findall(r"^\s*function (\w+)\(", qml, re.M))
+    called = set()
+    for path in list((ROOT / "modules").rglob("*.qml")) + list((ROOT / "services").rglob("*.qml")):
+        called |= set(re.findall(r"\bAssistantRun\.(\w+)\(", path.read_text()))
+    assert called, "no AssistantRun calls found"
+    assert called <= defined, sorted(called - defined)

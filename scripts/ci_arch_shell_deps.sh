@@ -26,9 +26,44 @@ echo "Server = https://archive.archlinux.org/repos/${ARCH_SNAPSHOT}/\$repo/os/\$
 # deleting it on success.
 sed -i 's/^#\?CleanMethod.*/CleanMethod = KeepInstalled/' /etc/pacman.conf
 
-# -Syyuu: refresh against the snapshot and move the image's packages to it
-# (allows downgrades when the base image is newer than the snapshot).
-pacman -Syyuu --noconfirm --needed \
+# The archive is a single external host that sometimes stalls ("Operation
+# too slow"). Download through curl with per-file retries and an explicit
+# stall rule (below 10 KiB/s for 30 s counts as a failure and is retried),
+# resuming partial files instead of restarting them.
+sed -i '/^XferCommand/d' /etc/pacman.conf
+sed -i '/^\[options\]/a XferCommand = /usr/bin/curl --fail --location --silent --show-error --retry 5 --retry-all-errors --retry-delay 5 --connect-timeout 20 --speed-limit 10240 --speed-time 30 --continue-at - --output %o %u' \
+    /etc/pacman.conf
+
+# Bounded retry around a whole pacman transaction (network only: the
+# snapshot pins every version, so a retry installs exactly the same set).
+pacman_retry() {
+    local attempt
+    for attempt in 1 2 3 4; do
+        if pacman "$@"; then
+            return 0
+        fi
+        echo "pacman $1 failed (attempt $attempt/4); retrying in $((attempt * 15))s" >&2
+        rm -f /var/lib/pacman/db.lck
+        sleep $((attempt * 15))
+    done
+    pacman "$@"
+}
+
+# Sync databases are pinned to the snapshot, so a cached copy (restored by
+# actions/cache with the package cache) is exactly what -Syy would fetch.
+# The stamp says which snapshot the cached databases belong to.
+stamp=/var/lib/pacman/sync/.hornero-snapshot
+if [ "$(cat "$stamp" 2>/dev/null || true)" = "$ARCH_SNAPSHOT" ] \
+    && [ -s /var/lib/pacman/sync/core.db ] && [ -s /var/lib/pacman/sync/extra.db ]; then
+    echo "sync databases for snapshot ${ARCH_SNAPSHOT} restored from cache"
+else
+    pacman_retry -Syy --noconfirm
+    printf '%s\n' "$ARCH_SNAPSHOT" > "$stamp"
+fi
+
+# -Suu: move the image's packages to the snapshot (allows downgrades when
+# the base image is newer than the snapshot) and install the stack.
+pacman_retry -Suu --noconfirm --needed \
     base-devel cmake ninja pkgconf git \
     qt6-base qt6-declarative qt6-svg qt6-wayland qt6-tools \
     qt6-multimedia qt6-multimedia-ffmpeg \

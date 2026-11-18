@@ -39,15 +39,23 @@ Singleton {
     // True when a run ended without an answer: the row offers the
     // previous summon-Javi behaviour instead of a dead end.
     property bool failed: false
+    // Who started the current/last run ("launcher" or "radio"; the launcher
+    // and Javi Radio share this one quick ask) and a counter bumped by every
+    // ask(). A surface cancels only a run it owns, and checks the counter
+    // to know whether the result it sees is still its own question.
+    property string owner: ""
+    property int generation: 0
 
     readonly property int textCap: InlineAskLogic.TEXT_CAP
 
-    function ask(question: string): void {
+    function ask(question: string, who: string): void {
         const q = (question ?? "").toString().trim();
         if (q === "")
             return;
         // A new query cancels any in-flight run first.
         proc.running = false;
+        root.owner = (who ?? "") === "" ? "launcher" : who;
+        root.generation = root.generation + 1;
         root.askedPrompt = q;
         root.text = "";
         root.errorText = "";
@@ -59,14 +67,17 @@ Singleton {
     }
 
     function stop(): void {
-        root.cancel();
+        root.cancel("");
     }
 
     // Cancels the in-flight run (Escape/launcher close, leaving the
     // ai state, or a new query). Partial streamed text is kept;
     // the killed process's exit is ignored because busy is false.
-    function cancel(): void {
+    // `who` limits it to a run that surface started (empty = any run).
+    function cancel(who: string): void {
         if (!root.busy && !proc.running)
+            return;
+        if ((who ?? "") !== "" && who !== root.owner)
             return;
         proc.running = false;
         root.busy = false;

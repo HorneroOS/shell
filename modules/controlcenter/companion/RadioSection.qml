@@ -45,7 +45,7 @@ ChannelPanel {
         }
 
         Repeater {
-            model: [{ "id": "shortcut", "label": qsTr("Keyboard shortcut") }, { "id": "launcher", "label": qsTr("Launcher") }, { "id": "javi", "label": qsTr("Clicking Javi") }, { "id": "bar", "label": qsTr("Bar item") }, { "id": "plugin", "label": qsTr("Extension actions") }, { "id": "menu", "label": qsTr("Javi's menu") }]
+            model: [{ "id": "shortcut", "label": qsTr("Keyboard shortcut") }, { "id": "launcher", "label": qsTr("Launcher") }, { "id": "javi", "label": qsTr("Clicking Javi") }, { "id": "bar", "label": qsTr("Bar item") }, { "id": "menu", "label": qsTr("Javi's menu") }, { "id": "nest", "label": qsTr("Clicking the nest") }, { "id": "plugin", "label": qsTr("Extension actions (no keyboard until you click)") }, { "id": "keybind", "label": qsTr("Compositor key binding over IPC (cannot be verified)") }]
 
             SwitchRow {
                 id: entryRow
@@ -57,6 +57,14 @@ ChannelPanel {
                 checked: root.r.entryPoints[modelData.id]
                 onToggled: checked => CompanionStore.patchPref("radio", "entryPoints." + entryRow.modelData.id, checked)
             }
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+            text: qsTr("Extension actions and the IPC key binding come through qs ipc, which any local program can call: they are refused in Focus, Gaming and fullscreen, and they can only open Radio or put text in it, never send a question.")
+            wrapMode: Text.Wrap
+            font.pointSize: Appearance.font.size.smaller
+            color: Signal.palette.inkMuted
         }
 
         PrefPick {

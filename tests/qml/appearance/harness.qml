@@ -13,7 +13,8 @@ import qs.modules.launcher.services
 //   idle          nothing (what a first-time user sees)
 //   preview-theme point at Signal Day (theme hover preview)
 //   preview-end   point at Signal Day, then leave it again
-//   preview-variant open Chromatic, point at the Vibrant variant tile
+//   preview-variant Chromatic from a seed colour, open it, wait for the
+//                 Vibrant tile, point at it
 //   collapsed     every section closed, tall window (section order)
 // HOUT is an optional PNG path, HWIDTH/HHEIGHT the window size.
 // The report lists the section titles in on-screen order, what the
@@ -24,6 +25,8 @@ ShellRoot {
 
     readonly property string scene: Quickshell.env("HSCENE") || "idle"
     property string variantHovered: ""
+    property string variantEngine: ""
+    property var variantFailed: []
 
     function walk(item: var, fn: var): void {
         if (!item)
@@ -109,6 +112,8 @@ ShellRoot {
             "previewActive": pane.previewActive,
             "previewState": pane.previewState,
             "variantHovered": root.variantHovered,
+            "variantEngine": root.variantEngine,
+            "variantFailed": root.variantFailed,
             "paneSize": [pane.width, pane.height, pane.visible, pane.opacity],
             "texts": root.texts()
         };
@@ -177,9 +182,18 @@ ShellRoot {
     Timer {
         id: step2
 
-        interval: root.scene === "preview-variant" ? 6000 : 1200
+        interval: 1200
+        property int waits: 0
         onTriggered: {
             if (root.scene === "preview-variant") {
+                // Wait (up to ~30 s) for the engine to compute the Vibrant
+                // tile; a tile without a scheme has nothing to preview.
+                if (!ChromaticPreview.variantSchemes["vibrant"] && waits++ < 25) {
+                    restart();
+                    return;
+                }
+                root.variantEngine = ChromaticPreview.engineName;
+                root.variantFailed = Object.keys(ChromaticPreview.variantFailed);
                 ChromaticPreview.hoverVariant("vibrant");
                 root.variantHovered = ChromaticPreview.hoveredVariant;
             }
@@ -197,7 +211,7 @@ ShellRoot {
     }
 
     Timer {
-        interval: 60000
+        interval: 90000
         running: true
         onTriggered: {
             console.log("HRESULT " + JSON.stringify({

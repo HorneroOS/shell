@@ -43,6 +43,16 @@ def run_pane(tmp_path: Path, scene: str = "idle", png: Path | None = None, shell
     root = _copy_shell(shell_root or ROOT, tmp_path / "root")
     xdg = tmp_path / "xdg"
     seed_xdg(xdg)
+    if scene == "preview-variant":
+        # Chromatic from one colour: needs no wallpaper, so the scene runs
+        # the same on a bare CI container as on a desktop, and with
+        # whichever engine is installed (in-process module, packaged
+        # helper or the fixture helper).
+        cfg_path = xdg / "config" / "hornero" / "shell.json"
+        cfg = json.loads(cfg_path.read_text())
+        cfg["appearance"]["chromatic"]["source"] = "seed"
+        cfg["appearance"]["chromatic"]["seeds"] = ["#D98A3A"]
+        cfg_path.write_text(json.dumps(cfg, indent=2) + "\n")
     fx = ROOT / "tests" / "fixtures" / "chromatic"
     bindir = tmp_path / "bin"
     bindir.mkdir(exist_ok=True)

@@ -5,6 +5,10 @@ JsonObject {
     property bool showOnHover: true
     property int mediaUpdateInterval: 500
     property int resourceUpdateInterval: 1000
+    // Probes that fork a process (sensors, GPU read) and the lsblk disk scan
+    // run on their own, slower budgets (shell#651).
+    property int sensorUpdateInterval: 2000
+    property int diskUpdateInterval: 30000
     property int dragThreshold: 50
     property Sizes sizes: Sizes {}
     property Performance performance: Performance {}

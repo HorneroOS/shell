@@ -90,8 +90,26 @@ Singleton {
         };
     }
 
-    // Rate and pause follow the experience mode (Signal Visual Language
-    // §6.5): 1 Hz everyday, 2 Hz signal, paused under fullscreen in gaming.
+    // Tiered refresh (shell#651). Only the cheap reads (/proc/stat and
+    // /proc/meminfo, two FileViews) follow the experience cadence (1 Hz
+    // everyday, 2 Hz signal, paused under fullscreen when the mode asks).
+    // The probes that fork a process (`sensors`, the GPU read, `lsblk`)
+    // run on their own, slower budget: temperatures move over seconds and
+    // disk usage over minutes, so spawning three processes on every 500 ms
+    // tick (and re-parsing `lsblk` each time) was the dominant main-thread
+    // cost of Signal mode. Both budgets are user settings
+    // (Control Center > Dashboard) and never run faster than the cadence.
+    readonly property int sensorIntervalMs: Math.max(Experience.telemetryIntervalMs, Config.dashboard.sensorUpdateInterval)
+    readonly property int diskIntervalMs: Math.max(root.sensorIntervalMs, Config.dashboard.diskUpdateInterval)
+    property double _lastSensorsAt: 0
+    property double _lastDisksAt: 0
+
+    // True when `lastAt` is a full interval (minus half a tick of timer
+    // jitter) behind `now`.
+    function due(lastAt: real, now: real, intervalMs: int): bool {
+        return now - lastAt >= intervalMs - Experience.telemetryIntervalMs / 2;
+    }
+
     Timer {
         running: root.refCount > 0 && !Experience.telemetryPaused
         interval: Experience.telemetryIntervalMs
@@ -100,9 +118,16 @@ Singleton {
         onTriggered: {
             stat.reload();
             meminfo.reload();
-            storage.running = true;
-            gpuUsage.running = true;
-            sensors.running = true;
+            const now = Date.now();
+            if (root.due(root._lastSensorsAt, now, root.sensorIntervalMs)) {
+                root._lastSensorsAt = now;
+                gpuUsage.running = true;
+                sensors.running = true;
+            }
+            if (root.due(root._lastDisksAt, now, root.diskIntervalMs)) {
+                root._lastDisksAt = now;
+                storage.running = true;
+            }
         }
     }
 
@@ -180,7 +205,13 @@ Singleton {
         // whole size, so the total read ~0%.
         command: ["lsblk", "-b", "-o", "NAME,PKNAME,SIZE,TYPE,FSUSED,FSSIZE", "-P"]
         stdout: StdioCollector {
-            onStreamFinished: root.disks = root.parseDisks(text)
+            onStreamFinished: {
+                const next = root.parseDisks(text);
+                // Same array contents: keep the old one so nothing bound
+                // to `disks` (storage meters, PluginKit) re-evaluates.
+                if (JSON.stringify(next) !== JSON.stringify(root.disks))
+                    root.disks = next;
+            }
         }
     }
 
@@ -191,10 +222,14 @@ Singleton {
         const nodes = {};
         const order = [];
         for (const line of text.split("\n")) {
-            const field = key => {
-                const m = line.match(new RegExp("(?:^|\\s)" + key + "=\"([^\"]*)\""));
-                return m ? m[1] : "";
-            };
+            // One pass per line: every KEY="value" pair, not one RegExp
+            // built and run per key.
+            const pairs = {};
+            const pairRe = /(?:^|\s)([A-Z]+)="([^"]*)"/g;
+            let m;
+            while ((m = pairRe.exec(line)) !== null)
+                pairs[m[1]] = m[2];
+            const field = key => pairs[key] ?? "";
             const name = field("NAME");
             if (name === "")
                 continue;

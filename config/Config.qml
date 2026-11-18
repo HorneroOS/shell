@@ -540,6 +540,8 @@ Singleton {
             showOnHover: dashboard.showOnHover,
             mediaUpdateInterval: dashboard.mediaUpdateInterval,
             resourceUpdateInterval: dashboard.resourceUpdateInterval,
+            sensorUpdateInterval: dashboard.sensorUpdateInterval,
+            diskUpdateInterval: dashboard.diskUpdateInterval,
             dragThreshold: dashboard.dragThreshold,
             performance: {
                 showBattery: dashboard.performance.showBattery,

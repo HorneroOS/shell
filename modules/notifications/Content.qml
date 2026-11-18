@@ -1,4 +1,5 @@
 import qs.components.containers
+import qs.components.motion
 import qs.components.widgets
 import qs.services
 import qs.config
@@ -81,7 +82,22 @@ Item {
                 implicitWidth: notif.implicitWidth
                 implicitHeight: notif.implicitHeight + (idx === 0 ? 0 : Appearance.spacing.smaller)
 
-                ListView.onRemove: removeAnim.start()
+                // Leaving (Signal visual language §11.2): a card swiped
+                // past the threshold is thrown on along its swipe, one card
+                // width, with `exit`; a card that timed out or was closed
+                // fades in 90 ms where it is. Either way the siblings close
+                // the gap at once with `settle`. Reduced motion keeps 4 px
+                // of travel plus the fade; off is the capped fade only.
+                property real throwDir: 0
+
+                ListView.onRemove: {
+                    wrapper.throwDir = notif.x > 0.5 ? 1 : notif.x < -0.5 ? -1 : 0;
+                    const thrown = wrapper.throwDir !== 0;
+                    exitX.to = !thrown ? notif.x : Choreography.morph ? wrapper.throwDir * (notif.width + Appearance.spacing.normal) : notif.x + wrapper.throwDir * Choreography.exitTravel;
+                    exitX.duration = !thrown ? 0 : Choreography.morph ? Choreography.medium : Choreography.fade;
+                    exitFade.duration = thrown && Choreography.morph ? Choreography.medium : Choreography.fade;
+                    removeAnim.start();
+                }
 
                 SequentialAnimation {
                     id: removeAnim
@@ -106,12 +122,24 @@ Item {
                         property: "z"
                         value: 1
                     }
-                    Anim {
-                        target: notif
-                        property: "x"
-                        to: (notif.x >= 0 ? Config.notifs.sizes.width : -Config.notifs.sizes.width) * 2 * (Config.notifs.align === "left" ? -1 : 1)
-                        duration: Appearance.anim.durations.medium
-                        easing.bezierCurve: Appearance.anim.curves.standard
+                    ParallelAnimation {
+                        NumberAnimation {
+                            id: exitX
+
+                            target: notif
+                            property: "x"
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Choreography.curves.exit
+                        }
+                        NumberAnimation {
+                            id: exitFade
+
+                            target: notif
+                            property: "opacity"
+                            to: 0
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Choreography.curves.exit
+                        }
                     }
                     PropertyAction {
                         target: wrapper
@@ -197,9 +225,10 @@ Item {
         Anim {}
     }
 
+    // Reflow: `settle`, instant under reduced motion and off.
     component Anim: NumberAnimation {
-        duration: Appearance.anim.durations.settle
+        duration: Choreography.settle
         easing.type: Easing.BezierSpline
-        easing.bezierCurve: Appearance.anim.curves.settle
+        easing.bezierCurve: Choreography.curves.settle
     }
 }

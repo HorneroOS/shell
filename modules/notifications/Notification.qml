@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import qs.components
 import qs.components.atmosphere
+import qs.components.motion
 import qs.components.effects
 import qs.services
 import qs.config
@@ -18,6 +19,10 @@ import QtQuick.Layouts
 // eyebrow, summary in Plex Sans, body in `inkMuted`. Only a critical
 // notification earns colour: an `alert` edge bar and an URGENT chip.
 // Enters with a 6 px travel + fade (`enter`, short); reflow settles.
+// An expiring card carries its timeout as a 2 px `signal` line on its
+// anchor (top) edge that drains toward the leading side and freezes while
+// the card is hovered or dragged (notifs.timeoutTick). How a card leaves
+// (thrown along the swipe, or a short fade) lives in Content.qml.
 StyledRect {
     id: root
 
@@ -27,6 +32,24 @@ StyledRect {
     readonly property bool critical: modelData.urgency === NotificationUrgency.Critical
     readonly property int nonAnimHeight: Math.max(cell.height, column.implicitHeight) + 24
     property bool expanded: Config.notifs.openExpanded
+
+    // Timeout line: the share of the timeout left (1 -> 0). It follows the
+    // notification's clock (Notifs.Notif.remainingMs) and only animates
+    // while this card exists and the line is shown.
+    readonly property bool tickShown: Config.notifs.timeoutTick && modelData.expires
+    property real drain: 1
+
+    function syncDrain(): void {
+        drainAnim.stop();
+        const total = Math.max(1, root.modelData.timeoutMs);
+        const left = root.modelData.remainingMs();
+        root.drain = Math.max(0, Math.min(1, left / total));
+        if (root.tickShown && !root.modelData.held && left > 0) {
+            drainAnim.from = root.drain;
+            drainAnim.duration = left;
+            drainAnim.start();
+        }
+    }
 
     color: Signal.surface(Signal.palette.panel, "notifications")
     radius: Appearance.rounding.small
@@ -42,8 +65,34 @@ StyledRect {
         x = 0;
         opacity = 1;
         modelData.lock(this);
+        syncDrain();
     }
-    Component.onDestruction: modelData.unlock(this)
+    Component.onDestruction: {
+        modelData.release(this);
+        modelData.unlock(this);
+    }
+    onTickShownChanged: syncDrain()
+
+    Connections {
+        target: root.modelData
+
+        function onHeldChanged(): void {
+            root.syncDrain();
+        }
+
+        function onTimeoutMsChanged(): void {
+            root.syncDrain();
+        }
+    }
+
+    NumberAnimation {
+        id: drainAnim
+
+        target: root
+        property: "drain"
+        to: 0
+        easing.type: Easing.Linear
+    }
 
     Behavior on x {
         Anim {
@@ -76,7 +125,25 @@ StyledRect {
         color: Signal.palette.alert
     }
 
+    // Timeout line on the anchor edge, inside the border and clear of the
+    // corner radius. With motion off it steps in quarters instead of
+    // sliding. Decorative: the card's text carries the content.
+    Rectangle {
+        readonly property real span: parent.width - root.radius * 2
+        readonly property real share: Choreography.animated ? root.drain : Math.ceil(root.drain * 4) / 4
+
+        visible: root.tickShown && share > 0
+        Accessible.ignored: true
+        x: root.radius
+        y: 1
+        width: span * share
+        height: 2
+        color: Signal.palette.signal
+    }
+
     MouseArea {
+        id: pointer
+
         property int startY
 
         anchors.fill: parent
@@ -85,25 +152,19 @@ StyledRect {
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton
         preventStealing: true
 
-        onEntered: root.modelData.timer.stop()
-        onExited: {
-            if (!pressed)
-                root.modelData.timer.start();
-        }
+        // Hovering or dragging holds the timeout (and freezes its line).
+        readonly property bool holding: containsMouse || pressed
+        onHoldingChanged: holding ? root.modelData.hold(root) : root.modelData.release(root)
 
         drag.target: parent
         drag.axis: Drag.XAxis
 
         onPressed: event => {
-            root.modelData.timer.stop();
             startY = event.y;
             if (event.button === Qt.MiddleButton)
                 root.modelData.close();
         }
         onReleased: event => {
-            if (!containsMouse)
-                root.modelData.timer.start();
-
             if (Math.abs(root.x) < Config.notifs.sizes.width * Config.notifs.clearThreshold)
                 root.x = 0;
             else

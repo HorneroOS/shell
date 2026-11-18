@@ -140,6 +140,39 @@ Item {
                         }
 
                         SwitchRow {
+                            label: qsTr("Timeout line")
+                            checked: Config.notifs.timeoutTick
+                            onToggled: checked => {
+                                Config.notifs.timeoutTick = checked;
+                                Config.save();
+                            }
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Appearance.spacing.small
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: qsTr("A thin amber line on each popup that runs down with its timeout and stops while you point at the card. Urgent notifications stay until you dismiss them, so they have none.")
+                                color: Signal.palette.inkMuted
+                                font.pointSize: Appearance.font.size.small
+                                wrapMode: Text.WordWrap
+                            }
+
+                            TextButton {
+                                text: qsTr("Reset")
+                                type: TextButton.Text
+                                visible: !Config.notifs.timeoutTick
+                                Accessible.name: qsTr("Reset %1 to default").arg(qsTr("Timeout line"))
+                                onClicked: {
+                                    Config.notifs.timeoutTick = true;
+                                    Config.save();
+                                }
+                            }
+                        }
+
+                        SwitchRow {
                             label: qsTr("Open on click")
                             checked: Config.notifs.actionOnClick
                             onToggled: checked => {

@@ -269,11 +269,44 @@ Singleton {
         property bool hasActionIcons
         property list<var> actions
 
+        // Popup timeout. One clock per notification, shared by every
+        // screen's card: hold() pauses it while a card is hovered or
+        // dragged, release() resumes from where it stopped (the card's
+        // timeout line freezes and resumes with it). Critical
+        // notifications never expire (they stay until dismissed).
+        readonly property int timeoutMs: expireTimeout > 0 ? expireTimeout : Config.notifs.defaultExpireTimeout
+        readonly property bool expires: Config.notifs.expire && urgency !== NotificationUrgency.Critical
+        property bool held: false
+        property real leftMs: timeoutMs
+        property real resumedAt: Date.now()
+        property var holds: new Set()
+
+        function remainingMs(): real {
+            return held ? leftMs : Math.max(0, leftMs - (Date.now() - resumedAt));
+        }
+
+        function hold(item: Item): void {
+            holds.add(item);
+            if (!held) {
+                leftMs = remainingMs();
+                held = true;
+            }
+        }
+
+        function release(item: Item): void {
+            holds.delete(item);
+            if (holds.size === 0 && held) {
+                resumedAt = Date.now();
+                held = false;
+            }
+        }
+
         readonly property Timer timer: Timer {
-            running: true
-            interval: notif.expireTimeout > 0 ? notif.expireTimeout : Config.notifs.defaultExpireTimeout
+            running: !notif.held
+            interval: Math.max(1, notif.leftMs)
             onTriggered: {
-                if (Config.notifs.expire)
+                notif.leftMs = 0;
+                if (notif.expires)
                     notif.popup = false;
             }
         }

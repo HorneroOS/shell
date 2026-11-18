@@ -406,6 +406,28 @@ QtObject {
         return getByIndex(getIndexByLabel(label));
     }
 
+    // Resolve an IPC/deep-link name to {pane, section}. A pane id maps to
+    // itself; a search target (`chromatic`, `themes`, ...) maps to the pane
+    // that hosts it plus the section to reveal (shell#653). null when the
+    // name is neither.
+    function resolveTarget(id: string): var {
+        const pane = getById(id);
+        if (pane)
+            return {
+                pane: pane.id,
+                section: ""
+            };
+        for (let i = 0; i < searchTargets.length; i++) {
+            const target = searchTargets[i];
+            if (target.id === id && getById(target.pane))
+                return {
+                    pane: target.pane,
+                    section: target.section
+                };
+        }
+        return null;
+    }
+
     function getById(id: string): QtObject {
         for (let i = 0; i < panes.length; i++) {
             if (panes[i].id === id)

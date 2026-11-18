@@ -123,7 +123,7 @@ def test_sounds_are_off_by_default_and_wired():
     assert set(s["events"]) == {"notification", "battery", "charger"}
     svc = (ROOT / "services" / "Sounds.qml").read_text()
     assert "pw-play" in svc and "Config.sounds.enabled" in svc
-    assert "replace(/[^A-Za-z0-9_.-]/g" in svc, "theme name is sanitised before building a path"
+    assert "Model.candidates(Config.sounds.theme" in svc, "theme name goes through sounds.js cleanTheme"
     assert 'Sounds.play("notification"' in (ROOT / "services" / "Notifs.qml").read_text()
     bat = (ROOT / "modules" / "BatteryMonitor.qml").read_text()
     assert 'Sounds.play("battery"' in bat and 'Sounds.play("charger"' in bat

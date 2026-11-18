@@ -9,6 +9,9 @@ JsonObject {
     property real volume: 0.5
     // Directory name under /usr/share/sounds (freedesktop is the standard theme).
     property string theme: "freedesktop"
+    // Chime even when an app names its own sound (sound-name / sound-file
+    // hints); off by default so apps that play their own are not doubled.
+    property bool alwaysChime: false
     property Events events: Events {}
 
     component Events: JsonObject {

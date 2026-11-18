@@ -693,6 +693,7 @@ Singleton {
             enabled: sounds.enabled,
             volume: sounds.volume,
             theme: sounds.theme,
+            alwaysChime: sounds.alwaysChime,
             events: {
                 notification: sounds.events.notification,
                 battery: sounds.events.battery,

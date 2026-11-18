@@ -206,6 +206,43 @@ Item {
                     paneId: "system"
                 }
 
+                // ── Language (docs/I18N.md) ──────────────────────────────────
+                ChannelPanel {
+                    title: qsTr("Language")
+                    readout: Language.activeName
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
+                        spacing: Appearance.spacing.small
+
+                        ChoiceRow {
+                            target: Config.general
+                            key: "language"
+                            label: qsTr("Shell language")
+                            defaultValue: "auto"
+                            options: Language.options
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Applies right away. Notifications and toasts already on screen keep their wording; restart the shell to refresh everything. Dates and numbers follow your system region.")
+                            color: Signal.palette.inkMuted
+                            font.pointSize: Appearance.font.size.small
+                            wrapMode: Text.WordWrap
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            visible: Language.error !== ""
+                            text: qsTr("The translation could not be loaded, so the shell stays in English: %1").arg(Language.error)
+                            color: Signal.palette.alert
+                            font.pointSize: Appearance.font.size.small
+                            wrapMode: Text.WordWrap
+                        }
+                    }
+                }
+
                 // ── Live stats ───────────────────────────────────────────────
                 ChannelPanel {
                     title: qsTr("Resources")

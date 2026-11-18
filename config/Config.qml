@@ -377,6 +377,7 @@ Singleton {
     function serializeGeneral(): var {
         return {
             logo: general.logo,
+            language: general.language,
             apps: {
                 terminal: general.apps.terminal,
                 audio: general.apps.audio,

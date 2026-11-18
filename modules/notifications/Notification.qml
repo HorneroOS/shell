@@ -257,7 +257,7 @@ StyledRect {
 
             Instruments.Eyebrow {
                 Layout.fillWidth: true
-                label: `${root.modelData.appName || qsTr("System")} · ${root.modelData.timeStr}`
+                label: (root.modelData.appName || qsTr("System")) + " · " + root.modelData.timeStr
             }
 
             Instruments.OnAirChip {

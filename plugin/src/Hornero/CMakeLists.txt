@@ -49,6 +49,7 @@ qml_module(hornero
         requests.hpp requests.cpp
         toaster.hpp toaster.cpp
         imageanalyser.hpp imageanalyser.cpp
+        translator.hpp translator.cpp
     LIBRARIES
         Qt::Gui
         Qt::Quick
@@ -61,3 +62,9 @@ add_subdirectory(Chromatic)
 add_subdirectory(Internal)
 add_subdirectory(Models)
 add_subdirectory(Services)
+
+option(HORNERO_TRANSLATOR_TESTS "Build the shell translator unit tests" ON)
+if(HORNERO_TRANSLATOR_TESTS AND EXISTS "${CMAKE_SOURCE_DIR}/tests/i18n/CMakeLists.txt")
+    enable_testing()
+    add_subdirectory("${CMAKE_SOURCE_DIR}/tests/i18n" "${CMAKE_BINARY_DIR}/tests/i18n")
+endif()

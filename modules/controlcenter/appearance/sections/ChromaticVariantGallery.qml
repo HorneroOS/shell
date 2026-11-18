@@ -35,6 +35,27 @@ ColumnLayout {
         ChromaticPreview.variantPreviewsWanted = false;
     }
 
+    // chromaticcli.js stays plain JS (node-tested): its variant labels and
+    // descriptions are marked here and shown through qsTr() (docs/I18N.md).
+    readonly property list<string> translatableVariants: [
+        QT_TR_NOOP("Balanced"),
+        QT_TR_NOOP("Signal Night or Day re-hued to the wallpaper. Quiet surfaces, one confident accent."),
+        QT_TR_NOOP("Vibrant"),
+        QT_TR_NOOP("Stronger accents and lightly tinted chrome. Best on colourful images."),
+        QT_TR_NOOP("Expressive"),
+        QT_TR_NOOP("A second accent hue from the image when it has one; more varied status colours."),
+        QT_TR_NOOP("Faithful"),
+        QT_TR_NOOP("The image's own dominant colour becomes the accent when it passes the contrast gates."),
+        QT_TR_NOOP("Muted"),
+        QT_TR_NOOP("Near-neutral chrome with soft accents. Calm; hue is a whisper."),
+        QT_TR_NOOP("Monochrome"),
+        QT_TR_NOOP("Neutral chrome and ink; accents hint at the seed hue. Status colours keep their meaning."),
+        QT_TR_NOOP("High contrast"),
+        QT_TR_NOOP("Maximum gates (7:1), deeper ground, brighter ink, no glow, no translucency. A look, not the accessibility switch."),
+        QT_TR_NOOP("Neon"),
+        QT_TR_NOOP("Dark only. Saturated complementary accents and glow. Never chosen automatically.")
+    ]
+
     readonly property var tiles: [{
             "id": "auto",
             "label": qsTr("Auto"),
@@ -75,8 +96,8 @@ ColumnLayout {
 
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                title: modelData.label
-                note: unavailable ? qsTr("No preview: this variant is not available for the current source and mode.") : modelData.description
+                title: qsTr(modelData.label)
+                note: unavailable ? qsTr("No preview: this variant is not available for the current source and mode.") : qsTr(modelData.description)
                 badge: root.resolved === modelData.id ? qsTr("in use") : ""
                 selected: root.current === modelData.id
                 tabStop: index === 0 || selected

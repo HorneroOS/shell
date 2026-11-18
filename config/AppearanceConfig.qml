@@ -103,10 +103,15 @@ JsonObject {
     component Anim: JsonObject {
         property real mediaGifSpeedAdjustment: 300
         property real sessionGifSpeed: 0.7
-        // Spatial easing personality: "smooth" (factory), "snappy" (no
-        // overshoot, quicker settle) or "bouncy" (a little more give).
+        // Spatial easing personality: "smooth" (factory, <= 4 % overshoot),
+        // "snappy" (no overshoot) or "lively" (spring-like needle settle,
+        // <= 6 % overshoot; the old "bouncy" value reads as lively).
         // Opacity and colour never overshoot in any style.
         property string curveStyle: "smooth"
+        // Leading/trailing asymmetry: the trailing edge of a travelling
+        // indicator takes this many times the leading edge's duration
+        // (1 = no stretch, 2.5 = longest). Signal visual language §11.
+        property real trailRatio: 1.6
         property AnimDurations durations: AnimDurations {}
     }
 

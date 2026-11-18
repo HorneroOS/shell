@@ -30,6 +30,7 @@
       "mediaGifSpeedAdjustment": 300,
       "sessionGifSpeed": 0.7,
       "curveStyle": "smooth",
+      "trailRatio": 1.6,
       "durations": {
         "scale": 1
       }

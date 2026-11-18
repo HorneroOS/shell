@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import qs.components
+import qs.components.motion
 import qs.components.atmosphere
 import qs.components.controls
 import qs.services
@@ -166,21 +167,20 @@ Item {
         }
     }
 
+    // Result list size is size: settle (§11 table, launcher list height).
     Behavior on implicitWidth {
         enabled: root.visibilities.launcher
 
-        Anim {
-            duration: Appearance.anim.durations.long
-            easing.bezierCurve: Appearance.anim.curves.enter
+        MotionAnim {
+            kind: "settle"
         }
     }
 
     Behavior on implicitHeight {
         enabled: root.visibilities.launcher
 
-        Anim {
-            duration: Appearance.anim.durations.long
-            easing.bezierCurve: Appearance.anim.curves.enter
+        MotionAnim {
+            kind: "settle"
         }
     }
 }

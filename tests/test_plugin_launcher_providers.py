@@ -82,6 +82,9 @@ def test_contract_is_the_established_query_result_shape():
 def test_contract_missing_skipped_with_diagnostic_not_failed():
     assert "launcher-contract-missing" in HOST
     assert "Plugins.logDiagnostic(slot.pluginId, \"launcher-contract-missing\"" in HOST
+    # The diagnostic names both accepted shapes, not only `result`.
+    line = next(l for l in HOST.splitlines() if '"launcher-contract-missing"' in l)
+    assert "'results'" in line and "'result'" in line
     # Skip path must not markFailed (that would fail other surfaces).
     body = HOST[HOST.index("if (!Providers.launcherContractOk(item))"):]
     assert "markFailed" not in body[: body.index("registerProvider")]
@@ -133,8 +136,8 @@ def test_icon_from_manifest_entry_else_generic():
 
 def test_query_bridge_sets_query_reads_result_single_row():
     assert "hosted.query = text" in HOST
-    assert "hosted.result" in HOST
-    assert "return row ? [row] : []" in HOST
+    assert "hosted)" in HOST
+    assert "Providers.launcherRows(slot.pluginId, slot.displayName, slot.icon, hosted)" in HOST
     # AppList serves plugin providers through the registry query.
     assert 'return "plugin";' in APPLIST
     assert 'name: "plugin"' in APPLIST
@@ -165,7 +168,16 @@ console.log(JSON.stringify([
 
 
 def test_activation_copies_result_text_wl_copy_like_calc():
-    assert 'Quickshell.execDetached(["wl-copy", result.payload.text])' in HOST
+    # Plugin text goes to wl-copy's stdin, never into argv: a row text
+    # such as "--clear" must not be parsed as a wl-copy option.
+    assert "root.copyText(result.payload.text)" in HOST
+    assert 'command: ["wl-copy"]' in HOST
+    assert "stdinEnabled: true" in HOST
+    assert "copier.write(copier.sending)" in HOST
+    assert "copier.stdinEnabled = false" in HOST
+    assert "import Quickshell.Io" in HOST
+    assert 'execDetached(["wl-copy"' not in HOST
+    assert '"wl-copy", result' not in HOST and '"wl-copy", text' not in HOST
     calc_item = (ROOT / "modules/launcher/items/CalcItem.qml").read_text()
     assert 'Quickshell.execDetached(["wl-copy", root.result.text])' in calc_item
     assert "list.visibilities.launcher = false" in HOST
@@ -174,6 +186,58 @@ def test_activation_copies_result_text_wl_copy_like_calc():
     # No plugin activation hook is invented anywhere.
     assert "onActivate" not in HOST and "activate(" not in (
         ROOT / "examples/plugins/example-multi-surface/Launcher.qml").read_text()
+
+
+def test_multi_row_contract_executes():
+    out = _run_js("""
+const long = "x".repeat(20000);
+const many = Array.from({length: 40}, (_, i) => ({text: "t" + i}));
+console.log(JSON.stringify([
+  launcherContractOk({query: "", results: []}),
+  launcherContractOk({query: "", results: "nope"}),
+  launcherContractOk({results: []}),
+  launcherRows("hornero-stowaway", "Stowaway", "puzzle", {query: "", result: {ok: true, text: "5"}}).length,
+  launcherRows("p", "P", "puzzle", {results: [
+      {text: "a\\nb  c", glyph: "clipboard", subtitle: "s"},
+      {text: "emoji", title: "T"},
+      {text: ""}, {text: 5}, null, "x", {title: "no text"}]}),
+  launcherRows("p", "P", "puzzle", {results: many}).length,
+  launcherRows("p", "P", "puzzle", {results: [{text: long}]})[0].payload.text.length,
+  launcherRows("p", "P", "puzzle", {results: [{text: long}]})[0].title.length,
+  launcherRows("p", "P", "puzzle", {result: {ok: false, text: "Error"}, results: []}),
+  launcherRows("p", "P", "puzzle", null)
+]));""")
+    assert out[0] is True and out[1] is False and out[2] is False
+    assert out[3] == 1  # single-result form unchanged
+    rows = out[4]
+    assert [r["title"] for r in rows] == ["a b c", "T"]
+    assert rows[0]["icon"] == "clipboard" and rows[0]["subtitle"] == "s"
+    assert rows[1]["icon"] == "puzzle" and rows[1]["subtitle"] == "P"
+    assert rows[0]["payload"] == {"ok": True, "text": "a\nb  c"}  # copy keeps the real text
+    assert out[5] == 24  # bounded
+    assert out[6] == 16384 and out[7] == 200
+    assert out[8] == [] and out[9] == []
+
+
+def test_multi_row_accepts_qml_array_likes():
+    # QML list<var>/QVariantList properties reach JS as array-likes that
+    # fail Array.isArray; they must still count as `results`.
+    out = _run_js("""
+const arrayLike = {length: 2, 0: {text: "one"}, 1: {text: "two", title: "Two"}};
+console.log(JSON.stringify([
+  launcherContractOk({query: "", results: arrayLike}),
+  launcherRows("p", "P", "puzzle", {query: "", results: arrayLike}).map(r => r.title),
+  launcherContractOk({query: "", results: {length: 0}}),
+  launcherRows("p", "P", "puzzle", {query: "", results: {length: 0}, result: {ok: true, text: "x"}}),
+  launcherContractOk({query: "", results: "abc"}),
+  launcherRows("p", "P", "puzzle", {query: "", results: "abc", result: {ok: true, text: "x"}}).length,
+  launcherContractOk({query: "", results: {length: "2"}})
+]));""")
+    assert out[0] is True
+    assert out[1] == ["one", "Two"]
+    assert out[2] is True and out[3] == []  # empty list wins over result
+    assert out[4] is False and out[5] == 1  # a string is not a list
+    assert out[6] is False
 
 
 # --- Fault isolation -------------------------------------------------------
@@ -217,6 +281,7 @@ def test_docs_describe_hosted_launcher_contract():
                    "wl-copy", "no row", "builtinsRegistered"):
         assert needle in DOCS_LAUNCHER, needle
     assert "unsandboxed" in DOCS_LAUNCHER and "unsandboxed" in DOCS_PLUGINS
+    assert "`results`" in DOCS_LAUNCHER and "`results`" in DOCS_PLUGINS
 
 
 # --- Regressions -------------------------------------------------------------

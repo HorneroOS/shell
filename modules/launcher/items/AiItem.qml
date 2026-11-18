@@ -13,7 +13,7 @@ Item {
     id: root
 
     required property var list
-    readonly property string lang: AssistantCopy.lang(Qt.locale().name)
+    readonly property string lang: AssistantCopy.lang(Language.uiLocale)
     // The quick ask is shared with Javi Radio: only a hand-off of a run
     // the launcher started is offered here.
     // Everything this row shows or stops is the launcher's own run; a

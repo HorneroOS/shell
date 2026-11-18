@@ -324,7 +324,7 @@ Item {
                 }
 
                 ChannelPanel {
-                    title: qsTr("Focus")
+                    title: qsTr("Focus", "window focus")
 
                     ColumnLayout {
                         id: focusCol

@@ -1,0 +1,3 @@
+# es_AR messages allowed to stay untranslated: one "Context|source" per line.
+# Keep it empty; tests/test_i18n_catalog.py fails on new untranslated strings
+# and on entries here that are translated or gone (docs/I18N.md).

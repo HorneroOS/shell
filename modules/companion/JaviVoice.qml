@@ -1,6 +1,7 @@
 pragma Singleton
 
 import "javivoice.js" as Voice
+import qs.services
 import Quickshell
 import QtQuick
 
@@ -13,7 +14,7 @@ import QtQuick
 Singleton {
     id: root
 
-    property string localeName: Qt.locale().name
+    property string localeName: Language.uiLocale
     readonly property var settings: CompanionStore.voiceSettings
     readonly property string language: Voice.resolveLanguage(root.settings, root.localeName)
 

@@ -70,6 +70,26 @@ Item {
         return root.presetGlyphs[p.name] ?? "layout-dashboard";
     }
 
+    // Edge names and bar names as whole phrases, so each language can word
+    // them naturally (docs/I18N.md).
+    function edgeName(edge: string): string {
+        return ({
+                top: qsTr("top", "screen edge"),
+                bottom: qsTr("bottom", "screen edge"),
+                left: qsTr("left", "screen edge"),
+                right: qsTr("right", "screen edge")
+            })[edge] ?? edge;
+    }
+
+    function barName(edge: string): string {
+        return ({
+                top: qsTr("Top bar"),
+                bottom: qsTr("Bottom bar"),
+                left: qsTr("Left rail"),
+                right: qsTr("Right rail")
+            })[edge] ?? qsTr("%1 bar").arg(edge);
+    }
+
     // Human topology summary for a card ("Two bars · top + bottom").
     function topologyLabel(p: var): string {
         const bars = Array.from(p.bars ?? []);
@@ -78,21 +98,19 @@ Item {
             const edge = p.position ?? p.edge;
             if (!edge)
                 return qsTr("Topology preview unavailable");
-            return qsTr("%1 bar").arg(cap(edge));
+            return root.barName(edge);
         }
         const clear = bars.every(b => b.backdrop === "clear") ? qsTr(" · clear") : bars.some(b => b.backdrop === "clear") ? qsTr(" · mixed") : "";
         if (bars.length > 1)
-            return cap(bars.map(b => b.edge).join(" + ")) + clear;
+            return cap(bars.map(b => root.edgeName(b.edge)).join(" + ")) + clear;
         const b = bars[0];
-        if (b.edge === "left" || b.edge === "right")
-            return qsTr("%1 rail").arg(cap(b.edge)) + clear;
         if (b.style === "dock")
-            return qsTr("Dock · %1").arg(b.edge) + clear;
+            return qsTr("Dock · %1").arg(root.edgeName(b.edge)) + clear;
         if (b.style === "islands")
-            return qsTr("Islands · %1").arg(b.edge) + clear;
+            return qsTr("Islands · %1").arg(root.edgeName(b.edge)) + clear;
         if (b.style === "floating")
-            return qsTr("Floating · %1").arg(b.edge) + clear;
-        return qsTr("%1 bar").arg(cap(b.edge)) + clear;
+            return qsTr("Floating · %1").arg(root.edgeName(b.edge)) + clear;
+        return root.barName(b.edge) + clear;
     }
 
     implicitWidth: grid.implicitWidth

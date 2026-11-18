@@ -190,7 +190,12 @@ ColumnLayout {
         border.width: 1
         border.color: Signal.palette.rule
         Accessible.role: Accessible.Graphic
-        Accessible.name: qsTr("Preview of the %1, %2 px thick").arg(root.bar?.edge ?? "").arg(root.bar?.thickness ?? 0)
+        Accessible.name: qsTr("Preview of the %1 bar, %2 px thick").arg(({
+                top: qsTr("top", "screen edge"),
+                bottom: qsTr("bottom", "screen edge"),
+                left: qsTr("left", "screen edge"),
+                right: qsTr("right", "screen edge")
+            })[root.bar?.edge ?? ""] ?? (root.bar?.edge ?? "")).arg(root.bar?.thickness ?? 0)
 
         Rectangle {
             readonly property string edge: root.bar?.edge ?? "top"

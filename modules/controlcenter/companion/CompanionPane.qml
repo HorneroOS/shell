@@ -581,7 +581,7 @@ Item {
                                 delegate: TextButton {
                                     required property string modelData
 
-                                    text: AssistantCopy.t("mode." + modelData, AssistantCopy.lang(Qt.locale().name))
+                                    text: AssistantCopy.t("mode." + modelData, AssistantCopy.lang(Language.uiLocale))
                                     toggle: true
                                     checked: CompanionStore.chatMode === modelData
                                     type: TextButton.Tonal
@@ -592,7 +592,7 @@ Item {
 
                         StyledText {
                             Layout.fillWidth: true
-                            text: AssistantCopy.t("mode." + CompanionStore.chatMode + ".hint", AssistantCopy.lang(Qt.locale().name))
+                            text: AssistantCopy.t("mode." + CompanionStore.chatMode + ".hint", AssistantCopy.lang(Language.uiLocale))
                             font.pointSize: Appearance.font.size.smaller
                             color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap

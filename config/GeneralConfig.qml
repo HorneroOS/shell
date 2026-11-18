@@ -2,6 +2,10 @@ import Quickshell.Io
 
 JsonObject {
     property string logo: ""
+    // Shell UI language: "auto" follows the system (LANGUAGE/LC_MESSAGES/
+    // LANG), "en" forces English, "es_AR" forces Argentine Spanish.
+    // See docs/I18N.md and services/Language.qml.
+    property string language: "auto"
     property Apps apps: Apps {}
     property Idle idle: Idle {}
     property Battery battery: Battery {}

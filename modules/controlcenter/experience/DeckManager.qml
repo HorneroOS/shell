@@ -174,7 +174,7 @@ ColumnLayout {
             delegate: TextButton {
                 required property var modelData
 
-                text: modelData.label
+                text: qsTr(modelData.label)
                 type: TextButton.Tonal
                 onClicked: root.report(Experience.applyDeckBuiltin(root.mode, modelData.id))
             }
@@ -316,7 +316,7 @@ ColumnLayout {
 
                         StyledText {
                             Layout.fillWidth: true
-                            text: card.item?.label ?? card.label
+                            text: qsTr(card.item?.label ?? card.label)
                             elide: Text.ElideRight
                         }
 

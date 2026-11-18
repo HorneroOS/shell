@@ -11,6 +11,12 @@
 #
 # Usage: HORNERO_DISPOSABLE_SESSION=1 ./scripts/perf-signal-deck.sh
 #          [--samples N] [--interval S] [--settle S] [--modes a,b,c] [--out FILE]
+#          [--max-cpu PCT]
+#
+# --max-cpu PCT is the idle budget (shell#651): the run exits 1 when any
+# measured mode's median CPU exceeds PCT percent of one core. Run it on an
+# empty workspace with no popouts; windows that cover the desktop make a
+# mode look cheaper than it is.
 set -euo pipefail
 
 SAMPLES=6
@@ -18,6 +24,7 @@ INTERVAL=2
 SETTLE=8
 MODES="everyday,signal,gaming"
 OUT=""
+MAX_CPU=""
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 while [ $# -gt 0 ]; do
@@ -27,6 +34,7 @@ while [ $# -gt 0 ]; do
         --settle) SETTLE="$2"; shift 2 ;;
         --modes) MODES="$2"; shift 2 ;;
         --out) OUT="$2"; shift 2 ;;
+        --max-cpu) MAX_CPU="$2"; shift 2 ;;
         *) echo "unknown flag: $1" >&2; exit 2 ;;
     esac
 done
@@ -54,7 +62,7 @@ for mode in "${LIST[@]}"; do
     "${HERE}/perf-baseline.sh" --samples "${SAMPLES}" --interval "${INTERVAL}" --format json --out "${TMP}/${mode}.json" >/dev/null
 done
 
-REPORT="$(MODES="${MODES}" TMP="${TMP}" python3 - <<'PY'
+REPORT="$(MODES="${MODES}" TMP="${TMP}" MAX_CPU="${MAX_CPU}" python3 - <<'PY'
 import json, os, statistics
 rows = []
 for mode in os.environ["MODES"].split(","):
@@ -67,7 +75,14 @@ for mode in os.environ["MODES"].split(","):
 print(f"{'mode':<10} {'cpu% med':>9} {'cpu% max':>9} {'rss MiB':>9} {'layers':>7}")
 for mode, med, mx, rss, layers in rows:
     print(f"{mode:<10} {med:>9.2f} {mx:>9.2f} {rss:>9.1f} {('n/a' if layers is None else int(layers)):>7}")
+budget = os.environ.get("MAX_CPU", "")
+if budget:
+    over = [(m, med) for m, med, *_ in rows if med > float(budget)]
+    for m, med in over:
+        print(f"OVER BUDGET: {m} median {med:.2f}% > {float(budget):g}%")
+    print("budget " + ("FAILED" if over else "ok") + f" (median CPU <= {float(budget):g}% of one core)")
 PY
 )"
 printf '%s\n' "${REPORT}"
 if [ -n "${OUT}" ]; then printf '%s\n' "${REPORT}" >"${OUT}"; fi
+case "${REPORT}" in *"budget FAILED"*) exit 1 ;; esac

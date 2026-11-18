@@ -141,6 +141,44 @@ SectionContainer {
         SliderInput {
             Layout.fillWidth: true
 
+            label: qsTr("Sensor update interval")
+            value: root.rootItem.sensorInterval
+            from: 500
+            to: 30000
+            stepSize: 500
+            suffix: "ms"
+            validator: IntValidator { bottom: 500; top: 30000 }
+            formatValueFunction: (val) => Math.round(val).toString()
+            parseValueFunction: (text) => parseInt(text)
+
+            onValueModified: (newValue) => {
+                root.rootItem.sensorInterval = Math.round(newValue);
+                root.rootItem.saveConfig();
+            }
+        }
+
+        SliderInput {
+            Layout.fillWidth: true
+
+            label: qsTr("Disk usage update interval")
+            value: root.rootItem.diskInterval
+            from: 1000
+            to: 300000
+            stepSize: 1000
+            suffix: "ms"
+            validator: IntValidator { bottom: 1000; top: 300000 }
+            formatValueFunction: (val) => Math.round(val).toString()
+            parseValueFunction: (text) => parseInt(text)
+
+            onValueModified: (newValue) => {
+                root.rootItem.diskInterval = Math.round(newValue);
+                root.rootItem.saveConfig();
+            }
+        }
+
+        SliderInput {
+            Layout.fillWidth: true
+
             label: qsTr("Drag threshold")
             value: root.rootItem.dragThreshold
             from: 0

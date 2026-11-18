@@ -415,6 +415,8 @@
     "showOnHover": true,
     "mediaUpdateInterval": 500,
     "resourceUpdateInterval": 1000,
+    "sensorUpdateInterval": 2000,
+    "diskUpdateInterval": 30000,
     "dragThreshold": 50,
     "performance": {
       "showBattery": true,

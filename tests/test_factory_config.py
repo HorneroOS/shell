@@ -255,6 +255,8 @@ def test_factory_values_match_code_defaults():
         ("dashboard.dragThreshold", 50),
         ("dashboard.mediaUpdateInterval", 500),
         ("dashboard.resourceUpdateInterval", 1000),
+        ("dashboard.sensorUpdateInterval", 2000),
+        ("dashboard.diskUpdateInterval", 30000),
         ("dashboard.workspaces.maxAppIcons", 4),
         ("dashboard.workspaces.previewHeight", 200),
         ("dashboard.performance.showGpu", True),

@@ -207,7 +207,7 @@ Item {
 
 | Domain | Facade | Mode | Refresh |
 | --- | --- | --- | --- |
-| `system` | `System`, `Telemetry` | polling | one shared timer while referenced: `/proc` reads at the experience cadence (1 Hz everyday, 2 Hz `signal`); `sensors`/GPU/`lsblk` probes at `dashboard.resourceUpdateInterval` (default 1000 ms) |
+| `system` | `System`, `Telemetry` | polling | one shared timer while referenced: `/proc` reads at the experience cadence (1 Hz everyday, 2 Hz `signal`); `sensors`/GPU probes at `dashboard.sensorUpdateInterval` (default 2000 ms) and `lsblk` at `dashboard.diskUpdateInterval` (default 30000 ms), never faster than the cadence |
 | `network` | `Network`, `Telemetry` | polling | one shared `/proc/net/dev` read at the experience cadence |
 | `spectrum` | `Audio.spectrum` | stream | the shared PipeWire visualiser, running only while a lease is held |
 | `weather` | `Weather` | cached | one shared fetch per configured location; refreshed hourly |

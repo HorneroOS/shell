@@ -23,6 +23,7 @@ Singleton {
     property alias winfo: adapter.winfo
     property alias lock: adapter.lock
     property alias utilities: adapter.utilities
+    property alias sounds: adapter.sounds
     property alias sidebar: adapter.sidebar
     property alias services: adapter.services
     property alias paths: adapter.paths
@@ -265,6 +266,7 @@ Singleton {
             winfo: serializeWinfo(),
             lock: serializeLock(),
             utilities: serializeUtilities(),
+            sounds: serializeSounds(),
             sidebar: serializeSidebar(),
             services: serializeServices(),
             paths: serializePaths(),
@@ -690,6 +692,20 @@ Singleton {
         };
     }
 
+    function serializeSounds(): var {
+        return {
+            enabled: sounds.enabled,
+            volume: sounds.volume,
+            theme: sounds.theme,
+            alwaysChime: sounds.alwaysChime,
+            events: {
+                notification: sounds.events.notification,
+                battery: sounds.events.battery,
+                charger: sounds.events.charger
+            }
+        };
+    }
+
     function serializeUtilities(): var {
         return {
             enabled: utilities.enabled,
@@ -845,6 +861,7 @@ Singleton {
             property WInfoConfig winfo: WInfoConfig {}
             property LockConfig lock: LockConfig {}
             property UtilitiesConfig utilities: UtilitiesConfig {}
+            property SoundsConfig sounds: SoundsConfig {}
             property SidebarConfig sidebar: SidebarConfig {}
             property ServiceConfig services: ServiceConfig {}
             property UserPaths paths: UserPaths {}

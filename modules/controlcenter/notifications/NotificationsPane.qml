@@ -268,6 +268,8 @@ Item {
                     }
                 }
 
+                SoundsPanel {}
+
                 // ── Lock screen ────────────────────────────────────────────
                 ChannelPanel {
                     title: qsTr("Lock screen")

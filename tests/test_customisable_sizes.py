@@ -116,3 +116,19 @@ def test_placement_choices_default_to_factory_and_are_consumed():
         assert f"target: {target}" in qml and 'key: "align"' in qml and 'defaultValue: "center"' in qml
         for o in opts:
             assert f'id: "{o}"' in qml
+
+def test_sounds_are_off_by_default_and_wired():
+    s = FACTORY["sounds"]
+    assert s["enabled"] is False and s["theme"] == "freedesktop" and s["volume"] == 0.5
+    assert set(s["events"]) == {"notification", "battery", "charger"}
+    svc = (ROOT / "services" / "Sounds.qml").read_text()
+    assert "pw-play" in svc and "Config.sounds.enabled" in svc
+    assert "Model.candidates(Config.sounds.theme" in svc, "theme name goes through sounds.js cleanTheme"
+    assert 'Sounds.play("notification"' in (ROOT / "services" / "Notifs.qml").read_text()
+    bat = (ROOT / "modules" / "BatteryMonitor.qml").read_text()
+    assert 'Sounds.play("battery"' in bat and 'Sounds.play("charger"' in bat
+    for ev in s["events"]:
+        assert f'"{ev}"' in svc, ev
+    panel = (CC / "notifications" / "SoundsPanel.qml").read_text()
+    assert "SoundsPanel {}" in (CC / "notifications" / "NotificationsPane.qml").read_text()
+    assert "Config.sounds.enabled" in panel and "defaultValue: 0.5" in panel

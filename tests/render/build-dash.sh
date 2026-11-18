@@ -16,7 +16,7 @@ t = re.sub(r"readonly property MprisPlayer active: .*",
            '    property QtObject fake: QtObject { property string identity: "Radio Hornero"; property string trackTitle: "Pájaro de barro"; '
            'property string trackArtist: "Los Teleros"; property string trackArtUrl: ""; property bool isPlaying: true; '
            'property real length: 302; property real position: 194; property bool canGoNext: true; property bool canGoPrevious: true; '
-           'property bool canTogglePlaying: true; signal postTrackChanged(); function positionChanged() {} }', t)
+           'property bool canTogglePlaying: true; signal postTrackChanged() }', t)
 t = t.replace("function getIdentity(player: MprisPlayer): string {", "function getIdentity(player): string {")
 p.write_text(t)
 p = d / "modules/dashboard/dash/Media.qml"; t = p.read_text()

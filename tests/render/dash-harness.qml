@@ -61,11 +61,20 @@ ShellRoot {
             running: true
             onTriggered: {
                 const frames = [];
-                for (let i = 0; i < dash.children.length; i++) {
-                    const c = dash.children[i];
-                    if (c.visible && c.width > 0 && c.title !== undefined)
-                        frames.push({ title: c.title, channel: c.channel, x: c.x, y: c.y, w: c.width, h: c.height });
-                }
+                const walk = (item, depth) => {
+                    for (let i = 0; i < item.children.length; i++) {
+                        const c = item.children[i];
+                        if (!c.visible || c.width <= 0)
+                            continue;
+                        if (c.channel !== undefined && c.headerHeight !== undefined) {
+                            const p = c.mapToItem(dash, 0, 0);
+                            frames.push({ title: c.title, channel: c.channel, x: p.x, y: p.y, w: c.width, h: c.height });
+                        } else if (depth < 4) {
+                            walk(c, depth + 1);
+                        }
+                    }
+                };
+                walk(dash, 0);
                 console.log("DASHPROBE " + JSON.stringify({ w: dash.width, h: dash.height, frames: frames }));
                 stage.grabToImage(r => {
                     r.saveToFile(Quickshell.env("HOUT"));

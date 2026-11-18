@@ -20,7 +20,7 @@ RENDER = ROOT / "tests" / "render"
 PLUGIN = os.environ.get("HORNERO_PLUGIN_QML", "")
 
 pytestmark = pytest.mark.skipif(
-    not PLUGIN or not Path(PLUGIN, "Hornero/Internal").is_dir()
+    not PLUGIN or not Path(PLUGIN.split(":")[0], "Hornero/Internal").is_dir()
     or shutil.which("qs") is None or shutil.which("dbus-run-session") is None or shutil.which("rsync") is None,
     reason="needs HORNERO_PLUGIN_QML (plugin build), quickshell, dbus-run-session and rsync",
 )

@@ -98,7 +98,7 @@ def test_pane_exposes_both_controls_and_resets_them():
 def test_bar_wires_the_island_size_into_every_island():
     bar = (ROOT / "modules/bar/Bar.qml").read_text(encoding="utf-8")
     assert "Density.chip(pillThickness)" in bar
-    assert bar.count("cross: root.islandCross") == 4
+    assert bar.count("cross: root.islandCross") == 5
     for name in ("Tray", "StatusIcons", "ExtensionsIsland", "workspaces/Workspaces"):
         src = (ROOT / "modules/bar/components" / f"{name}.qml").read_text(encoding="utf-8")
         assert "property int cross: Density.inner" in src, name

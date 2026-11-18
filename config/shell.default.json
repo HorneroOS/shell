@@ -39,6 +39,10 @@
       "intensity": 1,
       "limit": 3
     },
+    "sliders": {
+      "readout": true,
+      "readoutHold": 900
+    },
     "atmosphere": {
       "enabled": true,
       "lamp": 0.8,

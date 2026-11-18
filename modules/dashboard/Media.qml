@@ -256,6 +256,7 @@ Item {
                         threshold: 2
                         stepSize: 0.02
                         accessibleName: qsTr("Playback position")
+                        valueText: root.timecode(seek.value * (root.player?.length ?? 0))
                         enabled: root.timed && (root.player.canSeek ?? false) && (root.player.positionSupported ?? false)
                         value: root.progress
                         onMoved: v => {
@@ -275,6 +276,7 @@ Item {
                                 return;
 
                             event.accepted = true;
+                            seek.nudge();
                             const delta = event.angleDelta.y > 0 ? 10 : -10;
                             Qt.callLater(() => {
                                 active.position = Math.max(0, Math.min(active.length, active.position + delta));

@@ -50,6 +50,8 @@ Item {
             Instruments.SegmentSlider {
                 anchors.fill: parent
                 accessibleName: qsTr("Volume")
+                glyph: Icons.getVolumeIcon(root.volume, root.muted)
+                readoutOnChange: true
                 value: root.volume
                 to: Config.services.maxVolume
                 threshold: 1 / Config.services.maxVolume
@@ -72,6 +74,8 @@ Item {
             Instruments.SegmentSlider {
                 anchors.fill: parent
                 accessibleName: qsTr("Microphone volume")
+                glyph: Icons.getMicVolumeIcon(root.sourceVolume, root.sourceMuted)
+                readoutOnChange: true
                 value: root.sourceVolume
                 to: Config.services.maxVolume
                 threshold: 1 / Config.services.maxVolume
@@ -98,6 +102,8 @@ Item {
             Instruments.SegmentSlider {
                 anchors.fill: parent
                 accessibleName: qsTr("Brightness")
+                glyph: root.brightness < 0.34 ? "brightness-down" : root.brightness < 0.67 ? "brightness-half" : "brightness-up"
+                readoutOnChange: true
                 count: 20
                 value: root.brightness
                 onMoved: v => root.monitor?.setBrightness(v)

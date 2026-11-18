@@ -20,6 +20,7 @@ JsonObject {
     property Anim anim: Anim {}
     property Transparency transparency: Transparency {}
     property Glow glow: Glow {}
+    property Sliders sliders: Sliders {}
     property Atmosphere atmosphere: Atmosphere {}
     // Hornero Chromatic preferences (RFC 0002 §8.3). Active only while
     // `theme` is "hornero-chromatic"; horneroctl reads these, the shell
@@ -170,6 +171,15 @@ JsonObject {
     // 1.5). Whether glow appears at all is still decided by the experience
     // mode and the glow budget (visual language section 9); this only scales
     // the alpha of the glows that are allowed.
+    // Segmented sliders (OSD channels, media seek): while you drag, scroll
+    // or step one, its handle shows the value in Plex Mono; at rest it
+    // shows a glyph. `readoutHold` is how long the value stays after the
+    // last scroll or key step (ms).
+    component Sliders: JsonObject {
+        property bool readout: true
+        property int readoutHold: 900
+    }
+
     component Glow: JsonObject {
         property real intensity: 1
         // How many glowing items may show at once (visual language section 9

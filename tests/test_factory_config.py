@@ -189,6 +189,8 @@ def test_factory_values_match_code_defaults():
         # appearance (AppearanceConfig.qml)
         ("appearance.theme", "hornero-signal-night"),
         ("appearance.reducedMotion", False),
+        ("appearance.sliders.readout", True),
+        ("appearance.sliders.readoutHold", 900),
         ("appearance.rounding.scale", 1),
         ("appearance.font.family.sans", "IBM Plex Sans"),
         ("appearance.font.family.mono", "IBM Plex Mono"),

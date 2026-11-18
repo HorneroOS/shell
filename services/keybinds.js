@@ -134,8 +134,22 @@ function normalise(raw) {
             dispatcher: String(e.dispatcher || ""),
             remapped: e.remapped === true,
             mouse: e.mouse === true || String(e.combo || "").indexOf("mouse") >= 0,
-            keys: splitCombo(e.combo)
+            keys: splitCombo(e.combo),
+            shared: 1
         });
+    }
+    // Hyprland fires every bind on a combo; name the combos that carry
+    // more than one global bind so the overlay can flag them.
+    var counts = {};
+    for (var j = 0; j < out.length; j++) {
+        if (out[j].submap === "") {
+            var c = canonical(out[j].combo);
+            counts[c] = (counts[c] || 0) + 1;
+        }
+    }
+    for (var k = 0; k < out.length; k++) {
+        if (out[k].submap === "")
+            out[k].shared = counts[canonical(out[k].combo)];
     }
     return out;
 }

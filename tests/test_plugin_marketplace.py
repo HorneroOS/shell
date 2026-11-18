@@ -182,9 +182,9 @@ def test_preview_never_executes_plugin_code():
     assert "AnimatedImage" not in PANE
     assert "screenshotSources" in PANE and "Plugins.pluginsDir" in PANE
     # The pane gains no new process/write path for previews.
-    assert PANE.count("catalogInstallProc.command =") == 1
-    assert PANE.count("lifecycleProc.command =") == 1
-    assert PANE.count("catalogProc.command =") == 1
+    store = (ROOT / "services/ExtensionStore.qml").read_text()
+    assert "Process {" not in PANE
+    assert store.count("Process {") == 2  # catalogue read + one verb at a time
 
 
 def test_pane_marketplace_ux_contract():
@@ -216,8 +216,10 @@ def test_rollback_stays_on_verified_provenance_only():
     assert "rollback_available" in PANE
     assert 'runCatalogAction("rollback", catRow.modelData.id)' in PANE
     runner = PANE.split("function runCatalogAction", 1)[1].split("function runLifecycle", 1)[0]
-    assert 'action === "install" || action === "update"' in runner
     assert "marketplace" not in runner and "deprecat" not in runner
+    lib = (ROOT / "services/extensionstore.js").read_text()
+    build = lib.split("function commandFor", 1)[1].split("function progressText", 1)[0]
+    assert 'verb !== "rollback"' in build  # rollback never takes a --revision
 
 
 def test_docs_describe_marketplace():

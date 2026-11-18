@@ -5372,6 +5372,13 @@ Huella de la clave del autor: %3</translation>
     </message>
 </context>
 <context>
+    <name>ExtensionStore</name>
+    <message>
+        <source>Catalogue unavailable (network or horneroctl).</source>
+        <translation>Catálogo no disponible (red o horneroctl).</translation>
+    </message>
+</context>
+<context>
     <name>ExtensionsIsland</name>
     <message>
         <source>Extensions</source>
@@ -5593,28 +5600,8 @@ Ajustes que guarda: %5</translation>
         <translation>Las declaraciones son datos para revisar, no permisos que se apliquen: el QML activado igual corre como tu usuario y sin sandbox.</translation>
     </message>
     <message>
-        <source>Plugin action failed (exit %1).</source>
-        <translation>Falló la acción del plugin (código %1).</translation>
-    </message>
-    <message>
-        <source>Catalogue unavailable (network or horneroctl).</source>
-        <translation>El catálogo no está disponible (red o horneroctl).</translation>
-    </message>
-    <message>
-        <source>Catalogue action completed.</source>
-        <translation>La acción del catálogo terminó.</translation>
-    </message>
-    <message>
         <source>Catalogue revision: %1</source>
         <translation>Revisión del catálogo: %1</translation>
-    </message>
-    <message>
-        <source>Payload SHA-256: %1</source>
-        <translation>SHA-256 del contenido: %1</translation>
-    </message>
-    <message>
-        <source>Install failed.</source>
-        <translation>No se pudo instalar.</translation>
     </message>
     <message>
         <source>Every enabled QML plugin runs as your user without a sandbox. Command and network declarations come from each plugin&apos;s manifest and are not enforced permissions. Review a plugin&apos;s source before enabling it. Extensions built for PluginKit 1 or 2 are refused until they are ported to PluginKit 3 (Hornero Signal).</source>
@@ -5651,10 +5638,6 @@ Ajustes que guarda: %5</translation>
     <message>
         <source>Hidden, no room on the desktop: %1. Move or resize other widgets (Edit widgets) to bring them back.</source>
         <translation>Oculto, no hay lugar en el escritorio: %1. Mové o cambiá el tamaño de otros widgets (Editar widgets) para que vuelvan a aparecer.</translation>
-    </message>
-    <message>
-        <source>No plugins installed. Add one with: horneroctl plugin install &lt;path&gt;</source>
-        <translation>No hay plugins instalados. Agregá uno con: horneroctl plugin install &lt;path&gt;</translation>
     </message>
     <message>
         <source>Search installed plugins</source>
@@ -5695,6 +5678,10 @@ Ajustes que guarda: %5</translation>
     <message>
         <source>Trust: %1</source>
         <translation>Confianza: %1</translation>
+    </message>
+    <message>
+        <source>Measured load time: %1 ms</source>
+        <translation>Tiempo de carga medido: %1 ms</translation>
     </message>
     <message>
         <source>Catalogue revision: %1
@@ -5787,6 +5774,14 @@ SHA-256 esperado del contenido: %2</translation>
         <translation>Confirmar activación</translation>
     </message>
     <message>
+        <source>Remove…</source>
+        <translation>Quitar…</translation>
+    </message>
+    <message>
+        <source>Confirm remove</source>
+        <translation>Confirmar quitar</translation>
+    </message>
+    <message>
         <source>Reload</source>
         <translation>Recargar</translation>
     </message>
@@ -5811,6 +5806,38 @@ SHA-256 esperado del contenido: %2</translation>
         <translation>Actualizar catálogo</translation>
     </message>
     <message>
+        <source>Refreshing catalogue…</source>
+        <translation>Actualizando catálogo…</translation>
+    </message>
+    <message>
+        <source>Fetch on open</source>
+        <translation>Cargar al abrir</translation>
+    </message>
+    <message>
+        <source>Fetch the catalogue when this pane opens</source>
+        <translation>Cargar el catálogo al abrir esta página</translation>
+    </message>
+    <message>
+        <source>Show cost</source>
+        <translation>Mostrar costo</translation>
+    </message>
+    <message>
+        <source>Show measured extension cost</source>
+        <translation>Mostrar el costo medido de las extensiones</translation>
+    </message>
+    <message>
+        <source>Store language</source>
+        <translation>Idioma de la tienda</translation>
+    </message>
+    <message>
+        <source>Shell language</source>
+        <translation>Idioma del shell</translation>
+    </message>
+    <message>
+        <source>The catalogue is not loaded. Refresh catalogue fetches it from HorneroOS/plugins.</source>
+        <translation>El catálogo no está cargado. Actualizar catálogo lo trae de HorneroOS/plugins.</translation>
+    </message>
+    <message>
         <source>No official extensions match this search.</source>
         <translation>Ninguna extensión oficial coincide con esta búsqueda.</translation>
     </message>
@@ -5819,8 +5846,16 @@ SHA-256 esperado del contenido: %2</translation>
         <translation>Sin descripción.</translation>
     </message>
     <message>
-        <source>By %1 · %2 · %3 · %4</source>
-        <translation>Por %1 · %2 · %3 · %4</translation>
+        <source>By %1 · %2 · %3</source>
+        <translation>De %1 · %2 · %3</translation>
+    </message>
+    <message>
+        <source>Less</source>
+        <translation>Menos</translation>
+    </message>
+    <message>
+        <source>More</source>
+        <translation>Más</translation>
     </message>
     <message>
         <source>Unknown author</source>
@@ -5835,10 +5870,6 @@ SHA-256 esperado del contenido: %2</translation>
         <translation>Sin categoría</translation>
     </message>
     <message>
-        <source>Placement not listed</source>
-        <translation>Ubicación sin indicar</translation>
-    </message>
-    <message>
         <source>New installs of a deprecated extension are disabled.</source>
         <translation>Las instalaciones nuevas de una extensión obsoleta están desactivadas.</translation>
     </message>
@@ -5849,10 +5880,6 @@ Plugin snapshot: %3</source>
         <translation>Origen: %1
 SHA-256 del contenido: %2
 Snapshot del plugin: %3</translation>
-    </message>
-    <message>
-        <source>%1 · %2 · %3</source>
-        <translation>%1 · %2 · %3</translation>
     </message>
     <message>
         <source>Install…</source>
@@ -5867,6 +5894,10 @@ Snapshot del plugin: %3</translation>
         <translation>Actualizar…</translation>
     </message>
     <message>
+        <source>No extensions installed yet. Browse the official catalogue below and install one; it stays off until you enable it.</source>
+        <translation>Todavía no hay extensiones instaladas. Explorá el catálogo oficial de abajo e instalá una; queda apagada hasta que la actives.</translation>
+    </message>
+    <message>
         <source>Confirm update</source>
         <translation>Confirmar actualización</translation>
     </message>
@@ -5877,10 +5908,6 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>Confirm rollback</source>
         <translation>Confirmar reversión</translation>
-    </message>
-    <message>
-        <source>Installed — enable it in the list above</source>
-        <translation>Instalada — activala en la lista de arriba</translation>
     </message>
 </context>
 <context>

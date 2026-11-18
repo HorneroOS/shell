@@ -816,7 +816,10 @@ Singleton {
             desktopWidgetSlots: plugins.desktopWidgetSlots,
             desktopWidgets: plugins.desktopWidgets,
             dashboardLayout: plugins.dashboardLayout,
-            safeMode: plugins.safeMode
+            safeMode: plugins.safeMode,
+            storeRefreshOnOpen: plugins.storeRefreshOnOpen,
+            storeShowCost: plugins.storeShowCost,
+            storeLanguage: plugins.storeLanguage
         };
     }
 

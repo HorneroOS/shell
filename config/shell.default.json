@@ -884,7 +884,10 @@
     "desktopWidgetSlots": {},
     "desktopWidgets": {},
     "dashboardLayout": {},
-    "safeMode": false
+    "safeMode": false,
+    "storeRefreshOnOpen": true,
+    "storeShowCost": true,
+    "storeLanguage": "auto"
   },
   "experience": {
     "modes": {},

@@ -40,7 +40,32 @@ JsonObject {
     // plugin. HORNERO_SAFE_MODE=1 at launch forces the same without
     // touching this persisted value.
     property bool safeMode: false
+    // Extension store (Control Center › Extensions, gap #4):
+    // fetch the official catalogue when the pane opens (off: only on
+    // Refresh catalogue, so opening the pane makes no network request),
+    // show the measured cost readouts, and the language of the
+    // store's own lines and catalogue permission text ("auto" follows
+    // the shell UI language, Language.active; see ExtensionStore).
+    property bool storeRefreshOnOpen: true
+    property bool storeShowCost: true
+    property string storeLanguage: "auto"
+    readonly property var allowedStoreLanguages: ["auto", "en", "es"]
     signal saveRequested
+
+    function setStoreOption(key: string, value: var): bool {
+        if (key === "storeRefreshOnOpen" || key === "storeShowCost") {
+            if (typeof value !== "boolean" || this[key] === value)
+                return false;
+        } else if (key === "storeLanguage") {
+            if (!allowedStoreLanguages.includes(value) || storeLanguage === value)
+                return false;
+        } else {
+            return false;
+        }
+        this[key] = value;
+        saveRequested();
+        return true;
+    }
 
     function setSafeMode(enabled: bool): bool {
         if (safeMode === enabled)

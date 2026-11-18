@@ -377,6 +377,22 @@
         <source>Animation duration scale</source>
         <translation>Escala de duración de animaciones</translation>
     </message>
+    <message>
+        <source>Trailing edge stretch</source>
+        <translation>Estiramiento del borde trasero</translation>
+    </message>
+    <message>
+        <source>Indicators stretch toward their target and catch up. Applies at the Signal and Everyday motion levels; reduced motion moves both edges together.</source>
+        <translation>Los indicadores se estiran hacia su destino y después se acomodan. Se aplica en los niveles de movimiento Signal y Everyday; con movimiento reducido, los dos bordes se mueven juntos.</translation>
+    </message>
+    <message>
+        <source>Reset motion feel</source>
+        <translation>Restablecer la sensación de movimiento</translation>
+    </message>
+    <message>
+        <source>Reset motion style to Smooth and trailing edge stretch to 1.6</source>
+        <translation>Restablecer el estilo de movimiento a Suave y el estiramiento del borde trasero a 1.6</translation>
+    </message>
 </context>
 <context>
     <name>AppItem</name>
@@ -395,10 +411,6 @@
 <context>
     <name>AppearancePane</name>
     <message>
-        <source>Current look</source>
-        <translation>Aspecto actual</translation>
-    </message>
-    <message>
         <source>Custom appearance</source>
         <translation>Aspecto personalizado</translation>
     </message>
@@ -415,8 +427,20 @@
         <translation>Pendiente: se aplica cuando termine la tarea actual</translation>
     </message>
     <message>
-        <source>Click a theme or option to apply</source>
-        <translation>Hacé clic en un tema u opción para aplicarlo</translation>
+        <source>Chromatic</source>
+        <translation>Chromatic</translation>
+    </message>
+    <message>
+        <source>%1 · built from your wallpaper or colour</source>
+        <translation>%1 · armado desde tu fondo o un color</translation>
+    </message>
+    <message>
+        <source>Built from your wallpaper or colour</source>
+        <translation>Armado desde tu fondo o un color</translation>
+    </message>
+    <message>
+        <source>Choices apply as you make them</source>
+        <translation>Los cambios se aplican apenas los elegís</translation>
     </message>
     <message>
         <source>Follow theme mode</source>
@@ -455,6 +479,18 @@
         <translation>vista previa con tu fondo de pantalla actual</translation>
     </message>
     <message>
+        <source>GTK theme</source>
+        <translation>Tema GTK</translation>
+    </message>
+    <message>
+        <source>Icon theme</source>
+        <translation>Tema de íconos</translation>
+    </message>
+    <message>
+        <source>GTK colour scheme</source>
+        <translation>Esquema de colores GTK</translation>
+    </message>
+    <message>
         <source>Preview</source>
         <translation>Vista previa</translation>
     </message>
@@ -471,8 +507,36 @@
         <translation>Expandir todas las secciones</translation>
     </message>
     <message>
+        <source>Colour</source>
+        <translation>Color</translation>
+    </message>
+    <message>
+        <source>Wallpaper &amp; desktop</source>
+        <translation>Fondo y escritorio</translation>
+    </message>
+    <message>
+        <source>Look &amp; feel</source>
+        <translation>Aspecto</translation>
+    </message>
+    <message>
+        <source>Type &amp; motion</source>
+        <translation>Tipografía y movimiento</translation>
+    </message>
+    <message>
+        <source>Apps: GTK, Qt and icons</source>
+        <translation>Apps: GTK, Qt e íconos</translation>
+    </message>
+    <message>
+        <source>Health</source>
+        <translation>Estado</translation>
+    </message>
+    <message>
         <source>Appearance apply failed</source>
         <translation>No se pudo aplicar la apariencia</translation>
+    </message>
+    <message>
+        <source>Appearance was not changed</source>
+        <translation>No se cambió el aspecto</translation>
     </message>
 </context>
 <context>
@@ -502,52 +566,12 @@
         <translation>Preferir oscuro</translation>
     </message>
     <message>
-        <source>Wallpaper unavailable</source>
-        <translation>Fondo de pantalla no disponible</translation>
-    </message>
-    <message>
-        <source>Loading wallpaper</source>
-        <translation>Cargando fondo de pantalla</translation>
-    </message>
-    <message>
-        <source>No wallpaper selected</source>
-        <translation>No hay fondo de pantalla elegido</translation>
-    </message>
-    <message>
-        <source>Select an option</source>
-        <translation>Elegí una opción</translation>
-    </message>
-    <message>
-        <source>Preview updates here — click to apply</source>
-        <translation>La vista previa se actualiza acá; hacé clic para aplicar</translation>
-    </message>
-    <message>
         <source>Theme requirements</source>
         <translation>Requisitos del tema</translation>
     </message>
     <message>
-        <source>About this look</source>
-        <translation>Sobre este aspecto</translation>
-    </message>
-    <message>
         <source>Hide details</source>
         <translation>Ocultar detalles</translation>
-    </message>
-    <message>
-        <source>More details</source>
-        <translation>Más detalles</translation>
-    </message>
-    <message>
-        <source>Mode</source>
-        <translation>Modo</translation>
-    </message>
-    <message>
-        <source>GTK</source>
-        <translation>GTK</translation>
-    </message>
-    <message>
-        <source>Icons</source>
-        <translation>Íconos</translation>
     </message>
     <message>
         <source>Wallpaper</source>
@@ -556,6 +580,86 @@
     <message>
         <source>Theme mode</source>
         <translation>Modo del tema</translation>
+    </message>
+    <message>
+        <source>Chromatic · %1</source>
+        <translation>Chromatic · %1</translation>
+    </message>
+    <message>
+        <source>Text</source>
+        <translation>Texto</translation>
+    </message>
+    <message>
+        <source>Muted text</source>
+        <translation>Texto atenuado</translation>
+    </message>
+    <message>
+        <source>Accent</source>
+        <translation>Acento</translation>
+    </message>
+    <message>
+        <source>On accent</source>
+        <translation>Sobre acento</translation>
+    </message>
+    <message>
+        <source>your desktop</source>
+        <translation>tu escritorio</translation>
+    </message>
+    <message>
+        <source>%1 %2</source>
+        <translation>%1 %2</translation>
+    </message>
+    <message>
+        <source>%1 · %2</source>
+        <translation>%1 · %2</translation>
+    </message>
+    <message>
+        <source>Shown on your whole desktop while you point at it. Click to use it; move away to go back.</source>
+        <translation>Se muestra en todo tu escritorio mientras apuntás. Hacé clic para usarlo; alejate para volver.</translation>
+    </message>
+    <message>
+        <source>Nothing has changed yet. %1; move away to go back.</source>
+        <translation>Todavía no cambió nada. %1; alejate para volver.</translation>
+    </message>
+    <message>
+        <source>Your choice is being applied. Undo appears when it is done.</source>
+        <translation>Estamos aplicando tu elección. Deshacer aparece cuando termine.</translation>
+    </message>
+    <message>
+        <source>Point at any theme, wallpaper or colour option to preview it here.</source>
+        <translation>Apuntá a cualquier tema, fondo o color para verlo acá.</translation>
+    </message>
+    <message>
+        <source>Click any theme, wallpaper or colour option to use it.</source>
+        <translation>Hacé clic en cualquier tema, fondo o color para usarlo.</translation>
+    </message>
+    <message>
+        <source>Contrast checks</source>
+        <translation>Controles de contraste</translation>
+    </message>
+    <message>
+        <source>%1 contrast %2 to 1, passes %3 to 1</source>
+        <translation>%1: contraste %2 a 1, supera %3 a 1</translation>
+    </message>
+    <message>
+        <source>%1 contrast %2 to 1, below %3 to 1</source>
+        <translation>%1: contraste %2 a 1, por debajo de %3 a 1</translation>
+    </message>
+    <message>
+        <source>Your desktop</source>
+        <translation>Tu escritorio</translation>
+    </message>
+    <message>
+        <source>Details</source>
+        <translation>Detalles</translation>
+    </message>
+    <message>
+        <source>Hide the theme recipe</source>
+        <translation>Ocultar la receta del tema</translation>
+    </message>
+    <message>
+        <source>Show the theme recipe: GTK, icons, wallpaper</source>
+        <translation>Mostrar la receta del tema: GTK, íconos, fondo</translation>
     </message>
     <message>
         <source>GTK theme</source>
@@ -570,10 +674,6 @@
         <translation>Tema de íconos</translation>
     </message>
     <message>
-        <source>Default wallpaper</source>
-        <translation>Fondo de pantalla predeterminado</translation>
-    </message>
-    <message>
         <source>Wallpapers in pack</source>
         <translation>Fondos en el paquete</translation>
     </message>
@@ -585,37 +685,20 @@
         <source>No thumb</source>
         <translation>Sin miniatura</translation>
     </message>
+</context>
+<context>
+    <name>ApprovalCard</name>
     <message>
-        <source>Interface sample</source>
-        <translation>Muestra de la interfaz</translation>
+        <source>Hide details</source>
+        <translation>Ocultar detalles</translation>
     </message>
     <message>
-        <source>Preview</source>
-        <translation>Vista previa</translation>
+        <source>Details</source>
+        <translation>Detalles</translation>
     </message>
     <message>
-        <source>A desktop that feels like yours</source>
-        <translation>Un escritorio que se siente tuyo</translation>
-    </message>
-    <message>
-        <source>Surfaces, text, and accents work together.</source>
-        <translation>Superficies, texto y acentos trabajan juntos.</translation>
-    </message>
-    <message>
-        <source>Typography Preview</source>
-        <translation>Vista previa tipográfica</translation>
-    </message>
-    <message>
-        <source>Monospace: 1234 ABCD</source>
-        <translation>Monoespaciada: 1234 ABCD</translation>
-    </message>
-    <message>
-        <source>Mode: %1</source>
-        <translation>Modo: %1</translation>
-    </message>
-    <message>
-        <source>Hover or select a theme, wallpaper, mode, or scheme</source>
-        <translation>Pasá el cursor o elegí un tema, fondo, modo o esquema</translation>
+        <source>Tool</source>
+        <translation>Herramienta</translation>
     </message>
 </context>
 <context>
@@ -640,9 +723,57 @@
         <source>Transcribe the attached audio and treat the transcription as my message. Answer it.</source>
         <translation>Transcribí el audio adjunto y tomá la transcripción como mi mensaje. Respondelo.</translation>
     </message>
+    <message>
+        <source>That request is no longer waiting.</source>
+        <translation>Ese pedido ya no está esperando.</translation>
+    </message>
+    <message>
+        <source>Only an Agent run can be allowed. You can deny it.</source>
+        <translation>Solo se puede permitir una ejecución en modo Agente. Podés rechazarla.</translation>
+    </message>
+    <message>
+        <source>This request cannot be allowed from here. You can deny it.</source>
+        <translation>Este pedido no se puede permitir desde acá. Podés rechazarlo.</translation>
+    </message>
+    <message>
+        <source>That question is no longer waiting.</source>
+        <translation>Esa pregunta ya no está esperando.</translation>
+    </message>
+    <message>
+        <source>A decision is being sent; stop once it is recorded.</source>
+        <translation>Se está enviando una decisión; detenelo cuando quede registrada.</translation>
+    </message>
+    <message>
+        <source>Stopped, including the Hermes run.</source>
+        <translation>Detenido, junto con la ejecución de Hermes.</translation>
+    </message>
+    <message>
+        <source>Stopping as soon as the run id is known…</source>
+        <translation>Se detiene apenas se conozca el id de la ejecución…</translation>
+    </message>
+    <message>
+        <source>Stopped locally; the run may still be going on the gateway (its id was never known).</source>
+        <translation>Detenido localmente; la ejecución puede seguir en el gateway (nunca se supo su id).</translation>
+    </message>
+    <message>
+        <source>The stop request for %1 was not accepted. It may still be running.</source>
+        <translation>No se aceptó el pedido para detener %1. Puede que siga en marcha.</translation>
+    </message>
+    <message>
+        <source>The decision was not recorded. Check: horneroctl assistant status</source>
+        <translation>La decisión no quedó registrada. Revisá: horneroctl assistant status</translation>
+    </message>
 </context>
 <context>
     <name>AtmosphereSection</name>
+    <message>
+        <source>Atmosphere reset to factory</source>
+        <translation>Atmósfera restablecida de fábrica</translation>
+    </message>
+    <message>
+        <source>Undo brings back your lamp, warmth, grain and voice.</source>
+        <translation>Deshacer recupera tu lámpara, calidez, grano y voz.</translation>
+    </message>
     <message>
         <source>Atmosphere</source>
         <translation>Atmósfera</translation>
@@ -751,12 +882,24 @@
 <context>
     <name>Audio</name>
     <message>
+        <source>Unnamed device</source>
+        <translation>Dispositivo sin nombre</translation>
+    </message>
+    <message>
         <source>Output device</source>
         <translation>Dispositivo de salida</translation>
     </message>
     <message>
+        <source>No output device</source>
+        <translation>Sin dispositivo de salida</translation>
+    </message>
+    <message>
         <source>Input device</source>
         <translation>Dispositivo de entrada</translation>
+    </message>
+    <message>
+        <source>No input device</source>
+        <translation>Sin dispositivo de entrada</translation>
     </message>
     <message>
         <source>Volume (%1)</source>
@@ -1028,6 +1171,22 @@
         <translation>Barra derecha</translation>
     </message>
     <message>
+        <source>Bar reset to the layout default</source>
+        <translation>Barra restablecida al predeterminado del layout</translation>
+    </message>
+    <message>
+        <source>Undo brings back this bar&apos;s thickness, gap, style and density.</source>
+        <translation>Deshacer te devuelve el grosor, la separación, el estilo y la densidad de esta barra.</translation>
+    </message>
+    <message>
+        <source>Sizes reset to the layout default</source>
+        <translation>Tamaños restablecidos al predeterminado del layout</translation>
+    </message>
+    <message>
+        <source>Undo brings back your cell size, scales, text face, radius, gap and padding.</source>
+        <translation>Deshacer te devuelve el tamaño de celda, las escalas, la tipografía, el radio, la separación y el relleno.</translation>
+    </message>
+    <message>
         <source>Size &amp; shape</source>
         <translation>Tamaño y forma</translation>
     </message>
@@ -1126,6 +1285,14 @@
     <message>
         <source>Active workspace inset (px)</source>
         <translation>Margen del espacio de trabajo activo (px)</translation>
+    </message>
+    <message>
+        <source>Workspace window glyph size (%)</source>
+        <translation>Tamaño de los glifos de ventana del espacio de trabajo (%)</translation>
+    </message>
+    <message>
+        <source>Workspace window glyphs per cell</source>
+        <translation>Glifos de ventana por celda del espacio de trabajo</translation>
     </message>
     <message>
         <source>Icon and label size (%)</source>
@@ -1354,8 +1521,12 @@
         <translation>Batería %1%</translation>
     </message>
     <message>
-        <source>No battery detected · Power profile: %1</source>
-        <translation>No se detectó batería · Perfil de energía: %1</translation>
+        <source>No battery detected</source>
+        <translation>No se detectó ninguna batería</translation>
+    </message>
+    <message>
+        <source>Power profile: %1</source>
+        <translation>Perfil de energía: %1</translation>
     </message>
     <message>
         <source>Performance Degraded</source>
@@ -1594,6 +1765,22 @@
         <source>Border thickness</source>
         <translation>Grosor del borde</translation>
     </message>
+    <message>
+        <source>Frame edge line</source>
+        <translation>Línea del borde del marco</translation>
+    </message>
+    <message>
+        <source>The line that separates the bar and frame from the desktop. High Contrast keeps it at 2 px or more.</source>
+        <translation>La línea que separa la barra y el marco del escritorio. Alto contraste la mantiene en 2 px o más.</translation>
+    </message>
+    <message>
+        <source>Machined fillet</source>
+        <translation>Empalme mecanizado</translation>
+    </message>
+    <message>
+        <source>The small curve where a drawer or popout meets the bar or the frame, so it grows out of the bezel. 0 keeps the flush square junction. Floating and clear bars never get one.</source>
+        <translation>La pequeña curva donde un cajón o panel emergente se une a la barra o al marco, para que nazca del bisel. Con 0 queda la unión recta y al ras. Las barras flotantes y transparentes nunca la tienen.</translation>
+    </message>
 </context>
 <context>
     <name>Buttons</name>
@@ -1824,21 +2011,20 @@
 <context>
     <name>ChatPanel</name>
     <message>
-        <source>JAVI · THE HORNERO</source>
+        <source>Kept what you were typing; the staged text was not inserted.</source>
+        <translation>Conservamos lo que estabas escribiendo; el texto preparado no se insertó.</translation>
+    </message>
+    <message>
+        <source>The staged text was too long and was cut. Check it before sending.</source>
+        <translation>El texto preparado era demasiado largo y se recortó. Revisalo antes de enviarlo.</translation>
+    </message>
+    <message>
+        <source>This text was staged for you. Check it, then press Send (%1).</source>
+        <translation>Te preparamos este texto. Revisalo y después tocá Enviar (%1).</translation>
+    </message>
+    <message>
+        <source>JAVI · EL HORNERO</source>
         <translation>JAVI · EL HORNERO</translation>
-    </message>
-    <message>
-        <source>thinking</source>
-        <comment>chat status</comment>
-        <translation>pensando</translation>
-    </message>
-    <message>
-        <source>Hermes connected</source>
-        <translation>Hermes conectado</translation>
-    </message>
-    <message>
-        <source>Hermes unavailable</source>
-        <translation>Hermes no disponible</translation>
     </message>
     <message>
         <source>Clear chat history</source>
@@ -1847,6 +2033,10 @@
     <message>
         <source>Close chat</source>
         <translation>Cerrar chat</translation>
+    </message>
+    <message>
+        <source>The gateway is not sandboxed. Approvals matter more.</source>
+        <translation>El gateway no está aislado. Las aprobaciones importan más.</translation>
     </message>
     <message>
         <source>Switch chat session</source>
@@ -1873,8 +2063,16 @@
         <translation>Te pide aprobación antes</translation>
     </message>
     <message>
-        <source>Never asks for approvals</source>
-        <translation>Nunca pide aprobación</translation>
+        <source>Approval requests are denied automatically</source>
+        <translation>Los pedidos de aprobación se rechazan automáticamente</translation>
+    </message>
+    <message>
+        <source>Open</source>
+        <translation>Abierta</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Cancelar</translation>
     </message>
     <message>
         <source>HIDE ACTIVITY TRACE</source>
@@ -1889,46 +2087,6 @@
         <translation>REGISTRO DE ACTIVIDAD · EN VIVO</translation>
     </message>
     <message>
-        <source>Javi is thinking</source>
-        <translation>Javi está pensando</translation>
-    </message>
-    <message>
-        <source>What updates are pending?</source>
-        <translation>¿Qué actualizaciones hay pendientes?</translation>
-    </message>
-    <message>
-        <source>Why is the machine slow?</source>
-        <translation>¿Por qué está lenta la máquina?</translation>
-    </message>
-    <message>
-        <source>Show me the GTK themes</source>
-        <translation>Mostrame los temas GTK</translation>
-    </message>
-    <message>
-        <source>What can you do?</source>
-        <translation>¿Qué podés hacer?</translation>
-    </message>
-    <message>
-        <source>Javi needs your OK:</source>
-        <translation>Javi necesita tu OK:</translation>
-    </message>
-    <message>
-        <source>● Recording… tap the mic to send</source>
-        <translation>● Grabando… tocá el mic para enviar</translation>
-    </message>
-    <message>
-        <source>Approve</source>
-        <translation>Aprobar</translation>
-    </message>
-    <message>
-        <source>Deny</source>
-        <translation>Rechazar</translation>
-    </message>
-    <message>
-        <source>Answer</source>
-        <translation>Responder</translation>
-    </message>
-    <message>
         <source>Attach file</source>
         <translation>Adjuntar archivo</translation>
     </message>
@@ -1939,10 +2097,6 @@
     <message>
         <source>Record voice message</source>
         <translation>Grabar mensaje de voz</translation>
-    </message>
-    <message>
-        <source>Stop</source>
-        <translation>Detener</translation>
     </message>
     <message>
         <source>Send</source>
@@ -2022,14 +2176,6 @@
         <translation>Chromatic falló</translation>
     </message>
     <message>
-        <source>Wallpaper changed</source>
-        <translation>Cambió el fondo de pantalla</translation>
-    </message>
-    <message>
-        <source>Previewing the matching Chromatic palette. Open Appearance, Chromatic to apply it; it reverts in 10 seconds.</source>
-        <translation>Vista previa de la paleta Chromatic que combina. Abrí Apariencia, Chromatic para aplicarla; se revierte en 10 segundos.</translation>
-    </message>
-    <message>
         <source>Choose an image</source>
         <translation>Elegí una imagen</translation>
     </message>
@@ -2078,8 +2224,44 @@
         <translation>Chromatic está desactivado. Se aplicó el tema de respaldo.</translation>
     </message>
     <message>
-        <source>Applied.</source>
-        <translation>Aplicado.</translation>
+        <source>Palette follows the wallpaper</source>
+        <translation>La paleta sigue al fondo de pantalla</translation>
+    </message>
+    <message>
+        <source>Chromatic no longer asks first: it recolours at once and Settings offers Undo. Turn following off in Appearance › Chromatic.</source>
+        <translation>Chromatic ya no pregunta antes: cambia los colores al instante y Ajustes ofrece Deshacer. Desactivá el seguimiento en Apariencia › Chromatic.</translation>
+    </message>
+    <message>
+        <source>Could not undo the Chromatic palette</source>
+        <translation>No se pudo deshacer la paleta de Chromatic</translation>
+    </message>
+    <message>
+        <source>Chromatic was not applied</source>
+        <translation>No se aplicó Chromatic</translation>
+    </message>
+    <message>
+        <source>%1 Your previous palette is still in place.</source>
+        <translation>%1 Tu paleta anterior sigue en su lugar.</translation>
+    </message>
+    <message>
+        <source>Chromatic palette</source>
+        <translation>Paleta de Chromatic</translation>
+    </message>
+    <message>
+        <source>%1, %2</source>
+        <translation>%1, %2</translation>
+    </message>
+    <message>
+        <source>Undo returns to the previous palette.</source>
+        <translation>Deshacer vuelve a la paleta anterior.</translation>
+    </message>
+    <message>
+        <source>Chromatic turned off</source>
+        <translation>Chromatic desactivado</translation>
+    </message>
+    <message>
+        <source>Chromatic did not change</source>
+        <translation>Chromatic no cambió</translation>
     </message>
     <message>
         <source>Could not %1: %2</source>
@@ -2097,36 +2279,8 @@
         <translation>Chromatic</translation>
     </message>
     <message>
-        <source>Build the desktop palette from your wallpaper, an image or one colour. Preview it, override anything, then apply.</source>
-        <translation>Armá la paleta del escritorio a partir de tu fondo, una imagen o un color. Mirá la vista previa, cambiá lo que quieras y aplicala.</translation>
-    </message>
-    <message>
         <source>High contrast is on, so the protected high-contrast palette is shown. You can still prepare a Chromatic palette; it shows once High contrast is off.</source>
         <translation>Alto contraste está activado, así que se muestra la paleta protegida de alto contraste. Igual podés preparar una paleta Chromatic; se muestra cuando desactives Alto contraste.</translation>
-    </message>
-    <message>
-        <source>The wallpaper changed. Recolour the desktop to match?</source>
-        <translation>Cambió el fondo de pantalla. ¿Querés recolorear el escritorio para que combine?</translation>
-    </message>
-    <message>
-        <source>Apply</source>
-        <translation>Aplicar</translation>
-    </message>
-    <message>
-        <source>Keep current</source>
-        <translation>Mantener el actual</translation>
-    </message>
-    <message>
-        <source>Chromatic is active: %1.</source>
-        <translation>Chromatic está activo: %1.</translation>
-    </message>
-    <message>
-        <source>waiting for the palette</source>
-        <translation>esperando la paleta</translation>
-    </message>
-    <message>
-        <source>Chromatic is not active. Your theme is %1; applying switches to a dynamic palette (Turn off returns to %2).</source>
-        <translation>Chromatic no está activo. Tu tema es %1; al aplicar pasás a una paleta dinámica (Desactivar vuelve a %2).</translation>
     </message>
     <message>
         <source>Building palette…</source>
@@ -2171,6 +2325,22 @@
     <message>
         <source>Look</source>
         <translation>Aspecto</translation>
+    </message>
+    <message>
+        <source>Dynamic colour: build the desktop palette from your wallpaper, an image or one colour. Pick a source, then a variant; point at a variant to preview it on the whole desktop.</source>
+        <translation>Color dinámico: armá la paleta del escritorio a partir de tu fondo, una imagen o un color. Elegí un origen y después una variante; apuntá a una variante para verla en todo el escritorio.</translation>
+    </message>
+    <message>
+        <source>Use Chromatic colours</source>
+        <translation>Usar colores de Chromatic</translation>
+    </message>
+    <message>
+        <source>In use. Every choice below applies as you make it; Undo puts the previous palette back.</source>
+        <translation>En uso. Cada opción de abajo se aplica apenas la elegís; Deshacer vuelve a la paleta anterior.</translation>
+    </message>
+    <message>
+        <source>Off: you are using %1. Turning Chromatic on, or choosing anything below, switches to it; turning it off returns to %2.</source>
+        <translation>Desactivado: estás usando %1. Activar Chromatic, o elegir cualquier opción de abajo, cambia a Chromatic; desactivarlo vuelve a %2.</translation>
     </message>
     <message>
         <source>Mode</source>
@@ -2225,6 +2395,10 @@
         <translation>Cambio de tono</translation>
     </message>
     <message>
+        <source>Candidate</source>
+        <translation>Candidata</translation>
+    </message>
+    <message>
         <source>Per mode and wallpaper changes</source>
         <translation>Cambios por modo y fondo</translation>
     </message>
@@ -2257,8 +2431,16 @@
         <translation>Recolorear automáticamente cuando cambia el fondo</translation>
     </message>
     <message>
-        <source>Ask me first, with a preview and a 10 second Keep current</source>
-        <translation>Preguntarme antes, con vista previa y 10 segundos para Mantener el actual</translation>
+        <source>Previous palette</source>
+        <translation>Paleta anterior</translation>
+    </message>
+    <message>
+        <source>Save this palette</source>
+        <translation>Guardar esta paleta</translation>
+    </message>
+    <message>
+        <source>Saving keeps the palette in use as a theme: it is listed under Themes, Your palettes, where pointing previews it and a click uses it (with Undo). To remove one, delete its folder under hornero/themes in your data directory.</source>
+        <translation>Guardar conserva la paleta en uso como tema: aparece en Temas, Tus paletas, donde al apuntarla ves la vista previa y con un clic la usás (con Deshacer). Para quitar una, borrá su carpeta en hornero/themes dentro de tu directorio de datos.</translation>
     </message>
     <message>
         <source>Smooth palette transitions</source>
@@ -2273,30 +2455,6 @@
         <translation>Aplicando…</translation>
     </message>
     <message>
-        <source>Stop previewing</source>
-        <translation>Dejar de previsualizar</translation>
-    </message>
-    <message>
-        <source>Preview on desktop</source>
-        <translation>Previsualizar en el escritorio</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>Cancelar</translation>
-    </message>
-    <message>
-        <source>Roll back</source>
-        <translation>Revertir</translation>
-    </message>
-    <message>
-        <source>Turn off Chromatic</source>
-        <translation>Desactivar Chromatic</translation>
-    </message>
-    <message>
-        <source>Saved palettes</source>
-        <translation>Paletas guardadas</translation>
-    </message>
-    <message>
         <source>Name this palette</source>
         <translation>Ponele nombre a esta paleta</translation>
     </message>
@@ -2307,18 +2465,6 @@
     <message>
         <source>Save</source>
         <translation>Guardar</translation>
-    </message>
-    <message>
-        <source>Apply this palette</source>
-        <translation>Aplicar esta paleta</translation>
-    </message>
-    <message>
-        <source>Saved palette preview</source>
-        <translation>Vista previa de la paleta guardada</translation>
-    </message>
-    <message>
-        <source>Saved palettes are ordinary themes: they also appear under Themes. Renaming and deleting are not available yet; remove the folder under hornero/themes in your data directory.</source>
-        <translation>Las paletas guardadas son temas comunes: también aparecen en Temas. Todavía no se pueden renombrar ni borrar; eliminá la carpeta en hornero/themes dentro de tu directorio de datos.</translation>
     </message>
     <message>
         <source>/path/to/palette.json</source>
@@ -2431,8 +2577,8 @@
         <translation>Conectado · 48 kHz</translation>
     </message>
     <message>
-        <source>Apply</source>
-        <translation>Aplicar</translation>
+        <source>Play</source>
+        <translation>Reproducir</translation>
     </message>
     <message>
         <source>Mixer</source>
@@ -2799,6 +2945,10 @@ Huella de la clave del autor: %3</translation>
         <translation>Restablecer posición</translation>
     </message>
     <message>
+        <source>Javi Radio</source>
+        <translation>Radio de Javi</translation>
+    </message>
+    <message>
         <source>Chat with Hermes</source>
         <translation>Chatear con Hermes</translation>
     </message>
@@ -3054,6 +3204,30 @@ Huella de la clave del autor: %3</translation>
         <translation>desactivado</translation>
     </message>
     <message>
+        <source>History is off: conversations are not saved on this device.</source>
+        <translation>El historial está desactivado: las conversaciones no se guardan en este dispositivo.</translation>
+    </message>
+    <message>
+        <source>Kept on this device only (last %1 messages). Hermes owns the real sessions; clear them from the chat panel at any time.</source>
+        <translation>Se guarda solo en este dispositivo (últimos %1 mensajes). Las sesiones reales son de Hermes; podés borrarlas desde el panel de chat cuando quieras.</translation>
+    </message>
+    <message>
+        <source>Default mode</source>
+        <translation>Modo predeterminado</translation>
+    </message>
+    <message>
+        <source>Workbench</source>
+        <translation>Workbench</translation>
+    </message>
+    <message>
+        <source>Quick questions (Javi Radio, the launcher) are read-only and never act. When one needs approval, it hands you over to the Workbench, where you decide on each request. The shell writes no keybinding; bind the Workbench yourself if you want a key.</source>
+        <translation>Las preguntas rápidas (Radio de Javi, el lanzador) son de solo lectura y nunca hacen nada. Cuando una necesita aprobación, te pasa al Workbench, donde decidís cada pedido. El shell no crea ningún atajo; si querés una tecla, asignale una al Workbench vos.</translation>
+    </message>
+    <message>
+        <source>Privacy: the microphone opens only when you press it and stops after 2 minutes; nothing is copied, captured or sent to a provider unless you attach it or approve a specific action.</source>
+        <translation>Privacidad: el micrófono se abre solo cuando lo tocás y se corta a los 2 minutos; nada se copia, se captura ni se envía a un proveedor salvo que lo adjuntes o apruebes una acción concreta.</translation>
+    </message>
+    <message>
         <source>Hermes agent</source>
         <translation>Agente Hermes</translation>
     </message>
@@ -3114,12 +3288,32 @@ Huella de la clave del autor: %3</translation>
         <translation>Modelo configurado</translation>
     </message>
     <message>
-        <source>Apply model</source>
-        <translation>Aplicar modelo</translation>
+        <source>Applies to new chats as soon as you pick a model or press Enter (same as hermes model); running chats keep their model.</source>
+        <translation>Se aplica a los chats nuevos apenas elegís un modelo o tocás Enter (igual que hermes model); los chats en curso conservan su modelo.</translation>
     </message>
     <message>
-        <source>Applies to new chats (same as hermes model); running chats keep their model.</source>
-        <translation>Se aplica a los chats nuevos (igual que hermes model); los chats en curso mantienen su modelo.</translation>
+        <source>Assistant model %1</source>
+        <translation>Modelo del asistente: %1</translation>
+    </message>
+    <message>
+        <source>Undo returns to %1 for new chats.</source>
+        <translation>Deshacer vuelve a %1 para los chats nuevos.</translation>
+    </message>
+    <message>
+        <source>Assistant prompt saved</source>
+        <translation>Prompt del asistente guardado</translation>
+    </message>
+    <message>
+        <source>Undo restores the previous text.</source>
+        <translation>Deshacer restaura el texto anterior.</translation>
+    </message>
+    <message>
+        <source>%1 was not applied</source>
+        <translation>No se aplicó: %1</translation>
+    </message>
+    <message>
+        <source>horneroctl refused the change.</source>
+        <translation>horneroctl rechazó el cambio.</translation>
     </message>
     <message>
         <source>Chat sessions</source>
@@ -3196,10 +3390,6 @@ Huella de la clave del autor: %3</translation>
     <message>
         <source>This is Javi&apos;s full user-configurable system prompt (Hermes SOUL.md). Saving snapshots the previous version for rollback. Behaviour only: it can never widen permissions or the sandbox.</source>
         <translation>Este es el prompt del sistema completo de Javi, configurable por vos (Hermes SOUL.md). Al guardar se respalda la versión anterior para poder volver atrás. Solo afecta el comportamiento: nunca puede ampliar los permisos ni el aislamiento.</translation>
-    </message>
-    <message>
-        <source>Save prompt</source>
-        <translation>Guardar prompt</translation>
     </message>
     <message>
         <source>Reload</source>
@@ -3355,6 +3545,76 @@ Huella de la clave del autor: %3</translation>
     <message>
         <source>Needs your attention</source>
         <translation>Necesita tu atención</translation>
+    </message>
+</context>
+<context>
+    <name>CompanionStore</name>
+    <message>
+        <source>Mode looks reset</source>
+        <translation>Looks por modo restablecidos</translation>
+    </message>
+    <message>
+        <source>Undo brings back your per-mode looks.</source>
+        <translation>Deshacer recupera tus looks por modo.</translation>
+    </message>
+    <message>
+        <source>Reactions reset</source>
+        <translation>Reacciones restablecidas</translation>
+    </message>
+    <message>
+        <source>Undo brings back your reaction settings.</source>
+        <translation>Deshacer recupera tus ajustes de reacciones.</translation>
+    </message>
+    <message>
+        <source>Nest reset</source>
+        <translation>Nido restablecido</translation>
+    </message>
+    <message>
+        <source>Undo brings your nest back.</source>
+        <translation>Deshacer te devuelve el nido.</translation>
+    </message>
+    <message>
+        <source>Companion position reset</source>
+        <translation>Posición del compañero restablecida</translation>
+    </message>
+    <message>
+        <source>Undo moves it back.</source>
+        <translation>Deshacer lo vuelve a su lugar.</translation>
+    </message>
+</context>
+<context>
+    <name>CompositionSection</name>
+    <message>
+        <source>Layout</source>
+        <translation>Layout</translation>
+    </message>
+    <message>
+        <source>Home composition</source>
+        <translation>Composición del inicio</translation>
+    </message>
+    <message>
+        <source>Console</source>
+        <translation>Consola</translation>
+    </message>
+    <message>
+        <source>Classic</source>
+        <translation>Clásica</translation>
+    </message>
+    <message>
+        <source>Compact</source>
+        <translation>Compacto</translation>
+    </message>
+    <message>
+        <source>An even grid: station, clock and weather on top, calendar and resources below, the media deck as a strip at the bottom.</source>
+        <translation>Una grilla pareja: estación, reloj y clima arriba, calendario y recursos abajo, y el deck multimedia como franja al pie.</translation>
+    </message>
+    <message>
+        <source>The even grid without the media deck, for a shorter dashboard.</source>
+        <translation>La grilla pareja sin el deck multimedia, para un dashboard más corto.</translation>
+    </message>
+    <message>
+        <source>A broadcast console: the clock with a seconds ruler, the media deck as the tall hero on the right, and a thin weather strip.</source>
+        <translation>Una consola de transmisión: el reloj con regla de segundos, el deck multimedia como protagonista alto a la derecha y una franja fina de clima.</translation>
     </message>
 </context>
 <context>
@@ -3697,12 +3957,42 @@ Huella de la clave del autor: %3</translation>
         <translation>Eso no es un JSON válido.</translation>
     </message>
     <message>
+        <source>Look was not imported</source>
+        <translation>No se importó el look</translation>
+    </message>
+    <message numerus="yes">
+        <source>Imported look (%n setting(s))</source>
+        <translation>
+            <numerusform>Look importado (%n ajuste)</numerusform>
+            <numerusform>Look importado (%n ajustes)</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Undo puts every imported setting back.</source>
+        <translation>Deshacer vuelve atrás cada ajuste importado.</translation>
+    </message>
+    <message>
         <source>Applied %1 setting(s); skipped %2 (%3).</source>
         <translation>Se aplicaron %1 ajuste(s); se omitieron %2 (%3).</translation>
     </message>
     <message>
         <source>Applied %1 setting(s).</source>
         <translation>Se aplicaron %1 ajuste(s).</translation>
+    </message>
+    <message>
+        <source>Reset %1</source>
+        <translation>Restablecer %1</translation>
+    </message>
+    <message numerus="yes">
+        <source>Reset %n setting(s)</source>
+        <translation>
+            <numerusform>Se restableció %n ajuste</numerusform>
+            <numerusform>Se restablecieron %n ajustes</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Your apps, files and layouts are not touched.</source>
+        <translation>No se tocan tus apps, archivos ni layouts.</translation>
     </message>
     <message>
         <source>HorneroOS ships its best defaults, and every value here is yours to change. This page lists what you have changed, so you can find it, edit it or put it back.</source>
@@ -3739,20 +4029,9 @@ Huella de la clave del autor: %3</translation>
         <source>Reset all customised settings to the HorneroOS defaults</source>
         <translation>Restablecer todos los ajustes personalizados a los valores predeterminados de HorneroOS</translation>
     </message>
-    <message numerus="yes">
-        <source>Reset %n setting(s)? Your apps, files and layouts are not touched.</source>
-        <translation>
-            <numerusform>¿Restablecer %n ajuste? Tus apps, archivos y layouts no se tocan.</numerusform>
-            <numerusform>¿Restablecer %n ajustes? Tus apps, archivos y layouts no se tocan.</numerusform>
-        </translation>
-    </message>
     <message>
-        <source>Yes, reset all</source>
-        <translation>Sí, restablecer todo</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>Cancelar</translation>
+        <source>Applies at once; Undo stays for a few seconds. Your apps, files and layouts are not touched.</source>
+        <translation>Se aplica al instante; Deshacer queda unos segundos. No se tocan tus apps, archivos ni layouts.</translation>
     </message>
     <message>
         <source>Share a look</source>
@@ -3806,6 +4085,14 @@ Huella de la clave del autor: %3</translation>
         <translation>Reloj</translation>
     </message>
     <message>
+        <source>Deck</source>
+        <translation>Deck</translation>
+    </message>
+    <message>
+        <source>No player</source>
+        <translation>Sin reproductor</translation>
+    </message>
+    <message>
         <source>Weather</source>
         <translation>Clima</translation>
     </message>
@@ -3855,6 +4142,14 @@ Huella de la clave del autor: %3</translation>
     <message>
         <source>Reset layout</source>
         <translation>Restablecer layout</translation>
+    </message>
+    <message>
+        <source>Dashboard layout reset</source>
+        <translation>Layout del dashboard restablecido</translation>
+    </message>
+    <message>
+        <source>Undo brings back your widget arrangement for this mode.</source>
+        <translation>Deshacer te devuelve la disposición de widgets de este modo.</translation>
     </message>
     <message>
         <source>Edit desktop lets you drag a widget, resize it from its corner and snap to an 8 px grid on the real desktop. Reset layout restores the factory arrangement; saved presets are kept.</source>
@@ -4380,6 +4675,18 @@ Huella de la clave del autor: %3</translation>
         <translation>El comando de disposición no respondió. Revisá: horneroctl hypr monitors status</translation>
     </message>
     <message>
+        <source>Display arrangement was not changed</source>
+        <translation>No se cambió la disposición de las pantallas</translation>
+    </message>
+    <message>
+        <source>Displays: %1</source>
+        <translation>Pantallas: %1</translation>
+    </message>
+    <message>
+        <source>Undo puts every screen back where it was.</source>
+        <translation>Deshacer devuelve cada pantalla a donde estaba.</translation>
+    </message>
+    <message>
         <source>Outputs</source>
         <translation>Salidas</translation>
     </message>
@@ -4748,6 +5055,14 @@ Huella de la clave del autor: %3</translation>
 <context>
     <name>ExperiencePane</name>
     <message>
+        <source>%1 mode</source>
+        <translation>Modo %1</translation>
+    </message>
+    <message>
+        <source>Undo returns to the previous mode.</source>
+        <translation>Deshacer vuelve al modo anterior.</translation>
+    </message>
+    <message>
         <source>fixed in this mode</source>
         <translation>fijo en este modo</translation>
     </message>
@@ -5020,12 +5335,8 @@ Huella de la clave del autor: %3</translation>
         <translation>Preset de layout preferido</translation>
     </message>
     <message>
-        <source>Apply preferred layout on switch</source>
-        <translation>Aplicar el layout preferido al cambiar</translation>
-    </message>
-    <message>
-        <source>Apply %1 now</source>
-        <translation>Aplicar %1 ahora</translation>
+        <source>Apply preferred layout whenever this mode starts</source>
+        <translation>Aplicar el layout preferido cada vez que empieza este modo</translation>
     </message>
     <message>
         <source>Reset %1 customisations</source>
@@ -5702,6 +6013,14 @@ Snapshot del plugin: %3</translation>
         <translation>Dejá seleccionada al menos una especialización o aplicación.</translation>
     </message>
     <message>
+        <source>Power profile %1</source>
+        <translation>Perfil de energía %1</translation>
+    </message>
+    <message>
+        <source>Undo returns to %1.</source>
+        <translation>Deshacer vuelve a %1.</translation>
+    </message>
+    <message>
         <source>Gaming is unavailable (is a horneroctl with gaming support installed?).</source>
         <translation>Gaming no está disponible (¿está instalado un horneroctl con soporte para gaming?).</translation>
     </message>
@@ -5716,6 +6035,10 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>Power profile unavailable (is horneroctl installed?).</source>
         <translation>Perfil de energía no disponible (¿está instalado horneroctl?).</translation>
+    </message>
+    <message>
+        <source>%1 was not applied</source>
+        <translation>No se aplicó: %1</translation>
     </message>
     <message>
         <source>Gaming is in Preview. Choose the gaming setups you want: Hornero remembers your choice and installs nothing until you confirm it. Hardware detection is a hint, not a guarantee that a game will run well.</source>
@@ -5778,12 +6101,8 @@ Snapshot del plugin: %3</translation>
         <translation>Leyendo perfil de energía…</translation>
     </message>
     <message>
-        <source>Confirm %1</source>
-        <translation>Confirmar %1</translation>
-    </message>
-    <message>
-        <source>Set power profile to %1 (two-step confirm)</source>
-        <translation>Cambiar el perfil de energía a %1 (confirmación en dos pasos)</translation>
+        <source>Set power profile to %1</source>
+        <translation>Cambiar el perfil de energía a %1</translation>
     </message>
     <message>
         <source>Gaming mode</source>
@@ -5876,6 +6195,14 @@ Snapshot del plugin: %3</translation>
         <translation>Intervalo de actualización</translation>
     </message>
     <message>
+        <source>Sensor update interval</source>
+        <translation>Intervalo de actualización de sensores</translation>
+    </message>
+    <message>
+        <source>Disk usage update interval</source>
+        <translation>Intervalo de actualización del uso de disco</translation>
+    </message>
+    <message>
         <source>Drag threshold</source>
         <translation>Umbral de arrastre</translation>
     </message>
@@ -5964,6 +6291,189 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>Try again</source>
         <translation>Reintentar</translation>
+    </message>
+</context>
+<context>
+    <name>HabitatSection</name>
+    <message>
+        <source>Nest</source>
+        <translation>Nido</translation>
+    </message>
+    <message>
+        <source>Show the nest</source>
+        <translation>Mostrar el nido</translation>
+    </message>
+    <message>
+        <source>Placeholder art: the final nest is still being drawn. The placement, lighting and mode controls below already work and will carry over.</source>
+        <translation>Arte provisorio: el nido final todavía se está dibujando. Los controles de ubicación, iluminación y modo de abajo ya funcionan y se van a mantener.</translation>
+    </message>
+    <message>
+        <source>Placement</source>
+        <translation>Ubicación</translation>
+    </message>
+    <message>
+        <source>Own corner</source>
+        <translation>Rincón propio</translation>
+    </message>
+    <message>
+        <source>Beside Javi</source>
+        <translation>Al lado de Javi</translation>
+    </message>
+    <message>
+        <source>Own corner keeps the nest in one place on your desktop, and Javi flies home to it. Beside Javi carries it along.</source>
+        <translation>Rincón propio deja el nido en un lugar fijo de tu escritorio, y Javi vuela de vuelta a él. Al lado de Javi lo lleva consigo.</translation>
+    </message>
+    <message>
+        <source>Corner</source>
+        <translation>Esquina</translation>
+    </message>
+    <message>
+        <source>Bottom right</source>
+        <translation>Abajo a la derecha</translation>
+    </message>
+    <message>
+        <source>Bottom left</source>
+        <translation>Abajo a la izquierda</translation>
+    </message>
+    <message>
+        <source>Top right</source>
+        <translation>Arriba a la derecha</translation>
+    </message>
+    <message>
+        <source>Top left</source>
+        <translation>Arriba a la izquierda</translation>
+    </message>
+    <message>
+        <source>Distance from the side</source>
+        <translation>Distancia desde el costado</translation>
+    </message>
+    <message>
+        <source>Distance from the edge</source>
+        <translation>Distancia desde el borde</translation>
+    </message>
+    <message>
+        <source>Nest size</source>
+        <translation>Tamaño del nido</translation>
+    </message>
+    <message>
+        <source>Monitor</source>
+        <translation>Monitor</translation>
+    </message>
+    <message>
+        <source>With Javi</source>
+        <translation>Con Javi</translation>
+    </message>
+    <message>
+        <source>Lighting</source>
+        <translation>Iluminación</translation>
+    </message>
+    <message>
+        <source>Follow theme</source>
+        <translation>Seguir el tema</translation>
+    </message>
+    <message>
+        <source>Warm</source>
+        <translation>Cálido</translation>
+    </message>
+    <message>
+        <source>Cool</source>
+        <translation>Frío</translation>
+    </message>
+    <message>
+        <source>Off</source>
+        <translation>Desactivado</translation>
+    </message>
+    <message>
+        <source>Follow theme uses your wallpaper and Chromatic colours. Lights only show real state: assistant link, a run in progress, an approval waiting, the current mode.</source>
+        <translation>Seguir el tema usa tu fondo y los colores de Chromatic. Las luces solo muestran estados reales: conexión con el asistente, una ejecución en curso, una aprobación pendiente, el modo actual.</translation>
+    </message>
+    <message>
+        <source>Light intensity</source>
+        <translation>Intensidad de la luz</translation>
+    </message>
+    <message>
+        <source>Indicator lights</source>
+        <translation>Luces indicadoras</translation>
+    </message>
+    <message>
+        <source>Screen glow while the assistant works</source>
+        <translation>Brillo en pantalla mientras el asistente trabaja</translation>
+    </message>
+    <message>
+        <source>Dim in quiet hours</source>
+        <translation>Atenuar en las horas tranquilas</translation>
+    </message>
+    <message>
+        <source>Click on the nest</source>
+        <translation>Clic en el nido</translation>
+    </message>
+    <message>
+        <source>Nothing</source>
+        <translation>Nada</translation>
+    </message>
+    <message>
+        <source>Javi Radio</source>
+        <translation>Radio de Javi</translation>
+    </message>
+    <message>
+        <source>Workbench</source>
+        <translation>Workbench</translation>
+    </message>
+    <message>
+        <source>Settings</source>
+        <translation>Ajustes</translation>
+    </message>
+    <message>
+        <source>Nothing (the default) keeps the nest click-through. Any other choice makes only the nest art clickable.</source>
+        <translation>Nada (lo predeterminado) deja que los clics atraviesen el nido. Cualquier otra opción hace clickeable solo el dibujo del nido.</translation>
+    </message>
+    <message>
+        <source>Per mode</source>
+        <translation>Por modo</translation>
+    </message>
+    <message>
+        <source>Focus</source>
+        <translation>Focus</translation>
+    </message>
+    <message>
+        <source>Everyday</source>
+        <translation>Everyday</translation>
+    </message>
+    <message>
+        <source>Signal</source>
+        <translation>Signal</translation>
+    </message>
+    <message>
+        <source>Gaming</source>
+        <translation>Gaming</translation>
+    </message>
+    <message>
+        <source>Studio</source>
+        <translation>Studio</translation>
+    </message>
+    <message>
+        <source>Hidden</source>
+        <translation>Oculto</translation>
+    </message>
+    <message>
+        <source>Dim</source>
+        <translation>Tenue</translation>
+    </message>
+    <message>
+        <source>Normal</source>
+        <translation>Normal</translation>
+    </message>
+    <message>
+        <source>Rich</source>
+        <translation>Detallado</translation>
+    </message>
+    <message>
+        <source>Build the next stage now</source>
+        <translation>Construir la siguiente etapa ya</translation>
+    </message>
+    <message>
+        <source>Reset the nest section</source>
+        <translation>Restablecer la sección del nido</translation>
     </message>
 </context>
 <context>
@@ -6147,6 +6657,14 @@ Snapshot del plugin: %3</translation>
 <context>
     <name>InlineAsk</name>
     <message>
+        <source>Stopped locally; the run may still be going on the gateway (its id was not known yet).</source>
+        <translation>Se detuvo localmente; la ejecución puede seguir en el gateway (todavía no se conocía su id).</translation>
+    </message>
+    <message>
+        <source>The stop request was not accepted. The run may still be going: horneroctl assistant status</source>
+        <translation>No se aceptó el pedido de detención. La ejecución puede seguir en curso: horneroctl assistant status</translation>
+    </message>
+    <message>
         <source>The assistant did not answer. Check: horneroctl assistant status</source>
         <translation>El asistente no respondió. Revisá: horneroctl assistant status</translation>
     </message>
@@ -6212,6 +6730,22 @@ Snapshot del plugin: %3</translation>
         <translation>horneroctl keyboard no está disponible en este sistema.</translation>
     </message>
     <message>
+        <source>Keyboard layout was not changed</source>
+        <translation>No se cambió la distribución de teclado</translation>
+    </message>
+    <message>
+        <source>horneroctl refused the layout list.</source>
+        <translation>horneroctl rechazó la lista de distribuciones.</translation>
+    </message>
+    <message>
+        <source>Keyboard layout %1</source>
+        <translation>Distribución de teclado %1</translation>
+    </message>
+    <message>
+        <source>Undo returns to %1.</source>
+        <translation>Deshacer vuelve a %1.</translation>
+    </message>
+    <message>
         <source>Keyboard layout</source>
         <translation>Distribución de teclado</translation>
     </message>
@@ -6236,14 +6770,6 @@ Snapshot del plugin: %3</translation>
         <translation>Lista de distribuciones</translation>
     </message>
     <message>
-        <source>Comma-separated XKB names, e.g. us,latam. %1 layouts are available on this system.</source>
-        <translation>Nombres XKB separados por comas, por ejemplo us,latam. Hay %1 distribuciones disponibles en este sistema.</translation>
-    </message>
-    <message>
-        <source>Comma-separated XKB names, e.g. us,latam</source>
-        <translation>Nombres XKB separados por comas, por ejemplo us,latam</translation>
-    </message>
-    <message>
         <source>us,latam</source>
         <translation>us,latam</translation>
     </message>
@@ -6252,8 +6778,12 @@ Snapshot del plugin: %3</translation>
         <translation>Variante (intl,)</translation>
     </message>
     <message>
-        <source>Apply layouts</source>
-        <translation>Aplicar distribuciones</translation>
+        <source>Comma-separated XKB names, e.g. us,latam. Applies when you press Enter or leave the field. %1 layouts are available on this system.</source>
+        <translation>Nombres XKB separados por comas, p. ej. us,latam. Se aplica al presionar Enter o al salir del campo. Hay %1 distribuciones disponibles en este sistema.</translation>
+    </message>
+    <message>
+        <source>Comma-separated XKB names, e.g. us,latam. Applies when you press Enter or leave the field.</source>
+        <translation>Nombres XKB separados por comas, p. ej. us,latam. Se aplica al presionar Enter o al salir del campo.</translation>
     </message>
     <message>
         <source>Pointer and keys</source>
@@ -6320,28 +6850,16 @@ Snapshot del plugin: %3</translation>
         <translation>Volver a aplicar ajustes guardados</translation>
     </message>
     <message>
-        <source>Each restore asks for a second click to confirm.</source>
-        <translation>Cada restauración te pide un segundo clic para confirmar.</translation>
-    </message>
-    <message>
-        <source>Click again to restore layout</source>
-        <translation>Hacé clic de nuevo para restaurar la distribución</translation>
+        <source>Puts the settings you saved back on the running session.</source>
+        <translation>Vuelve a poner en la sesión actual los ajustes que guardaste.</translation>
     </message>
     <message>
         <source>Restore keyboard layout</source>
         <translation>Restaurar distribución de teclado</translation>
     </message>
     <message>
-        <source>Click again to restore tuning</source>
-        <translation>Hacé clic de nuevo para restaurar el ajuste</translation>
-    </message>
-    <message>
         <source>Restore pointer &amp; keyboard</source>
         <translation>Restaurar puntero y teclado</translation>
-    </message>
-    <message>
-        <source>Click again to restore cursor</source>
-        <translation>Hacé clic de nuevo para restaurar el cursor</translation>
     </message>
     <message>
         <source>Restore cursor</source>
@@ -6456,6 +6974,18 @@ Snapshot del plugin: %3</translation>
         <translation>horneroctl rebind no está disponible en este sistema.</translation>
     </message>
     <message>
+        <source>%1 now %2</source>
+        <translation>%1 pasó a %2</translation>
+    </message>
+    <message>
+        <source>Undo moves it back to %1.</source>
+        <translation>Deshacer lo vuelve a %1.</translation>
+    </message>
+    <message>
+        <source>Keybinding was not changed</source>
+        <translation>No se cambió el atajo</translation>
+    </message>
+    <message>
         <source>Search keybindings…</source>
         <translation>Buscar atajos…</translation>
     </message>
@@ -6472,12 +7002,8 @@ Snapshot del plugin: %3</translation>
         <translation>Reasignar %1 a:</translation>
     </message>
     <message>
-        <source>SUPER + F13</source>
-        <translation>SUPER + F13</translation>
-    </message>
-    <message>
-        <source>Apply</source>
-        <translation>Aplicar</translation>
+        <source>SUPER + F13, then Enter</source>
+        <translation>SUPER + F13, después Enter</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -6631,12 +7157,28 @@ Snapshot del plugin: %3</translation>
         <translation>Guardar los tamaños de barra y escalas actuales como retoques de este layout</translation>
     </message>
     <message>
-        <source>Apply my tweaks</source>
-        <translation>Aplicar mis retoques</translation>
+        <source>Use my tweaks now</source>
+        <translation>Usar mis retoques ahora</translation>
     </message>
     <message>
-        <source>Apply the saved tweaks of this layout now</source>
-        <translation>Aplicar ahora los retoques guardados de este layout</translation>
+        <source>Lay the saved tweaks of this layout on the bars now</source>
+        <translation>Aplicar ahora a las barras los retoques guardados de este layout</translation>
+    </message>
+    <message>
+        <source>Tweaks laid back on</source>
+        <translation>Retoques aplicados de nuevo</translation>
+    </message>
+    <message>
+        <source>Undo brings back the sizes you had.</source>
+        <translation>Deshacer te devuelve los tamaños que tenías.</translation>
+    </message>
+    <message>
+        <source>Tweaks forgotten</source>
+        <translation>Retoques olvidados</translation>
+    </message>
+    <message>
+        <source>Undo remembers them again.</source>
+        <translation>Deshacer los vuelve a recordar.</translation>
     </message>
     <message>
         <source>Forget</source>
@@ -6775,6 +7317,14 @@ Snapshot del plugin: %3</translation>
         <translation>Esquinas más suaves, más espacio, un brillo más tenue, una lámpara más cálida y movimiento sin apuro.</translation>
     </message>
     <message>
+        <source>Look: %1</source>
+        <translation>Aspecto: %1</translation>
+    </message>
+    <message>
+        <source>Undo restores every scale, the glow and the atmosphere knobs.</source>
+        <translation>Deshacer restaura todas las escalas, el brillo y los controles de la atmósfera.</translation>
+    </message>
+    <message>
         <source>Look</source>
         <translation>Aspecto</translation>
     </message>
@@ -6815,6 +7365,14 @@ Snapshot del plugin: %3</translation>
         <translation>Relación entre ancho y alto</translation>
     </message>
     <message>
+        <source>How long Undo stays after a change</source>
+        <translation>Cuánto dura Deshacer después de un cambio</translation>
+    </message>
+    <message>
+        <source>Preview themes and colours while pointing at them</source>
+        <translation>Vista previa de temas y colores al apuntarlos</translation>
+    </message>
+    <message>
         <source>Text weight shift</source>
         <translation>Ajuste del grosor del texto</translation>
     </message>
@@ -6831,16 +7389,16 @@ Snapshot del plugin: %3</translation>
         <translation>Ágil</translation>
     </message>
     <message>
-        <source>Bouncy</source>
-        <translation>Con rebote</translation>
+        <source>Lively</source>
+        <translation>Animado</translation>
+    </message>
+    <message>
+        <source>Smooth (factory) settles like a needle, at most 4 % past the mark; Snappy never overshoots; Lively adds a spring, capped at 6 %. Opacity and colour never overshoot, and reduced motion still wins.</source>
+        <translation>Suave (de fábrica) se asienta como una aguja, como mucho 4 % más allá de la marca; Ágil nunca se pasa; Animado suma un rebote, con un tope de 6 %. La opacidad y el color nunca se pasan, y el movimiento reducido siempre manda.</translation>
     </message>
     <message>
         <source>%1 motion style</source>
         <translation>Estilo de movimiento %1</translation>
-    </message>
-    <message>
-        <source>Snappy never overshoots; Bouncy gives panels a little more give. Opacity and colour never overshoot, and reduced motion still wins.</source>
-        <translation>Ágil nunca se pasa de largo; Con rebote les da a los paneles un poco más de elasticidad. La opacidad y el color nunca se pasan, y reducir movimiento siempre tiene prioridad.</translation>
     </message>
     <message>
         <source>Reset look to factory</source>
@@ -6874,6 +7432,22 @@ Snapshot del plugin: %3</translation>
         <translation>Pista siguiente</translation>
     </message>
     <message>
+        <source>Left channel spectrum</source>
+        <translation>Espectro del canal izquierdo</translation>
+    </message>
+    <message>
+        <source>NO SIGNAL</source>
+        <translation>SIN SEÑAL</translation>
+    </message>
+    <message>
+        <source>No signal: nothing is playing</source>
+        <translation>Sin señal: no suena nada</translation>
+    </message>
+    <message>
+        <source>Right channel spectrum</source>
+        <translation>Espectro del canal derecho</translation>
+    </message>
+    <message>
         <source>Nothing playing</source>
         <translation>No se está reproduciendo nada</translation>
     </message>
@@ -6888,6 +7462,14 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>paused</source>
         <translation>en pausa</translation>
+    </message>
+    <message>
+        <source>Position %1 of %2</source>
+        <translation>Posición %1 de %2</translation>
+    </message>
+    <message>
+        <source>No position</source>
+        <translation>Sin posición</translation>
     </message>
     <message>
         <source>Playback</source>
@@ -6916,6 +7498,53 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>Playback position</source>
         <translation>Posición de reproducción</translation>
+    </message>
+</context>
+<context>
+    <name>MediaDeckSection</name>
+    <message>
+        <source>Media deck reset to factory</source>
+        <translation>Deck multimedia restablecido de fábrica</translation>
+    </message>
+    <message>
+        <source>Undo brings back your spectrum, peak ticks, bands and Javi.</source>
+        <translation>Deshacer te devuelve el espectro, las marcas de pico, las bandas y a Javi.</translation>
+    </message>
+    <message>
+        <source>Media deck</source>
+        <translation>Deck multimedia</translation>
+    </message>
+    <message>
+        <source>The deck on the dashboard home: the cover well with the left and right channels on either side, a tape counter and the transport. The spectrum only moves while something plays, and stays still when motion is off.</source>
+        <translation>El deck del inicio del dashboard: el hueco de la portada con los canales izquierdo y derecho a cada lado, un contador de cinta y los controles de reproducción. El espectro solo se mueve mientras algo suena y queda quieto cuando el movimiento está desactivado.</translation>
+    </message>
+    <message>
+        <source>Stereo spectrum</source>
+        <translation>Espectro estéreo</translation>
+    </message>
+    <message>
+        <source>Peak-hold ticks</source>
+        <translation>Marcas de pico</translation>
+    </message>
+    <message>
+        <source>Bands per channel</source>
+        <translation>Bandas por canal</translation>
+    </message>
+    <message>
+        <source>Javi dozes when nothing plays</source>
+        <translation>Javi dormita cuando no suena nada</translation>
+    </message>
+    <message>
+        <source>Javi is hidden because the mascot is off in Appearance, Atmosphere.</source>
+        <translation>Javi está oculto porque la mascota está desactivada en Apariencia, Atmósfera.</translation>
+    </message>
+    <message>
+        <source>Reset media deck to factory</source>
+        <translation>Restablecer el deck multimedia de fábrica</translation>
+    </message>
+    <message>
+        <source>Reset every media deck setting to its factory value</source>
+        <translation>Restablecer cada ajuste del deck multimedia a su valor de fábrica</translation>
     </message>
 </context>
 <context>
@@ -6957,6 +7586,30 @@ Snapshot del plugin: %3</translation>
         <translation>Elegí qué sigue</translation>
     </message>
     <message>
+        <source>Applied</source>
+        <translation>Aplicado</translation>
+    </message>
+    <message>
+        <source>Undone</source>
+        <translation>Deshecho</translation>
+    </message>
+    <message>
+        <source>Now using</source>
+        <translation>En uso</translation>
+    </message>
+    <message>
+        <source>Previewing</source>
+        <translation>En vista previa</translation>
+    </message>
+    <message>
+        <source>Click to use</source>
+        <translation>Hacé clic para usar</translation>
+    </message>
+    <message>
+        <source>Applying…</source>
+        <translation>Aplicando…</translation>
+    </message>
+    <message>
         <source>Nothing by that name yet</source>
         <translation>Todavía no hay nada con ese nombre</translation>
     </message>
@@ -6991,6 +7644,30 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>Rest, restart, or carry on</source>
         <translation>Descansar, reiniciar o seguir</translation>
+    </message>
+    <message>
+        <source>All set</source>
+        <translation>Listo</translation>
+    </message>
+    <message>
+        <source>Put back</source>
+        <translation>Como estaba</translation>
+    </message>
+    <message>
+        <source>Wearing now</source>
+        <translation>Puesto ahora</translation>
+    </message>
+    <message>
+        <source>Trying on</source>
+        <translation>Probándolo</translation>
+    </message>
+    <message>
+        <source>Click to keep it</source>
+        <translation>Hacé clic para quedártelo</translation>
+    </message>
+    <message>
+        <source>Settling in</source>
+        <translation>Acomodándose</translation>
     </message>
 </context>
 <context>
@@ -7242,12 +7919,36 @@ Snapshot del plugin: %3</translation>
         <translation>Leyendo luz nocturna…</translation>
     </message>
     <message>
+        <source>Night light schedule %1 to %2</source>
+        <translation>Horario de luz nocturna de %1 a %2</translation>
+    </message>
+    <message>
+        <source>Undo removes the schedule.</source>
+        <translation>Deshacer quita el horario.</translation>
+    </message>
+    <message>
+        <source>Undo returns to %1.</source>
+        <translation>Deshacer vuelve a %1.</translation>
+    </message>
+    <message>
+        <source>Night light schedule removed</source>
+        <translation>Horario de luz nocturna eliminado</translation>
+    </message>
+    <message>
+        <source>Undo brings back %1.</source>
+        <translation>Deshacer recupera %1.</translation>
+    </message>
+    <message>
         <source>horneroctl night-mode unavailable on this system.</source>
         <translation>horneroctl night-mode no está disponible en este sistema.</translation>
     </message>
     <message>
         <source>The night-mode command did not answer. Check: horneroctl appearance night-mode status</source>
         <translation>El comando night-mode no respondió. Revisá: horneroctl appearance night-mode status</translation>
+    </message>
+    <message>
+        <source>Night light was not changed</source>
+        <translation>No se cambió la luz nocturna</translation>
     </message>
     <message>
         <source>Warm the display for the night</source>
@@ -7306,6 +8007,10 @@ Snapshot del plugin: %3</translation>
         <translation>No hay horario configurado. Los horarios usan tu reloj local; si se pasó un cambio, los temporizadores lo ponen al día después de iniciar sesión.</translation>
     </message>
     <message>
+        <source>Switch on and off automatically</source>
+        <translation>Encender y apagar automáticamente</translation>
+    </message>
+    <message>
         <source>Turn on — hour</source>
         <translation>Encender — hora</translation>
     </message>
@@ -7320,14 +8025,6 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>Turn off — minutes</source>
         <translation>Apagar — minutos</translation>
-    </message>
-    <message>
-        <source>Set schedule</source>
-        <translation>Guardar horario</translation>
-    </message>
-    <message>
-        <source>Clear schedule</source>
-        <translation>Borrar horario</translation>
     </message>
     <message>
         <source>Temperature applies immediately while Night Light is on and is stored for the next time otherwise. This pane never shows a control the backend cannot honour.</source>
@@ -7441,6 +8138,22 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>Expire after</source>
         <translation>Ocultar después de</translation>
+    </message>
+    <message>
+        <source>Timeout line</source>
+        <translation>Línea de cuenta regresiva</translation>
+    </message>
+    <message>
+        <source>A thin amber line on each popup that runs down with its timeout and stops while you point at the card. Urgent notifications stay until you dismiss them, so they have none.</source>
+        <translation>Una línea ámbar fina en cada notificación emergente que se acorta a medida que vence y se detiene mientras apuntás a la tarjeta. Las notificaciones urgentes quedan hasta que las descartás, así que no la tienen.</translation>
+    </message>
+    <message>
+        <source>Reset</source>
+        <translation>Restablecer</translation>
+    </message>
+    <message>
+        <source>Reset %1 to default</source>
+        <translation>Restablecer %1 al valor predeterminado</translation>
     </message>
     <message>
         <source>Open on click</source>
@@ -7603,6 +8316,85 @@ Snapshot del plugin: %3</translation>
     </message>
 </context>
 <context>
+    <name>NowUsingStrip</name>
+    <message>
+        <source>Day</source>
+        <translation>Día</translation>
+    </message>
+    <message>
+        <source>Night</source>
+        <translation>Noche</translation>
+    </message>
+    <message>
+        <source>from %1</source>
+        <translation>de %1</translation>
+    </message>
+    <message>
+        <source>an image</source>
+        <translation>una imagen</translation>
+    </message>
+    <message>
+        <source>from colour %1</source>
+        <translation>del color %1</translation>
+    </message>
+    <message>
+        <source>from the Signal house palette</source>
+        <translation>de la paleta de la casa Signal</translation>
+    </message>
+    <message>
+        <source>from wallpaper %1</source>
+        <translation>del fondo %1</translation>
+    </message>
+    <message>
+        <source>from your wallpaper</source>
+        <translation>de tu fondo de pantalla</translation>
+    </message>
+    <message>
+        <source>High contrast</source>
+        <translation>Alto contraste</translation>
+    </message>
+    <message>
+        <source>Chromatic</source>
+        <translation>Chromatic</translation>
+    </message>
+    <message>
+        <source>Custom appearance</source>
+        <translation>Aspecto personalizado</translation>
+    </message>
+    <message>
+        <source>Accessibility override is on; your look returns when it is off</source>
+        <translation>El ajuste de accesibilidad está activado; tu aspecto vuelve cuando lo desactives</translation>
+    </message>
+    <message>
+        <source>Hornero Original</source>
+        <translation>Hornero Original</translation>
+    </message>
+    <message>
+        <source>Your palette</source>
+        <translation>Tu paleta</translation>
+    </message>
+    <message>
+        <source>Theme pack</source>
+        <translation>Paquete de temas</translation>
+    </message>
+    <message>
+        <source>%1 · colours set outside the theme list</source>
+        <translation>%1 · colores definidos fuera de la lista de temas</translation>
+    </message>
+    <message>
+        <source>Chromatic · %1</source>
+        <translation>Chromatic · %1</translation>
+    </message>
+    <message>
+        <source>Undo</source>
+        <translation>Deshacer</translation>
+    </message>
+    <message>
+        <source>Undo %1</source>
+        <translation>Deshacer: %1</translation>
+    </message>
+</context>
+<context>
     <name>OsIcon</name>
     <message>
         <source>Open launcher</source>
@@ -7666,6 +8458,30 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>Height</source>
         <translation>Alto</translation>
+    </message>
+    <message>
+        <source>Slider handle</source>
+        <translation>Manija del deslizador</translation>
+    </message>
+    <message>
+        <source>Show the value on the handle</source>
+        <translation>Mostrar el valor en la manija</translation>
+    </message>
+    <message>
+        <source>Keep the value after scrolling</source>
+        <translation>Mantener el valor después de desplazar</translation>
+    </message>
+    <message>
+        <source>While you drag, scroll or step a segmented slider, its handle shows the number in mono; at rest it shows a glyph. The value label stays for screen readers.</source>
+        <translation>Mientras arrastrás, desplazás o movés paso a paso un deslizador segmentado, su manija muestra el número en monoespaciada; en reposo muestra un glifo. La etiqueta del valor sigue disponible para lectores de pantalla.</translation>
+    </message>
+    <message>
+        <source>Reset</source>
+        <translation>Restablecer</translation>
+    </message>
+    <message>
+        <source>Reset %1 to default</source>
+        <translation>Restablecer %1 al valor predeterminado</translation>
     </message>
 </context>
 <context>
@@ -8056,6 +8872,18 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>Atmosphere: lamp light, grain, mascot, voice</source>
         <translation>Atmósfera: luz de lámpara, grano, mascota, voz</translation>
+    </message>
+    <message>
+        <source>Dashboard layout: console, classic, compact</source>
+        <translation>Layout del dashboard: consola, clásico, compacto</translation>
+    </message>
+    <message>
+        <source>Media deck: stereo spectrum, peak ticks, Javi</source>
+        <translation>Deck multimedia: espectro estéreo, marcas de pico, Javi</translation>
+    </message>
+    <message>
+        <source>Event sounds</source>
+        <translation>Sonidos de eventos</translation>
     </message>
     <message>
         <source>Wallpaper and background</source>
@@ -8515,16 +9343,19 @@ Snapshot del plugin: %3</translation>
         <translation>Ajustes</translation>
     </message>
     <message>
-        <source>Reset all to defaults…</source>
-        <translation>Restablecer todo a los valores predeterminados…</translation>
+        <source>Plugin settings reset</source>
+        <translation>Ajustes del plugin restablecidos</translation>
+    </message>
+    <message numerus="yes">
+        <source>Undo brings back %n setting(s).</source>
+        <translation>
+            <numerusform>Deshacer te devuelve %n ajuste.</numerusform>
+            <numerusform>Deshacer te devuelve %n ajustes.</numerusform>
+        </translation>
     </message>
     <message>
-        <source>Confirm reset all</source>
-        <translation>Confirmar restablecer todo</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>Cancelar</translation>
+        <source>Reset all to defaults</source>
+        <translation>Restablecer todo a los predeterminados</translation>
     </message>
     <message>
         <source>Value is outside the allowed range.</source>
@@ -8720,6 +9551,79 @@ Snapshot del plugin: %3</translation>
     </message>
 </context>
 <context>
+    <name>PrefPick</name>
+    <message>
+        <source>Reset</source>
+        <translation>Restablecer</translation>
+    </message>
+    <message>
+        <source>Reset %1 to default</source>
+        <translation>Restablecer %1 al valor predeterminado</translation>
+    </message>
+    <message>
+        <source>%1: %2</source>
+        <translation>%1: %2</translation>
+    </message>
+</context>
+<context>
+    <name>PrefSlider</name>
+    <message>
+        <source>Reset</source>
+        <translation>Restablecer</translation>
+    </message>
+    <message>
+        <source>Reset %1 to default</source>
+        <translation>Restablecer %1 al valor predeterminado</translation>
+    </message>
+</context>
+<context>
+    <name>PresetApply</name>
+    <message>
+        <source>Layout was not changed</source>
+        <translation>No se cambió el layout</translation>
+    </message>
+    <message>
+        <source>Could not save the current settings first (%1). Nothing was changed.</source>
+        <translation>No se pudieron guardar primero los ajustes actuales (%1). No se cambió nada.</translation>
+    </message>
+    <message>
+        <source>copy failed</source>
+        <translation>falló la copia</translation>
+    </message>
+    <message>
+        <source>Layout %1 was not applied</source>
+        <translation>No se aplicó el layout %1</translation>
+    </message>
+    <message>
+        <source>horneroctl refused the preset. Your previous layout is unchanged.</source>
+        <translation>horneroctl rechazó el preset. Tu layout anterior no cambió.</translation>
+    </message>
+    <message>
+        <source>Layout %1</source>
+        <translation>Layout %1</translation>
+    </message>
+    <message>
+        <source>Undo brings back the previous layout and its tuning.</source>
+        <translation>Deshacer te devuelve el layout anterior y su ajuste fino.</translation>
+    </message>
+    <message>
+        <source>Layout was not undone</source>
+        <translation>No se deshizo el layout</translation>
+    </message>
+    <message>
+        <source>Other settings changed after the layout was applied, and Undo would have rolled them back too. Pick the previous layout again instead.</source>
+        <translation>Otros ajustes cambiaron después de aplicar el layout, y Deshacer también los habría revertido. Mejor elegí de nuevo el layout anterior.</translation>
+    </message>
+    <message>
+        <source>Could not undo the layout</source>
+        <translation>No se pudo deshacer el layout</translation>
+    </message>
+    <message>
+        <source>The previous settings could not be restored.</source>
+        <translation>No se pudieron restaurar los ajustes anteriores.</translation>
+    </message>
+</context>
+<context>
     <name>PresetGrid</name>
     <message>
         <source>Topology preview unavailable</source>
@@ -8868,6 +9772,93 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>Start screen recording</source>
         <translation>Empezar a grabar la pantalla</translation>
+    </message>
+</context>
+<context>
+    <name>RadioSection</name>
+    <message>
+        <source>Javi Radio</source>
+        <translation>Radio de Javi</translation>
+    </message>
+    <message>
+        <source>Enable Javi Radio</source>
+        <translation>Activar Radio de Javi</translation>
+    </message>
+    <message>
+        <source>Quick questions only. A question never turns into an agent run: if the assistant needs your approval, Radio sends you to the Workbench.</source>
+        <translation>Solo preguntas rápidas. Una pregunta nunca se convierte en una ejecución del agente: si el asistente necesita tu aprobación, Radio te manda al Workbench.</translation>
+    </message>
+    <message>
+        <source>Open Radio from</source>
+        <translation>Abrir Radio desde</translation>
+    </message>
+    <message>
+        <source>Keyboard shortcut</source>
+        <translation>Atajo de teclado</translation>
+    </message>
+    <message>
+        <source>Launcher</source>
+        <translation>Lanzador</translation>
+    </message>
+    <message>
+        <source>Clicking Javi</source>
+        <translation>Clic en Javi</translation>
+    </message>
+    <message>
+        <source>Bar item</source>
+        <translation>Elemento de la barra</translation>
+    </message>
+    <message>
+        <source>Javi&apos;s menu</source>
+        <translation>Menú de Javi</translation>
+    </message>
+    <message>
+        <source>Clicking the nest</source>
+        <translation>Clic en el nido</translation>
+    </message>
+    <message>
+        <source>Extension actions (no keyboard until you click)</source>
+        <translation>Acciones de extensiones (sin teclado hasta que hagas clic)</translation>
+    </message>
+    <message>
+        <source>Compositor key binding over IPC (cannot be verified)</source>
+        <translation>Atajo del compositor por IPC (no se puede verificar)</translation>
+    </message>
+    <message>
+        <source>Extension actions and the IPC key binding come through qs ipc, which any local program can call: they are refused in Focus, Gaming and fullscreen, and they can only open Radio or put text in it, never send a question.</source>
+        <translation>Las acciones de extensiones y el atajo por IPC llegan por qs ipc, que cualquier programa local puede llamar: se rechazan en Focus, Gaming y en pantalla completa, y solo pueden abrir Radio o escribirle texto, nunca enviar una pregunta.</translation>
+    </message>
+    <message>
+        <source>Tip</source>
+        <translation>Consejo</translation>
+    </message>
+    <message>
+        <source>Chat</source>
+        <translation>Chat</translation>
+    </message>
+    <message>
+        <source>Nothing</source>
+        <translation>Nada</translation>
+    </message>
+    <message>
+        <source>Show Radio in the bar</source>
+        <translation>Mostrar Radio en la barra</translation>
+    </message>
+    <message>
+        <source>Keep Radio open after an answer</source>
+        <translation>Mantener Radio abierta después de una respuesta</translation>
+    </message>
+    <message>
+        <source>Show the answer in Javi&apos;s bubble</source>
+        <translation>Mostrar la respuesta en el globo de Javi</translation>
+    </message>
+    <message>
+        <source>Global shortcut name: javiRadio (suggested binding %1). Bind it in your compositor or Keybinds settings.</source>
+        <translation>Nombre del atajo global: javiRadio (atajo sugerido: %1). Asignalo en tu compositor o en los ajustes de Atajos.</translation>
+    </message>
+    <message>
+        <source>Reset the Radio section</source>
+        <translation>Restablecer la sección de Radio</translation>
     </message>
 </context>
 <context>
@@ -9064,8 +10055,40 @@ Snapshot del plugin: %3</translation>
 <context>
     <name>ScalesSection</name>
     <message>
+        <source>Compact</source>
+        <translation>Compacto</translation>
+    </message>
+    <message>
+        <source>Cosy</source>
+        <translation>Acogedor</translation>
+    </message>
+    <message>
+        <source>Airy</source>
+        <translation>Espacioso</translation>
+    </message>
+    <message>
         <source>Scales</source>
         <translation>Escalas</translation>
+    </message>
+    <message>
+        <source>Density</source>
+        <translation>Densidad</translation>
+    </message>
+    <message>
+        <source>Custom: spacing %1×, padding %2×. Pick a preset or reset to Cosy.</source>
+        <translation>Personalizada: espaciado %1×, relleno %2×. Elegí un preset o volvé a Acogedor.</translation>
+    </message>
+    <message>
+        <source>Spacing and padding move together, so gaps keep their rhythm: 8 inside a module, 12 between modules, 16 inset.</source>
+        <translation>El espaciado y el relleno se mueven juntos, así las separaciones mantienen su ritmo: 8 dentro de un módulo, 12 entre módulos, 16 de margen.</translation>
+    </message>
+    <message>
+        <source>Reset density</source>
+        <translation>Restablecer densidad</translation>
+    </message>
+    <message>
+        <source>Reset density to Cosy</source>
+        <translation>Restablecer la densidad a Acogedor</translation>
     </message>
     <message>
         <source>Padding scale</source>
@@ -9587,6 +10610,61 @@ Snapshot del plugin: %3</translation>
     </message>
 </context>
 <context>
+    <name>SoundsPanel</name>
+    <message>
+        <source>Sounds</source>
+        <translation>Sonidos</translation>
+    </message>
+    <message>
+        <source>Play event sounds</source>
+        <translation>Reproducir sonidos de eventos</translation>
+    </message>
+    <message>
+        <source>Volume</source>
+        <translation>Volumen</translation>
+    </message>
+    <message>
+        <source>New notification</source>
+        <translation>Notificación nueva</translation>
+    </message>
+    <message>
+        <source>Battery warning</source>
+        <translation>Aviso de batería</translation>
+    </message>
+    <message>
+        <source>Charger plugged in</source>
+        <translation>Cargador conectado</translation>
+    </message>
+    <message>
+        <source>Chime even when the app plays its own sound</source>
+        <translation>Sonar aunque la app reproduzca su propio sonido</translation>
+    </message>
+    <message>
+        <source>Sound theme</source>
+        <translation>Tema de sonidos</translation>
+    </message>
+    <message>
+        <source>Test notification sound</source>
+        <translation>Probar el sonido de notificación</translation>
+    </message>
+    <message>
+        <source>pw-play was not found: install PipeWire tools to hear sounds.</source>
+        <translation>No se encontró pw-play: instalá las herramientas de PipeWire para escuchar sonidos.</translation>
+    </message>
+    <message>
+        <source>No sound file found in this theme or in freedesktop.</source>
+        <translation>No hay ningún archivo de sonido en este tema ni en freedesktop.</translation>
+    </message>
+    <message>
+        <source>The sound could not be played.</source>
+        <translation>No se pudo reproducir el sonido.</translation>
+    </message>
+    <message>
+        <source>Quiet while Do Not Disturb is on and in Focus and Gaming modes; a critical battery warning still chimes.</source>
+        <translation>En silencio con No molestar activado y en los modos Focus y Gaming; una alerta de batería crítica suena igual.</translation>
+    </message>
+</context>
+<context>
     <name>SpecialWsCard</name>
     <message>
         <source>Special workspace %1</source>
@@ -9599,6 +10677,13 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>No windows</source>
         <translation>Sin ventanas</translation>
+    </message>
+</context>
+<context>
+    <name>Spectrum</name>
+    <message>
+        <source>Audio spectrum</source>
+        <translation>Espectro de audio</translation>
     </message>
 </context>
 <context>
@@ -10489,6 +11574,22 @@ Snapshot del plugin: %3</translation>
         <translation>Espacios de trabajo por monitor</translation>
     </message>
     <message>
+        <source>Needle travel</source>
+        <translation>Recorrido de la aguja</translation>
+    </message>
+    <message>
+        <source>Needle trail ratio</source>
+        <translation>Proporción de la estela de la aguja</translation>
+    </message>
+    <message>
+        <source>Show empty workspaces</source>
+        <translation>Mostrar espacios de trabajo vacíos</translation>
+    </message>
+    <message>
+        <source>Gap breaks</source>
+        <translation>Marcas de salto</translation>
+    </message>
+    <message>
         <source>Scroll Actions</source>
         <translation>Acciones de desplazamiento</translation>
     </message>
@@ -10559,6 +11660,18 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>Extensions Settings</source>
         <translation>Ajustes de extensiones</translation>
+    </message>
+    <message>
+        <source>Widest indicator</source>
+        <translation>Indicador más ancho</translation>
+    </message>
+    <message>
+        <source>Room per island before indicators move to Extensions</source>
+        <translation>Espacio por isla antes de pasar indicadores a Extensiones</translation>
+    </message>
+    <message>
+        <source>Room for the Extensions island before it collapses</source>
+        <translation>Espacio para la isla de Extensiones antes de que se pliegue</translation>
     </message>
 </context>
 <context>
@@ -10663,12 +11776,20 @@ Snapshot del plugin: %3</translation>
         <translation>Primero ponele un nombre a la paleta.</translation>
     </message>
     <message>
-        <source>Deleted. You can undo this for a short while.</source>
-        <translation>Eliminado. Podés deshacerlo por un ratito.</translation>
-    </message>
-    <message>
         <source>Restored.</source>
         <translation>Restaurado.</translation>
+    </message>
+    <message>
+        <source>Deleted.</source>
+        <translation>Borrada.</translation>
+    </message>
+    <message>
+        <source>Palette “%1” deleted</source>
+        <translation>Paleta “%1” borrada</translation>
+    </message>
+    <message>
+        <source>Undo puts the whole palette back.</source>
+        <translation>Deshacer recupera la paleta completa.</translation>
     </message>
     <message>
         <source>Renamed.</source>
@@ -10709,14 +11830,6 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>Palette preview</source>
         <translation>Vista previa de la paleta</translation>
-    </message>
-    <message>
-        <source>Deleted “%1”.</source>
-        <translation>Se eliminó “%1”.</translation>
-    </message>
-    <message>
-        <source>Undo</source>
-        <translation>Deshacer</translation>
     </message>
     <message>
         <source>Pick a theme above to start editing its colours.</source>
@@ -10831,20 +11944,12 @@ Snapshot del plugin: %3</translation>
         <translation>Borrar</translation>
     </message>
     <message>
-        <source>Really delete?</source>
-        <translation>¿Seguro que querés eliminarlo?</translation>
-    </message>
-    <message>
-        <source>Keep</source>
-        <translation>Conservar</translation>
+        <source>Saved palettes are ordinary themes and also appear under Themes. Hornero checks contrast before saving; a failing colour is reported here. Rename changes the name only; the id stays. Delete applies at once and Undo puts the palette back; the theme in use cannot be deleted.</source>
+        <translation>Las paletas guardadas son temas comunes y también aparecen en Temas. Hornero revisa el contraste antes de guardar; si un color no pasa, te lo avisamos acá. Renombrar cambia solo el nombre; el id queda igual. Borrar se aplica al instante y Deshacer recupera la paleta; el tema en uso no se puede borrar.</translation>
     </message>
     <message>
         <source>Reset all</source>
         <translation>Restablecer todo</translation>
-    </message>
-    <message>
-        <source>Saved palettes are ordinary themes and also appear under Themes. Hornero checks contrast before saving; a failing colour is reported here. Rename changes the name only; the id stays. Delete can be undone for 30 seconds, and the theme in use cannot be deleted.</source>
-        <translation>Las paletas guardadas son temas comunes y también aparecen en Temas. Hornero revisa el contraste antes de guardar; si un color no pasa, te lo avisa acá. Renombrar solo cambia el nombre; el id se mantiene. Podés deshacer una eliminación durante 30 segundos, y el tema en uso no se puede eliminar.</translation>
     </message>
 </context>
 <context>
@@ -10852,10 +11957,6 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>Themes</source>
         <translation>Temas</translation>
-    </message>
-    <message>
-        <source>Choose a look for your desktop. Themes update colors and app styling; some also include a matching wallpaper.</source>
-        <translation>Elegí un look para tu escritorio. Los temas cambian los colores y el estilo de las apps; algunos incluyen un fondo de pantalla a juego.</translation>
     </message>
     <message>
         <source>Saved theme is unavailable</source>
@@ -10938,10 +12039,6 @@ Snapshot del plugin: %3</translation>
         <translation>Otros looks</translation>
     </message>
     <message>
-        <source>First-party Hornero Signal looks: graphite night, drafting-paper day and high contrast.</source>
-        <translation>Looks propios de Hornero Signal: noche grafito, día de papel de dibujo y alto contraste.</translation>
-    </message>
-    <message>
         <source>Contrast</source>
         <translation>Contraste</translation>
     </message>
@@ -10952,18 +12049,6 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>Day</source>
         <translation>Día</translation>
-    </message>
-    <message>
-        <source>Current</source>
-        <translation>Actual</translation>
-    </message>
-    <message>
-        <source>Pending</source>
-        <translation>Pendiente</translation>
-    </message>
-    <message>
-        <source>Selected</source>
-        <translation>Elegido</translation>
     </message>
     <message>
         <source>Loading wallpaper</source>
@@ -10982,6 +12067,14 @@ Snapshot del plugin: %3</translation>
         <translation>No disponible</translation>
     </message>
     <message>
+        <source>In use. Tune its source, style and colour in Chromatic below.</source>
+        <translation>En uso. Ajustá su origen, estilo y color en Chromatic, más abajo.</translation>
+    </message>
+    <message>
+        <source>Or build a palette from your wallpaper, an image or one colour. Opens Chromatic below.</source>
+        <translation>O armá una paleta a partir de tu fondo, una imagen o un color. Abre Chromatic más abajo.</translation>
+    </message>
+    <message>
         <source>Soft, cozy chips (rounder swatches, a heart on your pick)</source>
         <translation>Chips suaves y acogedores (muestras más redondeadas, un corazón en tu elección)</translation>
     </message>
@@ -10990,12 +12083,28 @@ Snapshot del plugin: %3</translation>
         <translation>Hornero Chromatic, color dinámico desde tu fondo de pantalla</translation>
     </message>
     <message>
-        <source>Hornero Chromatic</source>
-        <translation>Hornero Chromatic</translation>
+        <source>Curated looks and your saved palettes. Point at one to preview it, click to use it; Undo is right above.</source>
+        <translation>Looks seleccionados y tus paletas guardadas. Apuntá a uno para verlo, hacé clic para usarlo; Deshacer está justo arriba.</translation>
     </message>
     <message>
-        <source>A palette built from your wallpaper, an image or one colour. Always Signal: same structure, contrast gates and anatomy. Not a curated look; you choose and preview it in Chromatic.</source>
-        <translation>Una paleta creada a partir de tu fondo de pantalla, una imagen o un solo color. Siempre Signal: la misma estructura, controles de contraste y anatomía. No es un look curado; lo elegís y lo previsualizás en Chromatic.</translation>
+        <source>Your palettes</source>
+        <translation>Tus paletas</translation>
+    </message>
+    <message>
+        <source>Saved from Chromatic or the palette editor.</source>
+        <translation>Guardadas desde Chromatic o el editor de paletas.</translation>
+    </message>
+    <message>
+        <source>First-party Hornero Signal looks: graphite night, drafting-paper day, dusk and high contrast.</source>
+        <translation>Looks propios de Hornero Signal: noche grafito, día de papel de dibujo, atardecer y alto contraste.</translation>
+    </message>
+    <message>
+        <source>In use</source>
+        <translation>En uso</translation>
+    </message>
+    <message>
+        <source>Hornero Chromatic</source>
+        <translation>Hornero Chromatic</translation>
     </message>
 </context>
 <context>
@@ -11178,6 +12287,52 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>Back</source>
         <translation>Volver</translation>
+    </message>
+</context>
+<context>
+    <name>Undo</name>
+    <message>
+        <source>The change was not applied.</source>
+        <translation>No se aplicó el cambio.</translation>
+    </message>
+    <message>
+        <source>Could not undo %1</source>
+        <translation>No se pudo deshacer %1</translation>
+    </message>
+    <message>
+        <source>The command failed.</source>
+        <translation>Falló el comando.</translation>
+    </message>
+    <message>
+        <source>It was still busy after 10 seconds. Change the setting back by hand.</source>
+        <translation>Seguía ocupado después de 10 segundos. Volvé a cambiar el ajuste a mano.</translation>
+    </message>
+</context>
+<context>
+    <name>UndoStrip</name>
+    <message>
+        <source>Undoing %1…</source>
+        <translation>Deshaciendo %1…</translation>
+    </message>
+    <message>
+        <source>Undo (%1 s)</source>
+        <translation>Deshacer (%1 s)</translation>
+    </message>
+    <message>
+        <source>Undo</source>
+        <translation>Deshacer</translation>
+    </message>
+    <message>
+        <source>Undo %1</source>
+        <translation>Deshacer: %1</translation>
+    </message>
+    <message>
+        <source>Dismiss</source>
+        <translation>Descartar</translation>
+    </message>
+    <message>
+        <source>Dismiss the notice about %1</source>
+        <translation>Descartar el aviso sobre %1</translation>
     </message>
 </context>
 <context>
@@ -11405,6 +12560,49 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>Disconnected from %1</source>
         <translation>Desconectado de %1</translation>
+    </message>
+</context>
+<context>
+    <name>VoiceSection</name>
+    <message>
+        <source>Voice</source>
+        <translation>Voz</translation>
+    </message>
+    <message>
+        <source>Language</source>
+        <translation>Idioma</translation>
+    </message>
+    <message>
+        <source>Follow system</source>
+        <translation>Seguir al sistema</translation>
+    </message>
+    <message>
+        <source>Follow system uses the language the shell runs in.</source>
+        <translation>Seguir al sistema usa el idioma en el que corre el shell.</translation>
+    </message>
+    <message>
+        <source>Tone</source>
+        <translation>Tono</translation>
+    </message>
+    <message>
+        <source>Warm</source>
+        <translation>Cálido</translation>
+    </message>
+    <message>
+        <source>Plain</source>
+        <translation>Simple</translation>
+    </message>
+    <message>
+        <source>Warm is Javi at his workbench. Plain says the same things with fewer words of character.</source>
+        <translation>Cálido es Javi en su mesa de trabajo. Simple dice lo mismo con menos personalidad.</translation>
+    </message>
+    <message>
+        <source>Preview: %1</source>
+        <translation>Vista previa: %1</translation>
+    </message>
+    <message>
+        <source>Reset the voice section</source>
+        <translation>Restablecer la sección de voz</translation>
     </message>
 </context>
 <context>
@@ -12360,6 +13558,25 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>%1 MHz</source>
         <translation>%1 MHz</translation>
+    </message>
+</context>
+<context>
+    <name>WorkbenchPane</name>
+    <message>
+        <source>outcome unknown</source>
+        <translation>resultado desconocido</translation>
+    </message>
+    <message>
+        <source>Open workspace folder</source>
+        <translation>Abrir carpeta del espacio de trabajo</translation>
+    </message>
+    <message>
+        <source>Apply %1 to new sessions</source>
+        <translation>Aplicar %1 a las sesiones nuevas</translation>
+    </message>
+    <message>
+        <source>Kept on this device: last %1 messages. Hermes owns the real sessions.</source>
+        <translation>Se guarda en este dispositivo: últimos %1 mensajes. Las sesiones reales son de Hermes.</translation>
     </message>
 </context>
 <context>

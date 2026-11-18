@@ -36,7 +36,7 @@ def test_gaming_performance_mode_applies_at_once_and_is_undoable():
     # No confirm step (docs/CONTROL-CENTER-APPLY.md): applies, then offers Undo.
     assert "armedProfile" not in PANE
     assert "Confirm %1" not in PANE
-    assert 'Undo.offer("power-profile"' in PANE
+    assert 'Undo.offerCommand("power-profile"' in PANE
     assert "pick another profile to change back" in PANE
     assert "no improvement is guaranteed" in PANE.lower()
     for profile in ("power-saver", "balanced", "performance"):

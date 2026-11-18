@@ -66,8 +66,8 @@ def test_shell_wiring_and_controls():
     singleton = (ROOT / "services" / "Layouts.qml").read_text()
     assert "pragma Singleton" in singleton and 'import "layouts.js" as Model' in singleton
     assert "Config.layouts.overrides" in singleton and "Config.save()" in singleton
-    grid = (ROOT / "modules" / "layoutpicker" / "PresetGrid.qml").read_text()
-    assert "Layouts.reapplyAfterPreset(applyProc.layoutId)" in grid
+    grid = (ROOT / "services" / "PresetApply.qml").read_text()
+    assert "Layouts.reapplyAfterPreset(root._target)" in grid
     exp = (ROOT / "services" / "Experience.qml").read_text()
     assert "Layouts.reapplyAfterPreset(layoutProc.layoutId)" in exp and exp.count("layoutProc.layoutId =") == 2
     pane = (ROOT / "modules" / "controlcenter" / "layout" / "LayoutPane.qml").read_text()

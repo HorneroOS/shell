@@ -9,7 +9,11 @@ import QtQuick
 Item {
     id: root
 
+    implicitHeight: face.implicitHeight
+
     Column {
+        id: face
+
         anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
         spacing: Appearance.spacing.small

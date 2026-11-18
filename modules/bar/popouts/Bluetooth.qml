@@ -35,7 +35,8 @@ ColumnLayout {
         return qsTr("No nearby devices. Turn on Discovering to search.");
     }
 
-    spacing: Appearance.spacing.small
+    // Rack rhythm: rows inside one popout module sit 8 apart.
+    spacing: Appearance.spacing.smaller
 
     StyledText {
         Layout.topMargin: Appearance.padding.normal

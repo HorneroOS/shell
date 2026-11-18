@@ -12,6 +12,11 @@ import QtQuick.Layouts
 // 1 px `rule` border and radius `small`, labelled by an eyebrow and bound
 // to real services only (clock, weather, system usage, MPRIS).
 //
+// Rack rhythm (signal-visual-language §7.1): 8 inside a module, 12 between
+// modules, 16 surface inset, 24 section break. Every gap and inset here is
+// a spacing/padding token, so Appearance > Scales > Density (Compact, Cosy,
+// Airy) moves the whole panel together. Only sizes are literal.
+//
 //   STATION  | CLOCK            | WEATHER
 //   CALENDAR | RESOURCES (scope, meters, dimension lines)
 //   MEDIA strip
@@ -27,15 +32,19 @@ GridLayout {
     readonly property int rightWidth: 320
 
     columns: 3
-    rowSpacing: Appearance.spacing.small
-    columnSpacing: Appearance.spacing.small
+    // Top-row content height: the taller of the clock face and the weather
+    // readout, so the row grows with font and density instead of clipping.
+    readonly property real topRowContent: Math.max(dateTime.implicitHeight, weather.implicitHeight)
+
+    rowSpacing: Appearance.spacing.normal
+    columnSpacing: Appearance.spacing.normal
 
     Instruments.Frame {
         Layout.row: 0
         Layout.column: 0
         Layout.preferredWidth: root.leftWidth
         Layout.fillHeight: true
-        implicitHeight: user.implicitHeight + headerHeight + 12
+        implicitHeight: user.implicitHeight + headerHeight + Appearance.padding.larger
         channel: "01"
         title: qsTr("Station")
 
@@ -55,11 +64,13 @@ GridLayout {
         Layout.column: 1
         Layout.preferredWidth: root.midWidth
         Layout.fillHeight: true
-        implicitHeight: 148
+        implicitHeight: root.topRowContent + headerHeight + padding
         channel: "02"
         title: qsTr("Clock")
 
         DateTime {
+            id: dateTime
+
             anchors.fill: parent
         }
     }
@@ -69,12 +80,14 @@ GridLayout {
         Layout.column: 2
         Layout.preferredWidth: root.rightWidth
         Layout.fillHeight: true
-        implicitHeight: 148
+        implicitHeight: root.topRowContent + headerHeight + padding
         channel: "03"
         title: qsTr("Weather")
         context: Weather.ready ? Weather.city : ""
 
         Weather {
+            id: weather
+
             anchors.fill: parent
         }
     }
@@ -84,8 +97,8 @@ GridLayout {
         Layout.column: 0
         Layout.preferredWidth: root.leftWidth
         Layout.fillHeight: true
-        implicitHeight: calendar.implicitHeight + 24
-        padding: 12
+        implicitHeight: calendar.implicitHeight + padding * 2
+        padding: Appearance.padding.larger
 
         Calendar {
             id: calendar
@@ -102,7 +115,7 @@ GridLayout {
         Layout.columnSpan: 2
         Layout.fillWidth: true
         Layout.fillHeight: true
-        implicitHeight: resources.implicitHeight + headerHeight + 16
+        implicitHeight: resources.implicitHeight + headerHeight + padding
         channel: "04"
         title: qsTr("Resources")
         context: resources.windowLabel
@@ -120,10 +133,12 @@ GridLayout {
         Layout.column: 0
         Layout.columnSpan: 3
         Layout.fillWidth: true
-        implicitHeight: 76
-        padding: 10
+        implicitHeight: media.implicitHeight + padding * 2
+        padding: Appearance.padding.larger
 
         Media {
+            id: media
+
             anchors.fill: parent
             visibilities: root.visibilities
         }

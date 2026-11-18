@@ -18,10 +18,23 @@ Column {
         width: parent.width
     }
 
+    // Two lines that wrap inside the card: the old single "No battery
+    // detected · Power profile: Balanced" line was wider than the card and
+    // was cut off at its edge (shell#513).
     StyledText {
         visible: !UPower.displayDevice.isLaptopBattery
-        text: qsTr("No battery detected · Power profile: %1").arg(PowerProfile.toString(PowerProfiles.profile))
+        width: parent.width
+        text: qsTr("No battery detected")
         color: Signal.palette.inkMuted
+        wrapMode: Text.Wrap
+    }
+
+    StyledText {
+        visible: !UPower.displayDevice.isLaptopBattery
+        width: parent.width
+        text: qsTr("Power profile: %1").arg(PowerProfile.toString(PowerProfiles.profile))
+        color: Signal.palette.inkMuted
+        wrapMode: Text.Wrap
     }
 
     Loader {

@@ -6,6 +6,7 @@ Deterministic re-derivation gates (--check) run when Pillow is present.
 from __future__ import annotations
 
 import json
+import os
 import struct
 import subprocess
 import sys
@@ -250,15 +251,59 @@ def _needs_pil():
         pytest.skip("Pillow not installed")
 
 
-def test_derive_check():
+def _companion_tmp_dirs():
+    return sorted(p.name for p in (ROOT / "assets" / "companion").glob("tmp*")
+                  if p.is_dir())
+
+
+def test_derive_check(tmp_path):
     _needs_pil()
     # Without an SVG renderer the script falls back to a structural
     # gate (manifest/frames/SVG masters agree); pixel drift stays
     # gated wherever a renderer exists.
+    before = _companion_tmp_dirs()
+    env = {**os.environ, "TMPDIR": str(tmp_path)}
     proc = subprocess.run([sys.executable, "scripts/derive-companion-assets.py",
                            "--check"], cwd=ROOT, capture_output=True, text=True,
-                          timeout=300)
+                          timeout=300, env=env)
     assert proc.returncode == 0, proc.stderr
+    # The fresh render must not be staged inside the source tree.
+    assert _companion_tmp_dirs() == before
+
+
+def test_derive_check_renders_outside_the_tree(tmp_path, monkeypatch):
+    """check() stages its fresh render outside assets/companion/.
+
+    A render killed mid-way (test timeout, ^C) used to leave
+    assets/companion/tmpXXXX/ behind, which then got committed.
+    """
+    _needs_pil()
+    import importlib.util
+    import tempfile
+
+    spec = importlib.util.spec_from_file_location(
+        "derive_companion_assets_tmp", ROOT / "scripts" / "derive-companion-assets.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp_path))
+    seen = []
+
+    def fake_derive(out_dir):
+        seen.append(Path(out_dir).resolve())
+        raise RuntimeError("stop after staging")
+
+    monkeypatch.setattr(module, "derive", fake_derive)
+    with pytest.raises(RuntimeError):
+        module.check()
+    assert seen, "check() never staged a render"
+    companion = (ROOT / "assets" / "companion").resolve()
+    assert companion not in seen[0].parents
+    assert tmp_path.resolve() in seen[0].parents
+
+
+def test_stray_check_dirs_are_ignored():
+    gitignore = (ROOT / ".gitignore").read_text().splitlines()
+    assert "assets/companion/tmp*/" in gitignore
 
 
 def test_pixel_fingerprint_ignores_encoder_bytes(tmp_path):

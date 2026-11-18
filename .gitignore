@@ -29,3 +29,6 @@ __pycache__/
 # Nix
 result*
 .direnv/
+
+# Companion asset check scratch (scripts/derive-companion-assets.py --check)
+assets/companion/tmp*/

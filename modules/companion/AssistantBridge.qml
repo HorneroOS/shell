@@ -501,11 +501,88 @@ Scope {
         root.decisionDetail = pend.detail;
         root.decisionRun = id;
         root.decisionRequest = pend.requestId;
-        let cmd = ["horneroctl", "assistant", "approve", id, choice, "--json"];
-        if (pend.requestId !== "")
-            cmd = cmd.concat(["--request", pend.requestId]);
+        const presence = AssistantRun.gateway.presence;
+        if (choice === "approve" && presence === "required") {
+            // User presence (hornero#447): this click is the proof. A
+            // single-use nonce is written for exactly this run and request,
+            // then passed to horneroctl, which checks and consumes it.
+            const name = AssistantRun.presenceFileName(id, pend.requestId);
+            const dir = root.presenceDir();
+            if (name === "" || dir === "") {
+                root.decisionBusy = false;
+                AssistantRun.decided(false, false, AssistantCopy.t(name === "" ? "presence.unbound" : "presence.no-runtime", root.lang), id, pend.requestId, pend.detail);
+                return;
+            }
+            root.presenceFile = `${dir}/${name}`;
+            presenceWriter.out = "";
+            presenceWriter.command = ["sh", "-c", root.presenceScript, "sh", dir, name];
+            presenceWriter.running = true;
+            return;
+        }
+        const cmd = AssistantRun.approveCommand(id, choice, pend.requestId, presence, "");
+        if (!cmd) {
+            root.decisionBusy = false;
+            return;
+        }
         decisionProcess.command = cmd;
         decisionProcess.running = true;
+    }
+
+    // ---- approval presence (hornero#447) ---------------------------
+    // Where horneroctl looks for nonces (same override as horneroctl).
+    function presenceDir(): string {
+        const override = Quickshell.env("HORNERO_ASSISTANT_PRESENCE_DIR") ?? "";
+        if (override !== "")
+            return override;
+        const runtime = Quickshell.env("XDG_RUNTIME_DIR") ?? "";
+        return runtime === "" ? "" : `${runtime}/hornero/approval-presence`;
+    }
+
+    // The nonce comes from the kernel CSPRNG (24 bytes of /dev/urandom,
+    // base64url, 32 chars) inside this script; it is written with a shell
+    // builtin (never an exec argv) into a private 0700 dir as a fresh
+    // 0600 file (noclobber = O_EXCL after removing a stale one), and
+    // printed once on stdout for the approve call. Paths are arguments,
+    // the nonce never is.
+    readonly property string presenceScript: "umask 077; d=\"$1\"; f=\"$d/$2\"; mkdir -p -m 700 -- \"$d\" && chmod 700 -- \"$d\" || exit 3; n=$(head -c 24 /dev/urandom | base64 | tr '+/' '-_' | tr -d '=\\n') || exit 4; [ ${#n} -ge 32 ] || exit 4; rm -f -- \"$f\"; set -C; printf '%s\\n' \"$n\" > \"$f\" || exit 5; printf '%s\\n' \"$n\""
+    property string presenceFile: ""
+
+    Process {
+        id: presenceWriter
+
+        property string out: ""
+
+        stdout: SplitParser {
+            onRead: data => {
+                presenceWriter.out += data;
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            const token = presenceWriter.out.trim();
+            presenceWriter.out = "";
+            const pend = AssistantRun.pending;
+            // The request must still be the one clicked, and the nonce
+            // well formed; otherwise nothing is sent.
+            const same = pend && pend.kind === "approval" && pend.runId === root.decisionRun && pend.requestId === root.decisionRequest;
+            const cmd = exitCode === 0 && same ? AssistantRun.approveCommand(root.decisionRun, "approve", root.decisionRequest, "required", token) : null;
+            if (!cmd) {
+                root.decisionBusy = false;
+                root.removePresenceFile();
+                AssistantRun.decided(false, false, AssistantCopy.t(same ? "presence.write-failed" : "presence.changed", root.lang), root.decisionRun, root.decisionRequest, root.decisionDetail);
+                return;
+            }
+            decisionProcess.command = cmd;
+            decisionProcess.running = true;
+        }
+    }
+
+    // A nonce horneroctl did not consume (refused or failed decision) is
+    // removed; a consumed one is already gone.
+    function removePresenceFile(): void {
+        if (root.presenceFile === "")
+            return;
+        Quickshell.execDetached(["rm", "-f", "--", root.presenceFile]);
+        root.presenceFile = "";
     }
 
     // `shownDetail` is the question the card displayed when the user
@@ -1017,7 +1094,12 @@ Scope {
                 payload = null;
             }
             const ok = !!(payload && payload.ok === true);
-            const message = payload && payload.message ? payload.message.toString() : qsTr("The decision was not recorded. Check: horneroctl assistant status");
+            root.removePresenceFile();
+            const refusal = AssistantRun.decisionRefusal(payload);
+            const raw = payload && payload.message ? payload.message.toString() : qsTr("The decision was not recorded. Check: horneroctl assistant status");
+            // Presence refusals say what happened and what to do; the
+            // request stays waiting and nothing was decided.
+            const message = refusal !== "" ? AssistantCopy.t("presence." + refusal, root.lang) + " " + raw : raw;
             if (ok) {
                 const runId = root.decisionRun;
                 // The original stream may still be open (the gateway

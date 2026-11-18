@@ -21,6 +21,12 @@ starts with a `mode` frame after `run`; in ask/chat mode an approval is
 denied by horneroctl with no approval frame (final pending=denied-by-mode,
 "Approval denied by ask mode ..."), exactly like the released contract.
 
+Presence ($DIR/presence = true|false; absent = an older horneroctl with no
+requirePresence field and no --presence flag): mirrors hornero#447. With
+true, `approve ... approve` needs --request <id>@<gen> and --presence
+<nonce> matching a private, fresh nonce file
+<presence dir>/<run>.<id>@<gen>, which is consumed (renamed) once.
+
 Gateway view ($DIR/gateway): connected (default) | disconnected |
 slow-disconnected | disabled | unsandboxed | incompatible.
 """
@@ -68,6 +74,9 @@ def gateway_status():
         base.update({"gateway": "unreachable", "gatewayDetail": "unreachable: connection refused"})
         out({"command": "assistant status", "ok": False, "message": "Assistant is enabled but the Hermes gateway is not answering. Start Hermes, then retry.", "data": base})
         return 1
+    pres = read("presence", "")
+    if pres in ("true", "false"):
+        base["requirePresence"] = pres
     base.update({"gateway": "reachable", "protocol": "incompatible" if g == "incompatible" else "compatible",
                  "isolation": "systemd-only (not sandboxed)" if g == "unsandboxed" else "bubblewrap"})
     out({"command": "assistant status", "ok": g != "incompatible", "message": "Assistant enabled; Hermes gateway reachable and protocol-compatible.", "data": base})
@@ -123,6 +132,13 @@ def play(scn, run_id, mode="agent"):
         out({"type": "approval", "text": detail})
         wait_decision()
         return final(True, "ok", runId=run_id)
+    if scn == "unbound":
+        out({"type": "run", "text": run_id})
+        out({"type": "mode", "text": "agent"})
+        out({"type": "approval.control", "text": "p7@3"})
+        out({"type": "approval", "text": "an action the gateway did not describe (deny unless you expected it)"})
+        wait_decision()
+        return final(True, "ok", runId=run_id)
     if scn == "approval":
         out({"type": "run", "text": run_id})
         out({"type": "mode", "text": "agent"})
@@ -160,6 +176,38 @@ def play(scn, run_id, mode="agent"):
         sys.stdout.flush()
         os.kill(os.getpid(), signal.SIGKILL)
     return final(True, "ok", runId=run_id)
+
+
+def presence_refusal(args):
+    """None when the presence proof is valid (and consumed), else (pending, reason)."""
+    if "--presence" not in args:
+        return ("presence-required", "Approving needs proof that you are present.")
+    token = args[args.index("--presence") + 1]
+    ref = args[args.index("--request") + 1] if "--request" in args else ""
+    import re
+    import stat
+    if not re.fullmatch(r"[A-Za-z0-9_-]{32,128}", token) or "@" not in ref:
+        return ("presence-invalid", "the presence token has an invalid shape or no --request id@gen")
+    d = os.environ.get("HORNERO_ASSISTANT_PRESENCE_DIR") or os.path.join(os.environ.get("XDG_RUNTIME_DIR", ""), "hornero", "approval-presence")
+    path = os.path.join(d, f"{args[2]}.{ref}")
+    try:
+        ds, fs = os.lstat(d), os.lstat(path)
+    except OSError:
+        return ("presence-invalid", "no presence token was issued for this request")
+    private = lambda st: st.st_uid == os.getuid() and st.st_mode & 0o077 == 0
+    if not stat.S_ISDIR(ds.st_mode) or not private(ds) or not stat.S_ISREG(fs.st_mode) or not private(fs):
+        return ("presence-invalid", "the presence token file is not private")
+    if time.time() - fs.st_mtime > 60:
+        return ("presence-invalid", "the presence token expired")
+    if Path(path).read_text().rstrip("\n") != token:
+        return ("presence-invalid", "the presence token does not match")
+    try:
+        os.rename(path, path + ".used")
+        os.unlink(path + ".used")
+    except OSError:
+        return ("presence-invalid", "the presence token was already used")
+    log("presence ok " + f"{args[2]}.{ref}")
+    return None
 
 
 def main(argv):
@@ -204,6 +252,15 @@ def main(argv):
         mode = args[args.index("--mode") + 1] if "--mode" in args else "agent"
         return play(scn, run_id, mode)
     if verb == "approve":
+        pres = read("presence", "")
+        if "--presence" in args and pres not in ("true", "false"):
+            print(json.dumps({"command": "assistant approve", "ok": False, "message": "unknown flag --presence", "data": {}}))
+            return 2
+        if pres == "true" and args[3:4] == ["approve"]:
+            refusal = presence_refusal(args)
+            if refusal:
+                print(json.dumps({"command": "assistant approve", "ok": False, "message": refusal[1] + " Nothing was decided.", "data": {"runId": args[2], "pending": refusal[0]}}))
+                return 1
         if "--request" not in args:
             print(json.dumps({"command": "assistant approve", "ok": False, "message": "fake: no --request given", "data": {}}))
             return 1

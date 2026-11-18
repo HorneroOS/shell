@@ -146,6 +146,18 @@ Singleton {
         return Run.visibleText(text, Run.DETAIL_CAP).text;
     }
 
+    function presenceFileName(runId: string, requestRef: string): string {
+        return Run.presenceFileName(runId, requestRef);
+    }
+
+    function approveCommand(runId: string, choice: string, requestRef: string, presence: string, token: string): var {
+        return Run.approveCommand(runId, choice, requestRef, presence, token);
+    }
+
+    function decisionRefusal(payload: var): string {
+        return Run.decisionRefusal(payload);
+    }
+
     function isSafeLink(link: string): bool {
         return Run.isSafeLink(link);
     }

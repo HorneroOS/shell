@@ -54,6 +54,11 @@ Rectangle {
     }
 
     readonly property var pend: root.bridge.pendingApproval
+    readonly property bool unbound: root.pend !== null && root.pend.detailBound === false
+    // horneroctl requires a presence proof for Allow (hornero#447): the
+    // request must carry prompt-id@generation for the proof to bind to.
+    readonly property bool presenceRequired: AssistantRun.gateway.presence === "required"
+    readonly property bool presenceBindable: !root.presenceRequired || (root.pend !== null && AssistantRun.presenceFileName(root.pend.runId, root.pend.requestId) !== "")
     readonly property string lang: root.bridge.lang
     readonly property var gw: AssistantRun.gateway
 
@@ -122,6 +127,30 @@ Rectangle {
             font.pointSize: Appearance.font.size.smaller
             font.bold: true
             color: Signal.palette.alert
+        }
+
+        // K5: the gateway did not describe this request. Say so first and
+        // plainly; the text below is horneroctl's notice, not the action.
+        Rectangle {
+            Layout.fillWidth: true
+            visible: root.unbound
+            implicitHeight: unboundText.implicitHeight + Appearance.padding.small * 2
+            radius: Appearance.rounding.small
+            color: Qt.alpha(Signal.palette.alert, 0.22)
+            border.width: 1
+            border.color: Signal.palette.alert
+
+            StyledText {
+                id: unboundText
+
+                anchors.fill: parent
+                anchors.margins: Appearance.padding.small
+                text: "⚠ " + AssistantCopy.t("approval.unbound", root.lang)
+                font.pointSize: Appearance.font.size.small
+                font.bold: true
+                color: Signal.palette.alert
+                wrapMode: Text.Wrap
+            }
         }
 
         // The exact request, whole. Long text scrolls inside the well;
@@ -254,6 +283,15 @@ Rectangle {
 
         StyledText {
             Layout.fillWidth: true
+            visible: root.presenceRequired
+            text: AssistantCopy.t(root.presenceBindable ? "approval.presence" : "presence.unbound", root.lang)
+            font.pointSize: Appearance.font.size.smaller
+            color: Signal.palette.inkMuted
+            wrapMode: Text.Wrap
+        }
+
+        StyledText {
+            Layout.fillWidth: true
             visible: root.pend !== null && root.pend.live === false
             text: AssistantCopy.t("approval.stream.closed", root.lang)
             font.pointSize: Appearance.font.size.smaller
@@ -292,7 +330,7 @@ Rectangle {
             TextButton {
                 text: AssistantCopy.t("approval.allow", root.lang)
                 type: TextButton.Tonal
-                enabled: root.armed && !root.bridge.decisionBusy && root.pend !== null && root.pend.mode === "agent" && root.pend.requestId !== "" && !root.pend.truncated
+                enabled: root.armed && !root.bridge.decisionBusy && root.pend !== null && root.pend.mode === "agent" && root.pend.requestId !== "" && !root.pend.truncated && root.presenceBindable
                 onClicked: root.bridge.approve(root.pend.runId, "approve", root.armedRequest)
             }
         }

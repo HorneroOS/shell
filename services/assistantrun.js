@@ -137,9 +137,13 @@ function visibleText(text, cap) {
     return { text: out, flagged: flagged, truncated: truncated };
 }
 
-function makePending(kind, runId, detail, requestId, runMode, live, choices) {
+function makePending(kind, runId, detail, requestId, runMode, live, choices, bound) {
     var v = visibleText(detail, DETAIL_CAP);
+    // K5: a request the gateway did not describe is flagged, never shown
+    // as if its text were known.
+    var unbound = bound === false || (detail === null || detail === undefined ? "" : detail.toString()) === UNBOUND_APPROVAL_TEXT;
     return {
+        detailBound: !unbound,
         kind: kind,
         runId: runId,
         detail: v.text,
@@ -477,7 +481,7 @@ function applyPendingFromPayload(state, payload, ts) {
         // SAME displayed request; a different text drops it.
         var carried = (had && state.pending.detail === shown) ? state.pending.requestId : "";
         var req = d.request ? d.request.toString() : carried;
-        state.pending = makePending("approval", runId, detail, req, mode, had ? state.pending.live : false, choices);
+        state.pending = makePending("approval", runId, detail, req, mode, had ? state.pending.live : false, choices, d.detailBound === "false" || d.detailBound === false ? false : true);
         state.phase = "awaiting-approval";
         if (!had)
             pushEntry(state, { kind: "approval", text: state.pending.detail, status: "pending", ts: ts });
@@ -618,10 +622,11 @@ function intentToState(intent) {
 // the run state to combine with (or null). Never reports "sandboxed"
 // unless the backend said bubblewrap.
 function gatewayView(payload) {
-    var view = { connection: "unknown", enabled: false, reachable: false, compatible: false, isolation: "unknown", sandboxed: false, workspace: "", detail: "" };
+    var view = { connection: "unknown", enabled: false, reachable: false, compatible: false, isolation: "unknown", sandboxed: false, workspace: "", detail: "", presence: "unknown" };
     if (!payload || typeof payload !== "object")
         return Object.assign(view, { connection: "disconnected", detail: "horneroctl assistant unavailable" });
     var d = payload.data || {};
+    view.presence = presenceSupport(d);
     view.enabled = d.enabled === "true";
     view.detail = (payload.message || "").toString();
     if (!view.enabled) {
@@ -643,6 +648,72 @@ function gatewayView(payload) {
         view.connection = "connected";
     return view;
 }
+
+// ---- approval user presence (hornero#447) -------------------------
+
+// What `assistant status --json` says about approvals.requirePresence:
+//   "required"  horneroctl knows --presence and requires it for approve
+//   "off"       horneroctl knows it, the user turned the requirement off
+//   "unknown"   an older horneroctl without the field: --presence is
+//               never sent (it would reject the flag) and approve works
+//               as before.
+function presenceSupport(data) {
+    var v = data ? data.requirePresence : undefined;
+    if (v === true || v === "true")
+        return "required";
+    if (v === false || v === "false")
+        return "off";
+    return "unknown";
+}
+
+// A presence nonce: 32-128 chars of [A-Za-z0-9_-] (horneroctl's shape).
+function isValidPresenceToken(token) {
+    return typeof token === "string" && /^[A-Za-z0-9_-]{32,128}$/.test(token);
+}
+
+// The nonce file name for one request: `<runId>.<promptId>@<generation>`.
+// Presence is bound to the full ref; a ref without a generation, or any
+// invalid id, has no file (and so cannot be allowed when presence is
+// required). Returns "" when invalid.
+function presenceFileName(runId, requestRef) {
+    if (!isValidRunId(runId) || !isValidRequestRef(requestRef) || requestRef.indexOf("@") < 0)
+        return "";
+    return runId + "." + requestRef;
+}
+
+// The approve argv for one decision. `presence` is the gateway's
+// presenceSupport value; `token` is the nonce written for this request
+// (required when presence is "required"). Deny never carries presence.
+// Returns null when the decision cannot be sent safely.
+function approveCommand(runId, choice, requestRef, presence, token) {
+    if (!isValidRunId(runId) || (choice !== "approve" && choice !== "deny"))
+        return null;
+    var cmd = ["horneroctl", "assistant", "approve", runId, choice, "--json"];
+    if (requestRef !== "") {
+        if (!isValidRequestRef(requestRef))
+            return null;
+        cmd = cmd.concat(["--request", requestRef]);
+    }
+    if (choice === "approve" && presence === "required") {
+        if (presenceFileName(runId, requestRef) === "" || !isValidPresenceToken(token))
+            return null;
+        cmd = cmd.concat(["--presence", token]);
+    }
+    return cmd;
+}
+
+// A refused decision's reason for the card (horneroctl `data.pending`).
+function decisionRefusal(payload) {
+    var d = payload && payload.data ? payload.data : {};
+    var p = (d.pending || "").toString();
+    if (p === "presence-required" || p === "presence-invalid")
+        return p;
+    return "";
+}
+
+// The text horneroctl shows when the gateway reports a control without a
+// description (hornero#443); results also carry detailBound:"false".
+var UNBOUND_APPROVAL_TEXT = "an action the gateway did not describe (deny unless you expected it)";
 
 // One user-facing status key combining gateway and run domains.
 // Priority: run problems and pending decisions outrank a calm

@@ -231,7 +231,7 @@ def test_bar_workspaces_are_accessible_controls():
     exposes its identity/state to accessibility clients."""
     workspace = (ROOT / "modules/bar/components/workspaces/Workspace.qml").read_text()
     assert "\nItem {\n    id: root" in workspace, "the interaction target must not be managed by the visual GridLayout"
-    assert "GridLayout {\n        id: content" in workspace
+    assert "GridLayout" not in workspace, "cells use explicit fixed-step positions"
     assert "import qs.components.controls" in workspace
     assert "Interactive {" in workspace
     assert "    Interactive {\n        anchors.fill: parent" in workspace

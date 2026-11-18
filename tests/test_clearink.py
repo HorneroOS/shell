@@ -159,7 +159,7 @@ def test_clear_bar_has_no_scrim_tint_slab_or_island_shadow():
 def test_clear_foreground_groups_paint_no_fill():
     ws = (ROOT / "modules/bar/components/workspaces/Workspaces.qml").read_text()
     assert 'color: labels || clear ? "transparent"' in ws
-    assert "!root.clear" in ws  # no occupied backdrop pills
+    assert "!labels && !clear" in ws  # no cell plates
     active = (ROOT / "modules/bar/components/workspaces/ActiveIndicator.qml").read_text()
     assert 'root.clear ? "transparent"' in active
     status = (ROOT / "modules/bar/components/StatusIcons.qml").read_text()

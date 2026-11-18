@@ -106,3 +106,4 @@ def test_bar_wires_the_island_size_into_every_island():
     assert "Density.activeInset(cross)" in ws
     ind = (ROOT / "modules/bar/components/workspaces/ActiveIndicator.qml").read_text(encoding="utf-8")
     assert "root.crossSize - root.inset * 2" in ind and "Density.inner - Appearance.padding.small" not in ind
+    assert "mainInset" not in ind

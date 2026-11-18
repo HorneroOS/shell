@@ -456,6 +456,7 @@ Singleton {
             workspaces: {
                 shown: bar.workspaces.shown,
                 maxWindowIcons: bar.workspaces.maxWindowIcons,
+                glyphScale: bar.workspaces.glyphScale,
                 activeIndicator: bar.workspaces.activeIndicator,
                 occupiedBg: bar.workspaces.occupiedBg,
                 showWindows: bar.workspaces.showWindows,

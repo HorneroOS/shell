@@ -175,7 +175,11 @@ JsonObject {
 
     component Workspaces: JsonObject {
         property int shown: 5
-        property int maxWindowIcons: 5
+        // Window glyphs per cell before the +N overflow mark (0..8).
+        property int maxWindowIcons: 3
+        // Window glyph size as a percentage of the numeral size (60..120):
+        // the default keeps glyphs at numeral x-height scale.
+        property int glyphScale: 85
         property bool activeIndicator: true
         property bool occupiedBg: true
         property bool showWindows: true

@@ -341,7 +341,8 @@
     },
     "workspaces": {
       "shown": 5,
-      "maxWindowIcons": 5,
+      "maxWindowIcons": 3,
+      "glyphScale": 85,
       "activeIndicator": true,
       "occupiedBg": true,
       "showWindows": true,

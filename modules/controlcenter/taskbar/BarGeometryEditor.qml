@@ -61,6 +61,11 @@ ColumnLayout {
         Config.save();
     }
 
+    function setWorkspaceField(name: string, value: real): void {
+        Config.bar.workspaces[name] = Geo.clamp(name, value);
+        Config.save();
+    }
+
     function setScale(group: string, value: real): void {
         Config.appearance[group].scale = Geo.clamp(group + "Scale", value);
         Config.save();
@@ -98,6 +103,8 @@ ColumnLayout {
         Config.bar.sizes.innerWidth = g.innerWidth;
         Config.bar.sizes.islandInset = g.islandInset;
         Config.bar.workspaces.activeInset = g.activeInset;
+        Config.bar.workspaces.glyphScale = g.glyphScale;
+        Config.bar.workspaces.maxWindowIcons = g.maxWindowIcons;
         Config.bar.sizes.contentScale = g.contentScale;
         Config.bar.sizes.iconScale = g.iconScale;
         Config.bar.sizes.textScale = g.textScale;
@@ -308,6 +315,24 @@ ColumnLayout {
         max: Geo.LIMITS.activeInset.max
         step: Geo.LIMITS.activeInset.step
         onValueModified: value => root.setActiveInset(value)
+    }
+
+    SpinBoxRow {
+        label: qsTr("Workspace window glyph size (%)")
+        value: Config.bar.workspaces.glyphScale
+        min: Geo.LIMITS.glyphScale.min
+        max: Geo.LIMITS.glyphScale.max
+        step: Geo.LIMITS.glyphScale.step
+        onValueModified: value => root.setWorkspaceField("glyphScale", value)
+    }
+
+    SpinBoxRow {
+        label: qsTr("Workspace window glyphs per cell")
+        value: Config.bar.workspaces.maxWindowIcons
+        min: Geo.LIMITS.maxWindowIcons.min
+        max: Geo.LIMITS.maxWindowIcons.max
+        step: Geo.LIMITS.maxWindowIcons.step
+        onValueModified: value => root.setWorkspaceField("maxWindowIcons", value)
     }
 
     SpinBoxRow {

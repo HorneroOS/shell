@@ -1,5 +1,6 @@
 import qs.services
 import qs.config
+import Quickshell.Widgets
 import QtQuick
 
 // Hover/pressed wash (signal-visual-language §8): hover and pressed are
@@ -25,7 +26,11 @@ MouseArea {
 
     onClicked: event => !disabled && onClicked(event)
 
-    StyledClippingRect {
+    // Plain ClippingRectangle, not StyledClippingRect: that one already
+    // animates `color` (a Behavior on its shader's backgroundColor), and a
+    // second Behavior here would register a second interceptor on the same
+    // property ("Attempting to set another interceptor ... unsupported").
+    ClippingRectangle {
         id: hoverLayer
 
         anchors.fill: parent

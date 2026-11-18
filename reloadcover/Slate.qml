@@ -21,8 +21,10 @@ Item {
     property bool motion: true
     property int elapsed: 0
     property string screenName: ""
-    // Javi frame (relative to this file; installed next to assets/).
-    property url spriteBase: Qt.resolvedUrl("../assets/companion/frames/default-sleep-0")
+    // Javi frames live inside this directory (CMake installs them to
+    // reloadcover/assets/): Quickshell blackholes files outside the config
+    // root, and the cover's root is this directory, so ../assets is unreachable.
+    property url spriteBase: Qt.resolvedUrl("assets/companion/frames/default-sleep-0")
 
     readonly property var p: cover.palette
     readonly property real u: Math.max(0.75, Math.min(1.6, Math.min(width / 1920, height / 1080)))

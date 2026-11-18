@@ -133,9 +133,11 @@ Item {
             trapTab: !Config.launcher.vimKeybinds
 
             anchors.left: searchIcon.right
-            anchors.right: keyLegend.left
+            // While the legend is hidden the field runs up to the clear
+            // glyph, the legend's old slot (8 px gap kept).
+            anchors.right: keyLegend.visible ? keyLegend.left : clearIcon.left
             anchors.leftMargin: Appearance.spacing.small
-            anchors.rightMargin: Appearance.spacing.small
+            anchors.rightMargin: Appearance.spacing.small + (keyLegend.visible ? 0 : keyLegend.anchors.rightMargin)
 
             topPadding: Appearance.padding.larger
             bottomPadding: Appearance.padding.larger
@@ -226,8 +228,10 @@ Item {
             anchors.right: clearIcon.left
             anchors.rightMargin: 8
             anchors.verticalCenter: parent.verticalCenter
+            // Natural (implicit) width only: sizing `width` from its own
+            // `implicitWidth` here was a binding loop, and the search field
+            // switches its right anchor while the legend is hidden instead.
             visible: search.text === ""
-            width: visible ? implicitWidth : 0
             label: qsTr("↑↓  ⏎  esc")
         }
 

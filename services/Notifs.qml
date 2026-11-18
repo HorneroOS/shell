@@ -154,7 +154,7 @@ Singleton {
             // Flood policy first (shell#224): duplicates collapse and
             // critical urgency is never dropped by the policy.
             if (notif.urgency !== NotificationUrgency.Critical && root._isDuplicate(notif)) {
-                notif.close();
+                notif.dismiss();
                 return;
             }
 

@@ -3,6 +3,10 @@ import Quickshell.Io
 JsonObject {
     property bool enabled: true
     property bool showOnHover: true
+    // Home composition: "console" (wide clock, tall media deck, thin
+    // weather strip), "classic" (the earlier even grid) or "compact"
+    // (classic without the media row).
+    property string composition: "console"
     property int mediaUpdateInterval: 500
     property int resourceUpdateInterval: 1000
     property int dragThreshold: 50

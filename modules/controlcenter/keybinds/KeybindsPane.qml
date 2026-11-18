@@ -280,7 +280,7 @@ Item {
 
                             StyledTextField {
                                 Layout.fillWidth: true
-                                placeholderText: qsTr("Search keybindings · buscar atajos…")
+                                placeholderText: qsTr("Search keybindings…")
                                 onTextChanged: root.query = text
                             }
 

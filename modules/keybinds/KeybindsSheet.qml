@@ -237,7 +237,7 @@ StyledRect {
 
                     Layout.fillWidth: true
                     text: sheet.initialQuery
-                    placeholderText: qsTr("Search binds, actions or groups · buscar atajos…")
+                    placeholderText: qsTr("Search binds, actions or groups…")
                     font.pointSize: Appearance.font.size.normal
                     trapTab: false
                     onTextChanged: sheet.query = text

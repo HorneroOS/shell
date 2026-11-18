@@ -149,7 +149,8 @@ def test_overlay_surface_contract():
     for fn in ("function toggle()", "function open(query: string)", "function close()", "function isOpen()"):
         assert fn in text, fn
     assert 'name: "keybinds"' in text  # CustomShortcut hornero:keybinds
-    assert "WlrLayer.Overlay" in text and "WlrKeyboardFocus.Exclusive" in text
+    assert "WlrLayer.Top" in text and "WlrKeyboardFocus.Exclusive" in text
+    assert "hasFullscreenOnFocusedOutput()" in text  # never over a fullscreen game
     assert "Keybinds.endCapture()" in text  # closing never strands the capture submap
     shell = (ROOT / "shell.qml").read_text()
     assert "KeybindsOverlay {}" in shell

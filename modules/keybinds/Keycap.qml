@@ -28,7 +28,7 @@ StyledRect {
         anchors.leftMargin: 2
         anchors.rightMargin: 2
         height: 2
-        radius: 1
+        radius: 1 // fixed: 2 px key-shadow hairline, not a corner style
         color: root.accent ? Signal.palette.signal : Signal.palette.ruleStrong
         opacity: 0.55
     }

@@ -28,6 +28,8 @@ Scope {
     property string initialQuery: ""
 
     function show(query: string): void {
+        if (Compositor.hasFullscreenOnFocusedOutput())
+            return;
         root.initialQuery = query ?? "";
         Keybinds.refresh();
         root.open = true;
@@ -96,7 +98,9 @@ Scope {
 
             name: "keybinds"
             screen: Quickshell.screens.find(s => s.name === Compositor.focusedOutputName) ?? Quickshell.screens[0]
-            WlrLayershell.layer: WlrLayer.Overlay
+            // Top, not Overlay: a fullscreen game always covers shell surfaces
+            // (tests/test_gaming_focus_contract.py); show() refuses under one.
+            WlrLayershell.layer: WlrLayer.Top
             WlrLayershell.exclusionMode: ExclusionMode.Ignore
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
 

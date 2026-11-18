@@ -12,9 +12,13 @@ Item {
 
     readonly property bool live: Weather.ready
 
+    implicitHeight: readout.implicitHeight
+
     Component.onCompleted: Weather.refreshIfStale()
 
     RowLayout {
+        id: readout
+
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter

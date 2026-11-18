@@ -14,10 +14,11 @@ StyledRect {
     property string context: ""
     property bool active: false
     property color contextColor: Signal.palette.inkMuted
-    readonly property real headerHeight: title !== "" ? header.implicitHeight + 20 : 0
+    readonly property real headerHeight: title !== "" ? header.implicitHeight + Appearance.spacing.normal + Appearance.spacing.smaller : 0
     default property alias content: body.data
     property alias body: body
-    property int padding: 16
+    // Surface inset (rack rhythm 16), scaled with Appearance > Scales.
+    property int padding: Appearance.padding.large
 
     color: Signal.palette.panel
     radius: Appearance.rounding.small
@@ -37,7 +38,7 @@ StyledRect {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
-        anchors.topMargin: 12
+        anchors.topMargin: Appearance.spacing.normal
         anchors.leftMargin: root.padding
         anchors.rightMargin: root.padding
         implicitHeight: eyebrow.implicitHeight
@@ -47,7 +48,7 @@ StyledRect {
 
             anchors.left: parent.left
             anchors.right: ctx.left
-            anchors.rightMargin: 8
+            anchors.rightMargin: Appearance.spacing.smaller
             channel: root.channel
             label: root.title
         }

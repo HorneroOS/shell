@@ -4,7 +4,8 @@ import qs.config
 import QtQuick.Layouts
 
 ColumnLayout {
-    spacing: Appearance.spacing.small
+    // Rack rhythm: rows inside one popout module sit 8 apart.
+    spacing: Appearance.spacing.smaller
 
     StyledText {
         text: qsTr("Capslock: %1").arg(Hypr.capsLock ? "Enabled" : "Disabled")

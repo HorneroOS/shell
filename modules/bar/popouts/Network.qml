@@ -19,7 +19,8 @@ ColumnLayout {
     property var passwordNetwork: null
     property bool showPasswordDialog: false
 
-    spacing: Appearance.spacing.small
+    // Rack rhythm: rows inside one popout module sit 8 apart.
+    spacing: Appearance.spacing.smaller
     width: Config.bar.sizes.networkWidth
 
     // Wireless section

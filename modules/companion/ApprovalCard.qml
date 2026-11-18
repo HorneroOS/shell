@@ -129,7 +129,7 @@ Rectangle {
         Rectangle {
             Layout.fillWidth: true
             implicitHeight: Math.min(what.implicitHeight + Appearance.padding.normal * 2, 160)
-            radius: 3
+            radius: Appearance.rounding.small
             color: Signal.palette.phosphorWell
             clip: true
 

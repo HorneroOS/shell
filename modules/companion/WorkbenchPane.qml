@@ -84,7 +84,7 @@ Rectangle {
             Rectangle {
                 implicitWidth: 9
                 implicitHeight: 9
-                radius: 5
+                radius: width / 2
                 color: root.statusColor()
             }
 

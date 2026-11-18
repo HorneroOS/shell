@@ -215,7 +215,7 @@ Item {
                         Rectangle {
                             implicitWidth: 8
                             implicitHeight: 8
-                            radius: 4
+                            radius: width / 2
                             color: root.statusColor()
                             opacity: root.bridge.busy && !CompanionStore.reducedMotion ? (root.dotPhase % 2 === 0 ? 1 : 0.35) : 1
                         }
@@ -777,7 +777,7 @@ Item {
                 Rectangle {
                     implicitWidth: 9
                     implicitHeight: 9
-                    radius: 5
+                    radius: width / 2
                     color: Signal.palette.alert
                 }
 

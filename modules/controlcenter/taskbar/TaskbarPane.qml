@@ -479,6 +479,50 @@ Item {
                                     }
                                 }
                             }
+
+                            // Needle travel (bar.workspaces.activeTrail): the
+                            // active plate stretches toward the target, then
+                            // lands as one cell. Instant under reduced motion.
+                            SwitchRow {
+                                label: qsTr("Needle travel")
+                                checked: Config.bar.workspaces.activeTrail
+                                onToggled: checked => {
+                                    Config.bar.workspaces.activeTrail = checked;
+                                    Config.save();
+                                }
+                            }
+
+                            SizeSlider {
+                                visible: Config.bar.workspaces.activeTrail
+                                target: Config.bar.workspaces
+                                key: "trailRatio"
+                                label: qsTr("Needle trail ratio")
+                                from: 1
+                                to: 2.5
+                                stepSize: 0.1
+                                decimals: 1
+                                suffix: "×"
+                                defaultValue: 1.6
+                            }
+
+                            SwitchRow {
+                                label: qsTr("Show empty workspaces")
+                                checked: Config.bar.workspaces.showUnoccupied
+                                onToggled: checked => {
+                                    Config.bar.workspaces.showUnoccupied = checked;
+                                    Config.save();
+                                }
+                            }
+
+                            // Broken-dimension-line mark where shown numbers skip.
+                            SwitchRow {
+                                label: qsTr("Gap breaks")
+                                checked: Config.bar.workspaces.gapBreaks
+                                onToggled: checked => {
+                                    Config.bar.workspaces.gapBreaks = checked;
+                                    Config.save();
+                                }
+                            }
                         }
 
                         SectionContainer {

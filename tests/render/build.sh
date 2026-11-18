@@ -28,9 +28,15 @@ t=t.replace("return isHyprland ? Hypr.toplevels.values.filter(window => window.w
 t=t.replace("return isHyprland && (workspace.lastIpcObject?.windows ?? 0) > 0;","return (workspace.lastIpcObject?.windows ?? 0) > 0;")
 p.write_text(t)
 p=d/"services/Hypr.qml"; t=p.read_text()
-t=t.replace("focusedWorkspace?.id ?? 1","parseInt(Quickshell.env('WSACTIVE') || '1')")
+t=t.replace("focusedWorkspace?.id ?? 1","root.harnessWs")
+# Harness hooks: the active workspace and the special workspace are writable
+# at runtime (needle travel frames), and the strip registers itself.
+t=t.replace("    id: root\n","    id: root\n    property int harnessWs: parseInt(Quickshell.env('WSACTIVE') || '1')\n    property bool harnessSpecial: Quickshell.env('WSSPECIAL') === '1'\n    property var harnessStrips: []\n",1)
 p.write_text(t)
 p=d/"modules/bar/components/workspaces/Workspaces.qml"; t=p.read_text()
+t=t.replace("readonly property bool onSpecial: Compositor.isSpecialWorkspaceActive(screen, Config.bar.workspaces.perMonitorWorkspaces)","readonly property bool onSpecial: Hypr.harnessSpecial")
+t=t.replace("    readonly property var activeWsId: niriMode\n","    readonly property var activeWsId: Hypr.harnessWs\n    readonly property var unusedActiveWsId: niriMode\n")
+t=t.replace("    implicitWidth: vertical ? cross :","    readonly property Item harnessPlate: plateLoader.item\n    readonly property Item harnessCells: workspaces\n    Component.onCompleted: Hypr.harnessStrips = Hypr.harnessStrips.concat([root])\n    implicitWidth: vertical ? cross :",1)
 t=t.replace("        if (niriMode || !Compositor.isHyprland)\n            return {};","        return {4: true};\n        if (niriMode || !Compositor.isHyprland)\n            return {};")
 p.write_text(t)
 PY2
@@ -54,7 +60,7 @@ import pathlib,sys
 p=pathlib.Path(sys.argv[1])/'modules/bar/components/workspaces/Workspaces.qml'; t=p.read_text()
 probe="""    Timer { interval: 4000; running: true; onTriggered: { const cs = []; for (let i = 0; i < workspaces.count; i++) { const c = workspaces.itemAt(i); cs.push({x: c.x, y: c.y, w: c.width, h: c.height, vertical: root.vertical, glyphs: c.glyphCount, gx: c.hasGlyphs ? c.groupX : 0, gy: c.hasGlyphs ? c.groupY : 0, gw: c.hasGlyphs ? c.groupW : 0, gh: c.hasGlyphs ? c.groupH : 0, nx: c.numeralX, nw: c.numeralW, ny: c.numeralY, nh: c.numeralH}); } console.log('WSPROBE ' + JSON.stringify({vertical: root.vertical, cells: cs, cross: root.cellCross})); } }
 """
-t=t.replace('    property real blur:', probe+'    property real blur:',1)
+t=t.replace('    readonly property bool receded: onSpecial', probe+'    readonly property bool receded: onSpecial',1)
 p.write_text(t)
 PY4
 cp "$H/${HARNESS:-harness.qml}" "$DEST/shell.qml"

@@ -24,7 +24,12 @@ json.dump(d,open(out,"w"),indent=2)
 PY
 mkdir -p "$(dirname "$OUT")"
 LW=$(python3 -c "print(round($W/$SC))"); LH=$(python3 -c "print(round($H/$SC))")
-env -i PATH="$PATH" XDG_CONFIG_HOME=$X/config XDG_STATE_HOME=$X/state XDG_DATA_HOME=$X/data XDG_CACHE_HOME=$X/cache HOME=$X/home \
+# Harness knobs passed through the clean environment (tests/render/harness.qml).
+PASS=()
+for v in WSACTIVE WSTO WSSPECIAL HFRAMES HFRAMEMS HFRAMECOUNT; do
+  if [ -n "${!v:-}" ]; then PASS+=("$v=${!v}"); fi
+done
+env -i "${PASS[@]}" PATH="$PATH" XDG_CONFIG_HOME=$X/config XDG_STATE_HOME=$X/state XDG_DATA_HOME=$X/data XDG_CACHE_HOME=$X/cache HOME=$X/home \
   XDG_RUNTIME_DIR=$X/rt QT_QPA_PLATFORM=offscreen QT_SCALE_FACTOR=$SC HW=$LW HH=$LH HOUT="$OUT" \
   timeout 60 dbus-run-session -- qs -p $TREE --no-duplicate >$X/log 2>&1 || true
 cp $X/log "$OUT.log"

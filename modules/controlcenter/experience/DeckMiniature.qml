@@ -105,7 +105,7 @@ Item {
                     font.pointSize: Appearance.font.size.small
                     font.capitalization: Font.AllUppercase
                     color: Signal.palette.inkMuted
-                    text: tile.modelData.label
+                    text: qsTr(tile.modelData.label)
                     visible: tile.width >= 56
                 }
             }

@@ -2964,10 +2964,6 @@ Huella de la clave del autor: %3</translation>
 <context>
     <name>CompanionPane</name>
     <message>
-        <source>Javi · the Hornero</source>
-        <translation>Javi · el Hornero</translation>
-    </message>
-    <message>
         <source>Javi, el Hornero: your sidekick. Idles, greets, shows tips — and, with Hermes enabled, chats, reads the system and always asks before changing anything.</source>
         <translation>Javi, el Hornero: tu compañero. Descansa, saluda, te da consejos y, con Hermes activado, charla, lee el sistema y siempre pregunta antes de cambiar algo.</translation>
     </message>
@@ -3318,6 +3314,10 @@ Huella de la clave del autor: %3</translation>
     <message>
         <source>Chat sessions</source>
         <translation>Sesiones de chat</translation>
+    </message>
+    <message>
+        <source>Javi · el Hornero</source>
+        <translation>Javi · el Hornero</translation>
     </message>
     <message>
         <source>Tokens in</source>
@@ -7044,6 +7044,10 @@ Snapshot del plugin: %3</translation>
 </context>
 <context>
     <name>Language</name>
+    <message>
+        <source>the installed Hornero plugin has no translator; update hornero-shell</source>
+        <translation>el plugin de Hornero instalado no tiene traductor; actualizá hornero-shell</translation>
+    </message>
     <message>
         <source>Automatic (%1)</source>
         <translation>Automático (%1)</translation>
@@ -12209,6 +12213,77 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>Timers, converters and quick tools from the bar.</source>
         <translation>Temporizadores, conversores y herramientas rápidas desde la barra.</translation>
+    </message>
+</context>
+<context>
+    <name>TranslatableData</name>
+    <message>
+        <source>Maximum space, quiet motion, notifications held.</source>
+        <translation>Máximo espacio, movimiento tranquilo, notificaciones en espera.</translation>
+    </message>
+    <message>
+        <source>Balanced default: Cockpit, standard motion, values on the bar.</source>
+        <translation>El equilibrio de siempre: Cockpit, movimiento estándar, valores en la barra.</translation>
+    </message>
+    <message>
+        <source>Immersive: desktop instruments, labelled telemetry at 2 Hz, glow and scanlines.</source>
+        <translation>Inmersivo: instrumentos en el escritorio, telemetría con etiquetas a 2 Hz, brillo y líneas de escaneo.</translation>
+    </message>
+    <message>
+        <source>Out of the way: no motion or glow, notifications queued, polling paused under fullscreen.</source>
+        <translation>Sin estorbar: sin movimiento ni brillo, notificaciones en cola y consultas en pausa a pantalla completa.</translation>
+    </message>
+    <message>
+        <source>Audio first: stable canvas, standard motion, no glow; a deliberate switch in applies the reversible PipeWire Low Latency profile.</source>
+        <translation>Primero el audio: lienzo estable, movimiento estándar, sin brillo; al entrar a propósito se aplica el perfil reversible de baja latencia de PipeWire.</translation>
+    </message>
+    <message>
+        <source>System Insight</source>
+        <translation>Vista del sistema</translation>
+    </message>
+    <message>
+        <source>Network Scope</source>
+        <translation>Monitor de red</translation>
+    </message>
+    <message>
+        <source>Audio Deck</source>
+        <translation>Deck de audio</translation>
+    </message>
+    <message>
+        <source>Calendar</source>
+        <translation>Calendario</translation>
+    </message>
+    <message>
+        <source>Agenda</source>
+        <translation>Agenda</translation>
+    </message>
+    <message>
+        <source>Moon Phase</source>
+        <translation>Fase lunar</translation>
+    </message>
+    <message>
+        <source>Everything</source>
+        <translation>Todo</translation>
+    </message>
+    <message>
+        <source>Cozy corner</source>
+        <translation>Rincón acogedor</translation>
+    </message>
+    <message>
+        <source>Kawaii night</source>
+        <translation>Noche kawaii</translation>
+    </message>
+    <message>
+        <source>System monitor</source>
+        <translation>Monitor del sistema</translation>
+    </message>
+    <message>
+        <source>Time and sky</source>
+        <translation>Tiempo y cielo</translation>
+    </message>
+    <message>
+        <source>System Insight only</source>
+        <translation>Solo Vista del sistema</translation>
     </message>
 </context>
 <context>

@@ -17,6 +17,10 @@ import QtQuick
 Singleton {
     id: root
 
+    // False when the installed Hornero plugin predates the translator (a
+    // source checkout running on an older package): the shell then stays
+    // in English and the Language panel says why, instead of failing.
+    readonly property bool available: typeof Translator !== "undefined"
     readonly property string directory: `${Quickshell.shellDir}/i18n`
     readonly property string setting: Config.general.language || "auto"
 
@@ -28,16 +32,16 @@ Singleton {
         })
 
     // Catalog the setting resolves to; "" is English (the source text).
-    readonly property string resolved: Translator.resolve(root.setting, root.directory)
+    readonly property string resolved: root.available ? Translator.resolve(root.setting, root.directory) : ""
     // Catalog actually loaded; differs from `resolved` only when loading
     // failed (then `error` says why and the shell stays in English).
-    readonly property string active: Translator.language
+    readonly property string active: root.available ? Translator.language : ""
     readonly property string activeName: root.nameOf(root.active)
     // Locale name for text that does not go through qsTr() (Javi's
     // assistant copy and voice tables): the shell language, "en" for English.
     readonly property string uiLocale: root.active !== "" ? root.active : "en"
-    readonly property string error: Translator.error
-    readonly property string systemName: root.nameOf(Translator.resolve("auto", root.directory))
+    readonly property string error: root.available ? Translator.error : qsTr("the installed Hornero plugin has no translator; update hornero-shell")
+    readonly property string systemName: root.nameOf(root.available ? Translator.resolve("auto", root.directory) : "")
 
     readonly property var options: [
         {
@@ -59,7 +63,8 @@ Singleton {
     }
 
     function apply(): void {
-        Translator.load(root.resolved, root.directory);
+        if (root.available)
+            Translator.load(root.resolved, root.directory);
     }
 
     onResolvedChanged: root.apply()

@@ -31,17 +31,22 @@ function clampWidth(width, max) {
     return max > 0 ? Math.min(w, max) : w;
 }
 
-// items: [{id, width, priority}] in declaration order. `budget` <= 0 means
-// unlimited. Items whose width is 0 (not loaded yet, or reporting nothing to
-// show) take no room and are always kept. Returns {keep: [ids], overflow: [ids]}
-// with both lists in declaration order.
-function plan(items, budget, gap, maxItemWidth) {
+// items: [{id, width, priority, overflowed}] in declaration order. `budget`
+// <= 0 means unlimited. Items whose width is 0 (not loaded yet, or reporting
+// nothing to show) take no room and are always kept. An item that is
+// currently `overflowed` only moves back when it fits with `returnSlack`
+// extra room to spare, so a bar resized around a threshold does not move
+// (destroy and recreate) the same plugin back and forth. Returns
+// {keep: [ids], overflow: [ids]} with both lists in declaration order.
+function plan(items, budget, gap, maxItemWidth, returnSlack) {
+    var slack = Number(returnSlack) > 0 ? Number(returnSlack) : 0;
     var list = (items || []).map(function (it, order) {
         return {
             id: it.id,
             order: order,
             width: clampWidth(it.width, maxItemWidth),
-            priority: priorityOf(it.priority)
+            priority: priorityOf(it.priority),
+            overflowed: it.overflowed === true
         };
     });
     if (!(budget > 0))
@@ -58,7 +63,7 @@ function plan(items, budget, gap, maxItemWidth) {
             return;
         if (!overflowed) {
             var next = spent + (used > 0 ? gap : 0) + it.width;
-            if (next <= budget) {
+            if (next + (it.overflowed ? slack : 0) <= budget) {
                 spent = next;
                 used++;
                 return;

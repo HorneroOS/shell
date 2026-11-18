@@ -51,6 +51,13 @@ Repeater {
     // Display hosting this bar instance (multi-monitor: the same
     // plugin is instantiated once per bar/screen).
     property string screenName: ""
+    // Edge of the bar this island sits on, for the overflow bookkeeping only
+    // (a screen can carry one bar per edge). Defaults to `edge`; islands
+    // that do not forward `edge` to plugins set it explicitly.
+    property string barEdge: edge
+    // Unique per bar: "<screen>|<edge>". Overflow is planned and sunk per
+    // bar, never across two bars of the same screen.
+    readonly property string barKey: `${root.screenName}|${root.barEdge}`
     // Native bar island this instance renders into (shell#439):
     // "status", "actions", "clock" or "end" (after the end group).
     // Each island embeds one instance with its own icon style, so an
@@ -88,10 +95,14 @@ Repeater {
 
     // The island hosts the Extensions island's own end section: it never
     // overflows (it collapses behind its chevron instead).
-    readonly property bool canOverflow: root.section !== "end" && Plugins.hasOverflowSink(root.screenName)
+    readonly property bool canOverflow: root.section !== "end" && Plugins.hasOverflowSink(root.barKey)
     readonly property real barMain: root.vertical ? (Window.window?.height ?? 0) : (Window.window?.width ?? 0)
     readonly property real budget: root.canOverflow ? Overflow.budgetFor(root.barMain, Config.bar.extensions.sectionBudget) : 0
     readonly property int itemGap: 6
+    // Extra room an overflowed indicator needs before it moves back, so a
+    // bar resized around a threshold does not destroy and recreate plugin
+    // instances on every step (internal stability margin, not a look value).
+    readonly property int returnSlack: 16
     property var overflowIds: []
 
     function replan(): void {
@@ -100,14 +111,22 @@ Repeater {
             const d = root.itemAt(i);
             if (!d)
                 continue;
+            const id = d.modelData.id;
+            const away = root.overflowIds.includes(id);
+            // An overflowed indicator is unloaded here: plan with the width
+            // its Extensions island instance reports, so a plugin that
+            // shrinks while away can come back (shell#531 review).
+            const reported = away ? Plugins.barItemWidth(root.barKey, id) : -1;
             items.push({
-                id: d.modelData.id,
-                width: d.measuredMain,
+                id: id,
+                // Clamped like the Loader itself (bar.extensions.itemMaxWidth).
+                width: Math.min(reported >= 0 ? reported : d.measuredMain, root.availableMain),
+                overflowed: away,
                 // Declared order is the priority: earlier indicators stay.
                 priority: Math.max(0, 100 - i)
             });
         }
-        const result = Overflow.plan(items, root.budget, root.itemGap, root.availableMain);
+        const result = Overflow.plan(items, root.budget, root.itemGap, root.availableMain, root.returnSlack);
         const next = result.overflow;
         if (JSON.stringify(next) !== JSON.stringify(root.overflowIds))
             root.overflowIds = next;
@@ -120,18 +139,45 @@ Repeater {
     onBudgetChanged: root.queueReplan()
     onItemAdded: root.queueReplan()
     onItemRemoved: root.queueReplan()
-    onOverflowIdsChanged: Plugins.setBarOverflow(root.screenName, root.section, root.overflowIds)
-    Component.onDestruction: Plugins.setBarOverflow(root.screenName, root.section, [])
+    // Bar key the current overflow list was published under (null: none).
+    property var publishedKey: null
+    function publishOverflow(): void {
+        if (root.publishedKey !== null && root.publishedKey !== root.barKey)
+            Plugins.setBarOverflow(root.publishedKey, root.section, []);
+        Plugins.setBarOverflow(root.barKey, root.section, root.overflowIds);
+        root.publishedKey = root.overflowIds.length > 0 ? root.barKey : null;
+    }
+    onOverflowIdsChanged: root.publishOverflow()
+    onBarKeyChanged: {
+        root.publishOverflow();
+        root.queueReplan();
+    }
+    Component.onDestruction: {
+        if (root.publishedKey !== null)
+            Plugins.setBarOverflow(root.publishedKey, root.section, []);
+    }
 
     // Structurally stable (StableList.qml): a plugin reporting loaded or
     // failed must not rebuild every other indicator's Loader.
     // Repeater's default property is its delegate, so the helper goes in
     // `data` explicitly.
     data: [
+        // Re-plan when the Extensions island reports a new width for one of
+        // this island's overflowed indicators.
+        Connections {
+            target: Plugins
+            enabled: root.canOverflow && root.overflowIds.length > 0
+            function onBarItemWidthsChanged(): void {
+                root.queueReplan();
+            }
+        },
         StableList {
             id: stable
 
-            source: root.surfaceActive ? Plugins.barPlugins().filter(p => !root.hiddenIds.includes(p.id) && ((p.barSection || "end") === root.section || root.fallbackSections.includes(p.barSection || "end") || (root.acceptOverflow && Plugins.isBarOverflowed(root.screenName, p.id)))) : []
+            // bar.extensions.hiddenIcons hides the island's own indicators
+            // only: an indicator handed over by another island is never
+            // hidden by it (it would vanish from the bar entirely).
+            source: root.surfaceActive ? Plugins.barPlugins().filter(p => (root.acceptOverflow && Plugins.isBarOverflowed(root.barKey, p.id)) || (!root.hiddenIds.includes(p.id) && ((p.barSection || "end") === root.section || root.fallbackSections.includes(p.barSection || "end")))) : []
         }
     ]
 
@@ -191,6 +237,16 @@ Repeater {
         // declares `available: false` and leaves the bar entirely.
         readonly property bool hasData: !pluginLoader.item || !("available" in pluginLoader.item) || pluginLoader.item.available !== false
         readonly property bool overflowed: !root.acceptOverflow && root.overflowIds.includes(pluginLoader.modelData.id)
+        // Rendered here on behalf of another island of the same bar.
+        readonly property bool guest: root.acceptOverflow && Plugins.isBarOverflowed(root.barKey, pluginLoader.modelData.id)
+
+        function publishWidth(): void {
+            // Only a real measurement (or an explicit "nothing to show"): a
+            // freshly loaded item reports 0 before layout and must not pull
+            // the indicator back home.
+            if (pluginLoader.guest && pluginLoader.item && (pluginLoader.measuredMain > 0 || !pluginLoader.hasData))
+                Plugins.setBarItemWidth(root.barKey, pluginLoader.modelData.id, pluginLoader.measuredMain);
+        }
 
         onLiveMainChanged: {
             if (pluginLoader.liveMain > 0 && Math.abs(pluginLoader.liveMain - pluginLoader.measuredMain) > 0.5)
@@ -202,7 +258,11 @@ Repeater {
             else
                 pluginLoader.measuredMain = pluginLoader.liveMain;
         }
-        onMeasuredMainChanged: root.queueReplan()
+        onMeasuredMainChanged: {
+            root.queueReplan();
+            pluginLoader.publishWidth();
+        }
+        onGuestChanged: pluginLoader.publishWidth()
 
         active: !pluginLoader.overflowed
         visible: !pluginLoader.overflowed && pluginLoader.hasData
@@ -214,10 +274,11 @@ Repeater {
         height: root.vertical ? Math.min(pluginLoader.natHeight, root.availableMain) : pluginLoader.natHeight
         Layout.maximumWidth: root.availableWidth
         Layout.maximumHeight: root.availableHeight
-        // Breathing room from the native items before it (Layout parents; a
-        // Row or Column spaces its children itself).
-        Layout.leftMargin: root.vertical ? 0 : root.itemGap
-        Layout.topMargin: root.vertical ? root.itemGap : 0
+        // Breathing room for an indicator handed over by another island
+        // (Layout parents; a Row or Column spaces its children itself).
+        // Indicators in their own island keep the island's native spacing.
+        Layout.leftMargin: pluginLoader.guest && !root.vertical ? root.itemGap : 0
+        Layout.topMargin: pluginLoader.guest && root.vertical ? root.itemGap : 0
         clip: true
         // Plugins cannot import Shell theming; give their default text the
         // bar's themed foreground through palette inheritance instead of

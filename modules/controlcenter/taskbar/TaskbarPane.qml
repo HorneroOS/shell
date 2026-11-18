@@ -735,6 +735,7 @@ Item {
                                 to: 320
                                 defaultValue: 160
                                 stepSize: 10
+                                suffix: "px"
                             }
 
                             SizeSlider {

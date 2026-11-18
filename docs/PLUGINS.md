@@ -654,7 +654,12 @@ islands, styled like their native neighbours.
   the bar's main axis (default 18). Indicators that do not fit, the last
   declared first, move to the Extensions island, which itself collapses
   behind its chevron past `bar.extensions.islandBudget` percent (default
-  40). Nothing is painted over a core segment, and with no Extensions
+  40). Overflow is planned per bar (screen and edge), and is not sticky:
+  the Extensions island reports the width of an overflowed indicator, so
+  one that shrinks moves back once it fits (with a small margin, so a
+  bar resized around the limit does not recreate it on every step).
+  `hiddenIcons` never hides an indicator that overflowed from another
+  island. Nothing is painted over a core segment, and with no Extensions
   island in the layout nothing overflows. An entrypoint with nothing to
   show (no player, no device) declares `property bool available` and sets
   it to `false`: the host then gives it no room at all instead of

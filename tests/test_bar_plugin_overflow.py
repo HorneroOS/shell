@@ -13,6 +13,7 @@ import os
 import re
 import shutil
 import subprocess
+import time
 from pathlib import Path
 
 import pytest
@@ -89,7 +90,7 @@ def test_hosts_overflow_into_the_extensions_island_only():
     island = (ROOT / "modules/bar/components/ExtensionsIsland.qml").read_text()
     assert "Plugins.setOverflowSink" in island and "acceptOverflow: true" in island
     assert "Config.bar.extensions.islandBudget / 100" in island
-    assert 'root.section !== "end" && Plugins.hasOverflowSink(root.screenName)' in WIDGETS
+    assert 'root.section !== "end" && Plugins.hasOverflowSink(root.barKey)' in WIDGETS
     for rel in ("QuickActions", "Clock", "StatusIcons"):
         src = (ROOT / f"modules/bar/components/{rel}.qml").read_text()
         assert "PluginBarWidgets {" in src
@@ -117,7 +118,7 @@ def test_every_limit_is_a_persisted_user_setting_with_a_reset():
 FIXTURE_COUNT = 14
 
 
-def _plugin(root: Path, n: int) -> str:
+def _plugin(root: Path, n: int, shrink_at_ms: int = 0) -> str:
     pid = f"ov-fixture-{n:02d}"
     d = root / pid
     d.mkdir()
@@ -127,10 +128,22 @@ def _plugin(root: Path, n: int) -> str:
         "entrypoint": "Main.qml", "placement": "bar", "files": ["Main.qml"],
         "surfaces": {"bar": {"entrypoint": "Main.qml", "section": "actions"}},
     }))
+    # shrink_at_ms: wall-clock epoch (ms) after which every instance of the
+    # indicator, wherever it is hosted, reports a narrow width. Shared by all
+    # instances so moving a plugin (a new instance) does not reset it.
     (d / "Main.qml").write_text(
         "import QtQuick\n"
         "Item {\n"
-        "    implicitWidth: 260\n"
+        "    id: ind\n"
+        f"    readonly property real shrinkAt: {shrink_at_ms}\n"
+        "    property bool narrow: shrinkAt > 0 && Date.now() >= shrinkAt\n"
+        "    Timer {\n"
+        "        interval: 100\n"
+        "        repeat: true\n"
+        "        running: ind.shrinkAt > 0 && !ind.narrow\n"
+        "        onTriggered: ind.narrow = Date.now() >= ind.shrinkAt\n"
+        "    }\n"
+        "    implicitWidth: narrow ? 30 : 260\n"
         "    implicitHeight: 16\n"
         "    Text {\n"
         "        anchors.fill: parent\n"
@@ -143,7 +156,10 @@ def _plugin(root: Path, n: int) -> str:
     return pid
 
 
-def render(tmp_path: Path, width: int, count: int = FIXTURE_COUNT) -> dict:
+HIDDEN = "ov-fixture-13"
+
+
+def render(tmp_path: Path, width: int, count: int = FIXTURE_COUNT, shrink_after_s: float = 0, report_ms: int = 9000) -> dict:
     root = tmp_path / "root"
 
     def ignore(_dir, names):
@@ -157,8 +173,13 @@ def render(tmp_path: Path, width: int, count: int = FIXTURE_COUNT) -> dict:
     for sub in ("config/hornero", "state/hornero", "data/hornero/plugins", "cache", "home", "rt"):
         (xdg / sub).mkdir(parents=True)
     (xdg / "rt").chmod(0o700)
-    ids = [_plugin(xdg / "data" / "hornero" / "plugins", n) for n in range(count)]
-    (xdg / "config" / "hornero" / "shell.json").write_text((ROOT / "config" / "shell.default.json").read_text())
+    shrink_at = int((time.time() + shrink_after_s) * 1000) if shrink_after_s > 0 else 0
+    ids = [_plugin(xdg / "data" / "hornero" / "plugins", n, shrink_at) for n in range(count)]
+    cfg = json.loads((ROOT / "config" / "shell.default.json").read_text())
+    # Hidden on the Extensions island: must not hide it once it overflows
+    # there from the Quick actions island (it always does: 14 never fit).
+    cfg["bar"]["extensions"]["hiddenIcons"] = [HIDDEN]
+    (xdg / "config" / "hornero" / "shell.json").write_text(json.dumps(cfg))
     bindir = tmp_path / "bin"
     bindir.mkdir()
     listing = json.dumps([{"id": i, "name": i, "version": "1.0.0", "installed": True, "enabled": True, "trust": "official"} for i in ids])
@@ -177,7 +198,7 @@ def render(tmp_path: Path, width: int, count: int = FIXTURE_COUNT) -> dict:
         "XDG_RUNTIME_DIR": str(xdg / "rt"), "HOME": str(xdg / "home"),
         "QML2_IMPORT_PATH": str(root / "plugin" / "qml"),
         "QT_QPA_PLATFORM": "offscreen", "LIBGL_ALWAYS_SOFTWARE": "1",
-        "OV_W": str(width),
+        "OV_W": str(width), "OV_REPORT_MS": str(report_ms),
     }
     if os.environ.get("OV_OUT"):
         env["OV_OUT"] = os.environ["OV_OUT"]
@@ -220,3 +241,70 @@ def test_no_indicator_overlaps_and_the_rest_move_to_the_extensions_island(tmp_pa
     assert kept | overflowed == {f"ov-fixture-{n:02d}" for n in range(FIXTURE_COUNT)}
     assert not kept & overflowed
     assert overflowed == in_island, (overflowed, in_island)
+    assert HIDDEN in in_island, "bar.extensions.hiddenIcons must not hide an overflowed indicator"
+
+
+@requires_qs
+def test_an_overflowed_indicator_that_shrinks_comes_back(tmp_path: Path):
+    """Overflow is not sticky: the island reports the new width of an
+    overflowed plugin and the source island re-plans with it."""
+    width = 1280
+    report = render(tmp_path, width, shrink_after_s=4, report_ms=11000)
+    rects = report["rects"]
+    in_actions = [r for r in rects if r["host"] == "actions"]
+    budget = int(width * 0.18)
+    assert all(r["w"] <= 31 for r in rects), rects
+    used = sum(r["w"] for r in in_actions) + 6 * max(0, len(in_actions) - 1)
+    assert used <= budget, in_actions
+    # Tight plan: the next 30 px indicator would not have fit (with the
+    # 16 px return slack an away indicator needs to come back).
+    assert used + 6 + 30 + 16 > budget, (used, budget, in_actions)
+    # With stale (pre-shrink) widths only one or two would have stayed.
+    assert len(in_actions) >= 4, in_actions
+    bar = next(iter(report["widths"]))
+    assert bar.endswith("|top"), report["widths"]
+    assert set(report["overflow"]) == {bar + "|actions"}
+
+
+# --- Model: stability and per-bar keys ---------------------------------------
+
+def test_an_overflowed_item_needs_slack_to_come_back():
+    its = json.dumps([{"id": "a", "width": 100}, {"id": "b", "width": 100, "overflowed": True}])
+    assert run_js(f"return plan({its}, 210, 6, 160, 16)")["overflow"] == ["b"]
+    assert run_js(f"return plan({its}, 222, 6, 160, 16)")["overflow"] == []
+    kept = json.dumps([{"id": "a", "width": 100}, {"id": "b", "width": 100}])
+    assert run_js(f"return plan({kept}, 210, 6, 160, 16)")["overflow"] == [], "slack never evicts a kept item"
+
+
+def test_overflow_is_keyed_per_bar_not_per_screen():
+    plugins = (ROOT / "services/Plugins.qml").read_text()
+    assert "const key = `${bar}|${section}`;" in plugins
+    assert "readonly property string barKey: `${root.screenName}|${root.barEdge}`" in WIDGETS
+    island = (ROOT / "modules/bar/components/ExtensionsIsland.qml").read_text()
+    assert "|${root.barEdge}`" in island and island.count("barEdge: root.barEdge") == 2
+    bar = (ROOT / "modules/bar/Bar.qml").read_text()
+    assert bar.count("barEdge: root.edge") == 4
+    for rel in ("QuickActions", "Clock", "StatusIcons"):
+        assert "barEdge: root.barEdge" in (ROOT / f"modules/bar/components/{rel}.qml").read_text()
+
+
+def test_hidden_icons_never_hide_overflow_guests():
+    assert "(root.acceptOverflow && Plugins.isBarOverflowed(root.barKey, p.id)) || (!root.hiddenIds.includes(p.id)" in WIDGETS
+
+
+def test_only_overflow_guests_get_the_extra_margin():
+    assert "Layout.leftMargin: pluginLoader.guest && !root.vertical ? root.itemGap : 0" in WIDGETS
+    assert "Layout.topMargin: pluginLoader.guest && root.vertical ? root.itemGap : 0" in WIDGETS
+
+
+def test_overflowed_items_are_planned_with_the_island_width():
+    assert "Plugins.barItemWidth(root.barKey, id)" in WIDGETS
+    assert "Plugins.setBarItemWidth(root.barKey, pluginLoader.modelData.id, pluginLoader.measuredMain)" in WIDGETS
+    assert "function onBarItemWidthsChanged()" in WIDGETS
+    assert "Math.min(reported >= 0 ? reported : d.measuredMain, root.availableMain)" in WIDGETS
+
+
+def test_widest_indicator_slider_shows_pixels():
+    pane = (ROOT / "modules/controlcenter/taskbar/TaskbarPane.qml").read_text()
+    block = pane[pane.index('key: "itemMaxWidth"'):][:400]
+    assert 'suffix: "px"' in block

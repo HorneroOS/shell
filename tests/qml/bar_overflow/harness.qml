@@ -44,6 +44,7 @@ ShellRoot {
 
                 vertical: false
                 screenName: Quickshell.screens[0].name
+                barEdge: "top"
             }
 
             ExtensionsIsland {
@@ -51,6 +52,7 @@ ShellRoot {
 
                 screen: Quickshell.screens[0]
                 vertical: false
+                barEdge: "top"
             }
         }
     }
@@ -73,7 +75,7 @@ ShellRoot {
     }
 
     Timer {
-        interval: 9000
+        interval: parseInt(Quickshell.env("OV_REPORT_MS") || "9000")
         running: true
         onTriggered: {
             const loaders = [];
@@ -100,6 +102,7 @@ ShellRoot {
                 actionsRect: [actions.mapToItem(null, 0, 0).x, actions.width],
                 islandRect: [island.mapToItem(null, 0, 0).x, island.width, island.visible],
                 overflow: Plugins.barOverflow,
+                widths: Plugins.barItemWidths,
                 sinks: Plugins.overflowSinks,
                 states: Plugins.entries.map(e => e.id + ":" + e.state),
                 details: Plugins.entries.map(e => e.detail),

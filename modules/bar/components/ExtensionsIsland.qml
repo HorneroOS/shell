@@ -81,12 +81,14 @@ StyledRect {
     Accessible.name: qsTr("Extensions")
 
     // Overflow sink (shell#531): while this island renders, other islands
-    // may hand it the indicators they cannot fit.
-    readonly property string sinkScreen: root.screen?.name ?? ""
-    // null while not registered (an empty name is a valid screen key).
+    // of the same bar may hand it the indicators they cannot fit. Keyed per
+    // bar ("<screen>|<edge>"), matching PluginBarWidgets.barKey.
+    property string barEdge: root.hostEdge
+    readonly property string sinkKey: `${root.hostScreenName !== "" ? root.hostScreenName : (root.screen?.name ?? "")}|${root.barEdge}`
+    // null while not registered.
     property var registeredSink: null
     function syncSink(): void {
-        const want = root.surfaceActive && root.screen ? root.sinkScreen : null;
+        const want = root.surfaceActive && root.screen ? root.sinkKey : null;
         if (want === root.registeredSink)
             return;
         if (root.registeredSink !== null)
@@ -96,7 +98,7 @@ StyledRect {
             Plugins.setOverflowSink(want, true);
     }
     onSurfaceActiveChanged: root.syncSink()
-    onSinkScreenChanged: root.syncSink()
+    onSinkKeyChanged: root.syncSink()
     Component.onCompleted: root.syncSink()
     Component.onDestruction: {
         if (root.registeredSink !== null)
@@ -165,6 +167,7 @@ StyledRect {
                 iconSize: Density.iconPt
                 textSize: Density.textPt
                 edge: root.hostEdge
+                barEdge: root.barEdge
                 compact: root.hostCompact
                 thickness: root.hostThickness > 0 ? root.hostThickness : Density.inner
                 screenName: root.hostScreenName !== "" ? root.hostScreenName : root.screen.name
@@ -216,6 +219,7 @@ StyledRect {
                 iconSize: Density.iconPt
                 textSize: Density.textPt
                 edge: root.hostEdge
+                barEdge: root.barEdge
                 compact: root.hostCompact
                 thickness: root.hostThickness > 0 ? root.hostThickness : Density.inner
                 screenName: root.hostScreenName !== "" ? root.hostScreenName : root.screen.name

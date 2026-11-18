@@ -866,15 +866,20 @@ Singleton {
         return root.pluginsForSurface("bar");
     }
 
-    // Bar overflow (shell#531). Island hosts that cannot fit all their
-    // indicators report the ones to move as `barOverflow["<screen>|<section>"]`;
-    // the Extensions island (an overflow sink, one count per screen) renders
-    // them. Without a sink nothing overflows, so an indicator never vanishes.
+    // Bar overflow (shell#531). Every bar is keyed "<screen>|<edge>" (a
+    // screen can carry one bar per edge). Island hosts that cannot fit all
+    // their indicators report the ones to move as
+    // `barOverflow["<screen>|<edge>|<section>"]`; the Extensions island of the
+    // same bar (an overflow sink, counted per bar) renders them and reports
+    // their measured width back in `barItemWidths["<screen>|<edge>"][id]`, so
+    // the source island re-plans when an overflowed plugin changes size.
+    // Without a sink nothing overflows, so an indicator never vanishes.
     property var barOverflow: ({})
     property var overflowSinks: ({})
+    property var barItemWidths: ({})
 
-    function setBarOverflow(screen: string, section: string, ids: var): void {
-        const key = `${screen}|${section}`;
+    function setBarOverflow(bar: string, section: string, ids: var): void {
+        const key = `${bar}|${section}`;
         const next = Object.assign({}, root.barOverflow);
         if (ids && ids.length > 0)
             next[key] = Array.from(ids);
@@ -885,8 +890,8 @@ Singleton {
         root.barOverflow = next;
     }
 
-    function isBarOverflowed(screen: string, id: string): bool {
-        const prefix = `${screen}|`;
+    function isBarOverflowed(bar: string, id: string): bool {
+        const prefix = `${bar}|`;
         for (const key in root.barOverflow) {
             if (key.startsWith(prefix) && root.barOverflow[key].includes(id))
                 return true;
@@ -894,18 +899,34 @@ Singleton {
         return false;
     }
 
-    function setOverflowSink(screen: string, on: bool): void {
+    function setOverflowSink(bar: string, on: bool): void {
         const next = Object.assign({}, root.overflowSinks);
-        const count = Math.max(0, (next[screen] ?? 0) + (on ? 1 : -1));
+        const count = Math.max(0, (next[bar] ?? 0) + (on ? 1 : -1));
         if (count === 0)
-            delete next[screen];
+            delete next[bar];
         else
-            next[screen] = count;
+            next[bar] = count;
         root.overflowSinks = next;
     }
 
-    function hasOverflowSink(screen: string): bool {
-        return (root.overflowSinks[screen] ?? 0) > 0;
+    function hasOverflowSink(bar: string): bool {
+        return (root.overflowSinks[bar] ?? 0) > 0;
+    }
+
+    function setBarItemWidth(bar: string, id: string, width: real): void {
+        const w = width > 0 ? Math.round(width) : 0;
+        if ((root.barItemWidths[bar] ?? {})[id] === w)
+            return;
+        const next = Object.assign({}, root.barItemWidths);
+        next[bar] = Object.assign({}, next[bar] ?? {});
+        next[bar][id] = w;
+        root.barItemWidths = next;
+    }
+
+    // -1 when the bar's Extensions island has not measured `id` yet.
+    function barItemWidth(bar: string, id: string): real {
+        const w = (root.barItemWidths[bar] ?? {})[id];
+        return typeof w === "number" ? w : -1;
     }
 
     function dashboardPlugins(): var {

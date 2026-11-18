@@ -26,6 +26,10 @@ Item {
     property real travel: Choreography.scanTravel
     property int duration: Choreography.brief
     property list<real> curve: Choreography.curves.enter
+    // Gap between row starts and how many rows stagger (later rows start
+    // with the last one). Dense lists use staggerStepFine/staggerMaxFine.
+    property int step: Choreography.staggerStep
+    property int maxRows: Choreography.staggerMax
 
     readonly property int poolSize: Choreography.staggerMax + 8
     readonly property bool running: _active > 0
@@ -65,12 +69,18 @@ Item {
         stop();
         if (!target || !Choreography.stagger)
             return 0;
-        const rows = rowsOf(target);
-        if (rows.length < 2)
+        return playRows(rowsOf(target));
+    }
+
+    // Reveal explicit rows, in order (for views whose children are not in
+    // layout order, such as a ListView's delegates).
+    function playRows(rows: var): int {
+        stop();
+        if (!Choreography.stagger || !rows || rows.length < 2)
             return 0;
         const n = Math.min(rows.length, pool.count);
         for (let i = 0; i < n; i++)
-            pool.objectAt(i)?.start(rows[i], Choreography.rowDelay(i));
+            pool.objectAt(i)?.start(rows[i], Choreography.rowDelay(i, root.step, root.maxRows));
         return n;
     }
 

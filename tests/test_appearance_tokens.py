@@ -156,11 +156,12 @@ def test_motion_tokens():
         "enter": "0.05, 0.7, 0.1, 1, 1, 1",
         "exit": "0.3, 0, 1, 1, 1, 1",
         "sweep": "0.65, 0, 0.35, 1, 1, 1",
-        # Factory "smooth" spatial curves; snappy reuses `standard`, bouncy has its own.
+        # Factory "smooth" spatial curves; snappy reuses `standard`, lively
+        # (spring, <= 6 % overshoot) has its own.
         "settleSmooth": "0.32, 1.24, 0.42, 1, 1, 1",
         "settleFastSmooth": "0.34, 1.3, 0.5, 1, 1, 1",
-        "settleBouncy": "0.32, 1.5, 0.42, 1, 1, 1",
-        "settleFastBouncy": "0.34, 1.6, 0.5, 1, 1, 1",
+        "settleLively": "0.3, 1.4, 0.4, 1, 1, 1",
+        "settleFastLively": "0.34, 1.42, 0.5, 1, 1, 1",
     }
     for name, ms in (("quick", 90), ("short", 160), ("medium", 240), ("long", 360),
                      ("scan", 480), ("settleFast", 220), ("settle", 320)):

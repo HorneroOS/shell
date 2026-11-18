@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import qs.components
 import qs.components.atmosphere
 import qs.components.filedialog
+import qs.components.motion
 import qs.config
 import Quickshell
 import QtQuick
@@ -137,23 +138,25 @@ Item {
                 }
             }
 
+            // Pane slide is position: settle (§11 table, dashboard tabs).
             Behavior on contentX {
-                Anim {}
+                MotionAnim {
+                    kind: "settle"
+                }
             }
         }
     }
 
+    // Tab content size switch is size: settle (§11 table).
     Behavior on implicitWidth {
-        Anim {
-            duration: Appearance.anim.durations.long
-            easing.bezierCurve: Appearance.anim.curves.standard
+        MotionAnim {
+            kind: "settle"
         }
     }
 
     Behavior on implicitHeight {
-        Anim {
-            duration: Appearance.anim.durations.long
-            easing.bezierCurve: Appearance.anim.curves.standard
+        MotionAnim {
+            kind: "settle"
         }
     }
 

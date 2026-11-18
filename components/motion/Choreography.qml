@@ -54,6 +54,16 @@ Singleton {
     readonly property int staggerStep: stagger ? _ms(24) : 0
     readonly property int staggerStart: stagger ? _ms(60) : 0
     readonly property int staggerMax: 8
+    // Fine stagger for dense result lists (launcher rows, §11.2): 16 ms
+    // apart, at most six rows.
+    readonly property int staggerStepFine: stagger ? _ms(16) : 0
+    readonly property int staggerMaxFine: 6
+
+    // Leading/trailing asymmetry (§11): an indicator's leading edge moves
+    // with the plain duration, its trailing edge with trail(ms), so it
+    // stretches toward the target and catches up. Only at full/standard;
+    // reduced and off move both edges together.
+    readonly property real trailRatio: Math.max(1, Math.min(2.5, Appearance.anim.trailRatio))
 
     // Hover intent (RFC §4 rule 6). Timing of intent, not of motion: it
     // stays the same at every level.
@@ -72,11 +82,21 @@ Singleton {
         return hover ? curves.settleFast : curves.settle;
     }
 
-    // Row `index` start delay for a staggered reveal (at most eight rows
-    // stagger; later rows start with the eighth).
-    function rowDelay(index: int): int {
+    function lead(ms: int): int {
+        return ms;
+    }
+
+    function trail(ms: int): int {
+        return morph ? Math.round(ms * trailRatio) : ms;
+    }
+
+    // Row `index` start delay for a staggered reveal (at most `max` rows
+    // stagger, eight by default; later rows start with the last one).
+    function rowDelay(index: int, step: int, max: int): int {
         if (!stagger)
             return 0;
-        return staggerStart + Math.min(Math.max(0, index), staggerMax - 1) * staggerStep;
+        const s = step === undefined || step < 0 ? staggerStep : step;
+        const m = max === undefined || max < 1 ? staggerMax : max;
+        return staggerStart + Math.min(Math.max(0, index), m - 1) * s;
     }
 }

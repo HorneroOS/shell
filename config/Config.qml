@@ -308,6 +308,7 @@ Singleton {
                 mediaGifSpeedAdjustment: appearance.anim.mediaGifSpeedAdjustment,
                 sessionGifSpeed: appearance.anim.sessionGifSpeed,
                 curveStyle: appearance.anim.curveStyle,
+                trailRatio: appearance.anim.trailRatio,
                 durations: {
                     scale: appearance.anim.durations.scale
                 }

@@ -156,13 +156,14 @@ Item {
         return Math.abs(a.x - b.x) < 0.5 && Math.abs(a.y - b.y) < 0.5 && Math.abs(a.width - b.width) < 0.5 && Math.abs(a.height - b.height) < 0.5;
     }
 
-    // settle overshoots 1.9 % of travel, settleFast 3 %: past ~8 px of
-    // overshoot use `enter` instead (visual language §11).
+    // Past ~8 px of overshoot use `enter` instead (visual language §11).
+    // The overshoot fraction follows the curve style (smooth: settle
+    // 1.9 %, settleFast 3 %; lively: 5.3 % / 5.8 %; snappy: none).
     function _curveFor(fast: bool, travel: real): var {
         const c = Choreography.curves;
         if (fast)
-            return travel * 0.03 > 8 ? c.enter : c.settleFast;
-        return travel * 0.019 > 8 ? c.enter : c.settle;
+            return travel * c.settleFastOvershoot > 8 ? c.enter : c.settleFast;
+        return travel * c.settleOvershoot > 8 ? c.enter : c.settle;
     }
 
     function _setGeometry(r: rect): void {

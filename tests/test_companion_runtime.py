@@ -242,6 +242,14 @@ def test_assistant_bridge_horneroctl_mediated():
     assert "root.busy" in BRIDGE
 
 
+def test_missing_pending_snapshot_is_silent():
+    # No pending request is the normal state: FileView must not print a
+    # "file not found" warning on every shell start.
+    block = BRIDGE[BRIDGE.index("id: pendingReader"):]
+    block = block[:block.index("onLoaded")]
+    assert "printErrors: false" in block
+
+
 def test_assistant_ipc_surface():
     assert "AssistantBridge" in HOST
     for fn in ("ask(", "askStop("):

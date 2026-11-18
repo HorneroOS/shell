@@ -28,6 +28,18 @@ def test_duplicate_collapse_policy():
     assert "root._isDuplicate(notif)" in src
 
 
+def test_ingress_never_calls_close_on_the_raw_notification():
+    # The Quickshell Notification has dismiss()/expire(), not close():
+    # `notif.close()` in onNotification is a TypeError at runtime (the
+    # shell's own Notif wrapper is what has close()).
+    src = NOTIFS.read_text()
+    start = src.index("onNotification: notif =>")
+    end = src.index("FileView {", start)
+    handler = src[start:end]
+    assert "notif.close()" not in handler
+    assert "notif.dismiss();\n                return;" in handler
+
+
 def test_per_app_cap_and_critical_exemption():
     src = NOTIFS.read_text()
     assert "maxPerApp" in src and "_enforcePerApp" in src

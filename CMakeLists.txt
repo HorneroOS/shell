@@ -116,6 +116,13 @@ if("shell" IN_LIST ENABLE_MODULES)
     # Standalone restart cover (`qs --path <conf>/reloadcover/shell.qml`),
     # shown by `horneroctl shell restart` while the main shell reloads.
     install(DIRECTORY reloadcover DESTINATION "${INSTALL_QSCONFDIR}")
+    # Quickshell blackholes any file outside the config root it was started
+    # with (`qs --path .../reloadcover/shell.qml` roots at reloadcover/), so the
+    # cover cannot reach ../assets. Javi's dozing frames ship inside the
+    # cover's own directory instead.
+    install(DIRECTORY assets/companion/frames
+        DESTINATION "${INSTALL_QSCONFDIR}/reloadcover/assets/companion"
+        FILES_MATCHING PATTERN "default-sleep-0*.png")
     # Welcome Center launcher entry; picked up by the launcher through the
     # system DesktopEntries service (no shell-side registration needed).
     install(FILES assets/hornero-welcome.desktop DESTINATION "share/applications")

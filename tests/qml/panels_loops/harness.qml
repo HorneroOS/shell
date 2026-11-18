@@ -86,13 +86,26 @@ ShellRoot {
     Timer {
         interval: 1500
         running: true
-        onTriggered: panels.popouts.openFor("audio", trigger, {edge: shell.edge, style: "attached", thickness: 40, margin: 0, floating: false, clear: false}, "click")
+        onTriggered: {
+            // PL_OPEN=launcher exercises the launcher drawer's content
+            // (search row, key legend) instead of the bar popout.
+            if (Quickshell.env("PL_OPEN") === "launcher") {
+                vis.launcher = true;
+                return;
+            }
+            panels.popouts.openFor("audio", trigger, {edge: shell.edge, style: "attached", thickness: 40, margin: 0, floating: false, clear: false}, "click");
+        }
     }
 
     Timer {
         interval: 3500
         running: true
         onTriggered: {
+            if (Quickshell.env("PL_OPEN") === "launcher") {
+                console.log("PANELS-DONE " + JSON.stringify({edge: shell.edge, launcher: vis.launcher}));
+                Qt.quit();
+                return;
+            }
             console.log("PANELS-DONE " + JSON.stringify({edge: panels.popouts.edge, fillet: panels.popouts.fillet, attached: panels.popouts.placement.attached}));
             Qt.quit();
         }

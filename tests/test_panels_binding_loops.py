@@ -49,7 +49,7 @@ def test_popout_bindings_in_panels_never_read_the_solved_placement():
     assert "placement" not in line and "edge:" not in line.split("ownerEdge:", 1)[1]
 
 
-def _run(tmp: Path, edge: str) -> str:
+def _run(tmp: Path, edge: str, open_: str = "popout") -> str:
     root = tmp / "root"
 
     def ignore(_dir, names):
@@ -70,7 +70,7 @@ def _run(tmp: Path, edge: str) -> str:
         "XDG_DATA_HOME": str(xdg / "data"), "XDG_CACHE_HOME": str(xdg / "cache"),
         "XDG_RUNTIME_DIR": str(xdg / "rt"), "HOME": str(xdg / "home"),
         "QML2_IMPORT_PATH": os.pathsep.join(filter(None, [str(root / "plugin" / "qml"), os.environ.get("HORNERO_PLUGIN_QML", "")])),
-        "QT_QPA_PLATFORM": "offscreen", "LIBGL_ALWAYS_SOFTWARE": "1", "PL_EDGE": edge,
+        "QT_QPA_PLATFORM": "offscreen", "LIBGL_ALWAYS_SOFTWARE": "1", "PL_EDGE": edge, "PL_OPEN": open_,
         "GIO_USE_VFS": "local", "GVFS_DISABLE_FUSE": "1",
     }
     try:
@@ -92,5 +92,18 @@ def test_panels_and_popouts_load_without_binding_loops(tmp_path, edge):
     assert "PANELS-DONE" in log, log[-3000:]
     done = next(ln for ln in log.splitlines() if "PANELS-DONE" in ln)
     assert '"attached":true' in done and f'"edge":"{edge}"' in done and '"fillet":6' in done, done
+    loops = [ln for ln in log.splitlines() if "Binding loop detected" in ln]
+    assert not loops, "\n".join(loops[:20])
+
+
+@requires_qs
+def test_launcher_opens_without_binding_loops(tmp_path):
+    """Shell 1.3.2 logged `Binding loop detected for property "width"` (QML
+    Eyebrow at modules/launcher/Content.qml) every time the launcher opened:
+    the key legend sized itself from its own implicit width."""
+    if shutil.which("dbus-run-session") is None:
+        pytest.skip("NOT RUN: dbus-run-session is not installed")
+    log = _run(tmp_path, "top", "launcher")
+    assert '"launcher":true' in next((ln for ln in log.splitlines() if "PANELS-DONE" in ln), log[-3000:])
     loops = [ln for ln in log.splitlines() if "Binding loop detected" in ln]
     assert not loops, "\n".join(loops[:20])

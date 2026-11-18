@@ -818,6 +818,9 @@ Scope {
     FileView {
         id: pendingReader
 
+        // The snapshot only exists while a request is pending: a missing
+        // file is the normal state, not an error to log on every start.
+        printErrors: false
         onLoaded: {
             try {
                 root.verifyRestoredRequest(JSON.parse(text()));

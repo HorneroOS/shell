@@ -67,6 +67,11 @@ ANSI = re.compile(r"\x1b\[[0-9;]*m")
 # popouts, from the machined-fillet binding in Panels.qml). The load gate
 # rejects any.
 BINDING_LOOP = re.compile(r"Binding loop detected")
+# Startup warnings fixed in shell 1.3.3 that must stay gone: a second
+# interceptor on a ShaderEffect property (stacked Behaviors on a clipping
+# rectangle's colour), a service calling a method the Quickshell API does
+# not have (Notification.close), and an image that does not resolve.
+STARTUP_WARNINGS = re.compile(r"another interceptor on|is not a function|Cannot open: qrc:/qs-blackhole")
 
 needs_stack = pytest.mark.skipif(
     not (QS and SWAY and DBUS),
@@ -199,5 +204,7 @@ def test_full_shell_loads_without_qml_errors(tmp_path):
     assert not failures, "shell.qml failed to load:\n" + "\n".join(failures[:40]) + "\n--- log tail ---\n" + tail
     loops = [ln for ln in log.splitlines() if BINDING_LOOP.search(ln)]
     assert not loops, "binding loops while the shell loads:\n" + "\n".join(loops[:40])
+    warned = [ln for ln in log.splitlines() if STARTUP_WARNINGS.search(ln)]
+    assert not warned, "startup warnings while the shell loads:\n" + "\n".join(warned[:40])
     assert LOADED in log, f"no '{LOADED}' within {LOAD_TIMEOUT:.0f}s:\n{tail}"
     assert alive, f"shell exited within {SETTLE_SECONDS:.0f}s of loading:\n{tail}"

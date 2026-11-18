@@ -99,7 +99,11 @@ def test_cover_and_its_art_are_installed_side_by_side():
     m = _re.search(r"foreach\(dir ([^)]*)\)", cmake)
     assert m and {"assets", "components", "config", "modules", "services", "utils"} <= set(m.group(1).split())
     slate = (COVER / "Slate.qml").read_text()
-    assert 'Qt.resolvedUrl("../assets/companion/frames/default-sleep-0")' in slate
+    # Quickshell blackholes files outside the config root (reloadcover/), so
+    # the sprites must resolve inside the cover's own directory, not ../assets.
+    assert 'Qt.resolvedUrl("assets/companion/frames/default-sleep-0")' in slate
+    assert '"../' not in slate
+    assert "reloadcover/assets/companion" in cmake and 'PATTERN "default-sleep-0*.png"' in cmake
     for n in range(1, 5):
         assert (ROOT / f"assets/companion/frames/default-sleep-0{n}.png").is_file()
     # Missing art degrades to no sprite, never a broken image.
@@ -225,7 +229,11 @@ def _render(tmp: Path, shots: Path, scene) -> dict:
     root = tmp / name / "root"
     root.mkdir(parents=True)
     shutil.copytree(COVER, root / "reloadcover")
-    os.symlink(ROOT / "assets", root / "assets")
+    # Mirror the install layout: Javi's frames sit inside reloadcover/.
+    frames = root / "reloadcover/assets/companion/frames"
+    frames.mkdir(parents=True)
+    for n in range(1, 5):
+        shutil.copy(ROOT / f"assets/companion/frames/default-sleep-0{n}.png", frames)
     shutil.copy(ROOT / "tests/qml/reloadcover/harness.qml", root / "shell.qml")
     xdg = tmp / name / "xdg"
     for sub in ("config/hornero", "state/hornero/signal", "data", "cache", "home", "rt"):
@@ -262,6 +270,9 @@ def _render(tmp: Path, shots: Path, scene) -> dict:
     lines = [ln for ln in log.splitlines() if "COVER " in ln]
     assert lines, f"{name}: harness never reported:\n{log[-3000:]}"
     assert "ReferenceError" not in log and "TypeError" not in log, log[-3000:]
+    # Every asset must resolve (a Cannot open / blackhole warning means the
+    # cover reaches outside its Quickshell config root).
+    assert "Cannot open" not in log and "blackhole" not in log, log[-3000:]
     return json.loads(lines[-1].split("COVER ", 1)[1])
 
 

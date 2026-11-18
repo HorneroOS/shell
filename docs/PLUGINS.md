@@ -1320,6 +1320,31 @@ rejects obvious shell/privilege escalation patterns and undeclared literal
 `Process` commands. These textual checks can be evaded by dynamic code and
 must never be treated as a sandbox.
 
+## Which first-party features are extensions
+
+RFC 0003 section 10 lists the hard-coded features that could become
+extensions. This is the evaluation of 2026-11-17 against the rule the RFC
+sets: a feature is extracted only when (1) the contribution point it needs
+exists on `main`, (2) PluginKit exposes the data it reads, (3) a first-party
+extension is demonstrably identical in the QA VM, (4) its stored settings
+carry over and (5) removing the extension leaves a working fallback. Until all
+five hold the built-in stays.
+
+| Feature | Extension today | Verdict | Blocker |
+| --- | --- | --- | --- |
+| Launcher clipboard history (`>clipboard`) and emoji (`>emoji`) | `hornero-clipboard`, `hornero-emoji` | Built as extensions from the start, never hard-coded | Needs multi-row launcher results (`results`, this repository) |
+| Launcher `>calc` | `hornero-calculator` (deprecated for Toolbox) | Keep native | The built-in is the shell's own parser and the extension was retired; nothing to extract |
+| Launcher `>win`, `>file`, `>ai` | none | Keep native | They read compositor toplevels, the filesystem and the assistant gateway, which PluginKit does not expose |
+| Dashboard Weather tab | `hornero-weather` | Extract later | The dashboard tabs are a fixed, index-bound list (`Content.qml`, `Tabs.qml`); a tab model with per-tab visibility must land first, then the native tab becomes the fallback |
+| Dashboard Media and Performance tabs | `hornero-now-playing`, `hornero-system-insight` | Extract later | Same tab model; Performance also draws shared telemetry history |
+| Bar weather, battery, media and resource chips | `hornero-weather`, `hornero-battery`, `hornero-now-playing`, `hornero-system-monitor` | Keep native for factory layouts | Presets reference them by id; swapping needs first-party extensions enabled at install (composition, not Shell) so a missing extension never leaves a blank bar |
+| Utilities quick toggles (Wi-Fi, Bluetooth, microphone, gaming, DND, VPN) | none | Refactor in place, do not extract | They drive in-process services with no PluginKit facade; the RFC's internal-tile registry would make them data-driven and individually hideable, which is a Shell change |
+| Idle inhibit and recording cards | none | Keep native | Need typed facades for the two services first |
+| Workspaces, tray, clock, active window, keyboard layout, pinned apps, notifications, OSD, lock, session | none | Core | They are the shell's own surfaces |
+
+Nothing in this table changes behaviour today; it records what must land
+before each extraction is safe and which verdicts are final.
+
 ## Diagnostics, performance budget and safe mode
 
 Each extension carries a load state (`pending`, `loaded`, `failed`,

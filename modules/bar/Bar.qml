@@ -903,6 +903,10 @@ Item {
             ExtensionsIsland {
                 Layout.alignment: root.vertical ? Qt.AlignHCenter : Qt.AlignVCenter
 
+                // Same cross-axis size as every other island, so it keeps the
+                // inset from the bar edge (it used to fill the whole cell).
+                cross: root.islandCross
+                clear: root.clear
                 screen: root.screen
                 vertical: root.vertical
                 surfaceActive: group.name === "end" && !root.presentSections.includes("end")

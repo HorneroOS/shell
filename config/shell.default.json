@@ -408,7 +408,8 @@
   "border": {
     "frameEnabled": true,
     "thickness": 10,
-    "rounding": 25
+    "rounding": 25,
+    "edgeWidth": 1
   },
   "dashboard": {
     "enabled": true,

@@ -525,7 +525,8 @@ Singleton {
         return {
             frameEnabled: border.frameEnabled,
             thickness: border.thickness,
-            rounding: border.rounding
+            rounding: border.rounding,
+            edgeWidth: border.edgeWidth
         };
     }
 

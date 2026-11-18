@@ -65,4 +65,27 @@ CollapsibleSection {
             }
         }
     }
+
+    SectionContainer {
+        contentSpacing: Appearance.spacing.normal
+
+        SizeSlider {
+            target: Config.border
+            key: "edgeWidth"
+            label: qsTr("Frame edge line")
+            from: 0
+            to: 4
+            defaultValue: 1
+            stepSize: 1
+            suffix: "px"
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+            text: qsTr("The line that separates the bar and frame from the desktop. High Contrast keeps it at 2 px or more.")
+            color: Signal.palette.inkMuted
+            font.pointSize: Appearance.font.size.small
+            wrapMode: Text.WordWrap
+        }
+    }
 }

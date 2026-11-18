@@ -69,6 +69,7 @@ Item {
 
                 StyledText {
                     text: Math.round(root.level * 100) + "%"
+                    tabular: true
                     font.pointSize: Appearance.font.size.extraLarge
                     font.weight: Appearance.font.weight.strong
                     color: contents.textColour

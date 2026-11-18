@@ -134,6 +134,7 @@ StyledRect {
                         anchors.horizontalCenter: parent.horizontalCenter
                         y: root.yAt(point.temp) - height - 8
                         text: Math.round(point.temp) + "°"
+                        tabular: true
                         font.pointSize: Appearance.font.size.smaller
                         font.weight: point.emphasised ? 700 : 500
                         color: point.emphasised ? Signal.palette.ink : Signal.palette.inkMuted

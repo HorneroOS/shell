@@ -114,3 +114,27 @@ def test_pluginkit_essential_borders_use_rule_strong():
         assert "Theme.palette.ruleStrong" in (kit / name).read_text(), name
     for name in ("UiPopover.qml", "UiCard.qml", "UiWell.qml", "UiScope.qml"):
         assert "border.color: Theme.palette.rule" in (kit / name).read_text(), name
+
+
+def test_frame_edge_separates_bar_from_ground_in_high_contrast():
+    """shell#515: under Signal Contrast the bar fill (`base`) sits ~1.07:1 from
+    `ground`, so the boundary is carried by an edge stroke (modules/drawers/
+    Border.qml). In High Contrast that stroke uses `ruleStrong` and must reach
+    3:1 (SC 1.4.11) against both the bar fill and the ground."""
+    p = THEMES["hornero-signal-contrast"]["palette"]
+    assert contrast(p["base"], p["ground"]) < 1.5  # the fill alone cannot separate
+    for bg in ("base", "ground"):
+        assert contrast(p["ruleStrong"], p[bg]) >= 3.0, bg
+    for theme_id, theme in THEMES.items():
+        q = theme["palette"]
+        assert contrast(q["rule"], q["base"]) >= 1.3, theme_id  # quiet edge stays visible
+
+
+def test_frame_edge_is_drawn_and_customisable():
+    border = (ROOT / "modules" / "drawers" / "Border.qml").read_text()
+    assert "border.width: strokeWidth" in border
+    assert "hc ? Signal.palette.ruleStrong : Signal.palette.rule" in border
+    assert "Math.max(2, Config.border.edgeWidth)" in border
+    section = (ROOT / "modules" / "controlcenter" / "appearance" / "sections" / "BorderSection.qml").read_text()
+    assert 'key: "edgeWidth"' in section
+    assert "property int edgeWidth: 1" in (ROOT / "config" / "BorderConfig.qml").read_text()

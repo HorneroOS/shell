@@ -42,6 +42,7 @@ ColumnLayout {
         }
 
         StyledText {
+            tabular: true
             text: Math.round(root.value) + (root.suffix !== "" ? " " + root.suffix : "")
             font.pointSize: Appearance.font.size.normal
             color: root.readonly ? Signal.palette.ruleStrong : Signal.palette.ink

@@ -49,6 +49,12 @@
       "step": 20,
       "default": 400
     },
+    "border.edgeWidth": {
+      "min": 0,
+      "max": 4,
+      "step": 1,
+      "default": 1
+    },
     "controlCenter.sizes.heightMult": {
       "min": 0.5,
       "max": 0.95,

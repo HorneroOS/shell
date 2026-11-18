@@ -45,11 +45,19 @@ ColumnLayout {
         }
 
         TextButton {
-            text: qsTr("Apply my tweaks")
+            text: qsTr("Use my tweaks now")
             type: TextButton.Tonal
             visible: root.saved > 0
-            Accessible.name: qsTr("Apply the saved tweaks of this layout now")
-            onClicked: Layouts.applyNow(root.layoutId)
+            Accessible.name: qsTr("Lay the saved tweaks of this layout on the bars now")
+            onClicked: {
+                // Undo puts the values they replace back (kept in Undo, not here).
+                const row = Layouts.rowFor(root.layoutId);
+                Undo.offerPaths("layout-tweaks", qsTr("Tweaks laid back on"), Object.keys(row).map(path => ({
+                            "path": path,
+                            "value": Undo.valueAt(path)
+                        })), qsTr("Undo brings back the sizes you had."));
+                Layouts.applyNow(root.layoutId);
+            }
         }
 
         TextButton {
@@ -57,7 +65,15 @@ ColumnLayout {
             type: TextButton.Tonal
             visible: root.saved > 0
             Accessible.name: qsTr("Forget the saved tweaks of this layout")
-            onClicked: Layouts.forget(root.layoutId)
+            onClicked: {
+                Undo.offerValues("layout-tweaks", qsTr("Tweaks forgotten"), [
+                    {
+                        "obj": Config.layouts,
+                        "keys": ["overrides"]
+                    }
+                ], qsTr("Undo remembers them again."));
+                Layouts.forget(root.layoutId);
+            }
         }
     }
 }

@@ -236,10 +236,10 @@ def test_reset_removes_stored_values_and_saves():
     assert "Config.plugins.resetSetting(namespaceKey, key)" in FACADE
     assert "function resetAll(): bool" in FACADE
     assert "Config.plugins.resetSettings(namespaceKey)" in FACADE
-    # Generated UI reset (per-field and confirmed reset-all).
+    # Generated UI reset (per-field and reset-all with Undo; no confirm step).
     assert "Config.plugins.resetSetting(root.storageKey, field.key)" in SECTION
     assert "Config.plugins.resetSetting(root.storageKey, key)" in SECTION  # Reset all spares hidden state
-    assert "confirmResetAll" in SECTION
+    assert "confirmResetAll" not in SECTION and "Undo.offerCalls(" in SECTION
 
 
 def test_generated_ui_covers_every_type_with_native_controls():

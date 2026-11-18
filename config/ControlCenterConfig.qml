@@ -3,6 +3,10 @@ import Quickshell.Io
 JsonObject {
     property Sizes sizes: Sizes {}
 
+    // How long the "Applied · Undo" strip stays up after a risky or slow
+    // change (docs/CONTROL-CENTER-APPLY.md). 3 to 60 seconds.
+    property real undoSeconds: 10
+
     // Shared trailing-action rail used by repeatable settings rows.
     readonly property real actionColumnWidth: 136
 

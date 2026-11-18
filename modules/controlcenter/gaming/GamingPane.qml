@@ -70,7 +70,10 @@ Item {
     property string performanceCurrent: ""
     property var performanceAvailable: []
     property string performanceError: ""
-    property string armedProfile: ""
+    // Called with the CLI envelope when the running set command succeeds;
+    // the title names it for a failure notice (services/Undo.qml).
+    property var setDone: null
+    property string setTitle: ""
 
     function refresh(): void {
         if (doctorProc.running || selectionProc.running || perfProc.running)
@@ -121,23 +124,44 @@ Item {
         setProc.running = true;
     }
 
-    // Two-step confirm: first click arms, second runs the ctl --yes
-    // gate. Switching profile is reversible by picking another one.
+    // Switching the power profile applies at once (it is reversible by
+    // picking another one) and offers Undo with the previous profile.
     function setPerformance(profile: string): void {
         if (root.busy || profile === root.performanceCurrent)
             return;
-        if (root.armedProfile !== profile) {
-            root.armedProfile = profile;
+        const prev = root.performanceCurrent;
+        root.runPerformance(profile, () => {
+            // Undo runs the inverse command itself (it outlives this pane).
+            if (prev !== "")
+                Undo.offerCommand("power-profile", qsTr("Power profile %1").arg(profile), root.performanceArgs(prev), qsTr("Undo returns to %1.").arg(prev));
+        });
+    }
+
+    function performanceArgs(profile: string): var {
+        return ["horneroctl", "--json", "apps", "performance", "mode", "set", profile, "--yes"];
+    }
+
+    function runPerformance(profile: string, done: var): void {
+        if (root.busy)
             return;
-        }
-        root.armedProfile = "";
         root.busy = true;
         root.actionError = "";
-        setProc.command = ["horneroctl", "--json", "apps", "performance", "mode", "set", profile, "--yes"];
+        root.setDone = done;
+        root.setTitle = qsTr("Power profile %1").arg(profile);
+        setProc.command = root.performanceArgs(profile);
         setProc.running = true;
     }
 
     Component.onCompleted: root.refresh()
+
+    Connections {
+        target: Undo
+
+        function onCommandFinished(key: string, ok: bool): void {
+            if (key === "power-profile")
+                root.refresh();
+        }
+    }
 
     Process {
         id: doctorProc
@@ -223,7 +247,16 @@ Item {
         onStarted: setProc.out = ""
         onExited: {
             root.busy = false;
-            root.applyEnvelope(setProc, () => {});
+            const done = root.setDone;
+            const title = root.setTitle;
+            root.setDone = null;
+            root.setTitle = "";
+            root.applyEnvelope(setProc, () => {
+                if (done)
+                    done();
+            });
+            if (root.actionError !== "" && title !== "")
+                Undo.report("power-profile", qsTr("%1 was not applied").arg(title), root.actionError);
             root.refresh();
         }
     }
@@ -368,8 +401,8 @@ Item {
                             TextButton {
                                 required property var modelData
 
-                                text: root.armedProfile === modelData ? qsTr("Confirm %1").arg(modelData) : modelData
-                                Accessible.name: qsTr("Set power profile to %1 (two-step confirm)").arg(modelData)
+                                text: modelData
+                                Accessible.name: qsTr("Set power profile to %1").arg(modelData)
                                 enabled: !root.busy && root.performanceAvailable.includes(modelData) && root.performanceCurrent !== modelData
                                 onClicked: root.setPerformance(modelData)
                             }

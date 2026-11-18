@@ -85,6 +85,12 @@
       "step": 0.05,
       "default": 1.7777777777777777
     },
+    "controlCenter.undoSeconds": {
+      "min": 3,
+      "max": 60,
+      "step": 1,
+      "default": 10
+    },
     "launcher.dragThreshold": {
       "min": 10,
       "max": 200,

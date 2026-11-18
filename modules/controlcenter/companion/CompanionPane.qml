@@ -392,7 +392,7 @@ Item {
                             TextButton {
                                 text: qsTr("Reset reactions")
                                 type: TextButton.Tonal
-                                onClicked: CompanionStore.setReactionSettings({})
+                                onClicked: CompanionStore.resetReactions()
                             }
                         }
                     }
@@ -707,7 +707,10 @@ Item {
                                     toggle: true
                                     checked: modelInput.text.trim() === modelData
                                     type: TextButton.Tonal
-                                    onClicked: modelInput.text = modelData
+                                    onClicked: {
+                                        modelInput.text = modelData;
+                                        root.applyModel(modelData);
+                                    }
                                 }
                             }
                         }
@@ -720,22 +723,14 @@ Item {
                                 id: modelInput
 
                                 Layout.fillWidth: true
-                            }
-
-                            TextButton {
-                                text: qsTr("Apply model")
-                                type: TextButton.Tonal
-                                onClicked: {
-                                    const id = modelInput.text.trim();
-                                    if (id !== "" && !id.includes(" "))
-                                        assistantCtl.run(["horneroctl", "assistant", "model", "set", id, "--yes", "--json"]);
-                                }
+                                // Enter or leaving the field applies; there is no Apply button.
+                                onEditingFinished: root.applyModel(modelInput.text)
                             }
                         }
 
                         StyledText {
                             Layout.fillWidth: true
-                            text: qsTr("Applies to new chats (same as hermes model); running chats keep their model.")
+                            text: qsTr("Applies to new chats as soon as you pick a model or press Enter (same as hermes model); running chats keep their model.")
                             font.pointSize: Appearance.font.size.smaller
                             color: Signal.palette.inkMuted
                             wrapMode: Text.Wrap
@@ -920,6 +915,23 @@ Item {
                                 wrapMode: TextEdit.Wrap
                                 selectByMouse: true
                                 text: assistantPrompt.text
+                                // Saved when the editor loses focus (no Save button); Undo restores the old text.
+                                // Saved shortly after the editor loses focus. Pressing Reload
+                                // (which also takes focus) cancels that save: Reload means
+                                // "throw my edits away", not "save them first".
+                                onActiveFocusChanged: {
+                                    if (!activeFocus)
+                                        promptSave.restart();
+                                    else
+                                        promptSave.stop();
+                                }
+
+                                Timer {
+                                    id: promptSave
+
+                                    interval: 400
+                                    onTriggered: root.applyPrompt(promptEditor.text)
+                                }
                             }
                         }
 
@@ -928,15 +940,13 @@ Item {
                             spacing: Appearance.spacing.small
 
                             TextButton {
-                                text: qsTr("Save prompt")
-                                type: TextButton.Filled
-                                onClicked: assistantPrompt.save(promptEditor.text)
-                            }
-
-                            TextButton {
                                 text: qsTr("Reload")
                                 type: TextButton.Tonal
-                                onClicked: assistantPrompt.refresh()
+                                onClicked: {
+                                    promptSave.stop();
+                                    promptEditor.text = Qt.binding(() => assistantPrompt.text);
+                                    assistantPrompt.refresh();
+                                }
                             }
 
                             StyledText {
@@ -1227,11 +1237,6 @@ Item {
             assistantPromptProc.running = true;
             assistantPromptHistory.refresh();
         }
-
-        function save(text): void {
-            assistantPromptSaveProc.command = ["horneroctl", "assistant", "prompt", "set-text", text.toString(), "--yes", "--json"];
-            assistantPromptSaveProc.running = true;
-        }
     }
 
     Process {
@@ -1252,12 +1257,6 @@ Item {
                 assistantPrompt.text = "";
             }
         }
-    }
-
-    Process {
-        id: assistantPromptSaveProc
-
-        onExited: (exitCode, exitStatus) => assistantPrompt.refresh()
     }
 
     QtObject {
@@ -1486,22 +1485,91 @@ Item {
         }
     }
 
+    // One assistant command at a time; a newer one issued meanwhile replaces
+    // an older queued one (newest wins). `undo` is {key, title, detail,
+    // restore: argv} and is offered after a successful run.
     QtObject {
         id: assistantCtl
 
-        function run(cmd): void {
+        property var current: null
+        property var queued: null
+
+        function run(cmd, undo): void {
+            const job = {
+                "cmd": cmd,
+                "undo": undo ?? null
+            };
+            if (assistantCtlProc.running) {
+                assistantCtl.queued = job;
+                return;
+            }
+            assistantCtl.current = job;
             assistantCtlProc.command = cmd;
             assistantCtlProc.running = true;
         }
     }
 
+    function applyModel(raw: string): void {
+        const id = raw.trim();
+        const prev = assistantModelConfig.text;
+        if (id === "" || id.includes(" ") || id === prev)
+            return;
+        assistantCtl.run(["horneroctl", "assistant", "model", "set", id, "--yes", "--json"], prev !== "" && prev !== "—" ? {
+            "key": "assistant-model",
+            "title": qsTr("Assistant model %1").arg(id),
+            "detail": qsTr("Undo returns to %1 for new chats.").arg(prev),
+            "restore": ["horneroctl", "assistant", "model", "set", prev, "--yes", "--json"]
+        } : null);
+    }
+
+    function applyPrompt(text: string): void {
+        const prev = assistantPrompt.text;
+        if (text === prev)
+            return;
+        assistantCtl.run(["horneroctl", "assistant", "prompt", "set-text", text, "--yes", "--json"], {
+            "key": "assistant-prompt",
+            "title": qsTr("Assistant prompt saved"),
+            "detail": qsTr("Undo restores the previous text."),
+            "restore": ["horneroctl", "assistant", "prompt", "set-text", prev, "--yes", "--json"]
+        });
+    }
+
     Process {
         id: assistantCtlProc
 
+        stderr: StdioCollector {
+            id: assistantCtlErr
+        }
         onExited: (exitCode, exitStatus) => {
+            const job = assistantCtl.current;
+            assistantCtl.current = null;
+            if (job && job.undo) {
+                const u = job.undo;
+                if (exitCode === 0)
+                    Undo.offerCommand(u.key, u.title, u.restore, u.detail);
+                else
+                    Undo.report(u.key, qsTr("%1 was not applied").arg(u.title), assistantCtlErr.text.trim().split("\n").slice(-1)[0] || qsTr("horneroctl refused the change."));
+            }
             assistantStatus.refresh();
             assistantPolicy.refresh();
             assistantProfile.refresh();
+            assistantModelConfig.refresh();
+            assistantPrompt.refresh();
+            const next = assistantCtl.queued;
+            assistantCtl.queued = null;
+            if (next)
+                assistantCtl.run(next.cmd, next.undo);
+        }
+    }
+
+    Connections {
+        target: Undo
+
+        function onCommandFinished(key: string, ok: bool): void {
+            if (key === "assistant-model")
+                assistantModelConfig.refresh();
+            else if (key === "assistant-prompt")
+                assistantPrompt.refresh();
         }
     }
 

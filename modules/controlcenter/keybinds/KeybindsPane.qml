@@ -96,12 +96,28 @@ Item {
         return order.map(name => ({ name, rows: byName[name] }));
     }
 
+    // Enter applies a rebind (there is no Apply button). Undo moves the
+    // binding back; one CLI call runs at a time, Enter again while busy is ignored.
+    property var rebindUndo: null
+
     function applyRebind(): void {
-        if (root.editOld === "" || root.newCombo.trim() === "")
+        if (root.editOld === "" || root.newCombo.trim() === "" || actionProc.running)
             return;
+        root.rebindUndo = {
+            "from": root.editOld,
+            "to": root.newCombo.trim()
+        };
+        root.runRebind(root.editOld, root.newCombo.trim());
+    }
+
+    function rebindArgs(oldCombo: string, newCombo: string): var {
+        return ["horneroctl", "hardware", "keyboard", "rebind", "set", "--old", oldCombo, "--new", newCombo, "--yes", "--json"];
+    }
+
+    function runRebind(oldCombo: string, newCombo: string): void {
         root.actionText = qsTr("Applying…");
         actionProc.out = "";
-        actionProc.command = ["horneroctl", "hardware", "keyboard", "rebind", "set", "--old", root.editOld, "--new", root.newCombo, "--yes", "--json"];
+        actionProc.command = root.rebindArgs(oldCombo, newCombo);
         actionProc.running = true;
     }
 
@@ -129,6 +145,15 @@ Item {
     }
 
     Component.onCompleted: root.refresh()
+
+    Connections {
+        target: Undo
+
+        function onCommandFinished(key: string, ok: bool): void {
+            if (key === "keybind")
+                root.refresh();
+        }
+    }
 
     Process {
         id: keysProc
@@ -186,9 +211,13 @@ Item {
             }
         }
         onExited: (exitCode, exitStatus) => {
+            const undo = root.rebindUndo;
+            root.rebindUndo = null;
+            let ok = false;
             try {
                 const payload = JSON.parse(actionProc.out.trim());
                 root.actionText = payload.message ? payload.message.toString() : "";
+                ok = !!payload.ok;
                 if (payload.ok) {
                     root.editOld = "";
                     root.newCombo = "";
@@ -196,6 +225,12 @@ Item {
                 }
             } catch (e) {
                 root.actionText = qsTr("horneroctl rebind unavailable on this system.");
+            }
+            if (undo && ok) {
+                // Undo runs the inverse move itself (it outlives this pane).
+                Undo.offerCommand("keybind", qsTr("%1 now %2").arg(undo.from).arg(undo.to), root.rebindArgs(undo.to, undo.from), qsTr("Undo moves it back to %1.").arg(undo.from));
+            } else if (undo && !ok) {
+                Undo.report("keybind", qsTr("Keybinding was not changed"), root.actionText);
             }
             root.refresh();
         }
@@ -389,17 +424,10 @@ Item {
                                     id: newComboField
 
                                     Layout.fillWidth: true
-                                    placeholderText: qsTr("SUPER + F13")
+                                    placeholderText: qsTr("SUPER + F13, then Enter")
                                     text: root.newCombo
                                     onTextChanged: root.newCombo = text
                                     onAccepted: root.applyRebind()
-                                }
-
-                                TextButton {
-                                    text: qsTr("Apply")
-                                    type: TextButton.Filled
-                                    enabled: root.newCombo.trim() !== ""
-                                    onClicked: root.applyRebind()
                                 }
 
                                 TextButton {

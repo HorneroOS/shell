@@ -58,9 +58,23 @@ Item {
     }
 
     function activate(id: string): void {
+        const from = Experience.mode;
         const res = Experience.set(id, "user");
         root.actionMessage = res.startsWith("error") ? res : "";
         root.selectedMode = id;
+        if (!res.startsWith("error") && Experience.mode !== from)
+            // Undo switches back to exactly the mode that was active, from the
+            // Experience singleton (it outlives this pane).
+            Undo.offerCalls("experience-mode", qsTr("%1 mode").arg(Experience.label), [[Experience, "set", [from, "user"]]], qsTr("Undo returns to the previous mode."));
+    }
+
+    Connections {
+        target: Undo
+
+        function onUndone(key: string): void {
+            if (key === "experience-mode")
+                root.selectedMode = Experience.mode;
+        }
     }
 
     onSelectedModeChanged: {
@@ -755,11 +769,17 @@ Item {
                                     "value": id,
                                     "label": id
                                 }))
-                        onPicked: v => root.customise("layout.preset", v)
+                        onPicked: v => {
+                            root.customise("layout.preset", v);
+                            // With "apply on switch" on, the active mode takes it now,
+                            // through the same safety copy + Undo as the Layout pane.
+                            if (root.selActive && root.field("layout.apply"))
+                                PresetApply.apply(v, v, true);
+                        }
                     }
 
                     SwitchRow {
-                        label: qsTr("Apply preferred layout on switch")
+                        label: qsTr("Apply preferred layout whenever this mode starts")
                         checked: root.field("layout.apply")
                         onToggled: checked => root.customise("layout.apply", checked)
                     }
@@ -767,13 +787,6 @@ Item {
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: Appearance.spacing.small
-
-                        TextButton {
-                            visible: root.selActive && String(root.field("layout.preset") ?? "").length > 0
-                            text: qsTr("Apply %1 now").arg(root.field("layout.preset"))
-                            type: TextButton.Text
-                            onClicked: Experience.applyPreferredLayout()
-                        }
 
                         Item {
                             Layout.fillWidth: true

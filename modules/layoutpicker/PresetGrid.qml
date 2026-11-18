@@ -24,6 +24,9 @@ Item {
     // Keyboard navigation (arrow keys + Enter). Enable only when the host
     // gives this grid exclusive key focus (e.g. the modal picker).
     property bool keyboardNav: false
+    // Offer "Applied · Undo" (services/Undo.qml) after a preset applies. The
+    // Control Center turns this on; the modal picker has no strip to show it.
+    property bool offerUndo: false
 
     property var presets: []
     property string currentName: ""
@@ -99,14 +102,24 @@ Item {
         listProc.running = true;
     }
 
+    // Applying goes through the PresetApply singleton (safety copy, one job
+    // at a time, newest wins, Undo that survives this grid being unloaded).
+    // The grid shows the choice at once and re-lists from disk when the job
+    // finishes, which also corrects the marker after a failure.
     function apply(name: string): void {
-        if (applyProc.running)
+        if (name === "")
             return;
-        currentName = name; // optimistic; the re-list corrects if it failed
-        applyProc.layoutId = name;
-        applyProc.command = ["horneroctl", "shell", "preset", "apply", name, "--yes"];
-        console.log("[layoutpicker] apply", name, "via", applyProc.command);
-        applyProc.running = true;
+        const p = root.presets.find(x => x.name === name);
+        root.currentName = name;
+        PresetApply.apply(name, p ? p.display : name, root.offerUndo);
+    }
+
+    Connections {
+        target: PresetApply
+
+        function onFinished(ok: bool, name: string): void {
+            root.reload();
+        }
     }
 
     function applyFocused(): void {
@@ -170,27 +183,6 @@ Item {
                 root.presets = [];
                 root.currentName = "";
             }
-        }
-    }
-
-    Process {
-        id: applyProc
-
-        property string layoutId: ""
-
-        stdout: StdioCollector {
-            onStreamFinished: console.log("[layoutpicker] apply stdout:", text)
-        }
-        stderr: StdioCollector {
-            onStreamFinished: console.warn("[layoutpicker] apply stderr:", text)
-        }
-        onExited: (exitCode, exitStatus) => {
-            console.log("[layoutpicker] apply exit", exitCode, exitStatus);
-            // Re-sync the active marker from disk (source of truth)
-            root.reload();
-            // Lay the person's saved tweaks for this layout back on top.
-            if (exitCode === 0)
-                Layouts.reapplyAfterPreset(applyProc.layoutId);
         }
     }
 

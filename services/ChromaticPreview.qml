@@ -19,6 +19,14 @@ import "chromaticcli.js" as Cli
 // shell.json or any theme file.
 //
 // Apply: only `horneroctl appearance chromatic apply …`.
+//
+// Policy (docs/CONTROL-CENTER-APPLY.md): there is no Apply button. A user
+// change (`set`, `setSource`, `enable`) regenerates the candidate, and the
+// newest finished candidate is applied once the controls have been quiet
+// for `applyQuietMs`. One apply runs at a time; changes made meanwhile
+// collapse into one more apply of the newest request (newest wins). Every
+// apply offers "Applied · Undo" (services/Undo.qml) and a failure is
+// reported with its reason and leaves the previous palette in place.
 Singleton {
     id: root
 
@@ -40,6 +48,13 @@ Singleton {
     // The candidate is currently shown on the live shell.
     readonly property bool live: Signal.previewing
     property bool applying: false
+    // A change asked for an apply that has not started yet / must run again.
+    property bool _applyWanted: false
+    property bool _applyAgain: false
+    // The apply in flight is an Undo restore (never offers Undo itself).
+    property bool _undoing: false
+    // Quiet time after the last change before the newest candidate applies.
+    readonly property int applyQuietMs: 350
     property string applyError: ""
     property string lastAppliedFingerprint: ""
     property string notice: ""
@@ -110,16 +125,13 @@ Singleton {
     function _adopt(result: var): void {
         errorCode = "";
         root.result = result;
-        if (root.followAsking && !Signal.previewing) {
-            Signal.beginPreview(result.scheme);
-            askTimer.restart();
-            Toaster.toast(qsTr("Wallpaper changed"), qsTr("Previewing the matching Chromatic palette. Open Appearance, Chromatic to apply it; it reverts in 10 seconds."), "palette");
-            return;
-        }
         if (Signal.previewing) {
             Signal.beginPreview(result.scheme);
             idleCancel.restart();
         }
+        // A user change is waiting for its candidate: apply it when quiet.
+        if (root._applyWanted)
+            applyQuiet.restart();
     }
 
     // ---- per-variant palettes ------------------------------------------
@@ -343,15 +355,34 @@ Singleton {
             r.path = String(pathOrSeeds ?? "");
         else if (kind === "seed")
             r.seeds = Array.isArray(pathOrSeeds) ? pathOrSeeds : [String(pathOrSeeds)];
-        request = Cli.normalise(r, Signal.themeMode);
-        regenerate();
+        _change(Cli.normalise(r, Signal.themeMode));
     }
 
     function set(key: string, value: var): void {
         const r = JSON.parse(JSON.stringify(request));
         r[key] = value;
-        request = Cli.normalise(r, Signal.themeMode);
+        _change(Cli.normalise(r, Signal.themeMode));
+    }
+
+    // A user change: choosing what is already applied does nothing, anything
+    // else rebuilds the candidate and applies it once the controls are quiet.
+    function _change(next: var): void {
+        if (JSON.stringify(next) === JSON.stringify(request) && Config.appearance.theme === "hornero-chromatic")
+            return;
+        request = next;
+        _applyWanted = true;
         regenerate();
+    }
+
+    // Turn Chromatic on with the current request (the "Use Chromatic" switch).
+    function enable(): void {
+        if (!result) {
+            _applyWanted = true;
+            regenerate();
+            return;
+        }
+        _applyWanted = true;
+        applyQuiet.restart();
     }
 
     function regenerate(): void {
@@ -364,6 +395,7 @@ Singleton {
             const ereq = Cli.engineRequest(request, wallpaper, perMode);
             if (!ereq) {
                 result = null;
+                _applyWanted = false;
                 errorCode = "no-source";
                 errorTitle = request.source === "image" ? qsTr("Choose an image") : request.source === "seed" ? qsTr("Choose an accent colour") : qsTr("No wallpaper is set");
                 errorDetail = qsTr("Chromatic needs a source to build a palette from.");
@@ -379,6 +411,7 @@ Singleton {
         const args = Cli.helperArgs(request, wallpaper, perMode);
         if (!args) {
             result = null;
+            _applyWanted = false;
             errorCode = "no-source";
             errorTitle = request.source === "image" ? qsTr("Choose an image") : request.source === "seed" ? qsTr("Choose an accent colour") : qsTr("No wallpaper is set");
             errorDetail = qsTr("Chromatic needs a source to build a palette from.");
@@ -396,6 +429,7 @@ Singleton {
 
     function _fail(f: var): void {
         result = null;
+        _applyWanted = false;
         errorCode = f.code;
         errorTitle = f.title;
         errorDetail = f.detail;
@@ -412,13 +446,88 @@ Singleton {
         }
     }
 
+    // What Undo puts back: whether Chromatic was on, the theme that was
+    // live, and the saved Chromatic preferences.
+    function _snapshot(): var {
+        return {
+            "active": Config.appearance.theme === "hornero-chromatic",
+            "themeId": Signal.themeId,
+            "prefs": root._prefsCopy(),
+            "request": Cli.normalise(Config.appearance.chromatic, Signal.themeMode)
+        };
+    }
+
+    // Plain copy of the saved preferences (a JsonObject does not stringify).
+    function _prefsCopy(): var {
+        const c = Config.appearance.chromatic;
+        return {
+            "source": c.source,
+            "seeds": Array.from(c.seeds ?? []),
+            "variant": c.variant,
+            "mode": c.mode,
+            "contrast": c.contrast,
+            "surfaceDepth": c.surfaceDepth,
+            "chroma": c.chroma,
+            "hueShift": c.hueShift,
+            "follow": c.follow,
+            "transition": c.transition
+        };
+    }
+
+    // Nothing queued may re-apply over an Undo or a Turn off: the quiet
+    // timer, a wanted apply and a repeat apply are all dropped.
+    function _cancelPending(): void {
+        applyQuiet.stop();
+        _applyWanted = false;
+        _applyAgain = false;
+    }
+
+    function _restoreSnapshot(snap: var): var {
+        // Still applying or running a verb: Undo waits and retries.
+        if (applying || ctlProc.running)
+            return Undo.busy;
+        _cancelPending();
+        if (snap.active) {
+            request = snap.request;
+            _undoing = true;
+            _runApply(snap.request, true);
+            return true;
+        }
+        if (ThemePipeline.busy)
+            return Undo.busy;
+        // Chromatic was off: bring the old theme back, then the old preferences.
+        ThemePipeline.applyTheme(snap.themeId, "");
+        const p = snap.prefs;
+        const c = Config.appearance.chromatic;
+        for (const k of ["source", "variant", "mode", "contrast", "surfaceDepth", "chroma", "hueShift", "follow", "transition"]) {
+            if (p[k] !== undefined)
+                c[k] = p[k];
+        }
+        c.seeds = p.seeds ?? [];
+        Config.save();
+        reset();
+        return true;
+    }
+
     // Persist through horneroctl. `persist` false = one-off (no preferences).
+    // One apply at a time: a second call while one runs applies the newest
+    // request once more when the first finishes.
     function apply(persist: bool): void {
-        if (applying || !result)
+        if (!result && !_undoing)
             return;
+        if (applying) {
+            _applyAgain = true;
+            return;
+        }
+        _runApply(request, persist !== false);
+    }
+
+    function _runApply(req: var, persist: bool): void {
+        _applyWanted = false;
         applyError = "";
         applying = true;
-        applyProc.command = Cli.applyArgs(request, perMode, persist !== false);
+        applyProc.snap = _undoing ? null : _snapshot();
+        applyProc.command = Cli.applyArgs(req, perMode, persist);
         applyProc.running = true;
     }
 
@@ -457,50 +566,61 @@ Singleton {
         runCtl("import", Cli.importArgs(path.trim(), ""), qsTr("Imported. It appears in the saved palettes."));
     }
 
-    function rollback(): void {
-        runCtl("rollback", Cli.rollbackArgs(), qsTr("Rolled back to the previous palette."));
+    // `Undo.busy` while another verb runs, so an Undo of a follow waits.
+    function rollback(): var {
+        return runCtl("rollback", Cli.rollbackArgs(), qsTr("Rolled back to the previous palette.")) ? true : Undo.busy;
+    }
+
+    // Turning off wins over anything still queued; an apply already running
+    // finishes first and the off runs right after it.
+    property bool _offQueued: false
+    property bool _askNoticeShown: false
+
+    function _runQueuedOff(): void {
+        if (!_offQueued)
+            return;
+        _offQueued = false;
+        Qt.callLater(turnOff);
     }
 
     function turnOff(): void {
-        runCtl("off", Cli.offArgs(), qsTr("Chromatic is off. The fallback theme is applied."));
+        _cancelPending();
+        if (applying || ctlProc.running) {
+            _offQueued = true;
+            return;
+        }
+        runCtl("off", Cli.offArgs(), qsTr("Chromatic is off. The fallback theme is applied."), _snapshot());
     }
 
-    function runCtl(kind: string, command: var, doneText: string): void {
+    // `undoWith`: a snapshot to restore, or null for verbs that undo
+    // through the palette history (`follow`) or have no undo (`save`).
+    function runCtl(kind: string, command: var, doneText: string, undoWith: var): bool {
         if (ctlProc.running)
-            return;
+            return false;
         ctlProc.kind = kind;
         ctlProc.doneText = doneText;
+        ctlProc.snap = undoWith ?? null;
         ctlProc.command = command;
         notice = "";
         ctlProc.running = true;
+        return true;
     }
 
-    // Wallpaper follow policy. `auto` runs the CLI follow verb (no
-    // preview); `ask` previews the new palette and offers Apply / Keep.
-    property bool followAsking: false
-
+    // Wallpaper follow policy. `auto` (and the retired `ask`, which now
+    // behaves as `auto`) re-derives the palette and offers Undo, which is
+    // the palette history's one-step rollback.
     function onWallpaperChanged(): void {
         if (Config.appearance.theme !== "hornero-chromatic")
             return;
         const policy = Config.appearance.chromatic.follow;
-        if (policy === "auto") {
-            runCtl("follow", Cli.followArgs(), "");
-        } else if (policy === "ask") {
-            followAsking = true;
-            reset();
+        if (policy === "ask" && !root._askNoticeShown) {
+            // People who chose "Ask me first" learn once per session that the
+            // palette now follows at once, with Undo instead of a question.
+            root._askNoticeShown = true;
+            Toaster.toast(qsTr("Palette follows the wallpaper"), qsTr("Chromatic no longer asks first: it recolours at once and Settings offers Undo. Turn following off in Appearance › Chromatic."), "palette");
         }
-    }
-
-    function keepCurrent(): void {
-        askTimer.stop();
-        followAsking = false;
-        cancel();
-    }
-
-    function applyAsked(): void {
-        askTimer.stop();
-        followAsking = false;
-        apply(true);
+        if (policy === "auto" || policy === "ask")
+            runCtl("follow", Cli.followArgs(), "");
     }
 
     Timer {
@@ -508,14 +628,6 @@ Singleton {
 
         interval: 60
         onTriggered: root._start()
-    }
-
-    // `ask` policy: Keep current on timeout.
-    Timer {
-        id: askTimer
-
-        interval: 10000
-        onTriggered: root.keepCurrent()
     }
 
     // A forgotten preview never outlives 30 s of inactivity.
@@ -613,6 +725,8 @@ Singleton {
     Process {
         id: applyProc
 
+        property var snap: null
+
         stdout: StdioCollector {
             id: applyOut
         }
@@ -621,6 +735,8 @@ Singleton {
         }
         onExited: exitCode => {
             root.applying = false;
+            const undoing = root._undoing;
+            root._undoing = false;
             let doc = null;
             try {
                 doc = JSON.parse(applyOut.text);
@@ -632,7 +748,10 @@ Singleton {
                 const msg = doc?.error?.message ?? applyErr.text.trim();
                 root.applyError = msg || code;
                 Signal.cancelPreview();
+                root._applyAgain = false;
                 root.applyFailed(code, root.applyError);
+                Undo.report("chromatic", undoing ? qsTr("Could not undo the Chromatic palette") : qsTr("Chromatic was not applied"), qsTr("%1 Your previous palette is still in place.").arg(root.applyError));
+                root._runQueuedOff();
                 return;
             }
             const fp = String(doc?.fingerprint ?? "");
@@ -640,9 +759,34 @@ Singleton {
                 console.warn("ChromaticPreview: applied fingerprint differs from the previewed one; adopting the file");
             root.lastAppliedFingerprint = fp;
             Signal.commitPreview();
-            root.followAsking = false;
-            root.notice = qsTr("Applied.");
+            root.notice = "";
             root.applied(fp);
+            if (!undoing && applyProc.snap) {
+                const snap = applyProc.snap;
+                Undo.offer("chromatic", qsTr("Chromatic palette"), () => root._restoreSnapshot(snap), root.result ? qsTr("%1, %2").arg(root.result.inference?.variant ?? request.variant).arg(root.result.scheme.mode ?? "") : "");
+            }
+            if (root._offQueued) {
+                root._runQueuedOff();
+            } else if (root._applyAgain) {
+                root._applyAgain = false;
+                root.apply(true);
+            }
+        }
+    }
+
+    Timer {
+        id: applyQuiet
+
+        interval: root.applyQuietMs
+        onTriggered: {
+            // Still building the newest candidate: wait for it.
+            if (root.busy || !root.result) {
+                if (root._applyWanted)
+                    restart();
+                return;
+            }
+            root._applyWanted = false;
+            root.apply(true);
         }
     }
 
@@ -651,6 +795,7 @@ Singleton {
 
         property string kind: ""
         property string doneText: ""
+        property var snap: null
 
         stdout: StdioCollector {
             id: ctlOut
@@ -664,6 +809,17 @@ Singleton {
                 if (ctlProc.kind === "import" || ctlProc.kind === "save")
                     root.savedPalettesChanged();
                 Signal.reloadFromDisk();
+                // A follow right after the person changed the wallpaper rides on that
+                // change's Undo (restoring the wallpaper re-derives the palette); it
+                // never replaces it, and never offers an undo of an undo.
+                const folded = Undo.kind === "undone" || (Undo.kind === "applied" && Undo.key === "appearance");
+                if (ctlProc.kind === "follow") {
+                    if (!folded)
+                        Undo.offer("chromatic", qsTr("Palette follows the wallpaper"), () => root.rollback(), qsTr("Undo returns to the previous palette."));
+                } else if (ctlProc.kind === "off" && ctlProc.snap) {
+                    const snap = ctlProc.snap;
+                    Undo.offer("chromatic", qsTr("Chromatic turned off"), () => root._restoreSnapshot(snap), "");
+                }
             } else {
                 let msg = ctlErr.text.trim();
                 try {
@@ -672,7 +828,10 @@ Singleton {
                     // keep stderr
                 }
                 root.notice = qsTr("Could not %1: %2").arg(ctlProc.kind).arg(msg || qsTr("failed"));
+                if (ctlProc.kind === "follow" || ctlProc.kind === "off")
+                    Undo.report("chromatic", qsTr("Chromatic did not change"), root.notice);
             }
+            root._runQueuedOff();
         }
     }
 

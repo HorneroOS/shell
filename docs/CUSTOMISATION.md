@@ -42,6 +42,12 @@ Cozy is opt-in; the factory default is unchanged. "Reset look to factory" writes
 glow budget already allow (`Signal.glowIntensity`; consumers: `OnAirBar`, `ScopeTrace`). Gaming and Focus keep
 glow off regardless. Plugin-kit glows (`Theme.glowAlpha`) follow it too.
 
+## How changes apply
+
+Every setting applies the moment it is chosen. There is no Apply button anywhere in the Control Center; risky or
+slow changes also show an "Applied · Undo" strip for `controlCenter.undoSeconds`. The full policy, the shared Undo
+service and a pane-by-pane table are in `docs/CONTROL-CENTER-APPLY.md`.
+
 ## More sizes (Control Center)
 
 | Setting | Config key | Where | Range | Default |
@@ -51,6 +57,7 @@ glow off regardless. Plugin-kit glows (`Theme.glowAlpha`) follow it too.
 | Toasts on screen | `utilities.maxToasts` | Notifications | 1-8 | 4 |
 | Bar popup widths | `bar.sizes.{trayMenuWidth,batteryWidth,networkWidth,kbLayoutWidth,windowPreviewSize}` | Bars > Popup sizes | see pane | 300/250/320/320/400 |
 | Control Center window | `controlCenter.sizes.{heightMult,ratio}` | Appearance > Look | 0.5-0.95 / 1.2-2.4 | 0.7 / 16:9 |
+| How long Undo stays after a change | `controlCenter.undoSeconds` | Appearance > Look | 3-60 s | 10 |
 
 Note: `dashboard.sizes.*` are not listed because nothing in the shell reads them today; exposing dead settings would
 mislead, so they are left out until the dashboard consumes them.
@@ -67,7 +74,8 @@ mislead, so they are left out until the dashboard consumes them.
 ## Customisation overview (Control Center > Customisation)
 
 Lists every look, size and behaviour setting that differs from `config/shell.default.json`, with its default, an **Edit**
-button (jumps to the pane/section), a per-item **Reset**, a search field, and **Reset all** (with confirmation).
+button (jumps to the pane/section), a per-item **Reset**, a search field, and **Reset all**. Resets apply at once and offer Undo; there is no confirmation step (see
+`docs/CONTROL-CENTER-APPLY.md`).
 Your data is never listed or reset: apps, paths, favourites, hidden apps, launcher actions, bars/layouts, chromatic
 and per-surface transparency maps. The rules live in `services/customisation.js` (pure, tested with node).
 

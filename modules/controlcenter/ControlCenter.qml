@@ -6,6 +6,7 @@ import qs.components.controls
 import qs.services
 import qs.config
 import qs.modules.launcher.services
+import "components"
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
@@ -107,6 +108,14 @@ Item {
 
     SettingsSearch {
         session: root.session
+    }
+
+    // The one "Applied · Undo" strip for every setting (docs/CONTROL-CENTER-APPLY.md).
+    UndoStrip {
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: Appearance.padding.large
+        z: 10
     }
 
     readonly property bool initialOpeningComplete: panes.initialOpeningComplete

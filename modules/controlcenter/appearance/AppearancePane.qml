@@ -245,7 +245,7 @@ Item {
             return applyStatusMessage;
         if (hasPendingChanges)
             return qsTr("Pending — will apply when the current job finishes");
-        return qsTr("Click a theme or option to apply");
+        return qsTr("Choices apply as you make them");
     }
     property bool previewActive: false
     property string previewSource: ""
@@ -381,6 +381,22 @@ Item {
         previewPalette = {};
     }
 
+    // What Undo puts back for the apply now running (services/Undo.qml).
+    property var undoSnap: null
+    property string undoTitle: ""
+
+    function _captureUndo(kinds: var): void {
+        root.undoSnap = {
+            "theme": Signal.themeId,
+            "wallpaper": Wallpapers.actualCurrent,
+            "gtk": GtkSettings.liveGtkTheme,
+            "icons": GtkSettings.liveIconTheme,
+            "scheme": GtkSettings.liveColorScheme,
+            "kinds": kinds
+        };
+        root.undoTitle = kinds.theme ? (Themes.themeById(root.pendingThemeId)?.name ?? qsTr("Theme")) : kinds.wallpaper ? qsTr("Wallpaper") : kinds.gtk ? qsTr("GTK theme") : kinds.icons ? qsTr("Icon theme") : qsTr("GTK colour scheme");
+    }
+
     function commitSelection(): void {
         // ThemePipeline.applyTheme applies a complete Signal role table
         // (plus the theme's wallpaper/GTK recipe). GTK/icon overrides only
@@ -389,6 +405,13 @@ Item {
         const appliedTheme = themeDirty && pendingThemeId;
         const appliedWallpaper = !appliedTheme && wallpaperDirty && pendingWallpaperPath;
         const pipelineJob = appliedTheme || appliedWallpaper;
+        _captureUndo({
+            "theme": !!appliedTheme,
+            "wallpaper": !!appliedWallpaper,
+            "gtk": gtkDirty && !!pendingGtkTheme,
+            "icons": iconDirty && !!pendingIconTheme,
+            "scheme": gtkColorSchemeDirty && !!pendingGtkColorScheme
+        });
         deferredGtk = "";
         deferredIcon = "";
 
@@ -1004,10 +1027,40 @@ Item {
         }
     }
 
+    // Undo writes Config directly; pull the pane's working copies back so a
+    // later saveConfig() cannot write the old values again.
+    function resyncFromConfig(): void {
+        root.animDurationsScale = Config.appearance.anim.durations.scale ?? 1;
+        root.fontSizeScale = Config.appearance.font.size.scale ?? 1;
+        root.paddingScale = Config.appearance.padding.scale ?? 1;
+        root.roundingScale = Config.appearance.rounding.scale ?? 1;
+        root.spacingScale = Config.appearance.spacing.scale ?? 1;
+    }
+
+    Connections {
+        target: Undo
+
+        function onUndone(key: string): void {
+            root.resyncFromConfig();
+        }
+    }
+
     Connections {
         target: ThemePipeline
 
         function onApplyFinished(ok: bool): void {
+            // Offer Undo for the change that just finished (one offer per
+            // commit; a replay of an Undo never offers another).
+            if (ok && root.undoSnap) {
+                const snap = root.undoSnap;
+                root.undoSnap = null;
+                // The restore runs in ThemePipeline, so it still works after
+                // this pane is unloaded or the window closes.
+                Undo.offerCalls("appearance", root.undoTitle, [[ThemePipeline, "restoreAppearance", [snap]]], "");
+            } else if (!ok && root.undoSnap) {
+                root.undoSnap = null;
+                Undo.report("appearance", qsTr("Appearance was not changed"), ThemePipeline.lastError || qsTr("Appearance apply failed"));
+            }
             if (!ok) {
                 root.deferredGtk = "";
                 root.deferredIcon = "";

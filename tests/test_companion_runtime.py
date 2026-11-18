@@ -311,7 +311,8 @@ def test_settings_pane_registered():
     assert '"companion"' in REGISTRY
     assert '"companion/CompanionPane.qml"' in REGISTRY
     # Deep link validation keeps working: unknown panes warn + default.
-    assert "PaneRegistry.getById" in (ROOT / "modules" / "Shortcuts.qml").read_text()
+    shortcuts = (ROOT / "modules" / "Shortcuts.qml").read_text()
+    assert "PaneRegistry.getById" in shortcuts or "PaneRegistry.resolveTarget" in shortcuts
 
 
 def test_settings_pane_covers_every_setting():

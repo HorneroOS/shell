@@ -71,6 +71,30 @@ regression is a sustained median move across runs, not one outlier
 sample. Session age matters: compare fresh-start to fresh-start, or
 steady-state to steady-state at similar uptimes.
 
+## Idle budget (shell#651)
+
+Idle means an empty workspace, no popouts, nothing playing. Budget: the
+shell stays in low single digits of one core in every mode, Signal included
+(`scripts/perf-signal-deck.sh --max-cpu 5` fails the run otherwise; run it
+in a disposable or validation session, see [EXPERIENCE.md](EXPERIENCE.md)).
+
+Root cause found by bisecting Signal's per-mode fields over IPC
+(`qs ipc call experience customise signal <key> <value>`) with per-thread
+`/proc/<pid>/task/*/stat` sampling: main-thread cost scaled linearly with
+`telemetry.rateHz` (about 2.2 points of a core per Hz) while the visual
+layers (deck, glow, scanlines, chrome) were secondary. Every tick of the
+shared `SystemUsage` timer spawned `sensors`, a GPU read and `lsblk` and
+re-parsed the disk table with a RegExp built per field. Signal ticks at
+2 Hz, Everyday at 1 Hz. The probes now run on their own budgets
+(`dashboard.sensorUpdateInterval` 2000 ms, `dashboard.diskUpdateInterval`
+30000 ms, both in Control Center > Dashboard) and never faster than the
+cadence; `disks` is only reassigned when its content changed.
+
+Static guards in CI: `tests/test_idle_budget.py` (no always-running
+sub-second Timer, no ungated `Animation.Infinite`, process probes only
+behind `due()`). The numbers in
+[perf-baselines/2026-11-17-signal-idle.md](perf-baselines/2026-11-17-signal-idle.md).
+
 ## Reference captures and rules
 
 - Raw reports are not committed: they contain machine/session details such as

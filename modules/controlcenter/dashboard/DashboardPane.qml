@@ -22,7 +22,9 @@ Item {
     // General Settings
     property bool enabled: Config.dashboard.enabled ?? true
     property bool showOnHover: Config.dashboard.showOnHover ?? true
-    property int updateInterval: Config.dashboard.updateInterval ?? 1000
+    property int updateInterval: Config.dashboard.resourceUpdateInterval ?? 1000
+    property int sensorInterval: Config.dashboard.sensorUpdateInterval ?? 2000
+    property int diskInterval: Config.dashboard.diskUpdateInterval ?? 30000
     property int dragThreshold: Config.dashboard.dragThreshold ?? 50
 
     // Performance Resources
@@ -40,7 +42,9 @@ Item {
     function saveConfig() {
         Config.dashboard.enabled = root.enabled;
         Config.dashboard.showOnHover = root.showOnHover;
-        Config.dashboard.updateInterval = root.updateInterval;
+        Config.dashboard.resourceUpdateInterval = root.updateInterval;
+        Config.dashboard.sensorUpdateInterval = root.sensorInterval;
+        Config.dashboard.diskUpdateInterval = root.diskInterval;
         Config.dashboard.dragThreshold = root.dragThreshold;
         Config.dashboard.performance.showBattery = root.showBattery;
         Config.dashboard.performance.showGpu = root.showGpu;

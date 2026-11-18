@@ -18,7 +18,14 @@ trap cleanup EXIT
 for d in assets components config services utils; do
     ln -sfn "$repo/$d" "$scratch/$d"
 done
+# Every module is linked (lock content imports siblings such as
+# qs.modules.instruments, shell#653); only modules/lock is a private copy
+# so the inert Pam stub can replace the real one.
 mkdir -p "$scratch/modules"
+for m in "$repo"/modules/*; do
+    [[ "$(basename "$m")" == "lock" ]] && continue
+    ln -sfn "$m" "$scratch/modules/$(basename "$m")"
+done
 cp -r "$repo/modules/lock" "$scratch/modules/lock"
 cp "$repo/tests/atspi/lockstub/Pam.qml" "$scratch/modules/lock/Pam.qml"
 cp "$repo/tests/perf/framecost-lock-harness.qml" "$scratch/shell.qml"

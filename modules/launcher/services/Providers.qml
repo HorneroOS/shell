@@ -259,16 +259,16 @@ Singleton {
                         "section": "ai",
                         "icon": "feather",
                         "title": text,
-                        "subtitle": InlineAsk.busy ? qsTr("Javi is thinking…") : "",
+                        "subtitle": InlineAsk.busy && InlineAsk.owner === "launcher" ? qsTr("Javi is thinking…") : "",
                         "payload": {
                             "question": text
                         }
                     }],
             "activate": (result, list) => {
-                if (InlineAsk.busy)
-                    InlineAsk.stop();
+                if (InlineAsk.busy && InlineAsk.owner === "launcher")
+                    InlineAsk.cancel("launcher");
                 else
-                    InlineAsk.ask((result.payload?.question ?? result.title ?? "").toString());
+                    InlineAsk.ask((result.payload?.question ?? result.title ?? "").toString(), "launcher");
             }
         });
         root.builtinsRegistered = true;

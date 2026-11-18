@@ -79,7 +79,7 @@ def test_idle_scheduler_and_manifest_v2_contract():
     assert "o.manifestVersion === 2" in RESOLVER
     assert "durations" in RESOLVER and "durations" in PLAYER
     assert "holdStill" in PLAYER
-    assert "followEvents" in HOST and "assistantBridge.events(" not in HOST
+    assert "followEvents" not in HOST and "assistantBridge.events(" not in HOST  # S2: no IPC follow
     assert "IdleScheduler {" in HOST
     assert "nestSource" in HOST and "nestSource" in RESOLVER
     # Live-host regressions: restored transient states normalize at
@@ -231,9 +231,11 @@ def test_assistant_bridge_horneroctl_mediated():
     assert '"horneroctl", "assistant", "ask"' in BRIDGE
     for banned in ("XMLHttpRequest", "WebSocket", "8642", "Bearer"):
         assert banned not in BRIDGE, f"bridge must stay horneroctl-mediated: {banned}"
-    # State mapping: thinking while running, success/error on answer.
+    # State mapping moved to the canonical run state machine: the
+    # bridge forwards cosmetic presentation intents only.
     for state in ("thinking", "success", "error"):
-        assert f'requestState("{state}")' in BRIDGE
+        assert f'"{state}"' in (ROOT / "services" / "assistantrun.js").read_text()
+    assert "onIntent" in BRIDGE and "CompanionStore.requestState(companionState)" in BRIDGE
     # Answers and failures both surface through the bubble.
     assert "CompanionStore.say" in BRIDGE
     # Busy guard: a second ask never overlaps the first.
@@ -242,8 +244,14 @@ def test_assistant_bridge_horneroctl_mediated():
 
 def test_assistant_ipc_surface():
     assert "AssistantBridge" in HOST
-    for fn in ("ask(", "askStop(", "approve(", "clarify(", "events("):
+    for fn in ("ask(", "askStop("):
         assert f"function {fn}" in HOST, f"companion IPC missing {fn}"
+    # S2: no IPC follows an arbitrary run.
+    assert "function events(" not in HOST
+    # No IPC can decide a request (card-only, bound to the displayed one).
+    for fn in ("approve(", "clarify(", "deny("):
+        assert f"function {fn}" not in HOST, f"companion IPC must not expose {fn}"
+    assert 'askWith((text ?? "").toString(), "ask", [])' in HOST
     doc = (ROOT / "docs" / "IPC.md").read_text()
     assert "askStop()" in doc
 
@@ -388,18 +396,19 @@ CHAT = (COMPANION / "ChatPanel.qml").read_text()
 
 def test_companion_chat_panel_contract():
     # Bridge owns chat state; the panel is presentation over it.
-    for token in ("property var history", "property var pendingApproval",
-                  "property bool chatOpen", "pushHistory", "notePayload",
-                  "pendingApproval = null"):
+    for token in ("property var history", "pendingApproval",
+                  "property bool chatOpen", "pushHistory", "AssistantRun.pending"):
         assert token in BRIDGE, f"bridge missing chat state: {token}"
     # Panel renders history, thinking indicator, approval buttons,
     # and input; actions go only through the bridge.
-    for token in ("bridge.history", "bridge.pendingApproval",
-                  '"approve"', '"deny"', "bridge.ask(", "bridge.askStop()",
+    card = (ROOT / "modules" / "companion" / "ApprovalCard.qml").read_text()
+    for token in ("bridge.history", "ApprovalCard", "bridge.ask(", "bridge.askStop()",
                   "dotPhase"):
         assert token in CHAT, f"chat panel missing: {token}"
+    for token in ('"approve"', '"deny"'):
+        assert token in card, f"approval card missing: {token}"
     # Bridge must never answer approvals on its own.
-    assert 'pendingApproval.runId, "approve"' in CHAT
+    assert 'pend.runId, "approve"' in card
     assert 'chatOpen = !assistantBridge.chatOpen' in HOST
     assert "ChatPanel" in HOST
 

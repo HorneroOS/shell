@@ -105,8 +105,8 @@ def test_launcher_ai_inline_provider():
     assert 'name: "ai"' in app_list
     assert "aiItem" in app_list
     item = (ROOT / "modules/launcher/items/AiItem.qml").read_text()
-    assert "InlineAsk.ask(root.question)" in item
-    assert "InlineAsk.stop()" in item
+    assert 'InlineAsk.ask(root.question, "launcher")' in item
+    assert 'InlineAsk.cancel("launcher")' in item
     service = (ROOT / "services/InlineAsk.qml").read_text()
     assert "pragma Singleton" in service
     assert '"horneroctl", "assistant", "ask"' in service

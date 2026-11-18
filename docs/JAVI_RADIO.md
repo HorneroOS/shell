@@ -62,10 +62,14 @@ starts empty.
   shows plain text only.
 - No silent escalation. When the final payload says `data.pending`
   (approval or clarification) or the run is blocked, Radio stops. It shows
-  that the request needs approval and offers "Open the Workbench". Pressing
-  it hands the pending payload (run id and what is pending) to the chat,
-  which shows its approval card; the user decides there. The answer is
-  never inferred, and nothing is approved on the way.
+  that the request needs approval and offers "Open the Workbench". The
+  question runs with `--mode ask`, so horneroctl has already denied the
+  approval (and refuses to approve a non-agent run); a clarification stops
+  the run. Pressing the button opens the Workbench with a hand-off card
+  showing the question and the exact request (see
+  `docs/ASSISTANT_WORKBENCH.md`, "Hand-off from a quick question"); the user
+  can re-run it as an Agent run there and decide on its own approval card.
+  The answer is never inferred, and nothing is approved on the way.
 - One shared quick ask. The launcher and Radio share `InlineAsk`; each
   cancels only a run it started (`InlineAsk.owner`), and Radio checks
   `InlineAsk.generation` so a launcher question that replaced Radio's is
@@ -80,10 +84,10 @@ starts empty.
 
 ## Relation to the Workbench
 
-The Workbench (shell#622) owns the canonical run state, approvals and the
-timeline. Radio is the Level A surface: when #622 lands, Radio keeps the
-same entry points and the hand-off button opens the Workbench instead of
-the chat panel; the policy in `radio.js` does not change.
+The Workbench owns the canonical run state, approvals and the timeline
+(`services/AssistantRun.qml`). Radio is the Level A surface: it keeps its
+entry points, and the hand-off button opens the Workbench; the policy in
+`radio.js` does not change.
 
 ## Not built
 

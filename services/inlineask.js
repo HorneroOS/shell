@@ -11,6 +11,8 @@
 // the answer are never written to any log.
 
 var TEXT_CAP = 16384;
+// fixed: memory bound for a hand-off request text (display only).
+var DETAIL_CAP = 8000;
 
 function parseLine(line) {
     var trimmed = (line === null || line === undefined) ? "" : line.toString().trim();
@@ -22,13 +24,23 @@ function parseLine(line) {
     } catch (e) {
         obj = null;
     }
-    if (!obj)
+    if (!obj || typeof obj !== "object")
         return { kind: "ignore" };
     if (obj.type === "delta")
         return obj.text ? { kind: "delta", text: obj.text.toString() } : { kind: "ignore" };
     if (obj.type === "thinking" || obj.type === "tool" || obj.type === "commentary")
         return { kind: "trace" };
-    return { kind: "final", payload: obj };
+    // Typed run-control frames (horneroctl): the run id as soon as
+    // it exists, and the moment the gateway asks for a decision.
+    if (obj.type === "run")
+        return validRunId(obj.text) ? { kind: "run", runId: obj.text.toString() } : { kind: "ignore" };
+    if (obj.type === "approval" || obj.type === "clarify")
+        return { kind: "pending", pending: obj.type, detail: typeof obj.text === "string" ? obj.text.slice(0, DETAIL_CAP) : "" };
+    // The final CommandResult always carries a boolean `ok`; any
+    // other typed frame is forward-compat noise, never a result.
+    if (typeof obj.ok === "boolean")
+        return { kind: "final", payload: obj };
+    return { kind: "ignore" };
 }
 
 // Applies one streamed line to { text, finalPayload } and returns
@@ -37,12 +49,69 @@ function applyLine(state, line, cap) {
     var limit = (typeof cap === "number" && cap > 0) ? cap : TEXT_CAP;
     var text = state && state.text ? state.text.toString() : "";
     var finalPayload = state && state.finalPayload !== undefined ? state.finalPayload : null;
+    var runId = state && state.runId ? state.runId.toString() : "";
+    var pending = state && state.pending ? state.pending.toString() : "";
+    var pendingDetail = state && state.pendingDetail ? state.pendingDetail.toString() : "";
     var parsed = parseLine(line);
     if (parsed.kind === "delta")
         text = (text + parsed.text).slice(-limit);
     else if (parsed.kind === "final")
         finalPayload = parsed.payload;
-    return { text: text, finalPayload: finalPayload };
+    else if (parsed.kind === "run")
+        runId = parsed.runId;
+    else if (parsed.kind === "pending" && pending === "") {
+        pending = parsed.pending;
+        pendingDetail = parsed.detail;
+    }
+    return { text: text, finalPayload: finalPayload, runId: runId, pending: pending, pendingDetail: pendingDetail };
+}
+
+// A quick (Level A) question never acts. When the gateway asks for a
+// decision, or the mode blocks a tool, the quick surface does not
+// answer: it offers an explicit hand-off to the Workbench.
+function needsWorkbench(pending, finalPayload) {
+    if (pending === "approval" || pending === "clarify")
+        return true;
+    var d = finalPayload && finalPayload.data ? finalPayload.data : null;
+    var p = d && d.pending ? d.pending.toString() : "";
+    return p === "approval" || p === "clarify" || p === "denied-by-mode";
+}
+
+// The hand-off record for a quick run that needs the Workbench
+// (display data only; see InlineAsk.handoffInfo). `kind` is what the
+// quick run ran into: "approval" (denied by Ask mode or stopped at the
+// request), "clarify" (stopped at a question) or "blocked" (Ask mode
+// stopped a tool). The quick run is always read-only, so the record is
+// never actionable: `mode` is "ask" whatever the payload claims.
+function handoffInfo(question, pending, detail, runId, finalPayload, source) {
+    var d = finalPayload && finalPayload.data && typeof finalPayload.data === "object" ? finalPayload.data : {};
+    var p = (pending || "").toString();
+    var fp = d.pending !== undefined && d.pending !== null ? d.pending.toString() : "";
+    var msg = finalPayload && typeof finalPayload.message === "string" ? finalPayload.message : "";
+    var kind = "blocked";
+    // horneroctl reports both a denied approval and a blocked tool as
+    // `denied-by-mode`; only the message tells them apart.
+    if (p === "approval" || fp === "approval" || (fp === "denied-by-mode" && msg.indexOf("Tool execution") !== 0))
+        kind = "approval";
+    else if (p === "clarify" || fp === "clarify")
+        kind = "clarify";
+    var text = (detail || "").toString();
+    if (text === "" && typeof d.detail === "string")
+        text = d.detail;
+    if (text === "")
+        text = msg;
+    var id = (runId || "").toString();
+    if (id === "" && typeof d.runId === "string")
+        id = d.runId;
+    return {
+        source: (source || "launcher").toString(),
+        question: (question || "").toString().slice(0, TEXT_CAP),
+        kind: kind,
+        detail: text.slice(0, DETAIL_CAP),
+        runId: validRunId(id) ? id : "",
+        mode: "ask",
+        denied: fp === "denied-by-mode"
+    };
 }
 
 // Classifies a finished run. failed=true means the inline ask
@@ -69,4 +138,9 @@ function finishOutcome(text, finalPayload, cap) {
         return { text: current, errorText: "", failed: true };
     }
     return { text: current, errorText: "", failed: false };
+}
+
+// Strict shape for a run id that reaches an argv.
+function validRunId(id) {
+    return typeof id === "string" && /^[A-Za-z0-9._-]{1,64}$/.test(id) && id !== "." && id !== "..";
 }

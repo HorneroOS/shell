@@ -160,7 +160,7 @@ def test_workbench_handoff_carries_the_pending_payload():
     assert "signal handoffRequested(var payload)" in RADIO
     wb = RADIO.split("function openWorkbench()")[1].split("function mirror")[0]
     assert "root.handoffPayload" in wb and "root.handoffRequested(payload)" in wb
-    assert "root.handoffPayload = c.kind === \"handoff\" ? InlineAsk.finalPayload : null" in RADIO
+    assert "root.handoffPayload = c.kind === \"handoff\" ? InlineAsk.handoffInfo() : null" in RADIO
     handler = HOST.split("function onHandoffRequested(payload)")[1].split("}\n    }")[0]
     assert "assistantBridge.notePayload(payload)" in handler
     # notePayload records the pending item; it never approves

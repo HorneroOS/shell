@@ -556,6 +556,79 @@ Item {
                             parseValueFunction: text => parseInt(text)
                             onValueModified: newValue => CompanionStore.chatHistoryLimit = Math.round(newValue)
                         }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: CompanionStore.chatHistoryLimit === 0 ? qsTr("History is off: conversations are not saved on this device.") : qsTr("Kept on this device only (last %1 messages). Hermes owns the real sessions; clear them from the chat panel at any time.").arg(CompanionStore.chatHistoryLimit)
+                            font.pointSize: Appearance.font.size.smaller
+                            color: Signal.palette.inkMuted
+                            wrapMode: Text.Wrap
+                        }
+
+                        StyledText {
+                            text: qsTr("Default mode").toUpperCase()
+                            font.family: Appearance.font.family.mono
+                            font.pointSize: Appearance.font.size.smaller
+                            color: Signal.palette.inkMuted
+                        }
+
+                        RowLayout {
+                            spacing: Appearance.spacing.small
+
+                            Repeater {
+                                model: ["ask", "agent", "chat"]
+
+                                delegate: TextButton {
+                                    required property string modelData
+
+                                    text: AssistantCopy.t("mode." + modelData, AssistantCopy.lang(Qt.locale().name))
+                                    toggle: true
+                                    checked: CompanionStore.chatMode === modelData
+                                    type: TextButton.Tonal
+                                    onClicked: CompanionStore.setChatMode(modelData)
+                                }
+                            }
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: AssistantCopy.t("mode." + CompanionStore.chatMode + ".hint", AssistantCopy.lang(Qt.locale().name))
+                            font.pointSize: Appearance.font.size.smaller
+                            color: Signal.palette.inkMuted
+                            wrapMode: Text.Wrap
+                        }
+
+                        StyledText {
+                            text: qsTr("Workbench").toUpperCase()
+                            font.family: Appearance.font.family.mono
+                            font.pointSize: Appearance.font.size.smaller
+                            color: Signal.palette.inkMuted
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Quick questions (Javi Radio, the launcher) are read-only and never act. When one needs approval, it hands you over to the Workbench, where you decide on each request. The shell writes no keybinding; bind the Workbench yourself if you want a key.")
+                            font.pointSize: Appearance.font.size.smaller
+                            color: Signal.palette.inkMuted
+                            wrapMode: Text.Wrap
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: "qs ipc call companion workbench"
+                            textFormat: Text.PlainText
+                            font.family: Appearance.font.family.mono
+                            font.pointSize: Appearance.font.size.smaller
+                            color: Signal.palette.ink
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Privacy: the microphone opens only when you press it and stops after 2 minutes; nothing is copied, captured or sent to a provider unless you attach it or approve a specific action.")
+                            font.pointSize: Appearance.font.size.smaller
+                            color: Signal.palette.inkMuted
+                            wrapMode: Text.Wrap
+                        }
                     }
                 }
 

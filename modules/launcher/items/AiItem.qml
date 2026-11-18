@@ -13,17 +13,28 @@ Item {
     id: root
 
     required property var list
+    readonly property string lang: AssistantCopy.lang(Qt.locale().name)
+    // The quick ask is shared with Javi Radio: only a hand-off of a run
+    // the launcher started is offered here.
+    // Everything this row shows or stops is the launcher's own run; a
+    // Javi Radio question on the shared quick ask is never shown here.
+    readonly property bool mine: InlineAsk.owner === "launcher"
+    readonly property bool busy: root.mine && InlineAsk.busy
+    readonly property bool failed: root.mine && InlineAsk.failed
+    readonly property bool handoff: InlineAsk.needsWorkbench && root.mine
     readonly property string question: list.search.text.slice(`${Config.launcher.actionPrefix}ai `.length).trim()
 
     function onClicked(): void {
         // A failed ask is never a dead end: activating the row
         // falls back to the previous summon-Javi behaviour.
-        if (InlineAsk.failed)
+        if (root.handoff)
+            InlineAsk.openInWorkbench(root.list);
+        else if (root.failed)
             InlineAsk.openInJavi(root.list);
-        else if (InlineAsk.busy)
-            InlineAsk.stop();
+        else if (root.busy)
+            InlineAsk.cancel("launcher");
         else
-            InlineAsk.ask(root.question);
+            InlineAsk.ask(root.question, "launcher");
     }
 
     implicitHeight: Math.max(Config.launcher.sizes.itemHeight, content.implicitHeight + Appearance.padding.normal * 2)
@@ -32,7 +43,7 @@ Item {
     anchors.right: parent?.right
 
     Accessible.role: Accessible.Button
-    Accessible.name: InlineAsk.failed ? qsTr("Open this question in the Javi chat") : (InlineAsk.busy ? qsTr("Stop Javi") : (root.question !== "" ? qsTr("Ask Javi: %1").arg(root.question) : qsTr("Ask Javi")))
+    Accessible.name: root.handoff ? AssistantCopy.t("action.continue-workbench", root.lang) : root.failed ? qsTr("Open this question in the Javi chat") : (root.busy ? qsTr("Stop Javi") : (root.question !== "" ? qsTr("Ask Javi: %1").arg(root.question) : qsTr("Ask Javi")))
 
     StateLayer {
         radius: Appearance.rounding.normal
@@ -64,14 +75,18 @@ Item {
             StyledText {
                 Layout.fillWidth: true
                 elide: Text.ElideRight
+                wrapMode: Text.Wrap
+                maximumLineCount: 2
                 text: {
-                    if (InlineAsk.busy)
+                    if (root.busy)
                         return qsTr("Javi is thinking… (click to stop)");
-                    if (InlineAsk.failed)
+                    if (root.handoff)
+                        return AssistantCopy.t("quick.needs-workbench", root.lang) + "  \u2192 " + AssistantCopy.t("action.continue-workbench", root.lang);
+                    if (root.failed)
                         return qsTr("Open this question in the Javi chat instead");
                     if (root.question !== "")
                         return qsTr("Ask Javi: %1").arg(root.question);
-                    return qsTr("Type a question after %1ai").arg(Config.launcher.actionPrefix);
+                    return qsTr("Type a question after %1ai").arg(Config.launcher.actionPrefix) + " \u00B7 " + AssistantCopy.t("quick.hint", root.lang);
                 }
                 color: Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.normal
@@ -80,7 +95,7 @@ Item {
 
         StyledText {
             Layout.fillWidth: true
-            visible: InlineAsk.errorText !== ""
+            visible: root.mine && InlineAsk.errorText !== "" && !root.handoff
             text: InlineAsk.errorText
             color: Signal.palette.alert
             wrapMode: Text.Wrap
@@ -91,8 +106,8 @@ Item {
 
         StyledText {
             Layout.fillWidth: true
-            visible: InlineAsk.text !== ""
-            text: InlineAsk.text
+            visible: root.mine && InlineAsk.text !== ""
+            text: root.mine ? InlineAsk.text : ""
             color: Signal.palette.ink
             wrapMode: Text.Wrap
             maximumLineCount: 8

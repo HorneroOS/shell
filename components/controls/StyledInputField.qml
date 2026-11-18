@@ -21,11 +21,22 @@ Item {
 
     signal textEdited(string text)
     signal editingFinished
+    // Enter/Return only. editingFinished also fires on focus loss, so
+    // anything that sends or submits must use accepted.
+    signal accepted
 
     // Focus the inner text field (focusing the wrapper Item alone
     // leaves typing with nowhere to go).
     function focusInput(): void {
         inputField.forceActiveFocus();
+    }
+
+    // Replace the visible text even while the field has focus (the
+    // `text` binding only follows while it does not), so what is shown
+    // is always what would be sent.
+    function replaceText(value: string): void {
+        inputField.text = value;
+        root.text = value;
     }
 
     implicitHeight: inputField.implicitHeight + Appearance.padding.small * 2
@@ -82,6 +93,8 @@ Item {
             onEditingFinished: {
                 root.editingFinished();
             }
+
+            onAccepted: root.accepted()
         }
     }
 }

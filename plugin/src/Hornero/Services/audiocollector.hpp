@@ -16,6 +16,7 @@ namespace ac {
 
 constexpr quint32 SAMPLE_RATE = 44100;
 constexpr quint32 CHUNK_SIZE = 512;
+constexpr quint32 CHANNELS = 2; // captured interleaved; mono readers get the downmix
 
 } // namespace ac
 
@@ -53,19 +54,31 @@ public:
     static AudioCollector& instance();
 
     void clearBuffer();
+    // `count` interleaved stereo samples (L, R, L, R, ...).
     void loadChunk(const qint16* samples, quint32 count);
+    // Mono downmix, `count` frames (0 = a whole chunk).
     quint32 readChunk(float* out, quint32 count = 0);
     quint32 readChunk(double* out, quint32 count = 0);
+    // Interleaved stereo, `frames` frames (0 = a whole chunk); `out` holds
+    // 2 * frames values. Returns the frame count.
+    quint32 readStereoChunk(double* out, quint32 frames = 0);
 
 private:
     explicit AudioCollector(QObject* parent = nullptr);
     ~AudioCollector();
 
     std::jthread m_thread;
-    std::vector<float> m_buffer1;
-    std::vector<float> m_buffer2;
-    std::atomic<std::vector<float>*> m_readBuffer;
-    std::atomic<std::vector<float>*> m_writeBuffer;
+    // One captured chunk: the mono downmix every reader has always used, and
+    // the interleaved stereo frames for the L/R spectrum.
+    struct Chunk {
+        std::vector<float> mono;
+        std::vector<float> stereo;
+    };
+
+    Chunk m_buffer1;
+    Chunk m_buffer2;
+    std::atomic<Chunk*> m_readBuffer;
+    std::atomic<Chunk*> m_writeBuffer;
     quint32 m_sampleCount;
 
     void reload();

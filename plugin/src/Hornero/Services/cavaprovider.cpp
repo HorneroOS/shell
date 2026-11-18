@@ -8,16 +8,32 @@
 #include <cmath>
 #include <cava/cavacore.h>
 #include <cstddef>
+#include <mutex>
 #include <qdebug.h>
 
 namespace hornero::services {
 
+namespace {
+
+// FFTW's planner (inside cava_init / cava_destroy) is not thread-safe, and
+// every CavaProvider runs its processor on its own thread (the mono
+// spectrum and the deck's stereo one can start together), so plan creation
+// and destruction are serialised. cava_execute only runs existing plans,
+// which FFTW allows concurrently.
+std::mutex& planMutex() {
+    static std::mutex m;
+    return m;
+}
+
+} // namespace
+
 CavaProcessor::CavaProcessor(QObject* parent)
     : AudioProcessor(parent)
     , m_plan(nullptr)
-    , m_in(new double[ac::CHUNK_SIZE])
+    , m_in(new double[ac::CHUNK_SIZE * ac::CHANNELS])
     , m_out(nullptr)
-    , m_bars(0) {};
+    , m_bars(0)
+    , m_channels(1) {};
 
 CavaProcessor::~CavaProcessor() {
     cleanup();
@@ -29,7 +45,10 @@ void CavaProcessor::process() {
         return;
     }
 
-    const int count = static_cast<int>(AudioCollector::instance().readChunk(m_in));
+    const bool stereo = m_channels == 2;
+    // cava counts interleaved samples, so a stereo chunk is 2 * frames.
+    const int count = stereo ? static_cast<int>(AudioCollector::instance().readStereoChunk(m_in)) * 2
+                             : static_cast<int>(AudioCollector::instance().readChunk(m_in));
 
     // Silence that has already drained (below one segment): skip the FFT.
     // A paused or idle stream delivers exact zeros, so this is the common
@@ -47,22 +66,26 @@ void CavaProcessor::process() {
     // Process in data via cava
     cava_execute(m_in, count, m_out, m_plan);
 
-    // Apply monstercat filter
-    QVector<double> values(m_bars);
-
-    // Left to right pass
+    // Apply monstercat filter, per channel: cava puts every left band
+    // first, then every right band.
+    QVector<double> values(m_bars * m_channels);
     const double inv = 1.0 / 1.5;
-    double carry = 0.0;
-    for (int i = 0; i < m_bars; ++i) {
-        carry = std::max(m_out[i], carry * inv);
-        values[i] = carry;
-    }
+    for (int c = 0; c < m_channels; ++c) {
+        const int base = c * m_bars;
 
-    // Right to left pass and combine
-    carry = 0.0;
-    for (int i = m_bars - 1; i >= 0; --i) {
-        carry = std::max(m_out[i], carry * inv);
-        values[i] = std::max(values[i], carry);
+        // Left to right pass
+        double carry = 0.0;
+        for (int i = 0; i < m_bars; ++i) {
+            carry = std::max(m_out[base + i], carry * inv);
+            values[base + i] = carry;
+        }
+
+        // Right to left pass and combine
+        carry = 0.0;
+        for (int i = m_bars - 1; i >= 0; --i) {
+            carry = std::max(m_out[base + i], carry * inv);
+            values[base + i] = std::max(values[base + i], carry);
+        }
     }
 
     // Update values
@@ -84,6 +107,14 @@ void CavaProcessor::setBars(int bars) {
     }
 }
 
+void CavaProcessor::setChannels(int channels) {
+    channels = channels == 2 ? 2 : 1;
+    if (m_channels != channels) {
+        m_channels = channels;
+        reload();
+    }
+}
+
 void CavaProcessor::reload() {
     cleanup();
     initCava();
@@ -91,6 +122,7 @@ void CavaProcessor::reload() {
 
 void CavaProcessor::cleanup() {
     if (m_plan) {
+        const std::lock_guard lock(planMutex());
         cava_destroy(m_plan);
         m_plan = nullptr;
     }
@@ -106,13 +138,17 @@ void CavaProcessor::initCava() {
         return;
     }
 
-    m_plan = cava_init(m_bars, ac::SAMPLE_RATE, 1, 1, 0.85, 50, 10000);
-    m_out = new double[static_cast<size_t>(m_bars)];
+    {
+        const std::lock_guard lock(planMutex());
+        m_plan = cava_init(m_bars, ac::SAMPLE_RATE, m_channels, 1, 0.85, 50, 10000);
+    }
+    m_out = new double[static_cast<size_t>(m_bars * m_channels)];
 }
 
 CavaProvider::CavaProvider(QObject* parent)
     : AudioProvider(parent)
     , m_bars(0)
+    , m_channels(1)
     , m_values(m_bars, 0.0) {
     m_processor = new CavaProcessor();
     init();
@@ -134,7 +170,7 @@ void CavaProvider::setBars(int bars) {
         return;
     }
 
-    m_values.resize(bars, 0.0);
+    m_values.resize(bars * m_channels, 0.0);
     m_bars = bars;
     emit barsChanged();
     emit valuesChanged();
@@ -143,6 +179,25 @@ void CavaProvider::setBars(int bars) {
     // arguments, so route through an argument-free lambda (same semantics).
     auto* processor = static_cast<CavaProcessor*>(m_processor);
     QMetaObject::invokeMethod(processor, [processor, bars]() { processor->setBars(bars); }, Qt::QueuedConnection);
+}
+
+int CavaProvider::channels() const {
+    return m_channels;
+}
+
+void CavaProvider::setChannels(int channels) {
+    channels = channels == 2 ? 2 : 1;
+    if (m_channels == channels) {
+        return;
+    }
+
+    m_channels = channels;
+    m_values.fill(0.0, m_bars * m_channels);
+    emit channelsChanged();
+    emit valuesChanged();
+
+    auto* processor = static_cast<CavaProcessor*>(m_processor);
+    QMetaObject::invokeMethod(processor, [processor, channels]() { processor->setChannels(channels); }, Qt::QueuedConnection);
 }
 
 QVector<double> CavaProvider::values() const {

@@ -444,6 +444,12 @@
       "previewHeight": 200,
       "enableWindowActions": true
     },
+    "media": {
+      "spectrum": true,
+      "peakHold": true,
+      "bands": 12,
+      "javi": true
+    },
     "sizes": {
       "tabIndicatorHeight": 3,
       "tabIndicatorSpacing": 5,

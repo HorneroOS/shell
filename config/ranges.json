@@ -97,6 +97,12 @@
       "step": 1,
       "default": 10
     },
+    "dashboard.media.bands": {
+      "min": 8,
+      "max": 24,
+      "step": 1,
+      "default": 12
+    },
     "launcher.dragThreshold": {
       "min": 10,
       "max": 200,

@@ -40,6 +40,22 @@ Window {
             hotThreshold: 0.85
         }
 
+        // Right half of a stereo-style list: only the silent bands.
+        SpectrumMeter {
+            id: sliced
+
+            x: 0
+            y: 110
+            width: 40
+            height: 10
+            animated: false
+            values: [1.0, 1.0, 0.0, 0.0]
+            sliceStart: 2
+            sliceLength: 2
+            segment: 0
+            onColor: "#ff00ff"
+        }
+
         SpectrumMeter {
             id: still
 
@@ -88,6 +104,7 @@ Window {
                 win.log("paintsLater", meter.paints);
                 win.log("stillFrames", still.frames);
                 win.log("stillSettled", still.settled);
+                win.log("slicedBands", sliced.values.length);
                 console.log("SPECTRUMPROBE " + JSON.stringify(win.report));
                 Qt.quit();
             }

@@ -120,6 +120,9 @@ Item {
                     rootItem: root
                 }
 
+                // Media deck (dashboard.media)
+                MediaDeckSection {}
+
                 // Performance Resources Section
                 PerformanceSection {
                     rootItem: root

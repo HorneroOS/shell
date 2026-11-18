@@ -44,6 +44,10 @@ Singleton {
     readonly property real sourceVolume: source?.audio?.volume ?? 0
 
     readonly property alias cava: cava
+    // Stereo spectrum for the dashboard media deck: `values` holds the left
+    // bands, then the right ones (dashboard.media.bands each). Samples only
+    // while a ServiceRef holds it.
+    readonly property alias cavaStereo: cavaStereo
     readonly property alias beatTracker: beatTracker
 
     function setVolume(newVolume: real): void {
@@ -149,6 +153,19 @@ Singleton {
         id: cava
 
         bars: Config.services.visualiserBars
+    }
+
+    CavaProvider {
+        id: cavaStereo
+
+        bars: Math.max(8, Math.min(24, Config.dashboard.media.bands))
+
+        // Set imperatively so a shell tree running against an older plugin
+        // (no `channels`) keeps loading; the deck then shows silence on R.
+        Component.onCompleted: {
+            if ("channels" in cavaStereo)
+                cavaStereo.channels = 2;
+        }
     }
 
     BeatTracker {

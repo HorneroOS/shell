@@ -37,8 +37,13 @@ function styleDescription(id) {
 }
 
 // The style the engine resolved for an applied scheme's `chromatic` block.
+// Live schemes carry it as `variant`; engine documents as `resolved.variant`.
 function appliedStyle(block) {
-    return block && block.resolved && block.resolved.variant ? String(block.resolved.variant) : "";
+    if (!block)
+        return "";
+    if (block.variant)
+        return String(block.variant);
+    return block.resolved && block.resolved.variant ? String(block.resolved.variant) : "";
 }
 
 var MODES = ["auto", "dark", "light"];

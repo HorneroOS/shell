@@ -151,3 +151,10 @@ def test_offscreen_chromatic_style_preview_is_named(tmp_path):
     assert res["variantHovered"] == "vibrant"
     assert res["banner"]["state"] == "previewing" and "Chromatic · Vibrant" in res["banner"]["text"]
     assert res["nowUsing"]["title"] == "Hornero Signal Night"
+
+
+def test_applied_style_reads_both_live_and_engine_shapes():
+    cli = (ROOT / "services" / "chromaticcli.js").read_text()
+    body = cli.split("function appliedStyle(block) {", 1)[1].split("\n}\n", 1)[0]
+    # live schemes carry `variant`; engine documents nest it under `resolved`
+    assert "block.variant" in body and "block.resolved.variant" in body

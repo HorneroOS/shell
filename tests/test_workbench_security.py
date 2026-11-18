@@ -186,7 +186,7 @@ def test_s4_auto_stopped_clip_waits_for_the_user():
 
 def test_s5_untrusted_text_is_made_visible_where_shown():
     assert "function visibleText(text: string)" in (ROOT / "services" / "AssistantRun.qml").read_text()
-    assert "input.text = AssistantRun.visibleText(staged)" in PANEL
+    assert "input.replaceText(AssistantRun.visibleText(staged))" in PANEL
     assert "AssistantRun.visibleText(root.pendingLink)" in PANEL
     assert "AssistantRun.visibleText(root.lastTool())" in CARD
 
@@ -258,3 +258,63 @@ def test_nit_progress_tool_lines_keep_the_first_letter():
 def test_nit_positional_arguments_follow_double_dash():
     for cmd in ('"sessions", "new", "--json", "--", title]', '"sessions", "use", "--json", "--", id]', '"model", "set", "--yes", "--json", "--", m]'):
         assert cmd in BRIDGE
+
+
+# --- Re-review follow-ups (R1, R2, N1-N6) ------------------------------------
+
+def test_r1_run_cleanup_keeps_the_held_clip_and_removal_clears_it():
+    sweep = fn_body(BRIDGE, "removeAllVoiceFiles")
+    assert "if (p !== root.heldClip)" in sweep
+    remove = fn_body(BRIDGE, "removeVoiceFile")
+    assert 'if (root.heldClip === path)\n            root.heldClip = "";' in remove
+
+
+def test_r2_staged_text_is_written_into_the_focused_field_and_send_is_armed():
+    assert "function replaceText(value: string)" in INPUT and "inputField.text = value;" in fn_body(INPUT, "replaceText")
+    handler = PANEL.split("function onDraftChanged()")[1].split("function focusInput")[0]
+    assert "input.replaceText(AssistantRun.visibleText(staged))" in handler
+    assert "input.text =" not in PANEL
+    assert "root.sendArmed = false;" in handler and "sendArmTimer.restart()" in handler
+    assert re.search(r"id: sendArmTimer\s+interval: 700", PANEL)
+    assert "if (!root.sendArmed)" in fn_body(PANEL, "sendCurrent")
+    assert "enabled: root.sendArmed && (" in PANEL
+    # A cleared field is cleared on screen too.
+    assert 'input.replaceText("")' in fn_body(PANEL, "sendCurrent")
+
+
+def test_n6_truncated_staged_text_is_flagged():
+    handler = PANEL.split("function onDraftChanged()")[1].split("function focusInput")[0]
+    assert "staged.length > AssistantRun.detailCap" in handler
+
+
+def test_n1_inline_ask_does_not_claim_read_only_by_construction():
+    src = (ROOT / "services" / "InlineAsk.qml").read_text()
+    assert "read-only by construction" not in src and "not a sandbox" in src
+
+
+def test_n3_old_default_agent_is_migrated_once_with_a_notice():
+    assert "readonly property int chatModeVersion: 2" in STORE
+    assert "chatModeVersion: root.chatModeVersion," in STORE  # persisted, so it runs once
+    restore = fn_body(STORE, "restore")
+    mig = restore.split("o.chatModeVersion !== root.chatModeVersion")[1].split("}")[0]
+    assert 'persist.chatMode === "agent"' in mig and 'persist.chatMode = "ask";' in mig
+    assert "root.agentOptInNotice = true;" in mig and "migrated = true;" in mig
+    assert "if (migrated)\n            root.markDirty();" in restore
+    assert "CompanionStore.agentOptInNotice" in PANEL and "dismissAgentOptInNotice()" in PANEL
+
+
+def test_n5_clipboard_uses_one_queued_writer():
+    copy = fn_body(BRIDGE, "copyLastAnswer")
+    assert "copyProcess.running" not in copy and "root.flushCopy()" in copy
+    flush = fn_body(BRIDGE, "flushCopy")
+    assert "copyProcess.running)" in flush and "copyProcess.running = false" not in flush
+    proc = BRIDGE.split("id: copyProcess")[1].split("Process {")[0]
+    assert "copyProcess.write(root.copyText)" in proc and "root.flushCopy();" in proc
+
+
+@NODE
+def test_n2_joiners_survive_inside_words_and_emoji_only():
+    out = run_js(COMP / "radio.js", r"""console.log(JSON.stringify([
+        cleanQuestion("\u{1F468}‍\u{1F469}"), cleanQuestion("م‌م"),
+        cleanQuestion("x ‍y"), cleanQuestion("z‌ "), cleanQuestion("‍lead")]))""")
+    assert out == ["\U0001F468‍\U0001F469", "م‌م", "x y", "z", "lead"]

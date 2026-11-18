@@ -81,6 +81,7 @@ var STRINGS = {
     "mic.cancel": { en: "Discard recording", es: "Descartar grabación" },
     "mic.send": { en: "Stop and send", es: "Detener y enviar" },
     "mic.auto-stopped": { en: "Recording stopped after 2 minutes. Attach it or discard it.", es: "La grabación se detuvo a los 2 minutos. Adjúntala o descártala." },
+    "mode.agent-opt-in": { en: "Javi now starts in Ask mode. Agent is opt-in: pick it when you want Javi to act.", es: "Javi ahora empieza en modo Preguntar. Agente es opcional: elígelo cuando quieras que actúe." },
     "mic.held": { en: "Recording stopped at 2 minutes. Not attached yet.", es: "La grabación se detuvo a los 2 minutos. Aún no está adjunta." },
     "mic.attach": { en: "Attach", es: "Adjuntar" },
     "mic.discard": { en: "Discard", es: "Descartar" },

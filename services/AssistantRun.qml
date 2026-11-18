@@ -140,6 +140,8 @@ Singleton {
 
     // Hidden characters made visible (⟦U+…⟧) for any untrusted text
     // shown where it could disguise itself.
+    readonly property int detailCap: Run.DETAIL_CAP
+
     function visibleText(text: string): string {
         return Run.visibleText(text, Run.DETAIL_CAP).text;
     }

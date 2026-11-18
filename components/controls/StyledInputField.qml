@@ -31,6 +31,14 @@ Item {
         inputField.forceActiveFocus();
     }
 
+    // Replace the visible text even while the field has focus (the
+    // `text` binding only follows while it does not), so what is shown
+    // is always what would be sent.
+    function replaceText(value: string): void {
+        inputField.text = value;
+        root.text = value;
+    }
+
     implicitHeight: inputField.implicitHeight + Appearance.padding.small * 2
 
     StyledRect {

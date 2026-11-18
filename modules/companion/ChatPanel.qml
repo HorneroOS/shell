@@ -31,6 +31,16 @@ Item {
     // `workbenchDraft`, a hand-off "Edit first"). Such text is sent only
     // by the Send button, which names the mode; Enter does not send it.
     property bool fromDraft: false
+    property bool sendArmed: true
+
+    Timer {
+        id: sendArmTimer
+
+        // fixed: anti-misclick delay after staged text lands (same as
+        // the approval card), a safety bound, not a preference.
+        interval: 700
+        onTriggered: root.sendArmed = true
+    }
     // The conversation yields height to a pending decision so the
     // card is always fully on screen.
     readonly property int listHeight: AssistantRun.pendingDecision ? 96 : Math.min(360, Math.max(140, Screen.height - 520))
@@ -87,8 +97,16 @@ Item {
                 CompanionStore.say(qsTr("Kept what you were typing; the staged text was not inserted."), 5000);
                 return;
             }
-            input.text = AssistantRun.visibleText(staged);
+            // Written into the field itself, so it is visible even while
+            // the field has focus (what is shown is what Send sends).
+            input.replaceText(AssistantRun.visibleText(staged));
             root.fromDraft = true;
+            // Send stays disabled briefly, so a click aimed at something
+            // else cannot send text that just appeared.
+            root.sendArmed = false;
+            sendArmTimer.restart();
+            if (staged.length > AssistantRun.detailCap)
+                CompanionStore.say(qsTr("The staged text was too long and was cut. Check it before sending."), 6000);
         }
     }
 
@@ -97,11 +115,13 @@ Item {
     }
 
     function sendCurrent(): void {
+        if (!root.sendArmed)
+            return;
         const text = input.text.trim();
         if (text === "" && root.bridge.attachments.length === 0)
             return;
         root.bridge.ask(text);
-        input.text = "";
+        input.replaceText("");
         root.fromDraft = false;
     }
 
@@ -604,6 +624,28 @@ Item {
                 }
             }
 
+            // -- One-time notice: Agent became opt-in (N3 migration) -------
+            RowLayout {
+                Layout.fillWidth: true
+                visible: CompanionStore.agentOptInNotice
+                spacing: Appearance.spacing.small
+
+                StyledText {
+                    Layout.fillWidth: true
+                    Layout.minimumWidth: 0
+                    text: root.t("mode.agent-opt-in")
+                    font.pointSize: Appearance.font.size.smaller
+                    color: Signal.palette.ink
+                    wrapMode: Text.Wrap
+                }
+
+                TextButton {
+                    text: root.t("handoff.dismiss")
+                    type: TextButton.Text
+                    onClicked: CompanionStore.dismissAgentOptInNotice()
+                }
+            }
+
             // -- Voice clip held after the 2-minute auto-stop -------------
             RowLayout {
                 Layout.fillWidth: true
@@ -702,7 +744,7 @@ Item {
                     // The mode is always on the button that sends.
                     text: qsTr("Send") + " · " + root.t("mode." + CompanionStore.chatMode)
                     type: TextButton.Filled
-                    enabled: input.text.trim() !== "" || root.bridge.attachments.length > 0
+                    enabled: root.sendArmed && (input.text.trim() !== "" || root.bridge.attachments.length > 0)
                     onClicked: root.sendCurrent()
                 }
             }

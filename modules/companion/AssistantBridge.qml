@@ -291,10 +291,9 @@ Scope {
             if (root.history[i].role === "assistant") {
                 // Via stdin: the answer never appears in an argv (visible
                 // to every process of the user in /proc).
-                root.copyText = root.history[i].text.toString();
-                copyProcess.running = false;
-                copyProcess.command = ["wl-copy"];
-                copyProcess.running = true;
+                root.wantedCopy = root.history[i].text.toString();
+                root.copyDirty = true;
+                root.flushCopy();
                 CompanionStore.say("Answer copied.", 3000);
                 return;
             }
@@ -302,7 +301,22 @@ Scope {
         CompanionStore.say("Nothing to copy yet.", 3000);
     }
 
+    // Clipboard writes: one wl-copy at a time, last request wins, text via
+    // stdin. A copy asked for while one runs is applied when it exits,
+    // never by restarting the process mid-write.
     property string copyText: ""
+    property string wantedCopy: ""
+    property bool copyDirty: false
+
+    function flushCopy(): void {
+        if (!root.copyDirty || copyProcess.running)
+            return;
+        root.copyDirty = false;
+        root.copyText = root.wantedCopy;
+        copyProcess.stdinEnabled = true;
+        copyProcess.command = ["wl-copy"];
+        copyProcess.running = true;
+    }
 
     // Retry re-sends the text only (no attachments), in the mode the
     // panel shows now.
@@ -409,11 +423,16 @@ Scope {
         Quickshell.execDetached(["rm", "-f", "--", path]);
         root.voiceFiles = root.voiceFiles.filter(p => p !== path);
         root.attachments = root.attachments.filter(p => p !== path);
+        if (root.heldClip === path)
+            root.heldClip = "";
     }
 
+    // After a run: every clip except one held for the user's Attach /
+    // Discard decision (the 2-minute auto-stop), which is theirs to drop.
     function removeAllVoiceFiles(): void {
         for (const p of root.voiceFiles.slice())
-            root.removeVoiceFile(p);
+            if (p !== root.heldClip)
+                root.removeVoiceFile(p);
     }
 
     // Stale clips from a crashed session (and the pre-0700 location).
@@ -923,7 +942,7 @@ Scope {
         }
         onExited: (exitCode, exitStatus) => {
             root.copyText = "";
-            copyProcess.stdinEnabled = true;
+            root.flushCopy();
         }
     }
     Process {

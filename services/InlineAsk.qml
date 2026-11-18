@@ -13,9 +13,10 @@ import QtQuick
 // clarifications are NOT answered here -- the final payload says so and
 // the user continues in the Javi chat panel.
 //
-// Ask-mode contract: the inline ask is read-only by construction. It
-// runs `--mode ask` (horneroctl auto-denies approvals and stops any
-// run that tries a tool in that mode), never approves, clarifies,
+// Ask-mode contract: the inline ask runs `--mode ask`: horneroctl
+// auto-denies every approval and stops the run when it sees a tool
+// execution. That is not a sandbox (Hermes may run a tool that needs no
+// approval before horneroctl stops the run). This surface never approves, clarifies,
 // attaches or executes anything itself, and a pending gateway request
 // ends the quick run and offers an EXPLICIT hand-off to the Workbench
 // (`needsWorkbench`). A quick question never silently escalates to

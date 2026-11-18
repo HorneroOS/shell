@@ -140,16 +140,35 @@ function escapeAction(busy) {
 }
 
 // One line, bounded, no control characters (the question is user text).
+// ZWNJ/ZWJ (U+200C/U+200D) are kept only inside a word or emoji sequence
+// (a non-space character on both sides), where scripts and emoji need
+// them; anywhere else they could only hide text, so they go.
+function keepJoinersInWords(t) {
+    var out = "";
+    for (var i = 0; i < t.length; i++) {
+        var c = t.charAt(i);
+        var prev = out.length > 0 ? out.charAt(out.length - 1) : "";
+        var next = i + 1 < t.length ? t.charAt(i + 1) : "";
+        if (c === "\u200c" || c === "\u200d") {
+            if (prev === "" || next === "" || /\s/.test(prev) || /\s/.test(next) || next === "\u200c" || next === "\u200d")
+                continue;
+        }
+        out += c;
+    }
+    return out;
+}
+
 function cleanQuestion(text) {
     var t = String(text === undefined || text === null ? "" : text)
         .replace(/[\u0000-\u001f\u007f-\u009f\u2028-\u202e\u2066-\u2069]/g, " ")
-        // Invisible format characters (zero-width, joiners, word joiner,
-        // invisible operators, BOM, variation selectors, tag characters)
-        // could hide text from the user: dropped, never sent.
-        .replace(/[\u200b-\u200f\u2060-\u2064\ufeff\ufe00-\ufe0f]/g, "")
+        // Invisible format characters (zero-width space, LRM/RLM, word
+        // joiner, invisible operators, BOM, variation selectors, tag
+        // characters) could hide text from the user: dropped, never sent.
+        // ZWNJ/ZWJ survive only inside words (keepJoinersInWords).
+        .replace(/[\u200b\u200e\u200f\u2060-\u2064\ufeff\ufe00-\ufe0f]/g, "")
         .replace(/\udb40[\udc00-\udc7f]/g, "")
-        .replace(/\udb40[\udd00-\uddef]/g, "")
-        .replace(/\s+/g, " ").trim();
+        .replace(/\udb40[\udd00-\uddef]/g, "");
+    t = keepJoinersInWords(t.replace(/\s+/g, " ").trim()).replace(/\s+/g, " ").trim();
     return t.length > QUESTION_MAX ? t.slice(0, QUESTION_MAX) : t;
 }
 

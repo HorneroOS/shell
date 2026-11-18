@@ -654,6 +654,16 @@ Singleton {
     // -- Restart durability (file-backed, see header) -------------------
     readonly property string stateFilePath: `${Paths.state}/companion/state.json`
     readonly property int stateSchemaVersion: 2
+    // chatMode semantics version. 2 = Agent is opt-in (default Ask). A
+    // snapshot without it was written when Agent was the default, so a
+    // saved "agent" there was most likely never chosen: it is migrated
+    // to "ask" once, with a one-time notice (agentOptInNotice).
+    readonly property int chatModeVersion: 2
+    property bool agentOptInNotice: false
+
+    function dismissAgentOptInNotice(): void {
+        root.agentOptInNotice = false;
+    }
     // First apply wins: the on-disk snapshot must never clobber live
     // interaction that happened before the async load completed.
     property bool _restored: false
@@ -679,6 +689,7 @@ Singleton {
             chatHistoryLimit: persist.chatHistoryLimit,
             chatStreaming: persist.chatStreaming,
             chatMode: persist.chatMode,
+            chatModeVersion: root.chatModeVersion,
             idleAnimEnabled: persist.idleAnimEnabled,
             activityLevel: persist.activityLevel,
             wanderEnabled: persist.wanderEnabled,
@@ -730,6 +741,7 @@ Singleton {
         if (root._restored)
             return;
         root._restoring = true;
+        let migrated = false;
         try {
             const o = JSON.parse(text);
             if (o !== null && typeof o === "object" && !Array.isArray(o) && (o.schemaVersion === 1 || o.schemaVersion === root.stateSchemaVersion)) {
@@ -763,6 +775,11 @@ Singleton {
                     persist.chatStreaming = o.chatStreaming;
                 if (typeof o.chatMode === "string")
                     persist.chatMode = ["ask", "agent", "chat"].includes(o.chatMode) ? o.chatMode : "ask";
+                if (o.chatModeVersion !== root.chatModeVersion && persist.chatMode === "agent") {
+                    persist.chatMode = "ask";
+                    root.agentOptInNotice = true;
+                    migrated = true;
+                }
                 if (typeof o.idleAnimEnabled === "boolean")
                     persist.idleAnimEnabled = o.idleAnimEnabled;
                 if (typeof o.activityLevel === "string")
@@ -807,6 +824,9 @@ Singleton {
         root.sanitize();
         root._restoring = false;
         root._restored = true;
+        // Persist the migration (with chatModeVersion) so it runs once.
+        if (migrated)
+            root.markDirty();
     }
 
     // Direct-assigned preference keys (bound straight from the settings

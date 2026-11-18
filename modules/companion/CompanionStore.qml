@@ -5,6 +5,7 @@ import "prefsdoc.js" as PrefsDoc
 import "javivoice.js" as Voice
 import "radio.js" as Radio
 import "reactions.js" as Reactions
+import "suppression.js" as Suppression
 import qs.services
 import qs.utils
 import Quickshell
@@ -119,8 +120,18 @@ Singleton {
     // closes or the companion is hidden.
     property bool forceVisible: false
 
-    readonly property bool suppressed: root.suppressLocked || root.suppressFullscreen || root.suppressGameMode || root.areaPickerOpen || root.controlCenterOpen
+    readonly property bool suppressed: Suppression.isSuppressed(root.suppressors)
     readonly property bool visible: persist.enabled && (!root.suppressed || root.forceVisible) && persist.state !== "hidden" && !root.modeHidden
+
+    // Which inputs currently suppress the companion (diagnostics for
+    // `companion status`; a bare `suppressed:true` is undebuggable).
+    readonly property var suppressors: Suppression.reasons({
+        locked: root.suppressLocked,
+        fullscreen: root.suppressFullscreen,
+        gameMode: root.suppressGameMode,
+        areaPicker: root.areaPickerOpen,
+        controlCenter: root.controlCenterOpen
+    })
 
     property string bubbleText: ""
     property bool bubbleOpen: false
@@ -575,6 +586,7 @@ Singleton {
             skin: persist.skin,
             animation: root.activeAnimation,
             suppressed: root.suppressed,
+            suppressors: root.suppressors,
             bubbleOpen: root.bubbleOpen,
             nestStage: persist.nestStage,
             activityLevel: persist.activityLevel

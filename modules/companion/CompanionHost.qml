@@ -1,5 +1,6 @@
 pragma ComponentBehavior: Bound
 
+import "suppression.js" as Suppression
 import qs.modules.companion
 import qs.modules.controlcenter
 import qs.modules.welcome
@@ -32,14 +33,18 @@ Scope {
 
     readonly property bool hasFullscreen: Compositor.hasFullscreenOnFocusedOutput()
 
-    // Session-lock suppression follows the upstream `locked` notify
-    // signal, `lockStateChanged` (verified against the installed
-    // quickshell type data — there is no `lockedChanged` signal, so a
-    // handler by that name silently never fires and the sprite stays
-    // visible over the lock screen). The notify fires on both edges,
-    // so one handler covers lock and unlock; no Binding needed.
+    // Session-lock suppression. The upstream `lockStateChanged` notify
+    // covers the lock edge, but it does NOT fire when `locked` drops to
+    // false on unlock (or when the compositor ends the lock), which
+    // latched the suppression on forever (shell#652). The getter is
+    // authoritative, so re-read it on the notify AND on a slow poll that
+    // only runs while the flag is set (zero cost when unlocked). Note
+    // there is no `lockedChanged` signal: a handler by that name never
+    // fires.
     function syncLocked(): void {
-        CompanionStore.suppressLocked = root.lock !== null && root.lock !== undefined && root.lock.locked;
+        const step = Suppression.reconcileLock(CompanionStore.suppressLocked, root.lock);
+        if (step.changed)
+            CompanionStore.suppressLocked = step.flag;
     }
 
     Connections {
@@ -47,6 +52,13 @@ Scope {
         function onLockStateChanged(): void {
             root.syncLocked();
         }
+    }
+
+    Timer {
+        interval: Suppression.LOCK_POLL_MS
+        running: CompanionStore.suppressLocked
+        repeat: true
+        onTriggered: root.syncLocked()
     }
 
     Component.onCompleted: root.syncLocked()

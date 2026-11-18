@@ -31,6 +31,9 @@ ALLOWLIST = {
     "modules/drawers/Interactions.qml":
         "drawer backdrop / wheel interaction layer; panels opened from "
         "named bar controls",
+    "modules/keybinds/KeybindsOverlay.qml":
+        "scrim click dismisses the keybinding overlay; the sheet's search "
+        "field and rows are named controls",
     "modules/controlcenter/network/WirelessPasswordDialog.qml":
         "backdrop click dismisses; the dialog's field and buttons are "
         "named controls",

@@ -21,6 +21,7 @@ Singleton {
     property alias osd: adapter.osd
     property alias session: adapter.session
     property alias winfo: adapter.winfo
+    property alias keybinds: adapter.keybinds
     property alias lock: adapter.lock
     property alias utilities: adapter.utilities
     property alias sounds: adapter.sounds
@@ -264,6 +265,7 @@ Singleton {
             osd: serializeOsd(),
             session: serializeSession(),
             winfo: serializeWinfo(),
+            keybinds: serializeKeybinds(),
             lock: serializeLock(),
             utilities: serializeUtilities(),
             sounds: serializeSounds(),
@@ -692,6 +694,18 @@ Singleton {
         };
     }
 
+    function serializeKeybinds(): var {
+        return {
+            overlay: {
+                runOnEnter: keybinds.overlay.runOnEnter,
+                closeAfterRun: keybinds.overlay.closeAfterRun,
+                showSubmaps: keybinds.overlay.showSubmaps,
+                showMouse: keybinds.overlay.showMouse,
+                compact: keybinds.overlay.compact
+            }
+        };
+    }
+
     function serializeWinfo(): var {
         return {
             sizes: {
@@ -883,6 +897,7 @@ Singleton {
             property OsdConfig osd: OsdConfig {}
             property SessionConfig session: SessionConfig {}
             property WInfoConfig winfo: WInfoConfig {}
+            property KeybindsConfig keybinds: KeybindsConfig {}
             property LockConfig lock: LockConfig {}
             property UtilitiesConfig utilities: UtilitiesConfig {}
             property SoundsConfig sounds: SoundsConfig {}

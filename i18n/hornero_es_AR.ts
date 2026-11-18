@@ -6944,102 +6944,300 @@ Snapshot del plugin: %3</translation>
     </message>
 </context>
 <context>
-    <name>KeybindsPane</name>
+    <name>Keybinds</name>
     <message>
-        <source>Reading keybindings…</source>
-        <translation>Leyendo atajos…</translation>
+        <source>%1 swapped with %2</source>
+        <translation>%1 intercambiado con %2</translation>
     </message>
     <message>
-        <source>General</source>
-        <translation>General</translation>
+        <source>%1 now %2</source>
+        <translation>%1 ahora es %2</translation>
+    </message>
+    <message>
+        <source>%1 disabled</source>
+        <translation>%1 desactivado</translation>
+    </message>
+    <message>
+        <source>Keybindings reset to defaults</source>
+        <translation>Atajos restablecidos a los de fábrica</translation>
+    </message>
+    <message>
+        <source>Last keybinding change undone</source>
+        <translation>Se deshizo el último cambio de atajos</translation>
     </message>
     <message>
         <source>Applying…</source>
         <translation>Aplicando…</translation>
     </message>
     <message>
-        <source>Resetting…</source>
-        <translation>Restableciendo…</translation>
+        <source>horneroctl keybindings are unavailable on this system.</source>
+        <translation>Los atajos de horneroctl no están disponibles en este sistema.</translation>
     </message>
     <message>
-        <source>%1 keybindings · from %2</source>
-        <translation>%1 atajos · de %2</translation>
-    </message>
-    <message>
-        <source>horneroctl keyboard keys unavailable on this system.</source>
-        <translation>horneroctl keyboard keys no está disponible en este sistema.</translation>
-    </message>
-    <message>
-        <source>horneroctl rebind unavailable on this system.</source>
+        <source>horneroctl rebind is unavailable on this system.</source>
         <translation>horneroctl rebind no está disponible en este sistema.</translation>
     </message>
-    <message>
-        <source>%1 now %2</source>
-        <translation>%1 pasó a %2</translation>
-    </message>
-    <message>
-        <source>Undo moves it back to %1.</source>
-        <translation>Deshacer lo vuelve a %1.</translation>
-    </message>
+</context>
+<context>
+    <name>KeybindsPane</name>
     <message>
         <source>Keybinding was not changed</source>
         <translation>No se cambió el atajo</translation>
     </message>
     <message>
-        <source>Search keybindings…</source>
-        <translation>Buscar atajos…</translation>
+        <source>Undo restores the previous keybindings.</source>
+        <translation>Deshacer restaura los atajos anteriores.</translation>
+    </message>
+    <message>
+        <source>%1 keybindings · %2</source>
+        <translation>%1 atajos · %2</translation>
+    </message>
+    <message>
+        <source>live from Hyprland</source>
+        <translation>en vivo desde Hyprland</translation>
+    </message>
+    <message>
+        <source>from config files</source>
+        <translation>desde los archivos de configuración</translation>
+    </message>
+    <message>
+        <source>Keybinding overlay</source>
+        <translation>Panel de atajos</translation>
+    </message>
+    <message>
+        <source>Open overlay</source>
+        <translation>Abrir el panel</translation>
+    </message>
+    <message>
+        <source>Summon key</source>
+        <translation>Tecla para abrirlo</translation>
+    </message>
+    <message>
+        <source>No bind opens the overlay; bind `horneroctl hardware keyboard keys` to a combo.</source>
+        <translation>Ningún atajo abre el panel; asigná `horneroctl hardware keyboard keys` a una combinación.</translation>
+    </message>
+    <message>
+        <source>Change</source>
+        <translation>Cambiar</translation>
+    </message>
+    <message>
+        <source>Enter runs the highlighted bind</source>
+        <translation>Enter ejecuta el atajo seleccionado</translation>
+    </message>
+    <message>
+        <source>Close the overlay after running a bind</source>
+        <translation>Cerrar el panel después de ejecutar un atajo</translation>
+    </message>
+    <message>
+        <source>Show submap binds (resize, gaps, overview)</source>
+        <translation>Mostrar atajos de submapas (redimensionar, márgenes, vista general)</translation>
+    </message>
+    <message>
+        <source>Show mouse binds</source>
+        <translation>Mostrar atajos con el mouse</translation>
+    </message>
+    <message>
+        <source>Compact rows</source>
+        <translation>Filas compactas</translation>
+    </message>
+    <message>
+        <source>Reset overlay settings</source>
+        <translation>Restablecer los ajustes del panel</translation>
+    </message>
+    <message>
+        <source>Overlay settings reset</source>
+        <translation>Ajustes del panel restablecidos</translation>
     </message>
     <message>
         <source>Refresh</source>
         <translation>Actualizar</translation>
     </message>
     <message>
+        <source>Rebind “%1” (%2) to:</source>
+        <translation>Reasignar “%1” (%2) a:</translation>
+    </message>
+    <message>
+        <source>Press the new combo… (Esc stops)</source>
+        <translation>Apretá la combinación nueva… (Esc corta)</translation>
+    </message>
+    <message>
+        <source>Recording…</source>
+        <translation>Grabando…</translation>
+    </message>
+    <message>
+        <source>Record</source>
+        <translation>Grabar</translation>
+    </message>
+    <message>
+        <source>%1 is already “%2” (%3). Swap them, or pick another combo.</source>
+        <translation>%1 ya es “%2” (%3). Intercambialos o elegí otra combinación.</translation>
+    </message>
+    <message>
+        <source>Swap</source>
+        <translation>Intercambiar</translation>
+    </message>
+    <message>
+        <source>Disable bind</source>
+        <translation>Desactivar atajo</translation>
+    </message>
+    <message>
+        <source>%1 binds share this combo; all of them fire</source>
+        <translation>%1 atajos comparten esta combinación; se ejecutan todos</translation>
+    </message>
+    <message>
+        <source>moved from %1</source>
+        <translation>movido desde %1</translation>
+    </message>
+    <message>
+        <source>submap: %1</source>
+        <translation>submapa: %1</translation>
+    </message>
+    <message>
+        <source>personal (keybindings-user.lua)</source>
+        <translation>personal (keybindings-user.lua)</translation>
+    </message>
+    <message>
         <source>Rebind</source>
         <translation>Reasignar</translation>
     </message>
     <message>
-        <source>Rebind %1 to:</source>
-        <translation>Reasignar %1 a:</translation>
+        <source>%1 rebind(s) active</source>
+        <translation>%1 reasignación(es) activa(s)</translation>
+    </message>
+    <message>
+        <source>No rebinds; factory keybindings are active.</source>
+        <translation>Sin reasignaciones; están activos los atajos de fábrica.</translation>
+    </message>
+    <message>
+        <source>Undo last change</source>
+        <translation>Deshacer el último cambio</translation>
+    </message>
+    <message>
+        <source>Rebinds live in ~/.config/hypr/hornero-keybinds.lua, which the Hornero config applies on top of keybindings.lua and your keybindings-user.lua; neither file is edited. Changes apply live and can be undone.</source>
+        <translation>Las reasignaciones se guardan en ~/.config/hypr/hornero-keybinds.lua, que la configuración de Hornero aplica encima de keybindings.lua y de tu keybindings-user.lua; ninguno de los dos se edita. Los cambios se aplican al instante y se pueden deshacer.</translation>
+    </message>
+    <message>
+        <source>Rebinds are stored as user overrides in keybindings-user.conf and apply live; factory keybindings are never edited.</source>
+        <translation>Las reasignaciones se guardan como cambios tuyos en keybindings-user.conf y se aplican al instante; los atajos de fábrica nunca se editan.</translation>
+    </message>
+    <message>
+        <source>This session&apos;s keybindings are read-only here: rebinding needs the Hornero Hyprland config. The list shows what the session actually runs.</source>
+        <translation>Acá los atajos de esta sesión son de solo lectura: para reasignarlos hace falta la configuración de Hyprland de Hornero. La lista muestra lo que la sesión usa de verdad.</translation>
     </message>
     <message>
         <source>SUPER + F13, then Enter</source>
         <translation>SUPER + F13, después Enter</translation>
     </message>
     <message>
+        <source>Search keybindings…</source>
+        <translation>Buscar atajos…</translation>
+    </message>
+    <message>
         <source>Cancel</source>
         <translation>Cancelar</translation>
-    </message>
-    <message>
-        <source>%1 user override(s) active</source>
-        <translation>Personalizaciones activas: %1</translation>
-    </message>
-    <message>
-        <source>No user overrides; factory keybindings are active.</source>
-        <translation>Sin personalizaciones; están activos los atajos de fábrica.</translation>
-    </message>
-    <message>
-        <source>Confirm reset</source>
-        <translation>Confirmar restablecimiento</translation>
     </message>
     <message>
         <source>Reset to defaults</source>
         <translation>Restablecer valores predeterminados</translation>
     </message>
     <message>
-        <source>Keep overrides</source>
-        <translation>Conservar personalizaciones</translation>
-    </message>
-    <message>
         <source>No keybindings match.</source>
         <translation>Ningún atajo coincide.</translation>
     </message>
+</context>
+<context>
+    <name>KeybindsSheet</name>
     <message>
-        <source>Rebinds are stored as user overrides and apply live; factory keybindings are never edited. This list always shows what the session actually runs.</source>
-        <translation>Las reasignaciones se guardan como personalizaciones del usuario y se aplican en vivo; los atajos de fábrica nunca se editan. Esta lista siempre muestra lo que la sesión usa de verdad.</translation>
+        <source>Keybindings</source>
+        <translation>Atajos</translation>
     </message>
     <message>
-        <source>This session&apos;s keybindings are read-only here (Lua configuration); the list shows what the session actually runs.</source>
-        <translation>Los atajos de esta sesión son de solo lectura acá (configuración en Lua); la lista muestra lo que la sesión usa de verdad.</translation>
+        <source>Reading the compositor…</source>
+        <translation>Leyendo el compositor…</translation>
+    </message>
+    <message>
+        <source>%1 binds · %2</source>
+        <translation>%1 atajos · %2</translation>
+    </message>
+    <message>
+        <source>live from Hyprland</source>
+        <translation>en vivo desde Hyprland</translation>
+    </message>
+    <message>
+        <source>from config files</source>
+        <translation>desde los archivos de configuración</translation>
+    </message>
+    <message>
+        <source>Summon</source>
+        <translation>Abrir con</translation>
+    </message>
+    <message>
+        <source>Search binds, actions or groups…</source>
+        <translation>Buscar atajos, acciones o grupos…</translation>
+    </message>
+    <message>
+        <source>%1: %2</source>
+        <translation>%1: %2</translation>
+    </message>
+    <message>
+        <source>moved from %1</source>
+        <translation>movido desde %1</translation>
+    </message>
+    <message>
+        <source>shared ×%1</source>
+        <translation>compartido ×%1</translation>
+    </message>
+    <message>
+        <source>personal</source>
+        <translation>personal</translation>
+    </message>
+    <message>
+        <source>No keybindings match “%1”.</source>
+        <translation>Ningún atajo coincide con “%1”.</translation>
+    </message>
+    <message>
+        <source>Press the new combo for “%1”… (Esc cancels)</source>
+        <translation>Apretá la combinación nueva para “%1”… (Esc cancela)</translation>
+    </message>
+    <message>
+        <source>%1 is already “%2” (%3).</source>
+        <translation>%1 ya es “%2” (%3).</translation>
+    </message>
+    <message>
+        <source>Move “%1” from %2 to %3?</source>
+        <translation>¿Mover “%1” de %2 a %3?</translation>
+    </message>
+    <message>
+        <source>Save (Enter)</source>
+        <translation>Guardar (Enter)</translation>
+    </message>
+    <message>
+        <source>Swap them (S)</source>
+        <translation>Intercambiarlos (S)</translation>
+    </message>
+    <message>
+        <source>Try another (R)</source>
+        <translation>Probar otra (R)</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Cancelar</translation>
+    </message>
+    <message>
+        <source>↑↓ select · Enter run · Ctrl+E rebind · Ctrl+D disable · Ctrl+Z undo · Esc close</source>
+        <translation>↑↓ elegir · Enter ejecutar · Ctrl+E reasignar · Ctrl+D desactivar · Ctrl+Z deshacer · Esc cerrar</translation>
+    </message>
+    <message>
+        <source>↑↓ select · Enter run · Esc close · rebinding needs the Hornero config</source>
+        <translation>↑↓ elegir · Enter ejecutar · Esc cerrar · reasignar necesita la configuración de Hornero</translation>
+    </message>
+    <message>
+        <source>Rebind</source>
+        <translation>Reasignar</translation>
+    </message>
+    <message>
+        <source>Undo</source>
+        <translation>Deshacer</translation>
     </message>
 </context>
 <context>

@@ -44,6 +44,7 @@ def test_exclusive_keyboard_focus_is_only_requested_by_intentional_surfaces():
         "modules/companion/CompanionHost.qml",  # chat the person opened
         "modules/companion/RadioPanel.qml",     # Javi Radio the person opened
         "modules/drawers/Drawers.qml",          # Niri-only keyboardIntent branch
+        "modules/keybinds/KeybindsOverlay.qml", # keybinding overlay the person summoned (never over fullscreen)
     }
     files = {f for f, _ in hits(r"WlrKeyboardFocus\.Exclusive")}
     assert files <= allowed, f"unexpected Exclusive keyboard focus in {sorted(files - allowed)}"

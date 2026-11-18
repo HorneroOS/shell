@@ -39,7 +39,11 @@ Item {
         onTriggered: root.player?.positionChanged()
     }
 
+    implicitHeight: deck.implicitHeight
+
     RowLayout {
+        id: deck
+
         anchors.fill: parent
         spacing: Appearance.spacing.normal
 

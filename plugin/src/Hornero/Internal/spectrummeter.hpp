@@ -23,6 +23,10 @@ class SpectrumMeter : public QQuickItem {
 
     Q_PROPERTY(QList<double> values READ values WRITE setValues NOTIFY valuesChanged)
     Q_PROPERTY(int bands READ bands WRITE setBands NOTIFY bandsChanged)
+    // Read only values[sliceStart, sliceStart + sliceLength) (0 = to the end),
+    // e.g. one channel of a stereo CavaProvider.
+    Q_PROPERTY(int sliceStart READ sliceStart WRITE setSliceStart NOTIFY bandsChanged)
+    Q_PROPERTY(int sliceLength READ sliceLength WRITE setSliceLength NOTIFY bandsChanged)
     Q_PROPERTY(bool active READ active WRITE setActive NOTIFY activeChanged)
     Q_PROPERTY(Direction direction READ direction WRITE setDirection NOTIFY geometryParamsChanged)
     Q_PROPERTY(bool reversed READ reversed WRITE setReversed NOTIFY geometryParamsChanged)
@@ -63,6 +67,10 @@ public:
     void setValues(const QList<double>& values);
     [[nodiscard]] int bands() const { return m_bands; }
     void setBands(int bands);
+    [[nodiscard]] int sliceStart() const { return m_sliceStart; }
+    void setSliceStart(int v);
+    [[nodiscard]] int sliceLength() const { return m_sliceLength; }
+    void setSliceLength(int v);
     [[nodiscard]] bool active() const { return m_active; }
     void setActive(bool active);
 
@@ -124,6 +132,8 @@ protected:
 private:
     QList<double> m_values;
     int m_bands = 0;
+    int m_sliceStart = 0;
+    int m_sliceLength = 0;
     bool m_active = true;
     Direction m_direction = Up;
     bool m_reversed = false;

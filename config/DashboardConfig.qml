@@ -9,6 +9,21 @@ JsonObject {
     property Sizes sizes: Sizes {}
     property Performance performance: Performance {}
     property Workspaces workspaces: Workspaces {}
+    property Media media: Media {}
+
+    // The home media deck (docs/DASHBOARD.md "Media deck").
+    component Media: JsonObject {
+        // Stereo spectrum columns beside the cover well. Drawn only when
+        // motion is not off (Gaming and reduced motion keep the deck still).
+        property bool spectrum: true
+        // Amber peak-hold tick per band (holds 600 ms, then falls).
+        property bool peakHold: true
+        // Bands per channel, 8..24.
+        property int bands: 12
+        // Javi dozes in the empty cover well when nothing plays (needs the
+        // mascot, Appearance > Atmosphere).
+        property bool javi: true
+    }
 
     component Workspaces: JsonObject {
         property bool showLivePreview: true

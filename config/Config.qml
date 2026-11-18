@@ -558,6 +558,12 @@ Singleton {
                 previewHeight: dashboard.workspaces.previewHeight,
                 enableWindowActions: dashboard.workspaces.enableWindowActions
             },
+            media: {
+                spectrum: dashboard.media.spectrum,
+                peakHold: dashboard.media.peakHold,
+                bands: dashboard.media.bands,
+                javi: dashboard.media.javi
+            },
             sizes: {
                 tabIndicatorHeight: dashboard.sizes.tabIndicatorHeight,
                 tabIndicatorSpacing: dashboard.sizes.tabIndicatorSpacing,

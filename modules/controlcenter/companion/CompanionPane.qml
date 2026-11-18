@@ -1042,6 +1042,8 @@ Item {
                     }
                 }
 
+                HabitatSection {}
+
                 VoiceSection {}
 
                 ChannelPanel {

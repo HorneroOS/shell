@@ -26,6 +26,11 @@ Singleton {
     property var skins: ({})
     property var skinMeta: ({})
     property var nests: ({})
+    // Indicator light sockets of the nest art (canvas px; the art never
+    // paints them lit, the habitat lights them from real state).
+    property var nestLights: ({})
+    // CRT screen rectangle in the nest art [x0, y0, x1, y1] (canvas px).
+    property var nestScreen: [58, 372, 138, 424]
     property var assistantStates: ({})
     property int manifestVersion: 0
     property bool ready: false
@@ -156,6 +161,8 @@ Singleton {
         const meta = {};
         const states = {};
         const nests = {};
+        const lights = {};
+        let screenRect = [58, 372, 138, 424];
         let version = 0;
         try {
             const o = JSON.parse(text);
@@ -188,6 +195,15 @@ Singleton {
                             nests[key] = o.nests[key];
                     }
                 }
+                if (o.nestLights !== null && typeof o.nestLights === "object" && !Array.isArray(o.nestLights)) {
+                    for (const key of Object.keys(o.nestLights)) {
+                        const l = o.nestLights[key];
+                        if (l !== null && typeof l === "object" && typeof l.x === "number" && typeof l.y === "number" && typeof l.r === "number")
+                            lights[key] = { "x": l.x, "y": l.y, "r": l.r, "role": typeof l.role === "string" ? l.role : "" };
+                    }
+                }
+                if (Array.isArray(o.nestScreen) && o.nestScreen.length === 4 && o.nestScreen.every(v => typeof v === "number"))
+                    screenRect = o.nestScreen;
                 if (Object.keys(skins).length > 0)
                     version = o.manifestVersion;
             }
@@ -197,6 +213,8 @@ Singleton {
         root.skins = skins;
         root.skinMeta = meta;
         root.nests = nests;
+        root.nestLights = lights;
+        root.nestScreen = screenRect;
         root.assistantStates = states;
         root.manifestVersion = version;
         root.ready = true;

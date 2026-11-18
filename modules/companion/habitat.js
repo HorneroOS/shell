@@ -51,7 +51,9 @@ function defaults() {
         phosphor: true,
         indicators: true,
         dimInQuietHours: true,
-        clickAction: "radio",
+        // Nothing until the final nest art lands: a click target on a
+        // placeholder square is a surprise, not a feature.
+        clickAction: "none",
         modeLevel: { focus: "dim", everyday: "normal", signal: "rich", gaming: "hidden", studio: "dim" }
     };
 }
@@ -204,27 +206,88 @@ function lights(input) {
     return out;
 }
 
+// Space other shell layers reserve on each edge of a screen (the bars'
+// exclusive zones). Missing or bad values count as 0.
+function sanitizeInsets(raw) {
+    var o = (raw && typeof raw === "object") ? raw : {};
+    var out = {};
+    var edges = ["left", "right", "top", "bottom"];
+    for (var i = 0; i < edges.length; i++)
+        out[edges[i]] = Math.round(clampNumber(o[edges[i]], 0, 4096, 0));
+    return out;
+}
+
 // Size and position of the anchored nest on a screen of w x h pixels.
-// Margins are measured from the chosen corner; the result is clamped so the
-// whole nest always stays on screen.
-function layout(settings, screenW, screenH) {
+// The nest surface respects other layers' exclusive zones (a bar on the
+// nest's corner pushes it inward), so margins are measured from the chosen
+// corner of the usable area (the screen minus `insets`). Margins shrink so
+// the whole nest stays inside the usable area when it fits, and on screen
+// otherwise.
+// -> { x, y, size } in absolute screen pixels, plus the margins the surface
+//    uses from its anchored edges and which edges those are.
+function layout(settings, screenW, screenH, insets) {
     var s = sanitize(settings);
+    var ins = sanitizeInsets(insets);
     var size = Math.round(BASE_SIZE * s.scale);
-    var x = s.anchor.indexOf("left") >= 0 ? s.marginX : screenW - size - s.marginX;
-    var y = s.anchor.indexOf("top") >= 0 ? s.marginY : screenH - size - s.marginY;
+    var left = s.anchor.indexOf("left") >= 0;
+    var top = s.anchor.indexOf("top") >= 0;
+    var availW = Math.max(0, screenW - ins.left - ins.right);
+    var availH = Math.max(0, screenH - ins.top - ins.bottom);
+    var mx = Math.max(0, Math.min(s.marginX, availW - size));
+    var my = Math.max(0, Math.min(s.marginY, availH - size));
+    var x = left ? ins.left + mx : screenW - ins.right - size - mx;
+    var y = top ? ins.top + my : screenH - ins.bottom - size - my;
     x = Math.max(0, Math.min(x, Math.max(0, screenW - size)));
     y = Math.max(0, Math.min(y, Math.max(0, screenH - size)));
-    return { x: x, y: y, size: size };
+    return { x: x, y: y, size: size, marginX: mx, marginY: my, left: left, top: top };
 }
 
 // Where Javi stands when he goes home: screen fractions in the host's
-// convention (posX = horizontal centre, posY = feet line).
-function homeFraction(settings, screenW, screenH) {
-    var l = layout(settings, screenW, screenH);
+// convention (posX = horizontal centre, posY = feet line). Javi's own
+// surface ignores exclusive zones, so this is in full-screen coordinates
+// and includes the same insets the nest surface is pushed in by.
+function homeFraction(settings, screenW, screenH, insets) {
+    var l = layout(settings, screenW, screenH, insets);
     return {
         fx: Math.max(0, Math.min(1, (l.x + l.size / 2) / Math.max(1, screenW))),
         fy: Math.max(0, Math.min(1, (l.y + l.size * FEET_Y / CANVAS) / Math.max(1, screenH)))
     };
+}
+
+// The one monitor the nest lives on: the user's choice when that output
+// exists, else the monitor Javi was placed on, else the first (primary)
+// output. Never the focused output: a home does not follow the keyboard.
+function resolveScreen(monitor, javiScreen, names) {
+    var list = Array.isArray(names) ? names : [];
+    if (typeof monitor === "string" && monitor !== "" && list.indexOf(monitor) >= 0)
+        return monitor;
+    if (typeof javiScreen === "string" && javiScreen !== "" && list.indexOf(javiScreen) >= 0)
+        return javiScreen;
+    return list.length > 0 ? String(list[0]) : "";
+}
+
+// The assistant link light from `horneroctl assistant status --json` as the
+// bridge last saw it (ok + message). Before the first probe, or while the
+// assistant is switched off (the default), the light is off: off is the
+// user's choice, not a failure. Red only when the assistant is enabled and
+// the probe failed (gateway not answering, Hermes missing, incompatible).
+// -> "unknown" | "off" | "ok" | "failed"
+function linkState(input) {
+    var i = input || {};
+    var msg = String(i.message === undefined || i.message === null ? "" : i.message);
+    if (msg === "")
+        return "unknown";
+    if (i.ok === true)
+        return (/\bgateway reachable\b/i.test(msg) && !/unreachable/i.test(msg)) ? "ok" : "off";
+    return /^assistant is enabled\b/i.test(msg) ? "failed" : "off";
+}
+
+// True when the indicator lights are drawn at all (only the finished home
+// carries electronics). Blinking and the slow status probe exist only
+// while this holds.
+function ledsShown(settings, level, stage) {
+    var s = sanitize(settings);
+    return stage >= 4 && s.indicators && s.lighting !== "off" && level !== "hidden";
 }
 
 // Light socket centre/radius from manifest canvas pixels to nest pixels.

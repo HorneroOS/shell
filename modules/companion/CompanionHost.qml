@@ -1,5 +1,6 @@
 pragma ComponentBehavior: Bound
 
+import "habitat.js" as Habitat
 import qs.modules.companion
 import qs.modules.controlcenter
 import qs.modules.welcome
@@ -100,6 +101,36 @@ Scope {
     // Hermes assistant bridge (slice 1): horneroctl-mediated ask/cancel.
     AssistantBridge {
         id: assistantBridge
+    }
+
+    // The habitat, for surfaces that bind to it (Javi Radio binds
+    // `radioBusy` and handles the "radio" click action through this handle
+    // and sets radioHandlesNest; see docs/COMPANION_NEST.md).
+    readonly property var habitat: nestHabitat
+
+    // The Nest as ambient chrome (its own Bottom-layer surface; see
+    // NestHabitat.qml). Absent when hidden, in Gaming or not built yet.
+    NestHabitat {
+        id: nestHabitat
+
+        bridge: assistantBridge
+        onActivated: action => {
+            if (action === "settings") {
+                WindowFactory.create(null, {
+                    pane: "companion"
+                });
+                return;
+            }
+            // "radio" belongs to Javi Radio when it is in the tree (it
+            // declares radioHandlesNest on this host and connects to
+            // habitat.activated); without it, and for "workbench", the
+            // click opens the one conversation surface that exists.
+            if (action === "radio" && root.radioHandlesNest === true)
+                return;
+            CompanionStore.summon();
+            CompanionStore.forceVisible = true;
+            assistantBridge.chatOpen = true;
+        }
     }
 
     Variants {
@@ -377,7 +408,23 @@ Scope {
                     else if (s === "sleeping" && CompanionStore.sleepAtNest && CompanionStore.nestEnabled && !win.pendingSleep) {
                         // Fly home first, then settle into sleep there.
                         win.pendingSleep = true;
-                        win.flyTo(CompanionStore.edge === "left" ? 0.06 : 0.94, 0.97);
+                        // Home is the habitat when it is anchored on
+                        // screen, otherwise the old edge perch.
+                        // Only when the habitat lives on this screen;
+                        // the fractions include the bars' insets the
+                        // nest surface is pushed in by.
+                        if (CompanionStore.habitatSettings.placement === "anchored" && CompanionStore.nestStage > 0 && nestHabitat.screenName === win.modelData.name) {
+                            const bars = Visibilities.bars.get(win.modelData) ?? null;
+                            const home = Habitat.homeFraction(CompanionStore.habitatSettings, win.screenW, win.screenH, {
+                                "left": bars?.reservedLeft ?? 0,
+                                "right": bars?.reservedRight ?? 0,
+                                "top": bars?.reservedTop ?? 0,
+                                "bottom": bars?.reservedBottom ?? 0
+                            });
+                            win.flyTo(home.fx, home.fy);
+                        } else {
+                            win.flyTo(CompanionStore.edge === "left" ? 0.06 : 0.94, 0.97);
+                        }
                     }
                     if (s !== "dragging" && !win.dragging)
                         win.syncFromStore();
@@ -480,6 +527,25 @@ Scope {
             // implicitly get clipped.
             implicitWidth: stack.implicitWidth
             implicitHeight: stack.implicitHeight
+
+            // Input region: only what is visible takes input (the sprite
+            // box, an open bubble, the chat card, an open menu). The
+            // transparent rest of the surface stays click-through; hidden
+            // parts contribute an empty rectangle.
+            mask: Region {
+                Region {
+                    item: spriteRow
+                }
+                Region {
+                    item: bubble.visible ? bubble : null
+                }
+                Region {
+                    item: chatPanel.visible ? chatPanel : null
+                }
+                Region {
+                    item: menu.visible ? menu : null
+                }
+            }
 
             // The layer surface only takes its size at map time on
             // the supported Quickshell: toggling chatOpen remaps the
@@ -637,7 +703,7 @@ Scope {
                         width: win.sizePx
                         height: win.sizePx
                         sourceSize: Qt.size(Math.min(512, win.sizePx * 2), Math.min(512, win.sizePx * 2))
-                        visible: CompanionStore.nestEnabled && CompanionStore.nestStage > 0 && !win.peekMode
+                        visible: CompanionStore.nestEnabled && CompanionStore.nestStage > 0 && !win.peekMode && CompanionStore.habitatSettings.placement === "withJavi"
                         source: Companion.nestSource(["none", "twigs", "cup", "dome", "home"][CompanionStore.nestStage] ?? "none")
                         fillMode: Image.PreserveAspectFit
                         cache: true

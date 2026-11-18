@@ -49,6 +49,9 @@ def test_rebind_applies_on_enter_and_offers_undo() -> None:
     assert 'Undo.offerCommand("keybind"' in pane
     assert "root.undoArgv" in service_text()
     assert 'qsTr("Apply")' not in pane
+    # A recorded free combo applies at once; a taken one waits for Swap.
+    rec = pane[pane.index("id: recorder"):pane.index("id: editCol")]
+    assert "if (!root.conflict)" in rec and "root.apply(false)" in rec
 
 
 def test_conflicts_named_before_saving_with_swap() -> None:

@@ -317,6 +317,10 @@ Item {
                                         return;
                                     root.newCombo = combo;
                                     root.stopRecording();
+                                    // One apply policy: a free recorded combo applies at
+                                    // once (+Undo); a taken one waits for Swap.
+                                    if (!root.conflict)
+                                        root.apply(false);
                                 }
                             }
 

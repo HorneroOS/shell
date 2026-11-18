@@ -88,4 +88,27 @@ CollapsibleSection {
             wrapMode: Text.WordWrap
         }
     }
+
+    SectionContainer {
+        contentSpacing: Appearance.spacing.normal
+
+        SizeSlider {
+            target: Config.border
+            key: "fillet"
+            label: qsTr("Machined fillet")
+            from: 0
+            to: 16
+            defaultValue: 6
+            stepSize: 1
+            suffix: "px"
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+            text: qsTr("The small curve where a drawer or popout meets the bar or the frame, so it grows out of the bezel. 0 keeps the flush square junction. Floating and clear bars never get one.")
+            color: Signal.palette.inkMuted
+            font.pointSize: Appearance.font.size.small
+            wrapMode: Text.WordWrap
+        }
+    }
 }

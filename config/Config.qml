@@ -534,7 +534,8 @@ Singleton {
             frameEnabled: border.frameEnabled,
             thickness: border.thickness,
             rounding: border.rounding,
-            edgeWidth: border.edgeWidth
+            edgeWidth: border.edgeWidth,
+            fillet: border.fillet
         };
     }
 

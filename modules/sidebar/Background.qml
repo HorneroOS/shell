@@ -3,6 +3,7 @@ import qs.services
 import qs.config
 import QtQuick
 import QtQuick.Shapes
+import "../../components/placement/Fillet.js" as Fillet
 
 ShapePath {
     id: root
@@ -21,17 +22,40 @@ ShapePath {
     readonly property real r: Math.min(Appearance.rounding.small, wrapper.width / 2, wrapper.height / 2)
     readonly property bool open: wrapper.width > 0 && wrapper.height > 0
 
+    // Machined fillet at the top junction with the right frame (see
+    // dashboard/Background.qml), only where there is frame above the sheet
+    // to grow out of (below a notification stack). The bottom junction is
+    // the utilities drawer or the frame's own bottom corner: no fillet.
+    property real fillet: 0
+    property real rule: 0
+    readonly property real c: fillet > 0 ? rule : 0
+    readonly property real f: Fillet.fit(Math.min(fillet, panels.notifications.height), wrapper.width, r, c)
+
     // Signal Bezel §7.1: a right-attached `panel` sheet with a 1 px `rule`
     // border on its three free edges and radius `small` on the two corners
-    // away from the anchor edge — no concave wings. The `*RoundingX`
+    // away from the anchor edge. The `*RoundingX`
     // properties above stay because the notification host still derives its
     // own geometry from them; they no longer shape this sheet.
     strokeWidth: open ? 1 : -1
     strokeColor: Signal.palette.rule
     fillColor: open ? Signal.surface(Signal.palette.panel, "sidebar") : "transparent"
 
+    PathMove {
+        relativeX: 0
+        relativeY: -root.f
+    }
     PathLine {
-        relativeX: -(root.wrapper.width - root.r)
+        relativeX: -root.c
+        relativeY: 0
+    }
+    PathArc {
+        relativeX: -root.f
+        relativeY: root.f
+        radiusX: root.f
+        radiusY: root.f
+    }
+    PathLine {
+        relativeX: -(root.wrapper.width - root.r - root.f - root.c)
         relativeY: 0
     }
     PathArc {

@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import qs.config
 import "popouts" as BarPopouts
+import "../../components/placement/Fillet.js" as Fillet
 import Quickshell
 import QtQuick
 
@@ -72,6 +73,18 @@ Item {
     function openOn(edge: string): bool {
         const b = barOn(edge);
         return (b?.floating ?? false) || (b?.clear ?? false);
+    }
+
+    // Machined fillets (Signal visual language §7.1, components/placement/
+    // Fillet.js): the radius where an attached drawer or popout meets the
+    // bar or the frame on `edge` (0 = flush or nothing to grow out of), and
+    // where the junction's outline runs, in px into the sheet.
+    function filletOn(edge: string): real {
+        return Fillet.radius(Config.border.fillet, root.openOn(edge), root.frameVisible, root.barOn(edge) !== null);
+    }
+
+    function filletRule(edge: string): real {
+        return Fillet.rule(root.frameVisible, root.barOn(edge) !== null, Config.appearance.highContrast, Config.border.edgeWidth);
     }
 
     function barAt(x: real, y: real): Item {

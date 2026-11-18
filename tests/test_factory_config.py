@@ -253,6 +253,7 @@ def test_factory_values_match_code_defaults():
         ("border.thickness", 10),
         ("border.rounding", 25),
         ("border.edgeWidth", 1),
+        ("border.fillet", 6),
         # dashboard (DashboardConfig.qml)
         ("dashboard.dragThreshold", 50),
         ("dashboard.mediaUpdateInterval", 500),

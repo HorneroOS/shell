@@ -18,7 +18,8 @@ def test_defaults_validate_and_are_stable():
     r = run_js(M, "console.log(JSON.stringify([defaults(), sanitize(defaults()), sanitize(null), sanitize('x'), sanitize([1])]));")
     assert all(x == r[0] for x in r[1:])
     d = r[0]
-    assert d["placement"] == "anchored" and d["clickAction"] == "radio"
+    # no click target on placeholder art until the user asks for one
+    assert d["placement"] == "anchored" and d["clickAction"] == "none"
     assert d["modeLevel"] == {"focus": "dim", "everyday": "normal", "signal": "rich", "gaming": "hidden", "studio": "dim"}
 
 
@@ -32,7 +33,7 @@ console.log(JSON.stringify(sanitize({placement: 'floating', anchor: 'middle', ma
     assert r["marginX"] == 0 and r["marginY"] == 400
     assert r["scale"] == 2.0 and r["monitor"] == ""
     assert r["lighting"] == "auto" and r["intensity"] == 0.8
-    assert r["phosphor"] is True and r["clickAction"] == "radio"
+    assert r["phosphor"] is True and r["clickAction"] == "none"
     assert r["modeLevel"]["focus"] == "rich" and r["modeLevel"]["gaming"] == "hidden"
     assert "bogus" not in r["modeLevel"]
 
@@ -130,7 +131,7 @@ console.log(JSON.stringify(out));""")
         assert 0 <= l["x"] and l["x"] + l["size"] <= max(w, l["size"]), (a, w, h, l)
         assert 0 <= l["y"] and l["y"] + l["size"] <= max(h, l["size"]), (a, w, h, l)
     br = run_js(M, "console.log(JSON.stringify(layout(defaults(), 1920, 1080)));")
-    assert br == {"x": 1920 - 160 - 24, "y": 1080 - 160 - 48, "size": 160}
+    assert (br["x"], br["y"], br["size"]) == (1920 - 160 - 24, 1080 - 160 - 48, 160)
     tl = run_js(M, "console.log(JSON.stringify(layout(sanitize({anchor:'top-left'}), 1920, 1080)));")
     assert (tl["x"], tl["y"]) == (24, 48)
 
@@ -157,3 +158,71 @@ def test_surface_wanted_gates():
 @NODE
 def test_art_is_marked_placeholder():
     assert run_js(M, "console.log(JSON.stringify(ART));")["status"] == "placeholder"
+
+
+@NODE
+def test_layout_respects_bar_insets_on_every_edge():
+    # a 40 px bar on the right and a 32 px bar at the bottom push the
+    # bottom-right nest inward instead of covering it
+    ins = "{left: 0, right: 40, top: 0, bottom: 32}"
+    br = run_js(M, f"console.log(JSON.stringify(layout(defaults(), 1920, 1080, {ins})));")
+    assert (br["x"], br["y"]) == (1920 - 40 - 160 - 24, 1080 - 32 - 160 - 48)
+    assert (br["marginX"], br["marginY"], br["left"], br["top"]) == (24, 48, False, False)
+    tl = run_js(M, "console.log(JSON.stringify(layout(sanitize({anchor:'top-left'}), 1920, 1080, {left: 56, top: 30})));")
+    assert (tl["x"], tl["y"]) == (56 + 24, 30 + 48) and tl["left"] and tl["top"]
+    # margins shrink so the nest stays inside the usable area
+    tight = run_js(M, "console.log(JSON.stringify(layout(sanitize({marginX: 400}), 600, 600, {right: 300})));")
+    assert tight["marginX"] == 600 - 300 - 160 and tight["x"] == 0
+    # junk insets count as zero
+    junk = run_js(M, "console.log(JSON.stringify(layout(defaults(), 1920, 1080, {right: 'x', bottom: -9})));")
+    assert (junk["x"], junk["y"]) == (1736, 872)
+
+
+@NODE
+def test_home_fraction_includes_the_insets():
+    r = run_js(M, "console.log(JSON.stringify(homeFraction(defaults(), 1920, 1080, {right: 40, bottom: 32})));")
+    x, y = 1920 - 40 - 160 - 24, 1080 - 32 - 160 - 48
+    assert abs(r["fx"] - (x + 80) / 1920) < 1e-9
+    assert abs(r["fy"] - (y + 160 * 472 / 512) / 1080) < 1e-9
+
+
+@NODE
+def test_nest_screen_never_follows_focus():
+    def rs(monitor, javi, names):
+        import json
+        return run_js(M, f"console.log(JSON.stringify(resolveScreen({json.dumps(monitor)}, {json.dumps(javi)}, {json.dumps(names)})));")
+    assert rs("HDMI-A-1", "DP-1", ["DP-1", "HDMI-A-1"]) == "HDMI-A-1"
+    assert rs("gone", "DP-1", ["eDP-1", "DP-1"]) == "DP-1"
+    # nothing chosen and Javi unplaced: the primary output, not the focused one
+    assert rs("", "", ["eDP-1", "DP-1"]) == "eDP-1"
+    assert rs("", "", []) == ""
+
+
+@NODE
+def test_link_light_is_off_until_probed_and_while_disabled():
+    def ls(ok, message):
+        import json
+        return run_js(M, f"console.log(JSON.stringify(linkState({{ok: {json.dumps(ok)}, message: {json.dumps(message)}}})));")
+    # never probed yet
+    assert ls(False, "") == "unknown"
+    # horneroctl's real messages (hornero cli assistant_status_report)
+    assert ls(True, "Assistant is disabled (default). Enable it explicitly: horneroctl assistant enable --yes") == "off"
+    assert ls(True, "Assistant enabled; Hermes gateway reachable and protocol-compatible (v1).") == "ok"
+    assert ls(False, "Assistant is enabled but the Hermes gateway is not answering at http://127.0.0.1:8642 (x).") == "failed"
+    assert ls(False, "Assistant is enabled but Hermes Agent is not installed.") == "failed"
+    # horneroctl itself missing is not a failure the user set up
+    assert ls(False, "horneroctl assistant unavailable") == "off"
+    # off and unknown never light the link LED
+    assert lights("", connected=False, failed=False)["link"]["on"] is False
+
+
+@NODE
+def test_leds_shown_gates_blink_and_status_probe():
+    def shown(extra, level, stage):
+        import json
+        return run_js(M, f"const S = defaults(); {extra}; console.log(JSON.stringify(ledsShown(S, {json.dumps(level)}, {stage})));")
+    assert shown("", "normal", 4) is True
+    assert shown("", "normal", 3) is False
+    assert shown("S.indicators=false", "rich", 4) is False
+    assert shown("S.lighting='off'", "rich", 4) is False
+    assert shown("", "hidden", 4) is False

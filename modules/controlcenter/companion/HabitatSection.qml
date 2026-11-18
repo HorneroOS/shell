@@ -144,9 +144,9 @@ ChannelPanel {
         PrefPick {
             label: qsTr("Click on the nest")
             current: root.h.clickAction
-            defaultValue: "radio"
-            options: [{ "id": "radio", "label": qsTr("Javi Radio") }, { "id": "workbench", "label": qsTr("Workbench") }, { "id": "settings", "label": qsTr("Settings") }, { "id": "none", "label": qsTr("Nothing") }]
-            help: qsTr("With Nothing the nest never takes a click.")
+            defaultValue: "none"
+            options: [{ "id": "none", "label": qsTr("Nothing") }, { "id": "radio", "label": qsTr("Javi Radio") }, { "id": "workbench", "label": qsTr("Workbench") }, { "id": "settings", "label": qsTr("Settings") }]
+            help: qsTr("Nothing (the default) keeps the nest click-through. Any other choice makes only the nest art clickable.")
             onPicked: id => root.set("clickAction", id)
         }
 
@@ -176,7 +176,11 @@ ChannelPanel {
             Layout.fillWidth: true
             spacing: Appearance.spacing.small
 
+            // Developer aid for checking each construction stage; hidden
+            // unless the shell runs with HORNERO_COMPANION_DEV=1 (building
+            // is otherwise earned by real activity, never bought).
             TextButton {
+                visible: Quickshell.env("HORNERO_COMPANION_DEV") === "1"
                 text: qsTr("Build the next stage now")
                 type: TextButton.Tonal
                 enabled: CompanionStore.nestEnabled && CompanionStore.nestStage < 4

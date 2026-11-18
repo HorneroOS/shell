@@ -10,9 +10,11 @@ import QtQuick
 
 // The Nest as ambient desktop chrome: a small Bottom-layer surface on the
 // user's chosen corner and monitor, separate from Javi's window. It is not
-// a window the user manages: no keyboard focus, no exclusive zone, no
-// taskbar entry, and an empty input region unless a click action is set
-// (then only the nest art itself takes clicks).
+// a window the user manages: no keyboard focus, no exclusive zone of its
+// own (it reserves nothing, but it respects the bars' zones, so a bar on
+// its corner never covers it), no taskbar entry, and an empty input region
+// unless a click action is set (then only the nest art itself takes
+// clicks).
 //
 // All decisions are made by habitat.js (pure, tested under node); this file
 // binds them to live shell state:
@@ -21,7 +23,10 @@ import QtQuick
 // - state: resting / working / building / sleeping / summoned / hidden,
 //   derived from the companion store and the assistant bridge only.
 // - lights: lit only by real signals (assistant link, a run in flight, an
-//   approval waiting, the active mode). They never show content.
+//   approval waiting, the active mode). They never show content. The link
+//   light is off until the first status probe and while the assistant is
+//   switched off; a slow (60 s) probe keeps it current, only while the
+//   lights are drawn.
 // Hidden (or Gaming, or no nest built yet) means no surface and no timers:
 // the Variants model is empty, so nothing exists to cost anything.
 //
@@ -33,10 +38,14 @@ Scope {
     // The assistant bridge owned by CompanionHost.
     required property var bridge
     // True while Javi Radio has a question in flight (lights the radio LED).
+    // Bound by Javi Radio (shell#639) through CompanionHost.habitat.
     property bool radioBusy: false
 
     // The click action the user chose ("radio", "workbench", "settings").
     signal activated(string action)
+
+    // The one monitor the nest lives on (habitat.js resolveScreen).
+    readonly property string screenName: Habitat.resolveScreen(root.settings.monitor, CompanionStore.screenName, Quickshell.screens.map(s => s.name))
 
     readonly property var settings: CompanionStore.habitatSettings
     property int minute: new Date().getHours() * 60 + new Date().getMinutes()
@@ -58,14 +67,19 @@ Scope {
         "visible": CompanionStore.visible,
         "stage": CompanionStore.nestStage
     })
+    readonly property string link: Habitat.linkState({
+        "ok": root.bridge.assistantEnabled,
+        "message": root.bridge.statusMessage
+    })
+    readonly property bool ledsShown: root.wanted && Habitat.ledsShown(root.settings, root.level, CompanionStore.nestStage)
     readonly property var lights: Habitat.lights({
         "settings": root.settings,
         "mode": Experience.mode,
         "level": root.level,
-        "connected": root.bridge.assistantEnabled && root.bridge.gatewayReachable,
+        "connected": root.link === "ok",
         "running": root.bridge.busy,
         "awaitingApproval": root.awaiting,
-        "failed": root.bridge.assistantEnabled && !root.bridge.gatewayReachable,
+        "failed": root.link === "failed",
         "radioBusy": root.radioBusy,
         "reducedMotion": CompanionStore.reducedMotion,
         "sleeping": root.presentation === "sleeping"
@@ -73,19 +87,28 @@ Scope {
     readonly property bool anyBlink: Habitat.LIGHT_IDS.some(id => root.lights[id].blink)
     property bool blinkOn: true
 
-    // Slow clock for the quiet-hours window; only while a surface exists.
+    // Slow clock for the quiet-hours window and the link light; only while
+    // a surface exists. Fires on start so a nest that appears after a long
+    // hidden spell never shows a stale quiet-hours level or link state.
     Timer {
         interval: 60000
         running: root.wanted
         repeat: true
-        onTriggered: root.minute = new Date().getHours() * 60 + new Date().getMinutes()
+        triggeredOnStart: true
+        onTriggered: {
+            root.minute = new Date().getHours() * 60 + new Date().getMinutes();
+            // One cheap `horneroctl assistant status` probe (no-op while a
+            // probe is already running), only while the lights are drawn.
+            if (root.ledsShown)
+                root.bridge.refreshStatus();
+        }
     }
 
     // The only animation: a pending approval pulses (at most 1.4 Hz), and
-    // only while one is pending, motion is allowed and the nest is lit.
+    // only while one is pending, motion is allowed and the LEDs are drawn.
     Timer {
         interval: 700
-        running: root.wanted && root.anyBlink
+        running: root.ledsShown && root.anyBlink
         repeat: true
         onTriggered: root.blinkOn = !root.blinkOn
         onRunningChanged: {
@@ -102,30 +125,39 @@ Scope {
 
             required property ShellScreen modelData
 
-            readonly property string wantedScreen: root.settings.monitor
-            readonly property string targetScreen: {
-                const names = Quickshell.screens.map(s => s.name);
-                if (win.wantedScreen !== "" && names.indexOf(win.wantedScreen) >= 0)
-                    return win.wantedScreen;
-                if (CompanionStore.screenName !== "" && names.indexOf(CompanionStore.screenName) >= 0)
-                    return CompanionStore.screenName;
-                return Compositor.focusedOutputName || names[0];
-            }
-            readonly property var place: Habitat.layout(root.settings, win.modelData.width, win.modelData.height)
+            // The bars' reserved edges on this screen (the same values the
+            // drawers publish as exclusive zones).
+            readonly property var barSet: Visibilities.bars.get(win.modelData) ?? null
+            readonly property var insets: ({
+                    "left": win.barSet?.reservedLeft ?? 0,
+                    "right": win.barSet?.reservedRight ?? 0,
+                    "top": win.barSet?.reservedTop ?? 0,
+                    "bottom": win.barSet?.reservedBottom ?? 0
+                })
+            readonly property var place: Habitat.layout(root.settings, win.modelData.width, win.modelData.height, win.insets)
             readonly property bool clickable: root.settings.clickAction !== "none"
 
             screen: win.modelData
-            visible: win.modelData.name === win.targetScreen
+            visible: win.modelData.name === root.screenName
             color: "transparent"
             WlrLayershell.namespace: "hornero-nest"
             WlrLayershell.layer: WlrLayer.Bottom
-            WlrLayershell.exclusionMode: ExclusionMode.Ignore
+            // Normal with a zero zone: reserve nothing, but stay out of the
+            // bars' zones (a right or bottom bar never covers the nest).
+            WlrLayershell.exclusionMode: ExclusionMode.Normal
+            exclusiveZone: 0
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
-            anchors.top: true
-            anchors.left: true
-            margins.top: win.place.y
-            margins.left: win.place.x
+            // Anchored on the chosen corner; the compositor measures the
+            // margins from the usable area's edges.
+            anchors.left: win.place.left
+            anchors.right: !win.place.left
+            anchors.top: win.place.top
+            anchors.bottom: !win.place.top
+            margins.left: win.place.marginX
+            margins.right: win.place.marginX
+            margins.top: win.place.marginY
+            margins.bottom: win.place.marginY
             implicitWidth: win.place.size
             implicitHeight: win.place.size
 
@@ -144,7 +176,7 @@ Scope {
                 opacity: root.presentation === "sleeping" ? 0.8 : 1.0
 
                 Accessible.role: win.clickable ? Accessible.Button : Accessible.Graphic
-                Accessible.name: qsTr("Javi's nest, %1").arg(JaviVoice.line("nest." + root.presentation))
+                Accessible.name: JaviVoice.line("nest.accessible", [JaviVoice.line("nest." + root.presentation)])
 
                 Image {
                     anchors.fill: parent

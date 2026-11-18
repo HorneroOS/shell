@@ -163,13 +163,15 @@ Scope {
                     return "error: could not create Settings window";
                 return "opened";
             }
-            if (!PaneRegistry.getById(id)) {
+            const target = PaneRegistry.resolveTarget(id);
+            if (!target) {
                 console.warn(`[IPC] Unknown control-center pane "${id}"`);
                 return `error: unknown control-center pane ${id}`;
             }
-            if (!WindowFactory.create(null, { pane: id }))
+            if (!WindowFactory.create(null, { pane: target.pane, section: target.section }))
                 return "error: could not create Settings window";
-            return `opened: ${id}`;
+            // Search sections open their host pane scrolled to the section.
+            return target.section === "" ? `opened: ${target.pane}` : `opened: ${target.pane}#${target.section}`;
         }
 
         function close(): void {

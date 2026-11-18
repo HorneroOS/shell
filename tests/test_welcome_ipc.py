@@ -45,7 +45,7 @@ def test_welcome_controller_shape():
 def test_controlcenter_open_accepts_pane():
     block = _handler_block(SHORTCUTS.read_text(), "controlCenter")
     assert "function open(pane" in block
-    assert "PaneRegistry.getById" in block
+    assert "PaneRegistry.resolveTarget" in block
     assert "WindowFactory.create" in block
     # Invalid pane = default window + warning, never a crash.
     assert "console.warn" in block

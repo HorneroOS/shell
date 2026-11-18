@@ -66,7 +66,7 @@ Singleton {
             const existing = windows[0];
             const pane = props?.pane?.toString() ?? "";
             if (pane !== "" && PaneRegistry.getById(pane))
-                existing.active = pane;
+                existing.openTarget(pane, props?.section?.toString() ?? "");
             root.focusSettingsWindow(existing);
             root.syncCompanion();
             return true;
@@ -170,12 +170,22 @@ Singleton {
             // Deep-link target validated by the caller against
             // PaneRegistry; applied once the content exists.
             property string pane: ""
+            // Optional section of that pane to reveal (search targets).
+            property string section: ""
 
             color: Signal.tPalette.base
 
+            function openTarget(pane: string, section: string): void {
+                cc.session.navigateTo(pane, section);
+            }
+
             Component.onCompleted: {
-                if (win.pane !== "" && PaneRegistry.getById(win.pane))
-                    cc.active = win.pane;
+                if (win.pane !== "" && PaneRegistry.getById(win.pane)) {
+                    if (win.section !== "")
+                        win.openTarget(win.pane, win.section);
+                    else
+                        cc.active = win.pane;
+                }
             }
 
             onVisibleChanged: {

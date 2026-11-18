@@ -106,21 +106,31 @@ Scope {
         }
     }
 
-    // Radio hands a question that needs more than a quick answer (for
-    // example an approval) to the one conversation surface. The user asked
-    // for this by pressing "Open the Workbench". The pending payload (run
-    // id + what is pending) goes to the bridge so the chat shows the
-    // approval or clarification card; notePayload only records it, and the
-    // user decides there. Nothing is answered or approved on the way.
+    // Radio (and the launcher's `>ai` row) hand a question that needs more
+    // than a quick answer (an approval, a clarification, a blocked tool) to
+    // the Workbench. The user asked for this by pressing "Open the
+    // Workbench". The quick run was read-only (`--mode ask`): horneroctl
+    // already denied its approval and the quick ask stopped it, so it can
+    // never be approved (horneroctl refuses to approve a non-agent run).
+    // notePayload records the request for display in the Workbench and
+    // stages the question; the user then chooses to re-run it as an Agent
+    // run, whose own approval card is where the decision is made. Nothing
+    // is answered, approved or sent on the way.
     Connections {
         target: JaviRadio
 
         function onHandoffRequested(payload): void {
-            if (payload)
-                assistantBridge.notePayload(payload);
-            CompanionStore.summon();
-            CompanionStore.forceVisible = true;
-            assistantBridge.chatOpen = true;
+            assistantBridge.notePayload(payload);
+            root.openWorkbench("");
+        }
+    }
+
+    Connections {
+        target: InlineAsk
+
+        function onHandoffRequested(payload): void {
+            assistantBridge.notePayload(payload);
+            root.openWorkbench("");
         }
     }
 
@@ -177,10 +187,14 @@ Scope {
             }
             // "radio" belongs to Javi Radio when it is in the tree (it
             // declares radioHandlesNest on this host and connects to
-            // habitat.activated); without it, and for "workbench", the
-            // click opens the one conversation surface that exists.
+            // habitat.activated); "workbench" opens the Workbench, and
+            // anything else opens the conversation panel.
             if (action === "radio" && root.radioHandlesNest === true)
                 return;
+            if (action === "workbench") {
+                root.openWorkbench("");
+                return;
+            }
             CompanionStore.summon();
             CompanionStore.forceVisible = true;
             assistantBridge.chatOpen = true;
@@ -622,6 +636,16 @@ Scope {
                     if (assistantBridge.chatOpen)
                         focusTimer.restart();
                 }
+
+                // Level C expands the same panel: the layer surface
+                // takes its size at map time, so remap on change.
+                function onWorkbenchOpenChanged(): void {
+                    if (!assistantBridge.chatOpen)
+                        return;
+                    win.surfaceOn = false;
+                    remapTimer.restart();
+                    focusTimer.restart();
+                }
             }
 
             Timer {
@@ -1032,6 +1056,15 @@ Scope {
         }
     }
 
+    function openWorkbench(text: string): void {
+        CompanionStore.summon();
+        CompanionStore.forceVisible = true;
+        assistantBridge.chatOpen = true;
+        assistantBridge.workbenchOpen = true;
+        if (text !== "")
+            assistantBridge.draft = text;
+    }
+
     IpcHandler {
         target: "companion"
 
@@ -1086,11 +1119,26 @@ Scope {
             return JSON.stringify(CompanionStore.status());
         }
 
+        // External callers can only start READ-ONLY runs: the mode is
+        // fixed to "ask" here whatever the panel's mode is. Agent runs
+        // (tools, approvals) are started only from the panel itself.
         function ask(text: string): void {
             CompanionStore.summon();
             CompanionStore.forceVisible = true;
             assistantBridge.chatOpen = true;
-            assistantBridge.ask((text ?? "").toString());
+            assistantBridge.askWith((text ?? "").toString(), "ask");
+        }
+
+        // Level C: the conversation panel expanded into the Workbench
+        // (same engine). `workbenchDraft` only stages text in the input;
+        // nothing is sent until the user presses Send (in the panel's
+        // current mode, which is shown).
+        function workbench(): void {
+            root.openWorkbench("");
+        }
+
+        function workbenchDraft(text: string): void {
+            root.openWorkbench((text ?? "").toString().trim());
         }
 
         function chat(): void {
@@ -1114,14 +1162,6 @@ Scope {
 
         function askStop(): void {
             assistantBridge.askStop();
-        }
-
-        function approve(runId: string, decision: string): void {
-            assistantBridge.approve((runId ?? "").toString(), (decision ?? "").toString());
-        }
-
-        function clarify(runId: string, answer: string): void {
-            assistantBridge.clarify((runId ?? "").toString(), (answer ?? "").toString());
         }
 
         function events(runId: string): void {

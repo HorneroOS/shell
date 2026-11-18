@@ -119,8 +119,12 @@ def test_inline_ask_uses_only_existing_horneroctl_stream_contract():
     assert '"assistant", "approve"' not in INLINE_QML
     assert '"assistant", "clarify"' not in INLINE_QML
     assert '"--attach"' not in INLINE_QML
-    # Documented gap: horneroctl has no --mode flag to invent here.
-    assert '"--mode"' not in INLINE_QML
+    # Read-only by contract: the quick ask always runs in Ask mode
+    # (fails closed on a horneroctl too old to know the flag).
+    assert '"--mode", "ask"' in INLINE_QML
+    # Quick never escalates: a pending request ends the run and
+    # hands off explicitly to the Workbench.
+    assert "needsWorkbench" in INLINE_QML and "openInWorkbench" in INLINE_QML
 
 
 def test_inline_ask_cancel_and_new_query_semantics():
@@ -131,7 +135,7 @@ def test_inline_ask_cancel_and_new_query_semantics():
     assert "if (!root.busy)" in INLINE_QML
     # A new ask supersedes an in-flight one instead of being dropped.
     ask_body = INLINE_QML.split("function ask(")[1].split("function stop()")[0]
-    assert "proc.running = false" in ask_body
+    assert 'root.cancel("")' in ask_body  # cancel("") stops any owner's process and the gateway run
     assert "root.busy = true" in ask_body
 
 
@@ -187,3 +191,72 @@ def test_ai_row_shows_thinking_and_streamed_text():
     assert "InlineAsk.errorText" in AI_ITEM
     assert "InlineAsk.ask(root.question)" in AI_ITEM
     assert "InlineAsk.stop()" in AI_ITEM
+
+
+# --- Quick surface never escalates (typed frames) ---------------------
+
+def test_run_frame_is_tracked_and_never_mistaken_for_the_final_result():
+    out = _apply(['{"type":"run","text":"run_q"}', '{"type":"delta","text":"x"}'])
+    assert out["runId"] == "run_q" and out["finalPayload"] is None
+
+
+def test_unknown_typed_frames_are_not_a_final_payload():
+    out = _apply(['{"type":"future.thing","text":"x"}'])
+    assert out["finalPayload"] is None
+
+
+def test_pending_frames_mark_the_run_and_need_the_workbench():
+    out = _apply(['{"type":"run","text":"r"}', '{"type":"approval","text":"rm x"}'])
+    assert out["pending"] == "approval"
+    assert _run_js("console.log(JSON.stringify([needsWorkbench('approval',null),needsWorkbench('clarify',null),needsWorkbench('',{data:{pending:'denied-by-mode'}}),needsWorkbench('',{ok:true,data:{}})]))") == [True, True, True, False]
+
+
+# --- Hand-off to the Workbench (Radio and launcher) --------------------
+
+def _handoff(question, pending, detail, run_id, payload, source):
+    args = ",".join(json.dumps(v) for v in (question, pending, detail, run_id, payload, source))
+    return _run_js(f"console.log(JSON.stringify(handoffInfo({args})))")
+
+
+def test_pending_frame_keeps_the_exact_request_text_for_the_handoff():
+    out = _apply(['{"type":"run","text":"r"}', '{"type":"clarify","text":"Which folder?"}', '{"type":"approval","text":"later"}'])
+    assert out["pending"] == "clarify" and out["pendingDetail"] == "Which folder?"
+
+
+def test_mode_denied_approval_hands_off_as_a_read_only_approval_record():
+    # The exact payload preview46 returns for an Ask-mode approval.
+    payload = {"ok": False, "message": "Approval denied by ask mode on run r1: rm -rf ~/x. Ask/Chat modes never escalate; switch to an Agent session to act.",
+               "data": {"runId": "r1", "mode": "ask", "pending": "denied-by-mode", "detail": "rm -rf ~/x"}}
+    rec = _handoff("borra x", "", "", "r1", payload, "radio")
+    assert rec == {"source": "radio", "question": "borra x", "kind": "approval", "detail": "rm -rf ~/x",
+                   "runId": "r1", "mode": "ask", "denied": True}
+
+
+def test_mode_blocked_tool_is_not_called_an_approval():
+    payload = {"ok": False, "message": "Tool execution denied by ask mode on run r2: terminal. ask mode never executes tools; switch to an Agent session to act.",
+               "data": {"runId": "r2", "mode": "ask", "pending": "denied-by-mode", "detail": "terminal"}}
+    rec = _handoff("q", "", "", "r2", payload, "launcher")
+    assert rec["kind"] == "blocked" and rec["detail"] == "terminal" and rec["mode"] == "ask"
+
+
+def test_handoff_mode_is_ask_whatever_the_payload_claims_and_ids_are_checked():
+    payload = {"ok": False, "data": {"runId": "../etc", "mode": "agent", "pending": "approval", "detail": "x"}}
+    rec = _handoff("q", "", "", "", payload, "radio")
+    assert rec["mode"] == "ask" and rec["runId"] == ""
+
+
+def test_deny_failed_is_a_failure_not_a_handoff():
+    payload = {"ok": False, "message": "Could not deny", "data": {"runId": "r", "pending": "deny-failed"}}
+    assert _run_js(f"console.log(JSON.stringify(needsWorkbench('', {json.dumps(payload)})))") is False
+    out = _run_js(f"console.log(JSON.stringify(finishOutcome('', {json.dumps(payload)})))")
+    assert out["failed"] is True
+
+
+def test_handoff_is_emitted_only_by_the_user_and_only_for_the_launchers_own_run():
+    assert "signal handoffRequested(var payload)" in INLINE_QML
+    body = INLINE_QML.split("function openInWorkbench(")[1].split("function consume(")[0]
+    assert 'root.owner === "launcher"' in body and "root.handoffRequested(info)" in body
+    # No IPC round-trip any more: the record goes straight to the bridge.
+    assert "workbenchDraft" not in INLINE_QML
+    ai = (ROOT / "modules/launcher/items/AiItem.qml").read_text()
+    assert 'InlineAsk.needsWorkbench && InlineAsk.owner === "launcher"' in ai

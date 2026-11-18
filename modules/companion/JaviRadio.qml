@@ -17,9 +17,10 @@ import QtQuick
 //   entry point, IPC call or extension can submit one;
 // - Radio never approves, clarifies, continues a run, attaches or reads
 //   the screen or clipboard. The gateway may pause the run it starts for
-//   an approval; Radio then stops at "handoff", which only OFFERS the
-//   Workbench/chat. The user opens it, and the chat's approval card (not
-//   Radio) is where the decision is made;
+//   an approval (in `--mode ask` horneroctl denies it, and InlineAsk stops
+//   the run at any pending request); Radio then stops at "handoff", which
+//   only OFFERS the Workbench. The user opens it, and the Workbench (not
+//   Radio) is where the request is shown and an Agent run is decided;
 // - IPC opens are untrusted (refused in Focus, Gaming and fullscreen, and
 //   they never take the keyboard); only in-shell gestures do.
 // The companion mirrors the real state (listening, thinking, success,
@@ -179,9 +180,12 @@ Singleton {
     }
 
     // The user pressed "Open the Workbench": the one way out of Radio for
-    // anything that needs approval or more than a quick answer. The pending
-    // payload goes with it so the chat shows the approval card; nothing is
-    // decided on the way.
+    // anything that needs approval or more than a quick answer. The
+    // hand-off record (question + the exact request; InlineAsk.handoffInfo)
+    // goes with it so the Workbench shows what needed approval and offers
+    // to re-run the question as an Agent run, whose approval card is where
+    // the decision is made. Radio's own run was read-only and is already
+    // denied or stopped; nothing is decided on the way.
     function openWorkbench(): void {
         const payload = root.outcome === "handoff" ? root.handoffPayload : null;
         root.handoffRequested(payload);
@@ -214,11 +218,17 @@ Singleton {
             root.mirror("idle");
             return;
         }
-        const c = InlineAsk.failed ? {
+        // The quick ask stops a read-only run at its first pending request
+        // (or horneroctl denies it by mode): that is a hand-off, checked
+        // before the failure flag because a mode denial is also ok:false.
+        const c = InlineAsk.needsWorkbench ? {
+            "kind": "handoff",
+            "text": ""
+        } : InlineAsk.failed ? {
             "kind": "failed",
             "text": ""
         } : Radio.classify(InlineAsk.finalPayload, InlineAsk.text);
-        root.handoffPayload = c.kind === "handoff" ? InlineAsk.finalPayload : null;
+        root.handoffPayload = c.kind === "handoff" ? InlineAsk.handoffInfo() : null;
         root.outcome = c.kind;
         root.answer = c.text;
         if (!Radio.keepKeyboardAfter(Compositor.backendId))

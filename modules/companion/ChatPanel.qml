@@ -25,8 +25,21 @@ Item {
 
     property int dotPhase: 0
 
+    readonly property int cardWidth: 392
+    property string pendingLink: ""
+    // The conversation yields height to a pending decision so the
+    // card is always fully on screen.
+    readonly property int listHeight: AssistantRun.pendingDecision ? 96 : Math.min(360, Math.max(140, Screen.height - 520))
+    readonly property string lang: root.bridge.lang
+
+    function t(key: string): string {
+        return AssistantCopy.t(key, root.lang);
+    }
+
     visible: root.bridge.chatOpen
-    implicitWidth: 392
+    // Level C expands the same panel to the right; the layer surface
+    // is remapped by the host when `workbenchOpen` changes.
+    implicitWidth: root.cardWidth + (root.bridge.workbenchOpen ? bench.implicitWidth + Appearance.spacing.normal : 0)
     implicitHeight: card.implicitHeight
 
     Behavior on opacity {
@@ -45,6 +58,29 @@ Item {
         onTriggered: root.dotPhase = (root.dotPhase + 1) % 4
     }
 
+    function statusColor(): color {
+        const st = AssistantRun.status;
+        if (st === "connected")
+            return Signal.palette.signal;
+        if (st === "running")
+            return Signal.palette.phosphor;
+        return st === "unknown" ? Signal.palette.inkMuted : Signal.palette.alert;
+    }
+
+    // A hand-off from the quick ask stages text here; it is never sent
+    // until the user presses Send.
+    Connections {
+        target: root.bridge
+
+        function onDraftChanged(): void {
+            if (root.bridge.draft !== "") {
+                input.text = root.bridge.draft;
+                root.bridge.draft = "";
+                input.forceActiveFocus();
+            }
+        }
+    }
+
     function focusInput(): void {
         input.focusInput();
     }
@@ -60,35 +96,13 @@ Item {
     StyledRect {
         id: card
 
-        width: root.implicitWidth
+        width: root.cardWidth
         implicitHeight: layout.implicitHeight + Appearance.padding.large * 2
         radius: Appearance.rounding.small
         color: Signal.palette.panel
         // Hornero 199X frame: a phosphor accent edge around the card.
         border.width: 1
         border.color: Qt.alpha(Signal.palette.phosphor, 0.55)
-
-        // Static CRT scanlines over the whole card (texture only —
-        // no animation, so reduced-motion is honored by construction).
-        Item {
-            anchors.fill: parent
-            clip: true
-
-            Column {
-                anchors.fill: parent
-                spacing: 3
-
-                Repeater {
-                    model: 160
-
-                    Rectangle {
-                        width: card.width
-                        height: 1
-                        color: Qt.alpha(Signal.palette.ink, 0.035)
-                    }
-                }
-            }
-        }
 
         ColumnLayout {
             id: layout
@@ -153,11 +167,28 @@ Item {
                         }
                     }
 
-                    StyledText {
-                        text: root.bridge.busy ? qsTr("pensando") + ".".repeat(root.dotPhase) : (root.bridge.gatewayReachable ? qsTr("Hermes conectado") : qsTr("Hermes no disponible"))
-                        font.family: Appearance.font.family.mono
-                        font.pointSize: Appearance.font.size.smaller
-                        color: root.bridge.gatewayReachable ? Signal.palette.signal : Signal.palette.alert
+                    RowLayout {
+                        spacing: Appearance.spacing.small
+
+                        // Phosphor status light: same colour as the status text.
+                        Rectangle {
+                            implicitWidth: 8
+                            implicitHeight: 8
+                            radius: 4
+                            color: root.statusColor()
+                            opacity: root.bridge.busy && !CompanionStore.reducedMotion ? (root.dotPhase % 2 === 0 ? 1 : 0.35) : 1
+                        }
+
+                        StyledText {
+                            // One honest status from the canonical state
+                            // (connected / disconnected / running / blocked /
+                            // awaiting approval / failed / degraded).
+                            text: root.t("status." + (AssistantRun.probing && AssistantRun.status === "disconnected" ? "reconnecting" : AssistantRun.status))
+                            font.family: Appearance.font.family.mono
+                            font.pointSize: Appearance.font.size.smaller
+                            color: root.statusColor()
+                            elide: Text.ElideRight
+                        }
                     }
                 }
 
@@ -165,13 +196,12 @@ Item {
                     Layout.fillWidth: true
                 }
 
-                // Phosphor status light (retro 199X accent).
-                Rectangle {
-                    implicitWidth: 9
-                    implicitHeight: 9
-                    radius: 5
-                    color: root.bridge.busy ? Signal.palette.phosphor : root.bridge.gatewayReachable ? Signal.palette.signal : Signal.palette.alert
-                    opacity: root.bridge.busy && !CompanionStore.reducedMotion ? (root.dotPhase % 2 === 0 ? 1 : 0.35) : 1
+                IconButton {
+                    icon: root.bridge.workbenchOpen ? "arrows-minimize" : "layout-sidebar-right"
+                    accessibleName: root.t(root.bridge.workbenchOpen ? "workbench.collapse" : "workbench.expand")
+                    type: IconButton.Text
+                    checked: root.bridge.workbenchOpen
+                    onClicked: root.bridge.workbenchOpen = !root.bridge.workbenchOpen
                 }
 
                 IconButton {
@@ -196,6 +226,31 @@ Item {
                 implicitHeight: 2
                 color: Qt.alpha(Signal.palette.signal, CompanionStore.reducedMotion ? 0.25 : 0.45)
                 radius: 1
+            }
+
+            // -- Connection banner: only when something needs attention
+            RowLayout {
+                Layout.fillWidth: true
+                visible: AssistantRun.status === "disconnected" || AssistantRun.status === "degraded" || AssistantRun.status === "disabled" || AssistantRun.status === "degraded-isolation"
+                spacing: Appearance.spacing.small
+
+                StyledText {
+                    Layout.fillWidth: true
+                    Layout.minimumWidth: 0
+                    text: AssistantRun.status === "disabled" ? root.t("error.disabled") : AssistantRun.status === "degraded-isolation" ? qsTr("The gateway is not sandboxed. Approvals matter more.") : root.bridge.statusMessage
+                    textFormat: Text.PlainText
+                    font.family: Appearance.font.family.mono
+                    font.pointSize: Appearance.font.size.smaller
+                    color: Signal.palette.alert
+                    wrapMode: Text.Wrap
+                }
+
+                TextButton {
+                    visible: AssistantRun.status === "disconnected"
+                    text: root.t("action.reconnect")
+                    type: TextButton.Tonal
+                    onClicked: root.bridge.refreshStatus()
+                }
             }
 
             // -- Session bar (hornero#189): named chats + model -----
@@ -275,7 +330,7 @@ Item {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: CompanionStore.chatMode === "agent" ? qsTr("Approvals ask you first") : qsTr("Never asks for approvals")
+                    text: CompanionStore.chatMode === "agent" ? qsTr("Approvals ask you first") : qsTr("Approval requests are denied automatically")
                     font.family: Appearance.font.family.mono
                     font.pointSize: Appearance.font.size.smaller
                     color: Signal.palette.ruleStrong
@@ -288,9 +343,9 @@ Item {
                 id: view
 
                 Layout.fillWidth: true
-                Layout.preferredHeight: 360
-                Layout.minimumHeight: 360
-                Layout.maximumHeight: 360
+                Layout.preferredHeight: root.listHeight
+                Layout.minimumHeight: root.listHeight
+                Layout.maximumHeight: root.listHeight
                 clip: true
                 spacing: Appearance.spacing.normal
                 model: root.bridge.history
@@ -345,13 +400,18 @@ Item {
                             anchors.right: parent.right
                             anchors.top: parent.top
                             anchors.margins: Appearance.padding.large
-                            text: modelData.text
-                            textFormat: modelData.role === "assistant" ? Text.MarkdownText : Text.PlainText
+                            text: modelData.role === "assistant" ? AssistantRun.safeMarkdown(modelData.text) : modelData.text
+                            textFormat: modelData.role === "assistant" && AssistantRun.markdownOk(modelData.text) ? Text.MarkdownText : Text.PlainText
                             font.pointSize: Appearance.font.size.small
                             color: bubble.mine ? Signal.palette.onSignalWell : Signal.palette.ink
                             linkColor: bubble.mine ? Signal.palette.onSignalWell : Signal.palette.signal
                             wrapMode: Text.Wrap
-                            onLinkActivated: link => Qt.openUrlExternally(link)
+                            onLinkActivated: link => {
+                                // Show the real target first; opening is a
+                                // second, explicit click.
+                                if (AssistantRun.isSafeLink(link))
+                                    root.pendingLink = link;
+                            }
                         }
 
                         ColumnLayout {
@@ -451,8 +511,8 @@ Item {
                             anchors.right: parent.right
                             anchors.verticalCenter: parent.verticalCenter
                             anchors.margins: Appearance.padding.large
-                            text: root.bridge.streamText !== "" ? root.bridge.streamText : qsTr("Javi está pensando") + ".".repeat(root.dotPhase)
-                            textFormat: Text.MarkdownText
+                            text: root.bridge.streamText !== "" ? AssistantRun.safeMarkdown(root.bridge.streamText) : root.t("thinking") + ".".repeat(root.dotPhase)
+                            textFormat: AssistantRun.markdownOk(root.bridge.streamText) ? Text.MarkdownText : Text.PlainText
                             font.pointSize: Appearance.font.size.small
                             color: Signal.palette.ink
                             linkColor: Signal.palette.signal
@@ -467,7 +527,7 @@ Item {
                         spacing: Appearance.spacing.small
 
                         Repeater {
-                            model: [qsTr("¿Qué updates hay pendientes?"), qsTr("¿Por qué está lenta la máquina?"), qsTr("Mostrame los themes GTK"), qsTr("¿Qué podés hacer?")]
+                            model: ["chip.updates", "chip.slow", "chip.themes", "chip.capabilities"].map(k => root.t(k))
 
                             delegate: TextButton {
                                 required property var modelData
@@ -481,86 +541,45 @@ Item {
                 }
             }
 
-            // -- Pending approval card ---------------------------------
-            ColumnLayout {
-                Layout.fillWidth: true
-                visible: root.bridge.pendingApproval !== null
-                spacing: Appearance.spacing.small
-
-                StyledText {
-                    Layout.fillWidth: true
-                    text: qsTr("Javi necesita tu OK:")
-                    font.family: Appearance.font.family.mono
-                    font.pointSize: Appearance.font.size.smaller
-                    color: Signal.palette.alert
-                }
-
-                StyledText {
-                    Layout.fillWidth: true
-                    text: root.bridge.pendingApproval ? root.bridge.pendingApproval.detail : ""
-                    font.pointSize: Appearance.font.size.small
-                    color: Signal.palette.ink
-                    wrapMode: Text.Wrap
-                }
-
-                RowLayout {
-                    spacing: Appearance.spacing.small
-
-                    TextButton {
-                        text: qsTr("Approve")
-                        type: TextButton.Filled
-                        onClicked: root.bridge.approve(root.bridge.pendingApproval.runId, "approve")
-                    }
-
-                    TextButton {
-                        text: qsTr("Deny")
-                        type: TextButton.Tonal
-                        onClicked: root.bridge.approve(root.bridge.pendingApproval.runId, "deny")
-                    }
-                }
+            // -- Pending approval / clarification --------------------
+            ApprovalCard {
+                bridge: root.bridge
             }
 
-            // -- Pending clarification card ----------------------------
-            ColumnLayout {
+            ClarifyCard {
+                bridge: root.bridge
+            }
+
+            // -- Link target confirmation --------------------------------
+            RowLayout {
                 Layout.fillWidth: true
-                visible: root.bridge.pendingClarify !== null
+                visible: root.pendingLink !== ""
                 spacing: Appearance.spacing.small
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: root.bridge.pendingClarify ? root.bridge.pendingClarify.detail : ""
-                    font.pointSize: Appearance.font.size.small
+                    Layout.minimumWidth: 0
+                    text: root.pendingLink
+                    textFormat: Text.PlainText
+                    font.family: Appearance.font.family.mono
+                    font.pointSize: Appearance.font.size.smaller
                     color: Signal.palette.ink
-                    wrapMode: Text.Wrap
+                    wrapMode: Text.WrapAnywhere
                 }
 
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: Appearance.spacing.small
-
-                    StyledInputField {
-                        id: clarifyInput
-
-                        Layout.fillWidth: true
-                        horizontalAlignment: TextInput.AlignLeft
-                        onEditingFinished: {
-                            if (text.trim() !== "" && root.bridge.pendingClarify) {
-                                root.bridge.clarify(root.bridge.pendingClarify.runId, text);
-                                text = "";
-                            }
-                        }
+                TextButton {
+                    text: qsTr("Open")
+                    type: TextButton.Tonal
+                    onClicked: {
+                        Qt.openUrlExternally(root.pendingLink);
+                        root.pendingLink = "";
                     }
+                }
 
-                    TextButton {
-                        text: qsTr("Answer")
-                        type: TextButton.Filled
-                        onClicked: {
-                            if (root.bridge.pendingClarify) {
-                                root.bridge.clarify(root.bridge.pendingClarify.runId, clarifyInput.text);
-                                clarifyInput.text = "";
-                            }
-                        }
-                    }
+                TextButton {
+                    text: qsTr("Cancel")
+                    type: TextButton.Text
+                    onClicked: root.pendingLink = ""
                 }
             }
 
@@ -600,7 +619,7 @@ Item {
                     accessibleName: root.bridge.recording ? qsTr("Stop recording") : qsTr("Record voice message")
                     type: IconButton.Text
                     checked: root.bridge.recording
-                    onClicked: root.bridge.recording ? root.bridge.stopRecording(true) : root.bridge.startRecording()
+                    onClicked: root.bridge.recording ? root.bridge.stopRecording(true, false) : root.bridge.startRecording()
                 }
 
                 StyledInputField {
@@ -615,8 +634,8 @@ Item {
                 }
 
                 TextButton {
-                    visible: root.bridge.busy
-                    text: qsTr("Stop")
+                    visible: root.bridge.busy || AssistantRun.pendingDecision
+                    text: root.t("action.stop")
                     type: TextButton.Tonal
                     onClicked: root.bridge.askStop()
                 }
@@ -646,15 +665,51 @@ Item {
                     onClicked: root.bridge.copyLastAnswer()
                 }
 
+            }
+
+            // -- Microphone status: explicit, cancellable ---------------
+            RowLayout {
+                Layout.fillWidth: true
+                visible: root.bridge.recording
+                spacing: Appearance.spacing.small
+
+                Rectangle {
+                    implicitWidth: 9
+                    implicitHeight: 9
+                    radius: 5
+                    color: Signal.palette.alert
+                }
+
                 StyledText {
-                    visible: root.bridge.recording
-                    text: qsTr("● Grabando… tocá el mic para enviar")
+                    Layout.fillWidth: true
+                    text: root.t("mic.recording") + "  " + Math.floor(root.bridge.recordSeconds / 60) + ":" + ("0" + (root.bridge.recordSeconds % 60)).slice(-2) + " / 2:00"
                     font.family: Appearance.font.family.mono
                     font.pointSize: Appearance.font.size.smaller
                     color: Signal.palette.alert
                 }
+
+                TextButton {
+                    text: root.t("mic.cancel")
+                    type: TextButton.Tonal
+                    onClicked: root.bridge.stopRecording(false, false)
+                }
+
+                TextButton {
+                    text: root.t("mic.send")
+                    type: TextButton.Filled
+                    onClicked: root.bridge.stopRecording(true, false)
+                }
             }
         }
+    }
+
+    WorkbenchPane {
+        id: bench
+
+        visible: root.bridge.workbenchOpen
+        bridge: root.bridge
+        x: root.cardWidth + Appearance.spacing.normal
+        height: card.implicitHeight
     }
 
     // File picker: kdialog is the Hornero-standard picker backend on

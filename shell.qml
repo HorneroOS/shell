@@ -11,6 +11,7 @@ import "modules/plugins"
 import "modules/lock"
 import "modules/polkit"
 import "modules/welcome"
+import "modules/keybinds"
 import Quickshell
 
 ShellRoot {
@@ -31,6 +32,7 @@ ShellRoot {
     PolkitHost {}
 
     Shortcuts {}
+    KeybindsOverlay {}
     CompanionHost {
         lock: lock.lock
     }

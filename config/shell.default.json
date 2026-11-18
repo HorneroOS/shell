@@ -798,6 +798,15 @@
       "detailsWidth": 500
     }
   },
+  "keybinds": {
+    "overlay": {
+      "runOnEnter": true,
+      "closeAfterRun": true,
+      "showSubmaps": true,
+      "showMouse": true,
+      "compact": false
+    }
+  },
   "lock": {
     "recolourLogo": false,
     "hideNotifs": true,

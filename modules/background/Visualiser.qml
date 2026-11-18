@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import qs.components
 import qs.services
 import qs.config
+import qs.modules.instruments as Instruments
 import Hornero.Services
 import Quickshell
 import QtQuick
@@ -97,36 +98,26 @@ Item {
         Anim {}
     }
 
-    component Side: Repeater {
-        id: side
-
+    // One flat `phosphor` column per cava band (VU convention, Signal
+    // Bezel §6.2): square tops, no gradient, level read from the real audio
+    // spectrum, low frequencies toward the centre. One scene-graph item per
+    // side; it sleeps once the bands settle. The Experience glow budget does
+    // not apply here.
+    component Side: Instruments.Spectrum {
         required property Item content
         property bool isRight
 
-        model: Config.services.visualiserBars
+        x: isRight ? content.width * 0.6 : 0
+        y: content.height - height
+        width: content.width * 0.4
+        height: content.height * 0.4
 
-        // One flat `phosphor` column per cava band (VU convention, Signal
-        // Bezel §6.2): square tops, no gradient, level read from the real
-        // audio spectrum. The Experience glow budget does not apply here.
-        Rectangle {
-            id: bar
-
-            required property int modelData
-            property real value: Math.max(0, Math.min(1, Audio.cava.values[side.isRight ? modelData : side.count - modelData - 1]))
-
-            x: modelData * ((side.content.width * 0.4) / Config.services.visualiserBars) + (side.isRight ? side.content.width * 0.6 : 0)
-            implicitWidth: (side.content.width * 0.4) / Config.services.visualiserBars - Appearance.spacing.small * Config.background.visualiser.spacing
-
-            y: side.content.height - height
-            implicitHeight: bar.value * side.content.height * 0.4
-
-            color: Qt.alpha(Signal.palette.phosphor, 0.6)
-
-            Behavior on value {
-                Anim {
-                    duration: Appearance.anim.durations.short
-                }
-            }
-        }
+        values: Audio.cava.values
+        reversed: !isRight
+        segment: 0
+        bandGap: root.barSpacing
+        peakHold: false
+        hotThreshold: 2
+        onColor: Qt.alpha(Signal.palette.phosphor, 0.6)
     }
 }

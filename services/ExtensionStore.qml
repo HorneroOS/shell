@@ -35,8 +35,13 @@ Singleton {
 
     signal finished(string verb, string pluginId, bool ok)
 
+    // Language of the store's own lines (consent, guidance, progress) and
+    // of the catalogue's bilingual permission text: the shell UI language
+    // unless plugins.storeLanguage forces one.
+    readonly property bool spanish: Config.plugins.storeLanguage === "es" || (Config.plugins.storeLanguage === "auto" && Language.active.toLowerCase().startsWith("es"))
+
     function isSpanish(): bool {
-        return Qt.locale().name.toLowerCase().startsWith("es");
+        return root.spanish;
     }
 
     function entry(pluginId: string): var {

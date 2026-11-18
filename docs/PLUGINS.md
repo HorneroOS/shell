@@ -1394,7 +1394,7 @@ Preferences, next to Refresh catalogue (`plugins` in `shell.json`):
 | --- | --- | --- |
 | `storeRefreshOnOpen` | `true` | Fetch the catalogue when the pane opens. Off: only on Refresh catalogue, so opening the pane makes no network request. |
 | `storeShowCost` | `true` | Show the load-time chip and the cost lines. |
-| `storeLanguage` | `"auto"` | Language of the store's own lines: `auto` (system locale), `en` or `es`. |
+| `storeLanguage` | `"auto"` | Language of the store's own lines and the catalogue permission text: `auto` (the shell UI language, docs/I18N.md), `en` or `es`. |
 
 Removing keeps the extension's settings in `shell.json`, so a reinstall picks
 them up; it also deletes the kept rollback copy.

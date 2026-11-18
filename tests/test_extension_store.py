@@ -223,9 +223,12 @@ def test_store_preferences_are_persisted_validated_and_exposed():
         assert f"{key}: plugins.{key}" in SERIALIZER
         assert f'setStoreOption("{key}"' in PANE
     assert 'readonly property var allowedStoreLanguages: ["auto", "en", "es"]' in CONFIG
-    setter = CONFIG.split("function setStoreOption", 1)[1].split("function storeSpanish", 1)[0]
+    setter = CONFIG.split("function setStoreOption", 1)[1]
     assert "typeof value !== \"boolean\"" in setter and "allowedStoreLanguages.includes(value)" in setter
     assert "if (Config.plugins.storeRefreshOnOpen" in PANE
+    # "auto" follows the shell UI language (docs/I18N.md), not a separate locale probe.
+    assert 'Language.active.toLowerCase().startsWith("es")' in STORE
+    assert "readonly property bool es: ExtensionStore.spanish" in PANE
 
 
 def test_docs_describe_the_store():

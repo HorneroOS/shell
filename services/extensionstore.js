@@ -59,7 +59,7 @@ function progressText(verb, name, seconds, es) {
         "trust": es ? "calculando el hash del paquete" : "hashing the package"
     };
     var verbText = es
-        ? { "install": "Instalando", "update": "Actualizando", "rollback": "Volviendo atrás", "remove": "Quitando", "enable": "Activando", "disable": "Desactivando", "trust": "Confiando en" }
+        ? { "install": "Instalando", "update": "Actualizando", "rollback": "Revirtiendo", "remove": "Quitando", "enable": "Activando", "disable": "Desactivando", "trust": "Confiando en" }
         : { "install": "Installing", "update": "Updating", "rollback": "Rolling back", "remove": "Removing", "enable": "Enabling", "disable": "Disabling", "trust": "Trusting" };
     return (verbText[verb] || verb) + " " + name + "… " + (steps[verb] || "") + " · " + s + " s";
 }
@@ -299,15 +299,15 @@ function consentText(verb, entry, es) {
             : "Installing " + name + " copies hash-verified files and does not run them. It stays off until you enable it; once enabled it runs as your user, with no sandbox.";
     case "update":
         return es
-            ? "Actualizar reemplaza los archivos de " + name + " por la versión del catálogo y guarda la actual para volver atrás. Si estaba activada, sigue activada."
+            ? "Actualizar reemplaza los archivos de " + name + " por la versión del catálogo y guarda la actual para poder revertir. Si estaba activada, sigue activada."
             : "Updating replaces " + name + "'s files with the catalogue version and keeps the current one so you can roll back. If it was on, it stays on.";
     case "rollback":
         return es
-            ? "Volver atrás restaura la versión guardada de " + name + " y descarta la actual."
+            ? "Revertir restaura la versión guardada de " + name + " y descarta la actual."
             : "Rolling back restores the kept version of " + name + " and discards the current one.";
     case "remove":
         return es
-            ? "Quitar borra los archivos, el recibo y la copia para volver atrás de " + name + ". Su configuración queda guardada por si la reinstalás."
+            ? "Quitar borra los archivos, el recibo y la copia para revertir de " + name + ". Su configuración queda guardada por si la reinstalás."
             : "Removing deletes " + name + "'s files, receipt and rollback copy. Its settings are kept in case you reinstall it.";
     case "enable":
         return es

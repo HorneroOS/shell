@@ -42,7 +42,7 @@ Item {
     readonly property string catalogError: ExtensionStore.catalogueError
     readonly property string catalogRevision: ExtensionStore.catalogueRevision
     property string catalogSearch: ""
-    readonly property bool es: Config.plugins.storeSpanish()
+    readonly property bool es: ExtensionStore.spanish
     property string pluginSearch: ""
     property string pluginTrustFilter: "all"
     property string pluginPlacementFilter: "all"
@@ -1312,7 +1312,7 @@ Item {
                         delegate: FilterChip {
                             required property var modelData
 
-                            label: modelData === "auto" ? qsTr("System") : modelData === "es" ? "Español" : "English"
+                            label: modelData === "auto" ? qsTr("Shell language") : modelData === "es" ? "Español" : "English"
                             selected: Config.plugins.storeLanguage === modelData
                             onActivated: Config.plugins.setStoreOption("storeLanguage", modelData)
                         }

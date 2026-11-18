@@ -44,7 +44,8 @@ JsonObject {
     // fetch the official catalogue when the pane opens (off: only on
     // Refresh catalogue, so opening the pane makes no network request),
     // show the measured cost readouts, and the language of the
-    // store's own lines ("auto" follows the system locale).
+    // store's own lines and catalogue permission text ("auto" follows
+    // the shell UI language, Language.active; see ExtensionStore).
     property bool storeRefreshOnOpen: true
     property bool storeShowCost: true
     property string storeLanguage: "auto"
@@ -64,14 +65,6 @@ JsonObject {
         this[key] = value;
         saveRequested();
         return true;
-    }
-
-    function storeSpanish(): bool {
-        if (storeLanguage === "es")
-            return true;
-        if (storeLanguage === "en")
-            return false;
-        return Qt.locale().name.toLowerCase().startsWith("es");
     }
 
     function setSafeMode(enabled: bool): bool {

@@ -317,6 +317,10 @@ Singleton {
                 intensity: appearance.glow.intensity,
                 limit: appearance.glow.limit
             },
+            sliders: {
+                readout: appearance.sliders.readout,
+                readoutHold: appearance.sliders.readoutHold
+            },
             atmosphere: {
                 enabled: appearance.atmosphere.enabled,
                 lamp: appearance.atmosphere.lamp,

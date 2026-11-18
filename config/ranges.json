@@ -19,6 +19,12 @@
       "step": 1,
       "default": 3
     },
+    "appearance.sliders.readoutHold": {
+      "min": 300,
+      "max": 3000,
+      "step": 100,
+      "default": 900
+    },
     "bar.extensions.islandBudget": {
       "min": 15,
       "max": 60,

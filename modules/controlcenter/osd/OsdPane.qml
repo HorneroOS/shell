@@ -211,6 +211,63 @@ Item {
                         }
                     }
                 }
+
+                // Handle readout (Signal visual language §6.2): the value on
+                // the slider handle while adjusting. Shared by every
+                // segmented slider (OSD channels, the dashboard seek bar).
+                ChannelPanel {
+                    title: qsTr("Slider handle")
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
+                        spacing: Appearance.spacing.small
+
+                        SwitchRow {
+                            label: qsTr("Show the value on the handle")
+                            checked: Config.appearance.sliders.readout
+                            onToggled: checked => {
+                                Config.appearance.sliders.readout = checked;
+                                Config.save();
+                            }
+                        }
+
+                        SizeSlider {
+                            target: Config.appearance.sliders
+                            key: "readoutHold"
+                            label: qsTr("Keep the value after scrolling")
+                            from: 300
+                            to: 3000
+                            defaultValue: 900
+                            stepSize: 100
+                            suffix: "ms"
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Appearance.spacing.small
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: qsTr("While you drag, scroll or step a segmented slider, its handle shows the number in mono; at rest it shows a glyph. The value label stays for screen readers.")
+                                color: Signal.palette.inkMuted
+                                font.pointSize: Appearance.font.size.small
+                                wrapMode: Text.WordWrap
+                            }
+
+                            TextButton {
+                                text: qsTr("Reset")
+                                type: TextButton.Text
+                                visible: !Config.appearance.sliders.readout
+                                Accessible.name: qsTr("Reset %1 to default").arg(qsTr("Show the value on the handle"))
+                                onClicked: {
+                                    Config.appearance.sliders.readout = true;
+                                    Config.save();
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }

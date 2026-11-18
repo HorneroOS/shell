@@ -60,6 +60,26 @@ void SpectrumMeter::setBands(int bands) {
     retarget();
 }
 
+void SpectrumMeter::setSliceStart(int v) {
+    v = std::max(0, v);
+    if (v == m_sliceStart) {
+        return;
+    }
+    m_sliceStart = v;
+    emit bandsChanged();
+    retarget();
+}
+
+void SpectrumMeter::setSliceLength(int v) {
+    v = std::max(0, v);
+    if (v == m_sliceLength) {
+        return;
+    }
+    m_sliceLength = v;
+    emit bandsChanged();
+    retarget();
+}
+
 void SpectrumMeter::setActive(bool active) {
     if (active == m_active) {
         return;
@@ -70,8 +90,12 @@ void SpectrumMeter::setActive(bool active) {
 }
 
 void SpectrumMeter::retarget() {
-    const int n = m_bands > 0 ? m_bands : static_cast<int>(m_values.size());
-    std::vector<double> targets = spectrum::resample(std::span<const double>(m_values.constData(), static_cast<std::size_t>(m_values.size())), n);
+    const auto total = static_cast<std::size_t>(m_values.size());
+    const std::size_t from = std::min(static_cast<std::size_t>(m_sliceStart), total);
+    const std::size_t len = m_sliceLength > 0 ? std::min(static_cast<std::size_t>(m_sliceLength), total - from) : total - from;
+    const std::span<const double> source(m_values.constData() + from, len);
+    const int n = m_bands > 0 ? m_bands : static_cast<int>(len);
+    std::vector<double> targets = spectrum::resample(source, n);
     if (!m_active) {
         std::fill(targets.begin(), targets.end(), 0.0);
     }

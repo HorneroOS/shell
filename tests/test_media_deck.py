@@ -31,7 +31,7 @@ def test_factory_defaults_and_serializer():
 def test_deck_reads_real_stereo_left_then_right():
     deck = DECK.read_text()
     audio = (ROOT / "services/Audio.qml").read_text()
-    assert "channels: 2" in audio and "id: cavaStereo" in audio
+    assert "cavaStereo.channels = 2" in audio and "id: cavaStereo" in audio
     assert deck.count("values: Audio.cavaStereo.values") == 2
     assert "sliceStart: 0" in deck and "sliceStart: root.bands" in deck
     assert "direction: SpectrumMeter.Left" in deck and "direction: SpectrumMeter.Right" in deck

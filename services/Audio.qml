@@ -159,7 +159,13 @@ Singleton {
         id: cavaStereo
 
         bars: Math.max(8, Math.min(24, Config.dashboard.media.bands))
-        channels: 2
+
+        // Set imperatively so a shell tree running against an older plugin
+        // (no `channels`) keeps loading; the deck then shows silence on R.
+        Component.onCompleted: {
+            if ("channels" in cavaStereo)
+                cavaStereo.channels = 2;
+        }
     }
 
     BeatTracker {

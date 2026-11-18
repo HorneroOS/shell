@@ -37,6 +37,18 @@ def test_normalise_clamps_everything():
     assert out["chroma"] == 1.5 and out["hueShift"] == -180 and out["currentMode"] == "light"
 
 
+def test_normalise_keeps_seeds_from_a_config_sequence():
+    # Config.appearance.chromatic.seeds loaded from shell.json is a Qt
+    # sequence (array-like, Array.isArray false). Dropping it turned a saved
+    # "Colour" source into "Choose an accent colour" with no previews.
+    out = run_js("return normalise({source: 'seed', seeds: {length: 2, 0: '#d98a3a', 1: '#3A7FD9'}}, 'dark')")
+    assert out["source"] == "seed" and out["seeds"] == ["#D98A3A", "#3A7FD9"]
+    # a bare string is not a list of seeds
+    assert run_js("return normalise({source: 'seed', seeds: '#D98A3A'}, 'dark').seeds") == []
+    seed = run_js("return engineRequest(normalise({source: 'seed', seeds: {length: 1, 0: '#D98A3A'}}, 'dark'), '', null)")
+    assert seed and seed["seeds"] == ["#D98A3A"]
+
+
 def test_helper_args_per_source():
     wall = run_js("return helperArgs(normalise({source: 'wallpaper'}, 'dark'), '/w/a.jpg', null)")
     assert wall[:3] == ["generate", "--source", "/w/a.jpg"] and wall[-2:] == ["--current-mode", "dark"]

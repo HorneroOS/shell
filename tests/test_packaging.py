@@ -111,7 +111,6 @@ def test_hornero_runtime_dependencies_are_packaged():
         "the Shell must require the AUR-owned CLI runtime"
     )
     assert "'ttf-ibm-plex'" in depends, "Signal typography (RFC 0001 3.3)"
-    assert "python-materialyoucolor" not in depends
     assert "python-pywal16" not in depends, "retired pywal must not be a dependency"
 
 

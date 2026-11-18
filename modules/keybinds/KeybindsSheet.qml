@@ -360,6 +360,10 @@ StyledRect {
                         border.width: row.isTarget ? 1 : 0
                         border.color: Signal.palette.signal
 
+                        Accessible.role: Accessible.ListItem
+                        Accessible.name: qsTr("%1: %2").arg(row.entry.combo).arg(row.entry.label)
+                        Accessible.selected: row.isSelected
+
                         MouseArea {
                             id: rowMouse
 
@@ -397,6 +401,10 @@ StyledRect {
                                         compact: sheet.compact
                                     }
                                 }
+
+                                Item {
+                                    Layout.fillWidth: true
+                                }
                             }
 
                             ColumnLayout {
@@ -413,12 +421,18 @@ StyledRect {
 
                                 StyledText {
                                     Layout.fillWidth: true
-                                    visible: row.entry.remapped || sheet.query !== ""
-                                    text: row.entry.remapped ? qsTr("moved from %1").arg(row.entry.original) : row.entry.category
+                                    visible: row.entry.remapped
+                                    text: qsTr("moved from %1").arg(row.entry.original)
                                     color: Signal.palette.inkMuted
                                     font.pointSize: Appearance.font.size.smaller
                                     elide: Text.ElideRight
                                 }
+                            }
+
+                            Chip {
+                                visible: row.entry.shared > 1
+                                text: qsTr("shared ×%1").arg(row.entry.shared)
+                                alert: true
                             }
 
                             Chip {
@@ -589,17 +603,18 @@ StyledRect {
 
     component Chip: StyledRect {
         property alias text: chipLabel.text
+        property bool alert: false
 
         implicitWidth: chipLabel.implicitWidth + 12
         implicitHeight: chipLabel.implicitHeight + 4
         radius: Appearance.rounding.full
-        color: Signal.palette.cueWell
+        color: alert ? Signal.palette.alertWell : Signal.palette.cueWell
 
         StyledText {
             id: chipLabel
 
             anchors.centerIn: parent
-            color: Signal.palette.onCueWell
+            color: parent.alert ? Signal.palette.onAlertWell : Signal.palette.onCueWell
             font.pointSize: Appearance.font.size.smaller
         }
     }

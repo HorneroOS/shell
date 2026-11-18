@@ -102,6 +102,13 @@ def test_conflicts_are_detected_before_saving():
     assert run_js("return conflictFor(E, 'escape', 'SUPER + K');") is None
 
 
+def test_shared_combos_are_flagged():
+    rows = run_js("var X = normalise(JSON.stringify(JSON.parse(RAW).concat([{combo: 'SUPER + K', category: 'Personal', "
+                  "action: 'x', submap: '', source: 'personal'}]))); return X.filter(r => r.combo === 'SUPER + K').map(r => r.shared);")
+    assert rows == [2, 2]
+    assert run_js("return E.filter(r => r.combo === 'SUPER + Return')[0].shared;") == 1
+
+
 def test_summon_combo_follows_the_rebind():
     assert run_js("return summonCombo(E);") == "SUPER + X"
 

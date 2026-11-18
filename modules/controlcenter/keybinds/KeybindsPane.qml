@@ -498,6 +498,10 @@ Item {
                                                     accent: bindRow.modelData.remapped
                                                 }
                                             }
+
+                                            Item {
+                                                Layout.fillWidth: true
+                                            }
                                         }
 
                                         ColumnLayout {
@@ -514,10 +518,10 @@ Item {
 
                                             StyledText {
                                                 Layout.fillWidth: true
-                                                visible: bindRow.modelData.remapped || bindRow.modelData.submap !== "" || bindRow.modelData.source === "personal"
-                                                text: bindRow.modelData.remapped ? qsTr("moved from %1").arg(bindRow.modelData.original) : bindRow.modelData.submap !== "" ? qsTr("submap: %1").arg(bindRow.modelData.submap) : qsTr("personal (keybindings-user.lua)")
+                                                visible: bindRow.modelData.remapped || bindRow.modelData.submap !== "" || bindRow.modelData.source === "personal" || bindRow.modelData.shared > 1
+                                                text: bindRow.modelData.shared > 1 ? qsTr("%1 binds share this combo; all of them fire").arg(bindRow.modelData.shared) : bindRow.modelData.remapped ? qsTr("moved from %1").arg(bindRow.modelData.original) : bindRow.modelData.submap !== "" ? qsTr("submap: %1").arg(bindRow.modelData.submap) : qsTr("personal (keybindings-user.lua)")
                                                 font.pointSize: Appearance.font.size.smaller
-                                                color: Signal.palette.inkMuted
+                                                color: bindRow.modelData.shared > 1 ? Signal.palette.alert : Signal.palette.inkMuted
                                             }
                                         }
 

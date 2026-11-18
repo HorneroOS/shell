@@ -171,7 +171,7 @@ Scope {
                             Rectangle {
                                 implicitWidth: 8
                                 implicitHeight: 8
-                                radius: Appearance.rounding.small
+                                radius: width / 2
                                 color: JaviRadio.outcome === "failed" ? Signal.palette.alert : JaviRadio.outcome === "handoff" ? Signal.palette.cue : JaviRadio.busy ? Signal.palette.signal : Signal.palette.phosphor
                                 Accessible.ignored: true
                             }

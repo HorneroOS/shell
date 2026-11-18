@@ -146,7 +146,7 @@ Scope {
                         // be a safe relative .qml listed in files, and
                         // redeclaring the primary placement with a
                         // different file is a conflict, not an override.
-                        const knownSurfaces = ["background", "bar", "dashboard", "desktop", "launcher", "settings", "commands"];
+                        const knownSurfaces = ["background", "bar", "dashboard", "desktop", "launcher", "settings", "commands", "quickSetting", "panel"];
                         const safeEntrypoint = value => typeof value === "string" && !value.includes("..") && !value.includes("\\")
                             && /^(?!\/)(?!\.{1,2}(\/|$))(?!.*\/\.{1,2}(\/|$))(?!.*\/\/)[A-Za-z0-9._\/-]+\.qml$/.test(value);
                         const effectiveSurfaces = ({});
@@ -165,8 +165,8 @@ Scope {
                                     Plugins.markFailed(slot.modelData.id, `manifest surfaces contains unknown surface "${name}"`);
                                     return;
                                 }
-                                if (name === "commands" && !(Number.isInteger(manifest.pluginKit) && manifest.pluginKit >= 4)) {
-                                    Plugins.markFailed(slot.modelData.id, "manifest surfaces.commands is a PluginKit 4 surface and requires pluginKit 4");
+                                if (["commands", "quickSetting", "panel"].includes(name) && !(Number.isInteger(manifest.pluginKit) && manifest.pluginKit >= 4)) {
+                                    Plugins.markFailed(slot.modelData.id, `manifest surfaces.${name} is a PluginKit 4 surface and requires pluginKit 4`);
                                     return;
                                 }
                                 const surface = manifest.surfaces[name];

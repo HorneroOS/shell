@@ -1,0 +1,2 @@
+true
+{"enabled":true,"mode":"everyday","level":"full","shown":1,"dropped":0,"last":{"ok":true,"kind":"build.done","anim":"celebrate","bubble":"Build 412 passed","bubbleMs":5000,"priority":2,"source":"ipc"}}

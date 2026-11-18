@@ -3,6 +3,7 @@ singleton PluginKitInfo 1.0 PluginKitInfo.qml
 singleton Theme 1.0 Theme.qml
 singleton ExperienceBridge 1.0 ExperienceBridge.qml
 singleton GlowBudget 1.0 GlowBudget.qml
+singleton Companion 1.0 Companion.qml
 singleton Notifications 1.0 Notifications.qml
 singleton Desktop 1.0 Desktop.qml
 Settings 1.0 Settings.qml
@@ -44,3 +45,4 @@ UiState 1.0 UiState.qml
 UiTooltip 1.0 UiTooltip.qml
 UiPopover 1.0 UiPopover.qml
 UiStack 1.0 UiStack.qml
+UiScrollArea 1.0 UiScrollArea.qml

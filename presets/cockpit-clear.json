@@ -126,7 +126,11 @@
       "iconScale": 0.9,
       "textScale": 1.1,
       "itemSpacing": 2,
-      "textWeight": 400
+      "textWeight": 400,
+      "islandInset": 0
+    },
+    "workspaces": {
+      "activeInset": 0
     },
     "status": {
       "showAudio": true,

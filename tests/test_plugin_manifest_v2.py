@@ -239,7 +239,8 @@ def test_schema_stays_strict_about_unknown_fields():
                                               "width", "height", "minWidth", "minHeight", "resizable", "anchor",
                                               "instances"}
     assert set(SCHEMA["properties"]["surfaces"]["properties"]) == {
-        "background", "bar", "dashboard", "desktop", "launcher", "settings", "commands"
+        "background", "bar", "dashboard", "desktop", "launcher", "settings", "commands",
+        "quickSetting", "panel"
     }
 
 

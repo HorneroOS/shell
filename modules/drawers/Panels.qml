@@ -67,8 +67,14 @@ Item {
         visibilities: root.visibilities
         panels: root
 
+        // User placement along the top edge (Config.notifs.align), right by
+        // default. Only the popup stack moves: the notification centre
+        // (sidebar) stays on the right edge.
+        readonly property string align: ["left", "center"].includes(Config.notifs.align) ? Config.notifs.align : "right"
         anchors.top: parent.top
-        anchors.right: parent.right
+        anchors.right: align === "right" ? parent.right : undefined
+        anchors.left: align === "left" ? parent.left : undefined
+        anchors.horizontalCenter: align === "center" ? parent.horizontalCenter : undefined
     }
 
     Session.Wrapper {

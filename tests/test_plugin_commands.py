@@ -91,7 +91,7 @@ def test_invalid_commands_are_rejected(tmp_path, kwargs, message):
 def test_unknown_contribution_kinds_are_rejected(tmp_path):
     root = make(tmp_path, commands=GOOD)
     data = json.loads((root / "manifest.json").read_text())
-    data["contributes"]["quickSettings"] = []
+    data["contributes"]["widgets"] = []
     (root / "manifest.json").write_text(json.dumps(data))
     with pytest.raises(VALIDATOR.ValidationError, match="unknown kinds"):
         VALIDATOR.validate_plugin(root)
@@ -106,9 +106,9 @@ def test_a_commands_surface_without_level_4_is_rejected_even_alone(tmp_path):
 
 
 def test_host_records_contributions_and_gates_the_surface():
-    assert '"commands"]' in HOST.split("knownSurfaces =")[1].split(";")[0]
+    assert '"commands"' in HOST.split("knownSurfaces =")[1].split(";")[0]
     assert "Plugins.markContributes" in HOST
-    assert "surfaces.commands is a PluginKit 4 surface" in HOST
+    assert "is a PluginKit 4 surface and requires pluginKit 4" in HOST
     for needle in ("function normalizeContributes", "function markContributes", "function commandList", "function commandPlugins"):
         assert needle in SERVICE
 

@@ -4,6 +4,7 @@ import "habitat.js" as Habitat
 import "javivoice.js" as Voice
 import "radio.js" as Radio
 import "reactions.js" as Reactions
+import qs.services
 import qs.utils
 import Quickshell
 import QtQuick
@@ -118,7 +119,7 @@ Singleton {
     property bool forceVisible: false
 
     readonly property bool suppressed: root.suppressLocked || root.suppressFullscreen || root.suppressGameMode || root.areaPickerOpen || root.controlCenterOpen
-    readonly property bool visible: persist.enabled && (!root.suppressed || root.forceVisible) && persist.state !== "hidden"
+    readonly property bool visible: persist.enabled && (!root.suppressed || root.forceVisible) && persist.state !== "hidden" && !root.modeHidden
 
     property string bubbleText: ""
     property bool bubbleOpen: false
@@ -154,6 +155,8 @@ Singleton {
         // section validated by its own pure module on every read
         // (javivoice.js, habitat.js, radio.js).
         property string prefs: ""
+        // Per-Experience-mode look (visible / size multiplier / skin).
+        property string modeLook: ""
         property bool nestEnabled: true
         property int nestStage: 0
         property int nestProgress: 0
@@ -260,6 +263,29 @@ Singleton {
             "habitat": Habitat.sanitize(next.habitat),
             "radio": Radio.sanitize(next.radio)
         });
+        root.markDirty();
+    }
+
+    // Per-mode look (see reactions.js sanitizeModeLook).
+    readonly property var modeLookSettings: Reactions.sanitizeModeLook(root._parseJson(persist.modeLook))
+    readonly property var activeLook: root.modeLookSettings[Experience.mode] ?? { visible: true, size: 1.0, skin: "" }
+    // An explicit request (chat, summon through forceVisible) outranks a
+    // mode that hides the companion, like ambient suppression.
+    readonly property bool modeHidden: !root.activeLook.visible && !root.forceVisible
+    readonly property real effectiveSizeScale: Math.max(0.5, Math.min(2.0, persist.sizeScale * root.activeLook.size))
+    readonly property string effectiveSkin: root.activeLook.skin !== "" && Companion.isKnownSkin(root.activeLook.skin) ? root.activeLook.skin : persist.skin
+
+    function setModeLook(mode: string, key: string, value: var): void {
+        const next = Reactions.sanitizeModeLook(root.modeLookSettings);
+        if (next[mode] === undefined || ["visible", "size", "skin"].indexOf(key) < 0)
+            return;
+        next[mode][key] = value;
+        persist.modeLook = JSON.stringify(Reactions.sanitizeModeLook(next));
+        root.markDirty();
+    }
+
+    function resetModeLook(): void {
+        persist.modeLook = "";
         root.markDirty();
     }
 
@@ -626,7 +652,8 @@ Singleton {
             nestStage: persist.nestStage,
             nestProgress: persist.nestProgress,
             reactions: persist.reactions,
-            prefs: persist.prefs
+            prefs: persist.prefs,
+            modeLook: persist.modeLook
         });
     }
 
@@ -719,6 +746,8 @@ Singleton {
                         "radio": Radio.sanitize(rawPrefs.radio)
                     });
                 }
+                if (typeof o.modeLook === "string")
+                    persist.modeLook = JSON.stringify(Reactions.sanitizeModeLook(root._parseJson(o.modeLook)));
                 if (typeof o.nestEnabled === "boolean")
                     persist.nestEnabled = o.nestEnabled;
                 if (typeof o.nestStage === "number")

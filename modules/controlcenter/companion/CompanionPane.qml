@@ -211,6 +211,281 @@ Item {
 
 
                 ChannelPanel {
+                    title: qsTr("Reactions")
+
+                    ColumnLayout {
+                        id: reactionsCol
+
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
+                        spacing: Appearance.spacing.small
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Javi reacts only to things that really happened: a notification, a battery warning, a mode switch, or a finished build or download reported by an extension. Never on a timer.")
+                            font.pointSize: Appearance.font.size.smaller
+                            color: Signal.palette.inkMuted
+                            wrapMode: Text.Wrap
+                        }
+
+                        SwitchRow {
+                            label: qsTr("React to events")
+                            checked: CompanionStore.reactionSettings.enabled
+                            onToggled: checked => CompanionStore.patchReactions("enabled", checked)
+                        }
+
+                        SwitchRow {
+                            label: qsTr("Speech bubbles with reactions")
+                            enabled: CompanionStore.reactionSettings.enabled
+                            checked: CompanionStore.reactionSettings.bubbles
+                            onToggled: checked => CompanionStore.patchReactions("bubbles", checked)
+                        }
+
+                        StyledText {
+                            text: qsTr("Per event")
+                            font.pointSize: Appearance.font.size.smaller
+                            color: Signal.palette.inkMuted
+                        }
+
+                        Repeater {
+                            model: CompanionReactions.catalog
+
+                            SwitchRow {
+                                required property var modelData
+
+                                Layout.fillWidth: true
+                                enabled: CompanionStore.reactionSettings.enabled
+                                label: modelData.external ? qsTr("%1 (from extensions)").arg(CompanionReactions.label(modelData.id)) : CompanionReactions.label(modelData.id)
+                                checked: CompanionStore.reactionSettings.kindsOff.indexOf(modelData.id) < 0
+                                onToggled: checked => CompanionStore.setKindEnabled(modelData.id, checked)
+                            }
+                        }
+
+                        StyledText {
+                            text: qsTr("Per Experience mode")
+                            font.pointSize: Appearance.font.size.smaller
+                            color: Signal.palette.inkMuted
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Full: every enabled event. Quiet: only important events, animation only. Silent: no reactions.")
+                            font.pointSize: Appearance.font.size.smaller
+                            color: Signal.palette.inkMuted
+                            wrapMode: Text.Wrap
+                        }
+
+                        Repeater {
+                            model: CompanionReactions.modeIds
+
+                            RowLayout {
+                                id: modeRow
+
+                                required property string modelData
+
+                                Layout.fillWidth: true
+                                spacing: Appearance.spacing.small
+
+                                StyledText {
+                                    Layout.preferredWidth: 90
+                                    text: modeRow.modelData === "focus" ? qsTr("Focus") : modeRow.modelData === "signal" ? qsTr("Signal") : modeRow.modelData === "gaming" ? qsTr("Gaming") : modeRow.modelData === "studio" ? qsTr("Studio") : qsTr("Everyday")
+                                }
+
+                                Repeater {
+                                    model: CompanionReactions.levels
+
+                                    TextButton {
+                                        required property string modelData
+
+                                        text: modelData === "quiet" ? qsTr("Quiet") : modelData === "silent" ? qsTr("Silent") : qsTr("Full")
+                                        toggle: true
+                                        checked: CompanionStore.reactionSettings.modeBehaviour[modeRow.modelData] === modelData
+                                        type: TextButton.Tonal
+                                        onClicked: CompanionStore.setModeBehaviour(modeRow.modelData, modelData)
+                                    }
+                                }
+                            }
+                        }
+
+                        StyledText {
+                            visible: sourcesRepeater.count > 0
+                            text: qsTr("Extensions and tools that asked Javi to react")
+                            font.pointSize: Appearance.font.size.smaller
+                            color: Signal.palette.inkMuted
+                        }
+
+                        Repeater {
+                            id: sourcesRepeater
+
+                            model: {
+                                const all = CompanionReactions.seenSources.concat(CompanionStore.reactionSettings.mutedSources);
+                                return all.filter((v, i) => all.indexOf(v) === i);
+                            }
+
+                            SwitchRow {
+                                required property string modelData
+
+                                Layout.fillWidth: true
+                                label: qsTr("Allow %1").arg(modelData)
+                                checked: CompanionStore.reactionSettings.mutedSources.indexOf(modelData) < 0
+                                onToggled: checked => {
+                                    const muted = CompanionStore.reactionSettings.mutedSources.filter(v => v !== modelData);
+                                    if (!checked)
+                                        muted.push(modelData);
+                                    CompanionStore.patchReactions("mutedSources", muted);
+                                }
+                            }
+                        }
+
+                        SwitchRow {
+                            label: qsTr("Quiet hours")
+                            checked: CompanionStore.reactionSettings.quietHours.enabled
+                            onToggled: checked => CompanionStore.setQuietHours("enabled", checked)
+                        }
+
+                        SliderInput {
+                            Layout.fillWidth: true
+
+                            enabled: CompanionStore.reactionSettings.quietHours.enabled
+                            label: qsTr("Quiet from")
+                            value: parseInt(CompanionStore.reactionSettings.quietHours.start)
+                            from: 0
+                            to: 23
+                            stepSize: 1
+                            suffix: ":00"
+                            decimals: 0
+                            onValueModified: newValue => CompanionStore.setQuietHours("start", Math.round(newValue) + ":00")
+                        }
+
+                        SliderInput {
+                            Layout.fillWidth: true
+
+                            enabled: CompanionStore.reactionSettings.quietHours.enabled
+                            label: qsTr("Quiet until")
+                            value: parseInt(CompanionStore.reactionSettings.quietHours.end)
+                            from: 0
+                            to: 23
+                            stepSize: 1
+                            suffix: ":00"
+                            decimals: 0
+                            onValueModified: newValue => CompanionStore.setQuietHours("end", Math.round(newValue) + ":00")
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("During quiet hours Javi only reacts to important events, without a speech bubble.")
+                            font.pointSize: Appearance.font.size.smaller
+                            color: Signal.palette.inkMuted
+                            wrapMode: Text.Wrap
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Appearance.spacing.small
+
+                            TextButton {
+                                text: qsTr("Preview a reaction")
+                                type: TextButton.Tonal
+                                onClicked: CompanionStore.playReaction("celebrate", qsTr("Like this."), 4000, 3)
+                            }
+
+                            TextButton {
+                                text: qsTr("Reset reactions")
+                                type: TextButton.Tonal
+                                onClicked: CompanionStore.setReactionSettings({})
+                            }
+                        }
+                    }
+                }
+
+                ChannelPanel {
+                    title: qsTr("Look per Experience mode")
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
+                        spacing: Appearance.spacing.small
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Each mode can show or hide Javi, scale him relative to the size above, and use its own character. Gaming mode always hides him.")
+                            font.pointSize: Appearance.font.size.smaller
+                            color: Signal.palette.inkMuted
+                            wrapMode: Text.Wrap
+                        }
+
+                        Repeater {
+                            model: CompanionReactions.modeIds
+
+                            ColumnLayout {
+                                id: lookRow
+
+                                required property string modelData
+                                readonly property var look: CompanionStore.modeLookSettings[lookRow.modelData]
+                                readonly property string modeName: lookRow.modelData === "focus" ? qsTr("Focus") : lookRow.modelData === "signal" ? qsTr("Signal") : lookRow.modelData === "gaming" ? qsTr("Gaming") : lookRow.modelData === "studio" ? qsTr("Studio") : qsTr("Everyday")
+
+                                Layout.fillWidth: true
+                                spacing: Appearance.spacing.small
+
+                                SwitchRow {
+                                    label: qsTr("Show Javi in %1 mode").arg(lookRow.modeName)
+                                    checked: lookRow.look.visible
+                                    onToggled: checked => CompanionStore.setModeLook(lookRow.modelData, "visible", checked)
+                                }
+
+                                SliderInput {
+                                    Layout.fillWidth: true
+
+                                    enabled: lookRow.look.visible
+                                    label: qsTr("%1 size").arg(lookRow.modeName)
+                                    value: lookRow.look.size
+                                    from: 0.5
+                                    to: 2.0
+                                    stepSize: 0.05
+                                    suffix: "×"
+                                    decimals: 2
+                                    onValueModified: newValue => CompanionStore.setModeLook(lookRow.modelData, "size", newValue)
+                                }
+
+                                Flow {
+                                    Layout.fillWidth: true
+                                    spacing: Appearance.spacing.small
+                                    enabled: lookRow.look.visible
+
+                                    TextButton {
+                                        text: qsTr("Main character")
+                                        toggle: true
+                                        checked: lookRow.look.skin === ""
+                                        type: TextButton.Tonal
+                                        onClicked: CompanionStore.setModeLook(lookRow.modelData, "skin", "")
+                                    }
+
+                                    Repeater {
+                                        model: Companion.knownSkins
+
+                                        TextButton {
+                                            required property string modelData
+
+                                            text: modelData
+                                            toggle: true
+                                            checked: lookRow.look.skin === modelData
+                                            type: TextButton.Tonal
+                                            onClicked: CompanionStore.setModeLook(lookRow.modelData, "skin", modelData)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        TextButton {
+                            text: qsTr("Reset mode looks")
+                            type: TextButton.Tonal
+                            onClicked: CompanionStore.resetModeLook()
+                        }
+                    }
+                }
+
+                ChannelPanel {
                     title: qsTr("Assistant (Hermes)")
 
                     ColumnLayout {

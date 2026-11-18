@@ -3,6 +3,7 @@ import qs.components.controls
 import qs.services
 import qs.config
 import qs.modules.controlcenter
+import qs.modules.plugins
 import Quickshell
 import Quickshell.Bluetooth
 import QtQuick
@@ -13,6 +14,11 @@ StyledRect {
 
     required property var visibilities
     required property Item popouts
+
+    // Structurally stable model: load-state churn never rebuilds the tiles.
+    readonly property StableList tileModel: StableList {
+        source: Plugins.placedTiles()
+    }
 
     Layout.fillWidth: true
     implicitHeight: layout.implicitHeight + Appearance.padding.large * 2
@@ -103,6 +109,17 @@ StyledRect {
                 enabled: !VPN.connecting
                 visible: Config.utilities.vpn.provider.some(p => typeof p === "object" ? (p.enabled === true) : false)
                 onClicked: VPN.toggle()
+            }
+
+            Repeater {
+                model: root.tileModel.list
+
+                delegate: PluginQuickTile {
+                    required property var modelData
+
+                    tile: modelData
+                    inactiveColour: Signal.palette.lifted
+                }
             }
         }
     }

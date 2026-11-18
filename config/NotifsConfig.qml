@@ -7,6 +7,8 @@ JsonObject {
     property int expandThreshold: 20
     property bool actionOnClick: false
     property int groupPreviewNum: 3
+    // Where popups appear along the top edge: "right", "center" or "left".
+    property string align: "right"
     property bool openExpanded: false // Show the notifichation in expanded state when opening
     property Sizes sizes: Sizes {}
 

@@ -3,6 +3,7 @@
     "theme": "hornero-signal-night",
     "highContrast": false,
     "reducedMotion": false,
+    "cozyChips": true,
     "rounding": {
       "scale": 1
     },
@@ -78,6 +79,14 @@
         "light": "hornero-signal-day"
       },
       "transition": "smooth"
+    },
+    "accent": {
+      "color": "",
+      "perMode": {
+        "dark": "",
+        "light": ""
+      },
+      "perExperience": {}
     }
   },
   "general": {
@@ -338,6 +347,7 @@
       "showWindows": true,
       "showWindowsOnSpecialWorkspaces": true,
       "activeTrail": false,
+      "activeInset": 4,
       "perMonitorWorkspaces": true,
       "label": "",
       "occupiedLabel": "",
@@ -379,6 +389,7 @@
     },
     "sizes": {
       "innerWidth": 24,
+      "islandInset": 4,
       "windowPreviewSize": 400,
       "trayMenuWidth": 300,
       "batteryWidth": 250,
@@ -698,6 +709,7 @@
   },
   "notifs": {
     "expire": true,
+    "align": "right",
     "defaultExpireTimeout": 5000,
     "clearThreshold": 0.3,
     "expandThreshold": 20,
@@ -831,6 +843,7 @@
   "plugins": {
     "settings": {},
     "instances": {},
+    "quickTiles": [],
     "desktopWidgetSlots": {},
     "desktopWidgets": {},
     "dashboardLayout": {},
@@ -844,5 +857,8 @@
       "fullscreenGaming": false,
       "gamePatterns": []
     }
+  },
+  "layouts": {
+    "overrides": {}
   }
 }

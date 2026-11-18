@@ -34,9 +34,13 @@ StyledRect {
     color: clear ? "transparent" : Signal.tPalette.panel
     radius: Appearance.rounding.small
 
+    // Island cross-axis size (Density.chip): the cell size, shrunk so the
+    // island keeps its inset from the bar edge. Set by Bar.qml.
+    property int cross: Density.inner
+
     clip: true
-    implicitWidth: vertical ? Density.inner : iconGrid.implicitWidth + Appearance.padding.smaller * 2
-    implicitHeight: vertical ? iconGrid.implicitHeight + Appearance.padding.smaller * 2 - (Config.bar.status.showLockStatus && Compositor.supports("lockStatus") && !Compositor.capsLock && !Compositor.numLock ? iconGrid.rowSpacing : 0) : Density.inner
+    implicitWidth: vertical ? cross : iconGrid.implicitWidth + Appearance.padding.smaller * 2
+    implicitHeight: vertical ? iconGrid.implicitHeight + Appearance.padding.smaller * 2 - (Config.bar.status.showLockStatus && Compositor.supports("lockStatus") && !Compositor.capsLock && !Compositor.numLock ? iconGrid.rowSpacing : 0) : cross
 
     GridLayout {
         id: iconGrid

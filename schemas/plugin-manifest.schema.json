@@ -48,6 +48,12 @@
         },
         "commands": {
           "$ref": "#/$defs/surface"
+        },
+        "quickSetting": {
+          "$ref": "#/$defs/surface"
+        },
+        "panel": {
+          "$ref": "#/$defs/surface"
         }
       }
     },
@@ -336,7 +342,8 @@
                   "colour",
                   "list",
                   "text",
-                  "path"
+                  "path",
+                  "strings"
                 ]
               },
               "default": {
@@ -451,6 +458,10 @@
               },
               "mustExist": {
                 "type": "boolean"
+              },
+              "hidden": {
+                "type": "boolean",
+                "description": "Display only (PluginKit 4): the setting is stored, validated and readable like any other but is not rendered in the generated Control Center UI nor wiped by its Reset all. Use it for state an extension persists itself (timers, last-seen markers). Cannot combine with visibleWhen."
               }
             },
             "oneOf": [
@@ -1091,6 +1102,76 @@
                     }
                   ]
                 }
+              },
+              {
+                "properties": {
+                  "type": {
+                    "const": "strings"
+                  },
+                  "default": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    },
+                    "maxItems": 32
+                  }
+                },
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "minimum"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "maximum"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "minLength"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "options"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "step"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "unit"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "alpha"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "rows"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "kind"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "mustExist"
+                      ]
+                    }
+                  ]
+                }
               }
             ]
           }
@@ -1170,7 +1251,7 @@
       "type": "object",
       "additionalProperties": false,
       "minProperties": 1,
-      "description": "PluginKit 4 (RFC 0003): declarative contributions the Shell lists without running extension code. Requires pluginKit 4 and, for commands, surfaces.commands (the entrypoint implementing `function run(commandId, args): string`). Cross-field rules (surface present, glyph names) are enforced by scripts/validate_plugin.py.",
+      "description": "PluginKit 4 (RFC 0003): declarative contributions the Shell lists without running extension code. Requires pluginKit 4 and, for each kind, its surface: commands -> surfaces.commands (`function run(commandId, args): string`), quickSettings -> surfaces.quickSetting (`property bool checked`, `function toggle()`), panels -> surfaces.panel. Cross-field rules (surface present, glyph names) are enforced by scripts/validate_plugin.py.",
       "properties": {
         "commands": {
           "type": "array",
@@ -1217,6 +1298,70 @@
               }
             }
           }
+        },
+        "quickSettings": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "title"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-zA-Z0-9]{0,31}$"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 48,
+                "pattern": "\\S"
+              },
+              "glyph": {
+                "type": "string",
+                "pattern": "^[a-z0-9-]+$"
+              },
+              "kind": {
+                "enum": [
+                  "toggle",
+                  "button"
+                ]
+              }
+            }
+          },
+          "maxItems": 4
+        },
+        "panels": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "title"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-zA-Z0-9]{0,31}$"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 48,
+                "pattern": "\\S"
+              },
+              "glyph": {
+                "type": "string",
+                "pattern": "^[a-z0-9-]+$"
+              }
+            }
+          },
+          "maxItems": 4
         }
       }
     }

@@ -21,6 +21,9 @@ Item {
     required property int groupOffset
     required property var modelData
 
+    // Cross-axis size of one cell (Workspaces.cellCross); set by Workspaces.
+    property int cellCross: Density.inner - Appearance.padding.small * 2
+
     property bool niriMode: false
     property var workspaceData: null
 
@@ -76,8 +79,8 @@ Item {
             id: indicator
 
             Layout.alignment: root.vertical ? Qt.AlignHCenter | Qt.AlignTop : Qt.AlignVCenter | Qt.AlignLeft
-            Layout.preferredHeight: root.vertical ? Density.inner - Appearance.padding.small * 2 : implicitHeight
-            Layout.preferredWidth: root.vertical ? implicitWidth : Density.inner - Appearance.padding.small * 2
+            Layout.preferredHeight: root.vertical ? root.cellCross : implicitHeight
+            Layout.preferredWidth: root.vertical ? implicitWidth : root.cellCross
 
             animate: true
             font.family: Density.dataFamily

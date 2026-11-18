@@ -84,7 +84,7 @@ def test_appearance_sections_disclosure_wired():
     pane = (ROOT / "modules" / "controlcenter" / "appearance"
             / "AppearancePane.qml").read_text()
     keys = re.findall(r"persistSection\(\"([a-zA-Z]+)\"", pane)
-    assert len(keys) == 15, f"expected 15 wired sections, got {len(keys)}: {keys}"
+    assert len(keys) == 16, f"expected 16 wired sections, got {len(keys)}: {keys}"
     m = re.search(r"_sectionKeys:\s*\[(.*?)\]", pane, re.S)
     assert m, "pane must declare canonical _sectionKeys"
     canonical = re.findall(r"\"([a-zA-Z]+)\"", m.group(1))
@@ -131,3 +131,20 @@ def test_notify_roles_documented():
     base = (ROOT / "docs" / "EXPERIENCE_BASELINE.md").read_text()
     assert "WindowFactory.closeAll" in base
     assert "`function close(): void {}` (empty)" in base
+
+
+def test_lock_notif_placeholder_fits_its_dock():
+    """The 'Unlock to read notifications' placeholder wraps inside the dock
+    instead of being centred at its natural width and clipped."""
+    dock = (ROOT / "modules" / "lock" / "NotifDock.qml").read_text()
+    assert "anchors.centerIn: parent\n            active" not in dock
+    assert "wrapMode: Text.WordWrap" in dock and "Layout.fillWidth: true" in dock
+
+
+def test_theme_card_chips_wrap_under_the_text():
+    """Narrow Appearance pane: mode/current/staged chips sit in a Flow inside
+    the text column, never beside it, so they cannot squeeze or overlap it."""
+    src = (ROOT / "modules" / "controlcenter" / "appearance" / "sections" / "ThemesSection.qml").read_text()
+    flow = src.index("id: chipFlow")
+    for chip in ("modeChip", "currentChip", "stagedChip"):
+        assert src.index(f"id: {chip}") > flow

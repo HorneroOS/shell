@@ -28,6 +28,7 @@ Singleton {
     property alias paths: adapter.paths
     property alias plugins: adapter.plugins
     property alias experience: adapter.experience
+    property alias layouts: adapter.layouts
 
     property bool editSessionActive: false
     property bool hasPendingChanges: false
@@ -268,7 +269,8 @@ Singleton {
             services: serializeServices(),
             paths: serializePaths(),
             plugins: serializePlugins(),
-            experience: serializeExperience()
+            experience: serializeExperience(),
+            layouts: serializeLayouts()
         };
     }
 
@@ -277,6 +279,7 @@ Singleton {
             theme: appearance.theme,
             highContrast: appearance.highContrast,
             reducedMotion: appearance.reducedMotion,
+            cozyChips: appearance.cozyChips,
             rounding: {
                 scale: appearance.rounding.scale
             },
@@ -328,6 +331,14 @@ Singleton {
                 base: appearance.transparency.base,
                 layers: appearance.transparency.layers,
                 elements: appearance.transparency.elements
+            },
+            accent: {
+                color: appearance.accent.color,
+                perMode: {
+                    dark: appearance.accent.perMode.dark,
+                    light: appearance.accent.perMode.light
+                },
+                perExperience: appearance.accent.perExperience
             },
             chromatic: {
                 source: appearance.chromatic.source,
@@ -448,6 +459,7 @@ Singleton {
                 showWindows: bar.workspaces.showWindows,
                 showWindowsOnSpecialWorkspaces: bar.workspaces.showWindowsOnSpecialWorkspaces,
                 activeTrail: bar.workspaces.activeTrail,
+                activeInset: bar.workspaces.activeInset,
                 perMonitorWorkspaces: bar.workspaces.perMonitorWorkspaces,
                 label: bar.workspaces.label,
                 occupiedLabel: bar.workspaces.occupiedLabel,
@@ -489,6 +501,7 @@ Singleton {
             },
             sizes: {
                 innerWidth: bar.sizes.innerWidth,
+                islandInset: bar.sizes.islandInset,
                 autoDensity: bar.sizes.autoDensity,
                 densityScale: bar.sizes.densityScale,
                 contentScale: bar.sizes.contentScale,
@@ -598,6 +611,7 @@ Singleton {
     function serializeNotifs(): var {
         return {
             expire: notifs.expire,
+            align: notifs.align,
             defaultExpireTimeout: notifs.defaultExpireTimeout,
             clearThreshold: notifs.clearThreshold,
             expandThreshold: notifs.expandThreshold,
@@ -740,10 +754,17 @@ Singleton {
         return {
             settings: plugins.settings,
             instances: plugins.instances,
+            quickTiles: plugins.quickTiles,
             desktopWidgetSlots: plugins.desktopWidgetSlots,
             desktopWidgets: plugins.desktopWidgets,
             dashboardLayout: plugins.dashboardLayout,
             safeMode: plugins.safeMode
+        };
+    }
+
+    function serializeLayouts(): var {
+        return {
+            overrides: layouts.overrides
         };
     }
 
@@ -825,6 +846,7 @@ Singleton {
             property UserPaths paths: UserPaths {}
             property PluginsConfig plugins: PluginsConfig {}
             property ExperienceConfig experience: ExperienceConfig {}
+            property LayoutsConfig layouts: LayoutsConfig {}
         }
     }
 

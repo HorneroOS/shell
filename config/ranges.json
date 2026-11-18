@@ -1,0 +1,161 @@
+{
+  "schema": "hornero/ranges@1",
+  "ranges": {
+    "appearance.font.weight.shift": {
+      "min": -200,
+      "max": 200,
+      "step": 100,
+      "default": 0
+    },
+    "appearance.glow.intensity": {
+      "min": 0,
+      "max": 1.5,
+      "step": 0.05,
+      "default": 1
+    },
+    "appearance.glow.limit": {
+      "min": 1,
+      "max": 6,
+      "step": 1,
+      "default": 3
+    },
+    "bar.sizes.batteryWidth": {
+      "min": 200,
+      "max": 500,
+      "step": 10,
+      "default": 250
+    },
+    "bar.sizes.kbLayoutWidth": {
+      "min": 240,
+      "max": 640,
+      "step": 10,
+      "default": 320
+    },
+    "bar.sizes.networkWidth": {
+      "min": 240,
+      "max": 640,
+      "step": 10,
+      "default": 320
+    },
+    "bar.sizes.trayMenuWidth": {
+      "min": 200,
+      "max": 600,
+      "step": 10,
+      "default": 300
+    },
+    "bar.sizes.windowPreviewSize": {
+      "min": 200,
+      "max": 800,
+      "step": 20,
+      "default": 400
+    },
+    "controlCenter.sizes.heightMult": {
+      "min": 0.5,
+      "max": 0.95,
+      "step": 0.05,
+      "default": 0.7
+    },
+    "controlCenter.sizes.ratio": {
+      "min": 1.2,
+      "max": 2.4,
+      "step": 0.05,
+      "default": 1.7777777777777777
+    },
+    "launcher.dragThreshold": {
+      "min": 10,
+      "max": 200,
+      "step": 5,
+      "default": 50
+    },
+    "launcher.maxShown": {
+      "min": 3,
+      "max": 16,
+      "step": 1,
+      "default": 8
+    },
+    "launcher.maxWallpapers": {
+      "min": 3,
+      "max": 15,
+      "step": 1,
+      "default": 9
+    },
+    "launcher.sizes.itemHeight": {
+      "min": 32,
+      "max": 80,
+      "step": 2,
+      "default": 44
+    },
+    "launcher.sizes.itemWidth": {
+      "min": 400,
+      "max": 1000,
+      "step": 10,
+      "default": 640
+    },
+    "launcher.sizes.wallpaperHeight": {
+      "min": 120,
+      "max": 360,
+      "step": 10,
+      "default": 200
+    },
+    "launcher.sizes.wallpaperWidth": {
+      "min": 160,
+      "max": 480,
+      "step": 10,
+      "default": 280
+    },
+    "lock.sizes.centerWidth": {
+      "min": 400,
+      "max": 900,
+      "step": 10,
+      "default": 600
+    },
+    "notifs.expandThreshold": {
+      "min": 5,
+      "max": 80,
+      "step": 1,
+      "default": 20
+    },
+    "notifs.groupPreviewNum": {
+      "min": 1,
+      "max": 8,
+      "step": 1,
+      "default": 3
+    },
+    "notifs.sizes.image": {
+      "min": 24,
+      "max": 96,
+      "step": 1,
+      "default": 41
+    },
+    "notifs.sizes.width": {
+      "min": 280,
+      "max": 640,
+      "step": 10,
+      "default": 400
+    },
+    "session.sizes.button": {
+      "min": 56,
+      "max": 128,
+      "step": 4,
+      "default": 80
+    },
+    "sidebar.sizes.width": {
+      "min": 320,
+      "max": 720,
+      "step": 10,
+      "default": 430
+    },
+    "utilities.maxToasts": {
+      "min": 1,
+      "max": 8,
+      "step": 1,
+      "default": 4
+    },
+    "utilities.sizes.toastWidth": {
+      "min": 280,
+      "max": 640,
+      "step": 10,
+      "default": 430
+    }
+  }
+}

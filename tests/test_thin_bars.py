@@ -16,7 +16,7 @@ PRESETS = sorted((ROOT / "presets").glob("*.json"))
 CALIBRATION = {
     "classic-top": {"top": ("attached", 36, 6)},
     "classic-bottom": {"bottom": ("attached", 36, 6)},
-    "cockpit": {"top": ("inset", 42, 18), "bottom": ("attached", 28, 0)},
+    "cockpit": {"top": ("inset", 42, 18), "bottom": ("attached", 34, 0)},
     "cockpit-clear": {"top": ("attached", 46, 0), "bottom": ("attached", 30, 0)},
     "horizon": {"top": ("inset", 34, 6), "bottom": ("inset", 26, 6)},
     "islands": {"top": ("islands", 36, 8)},

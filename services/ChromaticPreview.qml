@@ -45,7 +45,20 @@ Singleton {
     property string notice: ""
     // The fingerprint of the candidate differs from what is applied.
     readonly property bool dirty: result !== null && result.fingerprint !== Signal.chromatic?.fingerprint
-    readonly property string helperPath: Quickshell.env("HORNERO_CHROMATIC_BIN") || "/usr/lib/hornero/hornero-chromatic"
+    // Where the helper may live, in order: HORNERO_CHROMATIC_BIN, the packaged
+    // /usr/lib/hornero/hornero-chromatic, then the person's own build in
+    // ~/.local/lib/hornero or ~/.local/bin (development or per-user install).
+    // The probe tries each in turn and settles on the first that answers
+    // `version`; only when none does is the engine reported as not installed.
+    readonly property var helperCandidates: {
+        const home = Quickshell.env("HOME") || "";
+        const list = [Quickshell.env("HORNERO_CHROMATIC_BIN"), "/usr/lib/hornero/hornero-chromatic"];
+        if (home)
+            list.push(home + "/.local/lib/hornero/hornero-chromatic", home + "/.local/bin/hornero-chromatic");
+        return list.filter(p => !!p);
+    }
+    property int helperIndex: 0
+    readonly property string helperPath: helperCandidates[Math.min(helperIndex, helperCandidates.length - 1)]
     readonly property string wallpaper: Wallpapers.actualCurrent
     readonly property var perMode: ({
             "dark": {
@@ -224,6 +237,41 @@ Singleton {
         if (id !== "" && !stale)
             _variantSet(id, parsed && parsed.ok ? parsed.result.scheme : null);
         _variantNext();
+    }
+
+    // ---- hover preview of a variant -------------------------------------
+    // Transient: shows a variant's palette on the live shell while the
+    // pointer or keyboard focus rests on its tile, and puts back whatever
+    // was shown before (the candidate the user is already previewing, or
+    // the applied theme) when it leaves. Memory only, self-cancelling after
+    // 30 s, and instant under reduced motion (Signal.transitionAllowed).
+    property string hoveredVariant: ""
+    property bool _resumeLive: false
+
+    function hoverVariant(id: string): void {
+        const scheme = id === "" ? null : variantSchemes[id] ?? null;
+        if (!scheme)
+            return;
+        if (hoveredVariant === "")
+            _resumeLive = Signal.previewing;
+        if (Signal.beginPreview(scheme)) {
+            hoveredVariant = id;
+            idleCancel.restart();
+        }
+    }
+
+    // `id` is the tile that was left ("" ends any hover); a tile entered a moment earlier keeps
+    // its preview (Qt may deliver the old tile's exit after the new tile's
+    // enter).
+    function endHover(id: string): void {
+        if (hoveredVariant === "" || (id && id !== hoveredVariant))
+            return;
+        hoveredVariant = "";
+        // Back to the candidate the user was already previewing, else to the real theme.
+        if (_resumeLive && result)
+            Signal.beginPreview(result.scheme);
+        else
+            Signal.cancelPreview();
     }
 
     onVariantPreviewsWantedChanged: {
@@ -475,15 +523,26 @@ Singleton {
         id: idleCancel
 
         interval: 30000
-        onTriggered: Signal.cancelPreview()
+        onTriggered: {
+            root.hoveredVariant = "";
+            Signal.cancelPreview();
+        }
     }
 
     // A helper that cannot even be started never reports an exit.
     Timer {
         id: probeTimeout
 
-        interval: 2500
+        interval: 1500
         onTriggered: {
+            if (!root.helperChecked && root.helperIndex + 1 < root.helperCandidates.length) {
+                // A path that cannot start never reports an exit: move on.
+                root.helperIndex += 1;
+                probeProc.running = false;
+                probeProc.running = true;
+                restart();
+                return;
+            }
             if (!root.helperChecked) {
                 root.helperAvailable = false;
                 root.helperChecked = true;
@@ -499,6 +558,13 @@ Singleton {
         stdout: StdioCollector {}
         onExited: exitCode => {
             probeTimeout.stop();
+            if (exitCode !== 0 && root.helperIndex + 1 < root.helperCandidates.length) {
+                // Not here: try the next known location.
+                root.helperIndex += 1;
+                probeTimeout.restart();
+                probeProc.running = true;
+                return;
+            }
             root.helperAvailable = exitCode === 0;
             root.helperChecked = true;
             if (root.helperAvailable)

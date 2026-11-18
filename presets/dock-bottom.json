@@ -78,7 +78,11 @@
     ],
     "sizes": {
       "innerWidth": 32,
-      "contentScale": 1.1
+      "contentScale": 1.1,
+      "islandInset": 5
+    },
+    "workspaces": {
+      "activeInset": 4
     },
     "status": {
       "showAudio": true,

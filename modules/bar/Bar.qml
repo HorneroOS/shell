@@ -41,6 +41,11 @@ Item {
     readonly property int barPadding: 0
     // Cross-axis thickness of a pill (excludes the float gap)
     readonly property int pillThickness: Density.thickness(spec.thickness) + barPadding * 2
+    // Island inset (Bars > Size & shape): islands (workspace track, tray,
+    // status and extension chips) keep at least this gap from the bar's
+    // cross-axis edges. It scales with the density factor and the bar
+    // thickness; the cell size stays the upper bound.
+    readonly property int islandCross: Density.chip(pillThickness)
     readonly property int pillPadding: floating ? Appearance.padding.small : 0
     readonly property real floatGap: floating ? spec.margin : 0
     // Main-axis inset of strips: inset bars keep the float gap at both ends
@@ -542,6 +547,14 @@ Item {
             height: root.vertical ? parent.height : 1
         }
 
+        // Experience-mode chrome (accent wash, content-facing edge line,
+        // Signal scanlines). Clear bars have no slab to wear it on.
+        ModeChrome {
+            visible: !root.clear && Experience.chromeActive
+            edge: root.edge === "top" ? "bottom" : root.edge === "bottom" ? "top" : root.edge === "left" ? "right" : "left"
+            radius: root.spec.radius >= 0 ? root.spec.radius : root.floating ? Appearance.rounding.small : 0
+        }
+
         BarGroup {
             id: startGroup
 
@@ -696,6 +709,7 @@ Item {
                             id: workspacesLoader
 
                             sourceComponent: Workspaces {
+                                cross: root.islandCross
                                 screen: root.screen
                                 vertical: root.vertical
                                 edge: root.edge
@@ -717,6 +731,7 @@ Item {
                         roleValue: "tray"
                         delegate: WrappedLoader {
                             sourceComponent: Tray {
+                                cross: root.islandCross
                                 screen: root.screen
                                 vertical: root.vertical
                                 clear: root.clear
@@ -727,6 +742,7 @@ Item {
                         roleValue: "extensions"
                         delegate: WrappedLoader {
                             sourceComponent: ExtensionsIsland {
+                                cross: root.islandCross
                                 screen: root.screen
                                 vertical: root.vertical
                                 clear: root.clear
@@ -750,6 +766,7 @@ Item {
                         roleValue: "statusIcons"
                         delegate: WrappedLoader {
                             sourceComponent: StatusIcons {
+                                cross: root.islandCross
                                 screen: root.screen
                                 vertical: root.vertical
                                 clear: root.clear

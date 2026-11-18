@@ -64,8 +64,15 @@ StyledClippingRect {
 
     property real blur: onSpecial ? 1 : 0
 
-    implicitWidth: vertical ? Density.inner : layout.implicitWidth + Appearance.padding.small * 2
-    implicitHeight: vertical ? layout.implicitHeight + Appearance.padding.small * 2 : Density.inner
+    // Track cross-axis size (Density.chip, set by Bar.qml) and the cell
+    // inside it: the active highlight keeps `activeInset` from the track
+    // edges (Bars > Size & shape), so it never touches the island border.
+    property int cross: Density.inner
+    readonly property int activeInset: Density.activeInset(cross)
+    readonly property int cellCross: cross - activeInset * 2
+
+    implicitWidth: vertical ? cross : layout.implicitWidth + Appearance.padding.small * 2
+    implicitHeight: vertical ? layout.implicitHeight + Appearance.padding.small * 2 : cross
 
     // Cockpit Clear draws no fill behind any foreground group.
     color: labels || clear ? "transparent" : Signal.tPalette.panel
@@ -95,6 +102,7 @@ StyledClippingRect {
                 screen: root.screen
                 vertical: root.vertical
                 workspaces: workspaces
+                cellCross: root.cellCross
                 occupied: root.occupied
                 groupOffset: root.groupOffset
             }
@@ -122,6 +130,7 @@ StyledClippingRect {
 
                     vertical: root.vertical
                     edge: root.edge
+                    cellCross: root.cellCross
                     tone: root.tone
                     labels: root.labels
                     activeWsId: root.activeWsId
@@ -173,6 +182,8 @@ StyledClippingRect {
                 edge: root.edge
                 tone: root.tone
                 clear: root.clear
+                inset: root.activeInset
+                crossSize: root.cross
                 activeWsId: root.activeWsId
                 workspaces: workspaces
                 mask: layout
@@ -202,6 +213,7 @@ StyledClippingRect {
         sourceComponent: SpecialWorkspaces {
             screen: root.screen
             vertical: root.vertical
+            cellCross: root.cellCross
             tone: root.tone
         }
 

@@ -15,6 +15,14 @@ StyledRect {
 
     required property ShellScreen screen
 
+    // Inset of the highlight inside its track (Workspaces.activeInset, px)
+    // and the track's cross-axis size. The highlight keeps `inset` from the
+    // track edges on every side; the on-air bar rides the highlight's edge.
+    property int inset: 0
+    property int crossSize: Density.inner
+    // Main-axis share of the inset: half, so adjacent cells stay readable.
+    readonly property int mainInset: Math.floor(inset / 2)
+
     required property int activeWsId
     required property Repeater workspaces
     required property Item mask
@@ -37,11 +45,11 @@ StyledRect {
     property real currentSize: workspaces.count > 0 ? workspaces.itemAt(currentWsIdx)?.size ?? 0 : 0
     property real offset: Math.min(leading, trailing)
     property real size: {
-        const s = Math.abs(leading - trailing) + currentSize;
+        const s = Math.max(0, Math.abs(leading - trailing) + currentSize - root.mainInset * 2);
         if (Config.bar.workspaces.activeTrail && lastWs > currentWsIdx) {
             const ws = workspaces.itemAt(lastWs);
             const wsEnd = vertical ? (ws ? ws.y + ws.size : 0) : (ws ? ws.x + ws.size : 0);
-            return ws ? Math.min(wsEnd - offset, s) : 0;
+            return ws ? Math.min(wsEnd - offset - root.mainInset * 2, s) : 0;
         }
         return s;
     }
@@ -55,10 +63,10 @@ StyledRect {
     }
 
     clip: true
-    x: vertical ? 0 : offset + mask.x
-    y: vertical ? offset + mask.y : 0
-    implicitWidth: vertical ? Density.inner - Appearance.padding.small * 2 : size
-    implicitHeight: vertical ? size : Density.inner - Appearance.padding.small * 2
+    x: vertical ? 0 : offset + root.mainInset + mask.x
+    y: vertical ? offset + root.mainInset + mask.y : 0
+    implicitWidth: vertical ? root.crossSize - root.inset * 2 : size
+    implicitHeight: vertical ? size : root.crossSize - root.inset * 2
     // Signal Bezel §5: fixed rectangular cells, never pills. The active
     // cell is a raised fill with the numeral in ink — not a signal slab.
     radius: Appearance.rounding.small
@@ -80,8 +88,8 @@ StyledRect {
         sourceColor: root.tone.ink
         colorizationColor: root.tone.ink
 
-        x: root.vertical ? 0 : -parent.offset
-        y: root.vertical ? -parent.offset : 0
+        x: root.vertical ? 0 : -(parent.offset + root.mainInset)
+        y: root.vertical ? -(parent.offset + root.mainInset) : 0
         implicitWidth: root.mask.implicitWidth
         implicitHeight: root.mask.implicitHeight
 

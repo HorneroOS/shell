@@ -181,6 +181,9 @@ JsonObject {
         property bool showWindows: true
         property bool showWindowsOnSpecialWorkspaces: showWindows
         property bool activeTrail: false
+        // Inset of the active-workspace highlight inside its track, px at
+        // density 1 (0..8). Cockpit Clear ships 0: its underline is flush.
+        property int activeInset: 4
         property bool perMonitorWorkspaces: true
         // Empty labels let Workspace.qml display the actual workspace name/ID.
         // State remains visible through its active indicator and occupied background.
@@ -241,6 +244,11 @@ JsonObject {
 
     component Sizes: JsonObject {
         property int innerWidth: 24
+        // Island inset: least gap (px at density 1, 0..12) between islands
+        // (workspace track, tray, status chips) and the bar's cross-axis
+        // edges. Cell size stays the upper bound; the inset only shrinks
+        // cells on thin bars. Cockpit Clear ships 0 (no island is drawn).
+        property int islandInset: 4
         // Density (services/Density.qml): follow the screen's logical height,
         // times a user multiplier (0.75..1.5).
         property bool autoDensity: true

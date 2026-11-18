@@ -237,6 +237,31 @@ padding, icons (15 to 18 px), text (12 to 13 px) and the clock, then
 go below 24 px (the full bar height is every segment's hit target). Popouts
 anchor to the scaled bar, so any thickness keeps them correct.
 
+### Island inset and the active-workspace inset
+
+Islands (the workspace track, tray, status and extension chips) do not touch
+the bar's cross-axis edges. `bar.sizes.islandInset` is the least gap, in px at
+density 1; it scales with the density factor (so with the bar thickness) and
+takes at most a quarter of the bar body per side. The cell size
+(`bar.sizes.innerWidth`) stays the upper bound: the island is
+`min(cell, thickness - 2 * inset)` tall (never under 18 px), so thick rails
+(60 px, cell 44: 8 px each side) keep their roomier natural gap and thin
+strips (Cockpit bottom, 28 px) now keep 4 px instead of 2.
+`bar.workspaces.activeInset` insets the active-workspace highlight inside its
+track the same way (the full inset on the cross axis, half along the bar), and
+never leaves less than a numeral's height.
+
+History: the first Hornero bars (imported from the Caelestia-derived tree)
+held every island `max(padding.smaller, border.thickness)` px inside a
+`innerWidth + 2 * padding` body. #520 (thin bars) cut that body padding to 0
+and let islands fill `innerWidth` of a density-scaled thickness, so on thin
+bars the gap collapsed to a side effect of two unrelated numbers (28 - 24 = 2
+px). The inset is now its own control with a default, not a leftover.
+
+Cockpit Clear ships both insets at 0: its reference draws no island and the
+workspace underline is flush with the bar edge, so there is nothing to
+inset. Every other layout ships 4.
+
 ### Every value is a control
 
 The defaults above are only defaults. Control Center, Bars, "Size & shape"
@@ -253,6 +278,8 @@ as `config/BarConfig.qml`:
 | Edge (per bar) | `bar.bars[].edge` | top, bottom, left, right (one bar per edge) |
 | Density (per bar) | `bar.bars[].density` | values, glyphs |
 | Cell size | `bar.sizes.innerWidth` | 22 to 56 px |
+| Island inset | `bar.sizes.islandInset` | 0 to 12 px at density 1 (default 4; Cockpit Clear 0) |
+| Active workspace inset | `bar.workspaces.activeInset` | 0 to 8 px at density 1 (default 4; Cockpit Clear 0) |
 | Icon and label size | `bar.sizes.contentScale` | 75 to 150 % |
 | Icon size | `bar.sizes.iconScale` | 60 to 150 % |
 | Text size | `bar.sizes.textScale` | 75 to 150 % |
@@ -270,3 +297,18 @@ preset ships (read from the preset JSON next to the shell), or to the factory
 fallbacks when the layout is custom. The pure logic lives in
 `modules/controlcenter/taskbar/bargeometry.js`; the controls edit the global
 bar set (per-screen overrides keep their own values).
+
+### My tweaks for a layout
+
+A layout preset rewrites the bars and sizes, so a person who tuned them loses the tuning on every switch. Control
+Center, Layout, "My tweaks for this layout" saves the current values as that layout's override row
+(`layouts.overrides.<layout id>` in `shell.json`, empty by default). Layers, lowest first: factory defaults, preset,
+layout override, experience-mode override, user edits.
+
+Overridable keys (validated and clamped like their controls): `bar.sizes.{innerWidth, contentScale, iconScale,
+textScale, textWeight, itemSpacing, densityScale, autoDensity}`, `bar.typeface`, `appearance.{rounding, spacing,
+padding}.scale`. Bar topology (edges, styles, groups, per-bar thickness) is the preset's and is never overridden.
+After a preset applied from the shell (Layout pane, quick picker, an experience mode's preferred layout, factory
+reset) succeeds, the row is applied about 0.9 s later, once the rewritten `shell.json` has been reloaded. A preset
+applied directly with `horneroctl` does not go through the shell: use "Apply my tweaks". "Forget" returns the layout
+to its preset. Logic: `services/layouts.js`, shell wiring `services/Layouts.qml`.

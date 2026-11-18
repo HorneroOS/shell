@@ -50,6 +50,11 @@ ColumnLayout {
         Config.save();
     }
 
+    function setActiveInset(value: real): void {
+        Config.bar.workspaces.activeInset = Geo.clamp("activeInset", value);
+        Config.save();
+    }
+
     function setScale(group: string, value: real): void {
         Config.appearance[group].scale = Geo.clamp(group + "Scale", value);
         Config.save();
@@ -58,6 +63,8 @@ ColumnLayout {
     function resetGlobals(): void {
         const g = root.presetGlobals;
         Config.bar.sizes.innerWidth = g.innerWidth;
+        Config.bar.sizes.islandInset = g.islandInset;
+        Config.bar.workspaces.activeInset = g.activeInset;
         Config.bar.sizes.contentScale = g.contentScale;
         Config.bar.sizes.iconScale = g.iconScale;
         Config.bar.sizes.textScale = g.textScale;
@@ -250,6 +257,24 @@ ColumnLayout {
         max: Geo.LIMITS.innerWidth.max
         step: Geo.LIMITS.innerWidth.step
         onValueModified: value => root.setSize("innerWidth", value)
+    }
+
+    SpinBoxRow {
+        label: qsTr("Island inset (px)")
+        value: Config.bar.sizes.islandInset
+        min: Geo.LIMITS.islandInset.min
+        max: Geo.LIMITS.islandInset.max
+        step: Geo.LIMITS.islandInset.step
+        onValueModified: value => root.setSize("islandInset", value)
+    }
+
+    SpinBoxRow {
+        label: qsTr("Active workspace inset (px)")
+        value: Config.bar.workspaces.activeInset
+        min: Geo.LIMITS.activeInset.min
+        max: Geo.LIMITS.activeInset.max
+        step: Geo.LIMITS.activeInset.step
+        onValueModified: value => root.setActiveInset(value)
     }
 
     SpinBoxRow {

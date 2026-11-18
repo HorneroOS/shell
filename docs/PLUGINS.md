@@ -50,6 +50,15 @@ to import Shell internals:
 - `Notifications.toast(summary, body, glyph)` shows a bounded in-shell
   toast (the third argument is a Hornero Glyph name). It does not create a
   persistent desktop notification.
+- `Companion.react(pluginId, kind, text)` asks Javi to react to something
+  that really happened in the extension. `kind` is one of `build.done`,
+  `build.failed`, `download.done`, `device.connected`,
+  `device.disconnected`, `task.done`, `attention`; `text` is optional plain
+  text (one line, 80 characters). It is a request: the user's per-event,
+  per-Experience-mode and quiet-hours settings decide, each extension gets
+  3 reactions per minute and can be muted in Control Center › Companion,
+  and the shell-only kinds (battery, notification, charger, mode) are
+  refused. Returns whether Javi showed it. Never use it for decoration.
 - `Desktop.editing`, `Desktop.anchor(pluginId, screenName)` and
   `Desktop.geometry(pluginId, screenName)` read desktop widget state.
   Users change placement in Control Center or in desktop edit mode;
@@ -539,6 +548,15 @@ extension. `Desktop.anchor()` and `Desktop.geometry()` accept an instance key.
 
 `examples/plugins/example-instance-clock` is a complete example.
 
+### Content that does not fit: UiScrollArea
+
+A desktop widget gets a fixed frame the person can resize. Content taller
+than the frame must scroll, not clip: put it in a `UiScrollArea` sized to the
+host context (`width: hostAvailableWidth; height: hostAvailableHeight`) and
+add children to it. The thin track shows only while the content overflows,
+the wheel and Up/Down/PageUp/PageDown scroll it, and it is a tab stop only
+while it scrolls.
+
 ## Accessibility and keyboard contract
 
 Extension UI follows the same keyboard/focus rules as native shell
@@ -865,6 +883,7 @@ for its type:
 | `colour` | `#RRGGBB` (or `#RRGGBBAA` with `alpha: true`) | `alpha` | Swatch, hex field and the Signal palette as presets | 4 |
 | `list` | array of unique strings drawn from `options` | `options` (required, as for enum), `minItems`, `maxItems` | Multi-select toggle group, declared option order | 4 |
 | `text` | string, newlines allowed (max 4096 chars) | `minLength`, `maxLength`, `rows` (1–12) | Multi-line text area | 4 |
+| `strings` | array of non-empty strings (default max 32 items, 128 chars each) | `minItems`, `maxItems` (0–32), `maxLength` (1–128) | Text area, one entry per line | 4 |
 | `path` | empty or a safe relative path | `kind` (`file` or `directory`), `mustExist` (UI hint) | Text field, plus Browse for `kind: file` | 4 |
 
 Display-only fields available on **every** type (level 4; they never change
@@ -873,7 +892,7 @@ what is valid): `title` (label instead of the key, max 48 chars), `group`
 first, groups in first-declared order), `visibleWhen`
 (`{"key": "<other setting>", "equals": <value>}`: the control is shown only
 while that sibling equals the value; a hidden setting keeps its value and
-stays readable by the extension), and for numbers `unit` (suffix, max 8 chars)
+stays readable by the extension), `hidden` (the setting is stored, validated and readable like any other but never rendered in the generated UI and spared by its Reset all: use it for state an extension persists itself, such as a timer deadline; it cannot combine with `visibleWhen`), and for numbers `unit` (suffix, max 8 chars)
 and `step`. The validator rejects `visibleWhen` that names an unknown key,
 itself, a value its target cannot hold, or forms a cycle.
 
@@ -979,7 +998,7 @@ minimum it needs with the optional top-level `"pluginKit"` integer (default
 | Level | Adds |
 | --- | --- |
 | 3 | Signal: Theme, glyphs, surfaces (bar, dashboard, desktop, background, launcher, settings), typed settings (boolean, integer, number, string, enum), data facades |
-| 4 | Command contributions (`contributes.commands`, `surfaces.commands`), settings schema v2 (colour, list, text, path; title, group, unit, step, visibleWhen), Control Center live preview, per-instance desktop widgets (`surfaces.desktop.instances`, `hostInstanceId`, `Settings.instanceId`) |
+| 4 | Contributions (`contributes.commands` / `quickSettings` / `panels` with `surfaces.commands` / `quickSetting` / `panel`), `hidden` settings, `strings` type, `UiScrollArea`, settings schema v2 (colour, list, text, path; title, group, unit, step, visibleWhen), Control Center live preview, per-instance desktop widgets (`surfaces.desktop.instances`, `hostInstanceId`, `Settings.instanceId`) |
 
 `scripts/validate_plugin.py` derives the level a manifest actually needs from
 the features it uses and rejects a package that under-declares; a value above
@@ -1031,6 +1050,43 @@ Each extension's handler has its own Loader: a failure marks that extension
 failed and never the launcher or another extension. Only declared command ids
 run. The handler is in-process QML running as your user, unsandboxed, like
 every other surface. `examples/plugins/example-commands` is a complete example.
+
+## Quick-setting tiles and panels
+
+Two more PluginKit 4 contributions use the same `contributes` declaration
+(RFC 0003 sections 4.3 and 4.4), each with the surface that implements it.
+
+```json
+"contributes": {
+  "quickSettings": [{ "id": "quiet", "title": "Quiet mode", "glyph": "bell", "kind": "toggle" }],
+  "panels": [{ "id": "tags", "title": "Tags", "glyph": "layout-sidebar" }]
+},
+"surfaces": {
+  "quickSetting": { "entrypoint": "Tile.qml" },
+  "panel": { "entrypoint": "Panel.qml" }
+}
+```
+
+- **Quick-setting tile** (`surfaces.quickSetting`, at most 4): an `Item`
+  exposing `property bool checked`, optional `string subtitle` and `bool
+  busy`, and `function toggle()`. The host draws the tile with the same
+  geometry and state layer as the built-in toggles, and supplies its
+  accessible name from the title and subtitle; `kind: "button"` draws no
+  checked state. Tiles are **off by default**: the person adds one in Control
+  Center › Extensions › Details (stored in `plugins.quickTiles`, at most 12),
+  and it appears after the built-in toggles in the Utilities panel. Keep
+  tile state in a `hidden` setting.
+- **Panel** (`surfaces.panel`, at most 4): an `Item` shown inside the
+  extension's row in Control Center › Extensions when the person opens it,
+  loaded only while open. It gets the host context with `hostSurface:
+  "panel"`. A panel cannot navigate or change other panes. A Control Center
+  navigation-rail entry is not offered yet; panels live in the Extensions
+  pane.
+
+Both load asynchronously in their own Loader; a failure marks that extension
+failed and leaves the tile disabled or shows an inline error, never affecting
+the host. Same trust as every surface: in-process QML as your user,
+unsandboxed. `examples/plugins/example-commands` shows both.
 
 ## Manifest: multiple surfaces
 

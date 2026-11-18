@@ -204,6 +204,31 @@ without showing a card, whatever the run status says; the mode is the
 RUN's mode, recorded server-side by run id (an unknown run is treated
 as read-only).
 
+### User presence and undescribed requests (hornero#447, hornero#443)
+
+When `horneroctl assistant status --json` reports `requirePresence: "true"`,
+Allow proves that a person clicked: at click time the bridge runs a small
+script that reads 24 bytes from `/dev/urandom`, base64url-encodes them (a
+32-character nonce), creates `$XDG_RUNTIME_DIR/hornero/approval-presence`
+(0700; `HORNERO_ASSISTANT_PRESENCE_DIR` overrides it, as in horneroctl) and
+writes the nonce with a shell builtin into a fresh 0600 file named
+`<runId>.<promptId>@<generation>` (noclobber). The nonce reaches horneroctl
+as `--presence <nonce>` together with `--request <promptId>@<generation>`:
+hornero#447 accepts it only in argv; it is single-use, bound to that run and
+request, valid for 60 s and consumed by horneroctl before the decision is
+sent. An unconsumed file is removed after the decision. Deny never needs
+presence. With `requirePresence: "false"`, or an older horneroctl that does
+not report the field, no nonce is written and `--presence` is never sent.
+A request without a generation cannot be bound, so Allow stays disabled
+(Deny works). Refusals (`presence-required`, `presence-invalid`) are shown
+on the card; the request stays waiting and nothing was decided. Turning the
+requirement off is a backend setting (`assistant.json`,
+`approvals.requirePresence`); the shell offers no switch for it.
+
+A request the gateway did not describe (`detailBound: "false"`, or
+horneroctl's "an action the gateway did not describe" text) gets a warning
+banner on the card: "Not described: deny unless you expected it."
+
 ## 5. Security notes
 
 - Ask mode means approvals are auto-denied and the run is stopped when a

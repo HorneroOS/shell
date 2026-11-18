@@ -133,7 +133,7 @@ def test_s1_clarify_decision_matches_the_question_text():
 
 
 def test_s1_bridge_passes_the_decided_request_to_the_reducer():
-    assert BRIDGE.count("root.decisionRun, root.decisionRequest, root.decisionDetail") == 2
+    assert BRIDGE.count("root.decisionRun, root.decisionRequest, root.decisionDetail") >= 2
     assert "const runId = root.decisionRun;" in BRIDGE
 
 

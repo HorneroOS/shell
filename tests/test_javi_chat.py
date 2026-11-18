@@ -243,7 +243,7 @@ def test_review_hardening_contracts():
     assert '"--", q]' in inline
     assert '"--", prompt' in BRIDGE and '"--", text]' in BRIDGE
     # H1: decisions carry the displayed request id
-    assert '"--request", pend.requestId' in BRIDGE
+    assert 'approveCommand(id, choice, pend.requestId' in BRIDGE and '"--request", requestRef' in (ROOT / "services" / "assistantrun.js").read_text()
     assert 'pend.requestId === "" || pend.truncated' in BRIDGE
     # H3: every cancel path stops the gateway run
     assert "stopRun(" in inline and "Component.onDestruction" in inline and 'root.cancel("");' in inline

@@ -383,8 +383,11 @@ def test_control_center_dead_close_stub_removed():
 
 
 def test_bridge_approval_ux_is_explicit_and_cli_mediated():
-    for verb in ("approve", "clarify", "events"):
+    for verb in ("clarify", "events"):
         assert f'"assistant", "{verb}"' in BRIDGE
+    # The approve argv is built by the pure, tested approveCommand().
+    assert "AssistantRun.approveCommand(" in BRIDGE
+    assert '"horneroctl", "assistant", "approve"' in (ROOT / "services" / "assistantrun.js").read_text()
     # Decisions are never auto-answered: approve only forwards the
     # exact user-typed choice, validated before any process runs.
     assert 'choice !== "approve" && choice !== "deny"' in BRIDGE

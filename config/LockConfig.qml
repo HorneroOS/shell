@@ -6,6 +6,9 @@ JsonObject {
     // never bodies. Reversible in Settings > Notifications.
     property bool hideNotifs: true
     property bool enableFprint: true
+    // Optional 45° La Plata hairline on the lock's lower left. Off by
+    // default: without context it reads as a stray rendering line.
+    property bool diagonalRule: false
     property int maxFprintTries: 3
     property Sizes sizes: Sizes {}
 

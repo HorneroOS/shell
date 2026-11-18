@@ -152,6 +152,13 @@ glow shows. `appearance.anim.mediaGifSpeedAdjustment` and `sessionGifSpeed` are 
 `background.wallpaperFit`: `crop` (factory, fill and crop), `fit` (whole image), `stretch`, `center`. Applies to still,
 animated and video wallpapers (video has no pad mode, so centre plays as fit).
 
+## Lock screen ornament (Lock screen)
+
+`lock.diagonalRule`: the 45° La Plata hairline in the lower-left strip of the lock (RFC 0001 §2 brand ornament). Off
+by default, because a line that began in the screen corner read as a rendering glitch on real outputs. When on, it is a
+finite segment beside the centre column that fades out at both ends. `tests/test_lock_ornament.py` renders the lock
+offscreen and fails if the default lock draws a 45° line.
+
 ## Placement (Launcher, OSD)
 
 `launcher.align` (left | centre | right along the bottom edge) and `osd.align` (top | centre | bottom along the right

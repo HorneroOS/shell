@@ -147,7 +147,10 @@ def test_offscreen_theme_preview_then_back_to_now(tmp_path):
 
 @requires_qs
 def test_offscreen_chromatic_style_preview_is_named(tmp_path):
-    res = run_pane(tmp_path / "v", scene="preview-variant")
+    # no wallpaper, like the CI container: the one-colour source must be what
+    # the engine (in-process, packaged helper or fixture) is asked for
+    res = run_pane(tmp_path / "v", scene="preview-variant", with_wallpaper=False)
+    assert res["chromaticSource"] == "seed", res["chromaticSource"]
     assert res["variantHovered"] == "vibrant", (res.get("variantEngine"), res.get("variantFailed"))
     assert res["banner"]["state"] == "previewing" and "Chromatic · Vibrant" in res["banner"]["text"]
     assert res["nowUsing"]["title"] == "Hornero Signal Night"

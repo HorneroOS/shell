@@ -39,7 +39,7 @@ def _copy_shell(src: Path, dest: Path) -> Path:
     return dest
 
 
-def run_pane(tmp_path: Path, scene: str = "idle", png: Path | None = None, shell_root: Path | None = None, **extra_env) -> dict:
+def run_pane(tmp_path: Path, scene: str = "idle", png: Path | None = None, shell_root: Path | None = None, with_wallpaper: bool = True, **extra_env) -> dict:
     root = _copy_shell(shell_root or ROOT, tmp_path / "root")
     xdg = tmp_path / "xdg"
     seed_xdg(xdg)
@@ -58,7 +58,9 @@ def run_pane(tmp_path: Path, scene: str = "idle", png: Path | None = None, shell
     bindir.mkdir(exist_ok=True)
     # A settled wallpaper: the pointer file plus `horneroctl wallpaper
     # current`; every other horneroctl call goes to the Chromatic fixture.
-    wall = next(iter(sorted(Path("/usr/share/hornero/wallpapers").rglob("*.jpg"))), None) if Path("/usr/share/hornero/wallpapers").is_dir() else None
+    # `with_wallpaper=False` reproduces a bare container (CI shell-load).
+    walls = Path("/usr/share/hornero/wallpapers")
+    wall = next(iter(sorted(walls.rglob("*.jpg"))), None) if with_wallpaper and walls.is_dir() else None
     if wall:
         ptr = xdg / "state" / "hornero" / "wallpaper"
         ptr.mkdir(parents=True, exist_ok=True)

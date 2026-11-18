@@ -25,6 +25,7 @@ ShellRoot {
 
     readonly property string scene: Quickshell.env("HSCENE") || "idle"
     property string variantHovered: ""
+    readonly property var pane: paneLoader.item
     property string variantEngine: ""
     property var variantFailed: []
 
@@ -113,6 +114,9 @@ ShellRoot {
             "previewState": pane.previewState,
             "variantHovered": root.variantHovered,
             "variantEngine": root.variantEngine,
+            "chromaticSource": ChromaticPreview.request.source,
+            "requestSeeds": ChromaticPreview.request.seeds,
+            "errorCode": ChromaticPreview.errorCode,
             "variantFailed": root.variantFailed,
             "paneSize": [pane.width, pane.height, pane.visible, pane.opacity],
             "texts": root.texts()
@@ -151,11 +155,16 @@ ShellRoot {
             anchors.fill: parent
             color: Signal.palette.ground
 
-            AppearancePane {
-                id: pane
+            // Like the real shell, the pane exists only once the config is
+            // loaded: a pane built earlier would snapshot factory settings.
+            Loader {
+                id: paneLoader
 
                 anchors.fill: parent
-                session: session
+                active: Config.loaded
+                sourceComponent: AppearancePane {
+                    session: session
+                }
             }
         }
     }
@@ -164,7 +173,7 @@ ShellRoot {
         id: step1
 
         interval: 2500
-        running: true
+        running: !!root.pane
         onTriggered: {
             if (root.scene === "collapsed")
                 pane.setAllSections(false);

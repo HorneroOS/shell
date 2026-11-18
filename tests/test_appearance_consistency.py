@@ -165,7 +165,8 @@ def test_color_only_theme_preview_preserves_the_current_wallpaper():
 
     assert "readonly property bool colorOnly: modelData.colorOnly === true" in launcher
     assert 'previewWallpaperPath = resolvedWallpaper || Wallpapers.actualCurrent || "";' in preview
-    assert '`${previewSubtitle} · ${qsTr("Current look")}`' in pane
+    # the applied look is named by the preview banner ("Now using …")
+    assert 'previewIsApplied ? "now" : "previewing"' in pane
     assert "!Themes.hasAvailableWallpaper(modelData)" in preview
     assert "previewing with your current wallpaper" in preview
     theme_preview_path = launcher.split("function previewPathFor(theme: var): string", 1)[1].split(
@@ -272,8 +273,9 @@ def test_theme_collection_metadata_reaches_appearance_cards():
         "function themeById", 1
     )[0]
     assert "return builtIns.concat(catalogue.sort((a, b) =>" in sorting
-    assert 'modelData.collection === "hornero-originals"' in cards
-    assert "collectionId !== (Themes.list[index - 1]?.collection" in cards
+    assert 'theme.collection === "hornero-originals"' in cards and 'theme.collection === "user"' in cards
+    assert "collectionId !== sectionRoot.groupOf(sectionRoot.orderedThemes[index - 1]" in cards
+    assert 'qsTr("Your palettes")' in cards
     assert 'qsTr("Hornero Originals")' in cards
     assert 'qsTr("First-party Hornero Signal looks' in cards
     assert "Eight first-party looks" not in cards
@@ -325,7 +327,7 @@ def test_custom_appearance_cannot_claim_a_catalogue_theme():
     pane = (ROOT / "modules/controlcenter/appearance/AppearancePane.qml").read_text()
 
     assert 'themeId = scheme.id || ""' in signal
-    assert "themeStateReady && !!Signal.themeId" in themes
+    assert "Signal.themeStateReady && !!appliedId" in themes
     assert "savedThemeMissing" in themes
     assert "Following your wallpaper" not in themes + pane
     assert 'previewSource = "current"' in pane

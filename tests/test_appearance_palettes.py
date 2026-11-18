@@ -17,9 +17,11 @@ SWATCH = (APP / "ThemeSwatch.qml").read_text()
 
 
 def test_one_swatch_component_serves_every_chooser():
-    # variants, GTK colour scheme and saved palettes use the shared tile
-    for name in ("ChromaticVariantGallery.qml", "GtkColorSchemeSection.qml", "ChromaticSection.qml"):
+    # variants and GTK colour scheme use the shared tile; saved palettes are
+    # listed once, under Themes > Your palettes, on the same ThemeSwatch face
+    for name in ("ChromaticVariantGallery.qml", "GtkColorSchemeSection.qml"):
         assert "PaletteOption {" in (SECTIONS / name).read_text(), name
+    assert 'qsTr("Your palettes")' in (SECTIONS / "ThemesSection.qml").read_text()
     # the tile itself draws the colours through ThemeSwatch
     assert "ThemeSwatch {" in OPTION
     # Themes cards share the same face, now with the terminal strip
@@ -56,7 +58,9 @@ def test_palette_tile_is_keyboard_and_assistive_tech_ready():
 def test_gtk_scheme_rows_show_real_signal_tables():
     gtk = (SECTIONS / "GtkColorSchemeSection.qml").read_text()
     assert 'Signal.builtInThemes["hornero-signal-day"]' in gtk and 'Signal.builtInThemes["hornero-signal-night"]' in gtk
-    assert "onPreviewStarted: previewController.startGtkColorSchemePreview" in gtk
+    started = gtk.split("onPreviewStarted:", 1)[1].split("onPreviewEnded:", 1)[0]
+    assert "previewController.startGtkColorSchemePreview" in started
+    assert 'endPreviewFor("gtk-color-scheme")' in gtk
 
 
 def test_variant_previews_are_engine_results_computed_on_demand():
@@ -160,7 +164,9 @@ def test_accent_is_in_config_schema_defaults_and_ui():
     assert presets.count("group: \"kawaii\"") >= 6 and presets.count("light:") >= 6
 def test_variant_tiles_preview_on_hover_and_focus_transiently():
     gallery = (SECTIONS / "ChromaticVariantGallery.qml").read_text()
-    assert "onPreviewStarted: ChromaticPreview.hoverVariant" in gallery and "onPreviewEnded: ChromaticPreview.endHover(" in gallery
+    started = gallery.split("onPreviewStarted:", 1)[1].split("onPreviewEnded:", 1)[0]
+    assert "ChromaticPreview.hoverVariant(" in started and "Config.controlCenter.appearanceHoverPreview" in started
+    assert "onPreviewEnded: ChromaticPreview.endHover(" in gallery
     svc = (ROOT / "services" / "ChromaticPreview.qml").read_text()
     assert "function hoverVariant" in svc and "function endHover(id: string)" in svc and "_resumeLive" in svc
     # the shared 30 s idle timer also ends a forgotten hover

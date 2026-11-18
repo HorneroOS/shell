@@ -17,6 +17,35 @@ var VARIANTS = [
     { id: "neon", label: "Neon", description: "Dark only. Saturated complementary accents and glow. Never chosen automatically." }
 ];
 
+// Display label of a Chromatic style id ("vibrant" -> "Vibrant"); the id
+// itself for an unknown one.
+function styleLabel(id) {
+    for (var i = 0; i < VARIANTS.length; i++) {
+        if (VARIANTS[i].id === id)
+            return VARIANTS[i].label;
+    }
+    return id || "";
+}
+
+// One-line description of a Chromatic style id, "" when unknown.
+function styleDescription(id) {
+    for (var i = 0; i < VARIANTS.length; i++) {
+        if (VARIANTS[i].id === id)
+            return VARIANTS[i].description;
+    }
+    return "";
+}
+
+// The style the engine resolved for an applied scheme's `chromatic` block.
+// Live schemes carry it as `variant`; engine documents as `resolved.variant`.
+function appliedStyle(block) {
+    if (!block)
+        return "";
+    if (block.variant)
+        return String(block.variant);
+    return block.resolved && block.resolved.variant ? String(block.resolved.variant) : "";
+}
+
 var MODES = ["auto", "dark", "light"];
 var CONTRASTS = ["auto", "standard", "boosted", "maximum"];
 var DEPTHS = ["standard", "deep"];

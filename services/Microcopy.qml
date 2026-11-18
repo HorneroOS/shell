@@ -39,7 +39,11 @@ Singleton {
             "lock.welcome": qsTr("Welcome back"),
             "session.hint": qsTr("Choose what happens next"),
             "undo.applied": qsTr("Applied"),
-            "undo.undone": qsTr("Undone")
+            "undo.undone": qsTr("Undone"),
+            "appearance.now": qsTr("Now using"),
+            "appearance.previewing": qsTr("Previewing"),
+            "appearance.clickToUse": qsTr("Click to use"),
+            "appearance.applying": qsTr("Applying…")
         })
 
     readonly property var warm: ({
@@ -53,7 +57,11 @@ Singleton {
             "lock.welcome": qsTr("Welcome back. Everything kept its place"),
             "session.hint": qsTr("Rest, restart, or carry on"),
             "undo.applied": qsTr("All set"),
-            "undo.undone": qsTr("Put back")
+            "undo.undone": qsTr("Put back"),
+            "appearance.now": qsTr("Wearing now"),
+            "appearance.previewing": qsTr("Trying on"),
+            "appearance.clickToUse": qsTr("Click to keep it"),
+            "appearance.applying": qsTr("Settling in")
         })
 
     // `key` -> line in the active voice (falls back to plain).

@@ -235,6 +235,14 @@ CollapsibleSection {
             stepSize: 1
             suffix: " s"
         }
+        SwitchRow {
+            label: qsTr("Preview themes and colours while pointing at them")
+            checked: Config.controlCenter.appearanceHoverPreview
+            onToggled: checked => {
+                Config.controlCenter.appearanceHoverPreview = checked;
+                Config.save();
+            }
+        }
     }
 
     SectionContainer {

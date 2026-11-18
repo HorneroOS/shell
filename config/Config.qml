@@ -589,7 +589,8 @@ Singleton {
                 ratio: controlCenter.sizes.ratio
             },
             undoSeconds: controlCenter.undoSeconds,
-            appearanceOpenSections: controlCenter.appearanceOpenSections
+            appearanceOpenSections: controlCenter.appearanceOpenSections,
+            appearanceHoverPreview: controlCenter.appearanceHoverPreview
         };
     }
 

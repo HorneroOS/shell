@@ -9,7 +9,17 @@ import qs.utils
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
+import "./sections"
+import "../../../services/chromatic.js" as Colour
+import "../../../services/chromaticcli.js" as Cli
 
+// Appearance preview (docs/APPEARANCE-PANE.md). One banner says which of
+// three states it is in: "Now using" (what is applied), "Previewing" (what
+// you point at or focus; nothing is applied until you click) or "Applying".
+// Below it, the same sample desktop Chromatic uses (bar, popout, launcher,
+// notification, terminal colours), drawn only from the previewed palette,
+// and measured WCAG contrast for that palette. The recipe (GTK, icons,
+// wallpaper pack) is one click away under Details.
 StyledRect {
     id: root
 
@@ -30,20 +40,15 @@ StyledRect {
     property var tags: []
     property int wallpaperCount: 0
     property bool showAdvancedDetails: false
+    // "now" | "previewing" | "applying" (AppearancePane.previewState).
+    property string previewState: "now"
+    property bool hoverEnabled: true
 
     readonly property bool isThemePreview: source === "theme"
-    readonly property bool compact: width < 600
     readonly property bool hasRecipe: {
         return !!modeText || !!gtkThemeText || !!iconThemeText || !!gtkPreferText || !!wallpaperLabel || (tags && tags.length > 0);
     }
-    readonly property bool showVisualSamples: active && showAdvancedDetails && !compact && (!!gtkThemeText || !!iconThemeText)
-
-    function previewColor(role: string, fallback: color): color {
-        const p = root.rootPane.previewPalette;
-        if (p && Object.prototype.hasOwnProperty.call(p, role))
-            return p[role];
-        return fallback;
-    }
+    readonly property bool showVisualSamples: active && showAdvancedDetails && (!!gtkThemeText || !!iconThemeText)
 
     function modeLabel(mode: string): string {
         return mode === "light" ? qsTr("Light") : qsTr("Dark");
@@ -121,582 +126,395 @@ StyledRect {
         return out;
     }
 
-    radius: Appearance.rounding.small
-    color: previewColor("panel", Signal.tPalette.panel)
+    // Complete flat role map for the specimen: the previewed palette over
+    // the applied roles (a registry listing may carry only a partial
+    // swatch), plus term0..term15.
+    // A Chromatic style pointed at in the gallery is shown on the whole
+    // desktop; the specimen shows that same scheme.
+    readonly property string hoverStyle: ChromaticPreview.hoveredVariant
+    readonly property var hoverScheme: hoverStyle !== "" ? (ChromaticPreview.variantSchemes[hoverStyle] ?? null) : null
+    readonly property string shownTitle: hoverScheme ? qsTr("Chromatic · %1").arg(Cli.styleLabel(hoverStyle)) : titleText
 
-    Item {
+    readonly property var flat: {
+        const out = {};
+        const p = root.hoverScheme ? Colour.flatten(root.hoverScheme) : (root.rootPane.previewPalette ?? {});
+        const live = root.rootPane.liveColors();
+        for (const role of Signal.roles) {
+            const v = p[role] ?? live[role];
+            if (v)
+                out[role] = String(v).toUpperCase();
+        }
+        out.glow = String(p.glow ?? out.signal ?? "");
+        const term = !root.hoverScheme && (root.rootPane.previewTerminal ?? []).length === 16 ? root.rootPane.previewTerminal : root.rootPane.liveTerminal();
+        for (let i = 0; i < 16; i++) {
+            const t = p[`term${i}`] ?? term[i];
+            if (t)
+                out[`term${i}`] = String(t).toUpperCase();
+        }
+        return out;
+    }
+    readonly property bool previewLight: hoverScheme ? hoverScheme.mode === "light" : modeText ? modeText === "light" : Signal.light
+
+    // WCAG checks on the previewed palette, measured, never assumed: body
+    // text needs 4.5:1, accents and controls 3:1 (WCAG 1.4.3 / 1.4.11).
+    readonly property var checks: {
+        const f = root.flat;
+        const rows = [
+            {"label": qsTr("Text"), "fg": f.ink, "bg": f.ground, "min": 4.5},
+            {"label": qsTr("Muted text"), "fg": f.inkMuted, "bg": f.panel, "min": 4.5},
+            {"label": qsTr("Accent"), "fg": f.signal, "bg": f.ground, "min": 3},
+            {"label": qsTr("On accent"), "fg": f.onSignalWell, "bg": f.signalWell, "min": 4.5}
+        ];
+        const out = [];
+        for (const r of rows) {
+            if (!r.fg || !r.bg)
+                continue;
+            const ratio = Colour.contrast(r.fg, r.bg);
+            out.push({"label": r.label, "ratio": ratio, "pass": ratio >= r.min, "min": r.min, "fg": r.fg, "bg": r.bg});
+        }
+        return out;
+    }
+
+    readonly property string bannerState: previewState
+    readonly property string bannerText: {
+        const name = shownTitle || qsTr("your desktop");
+        if (previewState === "applying")
+            return qsTr("%1 %2").arg(Microcopy.line("appearance.applying")).arg(name);
+        if (previewState === "previewing")
+            return qsTr("%1 · %2").arg(Microcopy.line("appearance.previewing")).arg(name);
+        return qsTr("%1 · %2").arg(Microcopy.line("appearance.now")).arg(name);
+    }
+    readonly property string bannerHint: {
+        if (previewState === "previewing")
+            return root.hoverStyle !== "" ? qsTr("Shown on your whole desktop while you point at it. Click to use it; move away to go back.") : qsTr("Nothing has changed yet. %1; move away to go back.").arg(Microcopy.line("appearance.clickToUse"));
+        if (previewState === "applying")
+            return qsTr("Your choice is being applied. Undo appears when it is done.");
+        return hoverEnabled ? qsTr("Point at any theme, wallpaper or colour option to preview it here.") : qsTr("Click any theme, wallpaper or colour option to use it.");
+    }
+
+    radius: Appearance.rounding.small
+    color: Signal.layer(Signal.palette.raised, 1)
+    border.width: 1
+    border.color: previewState === "previewing" ? Signal.palette.cue : Signal.palette.rule
+
+    Behavior on border.color {
+        enabled: !Appearance.anim.reduced
+        ColorAnimation {
+            duration: Appearance.anim.durations.short
+        }
+    }
+
+    ColumnLayout {
         anchors.fill: parent
         anchors.margins: Appearance.padding.normal
+        spacing: Appearance.spacing.normal
 
-        GridLayout {
-            anchors.fill: parent
-            columns: root.compact ? 1 : 2
-            rowSpacing: Appearance.spacing.normal
-            columnSpacing: Appearance.spacing.normal
+        // ---- state banner: Now using / Previewing / Applying ------------
+        StyledRect {
+            id: banner
 
-            // Wallpaper / visual hero
-            StyledClippingRect {
-                Layout.preferredWidth: root.compact ? -1 : root.isThemePreview ? 180 : 220
-                Layout.preferredHeight: root.compact ? 120 : -1
-                Layout.fillWidth: root.compact
-                Layout.fillHeight: !root.compact
-                radius: Appearance.rounding.small
-                color: previewColor("raised", Signal.tPalette.raised)
+            readonly property string bannerState: root.bannerState
+            readonly property string bannerText: root.bannerText
 
-                Image {
-                    id: previewWallpaper
-                    anchors.fill: parent
-                    source: root.wallpaperPath ? `file://${root.wallpaperPath}` : ""
-                    fillMode: Image.PreserveAspectCrop
-                    asynchronous: true
-                    cache: true
-                    visible: status === Image.Ready
-                    Accessible.name: status === Image.Ready
-                        ? (root.wallpaperLabel || Strings.wallpaperDisplayName(root.wallpaperPath))
-                        : status === Image.Error ? qsTr("Wallpaper unavailable") : qsTr("Loading wallpaper")
+            objectName: "previewBanner"
+            Layout.fillWidth: true
+            implicitHeight: bannerRow.implicitHeight + Appearance.padding.small * 2
+            radius: Config.appearance.cozyChips ? Appearance.rounding.normal : Appearance.rounding.small
+            color: root.previewState === "previewing" ? Signal.palette.cueWell : root.previewState === "applying" ? Signal.palette.signalWell : Signal.layer(Signal.palette.panel, 1)
+            Accessible.role: Accessible.StaticText
+            Accessible.name: `${root.bannerText}. ${root.bannerHint}`
+
+            RowLayout {
+                id: bannerRow
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.leftMargin: Appearance.padding.normal
+                anchors.rightMargin: Appearance.padding.normal
+                spacing: Appearance.spacing.normal
+
+                Glyph {
+                    name: root.previewState === "previewing" ? "eye" : root.previewState === "applying" ? "loader-2" : "circle-check"
+                    font.pointSize: Appearance.font.size.normal
+                    color: root.previewState === "previewing" ? Signal.palette.onCueWell : root.previewState === "applying" ? Signal.palette.onSignalWell : Signal.palette.signal
                 }
 
-                Column {
-                    anchors.centerIn: parent
-                    spacing: Appearance.spacing.smaller
-                    visible: root.active && previewWallpaper.status !== Image.Ready
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 0
 
-                    Glyph {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        name: previewWallpaper.status === Image.Error ? "photo-off" : "wallpaper"
-                        font.pointSize: Appearance.font.size.large
-                        color: previewColor("ruleStrong", Signal.palette.ruleStrong)
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: root.bannerText
+                        font.pointSize: Appearance.font.size.normal
+                        font.weight: Appearance.font.weight.strong
+                        color: root.previewState === "previewing" ? Signal.palette.onCueWell : root.previewState === "applying" ? Signal.palette.onSignalWell : Signal.palette.ink
+                        elide: Text.ElideRight
                     }
 
                     StyledText {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: previewWallpaper.status === Image.Error
-                            ? qsTr("Wallpaper unavailable")
-                            : root.wallpaperPath ? qsTr("Loading wallpaper") : qsTr("No wallpaper selected")
+                        Layout.fillWidth: true
+                        text: root.bannerHint
                         font.pointSize: Appearance.font.size.small
-                        color: previewColor("inkMuted", Signal.palette.inkMuted)
+                        color: root.previewState === "previewing" ? Signal.palette.onCueWell : root.previewState === "applying" ? Signal.palette.onSignalWell : Signal.palette.inkMuted
+                        wrapMode: Text.WordWrap
+                        maximumLineCount: 2
+                        elide: Text.ElideRight
                     }
                 }
+            }
+        }
 
-                // Mode badge over wallpaper
+        // ---- the honest specimen: bar, popout, launcher, notification,
+        // terminal colours, drawn only from the previewed palette ----------
+        ChromaticSpecimenBoard {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.minimumHeight: 280
+            palette: root.flat
+            light: root.previewLight
+            wallpaper: root.wallpaperPath
+        }
+
+        // ---- measured contrast -----------------------------------------
+        Flow {
+            Layout.fillWidth: true
+            spacing: Appearance.spacing.small
+            Accessible.role: Accessible.List
+            Accessible.name: qsTr("Contrast checks")
+
+            Repeater {
+                model: root.checks
+
                 StyledRect {
-                    anchors.left: parent.left
-                    anchors.top: parent.top
-                    anchors.margins: Appearance.padding.small
-                    visible: root.active && !!root.modeText
+                    id: check
+
+                    required property var modelData
+
                     radius: Appearance.rounding.small
-                    color: Qt.alpha(previewColor("base", Signal.palette.base), 0.88)
-                    implicitWidth: modeBadge.implicitWidth + Appearance.padding.small * 2
-                    implicitHeight: modeBadge.implicitHeight + Appearance.padding.smaller
+                    color: check.modelData.pass ? Signal.layer(Signal.palette.panel, 1) : Signal.palette.alertWell
+                    border.width: 1
+                    border.color: check.modelData.pass ? Signal.palette.rule : Signal.palette.alert
+                    implicitWidth: checkRow.implicitWidth + Appearance.padding.small * 2
+                    implicitHeight: checkRow.implicitHeight + Appearance.padding.smaller * 2
+                    Accessible.role: Accessible.ListItem
+                    Accessible.name: check.modelData.pass ? qsTr("%1 contrast %2 to 1, passes %3 to 1").arg(check.modelData.label).arg(check.modelData.ratio.toFixed(1)).arg(check.modelData.min) : qsTr("%1 contrast %2 to 1, below %3 to 1").arg(check.modelData.label).arg(check.modelData.ratio.toFixed(1)).arg(check.modelData.min)
 
                     Row {
-                        id: modeBadge
-                        anchors.centerIn: parent
-                        spacing: 4
+                        id: checkRow
 
-                        Glyph {
-                            name: root.modeText === "light" ? "sun" : "moon"
-                            font.pointSize: Appearance.font.size.small
-                            color: previewColor("signal", Signal.palette.signal)
+                        anchors.centerIn: parent
+                        spacing: Appearance.spacing.smaller
+
+                        // The pair itself: foreground letter on its background.
+                        Rectangle {
+                            width: 18
+                            height: 18
+                            radius: 3 // fixed: 18 px contrast sample tile, not a theme corner
+                            color: check.modelData.bg
+                            border.width: 1
+                            border.color: Signal.palette.rule
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "Aa"
+                                font.pixelSize: 9 // fixed: "Aa" glyph sized to the 18 px sample tile
+                                font.bold: true
+                                color: check.modelData.fg
+                            }
                         }
 
                         StyledText {
-                            text: root.modeLabel(root.modeText)
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: check.modelData.label
                             font.pointSize: Appearance.font.size.smaller
-                            color: previewColor("ink", Signal.palette.ink)
+                            color: check.modelData.pass ? Signal.palette.inkMuted : Signal.palette.onAlertWell
+                        }
+
+                        StyledText {
+                            anchors.verticalCenter: parent.verticalCenter
+                            mono: true
+                            text: `${check.modelData.ratio.toFixed(1)}:1`
+                            font.pointSize: Appearance.font.size.smaller
+                            color: check.modelData.pass ? Signal.palette.ink : Signal.palette.onAlertWell
+                        }
+
+                        Glyph {
+                            anchors.verticalCenter: parent.verticalCenter
+                            name: check.modelData.pass ? "check" : "alert-triangle"
+                            font.pointSize: Appearance.font.size.smaller
+                            color: check.modelData.pass ? Signal.palette.phosphor : Signal.palette.onAlertWell
                         }
                     }
                 }
-
-                Glyph {
-                    anchors.centerIn: parent
-                    visible: !root.active
-                    name: "eye"
-                    font.pointSize: Appearance.font.size.extraLarge
-                    color: previewColor("ruleStrong", Signal.palette.ruleStrong)
-                }
             }
+        }
+
+        // ---- what it is ------------------------------------------------
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Appearance.spacing.normal
 
             ColumnLayout {
                 Layout.fillWidth: true
-                Layout.fillHeight: !root.compact
-                Layout.preferredHeight: root.compact ? 240 : -1
-                spacing: Appearance.spacing.small
+                spacing: 1
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: root.titleText || qsTr("Select an option")
+                    text: root.shownTitle || qsTr("Your desktop")
                     font.pointSize: Appearance.font.size.normal
                     font.weight: Appearance.font.weight.strong
-                    color: previewColor("ink", Signal.palette.ink)
                     elide: Text.ElideRight
                 }
 
                 StyledText {
                     Layout.fillWidth: true
+                    visible: text !== ""
                     text: {
-                        const subtitle = root.subtitleText || qsTr("Preview updates here — click to apply");
-                        return root.compact && root.readinessDetails ? `${subtitle} · ${root.readinessDetails}` : subtitle;
+                        if (root.hoverScheme)
+                            return [Cli.styleDescription(root.hoverStyle), root.modeLabel(root.previewLight ? "light" : "dark")].filter(t => !!t).join(" · ");
+                        const parts = [root.subtitleText];
+                        if (root.modeText)
+                            parts.push(root.modeLabel(root.modeText));
+                        if (root.wallpaperPath.startsWith("/"))
+                            parts.push(Strings.wallpaperDisplayName(root.wallpaperLabel || root.wallpaperPath));
+                        return parts.filter(t => !!t).join(" · ");
                     }
-                    color: previewColor("ruleStrong", Signal.palette.ruleStrong)
                     font.pointSize: Appearance.font.size.small
+                    color: Signal.palette.inkMuted
                     elide: Text.ElideRight
                     maximumLineCount: 2
                     wrapMode: Text.WordWrap
                 }
 
-                RowLayout {
-                    visible: root.isThemePreview && !root.compact && !!root.readinessDetails
+                StyledText {
                     Layout.fillWidth: true
-                    spacing: Appearance.spacing.small
-
-                    Glyph {
-                        Layout.alignment: Qt.AlignTop
-                        name: "info-circle"
-                        font.pointSize: Appearance.font.size.small
-                        color: previewColor("phosphor", Signal.palette.phosphor)
-                    }
-
-                    StyledText {
-                        Layout.fillWidth: true
-                        text: root.readinessDetails
-                        color: previewColor("phosphor", Signal.palette.phosphor)
-                        font.pointSize: Appearance.font.size.smaller
-                        wrapMode: Text.WordWrap
-                        maximumLineCount: 3
-                        elide: Text.ElideRight
-                        Accessible.name: qsTr("Theme requirements")
-                    }
+                    visible: root.isThemePreview && !!root.readinessDetails
+                    text: root.readinessDetails
+                    color: Signal.palette.phosphor
+                    font.pointSize: Appearance.font.size.smaller
+                    wrapMode: Text.WordWrap
+                    maximumLineCount: 3
+                    elide: Text.ElideRight
+                    Accessible.name: qsTr("Theme requirements")
                 }
+            }
 
-                // Palette swatches
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: Appearance.spacing.small
-
-
-                    Repeater {
-                        model: [
-                            {
-                                role: "signal",
-                                fallback: Signal.palette.signal
-                            },
-                            {
-                                role: "cue",
-                                fallback: Signal.palette.cue
-                            },
-                            {
-                                role: "phosphor",
-                                fallback: Signal.palette.phosphor
-                            },
-                            {
-                                role: "base",
-                                fallback: Signal.palette.base
-                            },
-                            {
-                                role: "alert",
-                                fallback: Signal.palette.alert
-                            }
-                        ]
-
-                        delegate: StyledRect {
-                            required property var modelData
-                            radius: Appearance.rounding.small
-                            color: root.previewColor(modelData.role, modelData.fallback)
-                            implicitHeight: 22
-                            implicitWidth: 22
-                            border.width: 1
-                            border.color: Qt.alpha(previewColor("ruleStrong", Signal.palette.ruleStrong), 0.25)
-                        }
-                    }
-
-                    Item {
-                        Layout.fillWidth: true
-                    }
-
-                    StyledText {
-                        visible: root.isThemePreview && root.showAdvancedDetails && !!root.themeIdText
-                        text: root.themeIdText
-                        Layout.maximumWidth: 100
-                        font.family: root.rootPane.fontFamilyMono
-                        font.pointSize: Appearance.font.size.smaller
-                        color: previewColor("ruleStrong", Signal.palette.ruleStrong)
-                        elide: Text.ElideMiddle
-                    }
-                }
-
-                // Advanced implementation details stay out of the default
-                // preview. The title, description, wallpaper and palette are
-                // enough to understand a look; backend names remain available
-                // to users who deliberately expand this section.
-                StyledRect {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: !root.compact && root.showAdvancedDetails
-                    Layout.preferredHeight: root.showAdvancedDetails ? (root.compact ? 260 : 360) : 56
-                    visible: root.active && root.hasRecipe
-                    radius: Appearance.rounding.small
-                    color: Qt.alpha(previewColor("raised", Signal.tPalette.raised), 0.65)
-
-                    ColumnLayout {
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.normal
-                        spacing: Appearance.spacing.small / 2
-
-                        RowLayout {
-                            Layout.fillWidth: true
-
-                            StyledText {
-                                Layout.fillWidth: true
-                                text: qsTr("About this look")
-                                font.pointSize: Appearance.font.size.small
-                                font.weight: Appearance.font.weight.strong
-                                color: previewColor("ink", Signal.palette.ink)
-                            }
-
-                            TextButton {
-                                type: TextButton.Text
-                                toggle: true
-                                checked: root.showAdvancedDetails
-                                text: root.showAdvancedDetails ? qsTr("Hide details") : qsTr("More details")
-                                Accessible.name: text
-                                onClicked: root.showAdvancedDetails = !root.showAdvancedDetails
-                            }
-                        }
-
-                        Flow {
-                            Layout.fillWidth: true
-                            visible: root.showAdvancedDetails && !root.isThemePreview
-                            spacing: Appearance.spacing.smaller
-
-                            PreviewChip {
-                                visible: !!root.modeText
-                                icon: root.modeText === "light" ? "sun" : "moon"
-                                label: qsTr("Mode")
-                                value: root.modeLabel(root.modeText)
-                            }
-
-                            PreviewChip {
-                                visible: !!root.gtkThemeText
-                                icon: "device-desktop"
-                                label: qsTr("GTK")
-                                value: root.gtkThemeText
-                            }
-
-                            PreviewChip {
-                                visible: !!root.iconThemeText
-                                icon: "photo"
-                                label: qsTr("Icons")
-                                value: root.iconThemeText
-                            }
-
-                            PreviewChip {
-                                visible: !!root.wallpaperLabel || !!root.wallpaperPath
-                                icon: "wallpaper"
-                                label: qsTr("Wallpaper")
-                                value: root.wallpaperLabel || Strings.wallpaperDisplayName(root.wallpaperPath)
-                            }
-                        }
-
-                        // Exact recipe for theme packs
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            visible: root.isThemePreview && root.showAdvancedDetails
-                            spacing: 2
-
-                            RecipeRow {
-                                icon: root.modeText === "light" ? "sun" : "moon"
-                                label: qsTr("Theme mode")
-                                value: root.modeLabel(root.modeText)
-                            }
-
-                            RecipeRow {
-                                icon: "device-desktop"
-                                label: qsTr("GTK theme")
-                                value: root.gtkThemeText || "—"
-                            }
-
-                            RecipeRow {
-                                visible: !root.compact
-                                icon: root.gtkColorSchemeIcon(root.gtkPreferText)
-                                label: qsTr("GTK color scheme")
-                                value: root.gtkColorSchemeLabel(root.gtkPreferText)
-                            }
-
-                            RecipeRow {
-                                icon: "photo"
-                                label: qsTr("Icon theme")
-                                value: root.iconThemeText || "—"
-                            }
-
-                            RecipeRow {
-                                visible: !root.compact
-                                icon: "wallpaper"
-                                label: qsTr("Default wallpaper")
-                                value: root.wallpaperLabel || Strings.wallpaperDisplayName(root.wallpaperPath) || "—"
-                            }
-
-                            RecipeRow {
-                                visible: !root.compact && root.wallpaperCount > 0
-                                icon: "photo"
-                                label: qsTr("Wallpapers in pack")
-                                value: String(root.wallpaperCount)
-                            }
-                        }
-
-                        // Visual samples: GTK thumbnail + icon strip
-                        RowLayout {
-                            Layout.fillWidth: true
-                            Layout.topMargin: Appearance.spacing.small / 2
-                            visible: root.showVisualSamples
-                            spacing: Appearance.spacing.normal
-
-                            ColumnLayout {
-                                spacing: 4
-                                visible: !!root.gtkThemeText
-
-                                StyledText {
-                                    text: qsTr("GTK")
-                                    font.pointSize: Appearance.font.size.smaller
-                                    color: previewColor("ruleStrong", Signal.palette.ruleStrong)
-                                }
-
-                                FallbackImage {
-                                    implicitWidth: 88
-                                    implicitHeight: 56
-                                    candidates: root.showVisualSamples ? root.gtkThumbnailCandidates(root.gtkThemeText) : []
-                                    placeholderIcon: "device-desktop"
-                                    placeholderText: root.gtkThemeText === "auto" ? qsTr("auto") : qsTr("No thumb")
-                                }
-                            }
-
-                            ColumnLayout {
-                                Layout.fillWidth: true
-                                spacing: 4
-                                visible: !!root.iconThemeText
-
-                                StyledText {
-                                    text: qsTr("Icons")
-                                    font.pointSize: Appearance.font.size.smaller
-                                    color: previewColor("ruleStrong", Signal.palette.ruleStrong)
-                                }
-
-                                Row {
-                                    spacing: Appearance.spacing.small
-
-                                    Repeater {
-                                        model: ["folder", "user-home", "firefox", "terminal", "system-file-manager", "applications-system"]
-
-                                        delegate: FallbackImage {
-                                            required property string modelData
-                                            implicitWidth: 28
-                                            implicitHeight: 28
-                                            candidates: root.showVisualSamples ? root.iconSampleCandidates(root.iconThemeText, modelData) : []
-                                            placeholderIcon: ""
-                                            hideWhenMissing: true
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        Flow {
-                            Layout.fillWidth: true
-                            visible: root.showAdvancedDetails && !root.compact && root.tags && root.tags.length > 0
-                            spacing: Appearance.spacing.smaller
-
-                            Repeater {
-                                model: root.tags ?? []
-
-                                delegate: StyledRect {
-                                    required property var modelData
-                                    radius: Appearance.rounding.small
-                                    color: Qt.alpha(previewColor("signalWell", Signal.palette.signalWell), 0.55)
-                                    implicitWidth: tagLabel.implicitWidth + Appearance.padding.small * 2
-                                    implicitHeight: tagLabel.implicitHeight + Appearance.padding.smaller
-
-                                    StyledText {
-                                        id: tagLabel
-                                        anchors.centerIn: parent
-                                        text: modelData
-                                        font.pointSize: Appearance.font.size.smaller
-                                        color: previewColor("onSignalWell", Signal.palette.onSignalWell)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Show how the theme reads on a real Shell surface instead of
-                // leaving the right side of the preview empty when recipe
-                // details are collapsed.
-                StyledRect {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: root.isThemePreview && !root.compact
-                    visible: root.active && root.isThemePreview && !root.compact
-                    radius: Appearance.rounding.small
-                    color: Qt.alpha(previewColor("raised", Signal.tPalette.raised), 0.82)
-
-                    ColumnLayout {
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.small
-                        spacing: Appearance.spacing.small
-
-                        RowLayout {
-                            Layout.fillWidth: true
-                            Glyph {
-                                name: "dashboard"
-                                color: previewColor("signal", Signal.palette.signal)
-                                font.pointSize: Appearance.font.size.normal
-                            }
-                            StyledText {
-                                Layout.fillWidth: true
-                                text: qsTr("Interface sample")
-                                font.pointSize: Appearance.font.size.small
-                                font.weight: Appearance.font.weight.strong
-                                color: previewColor("ink", Signal.palette.ink)
-                            }
-                            StyledRect {
-                                radius: Appearance.rounding.small
-                                color: previewColor("signalWell", Signal.palette.signalWell)
-                                implicitWidth: sampleBadge.implicitWidth + Appearance.padding.small * 2
-                                implicitHeight: sampleBadge.implicitHeight + Appearance.padding.smaller
-                                StyledText {
-                                    id: sampleBadge
-                                    anchors.centerIn: parent
-                                    text: qsTr("Preview")
-                                    font.pointSize: Appearance.font.size.smaller
-                                    color: previewColor("onSignalWell", Signal.palette.onSignalWell)
-                                }
-                            }
-                        }
-
-                        StyledRect {
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            radius: Appearance.rounding.small
-                            color: previewColor("panel", Signal.tPalette.panel)
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.margins: Appearance.padding.small
-                                spacing: Appearance.spacing.small
-                                Glyph {
-                                    name: "palette"
-                                    color: previewColor("signal", Signal.palette.signal)
-                                    font.pointSize: Appearance.font.size.normal
-                                }
-                                ColumnLayout {
-                                    Layout.fillWidth: true
-                                    spacing: 2
-                                    StyledText {
-                                        Layout.fillWidth: true
-                                        text: qsTr("A desktop that feels like yours")
-                                        font.pointSize: Appearance.font.size.small
-                                        font.weight: Appearance.font.weight.strong
-                                        color: previewColor("ink", Signal.palette.ink)
-                                        elide: Text.ElideRight
-                                    }
-                                    StyledText {
-                                        Layout.fillWidth: true
-                                        text: qsTr("Surfaces, text, and accents work together.")
-                                        font.pointSize: Appearance.font.size.smaller
-                                        color: previewColor("inkMuted", Signal.palette.inkMuted)
-                                        elide: Text.ElideRight
-                                    }
-                                }
-                                Glyph {
-                                    name: "circle-check"
-                                    color: previewColor("signal", Signal.palette.signal)
-                                    font.pointSize: Appearance.font.size.normal
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // The custom-appearance typography sandbox is useful for
-                // tuning fonts, but it is an advanced preview detail rather
-                // than part of the everyday "choose a look" flow.
-                StyledRect {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    visible: root.active && root.showAdvancedDetails && !root.isThemePreview && !root.compact
-                    radius: Appearance.rounding.small * root.rootPane.roundingScale
-                    color: root.rootPane.transparencyEnabled ? Qt.alpha(previewColor("panel", Signal.palette.panel), root.rootPane.transparencyBase) : previewColor("panel", Signal.palette.panel)
-
-                    ColumnLayout {
-                        anchors.fill: parent
-                        anchors.margins: Math.max(8, Appearance.padding.normal * root.rootPane.paddingScale)
-                        spacing: Math.max(4, Appearance.spacing.small * root.rootPane.spacingScale)
-
-                        StyledText {
-                            text: qsTr("Typography Preview")
-                            font.family: root.rootPane.fontFamilySans
-                            font.pointSize: Appearance.font.size.normal * root.rootPane.fontSizeScale
-                            font.weight: Appearance.font.weight.strong
-                            color: previewColor("ink", Signal.palette.ink)
-                        }
-
-                        StyledText {
-                            text: qsTr("Monospace: 1234 ABCD")
-                            font.family: root.rootPane.fontFamilyMono
-                            font.pointSize: Appearance.font.size.small * root.rootPane.fontSizeScale
-                            color: previewColor("inkMuted", Signal.palette.inkMuted)
-                        }
-
-                        StyledText {
-                            visible: !!root.modeText
-                            text: qsTr("Mode: %1").arg(root.modeLabel(root.modeText))
-                            font.pointSize: Appearance.font.size.small
-                            color: previewColor("inkMuted", Signal.palette.inkMuted)
-                        }
-                    }
-                }
-
-                // Idle hint
-                Item {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    visible: !root.active
-
-                    StyledText {
-                        anchors.centerIn: parent
-                        text: qsTr("Hover or select a theme, wallpaper, mode, or scheme")
-                        color: previewColor("ruleStrong", Signal.palette.ruleStrong)
-                        font.pointSize: Appearance.font.size.small
-                    }
-                }
+            TextButton {
+                visible: root.active && root.hasRecipe
+                type: TextButton.Text
+                toggle: true
+                checked: root.showAdvancedDetails
+                text: root.showAdvancedDetails ? qsTr("Hide details") : qsTr("Details")
+                Accessible.name: root.showAdvancedDetails ? qsTr("Hide the theme recipe") : qsTr("Show the theme recipe: GTK, icons, wallpaper")
+                onClicked: root.showAdvancedDetails = !root.showAdvancedDetails
             }
         }
-    }
 
-    component PreviewChip: StyledRect {
-        id: chip
+        // ---- recipe (advanced, opt-in) -----------------------------------
+        ColumnLayout {
+            Layout.fillWidth: true
+            visible: root.active && root.showAdvancedDetails
+            spacing: 2
 
-        property string icon
-        property string label
-        property string value
-
-        radius: Appearance.rounding.small
-        color: Qt.alpha(previewColor("signalWell", Signal.palette.signalWell), 0.7)
-        implicitWidth: chipRow.implicitWidth + Appearance.padding.small * 2
-        implicitHeight: chipRow.implicitHeight + Appearance.padding.smaller
-
-        Row {
-            id: chipRow
-            anchors.centerIn: parent
-            spacing: 4
-
-            Glyph {
-                name: chip.icon
-                font.pointSize: Appearance.font.size.small
-                color: previewColor("onSignalWell", Signal.palette.onSignalWell)
+            RecipeRow {
+                icon: root.modeText === "light" ? "sun" : "moon"
+                label: qsTr("Theme mode")
+                value: root.modeLabel(root.modeText)
             }
 
-            StyledText {
-                text: `${chip.label}: ${chip.value}`
-                font.pointSize: Appearance.font.size.smaller
-                color: previewColor("onSignalWell", Signal.palette.onSignalWell)
+            RecipeRow {
+                icon: "device-desktop"
+                label: qsTr("GTK theme")
+                value: root.gtkThemeText || "—"
+            }
+
+            RecipeRow {
+                icon: root.gtkColorSchemeIcon(root.gtkPreferText)
+                label: qsTr("GTK color scheme")
+                value: root.gtkColorSchemeLabel(root.gtkPreferText)
+            }
+
+            RecipeRow {
+                icon: "photo"
+                label: qsTr("Icon theme")
+                value: root.iconThemeText || "—"
+            }
+
+            RecipeRow {
+                visible: root.wallpaperPath.startsWith("/")
+                icon: "wallpaper"
+                label: qsTr("Wallpaper")
+                value: Strings.wallpaperDisplayName(root.wallpaperLabel || root.wallpaperPath)
+            }
+
+            RecipeRow {
+                visible: root.wallpaperCount > 0
+                icon: "photo"
+                label: qsTr("Wallpapers in pack")
+                value: String(root.wallpaperCount)
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.topMargin: Appearance.spacing.small / 2
+                visible: root.showVisualSamples
+                spacing: Appearance.spacing.normal
+
+                FallbackImage {
+                    visible: !!root.gtkThemeText
+                    implicitWidth: 88
+                    implicitHeight: 56
+                    candidates: root.showVisualSamples ? root.gtkThumbnailCandidates(root.gtkThemeText) : []
+                    placeholderIcon: "device-desktop"
+                    placeholderText: root.gtkThemeText === "auto" ? qsTr("auto") : qsTr("No thumb")
+                }
+
+                Row {
+                    visible: !!root.iconThemeText
+                    spacing: Appearance.spacing.small
+
+                    Repeater {
+                        model: ["folder", "user-home", "firefox", "terminal", "system-file-manager", "applications-system"]
+
+                        delegate: FallbackImage {
+                            required property string modelData
+                            implicitWidth: 28
+                            implicitHeight: 28
+                            candidates: root.showVisualSamples ? root.iconSampleCandidates(root.iconThemeText, modelData) : []
+                            placeholderIcon: ""
+                            hideWhenMissing: true
+                        }
+                    }
+                }
+            }
+
+            Flow {
+                Layout.fillWidth: true
+                visible: root.tags && root.tags.length > 0
+                spacing: Appearance.spacing.smaller
+
+                Repeater {
+                    model: root.tags ?? []
+
+                    delegate: StyledRect {
+                        required property var modelData
+                        radius: Appearance.rounding.small
+                        color: Signal.palette.signalWell
+                        implicitWidth: tagLabel.implicitWidth + Appearance.padding.small * 2
+                        implicitHeight: tagLabel.implicitHeight + Appearance.padding.smaller
+
+                        StyledText {
+                            id: tagLabel
+                            anchors.centerIn: parent
+                            text: modelData
+                            font.pointSize: Appearance.font.size.smaller
+                            color: Signal.palette.onSignalWell
+                        }
+                    }
+                }
             }
         }
     }
@@ -714,13 +532,13 @@ StyledRect {
         Glyph {
             name: row.icon
             font.pointSize: Appearance.font.size.small
-            color: previewColor("signal", Signal.palette.signal)
+            color: Signal.palette.signal
         }
 
         StyledText {
             text: row.label
             font.pointSize: Appearance.font.size.small
-            color: previewColor("ruleStrong", Signal.palette.ruleStrong)
+            color: Signal.palette.ruleStrong
             Layout.preferredWidth: 120
         }
 
@@ -729,7 +547,7 @@ StyledRect {
             text: row.value
             font.pointSize: Appearance.font.size.small
             font.weight: Appearance.font.weight.medium
-            color: previewColor("ink", Signal.palette.ink)
+            color: Signal.palette.ink
             elide: Text.ElideMiddle
         }
     }
@@ -748,7 +566,7 @@ StyledRect {
         property bool exhausted: false
 
         radius: Appearance.rounding.small
-        color: Qt.alpha(previewColor("base", Signal.palette.base), 0.55)
+        color: Qt.alpha(Signal.palette.base, 0.55)
         visible: !(hideWhenMissing && exhausted && !loaded)
         clip: true
 
@@ -800,7 +618,7 @@ StyledRect {
                 visible: !!thumb.placeholderIcon
                 name: thumb.placeholderIcon
                 font.pointSize: Appearance.font.size.normal
-                color: previewColor("ruleStrong", Signal.palette.ruleStrong)
+                color: Signal.palette.ruleStrong
             }
 
             StyledText {
@@ -808,7 +626,7 @@ StyledRect {
                 visible: !!thumb.placeholderText
                 text: thumb.placeholderText
                 font.pointSize: Appearance.font.size.smaller
-                color: previewColor("ruleStrong", Signal.palette.ruleStrong)
+                color: Signal.palette.ruleStrong
             }
         }
 

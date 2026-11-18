@@ -21,10 +21,20 @@ CollapsibleSection {
     required property var session
 
     title: qsTr("Themes")
-    description: qsTr("Choose a look for your desktop. Themes update colors and app styling; some also include a matching wallpaper.")
+    description: qsTr("Curated looks and your saved palettes. Point at one to preview it, click to use it; Undo is right above.")
     showBackground: true
 
     property string selectedThemeId: ""
+
+    // Grouped as the headings read: Hornero Originals, Your palettes,
+    // then other installed looks.
+    function groupOf(theme: var): string {
+        return theme.collection === "hornero-originals" ? "hornero-originals" : theme.collection === "user" ? "user" : "other";
+    }
+    readonly property var orderedThemes: {
+        const list = Themes.list ?? [];
+        return list.filter(t => groupOf(t) === "hornero-originals").concat(list.filter(t => groupOf(t) === "user"), list.filter(t => groupOf(t) === "other"));
+    }
 
     Component.onCompleted: {
         Themes.reload();
@@ -86,7 +96,7 @@ CollapsibleSection {
         }
 
         Repeater {
-            model: Themes.list
+            model: sectionRoot.orderedThemes
 
             delegate: ColumnLayout {
                 id: themeItem
@@ -97,11 +107,15 @@ CollapsibleSection {
                 Layout.fillWidth: true
                 spacing: 0
 
-                readonly property bool isStaged: modelData.id === previewController.pendingThemeId
-                readonly property bool isCurrent: Signal.themeStateReady && !!Signal.themeId && modelData.id === Signal.themeId
+                // Applied theme (the live shell's pre-preview identity while a
+                // Chromatic style is shown on the desktop).
+                readonly property string appliedId: Signal.previewing && Signal._snapshot ? (Signal._snapshot.id ?? "") : Signal.themeId
+                readonly property bool isCurrent: Signal.themeStateReady && !!appliedId && modelData.id === appliedId
+                readonly property bool isApplying: ThemePipeline.busy && modelData.id === previewController.pendingThemeId && !isCurrent
+                readonly property bool isPreviewed: !isCurrent && !isApplying && previewController.previewSource === "theme" && previewController.previewThemeId === modelData.id && previewController.previewState === "previewing"
                 readonly property bool isExpanded: modelData.id === sectionRoot.selectedThemeId
-                readonly property string collectionId: modelData.collection === "hornero-originals" ? "hornero-originals" : "other"
-                readonly property bool showCollectionHeading: index === 0 || collectionId !== (Themes.list[index - 1]?.collection === "hornero-originals" ? "hornero-originals" : "other")
+                readonly property string collectionId: sectionRoot.groupOf(modelData)
+                readonly property bool showCollectionHeading: index === 0 || collectionId !== sectionRoot.groupOf(sectionRoot.orderedThemes[index - 1] ?? ({}))
                 readonly property bool missingGtkTheme: ThemeCatalogue.gtkThemesLoaded && !ThemeCatalogue.gtkThemesFailed && !!modelData.gtkTheme && modelData.gtkTheme !== "auto" && ThemeCatalogue.gtkThemes.indexOf(modelData.gtkTheme) < 0
                 readonly property bool missingIconTheme: ThemeCatalogue.iconThemesLoaded && !ThemeCatalogue.iconThemesFailed && !!modelData.iconTheme && ThemeCatalogue.iconThemes.indexOf(modelData.iconTheme) < 0
                 readonly property bool gtkAvailabilityUnknown: ThemeCatalogue.gtkThemesFailed
@@ -164,14 +178,15 @@ CollapsibleSection {
                         spacing: 2
 
                         StyledText {
-                            text: themeItem.collectionId === "hornero-originals" ? qsTr("Hornero Originals") : qsTr("Other looks")
+                            text: themeItem.collectionId === "hornero-originals" ? qsTr("Hornero Originals") : themeItem.collectionId === "user" ? qsTr("Your palettes") : qsTr("Other looks")
                             font.pointSize: Appearance.font.size.normal
                             font.weight: Appearance.font.weight.strong
+                            Accessible.role: Accessible.Heading
                         }
 
                         StyledText {
-                            visible: themeItem.collectionId === "hornero-originals"
-                            text: qsTr("First-party Hornero Signal looks: graphite night, drafting-paper day and high contrast.")
+                            visible: themeItem.collectionId !== "other"
+                            text: themeItem.collectionId === "user" ? qsTr("Saved from Chromatic or the palette editor.") : qsTr("First-party Hornero Signal looks: graphite night, drafting-paper day, dusk and high contrast.")
                             font.pointSize: Appearance.font.size.small
                             color: Signal.palette.inkMuted
                             wrapMode: Text.WordWrap
@@ -180,16 +195,41 @@ CollapsibleSection {
                     }
                 }
 
+                // One selection language for every Appearance chooser
+                // (PaletteOption): the applied item is filled with the
+                // signal well, a 2 px signal border and a check (heart with
+                // cozy chips) plus the words "In use"; the item being
+                // previewed gets a cue border and "Previewing · Click to use".
                 StyledRect {
+                    id: card
+
+                    readonly property bool pointed: cardHover.containsMouse || cardInteractive.activeFocus
+                    readonly property color inkColour: themeItem.isCurrent ? Signal.palette.onSignalWell : Signal.palette.ink
+                    readonly property color mutedColour: themeItem.isCurrent ? Signal.palette.onSignalWell : Signal.palette.inkMuted
+
                     Layout.fillWidth: true
 
-                    color: themeItem.isStaged || themeItem.isCurrent ? Signal.layer(Signal.palette.raised, 1) : "transparent"
-                    radius: Appearance.rounding.small
-                    border.width: themeItem.isStaged || themeItem.isCurrent ? 1 : 0
-                    border.color: themeItem.isStaged ? Signal.palette.signal : Signal.palette.ruleStrong
+                    color: themeItem.isCurrent ? Signal.palette.signalWell : card.pointed ? Signal.layer(Signal.palette.raised, 2) : "transparent"
+                    radius: Config.appearance.cozyChips ? Appearance.rounding.large : Appearance.rounding.small
+                    border.width: themeItem.isCurrent || themeItem.isPreviewed ? 2 : 1
+                    border.color: themeItem.isCurrent ? Signal.palette.signal : themeItem.isPreviewed || themeItem.isApplying ? Signal.palette.cue : card.pointed ? Signal.palette.ruleStrong : Signal.palette.rule
 
                     Interactive {
+                        id: cardInteractive
+
                         disabled: themeItem.cannotApply
+                        Accessible.role: Accessible.RadioButton
+                        Accessible.name: themeItem.modelData.name ?? themeItem.modelData.id ?? ""
+                        Accessible.description: [themeItem.isCurrent ? qsTr("In use") : "", themeItem.modelData.description ?? "", themeItem.readinessText].filter(t => !!t).join(". ")
+                        Accessible.checked: themeItem.isCurrent
+
+                        // Keyboard focus previews exactly like the pointer.
+                        onActiveFocusChanged: {
+                            if (activeFocus)
+                                previewController.hoverThemePreview(themeItem.modelData, Themes.palettePreviewPathFor(themeItem.modelData, true), themeItem.readinessDetails);
+                            else if (!cardHover.containsMouse)
+                                previewController.endPreviewFor("theme");
+                        }
 
                         function onClicked(): void {
                             sectionRoot.selectedThemeId = themeItem.modelData.id;
@@ -200,10 +240,16 @@ CollapsibleSection {
                     }
 
                     MouseArea {
+                        id: cardHover
+
                         anchors.fill: parent
                         acceptedButtons: Qt.NoButton
                         hoverEnabled: true
-                        onEntered: previewController.startThemePreview(themeItem.modelData, Themes.palettePreviewPathFor(themeItem.modelData, true), themeItem.readinessDetails)
+                        onEntered: previewController.hoverThemePreview(themeItem.modelData, Themes.palettePreviewPathFor(themeItem.modelData, true), themeItem.readinessDetails)
+                        onExited: {
+                            if (!cardInteractive.activeFocus)
+                                previewController.endPreviewFor("theme");
+                        }
                     }
 
                     ColumnLayout {
@@ -239,7 +285,8 @@ CollapsibleSection {
                                     width: parent.width
                                     text: modelData.name ?? modelData.id ?? ""
                                     font.pointSize: Appearance.font.size.normal
-                                    font.weight: Appearance.font.weight.medium
+                                    font.weight: themeItem.isCurrent ? Appearance.font.weight.strong : Appearance.font.weight.medium
+                                    color: card.inkColour
                                     elide: Text.ElideRight
                                     wrapMode: Text.WordWrap
                                     maximumLineCount: 2
@@ -249,7 +296,7 @@ CollapsibleSection {
                                     width: parent.width
                                     text: modelData.description ?? ""
                                     font.pointSize: Appearance.font.size.small
-                                    color: Signal.palette.inkMuted
+                                    color: card.mutedColour
                                     elide: Text.ElideRight
                                     maximumLineCount: 2
                                     wrapMode: Text.WordWrap
@@ -277,6 +324,8 @@ CollapsibleSection {
                                 StyledRect {
                                     radius: Appearance.rounding.small
                                     color: Signal.palette.signalWell
+                                    border.width: themeItem.isCurrent ? 1 : 0
+                                    border.color: Signal.palette.onSignalWell
                                     implicitWidth: modeChip.implicitWidth + Appearance.padding.small * 2
                                     implicitHeight: modeChip.implicitHeight + Appearance.padding.smaller * 2
 
@@ -291,36 +340,28 @@ CollapsibleSection {
                                     }
                                 }
 
-                                StyledRect {
-                                    visible: themeItem.isCurrent && !themeItem.isStaged
-                                    radius: Appearance.rounding.small
-                                    color: Signal.palette.signalWell
-                                    implicitWidth: currentChip.implicitWidth + Appearance.padding.small * 2
-                                    implicitHeight: currentChip.implicitHeight + Appearance.padding.smaller * 2
-
-                                    StyledText {
-                                        id: currentChip
-                                        anchors.centerIn: parent
-                                        text: qsTr("Current")
-                                        font.pointSize: Appearance.font.size.smaller
-                                        color: Signal.palette.onSignalWell
-                                    }
+                                StateChip {
+                                    visible: themeItem.isCurrent
+                                    glyph: Config.appearance.cozyChips ? "heart" : "check"
+                                    text: qsTr("In use")
+                                    fill: Signal.palette.signal
+                                    ink: Signal.palette.onSignal
                                 }
 
-                                StyledRect {
-                                    visible: themeItem.isStaged
-                                    radius: Appearance.rounding.small
-                                    color: Signal.palette.signalWell
-                                    implicitWidth: stagedChip.implicitWidth + Appearance.padding.small * 2
-                                    implicitHeight: stagedChip.implicitHeight + Appearance.padding.smaller * 2
+                                StateChip {
+                                    visible: themeItem.isPreviewed
+                                    glyph: "eye"
+                                    text: `${Microcopy.line("appearance.previewing")} · ${Microcopy.line("appearance.clickToUse")}`
+                                    fill: Signal.palette.cueWell
+                                    ink: Signal.palette.onCueWell
+                                }
 
-                                    StyledText {
-                                        id: stagedChip
-                                        anchors.centerIn: parent
-                                        text: previewController.themeDirty ? qsTr("Pending") : qsTr("Selected")
-                                        font.pointSize: Appearance.font.size.smaller
-                                        color: Signal.palette.onSignalWell
-                                    }
+                                StateChip {
+                                    visible: themeItem.isApplying
+                                    glyph: "loader-2"
+                                    text: Microcopy.line("appearance.applying")
+                                    fill: Signal.palette.cueWell
+                                    ink: Signal.palette.onCueWell
                                 }
                                 }
                             }
@@ -411,9 +452,10 @@ CollapsibleSection {
                                     acceptedButtons: Qt.NoButton
                                     hoverEnabled: true
                                     onEntered: {
-                                        if (wallpaperThumb.available)
+                                        if (wallpaperThumb.available && previewController.hoverPreviewEnabled)
                                             previewController.startWallpaperPreview(wallpaperThumb.fullPath, wallpaperThumb.modelData);
                                     }
+                                    onExited: previewController.endPreviewFor("wallpaper")
                                 }
                             }
                         }
@@ -422,20 +464,9 @@ CollapsibleSection {
             }
         }
 
-        // Hornero Chromatic (RFC 0002): the dynamic theme is a card of its
-        // own after the catalogue (reserved id `hornero-chromatic`, no
-        // theme directory). Choosing it opens the Chromatic section; the
-        // palette is only applied from there.
-        SwitchRow {
-            Layout.topMargin: Appearance.spacing.small
-            label: qsTr("Soft, cozy chips (rounder swatches, a heart on your pick)")
-            checked: Config.appearance.cozyChips
-            onToggled: checked => {
-                Config.appearance.cozyChips = checked;
-                Config.save();
-            }
-        }
-
+        // Hornero Chromatic (RFC 0002): the dynamic theme has no catalogue
+        // card (reserved id `hornero-chromatic`); this card jumps to the
+        // Chromatic section right below, where it is chosen and tuned.
         StyledRect {
             id: chromaticCard
 
@@ -449,9 +480,9 @@ CollapsibleSection {
             Layout.topMargin: Appearance.spacing.small
             implicitHeight: chromaticRow.implicitHeight + Appearance.padding.normal * 2
             radius: Appearance.rounding.small
-            color: isCurrent ? Signal.layer(Signal.palette.raised, 1) : "transparent"
-            border.width: 1
-            border.color: isCurrent ? Signal.palette.ruleStrong : Signal.palette.rule
+            color: isCurrent ? Signal.palette.signalWell : "transparent"
+            border.width: isCurrent ? 2 : 1
+            border.color: isCurrent ? Signal.palette.signal : activeFocus ? Signal.palette.focus : Signal.palette.rule
             activeFocusOnTab: true
             Accessible.role: Accessible.Button
             Accessible.name: qsTr("Hornero Chromatic, dynamic colour from your wallpaper")
@@ -486,34 +517,33 @@ CollapsibleSection {
                         text: qsTr("Hornero Chromatic")
                         font.pointSize: Appearance.font.size.normal
                         font.weight: Appearance.font.weight.medium
+                        color: chromaticCard.isCurrent ? Signal.palette.onSignalWell : Signal.palette.ink
                     }
 
                     StyledText {
                         Layout.fillWidth: true
-                        text: qsTr("A palette built from your wallpaper, an image or one colour. Always Signal: same structure, contrast gates and anatomy. Not a curated look; you choose and preview it in Chromatic.")
+                        text: chromaticCard.isCurrent ? qsTr("In use. Tune its source, style and colour in Chromatic below.") : qsTr("Or build a palette from your wallpaper, an image or one colour. Opens Chromatic below.")
                         font.pointSize: Appearance.font.size.small
-                        color: Signal.palette.inkMuted
+                        color: chromaticCard.isCurrent ? Signal.palette.onSignalWell : Signal.palette.inkMuted
                         wrapMode: Text.WordWrap
                         maximumLineCount: 3
                         elide: Text.ElideRight
                     }
                 }
 
-                StyledRect {
+                StateChip {
                     visible: chromaticCard.isCurrent
-                    radius: Appearance.rounding.small
-                    color: Signal.palette.signalWell
-                    implicitWidth: chromaticCurrent.implicitWidth + Appearance.padding.small * 2
-                    implicitHeight: chromaticCurrent.implicitHeight + Appearance.padding.smaller * 2
+                    glyph: Config.appearance.cozyChips ? "heart" : "check"
+                    text: qsTr("In use")
+                    fill: Signal.palette.signal
+                    ink: Signal.palette.onSignal
+                }
 
-                    StyledText {
-                        id: chromaticCurrent
-
-                        anchors.centerIn: parent
-                        text: qsTr("Current")
-                        font.pointSize: Appearance.font.size.smaller
-                        color: Signal.palette.onSignalWell
-                    }
+                Glyph {
+                    visible: !chromaticCard.isCurrent
+                    name: "chevron-down"
+                    color: Signal.palette.inkMuted
+                    font.pointSize: Appearance.font.size.normal
                 }
             }
 
@@ -521,6 +551,55 @@ CollapsibleSection {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: sectionRoot.session.navigateTo("appearance", "chromatic")
+            }
+        }
+
+        SwitchRow {
+            Layout.topMargin: Appearance.spacing.normal
+            label: qsTr("Soft, cozy chips (rounder swatches, a heart on your pick)")
+            checked: Config.appearance.cozyChips
+            onToggled: checked => {
+                Config.appearance.cozyChips = checked;
+                Config.save();
+            }
+        }
+    }
+
+    // "In use" / "Previewing · Click to use" / "Applying…": glyph + words,
+    // never colour alone.
+    component StateChip: StyledRect {
+        id: chip
+
+        property string glyph: ""
+        property string text: ""
+        property color fill: Signal.palette.signalWell
+        property color ink: Signal.palette.onSignalWell
+
+        radius: Config.appearance.cozyChips ? height / 2 : Appearance.rounding.small
+        color: chip.fill
+        implicitWidth: chipRow.implicitWidth + Appearance.padding.small * 2
+        implicitHeight: chipRow.implicitHeight + Appearance.padding.smaller * 2
+
+        Row {
+            id: chipRow
+
+            anchors.centerIn: parent
+            spacing: 4
+
+            Glyph {
+                anchors.verticalCenter: parent.verticalCenter
+                visible: chip.glyph !== ""
+                name: chip.glyph
+                font.pointSize: Appearance.font.size.smaller
+                color: chip.ink
+            }
+
+            StyledText {
+                anchors.verticalCenter: parent.verticalCenter
+                text: chip.text
+                font.pointSize: Appearance.font.size.smaller
+                font.weight: Appearance.font.weight.medium
+                color: chip.ink
             }
         }
     }

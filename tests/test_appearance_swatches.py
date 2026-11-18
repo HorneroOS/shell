@@ -31,5 +31,7 @@ def test_no_material_scheme_variants_in_appearance_pane():
             # Hornero Chromatic (RFC 0002) has its own Signal variants
             # (balanced, vibrant, expressive, ...); they are not scheme types.
             continue
-        text = path.read_text()
+        # ChromaticPreview's own API (hoveredVariant, variantSchemes) names
+        # Signal Chromatic styles, not Material scheme types.
+        text = re.sub(r"ChromaticPreview\.(hoveredVariant|variantSchemes)", "", path.read_text())
         assert not pattern.search(text), f"{path.name} mentions a Material scheme variant"

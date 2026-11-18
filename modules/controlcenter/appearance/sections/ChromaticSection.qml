@@ -33,7 +33,7 @@ CollapsibleSection {
     readonly property var infer: root.result ? root.result.inference : null
 
     title: qsTr("Chromatic")
-    description: qsTr("Build the desktop palette from your wallpaper, an image or one colour. Every choice applies as you make it; point at a variant to preview it, and Undo is one click away.")
+    description: qsTr("Dynamic colour: build the desktop palette from your wallpaper, an image or one colour. Pick a source, then a variant; point at a variant to preview it on the whole desktop.")
     showBackground: true
 
     Component.onCompleted: {
@@ -124,36 +124,19 @@ CollapsibleSection {
     }
 
     StyledText {
+        // The applied theme, not a variant shown while pointing at a tile.
+        readonly property string appliedId: Signal.previewing && Signal._snapshot ? (Signal._snapshot.id ?? "") : Signal.themeId
+        readonly property string themeName: Themes.themeById(appliedId)?.name ?? appliedId
+        readonly property string fallbackName: {
+            const id = Config.appearance.chromatic.fallback[Signal.themeMode] ?? "";
+            return Themes.themeById(id)?.name ?? id;
+        }
+
         Layout.fillWidth: true
         wrapMode: Text.WordWrap
         font.pointSize: Appearance.font.size.small
         color: Signal.palette.inkMuted
-        text: root.active ? qsTr("Chromatic is active: %1.").arg(Signal.chromatic ? `${Signal.chromatic.variant}, ${Signal.chromatic.mode}` : qsTr("waiting for the palette")) : qsTr("Chromatic is off. Your theme is %1. Choosing anything below, or the switch above, turns Chromatic on; turning it off returns to %2.").arg(Signal.themeId || "-").arg(Config.appearance.chromatic.fallback[Signal.themeMode] ?? "-")
-    }
-
-    // ---- candidate on a sample desktop --------------------------------
-    ChromaticSpecimenBoard {
-        visible: !!root.result
-        Layout.fillWidth: true
-        Layout.preferredHeight: 330
-        palette: root.flat
-        light: root.result ? root.result.scheme.mode === "light" : false
-        wallpaper: root.req.source === "image" ? root.req.path : (root.req.source === "wallpaper" ? ChromaticPreview.wallpaper : "")
-        minSurfaceAlpha: root.result ? (root.result.scheme.minSurfaceAlpha ?? ({})) : ({})
-        opacity: ChromaticPreview.busy ? 0.6 : 1
-    }
-
-    StyledText {
-        visible: ChromaticPreview.busy
-        text: qsTr("Building palette…")
-        font.pointSize: Appearance.font.size.small
-        color: Signal.palette.inkMuted
-    }
-
-    ChromaticGateReport {
-        Layout.fillWidth: true
-        gates: root.result ? root.result.gates : null
-        adjustments: root.result ? root.result.adjustments : []
+        text: root.active ? qsTr("In use. Every choice below applies as you make it; Undo puts the previous palette back.") : qsTr("Off: you are using %1. Turning Chromatic on, or choosing anything below, switches to it; turning it off returns to %2.").arg(themeName || "-").arg(fallbackName || "-")
     }
 
     // ---- source -------------------------------------------------------
@@ -187,87 +170,6 @@ CollapsibleSection {
             current: root.req.variant
             resolved: root.infer?.variant ?? ""
             onChosen: v => ChromaticPreview.set("variant", v)
-        }
-    }
-
-    // ---- smart inference ----------------------------------------------
-    SectionContainer {
-        contentSpacing: Appearance.spacing.small
-
-        Eyebrow {
-            label: qsTr("What Hornero inferred")
-        }
-
-        StyledText {
-            Layout.fillWidth: true
-            visible: !root.infer
-            wrapMode: Text.WordWrap
-            font.pointSize: Appearance.font.size.small
-            color: Signal.palette.inkMuted
-            text: qsTr("Nothing to infer yet.")
-        }
-
-        StyledText {
-            Layout.fillWidth: true
-            visible: !!root.infer
-            wrapMode: Text.WordWrap
-            font.weight: Appearance.font.weight.medium
-            text: root.infer ? root.infer.personality : ""
-        }
-
-        Repeater {
-            model: Cli.inferenceRows(root.infer, root.req)
-
-            RowLayout {
-                id: infRow
-
-                required property var modelData
-
-                Layout.fillWidth: true
-                spacing: Appearance.spacing.normal
-                Accessible.role: Accessible.StaticText
-                Accessible.name: modelData.overridden ? qsTr("%1: you chose %2; Hornero would pick %3").arg(modelData.label).arg(modelData.chosen).arg(modelData.inferred) : qsTr("%1: %2").arg(modelData.label).arg(modelData.inferred)
-
-                StyledText {
-                    Layout.preferredWidth: 80
-                    text: infRow.modelData.label
-                    font.pointSize: Appearance.font.size.small
-                    color: Signal.palette.inkMuted
-                }
-
-                StyledText {
-                    Layout.fillWidth: true
-                    mono: true
-                    text: infRow.modelData.overridden ? qsTr("%1 (you chose %2)").arg(infRow.modelData.inferred).arg(infRow.modelData.chosen) : infRow.modelData.inferred
-                    font.pointSize: Appearance.font.size.smaller
-                }
-            }
-        }
-
-        StyledText {
-            Layout.fillWidth: true
-            visible: !!root.infer && (root.infer.reasons?.length ?? 0) > 0
-            wrapMode: Text.WordWrap
-            font.pointSize: Appearance.font.size.small
-            color: Signal.palette.inkMuted
-            text: root.infer ? root.infer.reasons.join(" · ") : ""
-        }
-
-        StyledText {
-            Layout.fillWidth: true
-            visible: !!root.infer?.suggestion
-            wrapMode: Text.WordWrap
-            font.pointSize: Appearance.font.size.small
-            color: Signal.palette.signal
-            text: qsTr("Suggestion: %1 suits this image. It is never applied automatically.").arg(root.infer?.suggestion ?? "")
-        }
-
-        StyledText {
-            Layout.fillWidth: true
-            wrapMode: Text.WordWrap
-            font.pointSize: Appearance.font.size.small
-            color: Signal.palette.inkMuted
-            text: qsTr("Every choice below overrides what was inferred. Leave a setting on Auto to follow the image.")
         }
     }
 
@@ -360,6 +262,117 @@ CollapsibleSection {
             formatValueFunction: val => Math.round(val).toString()
             parseValueFunction: text => parseInt(text)
             onValueModified: v => ChromaticPreview.set("hueShift", Math.round(v))
+        }
+    }
+
+    // ---- the candidate being built, with its contrast gates ------------
+    Eyebrow {
+        visible: !!root.result
+        label: qsTr("Candidate")
+    }
+
+    ChromaticSpecimenBoard {
+        visible: !!root.result
+        Layout.fillWidth: true
+        Layout.preferredHeight: 260
+        palette: root.flat
+        light: root.result ? root.result.scheme.mode === "light" : false
+        wallpaper: root.req.source === "image" ? root.req.path : (root.req.source === "wallpaper" ? ChromaticPreview.wallpaper : "")
+        minSurfaceAlpha: root.result ? (root.result.scheme.minSurfaceAlpha ?? ({})) : ({})
+        opacity: ChromaticPreview.busy ? 0.6 : 1
+    }
+
+    StyledText {
+        visible: ChromaticPreview.busy
+        text: qsTr("Building palette…")
+        font.pointSize: Appearance.font.size.small
+        color: Signal.palette.inkMuted
+    }
+
+    ChromaticGateReport {
+        Layout.fillWidth: true
+        gates: root.result ? root.result.gates : null
+        adjustments: root.result ? root.result.adjustments : []
+    }
+
+    // ---- smart inference ----------------------------------------------
+    SectionContainer {
+        contentSpacing: Appearance.spacing.small
+
+        Eyebrow {
+            label: qsTr("What Hornero inferred")
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+            visible: !root.infer
+            wrapMode: Text.WordWrap
+            font.pointSize: Appearance.font.size.small
+            color: Signal.palette.inkMuted
+            text: qsTr("Nothing to infer yet.")
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+            visible: !!root.infer
+            wrapMode: Text.WordWrap
+            font.weight: Appearance.font.weight.medium
+            text: root.infer ? root.infer.personality : ""
+        }
+
+        Repeater {
+            model: Cli.inferenceRows(root.infer, root.req)
+
+            RowLayout {
+                id: infRow
+
+                required property var modelData
+
+                Layout.fillWidth: true
+                spacing: Appearance.spacing.normal
+                Accessible.role: Accessible.StaticText
+                Accessible.name: modelData.overridden ? qsTr("%1: you chose %2; Hornero would pick %3").arg(modelData.label).arg(modelData.chosen).arg(modelData.inferred) : qsTr("%1: %2").arg(modelData.label).arg(modelData.inferred)
+
+                StyledText {
+                    Layout.preferredWidth: 80
+                    text: infRow.modelData.label
+                    font.pointSize: Appearance.font.size.small
+                    color: Signal.palette.inkMuted
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
+                    mono: true
+                    text: infRow.modelData.overridden ? qsTr("%1 (you chose %2)").arg(infRow.modelData.inferred).arg(infRow.modelData.chosen) : infRow.modelData.inferred
+                    font.pointSize: Appearance.font.size.smaller
+                }
+            }
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+            visible: !!root.infer && (root.infer.reasons?.length ?? 0) > 0
+            wrapMode: Text.WordWrap
+            font.pointSize: Appearance.font.size.small
+            color: Signal.palette.inkMuted
+            text: root.infer ? root.infer.reasons.join(" · ") : ""
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+            visible: !!root.infer?.suggestion
+            wrapMode: Text.WordWrap
+            font.pointSize: Appearance.font.size.small
+            color: Signal.palette.signal
+            text: qsTr("Suggestion: %1 suits this image. It is never applied automatically.").arg(root.infer?.suggestion ?? "")
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+            wrapMode: Text.WordWrap
+            font.pointSize: Appearance.font.size.small
+            color: Signal.palette.inkMuted
+            text: qsTr("Every choice below overrides what was inferred. Leave a setting on Auto to follow the image.")
         }
     }
 
@@ -464,7 +477,7 @@ CollapsibleSection {
         contentSpacing: Appearance.spacing.normal
 
         Eyebrow {
-            label: qsTr("Saved palettes")
+            label: qsTr("Save this palette")
         }
 
         RowLayout {
@@ -493,42 +506,12 @@ CollapsibleSection {
             }
         }
 
-        GridLayout {
-            Layout.fillWidth: true
-            columns: Math.max(1, Math.min(3, Math.floor(width / 220)))
-            columnSpacing: Appearance.spacing.small
-            rowSpacing: Appearance.spacing.small
-
-            Repeater {
-                model: Themes.list.filter(t => t.collection === "user")
-
-                PaletteOption {
-                    id: savedRow
-
-                    required property var modelData
-
-                    readonly property bool complete: Signal.isCompletePalette(modelData.palette)
-
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignTop
-                    kind: "button"
-                    title: modelData.name ?? modelData.id
-                    note: qsTr("Apply this palette")
-                    selected: Signal.themeStateReady && Signal.themeId === modelData.id
-                    palette: complete ? modelData.palette : (modelData.swatch ?? ({}))
-                    terminal: Array.isArray(modelData.terminal) ? modelData.terminal : []
-                    paletteLabel: qsTr("Saved palette preview")
-                    onActivated: ThemePipeline.applyTheme(modelData.id, "")
-                }
-            }
-        }
-
         StyledText {
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
             font.pointSize: Appearance.font.size.small
             color: Signal.palette.inkMuted
-            text: qsTr("Saved palettes are ordinary themes: they also appear under Themes. Renaming and deleting are not available yet; remove the folder under hornero/themes in your data directory.")
+            text: qsTr("Saving keeps the palette in use as a theme: it is listed under Themes, Your palettes, where pointing previews it and a click uses it (with Undo). To remove one, delete its folder under hornero/themes in your data directory.")
         }
 
         RowLayout {

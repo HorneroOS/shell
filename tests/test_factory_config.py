@@ -269,6 +269,7 @@ def test_factory_values_match_code_defaults():
         # Appearance disclosure default exposes Themes first run
         # (ControlCenterConfig.qml appearanceOpenSections).
         ("controlCenter.appearanceOpenSections", ["themes"]),
+        ("controlCenter.appearanceHoverPreview", True),
         ("launcher.maxShown", 8),
         ("launcher.specialPrefix", "@"),
         ("launcher.useFuzzy.wallpapers", False),

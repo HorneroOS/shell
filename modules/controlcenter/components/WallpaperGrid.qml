@@ -118,7 +118,7 @@ Item {
                 id: previewDebounce
                 interval: 120
                 onTriggered: {
-                    if (grid.pendingPreviewPath)
+                    if (grid.pendingPreviewPath && root.previewController.hoverPreviewEnabled !== false)
                         root.previewController.startWallpaperPreview(grid.pendingPreviewPath, grid.pendingPreviewName);
                 }
             }
@@ -165,6 +165,9 @@ Item {
                 grid.pendingPreviewPath = "";
                 grid.pendingPreviewName = "";
                 previewDebounce.stop();
+                // Back to what is applied (Appearance's "Now using").
+                if (typeof root.previewController.endPreviewFor === "function")
+                    root.previewController.endPreviewFor("wallpaper");
             }
         }
 
@@ -296,6 +299,7 @@ Item {
             smooth: true
 
             Behavior on border.width {
+                enabled: !Appearance.anim.reduced
                 NumberAnimation {
                     duration: 150
                     easing.type: Easing.OutQuad
@@ -308,7 +312,8 @@ Item {
                 anchors.margins: Appearance.padding.small
 
                 visible: isCurrent
-                name: "circle-check"
+                // Same selection mark as every Appearance chooser.
+                name: Config.appearance.cozyChips ? "heart" : "circle-check"
                 color: Signal.palette.signal
                 font.pointSize: Appearance.font.size.large
             }

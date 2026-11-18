@@ -28,6 +28,8 @@ StyledClippingRect {
     property var options: ({})
     property bool clear: false
     readonly property bool labels: options?.style === "labels"
+    // Cell plates (empty hairline, occupied plate); never on Clear or labels.
+    readonly property bool plated: Config.bar.workspaces.occupiedBg && !labels && !clear
     readonly property bool niriMode: Compositor.isNiri
     readonly property bool onSpecial: Compositor.isSpecialWorkspaceActive(screen, Config.bar.workspaces.perMonitorWorkspaces)
     readonly property var activeWsId: niriMode
@@ -91,20 +93,36 @@ StyledClippingRect {
             blurMax: 32
         }
 
+        // Cell plates and the sliding active plate sit under the numerals.
         Loader {
-            asynchronous: true
-            active: Config.bar.workspaces.occupiedBg && !root.labels && !root.niriMode && !root.clear
+            active: root.plated
 
             anchors.fill: parent
-            anchors.margins: Appearance.padding.small
 
-            sourceComponent: OccupiedBg {
+            sourceComponent: CellPlates {
+                tone: root.tone
+                workspaces: workspaces
+                cells: layout
+                markActive: root.niriMode || !Config.bar.workspaces.activeIndicator
+            }
+        }
+
+        Loader {
+            anchors.horizontalCenter: root.vertical ? parent.horizontalCenter : undefined
+            anchors.verticalCenter: root.vertical ? undefined : parent.verticalCenter
+            active: Config.bar.workspaces.activeIndicator && !root.labels && !root.niriMode
+
+            sourceComponent: ActiveIndicator {
                 screen: root.screen
                 vertical: root.vertical
+                edge: root.edge
+                tone: root.tone
+                clear: root.clear
+                inset: root.activeInset
+                crossSize: root.cross
+                activeWsId: root.activeWsId
                 workspaces: workspaces
-                cellCross: root.cellCross
-                occupied: root.occupied
-                groupOffset: root.groupOffset
+                cells: layout
             }
         }
 
@@ -133,6 +151,7 @@ StyledClippingRect {
                     cellCross: root.cellCross
                     tone: root.tone
                     labels: root.labels
+                    plated: root.plated
                     activeWsId: root.activeWsId
                     occupied: root.occupied
                     urgent: root.urgent
@@ -167,26 +186,6 @@ StyledClippingRect {
                 Behavior on color {
                     CAnim {}
                 }
-            }
-        }
-
-        Loader {
-            asynchronous: true
-            anchors.horizontalCenter: root.vertical ? parent.horizontalCenter : undefined
-            anchors.verticalCenter: root.vertical ? undefined : parent.verticalCenter
-            active: Config.bar.workspaces.activeIndicator && !root.labels && !root.niriMode
-
-            sourceComponent: ActiveIndicator {
-                screen: root.screen
-                vertical: root.vertical
-                edge: root.edge
-                tone: root.tone
-                clear: root.clear
-                inset: root.activeInset
-                crossSize: root.cross
-                activeWsId: root.activeWsId
-                workspaces: workspaces
-                mask: layout
             }
         }
 

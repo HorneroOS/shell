@@ -24,6 +24,10 @@ var LIMITS = {
     // density 1; both scale with the density factor).
     islandInset: { min: 0, max: 12, step: 1, fallback: 4 },
     activeInset: { min: 0, max: 8, step: 1, fallback: 4 },
+    // Workspace cells: window glyph size (% of the numeral) and the glyphs
+    // shown per cell before the +N overflow mark.
+    glyphScale: { min: 60, max: 120, step: 5, fallback: 85 },
+    maxWindowIcons: { min: 0, max: 8, step: 1, fallback: 3 },
     contentScale: { min: 0.75, max: 1.5, step: 0.05, fallback: 1 },
     // Item style: icon size, text size, gap between items, text weight.
     iconScale: { min: 0.6, max: 1.5, step: 0.05, fallback: 1 },
@@ -131,6 +135,8 @@ function presetGlobals(preset) {
         innerWidth: clamp("innerWidth", sizes.innerWidth),
         islandInset: clamp("islandInset", sizes.islandInset === undefined ? LIMITS.islandInset.fallback : sizes.islandInset),
         activeInset: clamp("activeInset", ws.activeInset === undefined ? LIMITS.activeInset.fallback : ws.activeInset),
+        glyphScale: clamp("glyphScale", ws.glyphScale === undefined ? LIMITS.glyphScale.fallback : ws.glyphScale),
+        maxWindowIcons: clamp("maxWindowIcons", ws.maxWindowIcons === undefined ? LIMITS.maxWindowIcons.fallback : ws.maxWindowIcons),
         contentScale: clamp("contentScale", sizes.contentScale === undefined ? 1 : sizes.contentScale),
         iconScale: clamp("iconScale", sizes.iconScale === undefined ? 1 : sizes.iconScale),
         textScale: clamp("textScale", sizes.textScale === undefined ? 1 : sizes.textScale),

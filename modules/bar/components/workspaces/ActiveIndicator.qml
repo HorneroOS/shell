@@ -1,6 +1,5 @@
 import Quickshell
 import qs.components
-import qs.components.effects
 import qs.services
 import qs.config
 import QtQuick
@@ -10,22 +9,26 @@ StyledRect {
 
     // Region tone: the plain Signal palette, or per-region ink on Cockpit Clear.
     property var tone: ClearInk.neutral
-    // Cockpit Clear: no fill, the on-air bar and the ink numeral carry it.
+    // Cockpit Clear: no fill, the signal tick and the ink numeral carry it.
     property bool clear: false
 
     required property ShellScreen screen
 
-    // Inset of the highlight inside its track (Workspaces.activeInset, px)
-    // and the track's cross-axis size. The highlight keeps `inset` from the
-    // track edges on every side; the on-air bar rides the highlight's edge.
+    // Inset of the cell inside its track (Workspaces.activeInset, px) and the
+    // track's cross-axis size: the plate is exactly one cell, `inset` from
+    // the track edges on the cross axis.
     property int inset: 0
     property int crossSize: Density.inner
-    // Main-axis share of the inset: half, so adjacent cells stay readable.
-    readonly property int mainInset: Math.floor(inset / 2)
+    // The signal tick sits this far inside the plate (0 flush on Clear).
+    readonly property int tickGap: clear ? 0 : 2
+    // Tick length along the bar: half the cell, centred (full cell, flush,
+    // on Clear, matching its underline reference).
+    readonly property real tickLength: clear ? (vertical ? height : width) : Math.round((vertical ? height : width) / 2)
 
     required property int activeWsId
     required property Repeater workspaces
-    required property Item mask
+    // The strip's cell layout: the plate follows its cells.
+    required property Item cells
 
     // Orientation of the owning bar (set by Bar.qml); defaults to the
     // primary bar for standalone use.
@@ -45,11 +48,11 @@ StyledRect {
     property real currentSize: workspaces.count > 0 ? workspaces.itemAt(currentWsIdx)?.size ?? 0 : 0
     property real offset: Math.min(leading, trailing)
     property real size: {
-        const s = Math.max(0, Math.abs(leading - trailing) + currentSize - root.mainInset * 2);
+        const s = Math.max(0, Math.abs(leading - trailing) + currentSize);
         if (Config.bar.workspaces.activeTrail && lastWs > currentWsIdx) {
             const ws = workspaces.itemAt(lastWs);
             const wsEnd = vertical ? (ws ? ws.y + ws.size : 0) : (ws ? ws.x + ws.size : 0);
-            return ws ? Math.min(wsEnd - offset - root.mainInset * 2, s) : 0;
+            return ws ? Math.min(wsEnd - offset, s) : 0;
         }
         return s;
     }
@@ -62,39 +65,25 @@ StyledRect {
         cWs = currentWsIdx;
     }
 
-    clip: true
-    x: vertical ? 0 : offset + root.mainInset + mask.x
-    y: vertical ? offset + root.mainInset + mask.y : 0
+    x: vertical ? 0 : offset + cells.x
+    y: vertical ? offset + cells.y : 0
     implicitWidth: vertical ? root.crossSize - root.inset * 2 : size
     implicitHeight: vertical ? size : root.crossSize - root.inset * 2
     // Signal Bezel §5: fixed rectangular cells, never pills. The active
     // cell is a raised fill with the numeral in ink — not a signal slab.
     radius: Appearance.rounding.small
-    color: root.clear ? "transparent" : Signal.palette.raised
+    color: root.clear ? "transparent" : Qt.tint(Signal.palette.raised, Qt.alpha(root.tone.signal, 0.3))
 
-    // §5 on-air bar: 2 px signal across the full cell on the edge facing
-    // the content (top edge for a bottom strip, bottom for a top rail,
-    // inner edge for rails).
+    // Signal tick: 2 px, half the cell long and centred along the bar, on the
+    // edge facing the content (top edge for a bottom strip, bottom for a top
+    // rail, inner edge for rails), inside the plate; flush on Cockpit Clear.
     Rectangle {
-        width: root.vertical ? 2 : root.width
-        height: root.vertical ? root.height : 2
-        x: root.vertical ? (root.edge === "right" ? 0 : root.width - 2) : 0
-        y: root.vertical ? 0 : (root.edge === "bottom" ? 0 : root.height - 2)
+        width: root.vertical ? 2 : root.tickLength
+        height: root.vertical ? root.tickLength : 2
+        x: root.vertical ? (root.edge === "right" ? root.tickGap : root.width - 2 - root.tickGap) : Math.round((root.width - width) / 2)
+        y: root.vertical ? Math.round((root.height - height) / 2) : (root.edge === "bottom" ? root.tickGap : root.height - 2 - root.tickGap)
+        radius: 1 // fixed: 2 px tick end rounding, not a theme corner
         color: root.tone.signal
-    }
-
-    Colouriser {
-        source: root.mask
-        sourceColor: root.tone.ink
-        colorizationColor: root.tone.ink
-
-        x: root.vertical ? 0 : -(parent.offset + root.mainInset)
-        y: root.vertical ? -(parent.offset + root.mainInset) : 0
-        implicitWidth: root.mask.implicitWidth
-        implicitHeight: root.mask.implicitHeight
-
-        anchors.horizontalCenter: root.vertical ? parent.horizontalCenter : undefined
-        anchors.verticalCenter: root.vertical ? undefined : parent.verticalCenter
     }
 
     Behavior on leading {

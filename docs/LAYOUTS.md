@@ -262,6 +262,40 @@ Cockpit Clear ships both insets at 0: its reference draws no island and the
 workspace underline is flush with the bar edge, so there is nothing to
 inset. Every other layout ships 4.
 
+### Workspace cells
+
+The workspace strip is one instrument: every workspace is one cell of the same
+cross-axis size (the track minus the active inset on both sides), on top bars,
+bottom bars and left or right rails alike. The cell rule is fixed:
+
+- Numeral box: a square of at least the cell size (wider only when the widest
+  numeral needs it; the box is shared by every cell, so one and two digit
+  workspaces line up).
+- Window glyphs follow the numeral after a fixed gap, one fixed-size slot per
+  glyph at numeral x-height scale (`bar.workspaces.glyphScale`, default 85 % of
+  the numeral). A cell therefore grows by exactly one glyph step per window,
+  nothing overlaps and there are no negative margins. More windows than
+  `bar.workspaces.maxWindowIcons` (default 3) end in a `+N` mark.
+- States share one rounded rectangle at the cell's own size: empty is a
+  hairline, occupied a quiet plate, active the brighter plate that slides
+  between cells with a 2 px signal tick inset on the edge facing the content,
+  urgent an alert hairline and numeral, visible on another monitor a strong
+  hairline. Plates never merge across cells.
+- Cockpit Clear and the `labels` style draw no plates: foreground only. The
+  numeral and glyphs carry the state, occupied adds a 4 x 2 px tick under the
+  numeral, active a flush signal underline on the content-facing edge.
+- All colours are Signal roles; motion uses the shared animation durations,
+  so reduced motion shortens or removes the slide.
+
+Controls (Control Center, Bars, "Size & shape"): "Workspace window glyph size
+(%)" (`bar.workspaces.glyphScale`, 60 to 120), "Workspace window glyphs per
+cell" (`bar.workspaces.maxWindowIcons`, 0 to 8) and the existing active
+workspace inset; "Reset all sizes" restores the layout's values. "Show
+windows", "Occupied background" (cell plates) and "Active indicator" stay in
+the Taskbar pane. `tests/test_workspace_render.py` renders Cockpit, Hornero
+Left and Cockpit Clear offscreen and checks that cells do not overlap and
+glyphs stay inside their cell.
+
 ### Every value is a control
 
 The defaults above are only defaults. Control Center, Bars, "Size & shape"
@@ -280,6 +314,8 @@ as `config/BarConfig.qml`:
 | Cell size | `bar.sizes.innerWidth` | 22 to 56 px |
 | Island inset | `bar.sizes.islandInset` | 0 to 12 px at density 1 (default 4; Cockpit Clear 0) |
 | Active workspace inset | `bar.workspaces.activeInset` | 0 to 8 px at density 1 (default 4; Cockpit Clear 0) |
+| Workspace window glyph size | `bar.workspaces.glyphScale` | 60 to 120 % of the numeral (default 85) |
+| Workspace window glyphs per cell | `bar.workspaces.maxWindowIcons` | 0 to 8 (default 3, then `+N`) |
 | Icon and label size | `bar.sizes.contentScale` | 75 to 150 % |
 | Icon size | `bar.sizes.iconScale` | 60 to 150 % |
 | Text size | `bar.sizes.textScale` | 75 to 150 % |

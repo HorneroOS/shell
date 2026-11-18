@@ -96,7 +96,8 @@ def test_staggered_reveals_use_the_spec_steps():
     assert "readonly property int staggerMaxFine: 6" in CHOREO
     assert "readonly property int staggerStep: stagger ? _ms(24) : 0" in CHOREO
     dash = (ROOT / "modules" / "dashboard" / "Dash.qml").read_text()
-    assert "stagger.play(root)" in dash
+    # The frames of the loaded composition scan in (all three layouts).
+    assert "stagger.play(layout.item)" in dash and "onLoaded: Qt.callLater(root.reveal)" in dash
     apps = (ROOT / "modules" / "launcher" / "AppList.qml").read_text()
     assert "step: Choreography.staggerStepFine" in apps and "maxRows: Choreography.staggerMaxFine" in apps
     assert "rowStagger.playRows(rows)" in apps

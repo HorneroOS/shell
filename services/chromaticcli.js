@@ -42,10 +42,24 @@ function variantInfo(id) {
 // Request from Config.appearance.chromatic plus the live mode, with every
 // field clamped to its legal range. Per-mode variant preferences resolve
 // here only for an explicit `auto` variant and a known mode.
+// A list read from shell.json through a JsonObject `var` property is a Qt
+// sequence, not a JS Array (Array.isArray is false), so accept any
+// array-like value except a string.
+function listOf(v) {
+    if (Array.isArray(v))
+        return v;
+    var out = [];
+    if (v && typeof v !== "string" && typeof v.length === "number") {
+        for (var i = 0; i < v.length; i++)
+            out.push(v[i]);
+    }
+    return out;
+}
+
 function normalise(prefs, currentMode) {
     var p = prefs || {};
     var seeds = [];
-    var src = Array.isArray(p.seeds) ? p.seeds : [];
+    var src = listOf(p.seeds);
     for (var i = 0; i < src.length && seeds.length < 2; i++) {
         if (isHex(src[i]))
             seeds.push(String(src[i]).toUpperCase());

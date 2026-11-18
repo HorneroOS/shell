@@ -198,7 +198,7 @@ Scope {
                     y: rect[1] * k
                     width: (rect[2] - rect[0]) * k
                     height: (rect[3] - rect[1]) * k
-                    radius: 2
+                    radius: 2 // fixed: LED glow dot in the nest model, scaled with the art, not a theme corner
                     color: Signal.palette.phosphor
                     opacity: 0.35 * root.settings.intensity
                 }

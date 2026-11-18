@@ -233,3 +233,19 @@ def test_docs_describe_the_store():
     for needle in ("Managing extensions from Control Center", "Confirm remove", "data.error",
                    "storeRefreshOnOpen", "not measured per extension"):
         assert needle in flat, needle
+
+
+def test_qml_list_likes_are_accepted():
+    # Repeater modelData turns arrays into QVariantList, for which
+    # Array.isArray is false; the pane showed no permissions, screenshots
+    # or changelog until the store accepted list-likes (offscreen run).
+    got = run_js("""
+        const like = (a) => { const o = {length: a.length}; a.forEach((v, i) => o[i] = v); return o; };
+        const e = {id: "x", name: "X",
+            permissions: like([{kind: "program", value: "date", en: "Runs date.", es: "Ejecuta date."}]),
+            screenshot_files: like([{file: "/c/a.png", alt: "A"}]),
+            marketplace: {changelog: like([{version: "1.0.0", notes: "First."}])},
+            capabilities: {providers: like(["time"])}};
+        return [permissionLines(e, false).length, screenshotSources(e, "/p", false).length,
+                changelog(e, 5).length, costSummary(e, {}).providers.length];""")
+    assert got == [1, 1, 1, 1]

@@ -7,6 +7,20 @@
 // tests/test_extension_store.py; ExtensionStore.qml and the pane supply
 // the data. Nothing here runs plugin code or writes state.
 
+// Lists arrive from QML models as list-likes (QVariantList), for which
+// Array.isArray is false; accept anything with a numeric length.
+function asArray(v) {
+    if (Array.isArray(v))
+        return v;
+    if (v && typeof v === "object" && typeof v.length === "number")
+        return Array.prototype.slice.call(v);
+    return [];
+}
+
+function isList(v) {
+    return Array.isArray(v) || (!!v && typeof v === "object" && typeof v.length === "number");
+}
+
 var CATALOGUE_SOURCE = "https://github.com/HorneroOS/plugins.git";
 
 // Verbs the pane may run, with the argv shape horneroctl documents in
@@ -140,8 +154,8 @@ function signerText(entry, es) {
 function permissionLines(entry, es) {
     var e = entry || {};
     var lang = es ? "es" : "en";
-    if (Array.isArray(e.permissions) && e.permissions.length > 0) {
-        return e.permissions.filter(function (p) {
+    if (asArray(e.permissions).length > 0) {
+        return asArray(e.permissions).filter(function (p) {
             return p && typeof p === "object" && typeof p[lang] === "string";
         }).map(function (p) {
             return { kind: String(p.kind || ""), value: String(p.value || ""), text: p[lang] };
@@ -149,16 +163,16 @@ function permissionLines(entry, es) {
     }
     var caps = e.capabilities && typeof e.capabilities === "object" ? e.capabilities : {};
     var out = [];
-    (Array.isArray(caps.processCommands) ? caps.processCommands : []).forEach(function (c) {
+    asArray(caps.processCommands).forEach(function (c) {
         out.push({ kind: "program", value: c, text: es ? "Puede ejecutar " + c + " como tu usuario." : "May run " + c + " as your user." });
     });
-    (Array.isArray(caps.networkHosts) ? caps.networkHosts : []).forEach(function (h) {
+    asArray(caps.networkHosts).forEach(function (h) {
         out.push({ kind: "network", value: h, text: es ? "Puede conectarse a " + h + "." : "May contact " + h + "." });
     });
-    (Array.isArray(caps.providers) ? caps.providers : []).forEach(function (d) {
+    asArray(caps.providers).forEach(function (d) {
         out.push({ kind: "data", value: d, text: es ? "Lee los datos compartidos \"" + d + "\" (solo lectura)." : "Reads the shared \"" + d + "\" data (read-only)." });
     });
-    (Array.isArray(caps.actions) ? caps.actions : []).forEach(function (a) {
+    asArray(caps.actions).forEach(function (a) {
         var name = typeof a === "string" ? a : (a && a.id) || String(a);
         out.push({ kind: "action", value: name, text: es ? "Puede pedir la acción de sistema " + name + " (el intermediario la revisa)." : "May request the system action " + name + " (the broker checks it)." });
     });
@@ -186,7 +200,7 @@ function costSummary(entry, telemetry) {
     var e = entry || {};
     var t = telemetry && typeof telemetry === "object" ? telemetry : {};
     var caps = e.capabilities && typeof e.capabilities === "object" ? e.capabilities : {};
-    var domains = Array.isArray(caps.providers) ? caps.providers : [];
+    var domains = asArray(caps.providers);
     var providers = domains.map(function (d) {
         var c = t[d] || {};
         var interval = typeof c.intervalMs === "number" ? c.intervalMs : -1;
@@ -252,12 +266,12 @@ function costText(entry, telemetry, es) {
 function screenshotSources(catalogueEntry, pluginsDir, installed) {
     var e = catalogueEntry || {};
     var out = [];
-    (Array.isArray(e.screenshot_files) ? e.screenshot_files : []).forEach(function (s) {
+    asArray(e.screenshot_files).forEach(function (s) {
         if (s && typeof s.file === "string" && s.file.charAt(0) === "/" && s.file.indexOf("..") < 0)
             out.push({ source: "file://" + s.file, alt: String(s.alt || e.name || e.id || "") });
     });
-    if (out.length === 0 && installed && e.marketplace && Array.isArray(e.marketplace.screenshots)) {
-        e.marketplace.screenshots.forEach(function (s) {
+    if (out.length === 0 && installed && e.marketplace && isList(e.marketplace.screenshots)) {
+        asArray(e.marketplace.screenshots).forEach(function (s) {
             if (s && typeof s.path === "string" && s.path.indexOf("..") < 0 && s.path.charAt(0) !== "/")
                 out.push({ source: "file://" + pluginsDir + "/" + e.id + "/" + s.path, alt: String(s.alt || e.name || e.id || "") });
         });
@@ -267,9 +281,9 @@ function screenshotSources(catalogueEntry, pluginsDir, installed) {
 
 function changelog(entry, limit) {
     var m = entry && entry.marketplace && typeof entry.marketplace === "object" ? entry.marketplace : null;
-    if (!m || !Array.isArray(m.changelog))
+    if (!m || !isList(m.changelog))
         return [];
-    return m.changelog.filter(function (c) {
+    return asArray(m.changelog).filter(function (c) {
         return c && typeof c.version === "string" && typeof c.notes === "string";
     }).slice(0, limit > 0 ? limit : 20);
 }

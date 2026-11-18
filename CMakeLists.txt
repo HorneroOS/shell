@@ -86,7 +86,7 @@ if("plugin" IN_LIST ENABLE_MODULES)
 endif()
 
 if("shell" IN_LIST ENABLE_MODULES)
-    foreach(dir assets components config modules services utils)
+    foreach(dir assets components config i18n modules services utils)
         install(DIRECTORY ${dir} DESTINATION "${INSTALL_QSCONFDIR}")
     endforeach()
     install(FILES shell.qml lock.qml LICENSE.GPL-3.0 NOTICE DESTINATION "${INSTALL_QSCONFDIR}")

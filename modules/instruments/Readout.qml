@@ -18,7 +18,7 @@ Column {
     spacing: 6
 
     Accessible.role: Accessible.StaticText
-    Accessible.name: `${label}: ${value !== "" ? value + " " + unit : qsTr("unavailable")}`
+    Accessible.name: label + ": " + (value !== "" ? value + " " + unit : qsTr("unavailable"))
 
     Eyebrow {
         label: root.label

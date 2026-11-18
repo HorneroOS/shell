@@ -18,6 +18,35 @@ ColumnLayout {
     id: root
 
     // "" edits the global bar set; otherwise the override of that screen.
+    // barorder.js stays plain JS (node-tested), so its entry labels and
+    // group titles are marked here for lupdate; qsTr(label) below looks
+    // them up in this context (docs/I18N.md).
+    readonly property list<string> translatableLabels: [
+        QT_TR_NOOP("Logo"),
+        QT_TR_NOOP("Workspaces"),
+        QT_TR_NOOP("Active window"),
+        QT_TR_NOOP("System tray"),
+        QT_TR_NOOP("Extensions"),
+        QT_TR_NOOP("Clock"),
+        QT_TR_NOOP("Status icons"),
+        QT_TR_NOOP("Volume slider"),
+        QT_TR_NOOP("Brightness slider"),
+        QT_TR_NOOP("Media"),
+        QT_TR_NOOP("Resources"),
+        QT_TR_NOOP("Keyboard layout"),
+        QT_TR_NOOP("Mode indicator"),
+        QT_TR_NOOP("Weather"),
+        QT_TR_NOOP("Pinned apps"),
+        QT_TR_NOOP("Quick actions"),
+        QT_TR_NOOP("Battery"),
+        QT_TR_NOOP("Power"),
+        QT_TR_NOOP("Top"),
+        QT_TR_NOOP("Left"),
+        QT_TR_NOOP("Bottom"),
+        QT_TR_NOOP("Right"),
+        QT_TR_NOOP("Middle"),
+        QT_TR_NOOP("Center")
+    ]
     property string scope: ""
     property int barIndex: 0
 

@@ -614,7 +614,7 @@ Scope {
     property bool decisionDenied: false
     property string decisionDetail: ""
 
-    readonly property string lang: AssistantCopy.lang(Qt.locale().name)
+    readonly property string lang: AssistantCopy.lang(Language.uiLocale)
 
     function refreshStatus(): void {
         if (!AssistantRun.gateway.reachable)

@@ -1,10 +1,12 @@
 import qs.components
 import qs.components.filedialog
+import qs.components.motion
 import qs.services
 import qs.config
 import qs.modules.instruments as Instruments
 import "dash"
 import Quickshell
+import QtQuick
 import QtQuick.Layouts
 
 // Dashboard home (Signal Bezel): an instrument panel, not a card grid.
@@ -38,6 +40,34 @@ GridLayout {
 
     rowSpacing: Appearance.spacing.normal
     columnSpacing: Appearance.spacing.normal
+
+    // Staggered reveal (§11.1 rule 2): on every open the frames scan in
+    // from the bar side, 60 ms after the sheet and 24 ms apart, in reading
+    // order. Input is live from the first frame; off/reduced skip it.
+    function reveal(): void {
+        if (root.visible && root.visibilities.dashboard)
+            stagger.play(root);
+    }
+
+    Component.onCompleted: Qt.callLater(root.reveal)
+
+    Connections {
+        target: root.visibilities
+
+        function onDashboardChanged(): void {
+            if (root.visibilities.dashboard)
+                Qt.callLater(root.reveal);
+            else
+                stagger.stop();
+        }
+    }
+
+    Stagger {
+        id: stagger
+
+        dx: 0
+        dy: 1
+    }
 
     Instruments.Frame {
         Layout.row: 0

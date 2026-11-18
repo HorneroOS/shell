@@ -33,7 +33,7 @@ CollapsibleSection {
             id: "cozy",
             label: qsTr("Cozy"),
             blurb: qsTr("Softer corners, roomier spacing, a gentler glow, a warmer lamp and unhurried motion."),
-            rounding: 1.2, spacing: 1.1, padding: 1.15, font: 1.05, motion: 1.2, glow: 1.2, weight: 0, curve: "bouncy",
+            rounding: 1.2, spacing: 1.1, padding: 1.15, font: 1.05, motion: 1.2, glow: 1.2, weight: 0, curve: "lively",
             atmosphere: ({ lamp: 1.2, warmth: 0.45, innerLight: 1.1, vignette: 0.5, grain: 0.4, scanlines: 0, plateTracking: 0.14, mascot: true, tone: "cozy" })
         }
     ]
@@ -271,8 +271,8 @@ CollapsibleSection {
                         label: qsTr("Snappy")
                     },
                     {
-                        id: "bouncy",
-                        label: qsTr("Bouncy")
+                        id: "lively",
+                        label: qsTr("Lively")
                     }
                 ]
 
@@ -294,7 +294,7 @@ CollapsibleSection {
 
         StyledText {
             Layout.fillWidth: true
-            text: qsTr("Snappy never overshoots; Bouncy gives panels a little more give. Opacity and colour never overshoot, and reduced motion still wins.")
+            text: qsTr("Smooth (factory) settles like a needle, at most 4 % past the mark; Snappy never overshoots; Lively adds a spring, capped at 6 %. Opacity and colour never overshoot, and reduced motion still wins.")
             font.pointSize: Appearance.font.size.small
             color: Signal.palette.inkMuted
             wrapMode: Text.WordWrap

@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Window
 import Quickshell
 import qs.components.filedialog
+import qs.components.motion
 import qs.services
 import qs.config
 
@@ -108,9 +109,112 @@ ShellRoot {
         }
     }
 
+    function findNamed(item, name) {
+        if (item.objectName === name)
+            return item;
+        for (let i = 0; i < item.children.length; i++) {
+            const r = shell.findNamed(item.children[i], name);
+            if (r)
+                return r;
+        }
+        return null;
+    }
+
+    // DS_MODE=motion: reopen the dashboard and sample the frames' opacity
+    // and travel at fixed times (staggered reveal), then switch tab 0 -> 3
+    // and sample the on-air indicator (leading/trailing stretch).
+    readonly property string mode: Quickshell.env("DS_MODE") || "layout"
+    property var frames: []
+    property var samples: []
+    property var indicatorSamples: []
+    property real t0: 0
+    property real restWidth: 0
+    readonly property var marks: [0, 40, 90, 140, 200, 320, 600]
+
+    function sampleFrames(label) {
+        shell.samples.push({t: label, opacity: shell.frames.map(f => Math.round(f.opacity * 100) / 100), shift: shell.frames.map(f => f.transform.length ? Math.round(f.transform[0].y * 10) / 10 : 0)});
+    }
+
+    Timer {
+        id: motionStart
+
+        interval: 2600
+        running: shell.mode === "motion"
+        onTriggered: {
+            const issues = [], frames = [], grids = [];
+            shell.walk(content, issues, frames, grids);
+            shell.frames = frames.filter(f => f.title !== "Playback");
+            vis.dashboard = false;
+            Qt.callLater(() => {
+                vis.dashboard = true;
+                shell.t0 = Date.now();
+                sampler.idx = 0;
+                sampler.restart();
+            });
+        }
+    }
+
+    Timer {
+        id: sampler
+
+        property int idx: 0
+
+        interval: 5
+        repeat: true
+        onTriggered: {
+            const el = Date.now() - shell.t0;
+            if (sampler.idx < shell.marks.length && el >= shell.marks[sampler.idx]) {
+                shell.sampleFrames(shell.marks[sampler.idx]);
+                const out = Quickshell.env("DS_OUT");
+                if (out)
+                    stage.grabToImage(r => r.saveToFile(out.replace(".png", `-open-${String(el).padStart(4, "0")}ms.png`)));
+                sampler.idx++;
+            }
+            if (sampler.idx >= shell.marks.length) {
+                sampler.stop();
+                const ind = shell.findNamed(content, "onAirIndicator");
+                shell.restWidth = ind ? ind.width : -1;
+                dashState.currentTab = 3;
+                shell.t0 = Date.now();
+                indSampler.idx = 0;
+                indSampler.restart();
+            }
+        }
+    }
+
+    Timer {
+        id: indSampler
+
+        property int idx: 0
+        readonly property var marks: [0, 60, 110, 160, 600]
+
+        interval: 5
+        repeat: true
+        onTriggered: {
+            const el = Date.now() - shell.t0;
+            const ind = shell.findNamed(content, "onAirIndicator");
+            if (indSampler.idx < marks.length && el >= marks[indSampler.idx]) {
+                shell.indicatorSamples.push(ind ? {t: marks[indSampler.idx], x: Math.round(ind.x), width: Math.round(ind.width)} : {t: marks[indSampler.idx], x: -1, width: -1});
+                const out = Quickshell.env("DS_OUT");
+                if (out)
+                    stage.grabToImage(r => r.saveToFile(out.replace(".png", `-tab-${String(el).padStart(4, "0")}ms.png`)));
+                indSampler.idx++;
+            }
+            if (indSampler.idx >= marks.length) {
+                indSampler.stop();
+                console.log("DASHMOTION " + JSON.stringify({
+                    level: Appearance.anim.effectiveLevel, style: Appearance.anim.curves.style,
+                    trailRatio: Choreography.trailRatio, restWidth: shell.restWidth,
+                    frames: shell.frames.map(f => f.title || "calendar"), samples: shell.samples, indicator: shell.indicatorSamples
+                }));
+                Qt.callLater(Qt.quit);
+            }
+        }
+    }
+
     Timer {
         interval: 2600
-        running: true
+        running: shell.mode === "layout"
         onTriggered: {
             const issues = [], frames = [], grids = [];
             shell.walk(content, issues, frames, grids);

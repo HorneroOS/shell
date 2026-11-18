@@ -137,10 +137,11 @@ Item {
         opacity: root.shouldBeActive ? 1 : 0
         scale: root.shouldBeActive ? 1 : 0.88
 
+        // Opacity never overshoots (§11): enter, not settle.
         Behavior on opacity {
             Anim {
                 duration: Appearance.anim.durations.settleFast
-                easing.bezierCurve: Appearance.anim.curves.settle
+                easing.bezierCurve: Appearance.anim.curves.enter
             }
         }
 

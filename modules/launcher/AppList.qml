@@ -5,6 +5,7 @@ import "services"
 import qs.components
 import qs.components.controls
 import qs.components.containers
+import qs.components.motion
 import qs.services
 import qs.config
 import Quickshell
@@ -197,6 +198,42 @@ StyledListView {
 
     StyledScrollBar.vertical: StyledScrollBar {
         flickable: root
+    }
+
+    // Staggered reveal of the visible results when the launcher opens
+    // (§11.2 launcher rows: 16 ms apart, at most six). Delegates are not in
+    // layout order among the view's children, so rows go by index.
+    function revealRows(): void {
+        if (!root.visibilities.launcher)
+            return;
+        const rows = [];
+        for (let i = 0; i < Math.min(root.count, Choreography.staggerMaxFine + 2); i++) {
+            const it = root.itemAtIndex(i);
+            if (it && it.visible)
+                rows.push(it);
+        }
+        rowStagger.playRows(rows);
+    }
+
+    Connections {
+        target: root.visibilities
+
+        function onLauncherChanged(): void {
+            if (root.visibilities.launcher)
+                Qt.callLater(root.revealRows);
+            else
+                rowStagger.stop();
+        }
+    }
+
+    // The launcher rises from the bottom edge: rows travel up.
+    Stagger {
+        id: rowStagger
+
+        dx: 0
+        dy: -1
+        step: Choreography.staggerStepFine
+        maxRows: Choreography.staggerMaxFine
     }
 
     add: Transition {

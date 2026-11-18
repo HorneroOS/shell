@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import qs.components
 import qs.components.controls
+import qs.components.motion
 import qs.services
 import qs.config
 import Quickshell
@@ -64,29 +65,81 @@ Item {
     }
 
     // On-air bar (Signal Bezel §5): a 2 px `signal` bar on the edge facing
-    // the content, sliding to the selected cell with settleFast.
+    // the content. It travels with leading/trailing asymmetry (§11): the
+    // edge toward the new tab settles in settleFast, the far edge on the
+    // same curve over Choreography.trail(settleFast), so it is always behind
+    // and the bar stretches toward its target, then catches up. Reduced and
+    // off move both edges alike.
     Rectangle {
         id: indicator
+
+        objectName: "onAirIndicator"
+        // Final cell geometry from the settled width: the tab bar itself
+        // resizes while the sheet settles, and chasing those in-flight cell
+        // edges would restart the travel every frame.
+        readonly property real cellWidth: bar.count > 0 ? (root.nonAnimWidth - bar.spacing * (bar.count - 1)) / bar.count : 0
+        readonly property real targetLeft: Math.max(0, bar.currentIndex) * (cellWidth + bar.spacing)
+        readonly property real targetRight: targetLeft + cellWidth
+        // +1 travelling right, -1 left, 0 resize in place. Set before the
+        // edges move, so each edge's timing is fixed for the whole flight.
+        property int dir: 0
+        // Past ~8 px of overshoot the travel uses `enter` (§11 8 px rule,
+        // per curve style); short hops keep the settle.
+        property string curveKind: "settleFast"
+        property real goalLeft: 0
+        property real goalRight: 0
+        property real leftEdge: 0
+        property real rightEdge: 0
+        property bool ready: false
+
+        // Coalesced: a tab switch moves both targets in one turn. The
+        // direction changes only when the target tab moves, so a tab that
+        // resizes mid-flight retargets one edge without resetting the
+        // other's timing.
+        function retarget(): void {
+            const l = targetLeft, r = targetRight;
+            if (Math.abs(l - goalLeft) > 0.5) {
+                dir = l > goalLeft ? 1 : -1;
+                curveKind = Math.abs(l - goalLeft) * Choreography.curves.settleFastOvershoot > 8 ? "enter" : "settleFast";
+                goalLeft = l;
+                leftEdge = l;
+            }
+            if (Math.abs(r - goalRight) > 0.5) {
+                goalRight = r;
+                rightEdge = r;
+            }
+        }
+
+        onTargetLeftChanged: Qt.callLater(retarget)
+        onTargetRightChanged: Qt.callLater(retarget)
+        Component.onCompleted: {
+            retarget();
+            ready = true;
+        }
 
         anchors.top: bar.bottom
         anchors.topMargin: -height
 
-        x: bar.currentItem ? bar.currentItem.x : 0
-        implicitWidth: bar.currentItem ? bar.currentItem.width : 0
+        x: leftEdge
+        implicitWidth: Math.max(0, rightEdge - leftEdge)
         implicitHeight: 2
         color: Signal.palette.signal
 
-        Behavior on x {
-            Anim {
-                duration: Appearance.anim.durations.settleFast
-                easing.bezierCurve: Appearance.anim.curves.settleFast
+        Behavior on leftEdge {
+            enabled: indicator.ready
+
+            MotionAnim {
+                kind: indicator.curveKind
+                duration: indicator.dir > 0 ? Choreography.trail(Choreography.settleFast) : Choreography.lead(Choreography.settleFast)
             }
         }
 
-        Behavior on implicitWidth {
-            Anim {
-                duration: Appearance.anim.durations.settleFast
-                easing.bezierCurve: Appearance.anim.curves.settleFast
+        Behavior on rightEdge {
+            enabled: indicator.ready
+
+            MotionAnim {
+                kind: indicator.curveKind
+                duration: indicator.dir < 0 ? Choreography.trail(Choreography.settleFast) : Choreography.lead(Choreography.settleFast)
             }
         }
     }

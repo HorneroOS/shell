@@ -76,7 +76,8 @@ def test_density_presets_write_both_scales_with_cosy_default():
     assert cfg["spacing"]["scale"] == 1 and cfg["padding"]["scale"] == 1
 
 
-def render(tmp: Path, scale: float, w: int, h: int, out: Path | None = None) -> dict:
+def render(tmp: Path, scale: float, w: int, h: int, out: Path | None = None, mode: str = "layout", anim: dict | None = None, reduced: bool = False) -> dict:
+    tag = "DASH " if mode == "layout" else "DASHMOTION "
     root = tmp / "root"
 
     def ignore(_dir, names):
@@ -93,6 +94,8 @@ def render(tmp: Path, scale: float, w: int, h: int, out: Path | None = None) -> 
     cfg = json.loads((ROOT / "config" / "shell.default.json").read_text())
     cfg["appearance"]["spacing"]["scale"] = scale
     cfg["appearance"]["padding"]["scale"] = scale
+    cfg["appearance"]["anim"].update(anim or {})
+    cfg["appearance"]["reducedMotion"] = reduced
     (xdg / "config" / "hornero" / "shell.json").write_text(json.dumps(cfg))
     env = {
         "PATH": os.environ["PATH"],
@@ -101,7 +104,7 @@ def render(tmp: Path, scale: float, w: int, h: int, out: Path | None = None) -> 
         "XDG_RUNTIME_DIR": str(xdg / "rt"), "HOME": str(xdg / "home"),
         "QML2_IMPORT_PATH": str(root / "plugin" / "qml"),
         "QT_QPA_PLATFORM": "offscreen", "LIBGL_ALWAYS_SOFTWARE": "1",
-        "DS_W": str(w), "DS_H": str(h),
+        "DS_W": str(w), "DS_H": str(h), "DS_MODE": mode,
     }
     if out:
         env["DS_OUT"] = str(out)
@@ -109,9 +112,9 @@ def render(tmp: Path, scale: float, w: int, h: int, out: Path | None = None) -> 
                           capture_output=True, text=True, timeout=120, env=env, cwd=tmp)
     log = re.sub(r"\x1b\[[0-9;]*m", "", proc.stdout + proc.stderr)
     shutil.rmtree(root, ignore_errors=True)
-    lines = [ln for ln in log.splitlines() if "DASH " in ln]
+    lines = [ln for ln in log.splitlines() if tag in ln]
     assert lines, f"harness never reported:\n{log[-2500:]}"
-    return json.loads(lines[-1].split("DASH ", 1)[1])
+    return json.loads(lines[-1].split(tag, 1)[1])
 
 
 # The default Cockpit pair reserves 42 + 28 px. Compact is the 768p preset

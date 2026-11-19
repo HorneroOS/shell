@@ -139,7 +139,9 @@ def test_settings_defaults_agree_with_factory_and_qml():
     assert run_js("return DEFAULTS;") == factory
     qml = (ROOT / "config" / "KeybindsConfig.qml").read_text()
     props = dict(re.findall(r"property bool (\w+): (true|false)", qml))
-    assert {k: v == "true" for k, v in props.items()} == factory
+    # KeybindsConfig also hosts the superHold section (#701, parity in
+    # test_super_hold_badges.py); compare the overlay bools by name.
+    assert {k: props[k] == "true" for k in factory} == factory
     assert run_js("return settings({runOnEnter: 'yes', compact: true});") == {**factory, "compact": True}
 
 

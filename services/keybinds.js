@@ -39,6 +39,41 @@ var DEFAULTS = {
     compact: false
 };
 
+// SUPER-hold key badges (#701): holdMs bounds mirror
+// config/ranges.json (keybinds.superHold.holdMs).
+var BADGE_DEFAULTS = {
+    enabled: true,
+    holdMs: 600
+};
+var BADGE_HOLD_MIN = 200;
+var BADGE_HOLD_MAX = 3000;
+// Safety net: badges never outlive this even if a release is missed
+// (for example a combo that no interrupt bind saw).
+var BADGE_MAX_SHOWN_MS = 10000;
+
+// Detection binds the config registers for the badges (non-consuming
+// `global` binds in keybindings-overlay.lua). They are shell plumbing,
+// never user binds, so the overlay list hides them wherever the
+// shortcut name shows up (action, dispatcher or label).
+var BADGE_GLOBALS = ["hornero:superHoldArm", "hornero:superHoldRelease", "hornero:superHoldInterrupt"];
+
+function isBadgeGlobal(entry) {
+    var hay = [entry.action, entry.dispatcher, entry.label].join(" ");
+    for (var i = 0; i < BADGE_GLOBALS.length; i++) {
+        if (hay.indexOf(BADGE_GLOBALS[i]) >= 0)
+            return true;
+    }
+    return false;
+}
+
+function badgeSettings(raw) {
+    var hold = raw ? raw.holdMs : undefined;
+    return {
+        enabled: raw && typeof raw.enabled === "boolean" ? raw.enabled : BADGE_DEFAULTS.enabled,
+        holdMs: typeof hold === "number" && isFinite(hold) ? Math.max(BADGE_HOLD_MIN, Math.min(BADGE_HOLD_MAX, Math.round(hold))) : BADGE_DEFAULTS.holdMs
+    };
+}
+
 var MOD_ORDER = ["SUPER", "CTRL", "ALT", "SHIFT"];
 var MOD_ALIASES = {
     SUPER: "SUPER", WIN: "SUPER", META: "SUPER", LOGO: "SUPER", MOD4: "SUPER", MAINMOD: "SUPER",
@@ -117,6 +152,8 @@ function normalise(raw) {
         var e = list[i] || {};
         var submap = String(e.submap || "");
         if (submap.indexOf(HIDDEN_SUBMAP_PREFIX) === 0)
+            continue;
+        if (isBadgeGlobal({ action: String(e.action || ""), dispatcher: String(e.dispatcher || ""), label: "" }))
             continue;
         var category = String(e.category || "") || "General";
         var info = categoryInfo(category);
@@ -294,4 +331,85 @@ function execCommand(entry) {
         return m[1].replace(/\\"/g, "\"");
     var h = /^exec,\s*(.+)$/.exec(String(entry.action || "").trim());
     return h ? h[1] : "";
+}
+
+// --- SUPER-hold badges (#701) -------------------------------------------
+// The compositor reports bare-Super through three non-consuming
+// `global` binds (HorneroOS/config keybindings-overlay.lua):
+// superHoldArm on Super press, superHoldRelease on a bare release, and
+// superHoldInterrupt whenever any SUPER combo fires. None of them
+// consumes the keypress, so every SUPER combo still runs unchanged.
+// holdStep is the whole state machine, driven by services/Keybinds.qml
+// with wall-clock ms: press arms, tick promotes after holdMs, combo
+// (interrupt) or release hides, and a missed release cannot strand
+// the badges past BADGE_MAX_SHOWN_MS.
+function holdState() {
+    return { phase: "idle", since: 0, visible: false };
+}
+
+function holdStep(state, event, opts, now) {
+    var o = badgeSettings(opts);
+    var s = { phase: state ? state.phase : "idle", since: state ? state.since : 0 };
+    if (event === "press") {
+        s = o.enabled ? { phase: "armed", since: now } : { phase: "idle", since: 0 };
+    } else if (event === "interrupt") {
+        if (s.phase === "armed" || s.phase === "shown")
+            s.phase = "used";
+    } else if (event === "release") {
+        s = { phase: "idle", since: 0 };
+    } else if (event === "tick") {
+        if (!o.enabled)
+            s = { phase: "idle", since: 0 };
+        else if (s.phase === "armed" && now - s.since >= o.holdMs)
+            s.phase = "shown";
+        else if (s.phase === "shown" && now - s.since >= o.holdMs + BADGE_MAX_SHOWN_MS)
+            s.phase = "used";
+    }
+    s.visible = s.phase === "shown";
+    return s;
+}
+
+// superBadges lists the bare SUPER + <key> global binds (no extra
+// modifier, no submap, no mouse): one badge per key, first bind wins.
+function superBadges(entries) {
+    var seen = {};
+    var out = [];
+    for (var i = 0; i < entries.length; i++) {
+        var e = entries[i];
+        if (e.submap !== "" || e.mouse || isBadgeGlobal(e))
+            continue;
+        var parts = splitCombo(e.combo);
+        if (parts.length !== 2)
+            continue;
+        var mod = MOD_ALIASES[parts[0].toUpperCase().replace(/^\$/, "")] || parts[0].toUpperCase();
+        if (mod !== "SUPER")
+            continue;
+        var key = parts[1];
+        if (seen[key.toLowerCase()])
+            continue;
+        seen[key.toLowerCase()] = true;
+        out.push({ key: key, label: e.label, combo: e.combo, category: e.category, order: e.order });
+    }
+    out.sort(function (a, b) { return a.order - b.order; });
+    return out;
+}
+
+// workspaceBadges maps a workspace id to the key that focuses it with
+// bare SUPER, parsed from the live bind's action
+// (`hl.dsp.focus({ workspace = "10" })`), so rebinds move the badge.
+function workspaceBadges(entries) {
+    var out = {};
+    var badges = superBadges(entries);
+    var byCombo = {};
+    for (var i = 0; i < entries.length; i++)
+        byCombo[entries[i].combo] = entries[i];
+    for (var j = 0; j < badges.length; j++) {
+        var e = byCombo[badges[j].combo];
+        var m = /^hl\.dsp\.focus\(\{\s*workspace\s*=\s*"(\d+)"\s*\}\)$/.exec(String(e ? e.action : "").trim());
+        if (!m)
+            m = /^workspace,\s*(\d+)$/.exec(String(e ? e.action : "").trim());
+        if (m && out[m[1]] === undefined)
+            out[m[1]] = badges[j].key;
+    }
+    return out;
 }

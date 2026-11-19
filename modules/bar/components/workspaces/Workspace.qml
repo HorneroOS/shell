@@ -1,3 +1,4 @@
+import "../../../keybinds"
 import qs.components
 import qs.components.controls
 import qs.services
@@ -275,6 +276,20 @@ Item {
         y: root.vertical ? Math.round((root.numeralBox - height) / 2) : (root.contentAtTop ? 1 : root.height - 3)
         radius: 1 // fixed: 2 px tick end rounding, not a theme corner
         color: root.tone.active ? root.tone.inkMuted : Signal.palette.ruleStrong
+    }
+
+    // SUPER-hold key badge (#701): while bare SUPER is held past the
+    // configured delay, the cell shows the key that focuses it (from
+    // the live bind list, so rebinds move the badge). Purely visual:
+    // it never takes input, and Keybinds.badgesVisible owns the timing.
+    Keycap {
+        visible: Keybinds.badgesVisible && text !== ""
+        text: Keybinds.workspaceBadge(root.ws)
+        accent: true
+        compact: true
+        z: 2
+        x: (root.vertical ? root.width : root.numeralBox) - width - 1
+        y: 1
     }
 
     Interactive {

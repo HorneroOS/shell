@@ -1,6 +1,7 @@
 pragma Singleton
 
 import "keybinds.js" as Model
+import qs.components.misc
 import qs.config
 import Quickshell
 import Quickshell.Io
@@ -35,6 +36,23 @@ Singleton {
 
     readonly property var settings: Model.settings(Config.keybinds.overlay)
     readonly property string summonCombo: Model.summonCombo(entries)
+
+    // SUPER-hold key badges (#701). The config's non-consuming global
+    // binds feed holdStep; badges never show over a fullscreen window
+    // (gaming focus contract, same as the overlay).
+    readonly property var badgeSettings: Model.badgeSettings(Config.keybinds.superHold)
+    readonly property var superBadges: Model.superBadges(entries)
+    readonly property var wsBadges: Model.workspaceBadges(entries)
+    property var hold: Model.holdState()
+    readonly property bool badgesVisible: hold.visible && !Compositor.hasFullscreenOnFocusedOutput()
+
+    function workspaceBadge(wsId: var): string {
+        return root.wsBadges[String(wsId)] ?? "";
+    }
+
+    function holdEvent(event: string): void {
+        root.hold = Model.holdStep(root.hold, event, Config.keybinds.superHold, Date.now());
+    }
 
     signal refreshed
     // A set/reset/undo finished: `what` is the caller's one-line summary.
@@ -234,5 +252,38 @@ Singleton {
 
         interval: 350
         onTriggered: root.refresh()
+    }
+
+    // Badges need the live bind list before the first hold; other
+    // consumers refresh on open anyway. The list command is the same
+    // one the overlay runs, guarded by listProc.running.
+    Component.onCompleted: {
+        if (root.badgeSettings.enabled)
+            root.refresh();
+    }
+
+    Timer {
+        interval: 50
+        repeat: true
+        running: root.hold.phase === "armed" || root.hold.phase === "shown"
+        onTriggered: root.holdEvent("tick")
+    }
+
+    CustomShortcut {
+        name: "superHoldArm"
+        description: "Arm SUPER-hold key badges"
+        onPressed: root.holdEvent("press")
+    }
+
+    CustomShortcut {
+        name: "superHoldRelease"
+        description: "Hide SUPER-hold key badges"
+        onPressed: root.holdEvent("release")
+    }
+
+    CustomShortcut {
+        name: "superHoldInterrupt"
+        description: "Cancel SUPER-hold key badges on combo"
+        onPressed: root.holdEvent("interrupt")
     }
 }

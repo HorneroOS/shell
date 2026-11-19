@@ -806,6 +806,10 @@
       "showSubmaps": true,
       "showMouse": true,
       "compact": false
+    },
+    "superHold": {
+      "enabled": true,
+      "holdMs": 600
     }
   },
   "lock": {

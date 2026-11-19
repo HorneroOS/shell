@@ -7076,6 +7076,30 @@ Snapshot del plugin: %3</translation>
         <translation>Ajustes del panel restablecidos</translation>
     </message>
     <message>
+        <source>SUPER-hold key badges</source>
+        <translation>Insignias de teclas al mantener SUPER</translation>
+    </message>
+    <message>
+        <source>Holding SUPER on its own shows the workspace keys on the bar. Every SUPER shortcut keeps working; pressing one or releasing SUPER hides the badges.</source>
+        <translation>Al mantener SUPER sola se muestran las teclas de los espacios de trabajo en la barra. Todos los atajos con SUPER siguen funcionando; al usar uno o soltar SUPER, las insignias se ocultan.</translation>
+    </message>
+    <message>
+        <source>Show key badges when holding SUPER</source>
+        <translation>Mostrá insignias de teclas al mantener SUPER</translation>
+    </message>
+    <message>
+        <source>Hold SUPER for</source>
+        <translation>Mantené SUPER durante</translation>
+    </message>
+    <message>
+        <source>Reset badge settings</source>
+        <translation>Restablecer ajustes de insignias</translation>
+    </message>
+    <message>
+        <source>Badge settings reset</source>
+        <translation>Ajustes de insignias restablecidos</translation>
+    </message>
+    <message>
         <source>Refresh</source>
         <translation>Actualizar</translation>
     </message>

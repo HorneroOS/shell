@@ -74,6 +74,11 @@ Item {
         Config.save();
     }
 
+    function setSuperHold(key: string, value: bool): void {
+        Config.keybinds.superHold[key] = value;
+        Config.save();
+    }
+
     Component.onCompleted: Keybinds.refresh()
     Component.onDestruction: root.stopRecording()
 
@@ -258,6 +263,81 @@ Item {
                                     for (const k of ["runOnEnter", "closeAfterRun", "showSubmaps", "showMouse"])
                                         Config.keybinds.overlay[k] = true;
                                     Config.keybinds.overlay.compact = false;
+                                    Config.save();
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // --- SUPER-hold badges (#701) --------------------------------
+                ChannelPanel {
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        Layout.margins: Appearance.padding.large
+                        spacing: Appearance.spacing.small
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Appearance.spacing.small
+
+                            Glyph {
+                                name: "command"
+                                color: Signal.palette.signal
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: qsTr("SUPER-hold key badges")
+                                font.weight: Appearance.font.weight.strong
+                                color: Signal.palette.ink
+                            }
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Holding SUPER on its own shows the workspace keys on the bar. Every SUPER shortcut keeps working; pressing one or releasing SUPER hides the badges.")
+                            color: Signal.palette.inkMuted
+                            font.pointSize: Appearance.font.size.small
+                            wrapMode: Text.WordWrap
+                        }
+
+                        SwitchRow {
+                            label: qsTr("Show key badges when holding SUPER")
+                            checked: Keybinds.badgeSettings.enabled
+                            onToggled: checked => root.setSuperHold("enabled", checked)
+                        }
+
+                        SizeSlider {
+                            target: Config.keybinds.superHold
+                            key: "holdMs"
+                            label: qsTr("Hold SUPER for")
+                            from: 200
+                            to: 3000
+                            defaultValue: 600
+                            stepSize: 50
+                            suffix: "ms"
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+
+                            Item {
+                                Layout.fillWidth: true
+                            }
+
+                            TextButton {
+                                text: qsTr("Reset badge settings")
+                                type: TextButton.Tonal
+                                onClicked: {
+                                    Undo.offerValues("keybinds-superhold", qsTr("Badge settings reset"), [
+                                        {
+                                            "obj": Config.keybinds.superHold,
+                                            "keys": ["enabled", "holdMs"]
+                                        }
+                                    ], "");
+                                    Config.keybinds.superHold.enabled = true;
+                                    Config.keybinds.superHold.holdMs = 600;
                                     Config.save();
                                 }
                             }

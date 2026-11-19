@@ -702,6 +702,10 @@ Singleton {
                 showSubmaps: keybinds.overlay.showSubmaps,
                 showMouse: keybinds.overlay.showMouse,
                 compact: keybinds.overlay.compact
+            },
+            superHold: {
+                enabled: keybinds.superHold.enabled,
+                holdMs: keybinds.superHold.holdMs
             }
         };
     }

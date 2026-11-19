@@ -102,3 +102,26 @@ stored in `shell.json` under `keybinds.overlay`:
 The same pane shows the summon key with a **Change** button. It also lists
 every bind with the same rebind editor: record or type a combo, conflicts
 shown before applying, Swap, Disable, Undo, and Reset to defaults.
+
+## SUPER-hold key badges
+
+Holding bare SUPER for a moment shows a key badge on each bar workspace cell:
+the key that focuses that workspace (`0` on workspace 10, or whatever key a
+rebind moved it to — badges read the same live bind list as the overlay).
+Releasing SUPER hides them, and pressing any SUPER shortcut hides them too —
+shortcuts are never delayed or swallowed, because detection uses
+non-consuming `global` binds registered by HorneroOS/config
+(`keybindings-overlay.lua`): an arm bind on the SUPER key itself
+(`hornero:superHoldArm`), a release bind (`hornero:superHoldRelease`), and one
+interrupt twin next to every SUPER combo (`hornero:superHoldInterrupt`). Those
+three are shell plumbing and never appear in the overlay list. Badges never
+show over a fullscreen window. Hyprland only for now; on Niri the shortcuts
+stay inert.
+
+Stored in `shell.json` under `keybinds.superHold`, edited in Control Center >
+Keybinds > SUPER-hold key badges (with reset to defaults):
+
+| Setting | Default | Effect |
+| --- | --- | --- |
+| `enabled` | `true` | Turn the badges off entirely |
+| `holdMs` | `600` | How long SUPER must be held alone (200–3000 ms) |

@@ -115,6 +115,12 @@
       "step": 1,
       "default": 12
     },
+    "keybinds.superHold.holdMs": {
+      "min": 200,
+      "max": 3000,
+      "step": 50,
+      "default": 600
+    },
     "launcher.dragThreshold": {
       "min": 10,
       "max": 200,

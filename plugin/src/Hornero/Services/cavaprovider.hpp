@@ -1,8 +1,11 @@
 #pragma once
 
 #include "audioprovider.hpp"
-#include <cava/cavacore.h>
 #include <qqmlintegration.h>
+
+// libcava is loaded at runtime (see cavaprovider.cpp), never linked:
+// a missing or ABI-broken libcava must only silence the spectrum,
+// not prevent the whole plugin (and shell) from loading.
 
 namespace hornero::services {
 

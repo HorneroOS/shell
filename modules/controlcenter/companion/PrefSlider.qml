@@ -1,3 +1,4 @@
+import "../components"
 import qs.components
 import qs.components.controls
 import qs.config

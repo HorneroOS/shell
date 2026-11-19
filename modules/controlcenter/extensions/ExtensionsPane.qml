@@ -46,6 +46,48 @@ Item {
     property string pluginSearch: ""
     property string pluginTrustFilter: "all"
     property string pluginPlacementFilter: "all"
+    property string catalogCategoryFilter: "all"
+
+    onPluginSearchChanged: {
+        if (root.catalogSearch !== root.pluginSearch)
+            root.catalogSearch = root.pluginSearch;
+    }
+
+    onCatalogSearchChanged: {
+        if (root.pluginSearch !== root.catalogSearch)
+            root.pluginSearch = root.catalogSearch;
+    }
+
+    Keys.onEscapePressed: {
+        root.expandedPluginId = "";
+        root.expandedCatalogId = "";
+        root.settingsPluginId = "";
+        root.customSettingsPluginId = "";
+        root.pendingEnable = "";
+        root.pendingTrust = "";
+        root.pendingInstall = "";
+        root.pendingCatalogAction = "";
+        searchField.forceActiveFocus();
+    }
+
+    // One search for the whole pane: both SearchBars write the same
+    // query (kept in sync below), so installed rows and catalogue rows
+    // filter together instead of drifting apart.
+    function unifiedQuery(): string {
+        const installed = root.pluginSearch.trim();
+        return installed.length > 0 ? installed : root.catalogSearch.trim();
+    }
+
+    function catalogCategories(): var {
+        return [...new Set(root.catalogEntries.map(entry => String(entry.category || "")).filter(value => value.length > 0))].sort();
+    }
+
+    function updateEntries(): var {
+        return Plugins.entries.filter(entry => {
+            const cat = root.catalogueEntryFor(entry.id);
+            return !!cat && cat.update_available === true;
+        });
+    }
     property string expandedPluginId: ""
     property string expandedCatalogId: ""
     property string settingsPluginId: ""
@@ -166,11 +208,17 @@ Item {
     }
 
     function filteredCatalogEntries(): var {
-        const query = root.catalogSearch.trim().toLowerCase();
-        if (!query)
-            return root.catalogEntries;
-        return root.catalogEntries.filter(entry => [entry.name, entry.id, entry.description, entry.author, entry.category, entry.placement]
-            .some(value => String(value || "").toLowerCase().includes(query)));
+        const query = root.unifiedQuery().toLowerCase();
+        return root.catalogEntries.filter(entry => {
+            if (root.pluginPlacementFilter !== "all" && String(entry.placement || "") !== root.pluginPlacementFilter)
+                return false;
+            if (root.catalogCategoryFilter !== "all" && String(entry.category || "") !== root.catalogCategoryFilter)
+                return false;
+            if (!query)
+                return true;
+            return [entry.name, entry.id, entry.description, entry.author, entry.category, entry.placement]
+                .some(value => String(value || "").toLowerCase().includes(query));
+        });
     }
 
     function declaredCapabilities(capabilities, verified): string {
@@ -330,12 +378,23 @@ Item {
     // action is taken; installing/enabling the replacement stays
     // the existing confirmed flow.
     function openReplacement(pluginId): void {
+        // Clear filters that could hide the replacement, filter both
+        // lists to it, expand it, then scroll to the top of the filtered
+        // list and move keyboard focus back to the search field.
+        root.pluginTrustFilter = "all";
+        root.pluginPlacementFilter = "all";
+        root.catalogCategoryFilter = "all";
+        root.pluginSearch = pluginId;
+        root.catalogSearch = pluginId;
         if (root.installedEntry(pluginId)) {
-            root.pluginSearch = pluginId;
             root.expandedPluginId = pluginId;
+            root.expandedCatalogId = "";
         } else {
-            root.catalogSearch = pluginId;
+            root.expandedPluginId = "";
+            root.expandedCatalogId = pluginId;
         }
+        flick.contentY = 0;
+        searchField.forceActiveFocus();
     }
 
     function refreshCatalog() {
@@ -388,6 +447,7 @@ Item {
         if (!root.installedEntry(id))
             return;
         root.pluginSearch = id;
+        root.catalogSearch = id;
         root.expandedPluginId = id;
         root.settingsPluginId = id;
         root.session.requestedSection = "";
@@ -420,6 +480,7 @@ Item {
 
     Component.onDestruction: Plugins.telemetryWatchers = Math.max(0, Plugins.telemetryWatchers - 1)
 
+    focus: true
     anchors.fill: parent
 
     ClippingRectangle {
@@ -453,7 +514,22 @@ Item {
 
                 PaneHeader {
                     paneId: "extensions"
-                    intro: qsTr("Every enabled QML plugin runs as your user without a sandbox. Command and network declarations come from each plugin's manifest and are not enforced permissions. Review a plugin's source before enabling it. Extensions built for PluginKit 1 or 2 are refused until they are ported to PluginKit 3 (Hornero Signal).")
+                    intro: qsTr("Every enabled QML plugin runs as your user without a sandbox. Declared commands and network hosts are review information, not enforced permissions. Extensions built for PluginKit 1 or 2 are refused until they are ported to PluginKit 3.")
+                }
+
+                TextButton {
+                    visible: Plugins.entries.length > 0
+                    text: qsTr("See permissions")
+                    type: TextButton.Text
+                    onClicked: {
+                        const first = Plugins.entries[0];
+                        if (first) {
+                            root.pluginSearch = first.id;
+                            root.catalogSearch = first.id;
+                            root.expandedPluginId = first.id;
+                            flick.contentY = 0;
+                        }
+                    }
                 }
 
                 RowLayout {
@@ -537,7 +613,55 @@ Item {
                     wrapMode: Text.Wrap
                 }
 
+                // Updates strip: only when the catalogue reports an
+                // update; each row jumps to the installed card, where
+                // the existing two-step Update verb lives.
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    visible: root.updateEntries().length > 0
+                    spacing: Appearance.spacing.small
+
+                    StyledText {
+                        text: qsTr("Updates")
+                        font.pointSize: Appearance.font.size.normal
+                        font.weight: Appearance.font.weight.strong
+                    }
+
+                    Repeater {
+                        model: root.updateEntries()
+
+                        delegate: RowLayout {
+                            required property var modelData
+                            readonly property var cat: root.catalogueEntryFor(modelData.id)
+
+                            Layout.fillWidth: true
+                            spacing: Appearance.spacing.small
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: `${modelData.name} · ${cat ? Store.updateText(cat, root.es) : ""}`
+                                font.pointSize: Appearance.font.size.small
+                                wrapMode: Text.Wrap
+                            }
+
+                            TextButton {
+                                text: qsTr("Details")
+                                type: TextButton.Text
+                                onClicked: {
+                                    root.pluginSearch = modelData.id;
+                                    root.catalogSearch = modelData.id;
+                                    root.expandedPluginId = modelData.id;
+                                    flick.contentY = 0;
+                                    searchField.forceActiveFocus();
+                                }
+                            }
+                        }
+                    }
+                }
+
                 SearchBar {
+                    id: searchField
+
                     Layout.fillWidth: true
                     placeholderText: qsTr("Search installed plugins")
                     Accessible.name: qsTr("Search installed plugins")
@@ -612,6 +736,8 @@ Item {
                         radius: Appearance.rounding.small
                         color: Signal.layer(Signal.palette.panel, 1)
                         implicitHeight: rowCol.implicitHeight + Appearance.padding.large * 2
+                        Accessible.role: Accessible.ListItem
+                        Accessible.name: `${row.entry.name ?? row.entry.id} ${row.entry.version ? "v" + row.entry.version : ""} ${root.placementLabel(row.entry.placement)} ${root.trustLabel(row.entry.trust)}`
 
                         ColumnLayout {
                             id: rowCol
@@ -1014,7 +1140,7 @@ Item {
                                 id: previewFrame
 
                                 Layout.fillWidth: true
-                                visible: root.settingsPluginId === row.entry.id && root.hasPluginSettings(row.entry) && previewFrame.shown
+                                visible: root.settingsPluginId === row.entry.id && root.hasPluginSettings(row.entry)
                                 active: root.settingsPluginId === row.entry.id && root.hasPluginSettings(row.entry)
                                 pluginId: row.entry.id
                                 instanceId: instancesSection.supported ? instancesSection.selected : ""
@@ -1254,6 +1380,26 @@ Item {
                     onTextChanged: root.catalogSearch = text
                 }
 
+                // Catalogue filters: the placement chips above apply
+                // here too; category chips narrow the catalogue only.
+                Flow {
+                    Layout.fillWidth: true
+                    spacing: Appearance.spacing.small
+                    visible: root.catalogCategories().length > 1
+
+                    Repeater {
+                        model: root.catalogCategories()
+
+                        delegate: FilterChip {
+                            required property var modelData
+
+                            label: modelData
+                            selected: root.catalogCategoryFilter === modelData
+                            onActivated: root.catalogCategoryFilter = selected ? "all" : modelData
+                        }
+                    }
+                }
+
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: Appearance.spacing.small
@@ -1361,6 +1507,8 @@ Item {
                         radius: Appearance.rounding.small
                         color: Signal.layer(Signal.palette.panel, 1)
                         implicitHeight: catCol.implicitHeight + Appearance.padding.large * 2
+                        Accessible.role: Accessible.ListItem
+                        Accessible.name: `${catRow.modelData.name} v${catRow.modelData.version} ${root.placementLabel(catRow.modelData.placement)}`
 
                         ColumnLayout {
                             id: catCol
@@ -1649,6 +1797,7 @@ Item {
                                     type: TextButton.Text
                                     onClicked: {
                                         root.pluginSearch = catRow.modelData.id;
+                                        root.catalogSearch = catRow.modelData.id;
                                         root.settingsPluginId = catRow.modelData.id;
                                     }
                                 }

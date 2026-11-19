@@ -40,11 +40,23 @@ ColumnLayout {
 
     readonly property var declarations: Plugins.normalizeSettings(root.settings)
 
+    // Internal state (timer deadlines, phases) is not a person's
+    // setting: hidden declarations, an explicit internal flag, and
+    // epoch-millisecond state keys never render as controls. Reset
+    // already only clears visible controls (see resetAllSettings).
+    function isInternalSetting(key: string): bool {
+        const decl = root.declarations[key];
+        if (!decl || decl.internal === true)
+            return true;
+        return /(^|_)(deadline|phase|state)(_|$)/i.test(key) || /EpochMs$/.test(key) || key.startsWith("_");
+    }
+
     // Keys in display order: ungrouped first, then each group in the
     // order its first member was declared (alphabetical by key within a
     // group, like before).
     function settingKeys(): var {
-        const keys = Object.keys(root.declarations).filter(key => root.declarations[key].hidden !== true).sort();
+        const declared = Object.keys(root.declarations).filter(key => root.declarations[key].hidden !== true).sort();
+        const keys = declared.filter(key => !root.isInternalSetting(key));
         const groups = [];
         for (const key of keys) {
             const group = root.groupOf(key);
@@ -64,7 +76,12 @@ ColumnLayout {
 
     function titleOf(key: string): string {
         const decl = root.declarations[key];
-        return decl && typeof decl.title === "string" ? decl.title : key;
+        if (decl && typeof decl.title === "string" && decl.title.length > 0)
+            return decl.title;
+        // Human label from the key (camelCase / snake_case), so the
+        // generated UI never shows a raw key like barShowSeconds.
+        const words = key.replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/[_-]+/g, " ").trim().toLowerCase();
+        return words.length > 0 ? words.charAt(0).toUpperCase() + words.slice(1) : key;
     }
 
     // First key of its group in display order shows the group heading.

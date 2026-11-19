@@ -5600,12 +5600,20 @@ Ajustes que guarda: %5</translation>
         <translation>Las declaraciones son datos para revisar, no permisos que se apliquen: el QML activado igual corre como tu usuario y sin sandbox.</translation>
     </message>
     <message>
-        <source>Catalogue revision: %1</source>
-        <translation>Revisión del catálogo: %1</translation>
+        <source>Every enabled QML plugin runs as your user without a sandbox. Declared commands and network hosts are review information, not enforced permissions. Extensions built for PluginKit 1 or 2 are refused until they are ported to PluginKit 3.</source>
+        <translation>Cada plugin QML activado corre como tu usuario, sin sandbox. Los comandos y hosts de red declarados son datos para revisar, no permisos forzados. Las extensiones hechas para PluginKit 1 o 2 se rechazan hasta que se porten a PluginKit 3.</translation>
     </message>
     <message>
-        <source>Every enabled QML plugin runs as your user without a sandbox. Command and network declarations come from each plugin&apos;s manifest and are not enforced permissions. Review a plugin&apos;s source before enabling it. Extensions built for PluginKit 1 or 2 are refused until they are ported to PluginKit 3 (Hornero Signal).</source>
-        <translation>Cada plugin QML activado corre con tu usuario, sin sandbox. Las declaraciones de comandos y red vienen del manifiesto de cada plugin y no son permisos que se hagan cumplir. Revisá el código de un plugin antes de activarlo. Las extensiones hechas para PluginKit 1 o 2 se rechazan hasta que se porten a PluginKit 3 (Hornero Signal).</translation>
+        <source>See permissions</source>
+        <translation>Ver permisos</translation>
+    </message>
+    <message>
+        <source>Updates</source>
+        <translation>Actualizaciones</translation>
+    </message>
+    <message>
+        <source>Catalogue revision: %1</source>
+        <translation>Revisión del catálogo: %1</translation>
     </message>
     <message>
         <source>1 extension installed</source>
@@ -9572,6 +9580,10 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>Live preview</source>
         <translation>Vista previa en vivo</translation>
+    </message>
+    <message>
+        <source>No preview for this extension.</source>
+        <translation>Esta extensión no tiene vista previa.</translation>
     </message>
     <message>
         <source>The preview failed to load.</source>

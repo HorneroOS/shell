@@ -16,8 +16,8 @@ license=('GPL-3.0-or-later')
 # every orphaned-lock lifecycle issue tracked upstream in #1054.
 depends=(
   'aubio'
-  'hornero-config>=0.4.2'
-  'horneroctl-bin>=0.2.0_preview47'
+  'hornero-config>=0.4.3'
+  'horneroctl-bin>=0.2.0_preview49'
   'libcava'
   'libqalculate'
   'pipewire'

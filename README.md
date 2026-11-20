@@ -1,5 +1,7 @@
 # HorneroOS shell
 
+[![CI](https://github.com/HorneroOS/shell/actions/workflows/ci.yml/badge.svg)](https://github.com/HorneroOS/shell/actions/workflows/ci.yml)
+
 Hornero Shell is the official HorneroOS desktop shell for Wayland, built with
 [Quickshell](https://quickshell.org/), QML, and Qt 6. Hyprland is the supported
 compositor; Niri has a passing single-output graphical baseline and remains
@@ -17,12 +19,13 @@ semantic colour roles (`Signal.palette.*`, default theme
 subset, MIT) and instrument-like motion. See
 [`docs/NATIVE-APPEARANCE.md`](docs/NATIVE-APPEARANCE.md).
 
-![Concept render, not a screenshot: the Hornero Signal Night direction for the Cockpit desktop](https://raw.githubusercontent.com/HorneroOS/docs/main/development/assets/signal-visual-language/concept-final-night.png)
+<!-- markdownlint-disable MD033 -->
+<p align="center"><img src="https://www.horneroos.com/captures/cap-shell-07.png" width="960" alt="Hornero Shell Dashboard: clock and November 2026 calendar, Station card (HorneroOS on Hyprland), resource meters, media deck showing Nothing playing"></p>
 
-*Concept render, not a screenshot: the Hornero Signal direction for the Cockpit
-desktop. The previous hero capture predated Signal (the file stays only as the VM test wallpaper seed); real
-captures from the graphical test VM replace this once the surfaces are
-validated.*
+<p align="center"><sub>Dashboard: calendar, station, resources.
+Real capture — maintainer machine, staged demo content; shown values
+are that machine's, not requirements.</sub></p>
+<!-- markdownlint-enable MD033 -->
 
 ## Position in HorneroOS
 
@@ -92,6 +95,9 @@ The original extraction source and upstream license are recorded in
 
 The repository documents the community extension package contract, runtime,
 and public `Hornero.PluginKit` API in [`docs/PLUGINS.md`](docs/PLUGINS.md).
+First-party extensions live in
+[HorneroOS/plugins](https://github.com/HorneroOS/plugins); see the
+[desktop tour](https://www.horneroos.com/desktop) for the shell in context.
 `horneroctl` owns plugin lifecycle and provenance. The Control Center can show
 community entries only after `horneroctl` verifies the signed registry index.
 Community install, update, and rollback are not available yet. Quickshell QML
@@ -111,3 +117,14 @@ Dual layout (see `NOTICE`): scaffold and project docs are
 [GPL-3.0-only](LICENSE.GPL-3.0) (derived from
 [caelestia-dots/shell](https://github.com/caelestia-dots/shell) by
 [@soramane](https://github.com/soramane) — credit preserved).
+
+---
+
+[Website](https://www.horneroos.com) ·
+[Docs](https://www.horneroos.com/docs) ·
+[Desktop](https://www.horneroos.com/desktop) ·
+[`HorneroOS/config`](https://github.com/HorneroOS/config) ·
+[`HorneroOS/hornero`](https://github.com/HorneroOS/hornero) ·
+[`HorneroOS/plugins`](https://github.com/HorneroOS/plugins) ·
+[Issues](https://github.com/HorneroOS/shell/issues) ·
+[License](#license)

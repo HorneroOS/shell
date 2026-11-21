@@ -38,9 +38,9 @@ makepkg -s
 ```
 
 The `-s` flag resolves the remaining `depends` via pacman where available.
-`quickshell` is available in Arch `extra`, so only `libcava` lives on the
-AUR (on stock Arch) and must be installed first with an AUR helper (or
-`makepkg` by hand):
+`libcava` is only an optional runtime dependency (audio spectrum,
+resolved via `QLibrary` at runtime), so the AUR package is no longer
+needed to build or start the shell; install it only for the spectrum:
 
 ```bash
 paru -S libcava
@@ -72,19 +72,18 @@ namcap hornero-shell-*.pkg.tar.zst
 Expected results:
 
 - No missing-dependency warnings: every directly linked library observed in
-  the built modules (`libqalculate`, `libaubio`, `libcava`, `libpipewire`,
+  the built modules (`libqalculate`, `libaubio`, `libpipewire`,
   Qt6 Core/Gui/Qml/Quick/Network/Sql/Concurrent) maps to a `depends` entry.
-- Possible informational note about `libcava` being AUR-only on stock Arch;
-  this is normal for AUR packages and not a defect. `quickshell` comes from
-  Arch `extra`.
+  `libcava` is intentionally not linked (resolved at runtime), so it is
+  an `optdepends`, not a `depends`. `quickshell` comes from Arch `extra`.
 - No ELF or permission warnings: the helper script
   `assets/wrap_term_launch.sh` is explicitly kept executable in `package()`.
 
 ## Dependency notes
 
-- `extra/cava` does **not** provide the `libcava` shared library or its
-  pkg-config file (it ships only the `cava` binary), so the build depends on
-  the AUR `libcava` package instead.
+- `extra/cava` does **not** provide the `libcava` shared library (it
+  ships only the `cava` binary), so the spectrum needs the AUR
+  `libcava` package at runtime; without it the shell still starts.
 - Quickshell is resolved from Arch `extra` through the `quickshell` package
   name, with a 0.3.2 minimum for the session-lock acquisition guard.
 - `qt6-tools` is a build-only dependency for the Qt QML module tooling used

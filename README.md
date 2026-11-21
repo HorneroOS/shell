@@ -55,7 +55,9 @@ cmake --build build
 ```
 
 Requires CMake ≥ 3.19, Qt 6.9+ (Core, Qml, Gui, Quick, Concurrent, Sql,
-Network, DBus), `libqalculate`, `pipewire`, `aubio`, `libcava`/`cava`.
+Network, DBus), `libqalculate`, `pipewire`, `aubio`. `libcava` is an
+optional runtime dependency (audio spectrum): it is resolved at
+runtime, so a missing or ABI-broken copy only silences the spectrum.
 `VERSION`/`GIT_REVISION` come from git tags when available, else default
 to `0.0.0`/`unknown` with a warning. Select modules with
 `-D ENABLE_MODULES="extras;plugin;shell"`.

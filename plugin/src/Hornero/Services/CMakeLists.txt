@@ -10,5 +10,4 @@ qml_module(hornero-services
     LIBRARIES
         PkgConfig::Pipewire
         PkgConfig::Aubio
-        PkgConfig::Cava
 )

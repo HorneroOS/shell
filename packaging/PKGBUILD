@@ -2,7 +2,7 @@
 
 pkgname=hornero-shell
 pkgver=1.2.16
-pkgrel=1
+pkgrel=2
 pkgdesc="Hornero OS desktop shell, built with Quickshell, QML and Qt for Wayland"
 arch=('x86_64')
 url="https://github.com/HorneroOS/shell"
@@ -18,7 +18,6 @@ depends=(
   'aubio'
   'hornero-config>=0.4.3'
   'horneroctl-bin>=0.2.0_preview49'
-  'libcava'
   'libqalculate'
   'pipewire'
   'python'
@@ -37,6 +36,7 @@ makedepends=(
 )
 optdepends=(
   'app2unit: launch apps as systemd user units'
+  'libcava: audio spectrum visualiser (resolved at runtime; a missing or ABI-broken libcava only silences the spectrum)'
   'brightnessctl: laptop backlight control'
   'ddcutil: external monitor brightness control'
   'ffmpeg: Hornero Chromatic colours from video wallpapers (one frame)'

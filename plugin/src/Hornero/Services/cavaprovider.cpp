@@ -2,11 +2,11 @@
 
 #include "audiocollector.hpp"
 #include "audioprovider.hpp"
+#include <QLibrary>
 #include <QMetaObject>
 #include <QVector>
 #include <algorithm>
 #include <cmath>
-#include <cava/cavacore.h>
 #include <cstddef>
 #include <mutex>
 #include <qdebug.h>
@@ -14,6 +14,66 @@
 namespace hornero::services {
 
 namespace {
+
+// Runtime-resolved libcava ABI (cava/cavacore.h). The plugin used to
+// link libcava, so any transitive SONAME break in it (e.g. sndio
+// 1.11 dropping libsndio.so.7, which the AUR libcava was built
+// against) made the dynamic loader refuse the whole plugin and the
+// shell failed to start. Resolving at runtime confines that failure
+// to a silent spectrum.
+struct CavaApi {
+    using Init = struct cava_plan* (*)(int, unsigned int, int, int, double, int, int);
+    using Execute = void (*)(double*, int, double*, struct cava_plan*);
+    using Destroy = void (*)(struct cava_plan*);
+
+    Init init = nullptr;
+    Execute execute = nullptr;
+    Destroy destroy = nullptr;
+};
+
+const CavaApi& cavaApi() {
+    static const CavaApi api = [] {
+        // Intentionally leaked: resolved pointers must stay valid.
+        auto* lib = new QLibrary(QStringLiteral("cava"));
+        if (!lib->load()) {
+            const QString error = lib->errorString();
+            delete lib;
+            lib = new QLibrary(QStringLiteral("libcava.so.1"));
+            if (!lib->load()) {
+                qWarning() << "CavaProvider: libcava unavailable (" << error << "); spectrum disabled";
+                delete lib;
+                return CavaApi {};
+            }
+        }
+        CavaApi resolved;
+        resolved.init = reinterpret_cast<CavaApi::Init>(lib->resolve("cava_init"));
+        resolved.execute = reinterpret_cast<CavaApi::Execute>(lib->resolve("cava_execute"));
+        resolved.destroy = reinterpret_cast<CavaApi::Destroy>(lib->resolve("cava_destroy"));
+        if (!resolved.init || !resolved.execute || !resolved.destroy) {
+            qWarning() << "CavaProvider: libcava missing cava_init/cava_execute/cava_destroy; spectrum disabled";
+            return CavaApi {};
+        }
+        return resolved;
+    }();
+    return api;
+}
+
+struct cava_plan* cava_init(int bars, unsigned int rate, int channels, int autosens, double noise, int low, int high) {
+    const auto& api = cavaApi();
+    return api.init ? api.init(bars, rate, channels, autosens, noise, low, high) : nullptr;
+}
+
+void cava_execute(double* in, int samples, double* out, struct cava_plan* plan) {
+    const auto& api = cavaApi();
+    if (api.execute)
+        api.execute(in, samples, out, plan);
+}
+
+void cava_destroy(struct cava_plan* plan) {
+    const auto& api = cavaApi();
+    if (api.destroy)
+        api.destroy(plan);
+}
 
 // FFTW's planner (inside cava_init / cava_destroy) is not thread-safe, and
 // every CavaProvider runs its processor on its own thread (the mono

@@ -56,6 +56,7 @@ ColumnLayout {
     }
 
     Rectangle {
+        visible: root.shown
         Layout.alignment: Qt.AlignLeft
         implicitWidth: root.frameWidth
         implicitHeight: root.surfaceName === "dashboard" ? Math.max(root.frameHeight, 60) : root.frameHeight
@@ -144,6 +145,15 @@ ColumnLayout {
                 restoreMode: Binding.RestoreNone
             }
         }
+    }
+
+    StyledText {
+        Layout.fillWidth: true
+        visible: root.active && !root.shown && !root.loadFailed
+        text: qsTr("No preview for this extension.")
+        font.pointSize: Appearance.font.size.small
+        color: Signal.palette.inkMuted
+        wrapMode: Text.Wrap
     }
 
     StyledText {

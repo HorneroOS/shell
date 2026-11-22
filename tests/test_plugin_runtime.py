@@ -124,7 +124,8 @@ def test_dashboard_placement_contract():
     # The dashboard exposes the placement as its own tab (index 5).
     assert "PluginDashboardCards" in EXTENSIONS_PANE
     assert "sourceComponent: Extensions {}" in DASH_CONTENT
-    assert 'text: qsTr("Extensions")' in DASH_TABS
+    # shell#709: tab titles render through Tabs.labelFor (keyed model).
+    assert 'return qsTr("Extensions");' in DASH_TABS
     # The shipped example validates the placement end to end.
     example = ROOT / "examples" / "plugins" / "example-dashboard-note" / "manifest.json"
     assert '"placement": "dashboard"' in example.read_text()

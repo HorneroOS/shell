@@ -5,7 +5,9 @@ import qs.components.atmosphere
 import qs.components.filedialog
 import qs.components.motion
 import qs.modules.plugins
-import qs.services
+// Qualified: unqualified qs.services would shadow this directory's
+// Media/Weather page types with its same-named singletons.
+import qs.services as Services
 import qs.config
 import Quickshell
 import QtQuick
@@ -69,13 +71,13 @@ Item {
     // handler records the key and opens the drawer; consume it here
     // once this content (and its tab model) exists.
     function consumePendingTab(): void {
-        const key = Plugins.pendingDashboardTabKey;
+        const key = Services.Plugins.pendingDashboardTabKey;
         if (key === "")
             return;
         const index = root.tabItems.findIndex(t => t.key === key);
         if (index >= 0) {
             root.selectTab(index);
-            Plugins.pendingDashboardTabKey = "";
+            Services.Plugins.pendingDashboardTabKey = "";
         }
     }
 
@@ -83,7 +85,7 @@ Item {
     onTabItemsChanged: consumePendingTab()
 
     Connections {
-        target: Plugins
+        target: Services.Plugins
 
         function onPendingDashboardTabKeyChanged(): void {
             root.consumePendingTab();
@@ -93,7 +95,7 @@ Item {
     StableList {
         id: extStable
 
-        source: Plugins.dashboardTabList()
+        source: Services.Plugins.dashboardTabList()
     }
 
     AtmosphereTexture {}

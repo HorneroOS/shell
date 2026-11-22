@@ -34,6 +34,8 @@ def test_dashboard_content_references_resolve_to_files():
     refs = re.findall(r"sourceComponent:\s*(\w+)\s*\{", text)
     assert refs, "expected sourceComponent references in dashboard Content"
     siblings = {p.stem for p in DASH.glob("*.qml")}
+    # shell#709: contributed pages are hosted by the plugins module.
+    siblings |= {"PluginDashboardTab"}
     missing = sorted(set(refs) - siblings)
     assert not missing, f"dashboard references without a same-dir file: {missing}"
 
@@ -48,9 +50,13 @@ def test_dashboard_layout_tab_removed_per_adr003():
     assert "dashboard_customize" not in tabs, "Layout tab must be gone"
     assert "LayoutPickerView" not in CONTENT.read_text(), "Layout pane must be gone"
     assert not (DASH / "LayoutPickerView.qml").exists(), "dead view file must be gone"
-    for path in (DASH / "Tabs.qml", CONTENT):
-        assert "Math.min(root.state.currentTab" in path.read_text(), \
-            f"{path.name} must clamp a stale persisted tab index"
+    # shell#709: Content owns selection resolution (stable key first,
+    # clamped legacy index as fallback); Tabs renders the resolved
+    # index and writes (index, key) back together.
+    assert "Math.min(root.state.currentTab" in CONTENT.read_text(), \
+        "Content must clamp a stale persisted tab index"
+    assert "currentTabKey" in tabs and "selectedIndex" in tabs, \
+        "Tabs must select by resolved index and persist the stable key"
     pane_ids = re.findall(r"index:\s*(\d+)", CONTENT.read_text())
     assert sorted(pane_ids) == ["0", "1", "2", "3", "4", "5"], \
         f"dashboard panes must be 0-5 contiguous, got {pane_ids}"

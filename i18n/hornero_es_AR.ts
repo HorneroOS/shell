@@ -9481,6 +9481,13 @@ Snapshot del plugin: %3</translation>
     </message>
 </context>
 <context>
+    <name>PluginDashboardTab</name>
+    <message>
+        <source>This extension page failed to load.</source>
+        <translation>Esta página de la extensión no se pudo cargar.</translation>
+    </message>
+</context>
+<context>
     <name>PluginDesktopWidgets</name>
     <message>
         <source>Edit widgets</source>

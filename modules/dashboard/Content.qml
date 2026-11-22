@@ -4,6 +4,8 @@ import qs.components
 import qs.components.atmosphere
 import qs.components.filedialog
 import qs.components.motion
+import qs.modules.plugins
+import qs.services
 import qs.config
 import Quickshell
 import QtQuick
@@ -27,6 +29,73 @@ Item {
     // opens, and the central cascade handles them (INTERACTION.md).
     focus: true
 
+    // Tab model (shell#709): native pages first, contributed
+    // extension pages (PluginKit 5) next, Extensions last — exactly
+    // the pre-contribution order when no extension contributes a tab.
+    // Selection resolves by stable key; the legacy integer is only a
+    // fallback for state written before keys existed, and a key that
+    // names a removed tab falls back to the first tab instead of
+    // landing on a neighbour that reused its old index.
+    readonly property var extensionTabs: extStable.list
+    // Native labels stay untranslated keys here; Tabs.qml renders
+    // them through qsTr (its historical translation context), while
+    // contributed titles are the extension's own manifest strings.
+    readonly property var tabItems: [
+        { key: "dash", glyph: "dashboard", label: "Dashboard" },
+        { key: "media", glyph: "playlist", label: "Media" },
+        { key: "performance", glyph: "gauge", label: "Performance" },
+        { key: "weather", glyph: "cloud", label: "Weather" },
+        { key: "workspaces", glyph: "layout-grid", label: "Workspaces" }
+    ].concat(root.extensionTabs.map(t => ({ key: t.key, glyph: t.glyph, label: t.title }))).concat([
+        { key: "extensions", glyph: "puzzle", label: "Extensions" }
+    ])
+    readonly property int currentIndex: {
+        const key = "currentTabKey" in root.state ? root.state.currentTabKey : "";
+        if (key !== "") {
+            const byKey = root.tabItems.findIndex(t => t.key === key);
+            return byKey >= 0 ? byKey : 0;
+        }
+        return Math.max(0, Math.min(root.state.currentTab, root.tabItems.length - 1));
+    }
+
+    function selectTab(index: int): void {
+        const clamped = Math.max(0, Math.min(index, root.tabItems.length - 1));
+        root.state.currentTab = clamped;
+        if ("currentTabKey" in root.state)
+            root.state.currentTabKey = root.tabItems[clamped]?.key ?? "";
+    }
+
+    // Deep link (`qs ipc call drawers dashboardTab <key>`): the IPC
+    // handler records the key and opens the drawer; consume it here
+    // once this content (and its tab model) exists.
+    function consumePendingTab(): void {
+        const key = Plugins.pendingDashboardTabKey;
+        if (key === "")
+            return;
+        const index = root.tabItems.findIndex(t => t.key === key);
+        if (index >= 0) {
+            root.selectTab(index);
+            Plugins.pendingDashboardTabKey = "";
+        }
+    }
+
+    Component.onCompleted: consumePendingTab()
+    onTabItemsChanged: consumePendingTab()
+
+    Connections {
+        target: Plugins
+
+        function onPendingDashboardTabKeyChanged(): void {
+            root.consumePendingTab();
+        }
+    }
+
+    StableList {
+        id: extStable
+
+        source: Plugins.dashboardTabList()
+    }
+
     AtmosphereTexture {}
 
     Tabs {
@@ -40,6 +109,8 @@ Item {
 
         nonAnimWidth: root.nonAnimWidth - anchors.margins * 2
         state: root.state
+        tabItems: root.tabItems
+        selectedIndex: root.currentIndex
     }
 
     Item {
@@ -60,11 +131,8 @@ Item {
             // leaves clip false): FocusMode skips off-screen neighbour panes.
             clip: true
 
-            // Clamp: dashboardState.currentTab survives in-process config
-            // reloads via reloadableId and may still name a removed
-            // trailing tab (ADR 003).
-            readonly property int currentIndex: Math.min(root.state.currentTab, row.children.length - 1)
-            readonly property Item currentItem: row.children[currentIndex]
+            readonly property int currentIndex: root.currentIndex
+            readonly property Item currentItem: row.children[Math.min(currentIndex, row.children.length - 1)]
 
             anchors.fill: parent
 
@@ -83,17 +151,17 @@ Item {
 
                 const x = contentX - currentItem.x;
                 if (x > currentItem.implicitWidth / 2)
-                    root.state.currentTab = Math.min(root.state.currentTab + 1, tabs.count - 1);
+                    root.selectTab(Math.min(root.currentIndex + 1, tabs.count - 1));
                 else if (x < -currentItem.implicitWidth / 2)
-                    root.state.currentTab = Math.max(root.state.currentTab - 1, 0);
+                    root.selectTab(Math.max(root.currentIndex - 1, 0));
             }
 
             onDragEnded: {
                 const x = contentX - currentItem.x;
                 if (x > currentItem.implicitWidth / 10)
-                    root.state.currentTab = Math.min(root.state.currentTab + 1, tabs.count - 1);
+                    root.selectTab(Math.min(root.currentIndex + 1, tabs.count - 1));
                 else if (x < -currentItem.implicitWidth / 10)
-                    root.state.currentTab = Math.max(root.state.currentTab - 1, 0);
+                    root.selectTab(Math.max(root.currentIndex - 1, 0));
                 else
                     contentX = Qt.binding(() => currentItem.x);
             }
@@ -132,8 +200,14 @@ Item {
                     sourceComponent: Workspaces {}
                 }
 
+                Repeater {
+                    model: root.extensionTabs
+
+                    ExtPane {}
+                }
+
                 Pane {
-                    index: 5
+                    index: 5 + root.extensionTabs.length
                     sourceComponent: Extensions {}
                 }
             }
@@ -173,6 +247,25 @@ Item {
             // the panes' implicit sizes (binding loop).
             return Math.abs(pane.index - view.currentIndex) <= 1;
         })
+    }
+
+    // One contributed page (shell#709), hosted exactly like a native
+    // Pane: lazy (current ± neighbour) in its own failure-isolated
+    // Loader (PluginDashboardTab owns the plugin Loader and errors).
+    component ExtPane: Loader {
+        id: extPane
+
+        required property var modelData
+        required property int index
+        readonly property int tabIndex: 5 + index
+
+        Layout.alignment: Qt.AlignTop
+
+        sourceComponent: PluginDashboardTab {
+            tab: extPane.modelData
+        }
+
+        Component.onCompleted: active = Qt.binding(() => Math.abs(extPane.tabIndex - view.currentIndex) <= 1)
     }
 
     // Atmosphere: warm lamp, soft inner light, vignette, grain (section 17).

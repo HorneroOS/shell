@@ -8,6 +8,6 @@ import QtQuick
 // kit on the import path). Bump apiLevel together with schemaVersion in
 // scripts/validate_plugin.py (SCHEMA_VERSIONS / PLUGINKIT_API_LEVEL).
 QtObject {
-    readonly property int apiLevel: 4
-    readonly property string name: "PluginKit 4 (Hornero Signal Platform)"
+    readonly property int apiLevel: 5
+    readonly property string name: "PluginKit 5 (Hornero Signal Platform)"
 }

@@ -600,7 +600,8 @@ Singleton {
         const normalized = ({
                 commands: [],
                 quickSettings: [],
-                panels: []
+                panels: [],
+                dashboardTabs: []
             });
         if (!contributes || typeof contributes !== "object" || Array.isArray(contributes))
             return normalized;
@@ -608,7 +609,8 @@ Singleton {
         const limits = {
             commands: 16,
             quickSettings: 4,
-            panels: 4
+            panels: 4,
+            dashboardTabs: 2
         };
         for (const kind of Object.keys(limits)) {
             const list = contributes[kind];
@@ -626,7 +628,7 @@ Singleton {
                 const entry = {
                     id: item.id,
                     title: item.title,
-                    glyph: typeof item.glyph === "string" && glyph.test(item.glyph) ? item.glyph : (kind === "commands" ? "command" : kind === "panels" ? "layout-sidebar" : "bolt")
+                    glyph: typeof item.glyph === "string" && glyph.test(item.glyph) ? item.glyph : (kind === "commands" ? "command" : kind === "panels" ? "layout-sidebar" : kind === "dashboardTabs" ? "layout-grid" : "bolt")
                 };
                 if (kind === "commands") {
                     entry.description = typeof item.description === "string" && /\S/.test(item.description) && item.description.length <= 120 ? item.description : "";
@@ -662,6 +664,35 @@ Singleton {
         const wanted = Config.plugins.quickTilesList();
         const all = root.tileList();
         return wanted.map(key => all.find(t => t.key === key)).filter(t => !!t);
+    }
+
+    // Dashboard pages (PluginKit 5, shell#709): top-level Dashboard
+    // tabs of enabled extensions, manifest data only. Each tab's
+    // stable identity is `<pluginId>:<tabId>`; the dashboard persists
+    // selection by this key so adding/removing extensions can never
+    // retarget a saved selection at a different page.
+    property string pendingDashboardTabKey: ""
+
+    function requestDashboardTab(key: string): bool {
+        if (!root.dashboardTabList().some(t => t.key === key))
+            return false;
+        root.pendingDashboardTabKey = key;
+        return true;
+    }
+
+    function dashboardTabList(): var {
+        const result = [];
+        for (const entry of root.pluginsForSurface("dashboardTab")) {
+            const tabs = entry.contributes && Array.isArray(entry.contributes.dashboardTabs) ? entry.contributes.dashboardTabs : [];
+            for (const tab of tabs)
+                result.push(Object.assign({}, tab, {
+                    pluginId: entry.id,
+                    pluginName: entry.name || entry.id,
+                    entrypoint: entry.entrypoint,
+                    key: `${entry.id}:${tab.id}`
+                }));
+        }
+        return result;
     }
 
     function panelList(): var {

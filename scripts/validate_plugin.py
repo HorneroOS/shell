@@ -56,10 +56,13 @@ PLACEMENTS = ("background", "bar", "dashboard", "desktop")
 # › Extensions; "launcher" (search/launcher action) is hosted by
 # PluginLauncherHost into the launcher provider registry, and
 # declaring one grants no privilege.
-SURFACES = PLACEMENTS + ("launcher", "settings", "commands", "quickSetting", "panel")
+SURFACES = PLACEMENTS + ("launcher", "settings", "commands", "quickSetting", "panel", "dashboardTab")
 # Surfaces that exist only from PluginKit 4 (RFC 0003): declaring one needs
 # `"pluginKit": 4`.
 SURFACES_V4 = ("commands", "quickSetting", "panel")
+# Dashboard pages (shell#709) arrive at PluginKit 5, so a level-4 Shell
+# refuses the package plainly instead of ignoring its flagship surface.
+SURFACES_V5 = ("dashboardTab",)
 # Dashboard card size classes (shell#378): preferred card width class a
 # dashboard surface may hint; the user's persisted layout wins.
 DASHBOARD_CARD_SIZES = ("compact", "standard", "wide")
@@ -67,7 +70,7 @@ BAR_SECTIONS = ("status", "actions", "clock", "end")
 SCHEMA_VERSIONS = (3,)
 # PluginKit API level this validator targets; must equal
 # plugin/qml/Hornero/PluginKit/PluginKitInfo.qml apiLevel (tested).
-PLUGINKIT_API_LEVEL = 4
+PLUGINKIT_API_LEVEL = 5
 # Material-era manifests (PluginKit 1/2) are refused with a migration hint.
 LEGACY_SCHEMA_VERSIONS = (1, 2)
 DESKTOP_ANCHORS = (
@@ -175,6 +178,10 @@ def _validate_surfaces(
         if name in SURFACES_V4 and manifest.get("pluginKit", 3) < 4:
             raise ValidationError(
                 f'{where} is a PluginKit 4 surface; declare "pluginKit": 4 in the manifest'
+            )
+        if name in SURFACES_V5 and manifest.get("pluginKit", 3) < 5:
+            raise ValidationError(
+                f'{where} is a PluginKit 5 surface; declare "pluginKit": 5 in the manifest'
             )
         surface = _object(raw_surface, where)
         extra = set(surface) - {"entrypoint", "enabled", "size", "category", "section", *DESKTOP_KEYS}
@@ -286,14 +293,16 @@ def _validate_surfaces(
 # are rejected until a later level defines them, so an older validator never
 # silently accepts a contribution it cannot host. Each kind needs the
 # surface that implements it, and each such surface needs its kind.
-CONTRIBUTION_SURFACES = {"commands": "commands", "quickSettings": "quickSetting", "panels": "panel"}
+CONTRIBUTION_SURFACES = {"commands": "commands", "quickSettings": "quickSetting", "panels": "panel",
+                         "dashboardTabs": "dashboardTab"}
 CONTRIBUTION_KINDS = tuple(CONTRIBUTION_SURFACES)
 COMMAND_ID = re.compile(r"^[a-z][a-zA-Z0-9]{0,31}$")
-CONTRIBUTION_LIMITS = {"commands": 16, "quickSettings": 4, "panels": 4}
+CONTRIBUTION_LIMITS = {"commands": 16, "quickSettings": 4, "panels": 4, "dashboardTabs": 2}
 CONTRIBUTION_FIELDS = {
     "commands": {"id", "title", "description", "glyph", "keywords"},
     "quickSettings": {"id", "title", "glyph", "kind"},
     "panels": {"id", "title", "glyph"},
+    "dashboardTabs": {"id", "title", "glyph"},
 }
 TILE_KINDS = ("toggle", "button")
 
@@ -311,6 +320,8 @@ def _validate_contributes(manifest: dict, declared_level: int) -> dict[str, list
         return {}
     if declared_level < 4:
         raise ValidationError('contributes needs PluginKit 4; declare "pluginKit": 4 in the manifest')
+    if "dashboardTabs" in (manifest.get("contributes") or {}) and declared_level < 5:
+        raise ValidationError('contributes.dashboardTabs needs PluginKit 5; declare "pluginKit": 5 in the manifest')
     contributes = _object(manifest["contributes"], "contributes")
     if not contributes:
         raise ValidationError("contributes must declare at least one contribution kind (remove it or add one)")
@@ -345,6 +356,13 @@ def _validate_contributes(manifest: dict, declared_level: int) -> dict[str, list
                 raise ValidationError(f"{where}.id duplicates another entry: {entry_id}")
             seen.add(entry_id)
             _string(entry["title"], f"{where}.title", 48)
+            if kind == "dashboardTabs":
+                # A contributed page must not impersonate a native tab.
+                if entry_id in ("dash", "media", "performance", "weather", "workspaces", "extensions"):
+                    raise ValidationError(f"{where}.id is reserved for a native Dashboard tab: {entry_id}")
+                if str(entry["title"]).strip().lower() in (
+                        "dashboard", "media", "performance", "weather", "workspaces", "extensions"):
+                    raise ValidationError(f"{where}.title must not reuse a native Dashboard tab title")
             if "description" in entry:
                 _string(entry["description"], f"{where}.description", 120)
             if "glyph" in entry and (not isinstance(entry["glyph"], str) or (glyphs and entry["glyph"] not in glyphs)):

@@ -46,10 +46,10 @@ Item {
     readonly property var layoutSections: layoutStable.list
     readonly property var visibleIds: root.layoutSections.reduce((ids, section) => ids.concat(section.plugins.map(p => p.id)), [])
     readonly property bool hasPlugins: root.visibleIds.length > 0
-    readonly property real availableWidth: width > 0 ? width : 840
+    readonly property real availableWidth: width > 0 ? width : 968
     readonly property int columns: layoutHelper.columnsForWidth(root.availableWidth, Appearance.spacing.normal)
 
-    implicitWidth: 840
+    implicitWidth: 968
     implicitHeight: hasPlugins ? hint.height + (hint.visible ? Appearance.spacing.small : 0) + scroll.height : empty.implicitHeight
 
     function focusCard(id: string): void {

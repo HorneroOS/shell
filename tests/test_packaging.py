@@ -107,7 +107,7 @@ def test_hornero_runtime_dependencies_are_packaged():
     assert "'hornero-config>=0.4.3'" in depends, (
         "the Shell must require the AUR-owned system catalogue"
     )
-    assert "'horneroctl-bin>=0.2.0_preview49'" in depends, (
+    assert "'horneroctl-bin>=0.2.0_preview51'" in depends, (
         "the Shell must require the AUR-owned CLI runtime"
     )
     assert "'ttf-ibm-plex'" in depends, "Signal typography (RFC 0001 3.3)"

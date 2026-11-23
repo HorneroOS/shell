@@ -97,7 +97,9 @@ def test_return_enter_space_activate_focused_tab():
     tab = _tab_component()
     for key in ("onReturnPressed", "onEnterPressed", "onSpacePressed"):
         line = next(l for l in tab.splitlines() if f"Keys.{key}" in l)
-        assert "root.state.currentTab = tab.TabBar.index" in line, key
+        # shell#709: activation goes through Tabs.select(), which
+        # persists (index, stable key) together.
+        assert "root.select(tab.TabBar.index)" in line, key
 
 
 def test_no_initial_focus_steal_and_escape_untouched():
@@ -114,7 +116,7 @@ def test_no_initial_focus_steal_and_escape_untouched():
 def test_mouse_behaviour_unchanged():
     src = _src()
     assert "CustomMouseArea" in src
-    assert "root.state.currentTab = tab.TabBar.index;" in src  # click switches
+    assert "root.select(tab.TabBar.index);" in src  # click switches
     assert "function onWheel(event: WheelEvent): void" in src  # wheel switches
     assert "cursorShape: Qt.PointingHandCursor" in src
 

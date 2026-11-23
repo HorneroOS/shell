@@ -1,6 +1,6 @@
 # Hornero Shell extension contract
 
-**Status: PluginKit 3 (Hornero Signal), apiLevel 4 (Platform).** The design of the contribution surfaces is [RFC 0003](https://github.com/HorneroOS/docs/blob/main/development/rfc-0003-pluginkit-contribution-surfaces.md); [PluginKit levels](#pluginkit-levels) states what each level adds. The Shell discovers plugins that
+**Status: PluginKit 3 (Hornero Signal), apiLevel 5 (Platform).** The design of the contribution surfaces is [RFC 0003](https://github.com/HorneroOS/docs/blob/main/development/rfc-0003-pluginkit-contribution-surfaces.md); [PluginKit levels](#pluginkit-levels) states what each level adds. The Shell discovers plugins that
 `horneroctl plugin list` reports as enabled and installed, then instantiates
 each manifest entrypoint in its own Loader
 (`modules/plugins/PluginHost.qml`, state in `services/Plugins.qml`; inspect
@@ -1018,6 +1018,7 @@ minimum it needs with the optional top-level `"pluginKit"` integer (default
 | --- | --- |
 | 3 | Signal: Theme, glyphs, surfaces (bar, dashboard, desktop, background, launcher, settings), typed settings (boolean, integer, number, string, enum), data facades |
 | 4 | Contributions (`contributes.commands` / `quickSettings` / `panels` with `surfaces.commands` / `quickSetting` / `panel`), `hidden` settings, `strings` type, `UiScrollArea`, settings schema v2 (colour, list, text, path; title, group, unit, step, visibleWhen), Control Center live preview, per-instance desktop widgets (`surfaces.desktop.instances`, `hostInstanceId`, `Settings.instanceId`) |
+| 5 | Dashboard pages: `contributes.dashboardTabs` with `surfaces.dashboardTab` — full top-level Dashboard tabs with stable keyed identity (shell#709, [Dashboard pages](#dashboard-pages)) |
 
 `scripts/validate_plugin.py` derives the level a manifest actually needs from
 the features it uses and rejects a package that under-declares; a value above
@@ -1106,6 +1107,46 @@ Both load asynchronously in their own Loader; a failure marks that extension
 failed and leaves the tile disabled or shows an inline error, never affecting
 the host. Same trust as every surface: in-process QML as your user,
 unsandboxed. `examples/plugins/example-commands` shows both.
+
+## Dashboard pages
+
+PluginKit 5 (shell#709) lets an extension contribute a **full Dashboard
+page**: a top-level tab beside Dashboard, Media, Performance, Weather and
+Workspaces (before Extensions), instead of a card inside
+Dashboard › Extensions. The `dashboard` card contract is unchanged; a
+page is the place for a flagship, full-width experience.
+
+```json
+"pluginKit": 5,
+"contributes": {
+  "dashboardTabs": [{ "id": "agents", "title": "Agents", "glyph": "robot" }]
+},
+"surfaces": { "dashboardTab": { "entrypoint": "Agents.qml" } }
+```
+
+- At most **2 pages** per package. `id` matches `^[a-z][a-zA-Z0-9]{0,31}$`,
+  is unique per package, and may not reuse a native tab id or title
+  (`dash`, `media`, `performance`, `weather`, `workspaces`, `extensions`).
+  `title` is at most 48 characters; `glyph` is a Hornero Glyph name
+  (default `layout-grid`).
+- The tab's stable identity is `<pluginId>:<tabId>`. The Dashboard
+  persists selection by that key: enabling, disabling or removing
+  extensions never retargets a saved selection, and a removed page's
+  selection falls back to the first tab. The page disappears as soon
+  as its extension is disabled or removed.
+- The entrypoint is an `Item` loaded lazily (selected tab ± neighbour,
+  exactly like native panes) in its own asynchronous Loader with
+  `hostSurface: "dashboardTab"` and the full tab width as
+  `hostAvailableWidth`. A failing page is marked failed for the
+  `dashboardTab` surface and shows an inline error; it never affects
+  the other tabs. Tab keyboard behaviour (roving tab stop, Left/Right,
+  Home/End, manual activation) is the native contract.
+- Deep link: `qs ipc call drawers dashboardTab <pluginId>:<tabId>`
+  opens the Dashboard on that page (from a bar popover, a script, or
+  a key binding).
+- Same trust as every surface: in-process QML as your user,
+  unsandboxed; the manifest declaration is listed in Control Center
+  like every other contribution.
 
 ## Manifest: multiple surfaces
 

@@ -134,6 +134,22 @@ Scope {
             return Object.keys(visibilities).filter(k => typeof visibilities[k] === "boolean").join("\n");
         }
 
+        // Deep link to a contributed Dashboard page (shell#709):
+        // `qs ipc call drawers dashboardTab <pluginId>:<tabId>` records
+        // the request and opens the dashboard on the active screen;
+        // the dashboard content consumes the pending key when it loads.
+        function dashboardTab(key: string): string {
+            if (root.hasFullscreen)
+                return "blocked by fullscreen";
+            if (!Plugins.requestDashboardTab(key))
+                return "unknown dashboard tab";
+            const visibilities = Visibilities.getForActive();
+            if (!visibilities)
+                return "no active screen";
+            visibilities.dashboard = true;
+            return "opening";
+        }
+
         // Read-only: "true"/"false" for a known drawer, "" otherwise.
         // An empty list() ("") must not make "" a member: reject empty names.
         function state(drawer: string): string {

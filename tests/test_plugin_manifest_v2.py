@@ -240,7 +240,7 @@ def test_schema_stays_strict_about_unknown_fields():
                                               "instances"}
     assert set(SCHEMA["properties"]["surfaces"]["properties"]) == {
         "background", "bar", "dashboard", "desktop", "launcher", "settings", "commands",
-        "quickSetting", "panel"
+        "quickSetting", "panel", "dashboardTab"
     }
 
 

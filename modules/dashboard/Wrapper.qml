@@ -14,6 +14,10 @@ Item {
     required property PersistentProperties visibilities
     readonly property PersistentProperties dashState: PersistentProperties {
         property int currentTab
+        // Stable tab identity (shell#709): native key ("dash", "media",
+        // ...) or a contributed page key "<pluginId>:<tabId>". The
+        // integer above stays as the pre-PluginKit-5 mirror/fallback.
+        property string currentTabKey: ""
         property date currentDate: new Date()
 
         reloadableId: "dashboardState"

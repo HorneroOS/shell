@@ -54,6 +54,9 @@
         },
         "panel": {
           "$ref": "#/$defs/surface"
+        },
+        "dashboardTab": {
+          "$ref": "#/$defs/surface"
         }
       }
     },
@@ -1243,15 +1246,15 @@
     "pluginKit": {
       "type": "integer",
       "minimum": 3,
-      "maximum": 4,
+      "maximum": 5,
       "default": 3,
-      "description": "Minimum PluginKit apiLevel the package needs (RFC 0003). Defaults to 3. Features that exist only from level 4 (colour/list/text/path settings, title/group/unit/step/visibleWhen, contributes, instances) must declare 4; scripts/validate_plugin.py enforces that a package cannot under-declare, and a Shell whose kit is older refuses the package plainly."
+      "description": "Minimum PluginKit apiLevel the package needs (RFC 0003). Defaults to 3. Features that exist only from level 4 (colour/list/text/path settings, title/group/unit/step/visibleWhen, contributes, instances) must declare 4; dashboard pages (contributes.dashboardTabs + surfaces.dashboardTab, shell#709) must declare 5. scripts/validate_plugin.py enforces that a package cannot under-declare, and a Shell whose kit is older refuses the package plainly."
     },
     "contributes": {
       "type": "object",
       "additionalProperties": false,
       "minProperties": 1,
-      "description": "PluginKit 4 (RFC 0003): declarative contributions the Shell lists without running extension code. Requires pluginKit 4 and, for each kind, its surface: commands -> surfaces.commands (`function run(commandId, args): string`), quickSettings -> surfaces.quickSetting (`property bool checked`, `function toggle()`), panels -> surfaces.panel. Cross-field rules (surface present, glyph names) are enforced by scripts/validate_plugin.py.",
+      "description": "PluginKit 4 (RFC 0003): declarative contributions the Shell lists without running extension code. Requires pluginKit 4 and, for each kind, its surface: commands -> surfaces.commands (`function run(commandId, args): string`), quickSettings -> surfaces.quickSetting (`property bool checked`, `function toggle()`), panels -> surfaces.panel. PluginKit 5 adds dashboardTabs -> surfaces.dashboardTab (a full Dashboard page with stable tab identity `<pluginId>:<tabId>`). Cross-field rules (surface present, glyph names) are enforced by scripts/validate_plugin.py.",
       "properties": {
         "commands": {
           "type": "array",
@@ -1362,6 +1365,35 @@
             }
           },
           "maxItems": 4
+        },
+        "dashboardTabs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "title"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-zA-Z0-9]{0,31}$"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 48,
+                "pattern": "\\S"
+              },
+              "glyph": {
+                "type": "string",
+                "pattern": "^[a-z0-9-]+$"
+              }
+            }
+          },
+          "maxItems": 2
         }
       }
     }

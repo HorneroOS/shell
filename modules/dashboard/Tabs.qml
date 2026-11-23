@@ -14,9 +14,45 @@ Item {
 
     required property real nonAnimWidth
     required property PersistentProperties state
+    // Ordered tab descriptors from Content (shell#709): native tabs,
+    // contributed extension pages, then Extensions. Each entry is
+    // {key, glyph, label}; `key` is the stable selection identity.
+    required property var tabItems
+    required property int selectedIndex
     readonly property alias count: bar.count
 
     implicitHeight: bar.implicitHeight + separator.implicitHeight
+
+    // Native tab titles translate here (the historical Tabs i18n
+    // context); contributed titles are manifest strings, shown as-is.
+    function labelFor(item: var): string {
+        switch (item.key) {
+        case "dash":
+            return qsTr("Dashboard");
+        case "media":
+            return qsTr("Media");
+        case "performance":
+            return qsTr("Performance");
+        case "weather":
+            return qsTr("Weather");
+        case "workspaces":
+            return qsTr("Workspaces");
+        case "extensions":
+            return qsTr("Extensions");
+        default:
+            return item.label;
+        }
+    }
+
+    // Selection is written as (index, stable key) together, so a
+    // contributed tab appearing or disappearing can never retarget
+    // the saved selection at a different page.
+    function select(index: int): void {
+        const clamped = Math.max(0, Math.min(index, root.tabItems.length - 1));
+        root.state.currentTab = clamped;
+        if ("currentTabKey" in root.state)
+            root.state.currentTabKey = root.tabItems[clamped]?.key ?? "";
+    }
 
     TabBar {
         id: bar
@@ -25,42 +61,20 @@ Item {
         anchors.right: parent.right
         anchors.top: parent.top
 
-        // Clamp: dashboardState.currentTab survives in-process config
-        // reloads via reloadableId and may still name a removed trailing
-        // tab (ADR 003).
-        currentIndex: Math.min(root.state.currentTab, bar.count - 1)
+        currentIndex: root.selectedIndex
         background: null
 
-        onCurrentIndexChanged: root.state.currentTab = currentIndex
+        onCurrentIndexChanged: root.select(currentIndex)
 
-        Tab {
-            iconName: "dashboard"
-            text: qsTr("Dashboard")
-        }
+        Repeater {
+            model: root.tabItems
 
-        Tab {
-            iconName: "playlist"
-            text: qsTr("Media")
-        }
+            Tab {
+                required property var modelData
 
-        Tab {
-            iconName: "gauge"
-            text: qsTr("Performance")
-        }
-
-        Tab {
-            iconName: "cloud"
-            text: qsTr("Weather")
-        }
-
-        Tab {
-            iconName: "layout-grid"
-            text: qsTr("Workspaces")
-        }
-
-        Tab {
-            iconName: "puzzle"
-            text: qsTr("Extensions")
+                iconName: modelData.glyph
+                text: root.labelFor(modelData)
+            }
         }
     }
 
@@ -193,9 +207,9 @@ Item {
                 bar.itemAt(bar.count - 1)?.forceActiveFocus(Qt.TabFocusReason);
         }
 
-        Keys.onReturnPressed: root.state.currentTab = tab.TabBar.index
-        Keys.onEnterPressed: root.state.currentTab = tab.TabBar.index
-        Keys.onSpacePressed: root.state.currentTab = tab.TabBar.index
+        Keys.onReturnPressed: root.select(tab.TabBar.index)
+        Keys.onEnterPressed: root.select(tab.TabBar.index)
+        Keys.onSpacePressed: root.select(tab.TabBar.index)
 
         background: null
 
@@ -222,14 +236,14 @@ Item {
                 // (mouse is delegated here), so reportFocus would
                 // otherwise leave a stale keyboard ring after a click.
                 FocusMode.reportPointer();
-                root.state.currentTab = tab.TabBar.index;
+                root.select(tab.TabBar.index);
             }
 
             function onWheel(event: WheelEvent): void {
                 if (event.angleDelta.y < 0)
-                    root.state.currentTab = Math.min(root.state.currentTab + 1, bar.count - 1);
+                    root.select(Math.min(root.selectedIndex + 1, bar.count - 1));
                 else if (event.angleDelta.y > 0)
-                    root.state.currentTab = Math.max(root.state.currentTab - 1, 0);
+                    root.select(Math.max(root.selectedIndex - 1, 0));
             }
 
             Rectangle {

@@ -5,5 +5,5 @@ import QtQuick
 // `placement: "dashboard"`, rendered as cards. The loading and fault
 // isolation live in modules/plugins/PluginDashboardCards.qml.
 PluginDashboardCards {
-    implicitWidth: 840
+    implicitWidth: 968
 }

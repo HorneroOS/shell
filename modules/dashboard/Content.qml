@@ -38,6 +38,11 @@ Item {
     // fallback for state written before keys existed, and a key that
     // names a removed tab falls back to the first tab instead of
     // landing on a neighbour that reused its old index.
+    // Room a contributed page may claim: the screen minus the tab
+    // strip, drawer margins and a bottom reserve. Native panes are
+    // designed to fit; extension pages scroll inside this height.
+    readonly property int paneAvailableHeight: Math.max(280, Screen.height - 220)
+    readonly property int paneAvailableWidth: Math.max(640, Screen.width - 260)
     readonly property var extensionTabs: extStable.list
     // Native labels stay untranslated keys here; Tabs.qml renders
     // them through qsTr (its historical translation context), while
@@ -265,6 +270,8 @@ Item {
 
         sourceComponent: PluginDashboardTab {
             tab: extPane.modelData
+            availableHeight: root.paneAvailableHeight
+            availableWidth: root.paneAvailableWidth
         }
 
         Component.onCompleted: active = Qt.binding(() => Math.abs(extPane.tabIndex - view.currentIndex) <= 1)

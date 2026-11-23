@@ -84,6 +84,10 @@ def test_runtime_contract_is_mirrored():
     # Dashboard: keyed selection, extension pages before Extensions,
     # pending deep link consumed on load.
     assert "currentTabKey" in CONTENT
+    # Host offers real screen room; the page caps/scrolls inside it.
+    assert "paneAvailableHeight" in CONTENT and "paneAvailableWidth" in CONTENT
+    assert "availableHeight" in TAB_HOST and "availableWidth" in TAB_HOST
+    assert "hostAvailableHeight: root.availableHeight" in TAB_HOST
     assert "PluginDashboardTab" in CONTENT
     assert "consumePendingTab" in CONTENT
     assert CONTENT.index("ExtPane {}") < CONTENT.index("sourceComponent: Extensions")

@@ -19,10 +19,23 @@ Item {
     // One tab descriptor from Plugins.dashboardTabList():
     // {pluginId, pluginName, id, title, glyph, entrypoint, key}
     required property var tab
+    // Vertical room the dashboard offers this page (screen height
+    // minus the tab strip and drawer margins, from Content). A page
+    // taller than this must scroll internally (UiScrollArea) instead
+    // of overflowing off-screen — native panes fit by design, a
+    // contributed page cannot be assumed to.
+    property int availableHeight: 0
+    // Horizontal room offered by the dashboard (screen minus drawer
+    // margins). The page chooses its width up to this, like native
+    // panes choose theirs (968, Dash console ~1064).
+    property int availableWidth: 0
     readonly property var live: Plugins.entryFor(root.tab.pluginId) ?? null
 
-    implicitWidth: 840
-    implicitHeight: Math.max(pluginLoader.item ? pluginLoader.item.implicitHeight : 0, errorText.visible ? errorText.implicitHeight : 120)
+    implicitWidth: pluginLoader.item ? pluginLoader.item.implicitWidth : 968
+    implicitHeight: {
+        const wanted = Math.max(pluginLoader.item ? pluginLoader.item.implicitHeight : 0, errorText.visible ? errorText.implicitHeight : 120);
+        return root.availableHeight > 0 ? Math.min(wanted, root.availableHeight) : wanted;
+    }
 
     Accessible.role: Accessible.Pane
     Accessible.name: root.tab.title || root.tab.pluginId
@@ -30,8 +43,8 @@ Item {
     Loader {
         id: pluginLoader
 
-        readonly property int hostAvailableWidth: root.implicitWidth
-        readonly property int hostAvailableHeight: 0
+        readonly property int hostAvailableWidth: root.availableWidth > 0 ? root.availableWidth : root.implicitWidth
+        readonly property int hostAvailableHeight: root.availableHeight
         readonly property string hostSurface: "dashboardTab"
 
         anchors.top: parent.top

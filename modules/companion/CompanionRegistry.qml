@@ -193,11 +193,11 @@ Singleton {
                     next[addon.key] = (next[addon.key] || []).concat([clean]);
                     root._addons = next;
                 } catch (e) {
-                    root.diagnostics = root.diagnostics.concat([`${loader.contributionData.pluginId}: unreadable add-on`]);
+                    root.diagnostics = root.diagnostics.concat([`${addonFile.contributionData.pluginId}: unreadable add-on`]);
                 }
             }
 
-            onLoadFailed: root.diagnostics = root.diagnostics.concat([`${loader.contributionData.pluginId}: add-on could not be read`])
+            onLoadFailed: root.diagnostics = root.diagnostics.concat([`${addonFile.contributionData.pluginId}: add-on could not be read`])
         }
     }
 

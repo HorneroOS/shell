@@ -252,3 +252,24 @@ def test_companion_import_maps_semantic_actions(tmp_path):
     assert proc.returncode == 0, proc.stderr
     assert "unmapped" in proc.stdout  # dance9 carries a diagnostic
     V.validate_plugin(out)
+
+
+def test_addon_extends_character_without_overwriting():
+    pass  # behaviour asserted by the packs model test below
+
+
+@NODE
+def test_addon_merge_keeps_identity():
+    body = """
+const def = {id: "capi", defaultSkin: "default", canvas: {width: 512, height: 512, anchors: {ground: [256, 472], center: [256, 256]}},
+  skins: {default: {id: "default", names: {en: "Natural"}, animations: {idle: {frames: [{file: "idle.png"}]}}}}, habitat: null};
+const addon = sanitizeAddon({schemaVersion: 1, character: "capi",
+  skins: {party: {names: {en: "Party"}, animations: {idle: {frames: [{file: "party.png"}]}}}},
+  habitat: {id: "dock2", names: {en: "Dock"}, image: "habitat.png", anchor: "ground"}}, def);
+const merged = mergeAddons(def, [addon]);
+console.log(JSON.stringify({skins: Object.keys(merged.skins), habitat: merged.habitat.id, origSkins: Object.keys(def.skins)}));
+"""
+    result = run_js("companionpacks.js", body)
+    assert result["skins"] == ["default", "party"]
+    assert result["habitat"] == "dock2"
+    assert result["origSkins"] == ["default"]

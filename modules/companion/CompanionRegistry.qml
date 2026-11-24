@@ -16,11 +16,17 @@ Singleton {
     id: root
 
     property var _definitions: ({})
+    property var _addons: ({})
     property var _loaders: []
     property string _fingerprint: ""
     property var diagnostics: []
 
     readonly property var contributions: Plugins.companionList()
+    readonly property var addonContributions: Plugins.companionAddonList()
+
+    function _addonsFor(key: string): var {
+        return root._addons[key] || [];
+    }
 
     function _builtInJavi(): var {
         return ({
@@ -59,7 +65,13 @@ Singleton {
     }
 
     function characterByKey(key: string): var {
-        return root.byKey[key] || null;
+        const base = root.byKey[key] || null;
+        if (!base || !base.definition)
+            return base;
+        const addons = root._addonsFor(key);
+        if (!addons.length)
+            return base;
+        return Object.assign({}, base, { definition: Packs.mergeAddons(base.definition, addons) });
     }
 
     function displayName(character: var): string {
@@ -82,6 +94,14 @@ Singleton {
         root._loaders = [];
         root._definitions = ({});
         root.diagnostics = [];
+        for (const addon of Plugins.companionAddonList()) {
+            const loader = addonLoader.createObject(root, {
+                "contributionData": addon,
+                "path": `${Plugins.pluginsDir}/${addon.pluginId}/${addon.definition}`
+            });
+            if (loader)
+                root._loaders.push(loader);
+        }
         for (const contribution of list) {
             const loader = definitionLoader.createObject(root, {
                 "contributionData": contribution,
@@ -143,6 +163,41 @@ Singleton {
 
         function onEntriesChanged(): void {
             root.refresh();
+        }
+    }
+
+    Component {
+        id: addonLoader
+
+        FileView {
+            id: addonFile
+
+            property var contributionData: null
+
+            printErrors: false
+
+            onLoaded: {
+                try {
+                    const addon = addonFile.contributionData;
+                    const target = root._definitions[addon.key];
+                    if (!target || !target.definition) {
+                        root.diagnostics = root.diagnostics.concat([`${addon.pluginId}:${addon.addonId}: add-on target not loaded`]);
+                        return;
+                    }
+                    const clean = Packs.sanitizeAddon(JSON.parse(addonFile.text()), target.definition);
+                    if (!clean) {
+                        root.diagnostics = root.diagnostics.concat([`${addon.pluginId}:${addon.addonId}: invalid add-on`]);
+                        return;
+                    }
+                    const next = Object.assign({}, root._addons);
+                    next[addon.key] = (next[addon.key] || []).concat([clean]);
+                    root._addons = next;
+                } catch (e) {
+                    root.diagnostics = root.diagnostics.concat([`${addonFile.contributionData.pluginId}: unreadable add-on`]);
+                }
+            }
+
+            onLoadFailed: root.diagnostics = root.diagnostics.concat([`${addonFile.contributionData.pluginId}: add-on could not be read`])
         }
     }
 

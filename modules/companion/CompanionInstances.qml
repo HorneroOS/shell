@@ -30,7 +30,10 @@ Singleton {
     readonly property int maxGenericInstances: 6
 
     function _replace(doc: var): void {
-        root.document = Packs.sanitizeInstanceDocument(doc, CompanionRegistry.byKey);
+        const mergedByKey = {};
+        for (const character of CompanionRegistry.characters)
+            mergedByKey[character.key] = CompanionRegistry.characterByKey(character.key);
+        root.document = Packs.sanitizeInstanceDocument(doc, mergedByKey);
     }
 
     function prime(text: string): void {

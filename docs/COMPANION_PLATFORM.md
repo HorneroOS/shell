@@ -212,3 +212,17 @@ idempotent and unknown/malformed records sanitize independently.
    contracts; no new privilege path.
 5. **Catalogue and website:** only after released packages and host
    captures prove the experience above.
+
+## Add-ons (PluginKit 6)
+
+`contributes.companionAddons` extends a character **from the same
+package** with new skins and/or a habitat, without duplicating the
+character: `{id, title, forCharacter, definition}` where the
+definition is `{schemaVersion: 1, character, skins?, habitat?}`.
+Add-on skins must be new ids (identity conflicts are rejected by
+the validator and dropped by the runtime sanitizer), animations
+validate against the target canvas, and a habitat applies only
+when the character has none. Cross-package add-ons are deferred.
+The import path for existing sprite folders (Shimeji-style names
+recognized) is `scripts/companion_import.py`, which emits a valid
+data-only package plus unmapped-file diagnostics.

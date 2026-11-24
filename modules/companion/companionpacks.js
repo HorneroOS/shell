@@ -369,3 +369,72 @@ function sanitizeInstanceDocument(raw, charactersByKey) {
         instances: instances
     };
 }
+
+// Sanitize one add-on definition against its target character.
+// Returns only new skins (ids the character does not already own)
+// and a habitat when the character has none; identity conflicts are
+// dropped, never overwritten.
+function sanitizeAddon(raw, targetDefinition) {
+    if (!_obj(raw) || raw.schemaVersion !== 1 || !targetDefinition)
+        return null;
+    if (raw.character !== targetDefinition.id)
+        return null;
+    const anchors = targetDefinition.canvas.anchors;
+    const out = { character: raw.character, skins: {}, habitat: null };
+    if (_obj(raw.skins)) {
+        for (const skinId of Object.keys(raw.skins).slice(0, MAX_SKINS)) {
+            if (!_id(skinId) || targetDefinition.skins[skinId] || !_obj(raw.skins[skinId]))
+                continue;
+            const source = raw.skins[skinId];
+            const skinNames = _localized(source.names, 48);
+            if (!skinNames.en || !_obj(source.animations) || !source.animations.idle)
+                continue;
+            const animations = {};
+            let frames = 0;
+            for (const action of Object.keys(source.animations).slice(0, MAX_ANIMATIONS)) {
+                if (ACTIONS.indexOf(action) < 0)
+                    continue;
+                const anim = _sanitizeAnimation(source.animations[action], anchors);
+                if (anim) {
+                    animations[action] = anim;
+                    frames += anim.frames.length;
+                }
+            }
+            if (animations.idle && frames <= MAX_TOTAL_FRAMES)
+                out.skins[skinId] = { id: skinId, names: skinNames, animations: animations, accessories: [], defaultAccessories: [] };
+        }
+    }
+    if (!targetDefinition.habitat && _obj(raw.habitat) && _id(raw.habitat.id)
+            && _safePath(raw.habitat.image) && anchors[raw.habitat.anchor]) {
+        out.habitat = {
+            id: raw.habitat.id,
+            names: _localized(raw.habitat.names, 48),
+            image: raw.habitat.image,
+            anchor: raw.habitat.anchor,
+            defaultScale: Math.max(0.25, Math.min(3, Number(raw.habitat.defaultScale) || 1)),
+            sleepAnimation: ACTIONS.indexOf(raw.habitat.sleepAnimation) >= 0 ? raw.habitat.sleepAnimation : "sleep"
+        };
+    }
+    if (!Object.keys(out.skins).length && !out.habitat)
+        return null;
+    return out;
+}
+
+// Pure merge used by the registry (and Node tests): returns a new
+// definition; the input is never mutated.
+function mergeAddons(definition, addons) {
+    if (!definition || !Array.isArray(addons) || !addons.length)
+        return definition;
+    const merged = JSON.parse(JSON.stringify(definition));
+    for (const addon of addons) {
+        if (!addon || addon.character !== definition.id)
+            continue;
+        for (const skinId of Object.keys(addon.skins || {})) {
+            if (!merged.skins[skinId])
+                merged.skins[skinId] = addon.skins[skinId];
+        }
+        if (!merged.habitat && addon.habitat)
+            merged.habitat = addon.habitat;
+    }
+    return merged;
+}

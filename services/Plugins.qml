@@ -602,7 +602,8 @@ Singleton {
                 quickSettings: [],
                 panels: [],
                 dashboardTabs: [],
-                companions: []
+                companions: [],
+                companionAddons: []
             });
         if (!contributes || typeof contributes !== "object" || Array.isArray(contributes))
             return normalized;
@@ -612,7 +613,8 @@ Singleton {
             quickSettings: 4,
             panels: 4,
             dashboardTabs: 2,
-            companions: 4
+            companions: 4,
+            companionAddons: 4
         };
         for (const kind of Object.keys(limits)) {
             const list = contributes[kind];
@@ -638,6 +640,16 @@ Singleton {
                 }
                 if (kind === "quickSettings")
                     entry.kind = item.kind === "button" ? "button" : "toggle";
+                if (kind === "companionAddons") {
+                    const safePath = value => typeof value === "string"
+                        && /^(?!\/)(?!\.{1,2}(\/|$))(?!.*\/\.{1,2}(\/|$))(?!.*\/\/)[A-Za-z0-9._\/-]+$/.test(value)
+                        && value.length <= 240;
+                    if (!safePath(item.definition) || !item.definition.toLowerCase().endsWith(".json")
+                            || typeof item.forCharacter !== "string" || !/^[a-z][a-zA-Z0-9]{0,31}$/.test(item.forCharacter))
+                        continue;
+                    entry.definition = item.definition;
+                    entry.forCharacter = item.forCharacter;
+                }
                 if (kind === "companions") {
                     const safePath = value => typeof value === "string"
                         && /^(?!\/)(?!\.{1,2}(\/|$))(?!.*\/\.{1,2}(\/|$))(?!.*\/\/)[A-Za-z0-9._\/-]+$/.test(value)
@@ -737,6 +749,25 @@ Singleton {
                     key: `${entry.id}:${companion.id}`,
                     definitionUrl: root.entrypointUrl(entry.id, companion.definition),
                     previewUrl: companion.preview ? root.entrypointUrl(entry.id, companion.preview) : ""
+                }));
+        }
+        return result;
+    }
+
+    // Add-on contributions (new skins/habitats for a character from
+    // the same package), manifest data only like companionList.
+    function companionAddonList(): var {
+        const result = [];
+        for (const entry of root.entries) {
+            if (!entry || entry.enabled === false || entry.dataOnly !== true)
+                continue;
+            const addons = entry.contributes && Array.isArray(entry.contributes.companionAddons) ? entry.contributes.companionAddons : [];
+            for (const addon of addons)
+                result.push(Object.assign({}, addon, {
+                    pluginId: entry.id,
+                    key: `${entry.id}:${addon.forCharacter}`,
+                    addonId: addon.id,
+                    definitionUrl: root.entrypointUrl(entry.id, addon.definition)
                 }));
         }
         return result;

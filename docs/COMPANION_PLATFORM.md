@@ -201,17 +201,30 @@ idempotent and unknown/malformed records sanitize independently.
 
 ## Delivery stages
 
-1. **Contract and decorative runtime (this foundation):** PluginKit 6
-   data-only validation, registry, persisted instances, native sprite
-   rendering, Control Center collection controls, reference package.
-2. **Javi art program:** approved master model sheet, five hero
-   poses, skin-consistent animation rebuild, real Nest art.
-3. **Habitats and interactions:** independent habitat surfaces,
-   accessories, restrained companion-to-companion beats.
-4. **Assistant bindings:** generic binding UI over existing trusted
-   contracts; no new privilege path.
-5. **Catalogue and website:** only after released packages and host
-   captures prove the experience above.
+1. **Contract and decorative runtime (shipped, shell 1.3.7):**
+   PluginKit 6 data-only validation, registry, persisted instances,
+   native sprite rendering, Control Center collection controls,
+   reference package, add-on contributions and the sprite import
+   tool.
+2. **Javi art program (shipped, shell 1.3.7):** the approved 2026
+   generation rebuilt every skin through the deterministic derive
+   pipeline; the illustrated clay-workshop Nest replaced the
+   procedural final stage. Hero masters are registered candidates
+   with provenance; frames-hi and contact previews regenerated.
+3. **Habitats and interactions (shipped):** independent habitat
+   surfaces with their own persisted positions, proximity greetings
+   bounded per pair, add-on skins/habitats.
+4. **Assistant bindings (shipped as explicit configuration):**
+   per-instance binding preference (none/Hermes/Veasel) over the
+   existing trusted contracts; decorative companions never start a
+   process and packages gain no privileges.
+5. **Catalogue and website (shipped):** official Capi and Bitín
+   data-only packages in the catalogue, authoring guide EN/ES, and
+   the website living-platform section. Performance: one
+   visibility-gated timer per sprite; measured on the dev host,
+   the full demo shell (Javi + two generic companions + four
+   packages) runs at ~820 MB RSS after startup, with companions
+   suppressed (zero sprite work) while locked or hidden.
 
 ## Add-ons (PluginKit 6)
 

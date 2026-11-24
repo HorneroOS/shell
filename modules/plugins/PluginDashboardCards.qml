@@ -49,8 +49,13 @@ Item {
     readonly property real availableWidth: width > 0 ? width : 968
     readonly property int columns: layoutHelper.columnsForWidth(root.availableWidth, Appearance.spacing.normal)
 
-    implicitWidth: 968
-    implicitHeight: hasPlugins ? hint.height + (hint.visible ? Appearance.spacing.small : 0) + scroll.height : empty.implicitHeight
+    // Pane floor: even with zero cards the tab keeps a native-pane
+    // footprint instead of collapsing onto the empty-state text.
+    readonly property int minPaneWidth: 720
+    readonly property int minEmptyHeight: 300
+
+    implicitWidth: Math.max(968, root.minPaneWidth)
+    implicitHeight: hasPlugins ? hint.height + (hint.visible ? Appearance.spacing.small : 0) + scroll.height : Math.max(empty.implicitHeight, root.minEmptyHeight)
 
     function focusCard(id: string): void {
         root.focusedId = id;
@@ -420,14 +425,23 @@ Item {
         id: empty
 
         visible: !root.hasPlugins
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.topMargin: 64
+        width: Math.min(parent.width, 480)
         spacing: Appearance.spacing.small
 
         StyledText {
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
             text: qsTr("No dashboard plugins")
             font.pointSize: Appearance.font.size.large
         }
 
         StyledText {
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
+            wrapMode: Text.Wrap
             text: qsTr("Enabled plugins that declare dashboard placement show up here as cards.")
             color: Signal.palette.inkMuted
         }

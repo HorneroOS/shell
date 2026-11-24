@@ -206,3 +206,11 @@ def test_card_chrome_is_quiet_for_healthy_extensions():
     assert "visible: card.activeFocus && FocusMode.keyboard" in CARDS
     assert "palette.base: Signal.palette.raised" in CARDS
     assert "palette.placeholderText: Signal.palette.inkMuted" in CARDS
+
+
+def test_extensions_pane_keeps_a_minimum_footprint_when_empty():
+    cards = (ROOT / "modules/plugins/PluginDashboardCards.qml").read_text()
+    # User-visible floor: an empty Extensions tab must not collapse
+    # onto its two-line empty state.
+    assert "minPaneWidth" in cards and "minEmptyHeight" in cards
+    assert "Math.max(empty.implicitHeight, root.minEmptyHeight)" in cards

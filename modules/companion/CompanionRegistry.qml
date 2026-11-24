@@ -3,6 +3,7 @@ pragma Singleton
 import qs.services
 import Quickshell.Io
 import QtQml
+import Quickshell
 import QtQuick
 import "companionpacks.js" as Packs
 

@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "id": "capi",
+  "version": "1.0.0",
+  "names": {
+    "en": "Capi",
+    "es": "Capi"
+  },
+  "descriptions": {
+    "en": "A calm capybara who likes a slow desktop.",
+    "es": "Un carpincho tranquilo para un escritorio sin apuro."
+  },
+  "archetype": "capybara",
+  "provenance": {
+    "author": "HorneroOS contributors",
+    "license": "MIT",
+    "tool": "Muse image generation; deterministic chroma-key and slicing recorded in the shell PR"
+  },
+  "preview": "companions/capi/frames/idle-01.png",
+  "canvas": {
+    "width": 512,
+    "height": 512,
+    "anchors": {
+      "ground": [
+        256,
+        472
+      ],
+      "center": [
+        256,
+        256
+      ]
+    }
+  },
+  "defaultSkin": "default",
+  "capabilities": [
+    "grounded",
+    "walk",
+    "sleep",
+    "greet"
+  ],
+  "skins": {
+    "default": {
+      "names": {
+        "en": "Natural",
+        "es": "Natural"
+      },
+      "animations": {
+        "idle": {
+          "loop": true,
+          "anchor": "ground",
+          "frames": [
+            {
+              "file": "companions/capi/frames/idle-01.png",
+              "ms": 900
+            }
+          ]
+        },
+        "walk": {
+          "loop": true,
+          "anchor": "ground",
+          "frames": [
+            {
+              "file": "companions/capi/frames/idle-01.png",
+              "ms": 360
+            },
+            {
+              "file": "companions/capi/frames/walk-01.png",
+              "ms": 360
+            }
+          ]
+        },
+        "greet": {
+          "loop": false,
+          "anchor": "ground",
+          "frames": [
+            {
+              "file": "companions/capi/frames/greet-01.png",
+              "ms": 900
+            }
+          ],
+          "next": "idle"
+        },
+        "rest": {
+          "loop": true,
+          "anchor": "ground",
+          "frames": [
+            {
+              "file": "companions/capi/frames/greet-01.png",
+              "ms": 900
+            }
+          ]
+        },
+        "sleep": {
+          "loop": true,
+          "anchor": "ground",
+          "frames": [
+            {
+              "file": "companions/capi/frames/sleep-01.png",
+              "ms": 900
+            }
+          ]
+        }
+      }
+    }
+  },
+  "personality": {
+    "default": "calm",
+    "options": [
+      {
+        "id": "calm",
+        "names": {
+          "en": "Calm",
+          "es": "Tranqui"
+        },
+        "traits": [
+          "calm",
+          "gentle"
+        ],
+        "lines": {
+          "greet": {
+            "en": "Hola.",
+            "es": "Hola."
+          }
+        }
+      }
+    ]
+  },
+  "assistantCompatibility": [
+    "none"
+  ]
+}

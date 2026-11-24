@@ -1,4 +1,25 @@
 {
   "schema": 1,
-  "masters": []
+  "masters": [
+    {
+      "id": "idle-2026-candidate",
+      "file": "sources/masters/javi-idle-candidate-2026-11-23.png",
+      "sha256": "198c3cd25800b1c9dc425692540f18cedcb867b15b3e2a6008112fdf84c7dd68",
+      "pose": "idle",
+      "anchor": "feet",
+      "pivot": [
+        512,
+        992
+      ],
+      "origin": "external",
+      "status": "candidate",
+      "provenance": {
+        "tool": "Muse image generation",
+        "prompt": "assets/companion/sources/prompts/javi-idle-2026-11-23.md",
+        "date": "2026-11-23",
+        "licence": "HorneroOS project use; generated for this repository change",
+        "author": "HorneroOS contributors"
+      }
+    }
+  ]
 }

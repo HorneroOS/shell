@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 3,
+  "pluginKit": 6,
+  "dataOnly": true,
+  "id": "example-companion",
+  "name": "Example Companions",
+  "version": "1.0.0",
+  "description": "Two data-only desktop companions rendered natively by Hornero Shell (PluginKit 6).",
+  "author": "HorneroOS contributors",
+  "license": "MIT",
+  "entrypoint": "Main.qml",
+  "placement": "background",
+  "files": [
+    "Main.qml",
+    "README.md",
+    "LICENSE",
+    "companions/capi/companion.json",
+    "companions/capi/frames/greet-01.png",
+    "companions/capi/frames/idle-01.png",
+    "companions/capi/frames/sleep-01.png",
+    "companions/capi/frames/walk-01.png",
+    "companions/byte/companion.json",
+    "companions/byte/frames/idle-01.png",
+    "companions/byte/frames/sleep-01.png",
+    "companions/byte/frames/think-01.png",
+    "companions/byte/frames/walk-01.png"
+  ],
+  "capabilities": {
+    "processCommands": [],
+    "networkHosts": [],
+    "settings": {}
+  },
+  "contributes": {
+    "companions": [
+      {
+        "id": "capi",
+        "title": "Capi",
+        "definition": "companions/capi/companion.json",
+        "preview": "companions/capi/frames/idle-01.png"
+      },
+      {
+        "id": "byte",
+        "title": "Bitín",
+        "definition": "companions/byte/companion.json",
+        "preview": "companions/byte/frames/idle-01.png"
+      }
+    ]
+  }
+}

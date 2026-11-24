@@ -601,7 +601,8 @@ Singleton {
                 commands: [],
                 quickSettings: [],
                 panels: [],
-                dashboardTabs: []
+                dashboardTabs: [],
+                companions: []
             });
         if (!contributes || typeof contributes !== "object" || Array.isArray(contributes))
             return normalized;
@@ -610,7 +611,8 @@ Singleton {
             commands: 16,
             quickSettings: 4,
             panels: 4,
-            dashboardTabs: 2
+            dashboardTabs: 2,
+            companions: 4
         };
         for (const kind of Object.keys(limits)) {
             const list = contributes[kind];
@@ -636,6 +638,16 @@ Singleton {
                 }
                 if (kind === "quickSettings")
                     entry.kind = item.kind === "button" ? "button" : "toggle";
+                if (kind === "companions") {
+                    const safePath = value => typeof value === "string"
+                        && /^(?!\/)(?!\.{1,2}(\/|$))(?!.*\/\.{1,2}(\/|$))(?!.*\/\/)[A-Za-z0-9._\/-]+$/.test(value)
+                        && value.length <= 240;
+                    if (!safePath(item.definition) || !item.definition.toLowerCase().endsWith(".json"))
+                        continue;
+                    entry.definition = item.definition;
+                    if (safePath(item.preview) && /\.(?:png|webp|jpg|jpeg)$/i.test(item.preview))
+                        entry.preview = item.preview;
+                }
                 normalized[kind].push(entry);
             }
         }
@@ -690,6 +702,41 @@ Singleton {
                     pluginName: entry.name || entry.id,
                     entrypoint: entry.entrypoint,
                     key: `${entry.id}:${tab.id}`
+                }));
+        }
+        return result;
+    }
+
+    // Data-only companion packages (PluginKit 6): PluginHost records
+    // this from the validated manifest. It is a shell-side admission
+    // fact, not a package-granted capability. CompanionRegistry reads
+    // only entries for which this is true.
+    function markDataOnly(id: string, dataOnly: bool): void {
+        const current = root.entries.find(e => e.id === id);
+        if (current && (current.dataOnly === true) === dataOnly)
+            return;
+        root.entries = root.entries.map(e => e.id === id ? Object.assign({}, e, {
+            dataOnly: dataOnly
+        }) : e);
+    }
+
+    // Character contributions of enabled data-only packages. Listing
+    // reads manifests only; definition files are loaded by the native
+    // companion registry, never by package code (there is none run).
+    function companionList(): var {
+        const result = [];
+        for (const entry of root.entries) {
+            if (!entry || entry.enabled === false || entry.dataOnly !== true)
+                continue;
+            const companions = entry.contributes && Array.isArray(entry.contributes.companions) ? entry.contributes.companions : [];
+            for (const companion of companions)
+                result.push(Object.assign({}, companion, {
+                    pluginId: entry.id,
+                    pluginName: entry.name || entry.id,
+                    version: entry.version || "",
+                    key: `${entry.id}:${companion.id}`,
+                    definitionUrl: root.entrypointUrl(entry.id, companion.definition),
+                    previewUrl: companion.preview ? root.entrypointUrl(entry.id, companion.preview) : ""
                 }));
         }
         return result;

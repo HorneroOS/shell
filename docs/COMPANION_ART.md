@@ -113,3 +113,15 @@ mission evidence folder `javi-nest/candidates/`):
 Verdict: procedural vector cannot reach the painterly bar. An approved
 externally generated or painted `idle` master is required; nothing has been
 propagated across the 25 animations.
+
+### Candidate evaluated (2026-11-23)
+
+- D: generated painterly model sheet and a dedicated idle master. The
+  idle candidate materially improves the bill length, upright body,
+  uncocked tail, dark flight feathers, wing bar and grey-pink legs,
+  and remains readable at 128 px on both dark and light grounds. It
+  is registered as `idle-2026-candidate` with a pinned checksum and
+  generation brief. It has **not** been propagated into the shipped
+  animation catalogue: `think` and `sleep` still need matching
+  high-resolution masters and maintainer approval before any skin is
+  rebuilt from it.

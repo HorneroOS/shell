@@ -4,6 +4,12 @@ The Companion is the Hornero sidekick: a small skinned bird that idles,
 ambles, flies, and greets across shell surfaces. This page documents the
 production asset pipeline, not a mockup.
 
+Javi is also the first built-in character on the generic
+[Companion Platform](COMPANION_PLATFORM.md). His runtime and persisted
+preferences remain the flagship legacy implementation documented here;
+validated data-only characters from PluginKit 6 packages coexist as
+independent instances without replacing or rewriting Javi's state.
+
 ## Vocabulary (default skin first)
 
 | Animation | Frames | Timing | Loop | Next | Anchor |

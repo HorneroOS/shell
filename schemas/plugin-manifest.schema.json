@@ -1243,18 +1243,23 @@
         }
       }
     },
+    "dataOnly": {
+      "type": "boolean",
+      "default": false,
+      "description": "PluginKit 6: this package ships validated declarative data only. The Shell never instantiates its canonical inert Main.qml. Requires background placement, empty executable capabilities and contributes.companions; scripts/validate_plugin.py enforces the closed file and asset budgets."
+    },
     "pluginKit": {
       "type": "integer",
       "minimum": 3,
-      "maximum": 5,
+      "maximum": 6,
       "default": 3,
-      "description": "Minimum PluginKit apiLevel the package needs (RFC 0003). Defaults to 3. Features that exist only from level 4 (colour/list/text/path settings, title/group/unit/step/visibleWhen, contributes, instances) must declare 4; dashboard pages (contributes.dashboardTabs + surfaces.dashboardTab, shell#709) must declare 5. scripts/validate_plugin.py enforces that a package cannot under-declare, and a Shell whose kit is older refuses the package plainly."
+      "description": "Minimum PluginKit apiLevel the package needs (RFC 0003). Defaults to 3. Features that exist only from level 4 (colour/list/text/path settings, title/group/unit/step/visibleWhen, contributes, instances) must declare 4; dashboard pages (contributes.dashboardTabs + surfaces.dashboardTab, shell#709) must declare 5; data-only companion packages (dataOnly + contributes.companions) must declare 6. scripts/validate_plugin.py enforces that a package cannot under-declare, and a Shell whose kit is older refuses the package plainly."
     },
     "contributes": {
       "type": "object",
       "additionalProperties": false,
       "minProperties": 1,
-      "description": "PluginKit 4 (RFC 0003): declarative contributions the Shell lists without running extension code. Requires pluginKit 4 and, for each kind, its surface: commands -> surfaces.commands (`function run(commandId, args): string`), quickSettings -> surfaces.quickSetting (`property bool checked`, `function toggle()`), panels -> surfaces.panel. PluginKit 5 adds dashboardTabs -> surfaces.dashboardTab (a full Dashboard page with stable tab identity `<pluginId>:<tabId>`). Cross-field rules (surface present, glyph names) are enforced by scripts/validate_plugin.py.",
+      "description": "PluginKit 4 (RFC 0003): declarative contributions the Shell lists without running extension code. Requires pluginKit 4 and, for each kind, its surface: commands -> surfaces.commands (`function run(commandId, args): string`), quickSettings -> surfaces.quickSetting (`property bool checked`, `function toggle()`), panels -> surfaces.panel. PluginKit 5 adds dashboardTabs -> surfaces.dashboardTab (a full Dashboard page with stable tab identity `<pluginId>:<tabId>`). PluginKit 6 adds companions, a data-only native-rendered contribution with no QML surface. Cross-field and asset-budget rules are enforced by scripts/validate_plugin.py.",
       "properties": {
         "commands": {
           "type": "array",
@@ -1365,6 +1370,23 @@
             }
           },
           "maxItems": 4
+        },
+        "companions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "title", "definition"],
+            "properties": {
+              "id": {"type": "string", "pattern": "^[a-z][a-zA-Z0-9]{0,31}$"},
+              "title": {"type": "string", "minLength": 1, "maxLength": 48, "pattern": "\\S"},
+              "glyph": {"type": "string", "pattern": "^[a-z0-9-]+$"},
+              "definition": {"type": "string", "maxLength": 240, "pattern": "^(?!/)(?!\\.{1,2}(?:/|$))(?!.*\\/\\.{1,2}(?:/|$))(?!.*//)[A-Za-z0-9._/-]+\\.json$"},
+              "preview": {"type": "string", "maxLength": 240, "pattern": "^(?!/)(?!\\.{1,2}(?:/|$))(?!.*\\/\\.{1,2}(?:/|$))(?!.*//)[A-Za-z0-9._/-]+\\.(png|webp|jpg|jpeg)$"}
+            }
+          }
         },
         "dashboardTabs": {
           "type": "array",

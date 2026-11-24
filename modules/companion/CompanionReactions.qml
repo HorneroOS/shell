@@ -1,6 +1,7 @@
 pragma Singleton
 
 import "reactions.js" as Reactions
+import "companionpacks.js" as Packs
 import qs.services
 import Quickshell
 import QtQuick
@@ -75,6 +76,8 @@ Singleton {
             return qsTr("Task finished");
         case "attention":
             return qsTr("Needs your attention");
+        case "agent.quota":
+            return qsTr("Agent quota approaching a limit");
         default:
             return kind;
         }
@@ -83,6 +86,9 @@ Singleton {
     function react(kind: string, source: string, text: string): bool {
         const now = Date.now();
         const d = new Date(now);
+        const route = CompanionInstances.reactionTarget;
+        const routedInstance = route !== "primary" && route !== "none" ? CompanionInstances.instanceById(route) : null;
+        const routedCharacter = routedInstance ? CompanionRegistry.characterByKey(routedInstance.characterId) : null;
         const decision = Reactions.decide({
             settings: CompanionStore.reactionSettings,
             kind: kind,
@@ -92,7 +98,13 @@ Singleton {
             nowMs: now,
             minute: d.getHours() * 60 + d.getMinutes(),
             history: root.history,
-            hasAnimation: name => Companion.hasAnimation(CompanionStore.effectiveSkin, name)
+            hasAnimation: name => {
+                if (routedInstance && routedCharacter && routedCharacter.definition)
+                    return !!Packs.resolveAnimation(routedCharacter.definition, routedInstance.skin, name);
+                if (route === "none")
+                    return true;
+                return Companion.hasAnimation(CompanionStore.effectiveSkin, name);
+            }
         });
         root.lastDecision = decision;
         const src = Reactions.sourceKey(source);
@@ -107,11 +119,34 @@ Singleton {
         // sender's own text (decision.custom) is never replaced (it is
         // only shown, bounded and sanitised).
         let bubble = decision.bubble;
-        if (bubble !== "" && !decision.custom) {
+        if (bubble !== "" && !decision.custom && !routedInstance) {
             const spoken = JaviVoice.line("reaction." + decision.kind);
             bubble = spoken.indexOf("reaction.") !== 0 ? spoken : (root.defaultBubble(decision.kind) || decision.bubble);
         }
-        if (!CompanionStore.playReaction(decision.anim, bubble, decision.bubbleMs, decision.priority)) {
+        if (route === "none") {
+            root.lastDecision = { ok: false, reason: "route-none" };
+            root.dropped += 1;
+            return false;
+        }
+        if (routedInstance) {
+            if (!routedCharacter || !routedCharacter.definition || !routedInstance.enabled || !routedInstance.reactions) {
+                root.lastDecision = { ok: false, reason: "route-unavailable" };
+                root.dropped += 1;
+                return false;
+            }
+            if (!decision.custom && routedCharacter.definition.personality) {
+                const options = routedCharacter.definition.personality.options || [];
+                const personality = options.find(o => o.id === routedInstance.personalityId) || options.find(o => o.id === routedCharacter.definition.personality.default);
+                const line = personality && personality.lines ? Packs.localizedText(personality.lines[decision.anim], Qt.locale().name) : "";
+                if (line)
+                    bubble = line;
+            }
+            CompanionInstances.requestReaction(routedInstance.id, decision.anim, bubble);
+        } else if (route !== "primary") {
+            root.lastDecision = { ok: false, reason: "route-unavailable" };
+            root.dropped += 1;
+            return false;
+        } else if (!CompanionStore.playReaction(decision.anim, bubble, decision.bubbleMs, decision.priority)) {
             root.lastDecision = { ok: false, reason: "not-visible" };
             root.dropped += 1;
             return false;

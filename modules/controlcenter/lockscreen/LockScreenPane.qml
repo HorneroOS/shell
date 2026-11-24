@@ -87,15 +87,6 @@ Item {
                         }
 
                         SwitchRow {
-                            label: qsTr("Recolour the logo to the theme")
-                            checked: Config.lock.recolourLogo
-                            onToggled: checked => {
-                                Config.lock.recolourLogo = checked;
-                                Config.save();
-                            }
-                        }
-
-                        SwitchRow {
                             label: qsTr("Fingerprint unlock")
                             checked: Config.lock.enableFprint
                             onToggled: checked => {

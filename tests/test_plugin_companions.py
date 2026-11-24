@@ -235,13 +235,14 @@ console.log(JSON.stringify({resolved: resolved, doc: doc}));
 
 def test_companion_import_maps_semantic_actions(tmp_path):
     import subprocess
+    pytest.importorskip("PIL", reason="companion_import needs Pillow")
     src = tmp_path / "src"; src.mkdir()
     image = png_bytes()
     for name in ("shime1.png", "walk2.png", "sleep1.png", "dance9.png"):
         (src / name).write_bytes(image)
     out = tmp_path / "pkg"
     proc = subprocess.run(
-        [sys.executable if False else "python3", "scripts/companion_import.py", str(src), str(out),
+        [sys.executable, "scripts/companion_import.py", str(src), str(out),
          "--character", "friend", "--title", "Friend"],
         cwd=ROOT, capture_output=True, text=True)
     assert proc.returncode == 0, proc.stderr

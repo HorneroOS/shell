@@ -6068,6 +6068,14 @@ Snapshot del plugin: %3</translation>
         <source>No files found</source>
         <translation>No se encontraron archivos</translation>
     </message>
+    <message>
+        <source>Search timed out</source>
+        <translation>La búsqueda tardó demasiado</translation>
+    </message>
+    <message>
+        <source>Search timed out — partial results</source>
+        <translation>La búsqueda tardó demasiado — resultados parciales</translation>
+    </message>
 </context>
 <context>
     <name>FolderContents</name>

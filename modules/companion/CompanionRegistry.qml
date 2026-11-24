@@ -170,7 +170,7 @@ Singleton {
         id: addonLoader
 
         FileView {
-            id: loader
+            id: addonFile
 
             property var contributionData: null
 
@@ -178,13 +178,13 @@ Singleton {
 
             onLoaded: {
                 try {
-                    const addon = loader.contributionData;
+                    const addon = addonFile.contributionData;
                     const target = root._definitions[addon.key];
                     if (!target || !target.definition) {
                         root.diagnostics = root.diagnostics.concat([`${addon.pluginId}:${addon.addonId}: add-on target not loaded`]);
                         return;
                     }
-                    const clean = Packs.sanitizeAddon(JSON.parse(loader.text()), target.definition);
+                    const clean = Packs.sanitizeAddon(JSON.parse(addonFile.text()), target.definition);
                     if (!clean) {
                         root.diagnostics = root.diagnostics.concat([`${addon.pluginId}:${addon.addonId}: invalid add-on`]);
                         return;

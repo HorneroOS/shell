@@ -2960,6 +2960,26 @@ Huella de la clave del autor: %3</translation>
         <translation>Puede reaccionar a eventos</translation>
     </message>
     <message>
+        <source>Assistant</source>
+        <translation>Asistente</translation>
+    </message>
+    <message>
+        <source>None (decorative)</source>
+        <translation>Ninguno (decorativo)</translation>
+    </message>
+    <message>
+        <source>Hermes</source>
+        <translation>Hermes</translation>
+    </message>
+    <message>
+        <source>Veasel</source>
+        <translation>Veasel</translation>
+    </message>
+    <message>
+        <source>Decorative companions use no inference. A binding only takes effect through the trusted assistant contracts; the character package itself gains no tools or permissions.</source>
+        <translation>Los compañeros decorativos no usan inferencia. Un vínculo solo actúa mediante los contratos confiables del asistente; el paquete del personaje no gana herramientas ni permisos.</translation>
+    </message>
+    <message>
         <source>Reset position</source>
         <translation>Restablecer posición</translation>
     </message>

@@ -7,6 +7,7 @@ canonical inert entrypoint is never instantiated.
 """
 
 import copy
+import sys
 import importlib.util
 import json
 import struct
@@ -202,6 +203,10 @@ def test_host_never_loads_data_only_entrypoint():
     assert 'slot.backgroundEntrypoint = dataOnly ? ""' in HOST
     assert 'Plugins.markLoaded(slot.modelData.id, "companions")' in HOST
     assert "function companionList()" in SERVICE and "entry.dataOnly !== true" in SERVICE
+    registry = (ROOT / "modules/companion/CompanionRegistry.qml").read_text()
+    # Definition asset paths are package-relative; the render base
+    # must be the package root or frames resolve to a doubled path.
+    assert '`${Plugins.pluginsDir}/${contribution.pluginId}`' in registry
     assert "Loader" not in DATA_HOST.split("CompanionFramePlayer")[0][-2000:]
 
 
@@ -230,3 +235,20 @@ console.log(JSON.stringify({resolved: resolved, doc: doc}));
     generic = [i for i in result["doc"]["instances"] if i["id"] == "x"][0]
     assert generic["skin"] == "future"
     assert any(i["characterId"] == "hornero:javi" and i["legacy"] for i in result["doc"]["instances"])
+
+
+def test_companion_import_maps_semantic_actions(tmp_path):
+    import subprocess
+    pytest.importorskip("PIL", reason="companion_import needs Pillow")
+    src = tmp_path / "src"; src.mkdir()
+    image = png_bytes()
+    for name in ("shime1.png", "walk2.png", "sleep1.png", "dance9.png"):
+        (src / name).write_bytes(image)
+    out = tmp_path / "pkg"
+    proc = subprocess.run(
+        [sys.executable, "scripts/companion_import.py", str(src), str(out),
+         "--character", "friend", "--title", "Friend"],
+        cwd=ROOT, capture_output=True, text=True)
+    assert proc.returncode == 0, proc.stderr
+    assert "unmapped" in proc.stdout  # dance9 carries a diagnostic
+    V.validate_plugin(out)

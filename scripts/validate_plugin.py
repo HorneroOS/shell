@@ -297,15 +297,16 @@ CONTRIBUTION_SURFACES = {"commands": "commands", "quickSettings": "quickSetting"
                          "dashboardTabs": "dashboardTab"}
 # Companions are deliberately not a QML surface: PluginKit 6 renders
 # validated data-only character definitions with trusted native code.
-CONTRIBUTION_KINDS = tuple(CONTRIBUTION_SURFACES) + ("companions",)
+CONTRIBUTION_KINDS = tuple(CONTRIBUTION_SURFACES) + ("companions", "companionAddons")
 COMMAND_ID = re.compile(r"^[a-z][a-zA-Z0-9]{0,31}$")
-CONTRIBUTION_LIMITS = {"commands": 16, "quickSettings": 4, "panels": 4, "dashboardTabs": 2, "companions": 4}
+CONTRIBUTION_LIMITS = {"commands": 16, "quickSettings": 4, "panels": 4, "dashboardTabs": 2, "companions": 4, "companionAddons": 4}
 CONTRIBUTION_FIELDS = {
     "commands": {"id", "title", "description", "glyph", "keywords"},
     "quickSettings": {"id", "title", "glyph", "kind"},
     "panels": {"id", "title", "glyph"},
     "dashboardTabs": {"id", "title", "glyph"},
     "companions": {"id", "title", "glyph", "definition", "preview"},
+    "companionAddons": {"id", "title", "glyph", "forCharacter", "definition"},
 }
 
 COMPANION_ACTIONS = {
@@ -754,6 +755,63 @@ def _validate_companion_definition(
         _companion_string_list(definition["assistantCompatibility"], f"{where}.definition.assistantCompatibility", COMPANION_ASSISTANT_BINDINGS, 3)
 
 
+def _validate_companion_addon(root, safe_files, entry, declared, budget):
+    """Add-on definition: skins/habitat extending a same-package character."""
+    where = f"contributes.companionAddons[{entry['id']}]"
+    target_id = entry.get("forCharacter")
+    targets = {item["id"]: item for item in declared.get("companions", [])}
+    if target_id not in targets:
+        raise ValidationError(f"{where}.forCharacter must name a character contributed by the same package")
+    rel = _safe_relative(entry["definition"], f"{where}.definition")
+    if PurePosixPath(rel).suffix.lower() != ".json" or rel not in safe_files:
+        raise ValidationError(f"{where}.definition must be a listed JSON file")
+    path = root / rel
+    if path.is_symlink() or not path.is_file() or path.stat().st_size > COMPANION_MAX_DEFINITION_BYTES:
+        raise ValidationError(f"{where}.definition must be a regular file within the size budget")
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        raise ValidationError(f"{where}.definition cannot be read as JSON: {error}") from error
+    addon = _closed_object(raw, f"{where}.definition",
+                           {"schemaVersion", "character", "skins", "habitat"},
+                           {"schemaVersion", "character"})
+    if addon["schemaVersion"] != 1 or addon["character"] != target_id:
+        raise ValidationError(f"{where}.definition schemaVersion/character must match the contribution")
+    if "skins" not in addon and "habitat" not in addon:
+        raise ValidationError(f"{where}.definition must add at least one skin or a habitat")
+    # Canvas of the target character (its definition was validated above).
+    target_rel = targets[target_id]["definition"]
+    target_raw = json.loads((root / target_rel).read_text(encoding="utf-8"))
+    canvas = target_raw["canvas"]
+    if "skins" in addon:
+        skins = _object(addon["skins"], f"{where}.definition.skins")
+        if not skins or len(skins) > COMPANION_MAX_SKINS:
+            raise ValidationError(f"{where}.definition.skins must list 1 to {COMPANION_MAX_SKINS} skins")
+        for skin_id, raw_skin in skins.items():
+            skin_where = f"{where}.definition.skins.{skin_id}"
+            if not COMMAND_ID.fullmatch(skin_id):
+                raise ValidationError(f"{skin_where} has an invalid skin id")
+            if skin_id in target_raw.get("skins", {}):
+                raise ValidationError(f"{skin_where} already exists on the character; add-ons add new skins only")
+            skin = _closed_object(raw_skin, skin_where, {"names", "palette", "animations", "accessories", "defaultAccessories"}, {"names", "animations"})
+            _localized_map(skin["names"], f"{skin_where}.names", 48, require_english=True)
+            animations = _object(skin["animations"], f"{skin_where}.animations")
+            if not animations or "idle" not in animations:
+                raise ValidationError(f"{skin_where}.animations must include idle")
+            for action, animation in animations.items():
+                if action not in COMPANION_ACTIONS:
+                    raise ValidationError(f"{skin_where}.animations contains an unknown semantic action: {action}")
+                _validate_companion_animation(root, safe_files, animation, f"{skin_where}.animations.{action}", canvas, budget)
+    if "habitat" in addon:
+        habitat = _closed_object(addon["habitat"], f"{where}.definition.habitat",
+                                 {"id", "names", "image", "anchor", "defaultScale", "sleepAnimation"},
+                                 {"id", "names", "image", "anchor"})
+        _localized_map(habitat["names"], f"{where}.definition.habitat.names", 48, require_english=True)
+        _companion_image(root, safe_files, habitat["image"], f"{where}.definition.habitat.image", budget)
+        if habitat["anchor"] not in canvas["anchors"]:
+            raise ValidationError(f"{where}.definition.habitat.anchor must name a target canvas anchor")
+
+
 def _validate_companion_contribution(
     root: Path,
     safe_files: set[str],
@@ -825,6 +883,13 @@ def _validate_contributes(manifest: dict, declared_level: int, root: Path | None
         raise ValidationError('contributes needs PluginKit 4; declare "pluginKit": 4 in the manifest')
     if "dashboardTabs" in (manifest.get("contributes") or {}) and declared_level < 5:
         raise ValidationError('contributes.dashboardTabs needs PluginKit 5; declare "pluginKit": 5 in the manifest')
+    if "companionAddons" in (manifest.get("contributes") or {}):
+        if declared_level < 6:
+            raise ValidationError('contributes.companionAddons needs PluginKit 6; declare "pluginKit": 6 in the manifest')
+        if manifest.get("dataOnly") is not True:
+            raise ValidationError('contributes.companionAddons is data-only in PluginKit 6; declare "dataOnly": true')
+        if "companions" not in (manifest.get("contributes") or {}):
+            raise ValidationError("contributes.companionAddons extends a character from the same package; declare contributes.companions too")
     if "companions" in (manifest.get("contributes") or {}):
         if declared_level < 6:
             raise ValidationError('contributes.companions needs PluginKit 6; declare "pluginKit": 6 in the manifest')
@@ -855,9 +920,9 @@ def _validate_contributes(manifest: dict, declared_level: int, root: Path | None
                     f"{where} contains unknown fields: {', '.join(sorted(extra))} "
                     f"(allowed: {', '.join(sorted(CONTRIBUTION_FIELDS[kind]))})"
                 )
-            required = {"id", "title", "definition"} if kind == "companions" else {"id", "title"}
+            required = {"id", "title", "definition"} if kind == "companions" else {"id", "title", "forCharacter", "definition"} if kind == "companionAddons" else {"id", "title"}
             if not required <= set(entry):
-                wanted = "id, title and definition" if kind == "companions" else "id and title"
+                wanted = "id, title and definition" if kind in ("companions", "companionAddons") else "id and title"
                 raise ValidationError(f"{where} must contain {wanted}")
             entry_id = entry["id"]
             if not isinstance(entry_id, str) or not COMMAND_ID.fullmatch(entry_id):
@@ -895,6 +960,12 @@ def _validate_contributes(manifest: dict, declared_level: int, root: Path | None
                 _validate_companion_contribution(
                     root, safe_files, entry, f"contributes.companions[{items.index(entry)}]", budget
                 )
+        elif kind == "companionAddons":
+            if root is None or safe_files is None:
+                raise ValidationError("companion add-on contributions require package asset validation")
+            budget = {"pixels": 0, "frames": 0, "images": {}}
+            for entry in items:
+                _validate_companion_addon(root, safe_files, entry, declared, budget)
         elif CONTRIBUTION_SURFACES[kind] not in surfaces:
             raise ValidationError(
                 f"contributes.{kind} needs surfaces.{CONTRIBUTION_SURFACES[kind]}: the entrypoint that implements it"

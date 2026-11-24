@@ -242,6 +242,30 @@ ChannelPanel {
                     })
                 }
 
+                PrefPick {
+                    label: qsTr("Assistant")
+                    current: instanceCard.modelData.assistantBinding
+                    defaultValue: "none"
+                    options: [
+                        {
+                            "id": "none",
+                            "label": qsTr("None (decorative)")
+                        },
+                        {
+                            "id": "hermes",
+                            "label": qsTr("Hermes")
+                        },
+                        {
+                            "id": "veasel",
+                            "label": qsTr("Veasel")
+                        }
+                    ]
+                    help: qsTr("Decorative companions use no inference. A binding only takes effect through the trusted assistant contracts; the character package itself gains no tools or permissions.")
+                    onPicked: id => CompanionInstances.updateInstance(instanceCard.modelData.id, {
+                        "assistantBinding": id
+                    })
+                }
+
                 TextButton {
                     text: qsTr("Reset position")
                     type: TextButton.Text

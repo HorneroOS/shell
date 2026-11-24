@@ -203,6 +203,10 @@ def test_host_never_loads_data_only_entrypoint():
     assert 'slot.backgroundEntrypoint = dataOnly ? ""' in HOST
     assert 'Plugins.markLoaded(slot.modelData.id, "companions")' in HOST
     assert "function companionList()" in SERVICE and "entry.dataOnly !== true" in SERVICE
+    registry = (ROOT / "modules/companion/CompanionRegistry.qml").read_text()
+    # Definition asset paths are package-relative; the render base
+    # must be the package root or frames resolve to a doubled path.
+    assert '`${Plugins.pluginsDir}/${contribution.pluginId}`' in registry
     assert "Loader" not in DATA_HOST.split("CompanionFramePlayer")[0][-2000:]
 
 

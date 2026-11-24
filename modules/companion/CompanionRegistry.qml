@@ -110,7 +110,10 @@ Singleton {
                         root.diagnostics = root.diagnostics.concat([`${contribution.key}: invalid definition`]);
                         return;
                     }
-                    const basePath = root._directoryOf(loader.path.toString());
+                    // Frame/preview paths in a definition are
+                    // package-relative, so the render base is the
+                    // package root, not the definition directory.
+                    const basePath = `${Plugins.pluginsDir}/${contribution.pluginId}`;
                     const next = Object.assign({}, root._definitions);
                     next[contribution.key] = {
                         key: contribution.key,

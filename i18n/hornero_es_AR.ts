@@ -7622,10 +7622,6 @@ Snapshot del plugin: %3</translation>
         <translation>Ocultar notificaciones con la pantalla bloqueada</translation>
     </message>
     <message>
-        <source>Recolour the logo to the theme</source>
-        <translation>Teñir el logo con el tema</translation>
-    </message>
-    <message>
         <source>Fingerprint unlock</source>
         <translation>Desbloqueo con huella</translation>
     </message>

@@ -46,6 +46,9 @@ Singleton {
     function writeNow(): void {
         timer.restart();
         try {
+            // Merge over the on-disk document instead of replacing it:
+            // sections the shell does not model (written by horneroctl or
+            // a newer shell) must survive a shell-initiated save.
             let config = {};
             try {
                 config = JSON.parse(fileView.text());
@@ -53,7 +56,9 @@ Singleton {
                 config = {};
             }
 
-            config = serializeConfig();
+            const serialized = serializeConfig();
+            for (const key of Object.keys(serialized))
+                config[key] = serialized[key];
             fileView.setText(JSON.stringify(config, null, 2));
             recentlySaved = true;
             recentSaveCooldown.restart();
@@ -721,7 +726,6 @@ Singleton {
 
     function serializeLock(): var {
         return {
-            recolourLogo: lock.recolourLogo,
             hideNotifs: lock.hideNotifs,
             enableFprint: lock.enableFprint,
             maxFprintTries: lock.maxFprintTries,

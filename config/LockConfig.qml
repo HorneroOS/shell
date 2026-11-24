@@ -1,7 +1,6 @@
 import Quickshell.Io
 
 JsonObject {
-    property bool recolourLogo: false
     // Privacy default: lock screen shows the notification placeholder,
     // never bodies. Reversible in Settings > Notifications.
     property bool hideNotifs: true

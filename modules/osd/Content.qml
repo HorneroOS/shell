@@ -126,7 +126,9 @@ Item {
 
         visible: shown || opacity > 0
         opacity: shown ? 1 : 0
-        implicitWidth: shown ? 40 : 0
+        // Strip width follows the OSD slider-width setting (default 30
+        // gives the historic 40px strip).
+        implicitWidth: shown ? Config.osd.sizes.sliderWidth + 10 : 0
         implicitHeight: col.implicitHeight
         clip: true
 
@@ -179,7 +181,7 @@ Item {
                 id: meterSlot
 
                 anchors.horizontalCenter: parent.horizontalCenter
-                width: 12
+                width: Math.max(4, Config.osd.sizes.sliderWidth - 18)
                 height: Config.osd.sizes.sliderHeight - 50
             }
 

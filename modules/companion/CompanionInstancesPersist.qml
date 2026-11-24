@@ -1,23 +1,53 @@
+pragma ComponentBehavior: Bound
+
 import qs.utils
 import Quickshell.Io
 import QtQuick
 
-// Restart durability for generic companion instances. CompanionInstances
-// stays process-free; this item mirrors CompanionPersist's guarded
-// cat + atomic replace and never touches the legacy Javi snapshot.
-Item {
+// Restart durability for generic companion instances, mirroring
+// CompanionPersist: FileView primes once, a debounced shell child
+// persists through a temp file + atomic rename, and unchanged
+// content never spawns a child. The legacy Javi snapshot beside it
+// (companion/state.json) is never read or written here.
+Scope {
     id: root
 
     readonly property string filePath: Paths.state + "/companion/instances.json"
     property bool primed: false
+    property string lastWritten: ""
+    property string flightText: ""
+
+    function writeNow(): void {
+        const text = CompanionInstances.serialize();
+        if (text === root.lastWritten) {
+            if (!writer.running)
+                CompanionInstances.clearDirty();
+            return;
+        }
+        if (writer.running)
+            return;
+        root.flightText = text;
+        const quoted = text.replace(/'/g, "'\\''");
+        const path = root.filePath;
+        writer.command = ["sh", "-c", `mkdir -p "$(dirname '${path}')" && tmp="$(mktemp "$(dirname '${path}')/.instances.XXXXXX")" && printf '%s' '${quoted}' > "$tmp" && mv -f "$tmp" '${path}'`];
+        writer.running = true;
+    }
+
+    function prime(text: string): void {
+        if (root.primed)
+            return;
+        root.primed = true;
+        CompanionInstances.prime(text);
+        root.lastWritten = CompanionInstances.serialize();
+        if (text)
+            CompanionInstances.clearDirty();
+    }
 
     FileView {
-        id: file
-
         path: root.filePath
         printErrors: false
-        onLoaded: CompanionInstances.prime(file.text())
-        onLoadFailed: CompanionInstances.prime("")
+        onLoaded: root.prime(text())
+        onLoadFailed: root.prime("")
     }
 
     Connections {
@@ -25,35 +55,30 @@ Item {
 
         function onDirtyChanged(): void {
             if (CompanionInstances.dirty)
-                writeTimer.restart();
+                saveTimer.restart();
         }
     }
 
     Timer {
-        id: writeTimer
+        id: saveTimer
 
-        interval: 300
-        onTriggered: {
-            if (!CompanionInstances.dirty)
-                return;
-            writer.stdin = CompanionInstances.serialize();
-            writer.running = true;
-        }
+        interval: 600
+        repeat: false
+        onTriggered: root.writeNow()
     }
 
     Process {
         id: writer
 
-        running: false
-        command: ["/bin/sh", "-c", 'd="$1"; f="$2"; mkdir -p "$d"; tmp="$f.tmp"; cat > "$tmp" && mv "$tmp" "$f"', "hornero-companion-instances", Paths.state + "/companion", root.filePath]
-        onExited: code => {
-            if (code === 0) {
-                CompanionInstances.dirty = false;
-                if (CompanionInstances.savePending) {
-                    CompanionInstances.savePending = false;
-                    CompanionInstances.markDirty();
-                }
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode !== 0 || exitStatus !== 0) {
+                console.warn(`[companions] instances snapshot write failed (exit ${exitCode})`);
+            } else {
+                root.lastWritten = root.flightText;
+                CompanionInstances.clearDirty();
             }
+            if (CompanionInstances.dirty)
+                saveTimer.restart();
         }
     }
 }

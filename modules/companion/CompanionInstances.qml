@@ -52,11 +52,12 @@ Singleton {
     }
 
     function markDirty(): void {
-        if (root.dirty) {
-            root.savePending = true;
-            return;
-        }
         root.dirty = true;
+    }
+
+    function clearDirty(): void {
+        root.dirty = false;
+        root.savePending = false;
     }
 
     function instanceById(id: string): var {

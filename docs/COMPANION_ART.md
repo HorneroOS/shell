@@ -125,3 +125,18 @@ propagated across the 25 animations.
   animation catalogue: `think` and `sleep` still need matching
   high-resolution masters and maintainer approval before any skin is
   rebuilt from it.
+
+### Production rebuild (2026-11-24)
+
+The five-pose candidate direction was extended to a full
+single-pose set (greet, preen, takeoff, fly, walk, hop, stretch,
+listen, perch, worry, talk, celebrate, peek, think without any
+baked prop, land, sleep) and fed into
+`scripts/derive-companion-assets.py` as replacement source
+keyframes plus new default `orig` frames. The deterministic
+pipeline regenerated every skin's frames, palette recolors and
+contact previews, so identity propagates coherently instead of
+mixing birds per animation. Sheet-sliced poses were rejected
+during review (fragmented crops); only individually generated,
+full-body poses were accepted. The `frames-hi` set is regenerated
+by the same pipeline entry.

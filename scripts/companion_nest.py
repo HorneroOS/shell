@@ -11,6 +11,8 @@ Stages: none, twigs, cup, dome, home. Drawn at 2x and downscaled.
 """
 from __future__ import annotations
 
+from pathlib import Path
+
 import math
 
 from PIL import Image, ImageDraw
@@ -42,14 +44,14 @@ SOCKET = (30, 20, 16, 255)
 # Light sockets (canvas px): id -> (x, y, radius, role). Roles are the
 # real states the runtime binds them to; the art never lights them.
 LIGHTS = {
-    "link": (96, 438, 6, "assistant-link"),
-    "run": (118, 438, 6, "assistant-run"),
-    "approval": (440, 436, 6, "approval"),
-    "radio": (462, 436, 6, "radio"),
-    "mode": (300, 392, 5, "mode"),
+    "link": (255, 385, 6, "assistant-link"),
+    "run": (280, 385, 6, "assistant-run"),
+    "approval": (415, 395, 6, "approval"),
+    "radio": (440, 395, 6, "radio"),
+    "mode": (321, 285, 5, "mode"),
 }
 # CRT screen rectangle (canvas px) for the runtime phosphor overlay.
-SCREEN_RECT = (58, 372, 138, 424)
+SCREEN_RECT = (294, 261, 349, 317)
 
 
 def _s(v):
@@ -199,6 +201,12 @@ def nest_image(stage: int) -> Image.Image:
         _dome(p)
         _pcb(p, 120, 440)
     else:
+        # Definitive home: the illustrated clay-workshop master
+        # (sources/nest-home-workshop.png, reviewed 2026-11-24).
+        # The procedural dome stays as fallback if it is missing.
+        master = Path(__file__).resolve().parent.parent / "assets/companion/sources/nest-home-workshop.png"
+        if master.is_file():
+            return Image.open(master).convert("RGBA")
         _twigs(p, 2)
         _dome(p)
         _antenna_dome(p)

@@ -112,9 +112,9 @@ def test_registration_after_builtins_and_prefix_derivation():
     assert "Providers.registerProvider({" in HOST
     assert '"id": slot.pluginId' in HOST and '"prefix": slot.prefix' in HOST
     assert "Providers.launcherPrefixFor(modelData.id)" in HOST
-    # Registry still rejects duplicate id/prefix: first (built-in)
-    # registration wins; host logs the rejection.
-    assert "p.id === spec.id" in PROVIDERS and "p.prefix === spec.prefix" in PROVIDERS
+    # Registry still rejects duplicate id/route tokens: first
+    # (built-in) registration wins; host logs the rejection.
+    assert "p.id === spec.id" in PROVIDERS and "routeTokens(p).includes(token)" in PROVIDERS
     assert "launcher-registration-rejected" in HOST
 
 

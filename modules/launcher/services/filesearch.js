@@ -13,6 +13,8 @@ var MAX_DEPTH = 4;
 var HOME_MAX_DEPTH = 1;
 var MIN_QUERY_LENGTH = 2;
 var DEBOUNCE_MS = 250;
+var SEARCH_TIMEOUT_MS = 5000;
+var MAX_RAW_OUTPUT_CHARS = 262144;
 
 // Directory/file names that must never be searched or shown,
 // even inside an allowed root. Hidden dot-components are

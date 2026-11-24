@@ -42,7 +42,7 @@ activates the current row and the Escape cascade
 | Apps | *(default)* | Existing app search and frecency ordering. |
 | Calculator | `>calc <expr>` | Safe arithmetic with the shell's own parser (below). Enter/click copies the result and closes the launcher, the historic convention for this row. |
 | Windows | `>win <query>` | Lists open windows (title, app class, workspace) from `Hypr.toplevels` — the same toplevel source the bar uses — filtered case-insensitively on title/class in compositor order. Activation focuses through the shell's existing path, `Hypr.dispatch("focuswindow address:0x…")`; no new IPC. Hyprland-only today; Niri rows arrive with its window read model. |
-| Files | `>file <query>` | Bounded, on-demand file search (below). Section `Files`; rows show the file name and its parent path, for files and directories alike. Activation opens the path with `xdg-open`, the shell's existing open-path convention. |
+| Files | `>file <query>` or `>files <query>` | Bounded, on-demand file search (below). Both spellings (and the bare route, which shows the minimum-query hint) enter the same state. Section `Files`; rows show the file name and its parent path, for files and directories alike. Activation opens the path with `xdg-open`, the shell's existing open-path convention. |
 | Inline AI | `>ai <question>` | Streamed Ask-mode answer inline in the launcher (below), via `horneroctl assistant ask --json --stream`; errors fall back to summoning the Javi chat. |
 
 ## Inline AI (`>ai <question>`)
@@ -131,7 +131,12 @@ logic in `filesearch.js`) is deliberately bounded:
   cancels the running search, and results from a superseded
   query never publish.
 - **Degradation.** A missing, unreadable or empty root simply
-  contributes no rows. The provider never raises an error into
+  contributes no rows. Results from each root group publish as
+  soon as that group finishes, and a 5-second cap stops
+  stragglers and publishes whatever partial results arrived.
+  Re-entering the Files route re-runs the current query, so
+  files created while the launcher was closed are found without
+  a watcher daemon. The provider never raises an error into
   the launcher, and queries shorter than 2 characters search
   nothing.
 

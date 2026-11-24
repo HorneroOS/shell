@@ -145,7 +145,7 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
 
             StyledText {
-                text: root.state === "wallpapers" ? qsTr("No wallpapers found") : (root.showThemesList ? qsTr("No themes found") : Microcopy.line("launcher.empty"))
+                text: root.state === "wallpapers" ? qsTr("No wallpapers found") : (root.showThemesList ? qsTr("No themes found") : ((root.currentList?.fileStatus ?? "") !== "" ? root.currentList.fileStatus : Microcopy.line("launcher.empty")))
                 color: Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.larger
                 font.weight: Appearance.font.weight.medium

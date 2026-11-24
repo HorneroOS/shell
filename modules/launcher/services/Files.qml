@@ -26,6 +26,8 @@ Singleton {
     property string requestedQuery: ""
     property string activeQuery: ""
     property int pendingRuns: 0
+    property bool userDirsDone: false
+    property bool homeDone: false
 
     readonly property int maxResults: FileSearch.MAX_RESULTS
     readonly property int maxDepth: FileSearch.MAX_DEPTH
@@ -50,32 +52,56 @@ Singleton {
         if (q === root.requestedQuery)
             return;
         root.requestedQuery = q;
-        root.cancel();
+        root.invalidate();
         if (q.length < FileSearch.MIN_QUERY_LENGTH) {
+            root.activeQuery = "";
             root.results = [];
-            root.status = q.length === 0 ? "" : qsTr("Type at least 2 characters");
+            root.status = qsTr("Type at least 2 characters");
             return;
         }
         root.status = qsTr("Searching…");
         debounce.restart();
     }
 
-    function cancel(): void {
+    // Re-run the currently requested query when the file route is
+    // entered again. This makes files created while the launcher was
+    // closed discoverable without adding a filesystem watcher daemon.
+    function refresh(): void {
+        if (root.requestedQuery.length < FileSearch.MIN_QUERY_LENGTH)
+            return;
+        root.invalidate();
+        root.status = qsTr("Searching…");
+        debounce.restart();
+    }
+
+    // Internal invalidation: bumps the generation and stops work
+    // without forgetting which query the route is currently serving.
+    function invalidate(): void {
         root.generation++;
         debounce.stop();
+        searchTimeout.stop();
         userDirsProc.running = false;
         homeProc.running = false;
         root.pendingRuns = 0;
+        root.userDirsDone = false;
+        root.homeDone = false;
         root.busy = false;
+    }
+
+    // Public cancellation also forgets the query, so entering the
+    // same text after leaving/closing always performs a fresh search.
+    function cancel(): void {
+        root.invalidate();
+        root.requestedQuery = "";
+        root.activeQuery = "";
     }
 
     function startSearch(): void {
         const q = root.requestedQuery;
         if (q.length < FileSearch.MIN_QUERY_LENGTH)
             return;
-        root.cancel();
+        root.invalidate();
         root.activeQuery = q;
-        root.results = [];
         root.status = qsTr("Searching…");
         root.busy = true;
         const allRoots = root.roots();
@@ -90,20 +116,68 @@ Singleton {
         homeProc.out = "";
         homeProc.command = FileSearch.buildFindArgs(homeRoots, q, FileSearch.HOME_MAX_DEPTH);
         homeProc.running = true;
+        searchTimeout.restart();
     }
 
-    function finishRun(gen: int): void {
+    function publishResults(complete: bool): void {
+        let entries = [];
+        if (root.userDirsDone)
+            entries = [...entries, ...FileSearch.parseFindOutput(userDirsProc.out)];
+        if (root.homeDone)
+            entries = [...entries, ...FileSearch.parseFindOutput(homeProc.out)];
+        root.results = FileSearch.rankResults(entries, root.activeQuery, root.roots());
+        if (complete) {
+            userDirsProc.out = "";
+            homeProc.out = "";
+            root.status = root.results.length === 0 ? qsTr("No files found") : "";
+        } else {
+            root.status = qsTr("Searching…");
+        }
+    }
+
+    function finishRun(gen: int, userDirs: bool): void {
         if (gen !== root.generation)
             return;
-        root.pendingRuns--;
-        if (root.pendingRuns > 0)
+        if (userDirs) {
+            if (root.userDirsDone)
+                return;
+            root.userDirsDone = true;
+        } else {
+            if (root.homeDone)
+                return;
+            root.homeDone = true;
+        }
+        root.pendingRuns = (root.userDirsDone ? 0 : 1) + (root.homeDone ? 0 : 1);
+        const complete = root.userDirsDone && root.homeDone;
+        if (complete) {
+            searchTimeout.stop();
+            root.busy = false;
+        }
+        root.publishResults(complete);
+    }
+
+    function timeoutSearch(): void {
+        if (!root.busy)
             return;
+        userDirsProc.running = false;
+        homeProc.running = false;
+        root.userDirsDone = true;
+        root.homeDone = true;
+        root.pendingRuns = 0;
         root.busy = false;
-        const entries = [...FileSearch.parseFindOutput(userDirsProc.out), ...FileSearch.parseFindOutput(homeProc.out)];
-        userDirsProc.out = "";
-        homeProc.out = "";
-        root.results = FileSearch.rankResults(entries, root.activeQuery, root.roots());
-        root.status = root.results.length === 0 ? qsTr("No files found") : "";
+        root.publishResults(true);
+        root.status = root.results.length === 0 ? qsTr("Search timed out") : qsTr("Search timed out — partial results");
+    }
+
+    function appendOutput(proc: var, data: string): void {
+        const room = FileSearch.MAX_RAW_OUTPUT_CHARS - proc.out.length;
+        if (room <= 0) {
+            proc.running = false;
+            return;
+        }
+        proc.out += data.substring(0, room) + "\n";
+        if (data.length >= room)
+            proc.running = false;
     }
 
     function activate(result: var): void {
@@ -120,6 +194,13 @@ Singleton {
         onTriggered: root.startSearch()
     }
 
+    Timer {
+        id: searchTimeout
+
+        interval: FileSearch.SEARCH_TIMEOUT_MS
+        onTriggered: root.timeoutSearch()
+    }
+
     Process {
         id: userDirsProc
 
@@ -127,11 +208,9 @@ Singleton {
         property string out: ""
 
         stdout: SplitParser {
-            onRead: data => {
-                userDirsProc.out += data + "\n";
-            }
+            onRead: data => root.appendOutput(userDirsProc, data)
         }
-        onExited: (exitCode, exitStatus) => root.finishRun(userDirsProc.gen)
+        onExited: (exitCode, exitStatus) => root.finishRun(userDirsProc.gen, true)
     }
 
     Process {
@@ -141,10 +220,8 @@ Singleton {
         property string out: ""
 
         stdout: SplitParser {
-            onRead: data => {
-                homeProc.out += data + "\n";
-            }
+            onRead: data => root.appendOutput(homeProc, data)
         }
-        onExited: (exitCode, exitStatus) => root.finishRun(homeProc.gen)
+        onExited: (exitCode, exitStatus) => root.finishRun(homeProc.gen, false)
     }
 }

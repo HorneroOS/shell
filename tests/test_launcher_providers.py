@@ -45,8 +45,21 @@ def test_registry_declares_provider_contract():
 
 def test_registry_rejects_duplicates_and_malformed():
     assert "p.id === spec.id" in PROVIDERS, "duplicate id not rejected"
-    assert "p.prefix === spec.prefix" in PROVIDERS, "duplicate prefix not rejected"
+    assert "routeTokens(p).includes(token)" in PROVIDERS, "duplicate route token not rejected"
     assert "typeof spec.query !== \"function\"" in PROVIDERS
+
+
+def test_registry_supports_alias_routes_and_bare_prefixes():
+    assert "function normalizedAliases(spec" in PROVIDERS
+    assert "function routeTokens(provider" in PROVIDERS
+    assert "function routeFor(text" in PROVIDERS
+    # A token matches before a space and at end-of-string, so the bare
+    # route enters its state before the separator is typed.
+    assert "text === route || text.startsWith(`${route} `)" in PROVIDERS
+    # Query stripping uses the matched token, not the canonical prefix.
+    assert "route.token.length" in PROVIDERS
+    # Files answers to both singular and plural spellings.
+    assert '\"aliases\": ["files"]' in PROVIDERS
 
 
 def test_registry_registers_built_ins_with_apps_default():

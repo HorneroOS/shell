@@ -40,9 +40,30 @@ Singleton {
     // built-in route even if its Loader finishes first.
     property bool builtinsRegistered: false
 
+    // Normalizes a provider's optional alias prefixes. Aliases
+    // route to the same provider as prefix (for example Files
+    // answers to both "file" and "files"); they never create a
+    // second provider or widen what its query can do.
+    function normalizedAliases(spec: var): var {
+        if (!Array.isArray(spec.aliases))
+            return null;
+        const aliases = [];
+        for (const alias of spec.aliases) {
+            if (typeof alias !== "string" || alias.length === 0 || alias === spec.prefix)
+                return null;
+            if (!aliases.includes(alias))
+                aliases.push(alias);
+        }
+        return aliases;
+    }
+
+    function routeTokens(provider: var): var {
+        return [provider.prefix, ...(provider.aliases ?? [])];
+    }
+
     // Registers a provider spec. Returns false (and keeps the
     // existing registry) for a malformed spec, a duplicate id
-    // or a duplicate prefix: first registration wins so a later
+    // or a duplicate prefix/alias: first registration wins so a later
     // provider can never shadow a built-in route.
     function registerProvider(spec: var): bool {
         if (!spec || typeof spec.id !== "string" || spec.id.length === 0)
@@ -51,13 +72,22 @@ Singleton {
             return false;
         if (typeof spec.query !== "function")
             return false;
+        const aliases = spec.aliases === undefined ? [] : normalizedAliases(spec);
+        if (aliases === null)
+            return false;
+        const tokens = [spec.prefix, ...aliases].filter(token => token.length > 0);
         for (const p of providers) {
-            if (p.id === spec.id || (spec.prefix.length > 0 && p.prefix === spec.prefix))
+            if (p.id === spec.id)
                 return false;
+            for (const token of tokens) {
+                if (routeTokens(p).includes(token))
+                    return false;
+            }
         }
         providers = [...providers, {
                 "id": spec.id,
                 "prefix": spec.prefix,
+                "aliases": aliases,
                 "icon": typeof spec.icon === "string" ? spec.icon : "search",
                 "section": typeof spec.section === "string" ? spec.section : spec.id,
                 "bare": spec.bare === true,
@@ -110,21 +140,37 @@ Singleton {
         return null;
     }
 
-    // The provider an explicit-prefix query routes to, or null
-    // when no prefix matches (the caller then falls back to the
-    // default apps provider). Longest prefix wins.
-    function providerFor(text: string): var {
+    // The provider and exact route token an explicit-prefix query
+    // uses, or null when no token matches (the caller then falls back
+    // to the default apps provider). A token matches at end-of-string
+    // as well as before a space, so `>file` enters the Files state
+    // before the user types the separator. Longest token wins.
+    function routeFor(text: string): var {
         const actionPrefix = Config.launcher.actionPrefix;
         if (!text.startsWith(actionPrefix))
             return null;
         let best = null;
+        let bestToken = "";
         for (const p of providers) {
-            if (p.prefix.length === 0)
-                continue;
-            if (text.startsWith(`${actionPrefix}${p.prefix} `) && (!best || p.prefix.length > best.prefix.length))
-                best = p;
+            for (const token of routeTokens(p)) {
+                if (token.length === 0)
+                    continue;
+                const route = `${actionPrefix}${token}`;
+                if ((text === route || text.startsWith(`${route} `)) && token.length > bestToken.length) {
+                    best = p;
+                    bestToken = token;
+                }
+            }
         }
-        return best;
+        return best ? {
+            "provider": best,
+            "token": bestToken
+        } : null;
+    }
+
+    function providerFor(text: string): var {
+        const route = routeFor(text);
+        return route ? route.provider : null;
     }
 
     // AppList state name for a query: the routed provider id,
@@ -134,12 +180,14 @@ Singleton {
         return p ? p.id : "";
     }
 
-    // The query text with `<actionPrefix><prefix> ` stripped.
+    // The query text with the matched route (canonical prefix or
+    // alias) stripped. A bare route has no query text yet.
     function queryText(text: string): string {
-        const p = providerFor(text);
-        if (!p)
+        const route = routeFor(text);
+        if (!route)
             return text;
-        return text.slice(Config.launcher.actionPrefix.length + p.prefix.length + 1);
+        const routeLength = Config.launcher.actionPrefix.length + route.token.length;
+        return text.length > routeLength ? text.slice(routeLength + 1) : "";
     }
 
     function query(text: string): list<var> {
@@ -218,6 +266,7 @@ Singleton {
         registerProvider({
             "id": "file",
             "prefix": "file",
+            "aliases": ["files"],
             "icon": "folder-open",
             "section": "Files",
             // Async provider: requestSearch is debounced and

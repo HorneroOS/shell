@@ -76,7 +76,10 @@ def test_activation_opens_via_existing_xdg_open_convention():
 
 def test_enter_on_file_row_activates_item_not_modeldata():
     content = (ROOT / "modules" / "launcher" / "Content.qml").read_text()
-    assert "actionPrefix}file `" in content
+    # Enter routes through the registry, so the "files" alias activates
+    # exactly like the canonical "file" prefix.
+    assert "Providers.stateFor(text)" in content
+    assert 'routedState === "file"' in content
     assert "currentItem.onClicked();" in content
 
 
@@ -292,6 +295,36 @@ def test_min_query_searches_nothing():
     assert "MIN_QUERY_LENGTH" in FILES
     assert 'qsTr("Type at least 2 characters")' in FILES
     assert 'qsTr("No files found")' in FILES and 'qsTr("Searching\\u2026")' in FILES or 'qsTr("Searching…")' in FILES
+
+
+def test_search_refresh_partial_publish_and_timeout_contract():
+    # Public cancel forgets the query (same text can search again after
+    # leaving/closing); internal invalidation must not, or the pending
+    # debounce would lose its query.
+    assert "function invalidate()" in FILES
+    assert "function cancel()" in FILES
+    assert 'root.requestedQuery = ""' in FILES
+    assert "function refresh()" in FILES
+    assert "Files.refresh()" in APPLIST
+    # Each find process settles independently and publishes its group;
+    # one slow root must not gate the other group's rows.
+    assert "userDirsDone" in FILES and "homeDone" in FILES
+    assert "function publishResults(complete" in FILES
+    assert "root.publishResults(complete)" in FILES
+    assert "function finishRun(gen: int, userDirs: bool)" in FILES
+    # A bounded timeout publishes partial results instead of hanging.
+    assert "SEARCH_TIMEOUT_MS" in FILES
+    assert "function timeoutSearch()" in FILES
+    assert 'qsTr("Search timed out")' in FILES
+    # Raw find output is capped before ranking, and a new search keeps
+    # the previous rows visible while it runs.
+    assert "MAX_RAW_OUTPUT_CHARS" in FILES
+    start = FILES.split("function startSearch()", 1)[1].split("function publishResults", 1)[0]
+    assert "root.results = []" not in start, "startSearch must not blank previous results"
+    # Search status is reachable by the header/empty-state surfaces.
+    assert "readonly property string fileStatus" in APPLIST
+    assert "fileStatus" in (ROOT / "modules" / "launcher" / "Content.qml").read_text()
+    assert "fileStatus" in (ROOT / "modules" / "launcher" / "ContentList.qml").read_text()
 
 
 def test_other_providers_unchanged():

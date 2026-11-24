@@ -62,7 +62,7 @@ Item {
         Instruments.Eyebrow {
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
-            label: (list.currentList?.count ?? 0) === 1 ? qsTr("1 match") : qsTr("%1 matches").arg(list.currentList?.count ?? 0)
+            label: (list.currentList?.fileStatus ?? "") !== "" ? list.currentList.fileStatus : ((list.currentList?.count ?? 0) === 1 ? qsTr("1 match") : qsTr("%1 matches").arg(list.currentList?.count ?? 0))
         }
     }
 
@@ -153,11 +153,10 @@ Item {
                         Wallpapers.setWallpaper(currentItem.modelData.path);
                         root.visibilities.launcher = false;
                     } else if (text.startsWith(Config.launcher.actionPrefix)) {
-                        if (text.startsWith(`${Config.launcher.actionPrefix}calc `))
+                        const routedState = Providers.stateFor(text);
+                        if (routedState === "calc" || routedState === "file")
                             currentItem.onClicked();
-                        else if (text.startsWith(`${Config.launcher.actionPrefix}file `))
-                            currentItem.onClicked();
-                        else if (text.startsWith(`${Config.launcher.actionPrefix}ai `)) {
+                        else if (routedState === "ai") {
                             // Inline ask (shell#250 slice 3): activate
                             // the AiItem, which streams the answer in
                             // the launcher. The launcher stays open so

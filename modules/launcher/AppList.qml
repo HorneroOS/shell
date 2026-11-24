@@ -18,6 +18,9 @@ StyledListView {
     required property StyledTextField search
     required property PersistentProperties visibilities
 
+    readonly property string fileStatus: state === "file" ? Files.status : ""
+    readonly property bool fileBusy: state === "file" && Files.busy
+
     model: ScriptModel {
         id: model
 
@@ -79,7 +82,9 @@ StyledListView {
     }
 
     onStateChanged: {
-        if (state !== "file")
+        if (state === "file")
+            Files.refresh();
+        else
             Files.cancel();
         // Leaving the ai route (new query, prefix change) cancels
         // any in-flight inline ask; the singleton keeps only the

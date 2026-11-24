@@ -21,6 +21,7 @@ Singleton {
     property bool loaded: false
 
     signal reactionRequested(string instanceId, string animation, string bubble)
+    signal greetRequested(string instanceId)
 
     readonly property var instances: document.instances || []
     readonly property var genericInstances: root.instances.filter(i => !i.legacy)
@@ -104,7 +105,7 @@ Singleton {
         const item = next.instances.find(i => i.id === id);
         if (!item || item.legacy)
             return;
-        for (const key of ["enabled", "skin", "posX", "posY", "screenName", "scale", "habitatEnabled", "accessories", "personalityId", "reactions", "assistantBinding"]) {
+        for (const key of ["enabled", "skin", "posX", "posY", "screenName", "scale", "habitatEnabled", "habitatPosX", "habitatPosY", "accessories", "personalityId", "reactions", "assistantBinding"]) {
             if (patch[key] !== undefined)
                 item[key] = patch[key];
         }
@@ -156,9 +157,18 @@ Singleton {
         root.markDirty();
     }
 
+// Ambient companion-to-companion beat (host-scheduled, opt-in via
+    // idle animations in the host; never a model call).
+    function requestGreet(id: string): void {
+        const item = root.instanceById(id);
+        if (item && !item.legacy && item.enabled)
+            root.greetRequested(id);
+    }
+
     function requestReaction(instanceId: string, animation: string, bubble: string): void {
         const item = root.instanceById(instanceId);
         if (item && !item.legacy && item.enabled)
             root.reactionRequested(instanceId, animation, bubble || "");
     }
 }
+

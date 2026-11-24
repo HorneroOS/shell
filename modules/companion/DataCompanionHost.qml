@@ -14,6 +14,39 @@ Scope {
 
     CompanionInstancesPersist {}
 
+    // Restrained companion-to-companion beats: when two enabled
+    // generic instances share a screen and sit near each other, they
+    // greet once in a while. Deterministic local scheduling only —
+    // no model calls, no chatter between companions.
+    property var _lastGreet: ({})
+
+    Timer {
+        interval: 20000
+        repeat: true
+        running: CompanionStore.enabled && CompanionStore.idleAnimEnabled && !CompanionStore.suppressed
+        onTriggered: {
+            const actives = CompanionInstances.genericInstances.filter(i => i.enabled);
+            for (let a = 0; a < actives.length; a++) {
+                for (let b = a + 1; b < actives.length; b++) {
+                    const one = actives[a], two = actives[b];
+                    if ((one.screenName || "") !== (two.screenName || ""))
+                        continue;
+                    if (Math.abs(one.posX - two.posX) > 0.18 || Math.abs(one.posY - two.posY) > 0.12)
+                        continue;
+                    const key = [one.id, two.id].sort().join("+");
+                    if (Date.now() - (root._lastGreet[key] || 0) < 600000)
+                        return;
+                    const next = Object.assign({}, root._lastGreet);
+                    next[key] = Date.now();
+                    root._lastGreet = next;
+                    CompanionInstances.requestGreet(one.id);
+                    CompanionInstances.requestGreet(two.id);
+                    return;
+                }
+            }
+        }
+    }
+
     Variants {
         model: CompanionInstances.genericIds
 
@@ -43,8 +76,8 @@ Scope {
                 readonly property int spriteW: spriteSize
                 readonly property int spriteH: Math.max(32, Math.round(spriteSize * canvasRatio))
                 readonly property int habitatW: slot.habitat ? Math.round(spriteSize * 1.7 * slot.habitat.defaultScale) : 0
-                readonly property int contentW: Math.max(spriteW, habitatW, bubble.visible ? bubble.implicitWidth : 0)
-                readonly property int contentH: Math.max(spriteH, habitatImage.implicitHeight || 0) + (bubble.visible ? bubble.implicitHeight + 8 : 0)
+                readonly property int contentW: Math.max(spriteW, bubble.visible ? bubble.implicitWidth : 0)
+                readonly property int contentH: spriteH + (bubble.visible ? bubble.implicitHeight + 8 : 0)
                 property int px: 0
                 property int py: 0
                 property bool positioned: false
@@ -117,6 +150,15 @@ Scope {
                 }
 
                 Connections {
+                    target: CompanionInstances
+
+                    function onGreetRequested(instanceId: string): void {
+                        if (instanceId === slot.modelData)
+                            win.play("greet", "");
+                    }
+                }
+
+                Connections {
                     target: slot.instance ? CompanionStore : null
 
                     function onScreenNameChanged(): void {
@@ -153,22 +195,6 @@ Scope {
                     id: stage
 
                     anchors.fill: parent
-
-                    Image {
-                        id: habitatImage
-
-                        visible: !!slot.habitat && slot.instance && slot.instance.habitatEnabled
-                        anchors.bottom: parent.bottom
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        width: win.habitatW
-                        height: implicitWidth > 0 ? width * implicitHeight / implicitWidth : 0
-                        asynchronous: true
-                        cache: true
-                        fillMode: Image.PreserveAspectFit
-                        smooth: true
-                        source: visible ? "file://" + slot.character.basePath + "/" + slot.habitat.image : ""
-                        Accessible.ignored: true
-                    }
 
                     CompanionFramePlayer {
                         id: sprite
@@ -230,6 +256,93 @@ Scope {
                             win.commitPosition();
                             if (!moved)
                                 win.play("greet", "");
+                        }
+                    }
+                }
+            }
+
+            // Independent habitat surface: its own bounded window, its
+            // own persisted position, dragged separately from the
+            // character. Click-through (mask: the habitat image only
+            // through its MouseArea-sized window) and purely ambient.
+            PanelWindow {
+                id: habitatWin
+
+                readonly property int habitatW: slot.habitat ? Math.round(128 * (slot.instance ? slot.instance.scale : 1) * 1.7 * slot.habitat.defaultScale) : 0
+                property int px: 0
+                property int py: 0
+                property bool dragging: false
+                property real dragStartGlobalX: 0
+                property real dragStartGlobalY: 0
+                property int dragStartPx: 0
+                property int dragStartPy: 0
+
+                screen: slot.targetScreen
+                visible: win.visible && !!slot.habitat && slot.instance && slot.instance.habitatEnabled
+                color: "transparent"
+                exclusionMode: ExclusionMode.Ignore
+                WlrLayershell.namespace: "hornero-companion-habitat"
+                WlrLayershell.layer: WlrLayer.Bottom
+                WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+                anchors.left: true
+                anchors.top: true
+                margins.left: px
+                margins.top: py
+                implicitWidth: Math.max(1, habitatW)
+                implicitHeight: Math.max(1, habitatImg.implicitWidth > 0 ? Math.round(habitatW * habitatImg.implicitHeight / habitatImg.implicitWidth) : habitatW)
+                mask: habitatImg
+
+                function placeFromInstance(): void {
+                    if (!slot.instance || !slot.targetScreen)
+                        return;
+                    px = Math.max(0, Math.min(slot.targetScreen.width - implicitWidth,
+                        Math.round(slot.instance.habitatPosX * slot.targetScreen.width - implicitWidth / 2)));
+                    py = Math.max(0, Math.min(slot.targetScreen.height - implicitHeight,
+                        Math.round(slot.instance.habitatPosY * slot.targetScreen.height - implicitHeight)));
+                }
+
+                Component.onCompleted: placeFromInstance()
+                onImplicitWidthChanged: if (!dragging)
+                    placeFromInstance()
+                onImplicitHeightChanged: if (!dragging)
+                    placeFromInstance()
+
+                Image {
+                    id: habitatImg
+
+                    anchors.fill: parent
+                    asynchronous: true
+                    cache: true
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                    source: slot.habitat ? "file://" + slot.character.basePath + "/" + slot.habitat.image : ""
+                    Accessible.ignored: true
+
+                    MouseArea {
+                        anchors.fill: parent
+                        acceptedButtons: Qt.LeftButton
+                        cursorShape: habitatWin.dragging ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+                        onPressed: mouse => {
+                            const global = habitatImg.mapToGlobal(mouse.x, mouse.y);
+                            habitatWin.dragStartGlobalX = global.x;
+                            habitatWin.dragStartGlobalY = global.y;
+                            habitatWin.dragStartPx = habitatWin.px;
+                            habitatWin.dragStartPy = habitatWin.py;
+                            habitatWin.dragging = true;
+                        }
+                        onPositionChanged: mouse => {
+                            if (!habitatWin.dragging)
+                                return;
+                            const global = habitatImg.mapToGlobal(mouse.x, mouse.y);
+                            habitatWin.px = Math.max(0, Math.min(slot.targetScreen.width - habitatWin.implicitWidth, habitatWin.dragStartPx + global.x - habitatWin.dragStartGlobalX));
+                            habitatWin.py = Math.max(0, Math.min(slot.targetScreen.height - habitatWin.implicitHeight, habitatWin.dragStartPy + global.y - habitatWin.dragStartGlobalY));
+                        }
+                        onReleased: {
+                            habitatWin.dragging = false;
+                            CompanionInstances.updateInstance(slot.instance.id, {
+                                habitatPosX: Math.max(0, Math.min(1, (habitatWin.px + habitatWin.implicitWidth / 2) / Math.max(1, slot.targetScreen.width))),
+                                habitatPosY: Math.max(0, Math.min(1, (habitatWin.py + habitatWin.implicitHeight) / Math.max(1, slot.targetScreen.height)))
+                            });
                         }
                     }
                 }

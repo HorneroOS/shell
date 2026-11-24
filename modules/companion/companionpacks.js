@@ -332,6 +332,8 @@ function sanitizeInstance(raw, charactersByKey) {
         screenName: typeof raw.screenName === "string" ? raw.screenName.slice(0, 80) : "",
         scale: finite(raw.scale, 1, 0.5, 2),
         habitatEnabled: raw.habitatEnabled !== false,
+        habitatPosX: finite(raw.habitatPosX, 0.82, 0, 1),
+        habitatPosY: finite(raw.habitatPosY, 0.9, 0, 1),
         accessories: Array.isArray(raw.accessories) ? raw.accessories.filter(a => typeof a === "string").slice(0, 8) : [],
         personalityId: typeof raw.personalityId === "string" ? raw.personalityId : "",
         reactions: raw.reactions === true,

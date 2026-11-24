@@ -121,6 +121,34 @@ Scope {
                             Plugins.markFailed(slot.modelData.id, qsTr("This extension needs PluginKit %1 and the installed one is API level %2. Update the hornero-shell package.").arg(manifest.pluginKit).arg(Plugins.kitLevel));
                             return;
                         }
+                        const dataOnly = manifest.dataOnly === true;
+                        if (manifest.dataOnly !== undefined && typeof manifest.dataOnly !== "boolean") {
+                            Plugins.markFailed(slot.modelData.id, "manifest dataOnly must be a boolean");
+                            return;
+                        }
+                        if (manifest.contributes && manifest.contributes.companions !== undefined && !dataOnly) {
+                            Plugins.markFailed(slot.modelData.id, "manifest contributes.companions is data-only and requires dataOnly: true");
+                            return;
+                        }
+                        if (dataOnly) {
+                            const contributes = manifest.contributes && typeof manifest.contributes === "object" && !Array.isArray(manifest.contributes) ? manifest.contributes : null;
+                            const capabilities = manifest.capabilities && typeof manifest.capabilities === "object" && !Array.isArray(manifest.capabilities) ? manifest.capabilities : null;
+                            if (!Number.isInteger(manifest.pluginKit) || manifest.pluginKit < 6) {
+                                Plugins.markFailed(slot.modelData.id, "manifest dataOnly requires PluginKit 6");
+                                return;
+                            }
+                            if ((manifest.placement ?? "background") !== "background" || manifest.entrypoint !== "Main.qml"
+                                    || (manifest.surfaces && Object.keys(manifest.surfaces).length > 0)
+                                    || !contributes || Object.keys(contributes).length !== 1 || !Array.isArray(contributes.companions)
+                                    || !capabilities
+                                    || (Array.isArray(capabilities.processCommands) && capabilities.processCommands.length > 0)
+                                    || (Array.isArray(capabilities.networkHosts) && capabilities.networkHosts.length > 0)
+                                    || (capabilities.settings && Object.keys(capabilities.settings).length > 0)
+                                    || capabilities.actions !== undefined || capabilities.providers !== undefined) {
+                                Plugins.markFailed(slot.modelData.id, "manifest dataOnly packages may contribute companions only, with no executable surfaces or capabilities");
+                                return;
+                            }
+                        }
                         if (typeof manifest.version !== "string" || !/^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/.test(manifest.version)) {
                             Plugins.markFailed(slot.modelData.id, "manifest version must be semantic versioning");
                             return;
@@ -436,6 +464,7 @@ Scope {
                         }
                         slot.placement = placement;
                         const settings = manifest.capabilities && manifest.capabilities.settings;
+                        Plugins.markDataOnly(slot.modelData.id, dataOnly);
                         Plugins.markPlacement(slot.modelData.id, placement, manifest.entrypoint, settings || ({}), effectiveSurfaces);
                         Plugins.markContributes(slot.modelData.id, manifest.contributes === undefined ? null : manifest.contributes);
                         Plugins.markTranslations(slot.modelData.id, manifest.translations === undefined ? null : manifest.translations);
@@ -445,7 +474,9 @@ Scope {
                         Plugins.markPluginKit(slot.modelData.id, manifest.pluginKit);
                         slot.entrypoint = manifest.entrypoint;
                         const background = effectiveSurfaces.background;
-                        slot.backgroundEntrypoint = background && background.enabled !== false ? background.entrypoint : "";
+                        slot.backgroundEntrypoint = dataOnly ? "" : background && background.enabled !== false ? background.entrypoint : "";
+                        if (dataOnly)
+                            Plugins.markLoaded(slot.modelData.id, "companions");
                     } catch (e) {
                         Plugins.markFailed(slot.modelData.id, "manifest.json is not readable JSON");
                     }

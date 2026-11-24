@@ -69,6 +69,10 @@ def test_every_first_party_example_validates_and_uses_theme():
         # example-broken / example-launcher-broken are headless QA
         # fixtures that must fail to load; no visual surface, no Theme.
         if ex.name not in ("example-broken", "example-launcher-broken"):
-            assert "Theme." in main, ex.name
+            manifest = json.loads((ex / "manifest.json").read_text())
+            # Data-only packages ship the canonical inert entrypoint;
+            # native hosts own all rendering, so no Theme use exists.
+            if manifest.get("dataOnly") is not True:
+                assert "Theme." in main, ex.name
         manifest = json.loads((ex / "manifest.json").read_text())
         assert manifest["schemaVersion"] == 3 and manifest["entrypoint"] in manifest["files"]

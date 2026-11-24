@@ -31,7 +31,8 @@ var KINDS = {
     "device.connected": { label: "Device connected", priority: 1, anim: "look", bubble: "", cooldownMs: 8000, external: true },
     "device.disconnected": { label: "Device disconnected", priority: 1, anim: "look", bubble: "", cooldownMs: 8000, external: true },
     "task.done": { label: "Task finished", priority: 1, anim: "approve", bubble: "", cooldownMs: 8000, external: true },
-    "attention": { label: "Needs your attention", priority: 2, anim: "hop", bubble: "", cooldownMs: 20000, external: true }
+    "attention": { label: "Needs your attention", priority: 2, anim: "hop", bubble: "", cooldownMs: 20000, external: true },
+    "agent.quota": { label: "Agent quota approaching a limit", priority: 2, anim: "worry", bubble: "", cooldownMs: 1800000, external: true }
 };
 
 var KIND_IDS = Object.keys(KINDS);

@@ -1,4 +1,65 @@
 {
   "schema": 1,
-  "masters": []
+  "masters": [
+    {
+      "id": "idle-2026-candidate",
+      "file": "sources/masters/javi-idle-candidate-2026-11-23.png",
+      "sha256": "198c3cd25800b1c9dc425692540f18cedcb867b15b3e2a6008112fdf84c7dd68",
+      "pose": "idle",
+      "anchor": "feet",
+      "pivot": [
+        512,
+        992
+      ],
+      "origin": "external",
+      "status": "candidate",
+      "provenance": {
+        "tool": "Muse image generation",
+        "prompt": "assets/companion/sources/prompts/javi-idle-2026-11-23.md",
+        "date": "2026-11-23",
+        "licence": "HorneroOS project use; generated for this repository change",
+        "author": "HorneroOS contributors"
+      }
+    },
+    {
+      "id": "think-2026-candidate",
+      "file": "sources/masters/javi-think-candidate-2026-11-23.png",
+      "sha256": "9080c050692144cea5ada317935ab77f4127292f8e20d269e7e7c745310af5a8",
+      "pose": "think",
+      "anchor": "feet",
+      "pivot": [
+        512,
+        1000
+      ],
+      "origin": "external",
+      "status": "candidate",
+      "provenance": {
+        "tool": "Muse image generation",
+        "prompt": "assets/companion/sources/prompts/javi-think-sleep-2026-11-23.md",
+        "date": "2026-11-23",
+        "licence": "HorneroOS project use; generated for this repository change",
+        "author": "HorneroOS contributors"
+      }
+    },
+    {
+      "id": "sleep-2026-candidate",
+      "file": "sources/masters/javi-sleep-candidate-2026-11-23.png",
+      "sha256": "210929d7ffd548059acbd8b74417a2608cf67fd1a6e16c76642b5f6728c82d99",
+      "pose": "sleep",
+      "anchor": "feet",
+      "pivot": [
+        512,
+        1000
+      ],
+      "origin": "external",
+      "status": "candidate",
+      "provenance": {
+        "tool": "Muse image generation",
+        "prompt": "assets/companion/sources/prompts/javi-think-sleep-2026-11-23.md",
+        "date": "2026-11-23",
+        "licence": "HorneroOS project use; generated for this repository change",
+        "author": "HorneroOS contributors"
+      }
+    }
+  ]
 }

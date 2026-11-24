@@ -79,7 +79,7 @@ def test_panel_input_voice_attach_clarify():
 
 def test_pane_assistant_section_and_javi_name():
     assert "Assistant (Hermes)" in PANE
-    assert "Javi · el Hornero" in PANE
+    assert "Companions" in PANE  # platform collection pane (shell#713)
     assert "chatStreaming" in PANE and "chatHistoryLimit" in PANE
     assert '"Javi"' in REGISTRY
 

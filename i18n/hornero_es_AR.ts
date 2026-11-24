@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
+<?xml version='1.0' encoding='utf-8'?>
 <TS version="2.1" language="es_AR" sourcelanguage="en">
 <context>
     <name>AccentSection</name>
@@ -8,7 +7,7 @@
         <translation>Acento</translation>
     </message>
     <message>
-        <source>Your own accent colour over any theme: everywhere, per light or dark, or per experience mode. Reset returns to the theme&apos;s accent.</source>
+        <source>Your own accent colour over any theme: everywhere, per light or dark, or per experience mode. Reset returns to the theme's accent.</source>
         <translation>Tu propio color de acento sobre cualquier tema: en todos lados, según claro u oscuro, o por modo de experiencia. Restablecer vuelve al acento del tema.</translation>
     </message>
     <message>
@@ -52,7 +51,7 @@
         <translation>Acento %1 para %2</translation>
     </message>
     <message>
-        <source>An experience mode beats a light or dark choice, which beats Everywhere. Pastel presets are optional; pick any colour you like. The accent changes the accent, its glow and the text on it; surfaces and status colours stay the theme&apos;s.</source>
+        <source>An experience mode beats a light or dark choice, which beats Everywhere. Pastel presets are optional; pick any colour you like. The accent changes the accent, its glow and the text on it; surfaces and status colours stay the theme's.</source>
         <translation>Un modo de experiencia gana sobre la elección de claro u oscuro, que gana sobre En todos lados. Los presets pastel son opcionales; elegí el color que quieras. El acento cambia el acento, su brillo y el texto encima; las superficies y los colores de estado siguen siendo los del tema.</translation>
     </message>
 </context>
@@ -123,7 +122,7 @@
         <translation>Javi tranquilo (movimiento reducido)</translation>
     </message>
     <message>
-        <source>Javi&apos;s chat also honors reduced motion: no pulse or scanline shimmer while it is on.</source>
+        <source>Javi's chat also honors reduced motion: no pulse or scanline shimmer while it is on.</source>
         <translation>El chat de Javi también respeta el movimiento reducido: sin pulso ni brillo de líneas de escaneo mientras esté activado.</translation>
     </message>
     <message>
@@ -204,7 +203,7 @@
         <translation>Asistentes de código en esta computadora y Javi</translation>
     </message>
     <message>
-        <source>Coding assistants found on this computer, plus Javi, Hornero&apos;s own assistant. Choose which one Hornero uses by default. Nothing is fetched or started from this page.</source>
+        <source>Coding assistants found on this computer, plus Javi, Hornero's own assistant. Choose which one Hornero uses by default. Nothing is fetched or started from this page.</source>
         <translation>Asistentes de código que encontramos en esta computadora, más Javi, el asistente propio de Hornero. Elegí cuál usa Hornero de forma predeterminada. Desde esta página no se descarga ni se inicia nada.</translation>
     </message>
     <message>
@@ -1175,7 +1174,7 @@
         <translation>Barra restablecida al predeterminado del layout</translation>
     </message>
     <message>
-        <source>Undo brings back this bar&apos;s thickness, gap, style and density.</source>
+        <source>Undo brings back this bar's thickness, gap, style and density.</source>
         <translation>Deshacer te devuelve el grosor, la separación, el estilo y la densidad de esta barra.</translation>
     </message>
     <message>
@@ -1478,7 +1477,7 @@
         <translation>Secciones y orden</translation>
     </message>
     <message>
-        <source>Reorder or hide what each bar shows. Changes apply to the current layout right away; choosing another layout in Layout replaces them with that layout&apos;s order.</source>
+        <source>Reorder or hide what each bar shows. Changes apply to the current layout right away; choosing another layout in Layout replaces them with that layout's order.</source>
         <translation>Reordená u ocultá lo que muestra cada barra. Los cambios se aplican al layout actual al instante; si elegís otro layout en Layout, se reemplazan por el orden de ese layout.</translation>
     </message>
     <message>
@@ -2628,7 +2627,7 @@
         <translation>Fiel</translation>
     </message>
     <message>
-        <source>The image&apos;s own dominant colour becomes the accent when it passes the contrast gates.</source>
+        <source>The image's own dominant colour becomes the accent when it passes the contrast gates.</source>
         <translation>El color dominante de la imagen pasa a ser el acento cuando supera los controles de contraste.</translation>
     </message>
     <message>
@@ -2883,6 +2882,105 @@ Huella de la clave del autor: %3</translation>
     </message>
 </context>
 <context>
+    <name>CompanionCollectionSection</name>
+    <message>
+        <source>Companions</source>
+        <translation>Compañeros</translation>
+    </message>
+    <message>
+        <source>Characters installed on this system. Add an independent companion to the desktop, or manage the ones already out.</source>
+        <translation>Personajes instalados en este sistema. Agregá un compañero independiente al escritorio o gestioná los que ya están afuera.</translation>
+    </message>
+    <message>
+        <source>Built in</source>
+        <translation>Incorporado</translation>
+    </message>
+    <message>
+        <source>Managed below</source>
+        <translation>Se gestiona abajo</translation>
+    </message>
+    <message>
+        <source>Add to desktop</source>
+        <translation>Agregar al escritorio</translation>
+    </message>
+    <message>
+        <source>Some character definitions could not be loaded: %1</source>
+        <translation>Algunas definiciones de personajes no se pudieron cargar: %1</translation>
+    </message>
+    <message>
+        <source>On the desktop</source>
+        <translation>En el escritorio</translation>
+    </message>
+    <message>
+        <source>No additional companions are out yet.</source>
+        <translation>Todavía no hay compañeros adicionales afuera.</translation>
+    </message>
+    <message>
+        <source>Unavailable character</source>
+        <translation>Personaje no disponible</translation>
+    </message>
+    <message>
+        <source>Its package is not loaded; this instance and its settings are kept.</source>
+        <translation>Su paquete no está cargado; esta instancia y sus ajustes se conservan.</translation>
+    </message>
+    <message>
+        <source>Duplicate</source>
+        <translation>Duplicar</translation>
+    </message>
+    <message>
+        <source>Remove</source>
+        <translation>Quitar</translation>
+    </message>
+    <message>
+        <source>Enabled</source>
+        <translation>Activado</translation>
+    </message>
+    <message>
+        <source>Skin</source>
+        <translation>Apariencia</translation>
+    </message>
+    <message>
+        <source>Monitor</source>
+        <translation>Monitor</translation>
+    </message>
+    <message>
+        <source>Focused monitor</source>
+        <translation>Monitor enfocado</translation>
+    </message>
+    <message>
+        <source>Size</source>
+        <translation>Tamaño</translation>
+    </message>
+    <message>
+        <source>Habitat</source>
+        <translation>Hábitat</translation>
+    </message>
+    <message>
+        <source>May react to events</source>
+        <translation>Puede reaccionar a eventos</translation>
+    </message>
+    <message>
+        <source>Reset position</source>
+        <translation>Restablecer posición</translation>
+    </message>
+    <message>
+        <source>Reaction goes to</source>
+        <translation>La reacción va a</translation>
+    </message>
+    <message>
+        <source>Javi</source>
+        <translation>Javi</translation>
+    </message>
+    <message>
+        <source>No companion</source>
+        <translation>Ningún compañero</translation>
+    </message>
+    <message>
+        <source>One companion at a time. The existing kind, mode, quiet-hours and rate-limit rules still decide first.</source>
+        <translation>Un compañero a la vez. Las reglas actuales por tipo, modo, horario silencioso y límite de ritmo siguen decidiendo primero.</translation>
+    </message>
+</context>
+<context>
     <name>CompanionHost</name>
     <message>
         <source>sleeping</source>
@@ -2963,6 +3061,10 @@ Huella de la clave del autor: %3</translation>
 </context>
 <context>
     <name>CompanionPane</name>
+    <message>
+        <source>Companions</source>
+        <translation>Compañeros</translation>
+    </message>
     <message>
         <source>Javi, el Hornero: your sidekick. Idles, greets, shows tips — and, with Hermes enabled, chats, reads the system and always asks before changing anything.</source>
         <translation>Javi, el Hornero: tu compañero. Descansa, saluda, te da consejos y, con Hermes activado, charla, lee el sistema y siempre pregunta antes de cambiar algo.</translation>
@@ -3316,10 +3418,6 @@ Huella de la clave del autor: %3</translation>
         <translation>Sesiones de chat</translation>
     </message>
     <message>
-        <source>Javi · el Hornero</source>
-        <translation>Javi · el Hornero</translation>
-    </message>
-    <message>
         <source>Tokens in</source>
         <translation>Tokens de entrada</translation>
     </message>
@@ -3388,7 +3486,7 @@ Huella de la clave del autor: %3</translation>
         <translation>Personalidad y prompt del sistema</translation>
     </message>
     <message>
-        <source>This is Javi&apos;s full user-configurable system prompt (Hermes SOUL.md). Saving snapshots the previous version for rollback. Behaviour only: it can never widen permissions or the sandbox.</source>
+        <source>This is Javi's full user-configurable system prompt (Hermes SOUL.md). Saving snapshots the previous version for rollback. Behaviour only: it can never widen permissions or the sandbox.</source>
         <translation>Este es el prompt del sistema completo de Javi, configurable por vos (Hermes SOUL.md). Al guardar se respalda la versión anterior para poder volver atrás. Solo afecta el comportamiento: nunca puede ampliar los permisos ni el aislamiento.</translation>
     </message>
     <message>
@@ -3545,6 +3643,10 @@ Huella de la clave del autor: %3</translation>
     <message>
         <source>Needs your attention</source>
         <translation>Necesita tu atención</translation>
+    </message>
+    <message>
+        <source>Agent quota approaching a limit</source>
+        <translation>La cuota de agentes se acerca a un límite</translation>
     </message>
 </context>
 <context>
@@ -3927,8 +4029,8 @@ Huella de la clave del autor: %3</translation>
 <context>
     <name>CurrentItem</name>
     <message>
-        <source>&quot;%1&quot; selected</source>
-        <translation>&quot;%1&quot; seleccionado</translation>
+        <source>"%1" selected</source>
+        <translation>"%1" seleccionado</translation>
     </message>
 </context>
 <context>
@@ -4038,7 +4140,7 @@ Huella de la clave del autor: %3</translation>
         <translation>Compartir un look</translation>
     </message>
     <message>
-        <source>Export turns your changes into text you can send to a friend. Paste someone else&apos;s text and press Import to try their look; only known look and size settings are accepted.</source>
+        <source>Export turns your changes into text you can send to a friend. Paste someone else's text and press Import to try their look; only known look and size settings are accepted.</source>
         <translation>Exportar convierte tus cambios en un texto que le podés mandar a alguien. Pegá el texto de otra persona y tocá Importar para probar su look; solo se aceptan ajustes conocidos de aspecto y tamaño.</translation>
     </message>
     <message>
@@ -4292,7 +4394,7 @@ Huella de la clave del autor: %3</translation>
         <translation>Ajustes</translation>
     </message>
     <message>
-        <source>Anchor chooses the preferred side and which end of it a widget stacks from; order decides who is placed first when space runs out. Dragging a widget in Edit desktop overrides its anchor. Settings opens the extension&apos;s own options (metrics, units, formats…) in Extensions. Size, opacity, accent and density restyle the frame only; High Contrast keeps frames opaque. “Cozy corner” and “Kawaii night” are soft starting looks you can adjust.</source>
+        <source>Anchor chooses the preferred side and which end of it a widget stacks from; order decides who is placed first when space runs out. Dragging a widget in Edit desktop overrides its anchor. Settings opens the extension's own options (metrics, units, formats…) in Extensions. Size, opacity, accent and density restyle the frame only; High Contrast keeps frames opaque. “Cozy corner” and “Kawaii night” are soft starting looks you can adjust.</source>
         <translation>El anclaje elige el lado preferido y desde qué punta se apila el widget; el orden decide quién va primero cuando falta lugar. Arrastrar un widget en Editar escritorio reemplaza su anclaje. Ajustes abre las opciones propias de la extensión (métricas, unidades, formatos…) en Extensiones. Tamaño, opacidad, acento y densidad solo cambian el marco; Alto contraste mantiene los marcos opacos. “Cozy corner” y “Kawaii night” son looks suaves para arrancar, que podés ajustar.</translation>
     </message>
 </context>
@@ -5013,8 +5115,8 @@ Huella de la clave del autor: %3</translation>
         <translation>Modo %1</translation>
     </message>
     <message>
-        <source>Switched automatically. Run &quot;Revert mode&quot; or open Settings › Experience to go back.</source>
-        <translation>Cambió automáticamente. Ejecutá &quot;Revert mode&quot; o abrí Ajustes › Experiencia para volver.</translation>
+        <source>Switched automatically. Run "Revert mode" or open Settings › Experience to go back.</source>
+        <translation>Cambió automáticamente. Ejecutá "Revert mode" o abrí Ajustes › Experiencia para volver.</translation>
     </message>
     <message>
         <source>Notifications held</source>
@@ -5355,7 +5457,7 @@ Huella de la clave del autor: %3</translation>
         <translation>Cambiar a Gaming automáticamente con juegos en pantalla completa</translation>
     </message>
     <message>
-        <source>Off by default and local-only: it reads the focused window&apos;s app id and fullscreen state, nothing else. An automatic switch can be undone with “Revert to previous mode”, and your explicit choice is never overridden.</source>
+        <source>Off by default and local-only: it reads the focused window's app id and fullscreen state, nothing else. An automatic switch can be undone with “Revert to previous mode”, and your explicit choice is never overridden.</source>
         <translation>Desactivado de forma predeterminada y solo local: lee el id de la app de la ventana enfocada y si está en pantalla completa, nada más. Un cambio automático se puede deshacer con “Volver al modo anterior”, y nunca pisa una elección tuya.</translation>
     </message>
     <message>
@@ -6218,8 +6320,8 @@ Snapshot del plugin: %3</translation>
         <translation>Ciudad o lat,lon</translation>
     </message>
     <message>
-        <source>Weather stays offline until you enter a location. City search and forecasts use Open-Meteo over HTTPS. When you enter coordinates, they are also sent to OpenStreetMap to find the city name. Clear the field to stop requests. &lt;a href=&quot;https://www.openstreetmap.org/copyright&quot;&gt;© OpenStreetMap contributors&lt;/a&gt;</source>
-        <translation>El clima no se conecta hasta que ingreses una ubicación. La búsqueda de ciudades y los pronósticos usan Open-Meteo por HTTPS. Si ingresás coordenadas, también se mandan a OpenStreetMap para encontrar el nombre de la ciudad. Vaciá el campo para frenar las consultas. &lt;a href=&quot;https://www.openstreetmap.org/copyright&quot;&gt;© colaboradores de OpenStreetMap&lt;/a&gt;</translation>
+        <source>Weather stays offline until you enter a location. City search and forecasts use Open-Meteo over HTTPS. When you enter coordinates, they are also sent to OpenStreetMap to find the city name. Clear the field to stop requests. &lt;a href="https://www.openstreetmap.org/copyright"&gt;© OpenStreetMap contributors&lt;/a&gt;</source>
+        <translation>El clima no se conecta hasta que ingreses una ubicación. La búsqueda de ciudades y los pronósticos usan Open-Meteo por HTTPS. Si ingresás coordenadas, también se mandan a OpenStreetMap para encontrar el nombre de la ciudad. Vaciá el campo para frenar las consultas. &lt;a href="https://www.openstreetmap.org/copyright"&gt;© colaboradores de OpenStreetMap&lt;/a&gt;</translation>
     </message>
     <message>
         <source>Looking up weather…</source>
@@ -6316,7 +6418,7 @@ Snapshot del plugin: %3</translation>
         <translation>Buscando estilos GTK instalados…</translation>
     </message>
     <message>
-        <source>Hornero couldn&apos;t load the installed GTK styles.</source>
+        <source>Hornero couldn't load the installed GTK styles.</source>
         <translation>Hornero no pudo cargar los estilos GTK instalados.</translation>
     </message>
     <message>
@@ -6615,7 +6717,7 @@ Snapshot del plugin: %3</translation>
         <translation>Buscando estilos de íconos instalados…</translation>
     </message>
     <message>
-        <source>Hornero couldn&apos;t load the installed icon styles.</source>
+        <source>Hornero couldn't load the installed icon styles.</source>
         <translation>Hornero no pudo cargar los estilos de íconos instalados.</translation>
     </message>
     <message>
@@ -6920,7 +7022,7 @@ Snapshot del plugin: %3</translation>
         <translation>Preguntá lo que quieras: actualizaciones, disco, temas. Javi lee el sistema con horneroctl y responde en el panel de chat, en vivo.</translation>
     </message>
     <message>
-        <source>Talk, don&apos;t type</source>
+        <source>Talk, don't type</source>
         <translation>Hablá, no escribas</translation>
     </message>
     <message>
@@ -7180,7 +7282,7 @@ Snapshot del plugin: %3</translation>
         <translation>Las reasignaciones se guardan como cambios tuyos en keybindings-user.conf y se aplican al instante; los atajos de fábrica nunca se editan.</translation>
     </message>
     <message>
-        <source>This session&apos;s keybindings are read-only here: rebinding needs the Hornero Hyprland config. The list shows what the session actually runs.</source>
+        <source>This session's keybindings are read-only here: rebinding needs the Hornero Hyprland config. The list shows what the session actually runs.</source>
         <translation>Acá los atajos de esta sesión son de solo lectura: para reasignarlos hace falta la configuración de Hyprland de Hornero. La lista muestra lo que la sesión usa de verdad.</translation>
     </message>
     <message>
@@ -7402,7 +7504,7 @@ Snapshot del plugin: %3</translation>
         <translation>%1 valores guardados se vuelven a aplicar encima cada vez que se aplica este layout.</translation>
     </message>
     <message>
-        <source>Save your current bar sizes, text face and scales for this layout. Applying it later keeps them instead of the preset&apos;s values.</source>
+        <source>Save your current bar sizes, text face and scales for this layout. Applying it later keeps them instead of the preset's values.</source>
         <translation>Guardá los tamaños de barra, la tipografía y las escalas actuales para este layout. Cuando lo apliques más adelante, se mantienen en lugar de los valores del preset.</translation>
     </message>
     <message>
@@ -9604,11 +9706,11 @@ Snapshot del plugin: %3</translation>
         <translation>Ajustes personalizados</translation>
     </message>
     <message>
-        <source>This plugin&apos;s own settings UI runs in-process as your user, without a sandbox — the same trust as its other surfaces. Review its source before use.</source>
+        <source>This plugin's own settings UI runs in-process as your user, without a sandbox — the same trust as its other surfaces. Review its source before use.</source>
         <translation>La interfaz de ajustes propia de este plugin corre dentro del proceso con tu usuario, sin sandbox — la misma confianza que sus otras superficies. Revisá su código antes de usarla.</translation>
     </message>
     <message>
-        <source>This plugin&apos;s custom settings failed to load.</source>
+        <source>This plugin's custom settings failed to load.</source>
         <translation>Los ajustes personalizados de este plugin no se pudieron cargar.</translation>
     </message>
 </context>
@@ -9693,7 +9795,7 @@ Snapshot del plugin: %3</translation>
 <context>
     <name>Plugins</name>
     <message>
-        <source>The installed PluginKit is too old (API level %1, this Shell needs %2). Update the hornero-shell package or point QML2_IMPORT_PATH at this Shell&apos;s plugin/qml. Extensions are not loaded until then.</source>
+        <source>The installed PluginKit is too old (API level %1, this Shell needs %2). Update the hornero-shell package or point QML2_IMPORT_PATH at this Shell's plugin/qml. Extensions are not loaded until then.</source>
         <translation>El PluginKit instalado es muy viejo (nivel de API %1, este Shell necesita %2). Actualizá el paquete hornero-shell o apuntá QML2_IMPORT_PATH al plugin/qml de este Shell. Hasta entonces, las extensiones no se cargan.</translation>
     </message>
     <message>
@@ -10085,7 +10187,7 @@ Snapshot del plugin: %3</translation>
         <translation>Elemento de la barra</translation>
     </message>
     <message>
-        <source>Javi&apos;s menu</source>
+        <source>Javi's menu</source>
         <translation>Menú de Javi</translation>
     </message>
     <message>
@@ -10125,7 +10227,7 @@ Snapshot del plugin: %3</translation>
         <translation>Mantener Radio abierta después de una respuesta</translation>
     </message>
     <message>
-        <source>Show the answer in Javi&apos;s bubble</source>
+        <source>Show the answer in Javi's bubble</source>
         <translation>Mostrar la respuesta en el globo de Javi</translation>
     </message>
     <message>
@@ -10210,8 +10312,8 @@ Snapshot del plugin: %3</translation>
         <translation>¿Borrar la grabación?</translation>
     </message>
     <message>
-        <source>Recording &apos;%1&apos; will be permanently deleted.</source>
-        <translation>La grabación &apos;%1&apos; se va a borrar para siempre.</translation>
+        <source>Recording '%1' will be permanently deleted.</source>
+        <translation>La grabación '%1' se va a borrar para siempre.</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -12259,15 +12361,15 @@ Snapshot del plugin: %3</translation>
         <translation>Elegí un fondo de pantalla antes de aplicar</translation>
     </message>
     <message>
-        <source>Couldn&apos;t verify GTK and icon styles</source>
+        <source>Couldn't verify GTK and icon styles</source>
         <translation>No se pudieron verificar los estilos GTK y de íconos</translation>
     </message>
     <message>
-        <source>Couldn&apos;t verify the GTK style</source>
+        <source>Couldn't verify the GTK style</source>
         <translation>No se pudo verificar el estilo GTK</translation>
     </message>
     <message>
-        <source>Couldn&apos;t verify the icon style</source>
+        <source>Couldn't verify the icon style</source>
         <translation>No se pudo verificar el estilo de íconos</translation>
     </message>
     <message>
@@ -12291,11 +12393,11 @@ Snapshot del plugin: %3</translation>
         <translation>Falta el estilo de íconos “%1”. Instalalo para usar este tema.</translation>
     </message>
     <message>
-        <source>Hornero couldn&apos;t check installed GTK styles. Reopen Appearance to try again.</source>
+        <source>Hornero couldn't check installed GTK styles. Reopen Appearance to try again.</source>
         <translation>Hornero no pudo revisar los estilos GTK instalados. Volvé a abrir Apariencia para intentarlo de nuevo.</translation>
     </message>
     <message>
-        <source>Hornero couldn&apos;t check installed icon styles. Reopen Appearance to try again.</source>
+        <source>Hornero couldn't check installed icon styles. Reopen Appearance to try again.</source>
         <translation>Hornero no pudo revisar los estilos de íconos instalados. Volvé a abrir Apariencia para intentarlo de nuevo.</translation>
     </message>
     <message>
@@ -13377,8 +13479,8 @@ Snapshot del plugin: %3</translation>
         <translation>Hoy</translation>
     </message>
     <message>
-        <source>Weather: &lt;a href=&quot;https://open-meteo.com/&quot;&gt;Open-Meteo&lt;/a&gt; · Geocoding: &lt;a href=&quot;https://www.openstreetmap.org/copyright&quot;&gt;© OpenStreetMap contributors&lt;/a&gt;</source>
-        <translation>Clima: &lt;a href=&quot;https://open-meteo.com/&quot;&gt;Open-Meteo&lt;/a&gt; · Geocodificación: &lt;a href=&quot;https://www.openstreetmap.org/copyright&quot;&gt;© colaboradores de OpenStreetMap&lt;/a&gt;</translation>
+        <source>Weather: &lt;a href="https://open-meteo.com/"&gt;Open-Meteo&lt;/a&gt; · Geocoding: &lt;a href="https://www.openstreetmap.org/copyright"&gt;© OpenStreetMap contributors&lt;/a&gt;</source>
+        <translation>Clima: &lt;a href="https://open-meteo.com/"&gt;Open-Meteo&lt;/a&gt; · Geocodificación: &lt;a href="https://www.openstreetmap.org/copyright"&gt;© colaboradores de OpenStreetMap&lt;/a&gt;</translation>
     </message>
     <message>
         <source>Loading…</source>

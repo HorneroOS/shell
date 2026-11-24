@@ -201,6 +201,11 @@ Scope {
         }
     }
 
+    // Generic data-only companions (PluginKit 6). Javi above stays
+    // the legacy flagship host; this renders only validated package
+    // definitions and never package QML.
+    DataCompanionHost {}
+
     Variants {
         model: CompanionStore.enabled ? Quickshell.screens : []
 

@@ -70,7 +70,7 @@ BAR_SECTIONS = ("status", "actions", "clock", "end")
 SCHEMA_VERSIONS = (3,)
 # PluginKit API level this validator targets; must equal
 # plugin/qml/Hornero/PluginKit/PluginKitInfo.qml apiLevel (tested).
-PLUGINKIT_API_LEVEL = 5
+PLUGINKIT_API_LEVEL = 6
 # Material-era manifests (PluginKit 1/2) are refused with a migration hint.
 LEGACY_SCHEMA_VERSIONS = (1, 2)
 DESKTOP_ANCHORS = (
@@ -295,19 +295,522 @@ def _validate_surfaces(
 # surface that implements it, and each such surface needs its kind.
 CONTRIBUTION_SURFACES = {"commands": "commands", "quickSettings": "quickSetting", "panels": "panel",
                          "dashboardTabs": "dashboardTab"}
-CONTRIBUTION_KINDS = tuple(CONTRIBUTION_SURFACES)
+# Companions are deliberately not a QML surface: PluginKit 6 renders
+# validated data-only character definitions with trusted native code.
+CONTRIBUTION_KINDS = tuple(CONTRIBUTION_SURFACES) + ("companions",)
 COMMAND_ID = re.compile(r"^[a-z][a-zA-Z0-9]{0,31}$")
-CONTRIBUTION_LIMITS = {"commands": 16, "quickSettings": 4, "panels": 4, "dashboardTabs": 2}
+CONTRIBUTION_LIMITS = {"commands": 16, "quickSettings": 4, "panels": 4, "dashboardTabs": 2, "companions": 4}
 CONTRIBUTION_FIELDS = {
     "commands": {"id", "title", "description", "glyph", "keywords"},
     "quickSettings": {"id", "title", "glyph", "kind"},
     "panels": {"id", "title", "glyph"},
     "dashboardTabs": {"id", "title", "glyph"},
+    "companions": {"id", "title", "glyph", "definition", "preview"},
 }
+
+COMPANION_ACTIONS = {
+    "idle", "blink", "look", "greet", "walk", "move", "appear", "leave",
+    "rest", "sleep", "talk", "listen", "think", "work", "approve",
+    "celebrate", "deny", "worry", "error", "drag", "peek", "hover",
+    "takeoff", "fly", "land", "perch", "hop", "preen", "stretch",
+    "swim", "climb", "roll", "burrow",
+}
+COMPANION_CAPABILITIES = {
+    "stationary", "grounded", "walk", "fly", "swim", "climb", "roll",
+    "burrow", "perch", "talk", "listen", "think", "work", "sleep",
+    "greet", "celebrate", "concern",
+}
+COMPANION_TRAITS = {
+    "calm", "playful", "curious", "focused", "quiet", "cheerful",
+    "sleepy", "mischievous", "gentle", "technical",
+}
+COMPANION_ASSISTANT_BINDINGS = {"none", "hermes", "veasel"}
+COMPANION_MAX_CHARACTERS = 4
+COMPANION_MAX_SKINS = 16
+COMPANION_MAX_ANIMATIONS = 32
+COMPANION_MAX_FRAMES = 120
+COMPANION_MAX_TOTAL_FRAMES = 2000
+COMPANION_MAX_IMAGE_PIXELS = 4_194_304
+COMPANION_MAX_DECODED_PIXELS = 67_108_864
+COMPANION_MAX_IMAGE_BYTES = 4 * 1024 * 1024
+COMPANION_MAX_DEFINITION_BYTES = 256 * 1024
+DATA_ONLY_MAIN_QML = (
+    "import QtQuick\n\n"
+    "// Data-only companion package: rendered natively by the shell.\n\n"
+    "Item {}\n"
+)
+DATA_ONLY_SUFFIXES = {".qml", ".json", ".png", ".webp", ".jpg", ".jpeg", ".md", ""}
 TILE_KINDS = ("toggle", "button")
 
 
-def _validate_contributes(manifest: dict, declared_level: int) -> dict[str, list]:
+def _closed_object(
+    value: object,
+    where: str,
+    allowed: set[str],
+    required: set[str] | frozenset[str] = frozenset(),
+) -> dict:
+    result = _object(value, where)
+    extra = set(result) - allowed
+    if extra:
+        raise ValidationError(
+            f"{where} contains unknown fields: {', '.join(sorted(extra))} "
+            f"(allowed: {', '.join(sorted(allowed))})"
+        )
+    missing = set(required) - set(result)
+    if missing:
+        raise ValidationError(f"{where} must contain {', '.join(sorted(missing))}")
+    return result
+
+
+def _localized_map(value: object, where: str, maximum: int, *, require_english: bool = False) -> dict:
+    result = _object(value, where)
+    if not result or len(result) > 16:
+        raise ValidationError(f"{where} must contain 1 to 16 localized strings")
+    for locale, text in result.items():
+        if not LOCALE_TAG.fullmatch(locale):
+            raise ValidationError(f"{where} contains an invalid locale tag: {locale!r}")
+        _string(text, f"{where}.{locale}", maximum)
+    if require_english and "en" not in result:
+        raise ValidationError(f"{where} must include an English source string")
+    return result
+
+
+def _image_dimensions(path: Path, where: str) -> tuple[int, int, str]:
+    """Read only a raster header. This never decodes image pixels."""
+    try:
+        with path.open("rb") as handle:
+            data = handle.read(1024 * 1024)
+    except OSError as error:
+        raise ValidationError(f"{where} cannot be read: {error}") from error
+    suffix = path.suffix.lower()
+    if suffix == ".png":
+        if len(data) < 24 or data[:8] != b"\x89PNG\r\n\x1a\n" or data[12:16] != b"IHDR":
+            raise ValidationError(f"{where} is not a valid PNG image")
+        return int.from_bytes(data[16:20], "big"), int.from_bytes(data[20:24], "big"), "png"
+    if suffix == ".webp":
+        if len(data) < 30 or data[:4] != b"RIFF" or data[8:12] != b"WEBP":
+            raise ValidationError(f"{where} is not a valid WebP image")
+        kind = data[12:16]
+        if kind == b"VP8X":
+            if data[20] & 0x02:
+                raise ValidationError(f"{where} is an animated WebP; declare individual frames instead")
+            return (
+                int.from_bytes(data[24:27], "little") + 1,
+                int.from_bytes(data[27:30], "little") + 1,
+                "webp",
+            )
+        if kind == b"VP8L":
+            if data[20] != 0x2F:
+                raise ValidationError(f"{where} is not a valid lossless WebP image")
+            bits = int.from_bytes(data[21:25], "little")
+            return (bits & 0x3FFF) + 1, ((bits >> 14) & 0x3FFF) + 1, "webp"
+        if kind == b"VP8 ":
+            if data[23:26] != b"\x9d\x01\x2a":
+                raise ValidationError(f"{where} is not a valid lossy WebP image")
+            return (
+                int.from_bytes(data[26:28], "little") & 0x3FFF,
+                int.from_bytes(data[28:30], "little") & 0x3FFF,
+                "webp",
+            )
+        raise ValidationError(f"{where} uses an unsupported WebP chunk")
+    if suffix in {".jpg", ".jpeg"}:
+        if len(data) < 4 or data[:2] != b"\xff\xd8":
+            raise ValidationError(f"{where} is not a valid JPEG image")
+        index = 2
+        sof = {0xC0, 0xC1, 0xC2, 0xC3, 0xC5, 0xC6, 0xC7, 0xC9, 0xCA, 0xCB, 0xCD, 0xCE, 0xCF}
+        while index + 9 < len(data):
+            if data[index] != 0xFF:
+                index += 1
+                continue
+            marker = data[index + 1]
+            if marker in (0x01, 0xD8, 0xD9) or 0xD0 <= marker <= 0xD7:
+                index += 2
+                continue
+            length = int.from_bytes(data[index + 2 : index + 4], "big")
+            if length < 2:
+                break
+            if marker in sof:
+                return (
+                    int.from_bytes(data[index + 7 : index + 9], "big"),
+                    int.from_bytes(data[index + 5 : index + 7], "big"),
+                    "jpeg",
+                )
+            index += 2 + length
+        raise ValidationError(f"{where} has no JPEG frame header in its first megabyte")
+    raise ValidationError(f"{where} must be a PNG or WebP sprite (JPEG is preview-only)")
+
+
+def _companion_image(
+    root: Path,
+    safe_files: set[str],
+    value: object,
+    where: str,
+    budget: dict,
+    *,
+    preview: bool = False,
+) -> tuple[str, int, int]:
+    rel = _safe_relative(value, where)
+    suffixes = {".png", ".webp", ".jpg", ".jpeg"} if preview else {".png", ".webp"}
+    if PurePosixPath(rel).suffix.lower() not in suffixes:
+        raise ValidationError(f"{where} must be a {'static raster preview' if preview else 'PNG or WebP sprite'}")
+    if rel not in safe_files:
+        raise ValidationError(f"{where} must be listed in files")
+    path = root / rel
+    if path.is_symlink() or not path.is_file():
+        raise ValidationError(f"{where} must be a regular package file")
+    if path.stat().st_size > COMPANION_MAX_IMAGE_BYTES:
+        raise ValidationError(f"{where} exceeds the per-image byte budget")
+    if rel not in budget["images"]:
+        width, height, _fmt = _image_dimensions(path, where)
+        if not (1 <= width <= 2048 and 1 <= height <= 2048) or width * height > COMPANION_MAX_IMAGE_PIXELS:
+            raise ValidationError(f"{where} dimensions exceed the companion image budget")
+        budget["images"][rel] = (width, height)
+        budget["pixels"] += width * height
+        if budget["pixels"] > COMPANION_MAX_DECODED_PIXELS:
+            raise ValidationError("companion package exceeds the decoded-image pixel budget")
+    width, height = budget["images"][rel]
+    return rel, width, height
+
+
+def _aspect_matches(width: int, height: int, canvas: dict, where: str) -> None:
+    left = width * int(canvas["height"])
+    right = height * int(canvas["width"])
+    if abs(left - right) * 100 > max(left, right):
+        raise ValidationError(f"{where} aspect ratio must match the character canvas")
+
+
+def _companion_string_list(value: object, where: str, allowed: set[str], maximum: int) -> list[str]:
+    if not isinstance(value, list) or not value or len(value) > maximum:
+        raise ValidationError(f"{where} must list 1 to {maximum} values")
+    if any(not isinstance(item, str) or item not in allowed for item in value):
+        raise ValidationError(f"{where} contains a value outside the closed vocabulary")
+    if len(value) != len(set(value)):
+        raise ValidationError(f"{where} must not contain duplicates")
+    return value
+
+
+def _validate_companion_animation(
+    root: Path,
+    safe_files: set[str],
+    raw: object,
+    where: str,
+    canvas: dict,
+    budget: dict,
+) -> None:
+    anim = _closed_object(
+        raw,
+        where,
+        {"frames", "atlas", "frameMs", "loop", "next", "anchor", "fallbacks", "reducedMotionFrame"},
+    )
+    if ("frames" in anim) == ("atlas" in anim):
+        raise ValidationError(f"{where} must declare exactly one of frames or atlas")
+    frame_ms = anim.get("frameMs", 160)
+    if type(frame_ms) is not int or not 40 <= frame_ms <= 10_000:
+        raise ValidationError(f"{where}.frameMs must be an integer from 40 to 10000")
+    if "loop" in anim and not isinstance(anim["loop"], bool):
+        raise ValidationError(f"{where}.loop must be a boolean")
+    if "anchor" in anim and anim["anchor"] not in canvas["anchors"]:
+        raise ValidationError(f"{where}.anchor must name a declared canvas anchor")
+    if "next" in anim and anim["next"] not in COMPANION_ACTIONS:
+        raise ValidationError(f"{where}.next is outside the semantic action vocabulary")
+    fallbacks = anim.get("fallbacks", [])
+    if not isinstance(fallbacks, list) or len(fallbacks) > 8 or any(item not in COMPANION_ACTIONS for item in fallbacks):
+        raise ValidationError(f"{where}.fallbacks must list at most 8 semantic actions")
+    durations: list[int] = []
+    if "frames" in anim:
+        frames = anim["frames"]
+        if not isinstance(frames, list) or not frames or len(frames) > COMPANION_MAX_FRAMES:
+            raise ValidationError(f"{where}.frames must list 1 to {COMPANION_MAX_FRAMES} frames")
+        for index, raw_frame in enumerate(frames):
+            frame_where = f"{where}.frames[{index}]"
+            frame = _closed_object(raw_frame, frame_where, {"file", "layers", "ms"})
+            if ("file" in frame) == ("layers" in frame):
+                raise ValidationError(f"{frame_where} must declare exactly one of file or layers")
+            files = [frame["file"]] if "file" in frame else frame["layers"]
+            if "layers" in frame and (not isinstance(files, list) or not files or len(files) > 4):
+                raise ValidationError(f"{frame_where}.layers must list 1 to 4 images")
+            for layer_index, image in enumerate(files):
+                _, width, height = _companion_image(root, safe_files, image, f"{frame_where}[{layer_index}]", budget)
+                _aspect_matches(width, height, canvas, f"{frame_where}[{layer_index}]")
+            ms = frame.get("ms", frame_ms)
+            if type(ms) is not int or not 40 <= ms <= 10_000:
+                raise ValidationError(f"{frame_where}.ms must be an integer from 40 to 10000")
+            durations.append(ms)
+            budget["frames"] += 1
+    else:
+        atlas = _closed_object(
+            anim["atlas"], f"{where}.atlas",
+            {"file", "frameWidth", "frameHeight", "columns", "count", "durations"},
+            {"file", "frameWidth", "frameHeight", "columns", "count"},
+        )
+        _, image_w, image_h = _companion_image(root, safe_files, atlas["file"], f"{where}.atlas.file", budget)
+        for key in ("frameWidth", "frameHeight", "columns", "count"):
+            if type(atlas[key]) is not int or atlas[key] < 1:
+                raise ValidationError(f"{where}.atlas.{key} must be a positive integer")
+        if atlas["count"] > COMPANION_MAX_FRAMES or atlas["columns"] > COMPANION_MAX_FRAMES:
+            raise ValidationError(f"{where}.atlas exceeds the frame budget")
+        _aspect_matches(atlas["frameWidth"], atlas["frameHeight"], canvas, f"{where}.atlas")
+        rows = (atlas["count"] + atlas["columns"] - 1) // atlas["columns"]
+        if atlas["columns"] * atlas["frameWidth"] > image_w or rows * atlas["frameHeight"] > image_h:
+            raise ValidationError(f"{where}.atlas grid exceeds the sprite sheet dimensions")
+        raw_durations = atlas.get("durations", [frame_ms] * atlas["count"])
+        if (
+            not isinstance(raw_durations, list)
+            or len(raw_durations) != atlas["count"]
+            or any(type(item) is not int or not 40 <= item <= 10_000 for item in raw_durations)
+        ):
+            raise ValidationError(f"{where}.atlas.durations must match count with values from 40 to 10000")
+        durations = raw_durations
+        budget["frames"] += atlas["count"]
+    if budget["frames"] > COMPANION_MAX_TOTAL_FRAMES:
+        raise ValidationError("companion package exceeds the total frame budget")
+    if sum(durations) > 120_000:
+        raise ValidationError(f"{where} exceeds the 120-second animation budget")
+    reduced = anim.get("reducedMotionFrame", 0)
+    if type(reduced) is not int or not 0 <= reduced < len(durations):
+        raise ValidationError(f"{where}.reducedMotionFrame must name a declared frame")
+
+
+def _validate_companion_definition(
+    root: Path,
+    safe_files: set[str],
+    contribution: dict,
+    where: str,
+    budget: dict,
+) -> None:
+    rel = _safe_relative(contribution["definition"], f"{where}.definition")
+    if PurePosixPath(rel).suffix.lower() != ".json" or rel not in safe_files:
+        raise ValidationError(f"{where}.definition must be a listed JSON file")
+    path = root / rel
+    if path.is_symlink() or not path.is_file() or path.stat().st_size > COMPANION_MAX_DEFINITION_BYTES:
+        raise ValidationError(f"{where}.definition must be a regular file within the size budget")
+    try:
+        def unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
+            result: dict[str, object] = {}
+            for key, value in pairs:
+                if key in result:
+                    raise ValidationError(f"{where}.definition contains duplicate key {key!r}")
+                result[key] = value
+            return result
+
+        raw = json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=unique_object)
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        raise ValidationError(f"{where}.definition cannot be read as JSON: {error}") from error
+    definition = _closed_object(
+        raw,
+        f"{where}.definition",
+        {
+            "schemaVersion", "id", "version", "names", "descriptions", "archetype",
+            "provenance", "preview", "canvas", "defaultSkin", "skins",
+            "capabilities", "personality", "habitat", "assistantCompatibility",
+        },
+        {"schemaVersion", "id", "version", "names", "provenance", "preview", "canvas", "defaultSkin", "skins", "capabilities"},
+    )
+    if definition["schemaVersion"] != 1 or definition["id"] != contribution["id"]:
+        raise ValidationError(f"{where}.definition schemaVersion/id must match the contribution")
+    version = _string(definition["version"], f"{where}.definition.version", 80)
+    if not SEMVER.fullmatch(version):
+        raise ValidationError(f"{where}.definition.version must be semantic versioning")
+    _localized_map(definition["names"], f"{where}.definition.names", 48, require_english=True)
+    if "descriptions" in definition:
+        _localized_map(definition["descriptions"], f"{where}.definition.descriptions", 280)
+    if "archetype" in definition:
+        archetype = definition["archetype"]
+        if not isinstance(archetype, str) or not COMMAND_ID.fullmatch(archetype):
+            raise ValidationError(f"{where}.definition.archetype is invalid")
+    provenance = _closed_object(
+        definition["provenance"], f"{where}.definition.provenance",
+        {"author", "license", "source", "attribution", "tool"}, {"author", "license"},
+    )
+    _string(provenance["author"], f"{where}.definition.provenance.author", 120)
+    _string(provenance["license"], f"{where}.definition.provenance.license", 80)
+    for field, limit in (("attribution", 500), ("tool", 120)):
+        if field in provenance:
+            _string(provenance[field], f"{where}.definition.provenance.{field}", limit)
+    allowed_url = provenance.get("source")
+    if allowed_url is not None:
+        _string(allowed_url, f"{where}.definition.provenance.source", 500)
+        parsed = urlparse(str(allowed_url))
+        if parsed.scheme != "https" or not parsed.netloc:
+            raise ValidationError(f"{where}.definition.provenance.source must be an HTTPS URL")
+
+    def reject_remote(value: object) -> None:
+        if isinstance(value, dict):
+            for nested in value.values():
+                reject_remote(nested)
+        elif isinstance(value, list):
+            for nested in value:
+                reject_remote(nested)
+        elif isinstance(value, str) and ("://" in value or value.lower().startswith("file:")):
+            if value != allowed_url:
+                raise ValidationError(f"{where}.definition contains a remote or file reference; assets are package-local only")
+
+    reject_remote(definition)
+    preview_rel, _, _ = _companion_image(root, safe_files, definition["preview"], f"{where}.definition.preview", budget, preview=True)
+    if "preview" in contribution and contribution["preview"] != preview_rel:
+        raise ValidationError(f"{where}.preview must match the character definition preview")
+    canvas = _closed_object(definition["canvas"], f"{where}.definition.canvas", {"width", "height", "anchors"}, {"width", "height", "anchors"})
+    for axis in ("width", "height"):
+        if type(canvas[axis]) is not int or not 32 <= canvas[axis] <= 2048:
+            raise ValidationError(f"{where}.definition.canvas.{axis} must be from 32 to 2048")
+    if canvas["width"] * canvas["height"] > COMPANION_MAX_IMAGE_PIXELS:
+        raise ValidationError(f"{where}.definition.canvas exceeds the image pixel budget")
+    anchors = _object(canvas["anchors"], f"{where}.definition.canvas.anchors")
+    if not anchors or len(anchors) > 16 or "ground" not in anchors or "center" not in anchors:
+        raise ValidationError(f"{where}.definition.canvas.anchors must declare ground and center (at most 16 anchors)")
+    for name, point in anchors.items():
+        if not COMMAND_ID.fullmatch(name) or not isinstance(point, list) or len(point) != 2 or any(type(item) is not int for item in point):
+            raise ValidationError(f"{where}.definition.canvas.anchors.{name} must be an [x, y] integer pair")
+        if not (0 <= point[0] <= canvas["width"] and 0 <= point[1] <= canvas["height"]):
+            raise ValidationError(f"{where}.definition.canvas.anchors.{name} is outside the canvas")
+    _companion_string_list(definition["capabilities"], f"{where}.definition.capabilities", COMPANION_CAPABILITIES, 16)
+    skins = _object(definition["skins"], f"{where}.definition.skins")
+    if not skins or len(skins) > COMPANION_MAX_SKINS or definition["defaultSkin"] not in skins:
+        raise ValidationError(f"{where}.definition.skins must list 1 to {COMPANION_MAX_SKINS} skins including defaultSkin")
+    for skin_id, raw_skin in skins.items():
+        skin_where = f"{where}.definition.skins.{skin_id}"
+        if not COMMAND_ID.fullmatch(skin_id):
+            raise ValidationError(f"{skin_where} has an invalid skin id")
+        skin = _closed_object(raw_skin, skin_where, {"names", "palette", "animations", "accessories", "defaultAccessories"}, {"names", "animations"})
+        _localized_map(skin["names"], f"{skin_where}.names", 48, require_english=True)
+        if "palette" in skin:
+            palette = _object(skin["palette"], f"{skin_where}.palette")
+            if len(palette) > 32 or any(
+                not COMMAND_ID.fullmatch(str(key)) or not isinstance(value, str)
+                or not re.fullmatch(r"#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?", value)
+                for key, value in palette.items()
+            ):
+                raise ValidationError(f"{skin_where}.palette must map at most 32 ids to hex colours")
+        animations = _object(skin["animations"], f"{skin_where}.animations")
+        if not animations or len(animations) > COMPANION_MAX_ANIMATIONS or "idle" not in animations:
+            raise ValidationError(f"{skin_where}.animations must include idle (at most {COMPANION_MAX_ANIMATIONS} animations)")
+        for action, animation in animations.items():
+            if action not in COMPANION_ACTIONS:
+                raise ValidationError(f"{skin_where}.animations contains an unknown semantic action: {action}")
+            anim_obj = _object(animation, f"{skin_where}.animations.{action}")
+            if "next" in anim_obj and anim_obj["next"] not in animations and anim_obj["next"] != "idle":
+                raise ValidationError(f"{skin_where}.animations.{action}.next must stay inside the same skin")
+            for fallback in anim_obj.get("fallbacks", []):
+                if fallback not in animations and fallback != "idle":
+                    raise ValidationError(f"{skin_where}.animations.{action}.fallbacks must stay inside the same skin")
+            _validate_companion_animation(root, safe_files, animation, f"{skin_where}.animations.{action}", canvas, budget)
+        accessory_ids: set[str] = set()
+        for index, raw_accessory in enumerate(skin.get("accessories", [])):
+            acc_where = f"{skin_where}.accessories[{index}]"
+            accessory = _closed_object(raw_accessory, acc_where, {"id", "names", "file", "zIndex"}, {"id", "names", "file"})
+            if not COMMAND_ID.fullmatch(str(accessory["id"])) or accessory["id"] in accessory_ids:
+                raise ValidationError(f"{acc_where}.id is invalid or duplicated")
+            accessory_ids.add(accessory["id"])
+            _localized_map(accessory["names"], f"{acc_where}.names", 48, require_english=True)
+            _, acc_w, acc_h = _companion_image(root, safe_files, accessory["file"], f"{acc_where}.file", budget)
+            _aspect_matches(acc_w, acc_h, canvas, f"{acc_where}.file")
+            if "zIndex" in accessory and (type(accessory["zIndex"]) is not int or not -2 <= accessory["zIndex"] <= 2):
+                raise ValidationError(f"{acc_where}.zIndex must be from -2 to 2")
+        if len(accessory_ids) > 8:
+            raise ValidationError(f"{skin_where}.accessories must list at most 8 accessories")
+        defaults = skin.get("defaultAccessories", [])
+        if not isinstance(defaults, list) or len(defaults) != len(set(defaults)) or any(item not in accessory_ids for item in defaults):
+            raise ValidationError(f"{skin_where}.defaultAccessories must reference declared accessories")
+    if "personality" in definition:
+        personality = _closed_object(definition["personality"], f"{where}.definition.personality", {"default", "options"}, {"default", "options"})
+        options = personality["options"]
+        if not isinstance(options, list) or not options or len(options) > 8:
+            raise ValidationError(f"{where}.definition.personality.options must list 1 to 8 options")
+        option_ids: set[str] = set()
+        for index, raw_option in enumerate(options):
+            opt_where = f"{where}.definition.personality.options[{index}]"
+            option = _closed_object(raw_option, opt_where, {"id", "names", "traits", "lines"}, {"id", "names", "traits"})
+            if not COMMAND_ID.fullmatch(str(option["id"])) or option["id"] in option_ids:
+                raise ValidationError(f"{opt_where}.id is invalid or duplicated")
+            option_ids.add(option["id"])
+            _localized_map(option["names"], f"{opt_where}.names", 48, require_english=True)
+            _companion_string_list(option["traits"], f"{opt_where}.traits", COMPANION_TRAITS, 6)
+            lines = _object(option.get("lines", {}), f"{opt_where}.lines") if "lines" in option else {}
+            if len(lines) > 16:
+                raise ValidationError(f"{opt_where}.lines must cover at most 16 actions")
+            for action, localized in lines.items():
+                if action not in COMPANION_ACTIONS:
+                    raise ValidationError(f"{opt_where}.lines contains an unknown action")
+                _localized_map(localized, f"{opt_where}.lines.{action}", 120)
+        if personality["default"] not in option_ids:
+            raise ValidationError(f"{where}.definition.personality.default must name an option")
+    if "habitat" in definition:
+        habitat = _closed_object(
+            definition["habitat"], f"{where}.definition.habitat",
+            {"id", "names", "image", "anchor", "defaultScale", "sleepAnimation"},
+            {"id", "names", "image", "anchor"},
+        )
+        if not COMMAND_ID.fullmatch(str(habitat["id"])):
+            raise ValidationError(f"{where}.definition.habitat.id is invalid")
+        _localized_map(habitat["names"], f"{where}.definition.habitat.names", 48, require_english=True)
+        _companion_image(root, safe_files, habitat["image"], f"{where}.definition.habitat.image", budget)
+        if habitat["anchor"] not in anchors:
+            raise ValidationError(f"{where}.definition.habitat.anchor must name a declared anchor")
+        if "defaultScale" in habitat and (not isinstance(habitat["defaultScale"], (int, float)) or isinstance(habitat["defaultScale"], bool) or not 0.25 <= float(habitat["defaultScale"]) <= 3):
+            raise ValidationError(f"{where}.definition.habitat.defaultScale must be from 0.25 to 3")
+        if "sleepAnimation" in habitat and habitat["sleepAnimation"] not in COMPANION_ACTIONS:
+            raise ValidationError(f"{where}.definition.habitat.sleepAnimation is outside the semantic vocabulary")
+    if "assistantCompatibility" in definition:
+        _companion_string_list(definition["assistantCompatibility"], f"{where}.definition.assistantCompatibility", COMPANION_ASSISTANT_BINDINGS, 3)
+
+
+def _validate_companion_contribution(
+    root: Path,
+    safe_files: set[str],
+    entry: dict,
+    where: str,
+    budget: dict,
+) -> None:
+    definition = _safe_relative(entry["definition"], f"{where}.definition")
+    if PurePosixPath(definition).suffix.lower() != ".json" or definition not in safe_files:
+        raise ValidationError(f"{where}.definition must be a listed JSON file")
+    if "preview" in entry:
+        _companion_image(root, safe_files, entry["preview"], f"{where}.preview", budget, preview=True)
+    _validate_companion_definition(root, safe_files, entry, where, budget)
+
+
+def _validate_data_only(manifest: dict, root: Path, safe_files: set[str], declared_level: int) -> bool:
+    if "dataOnly" not in manifest:
+        return False
+    data_only = manifest["dataOnly"]
+    if not isinstance(data_only, bool):
+        raise ValidationError("dataOnly must be a boolean")
+    if not data_only:
+        return False
+    if declared_level < 6:
+        raise ValidationError('dataOnly packages need PluginKit 6; declare "pluginKit": 6 in the manifest')
+    if manifest.get("placement", "background") != "background":
+        raise ValidationError("dataOnly packages must use background placement")
+    if manifest.get("entrypoint") != "Main.qml":
+        raise ValidationError("dataOnly packages must use the canonical inert Main.qml entrypoint")
+    if manifest.get("surfaces"):
+        raise ValidationError("dataOnly packages cannot declare executable surfaces")
+    if "theme" in manifest:
+        raise ValidationError("dataOnly companion packages cannot declare theme templates")
+    capabilities = manifest.get("capabilities")
+    if not isinstance(capabilities, dict):
+        raise ValidationError("dataOnly packages need an empty capability set")
+    if capabilities.get("processCommands") or capabilities.get("networkHosts") or capabilities.get("settings") or capabilities.get("actions") or capabilities.get("providers"):
+        raise ValidationError("dataOnly packages cannot request commands, network hosts, settings, actions or providers")
+    contributes = manifest.get("contributes")
+    if not isinstance(contributes, dict) or set(contributes) != {"companions"}:
+        raise ValidationError("dataOnly packages may contribute companions only")
+    qml_files = [name for name in safe_files if name.lower().endswith(".qml")]
+    if qml_files != ["Main.qml"]:
+        raise ValidationError("dataOnly packages may ship only the canonical inert Main.qml")
+    for name in safe_files:
+        if PurePosixPath(name).suffix.lower() not in DATA_ONLY_SUFFIXES:
+            raise ValidationError(f"dataOnly packages cannot ship executable or unsupported file {name!r}")
+    try:
+        main_text = (root / "Main.qml").read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as error:
+        raise ValidationError(f"cannot read Main.qml: {error}") from error
+    if main_text != DATA_ONLY_MAIN_QML:
+        raise ValidationError("dataOnly Main.qml must be the canonical inert scaffold (the shell never loads it)")
+    return True
+
+
+def _validate_contributes(manifest: dict, declared_level: int, root: Path | None = None, safe_files: set[str] | None = None) -> dict[str, list]:
     """Validate `contributes`; returns the declared lists by kind."""
     surfaces = manifest.get("surfaces") or {}
     if "contributes" not in manifest:
@@ -322,6 +825,11 @@ def _validate_contributes(manifest: dict, declared_level: int) -> dict[str, list
         raise ValidationError('contributes needs PluginKit 4; declare "pluginKit": 4 in the manifest')
     if "dashboardTabs" in (manifest.get("contributes") or {}) and declared_level < 5:
         raise ValidationError('contributes.dashboardTabs needs PluginKit 5; declare "pluginKit": 5 in the manifest')
+    if "companions" in (manifest.get("contributes") or {}):
+        if declared_level < 6:
+            raise ValidationError('contributes.companions needs PluginKit 6; declare "pluginKit": 6 in the manifest')
+        if manifest.get("dataOnly") is not True:
+            raise ValidationError('contributes.companions is data-only in PluginKit 6; declare "dataOnly": true (executable companion QML is not part of this contract)')
     contributes = _object(manifest["contributes"], "contributes")
     if not contributes:
         raise ValidationError("contributes must declare at least one contribution kind (remove it or add one)")
@@ -347,8 +855,10 @@ def _validate_contributes(manifest: dict, declared_level: int) -> dict[str, list
                     f"{where} contains unknown fields: {', '.join(sorted(extra))} "
                     f"(allowed: {', '.join(sorted(CONTRIBUTION_FIELDS[kind]))})"
                 )
-            if not {"id", "title"} <= set(entry):
-                raise ValidationError(f"{where} must contain id and title")
+            required = {"id", "title", "definition"} if kind == "companions" else {"id", "title"}
+            if not required <= set(entry):
+                wanted = "id, title and definition" if kind == "companions" else "id and title"
+                raise ValidationError(f"{where} must contain {wanted}")
             entry_id = entry["id"]
             if not isinstance(entry_id, str) or not COMMAND_ID.fullmatch(entry_id):
                 raise ValidationError(f"{where}.id must match {COMMAND_ID.pattern}")
@@ -377,7 +887,15 @@ def _validate_contributes(manifest: dict, declared_level: int) -> dict[str, list
                     or len(set(keywords)) != len(keywords)
                 ):
                     raise ValidationError(f"{where}.keywords must be at most 8 unique strings of at most 24 characters")
-        if CONTRIBUTION_SURFACES[kind] not in surfaces:
+        if kind == "companions":
+            if root is None or safe_files is None:
+                raise ValidationError("companion contributions require package asset validation")
+            budget = {"pixels": 0, "frames": 0, "images": {}}
+            for entry in items:
+                _validate_companion_contribution(
+                    root, safe_files, entry, f"contributes.companions[{items.index(entry)}]", budget
+                )
+        elif CONTRIBUTION_SURFACES[kind] not in surfaces:
             raise ValidationError(
                 f"contributes.{kind} needs surfaces.{CONTRIBUTION_SURFACES[kind]}: the entrypoint that implements it"
             )
@@ -1134,7 +1652,7 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
         "schemaVersion", "id", "name", "version", "description", "author",
         "license", "homepage", "entrypoint", "files", "capabilities", "placement",
         "signing", "surfaces", "translations", "marketplace", "theme",
-        "pluginKit", "contributes",
+        "pluginKit", "contributes", "dataOnly",
     }
     unknown = manifest.keys() - allowed
     missing = {
@@ -1212,7 +1730,7 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
     # under v1 so an older host/validator can never silently ignore it.
     _validate_surfaces(manifest, schema_version, placement, entrypoint, set(safe_files))
     # Contributions (RFC 0003): declarative commands, level 4.
-    _validate_contributes(manifest, declared_level)
+    _validate_contributes(manifest, declared_level, root, set(safe_files))
 
     # Plugin translations (shell#375): optional in every schema
     # version; pre-#375 manifests without the field stay valid.
@@ -1227,6 +1745,7 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
     theme_templates = _validate_theme(manifest, set(safe_files))
 
     capabilities = _object(manifest["capabilities"], "capabilities")
+    _validate_data_only(manifest, root, set(safe_files), declared_level)
     # `actions` is the optional horneroctl plugin-broker declaration
     # (HorneroOS/hornero#408): snake_case action names the plugin may
     # request through the typed broker. Shape only — catalogue

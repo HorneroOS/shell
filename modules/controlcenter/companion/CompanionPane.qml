@@ -58,7 +58,7 @@ Item {
 
                 PaneHeader {
                     paneId: "companion"
-                    title: qsTr("Javi · el Hornero")
+                    title: qsTr("Companions")
                 }
 
                 StyledText {
@@ -68,6 +68,8 @@ Item {
                     color: Signal.palette.inkMuted
                     wrapMode: Text.Wrap
                 }
+
+                CompanionCollectionSection {}
 
                 ChannelPanel {
                     title: qsTr("General")

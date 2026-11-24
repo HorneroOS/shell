@@ -1,0 +1,143 @@
+{
+  "schemaVersion": 1,
+  "id": "byte",
+  "version": "1.0.0",
+  "names": {
+    "en": "Bitín",
+    "es": "Bitín"
+  },
+  "descriptions": {
+    "en": "A tiny retro CRT who thinks in warm phosphor.",
+    "es": "Un CRT retro diminuto que piensa en fósforo cálido."
+  },
+  "archetype": "retroComputer",
+  "provenance": {
+    "author": "HorneroOS contributors",
+    "license": "MIT",
+    "tool": "Muse image generation; deterministic chroma-key and slicing recorded in the shell PR"
+  },
+  "preview": "companions/byte/frames/idle-01.png",
+  "canvas": {
+    "width": 512,
+    "height": 512,
+    "anchors": {
+      "ground": [
+        256,
+        472
+      ],
+      "center": [
+        256,
+        256
+      ]
+    }
+  },
+  "defaultSkin": "default",
+  "capabilities": [
+    "grounded",
+    "walk",
+    "think",
+    "work",
+    "sleep",
+    "greet"
+  ],
+  "skins": {
+    "default": {
+      "names": {
+        "en": "Cream and copper",
+        "es": "Crema y cobre"
+      },
+      "animations": {
+        "idle": {
+          "loop": true,
+          "anchor": "ground",
+          "frames": [
+            {
+              "file": "companions/byte/frames/idle-01.png",
+              "ms": 900
+            }
+          ]
+        },
+        "walk": {
+          "loop": true,
+          "anchor": "ground",
+          "frames": [
+            {
+              "file": "companions/byte/frames/idle-01.png",
+              "ms": 320
+            },
+            {
+              "file": "companions/byte/frames/walk-01.png",
+              "ms": 320
+            }
+          ]
+        },
+        "greet": {
+          "loop": false,
+          "anchor": "ground",
+          "frames": [
+            {
+              "file": "companions/byte/frames/idle-01.png",
+              "ms": 800
+            }
+          ],
+          "next": "idle"
+        },
+        "think": {
+          "loop": true,
+          "anchor": "ground",
+          "frames": [
+            {
+              "file": "companions/byte/frames/think-01.png",
+              "ms": 700
+            }
+          ]
+        },
+        "work": {
+          "loop": true,
+          "anchor": "ground",
+          "frames": [
+            {
+              "file": "companions/byte/frames/think-01.png",
+              "ms": 700
+            }
+          ]
+        },
+        "sleep": {
+          "loop": true,
+          "anchor": "ground",
+          "frames": [
+            {
+              "file": "companions/byte/frames/sleep-01.png",
+              "ms": 900
+            }
+          ]
+        }
+      }
+    }
+  },
+  "personality": {
+    "default": "focused",
+    "options": [
+      {
+        "id": "focused",
+        "names": {
+          "en": "Focused",
+          "es": "Concentrado"
+        },
+        "traits": [
+          "focused",
+          "technical"
+        ],
+        "lines": {
+          "greet": {
+            "en": "Ready.",
+            "es": "Listo."
+          }
+        }
+      }
+    ]
+  },
+  "assistantCompatibility": [
+    "none"
+  ]
+}

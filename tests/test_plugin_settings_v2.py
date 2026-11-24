@@ -95,7 +95,7 @@ def test_level_3_manifest_is_unchanged_and_needs_no_declaration(tmp_path):
     VALIDATOR.validate_plugin(package(tmp_path, manifest(base, plugin_kit=None)))
 
 
-@pytest.mark.parametrize("level", [2, 6, True, "4", 4.0, None])
+@pytest.mark.parametrize("level", [2, 7, True, "4", 4.0, None])
 def test_pluginkit_field_is_bounded(tmp_path, level):
     data = manifest({}, plugin_kit=0)
     data["pluginKit"] = level
@@ -205,10 +205,10 @@ def test_runtime_mirrors_the_validator():
 
 
 def test_api_level_is_four_and_host_refuses_a_newer_requirement():
-    # Level 5 (shell#709 dashboard pages) supersedes the level-4 kit
-    # this suite introduced; v2 settings keep requiring only 4.
-    assert re.search(r"apiLevel:\s*5", INFO)
-    assert VALIDATOR.PLUGINKIT_API_LEVEL == 5
+    # Level 6 (data-only companions) supersedes level 5; v2 settings
+    # keep requiring only 4.
+    assert re.search(r"apiLevel:\s*6", INFO)
+    assert VALIDATOR.PLUGINKIT_API_LEVEL == 6
     assert "manifest.pluginKit > Plugins.kitLevel" in HOST
 
 

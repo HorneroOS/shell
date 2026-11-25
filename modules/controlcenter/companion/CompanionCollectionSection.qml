@@ -196,6 +196,24 @@ ChannelPanel {
                 }
 
                 PrefPick {
+                    // Only personalities the character actually offers;
+                    // a single-option character needs no picker.
+                    visible: !!instanceCard.definition && !!instanceCard.definition.personality && instanceCard.definition.personality.options.length > 1
+                    label: qsTr("Personality")
+                    current: instanceCard.modelData.personalityId
+                    defaultValue: instanceCard.definition && instanceCard.definition.personality ? instanceCard.definition.personality.default : ""
+                    options: instanceCard.definition && instanceCard.definition.personality ? instanceCard.definition.personality.options.map(option => ({
+                                "id": option.id,
+                                "label": CompanionRegistry.displayName({
+                                    "names": option.names
+                                })
+                            })) : []
+                    onPicked: id => CompanionInstances.updateInstance(instanceCard.modelData.id, {
+                        "personalityId": id
+                    })
+                }
+
+                PrefPick {
                     label: qsTr("Monitor")
                     current: instanceCard.modelData.screenName
                     defaultValue: ""
@@ -232,6 +250,37 @@ ChannelPanel {
                     onToggled: checked => CompanionInstances.updateInstance(instanceCard.modelData.id, {
                         "habitatEnabled": checked
                     })
+                }
+
+                // One switch per accessory of the current skin. The
+                // renderer and sanitizer already supported these; only
+                // the control was missing, so defaultAccessories were
+                // effectively read-only for users.
+                Repeater {
+                    model: {
+                        const skin = instanceCard.definition ? instanceCard.definition.skins[instanceCard.modelData.skin] : null;
+                        return skin ? skin.accessories : [];
+                    }
+
+                    SwitchRow {
+                        required property var modelData
+
+                        label: CompanionRegistry.displayName({
+                            "names": modelData.names
+                        })
+                        checked: (instanceCard.modelData.accessories || []).includes(modelData.id)
+                        onToggled: checked => {
+                            const current = (instanceCard.modelData.accessories || []).slice();
+                            const at = current.indexOf(modelData.id);
+                            if (checked && at < 0)
+                                current.push(modelData.id);
+                            else if (!checked && at >= 0)
+                                current.splice(at, 1);
+                            CompanionInstances.updateInstance(instanceCard.modelData.id, {
+                                "accessories": current
+                            });
+                        }
+                    }
                 }
 
                 SwitchRow {

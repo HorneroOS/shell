@@ -292,6 +292,32 @@ def test_player_completes_single_frame_one_shots():
     assert "setReel" in PLAYER
 
 
+def test_collection_card_exposes_personality_and_accessory_controls():
+    # The sanitizer/renderer always supported personalities and
+    # accessories, but the Control Center had no controls for them:
+    # Bitín's second personality was unreachable and accessory choices
+    # were read-only defaults. The card must offer both.
+    section = (
+        ROOT / "modules/controlcenter/companion/CompanionCollectionSection.qml"
+    ).read_text()
+    assert '"personalityId": id' in section
+    assert "definition.personality.options" in section
+    assert '"accessories": current' in section
+    assert "skin.accessories" in section
+
+
+def test_generic_companions_are_not_slaved_to_javis_master_switch():
+    # Generic instances are governed by their own per-instance enabled
+    # flag: DataCompanionHost must not gate windows (or its greet
+    # timer) on CompanionStore.enabled (Javi's switch), and disabled
+    # instances must not get a window at all (enabledGenericIds model).
+    host = (COMPANION / "DataCompanionHost.qml").read_text()
+    assert "CompanionStore.enabled" not in host
+    assert "model: CompanionInstances.enabledGenericIds" in host
+    instances = (COMPANION / "CompanionInstances.qml").read_text()
+    assert "enabledGenericIds" in instances and "filter(i => i.enabled)" in instances
+
+
 def test_generic_host_places_instances_via_slot_screen():
     # Regression (graphical validation): every generic instance window
     # sat at 0,0 because placeFromInstance()/commitPosition() read

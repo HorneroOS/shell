@@ -119,8 +119,9 @@ sleeping. Activity cadence is `activityLevel` (calm/normal/lively).
 
 Suppression (all automatic): session lock, fullscreen windows, game
 mode, the area picker, and any open Settings window hide the
-companion; disabling it in settings unloads every surface and timer
-(zero cost). The window is a `Bottom`-layer, `Ignore`-exclusion
+companion; disabling Javi in settings unloads every Javi surface and
+timer (zero cost), and each generic companion unloads its own
+surfaces when its per-instance switch is off. The window is a `Bottom`-layer, `Ignore`-exclusion
 surface with no keyboard focus sized to the sprite, so it never
 steals clicks or input. Reduced motion holds still frames and
 replaces bob/bounce/fly transitions with jump cuts.
@@ -200,7 +201,7 @@ existing art; no new poses were needed.
 Fullscreen windows, the session lock, the area picker and an open
 Settings window hide the companion regardless of mode.
 
-Budgets: the companion costs nothing when disabled (no surfaces, no
+Budgets: Javi costs nothing when disabled (no surfaces, no
 timers), nothing when hidden (the player pauses while suppressed) and
 nothing while idle with a still frame; the only recurring work is the
 30 s idle poll, the optional idle scheduler (one single-shot timer, 4-40 s

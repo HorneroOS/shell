@@ -23,7 +23,11 @@ Scope {
     Timer {
         interval: 20000
         repeat: true
-        running: CompanionStore.enabled && CompanionStore.idleAnimEnabled && !CompanionStore.suppressed
+        // Generic companions are governed by their own per-instance
+        // enabled flag, not by Javi's master switch: turning Javi off
+        // must not hide Capi/Bitín (the Control Center switch sits in
+        // the Javi pane and reads as Javi-only).
+        running: CompanionInstances.enabledGenericIds.length > 1 && CompanionStore.idleAnimEnabled && !CompanionStore.suppressed
         onTriggered: {
             const actives = CompanionInstances.genericInstances.filter(i => i.enabled);
             for (let a = 0; a < actives.length; a++) {
@@ -35,7 +39,7 @@ Scope {
                         continue;
                     const key = [one.id, two.id].sort().join("+");
                     if (Date.now() - (root._lastGreet[key] || 0) < 600000)
-                        return;
+                        continue;
                     const next = Object.assign({}, root._lastGreet);
                     next[key] = Date.now();
                     root._lastGreet = next;
@@ -48,7 +52,7 @@ Scope {
     }
 
     Variants {
-        model: CompanionInstances.genericIds
+        model: CompanionInstances.enabledGenericIds
 
         Scope {
             id: slot
@@ -91,7 +95,7 @@ Scope {
                 readonly property bool sleeping: CompanionStore.sleepMinutes > 0 && CompanionStore.idleSeconds >= CompanionStore.sleepMinutes * 60
 
                 screen: slot.targetScreen
-                visible: !!slot.instance && !!slot.definition && slot.instance.enabled && CompanionStore.enabled && !CompanionStore.suppressed
+                visible: !!slot.instance && !!slot.definition && slot.instance.enabled && !CompanionStore.suppressed
                 color: "transparent"
                 exclusionMode: ExclusionMode.Ignore
                 WlrLayershell.namespace: "hornero-companion-instance"

@@ -41,9 +41,30 @@ Item {
     implicitWidth: definition ? definition.canvas.width : 128
     implicitHeight: definition ? definition.canvas.height : 128
 
+    // End-of-reel handling shared by the timer path and by reels that
+    // can never animate (single frame, or reduced motion): without it a
+    // one-shot single-frame reel never finishes and the companion
+    // freezes in that pose forever (Javi's Player already guards this).
+    function completeReel(): void {
+        if (!root.reel)
+            return;
+        frameTimer.stop();
+        root.finished(root.resolvedAction);
+        if (root.reel.next && root.reel.next !== root.action)
+            root.action = root.reel.next;
+        else if (root.action !== "idle")
+            root.action = "idle";
+    }
+
     function restart(): void {
         root.frameIndex = root.reducedMotion && root.reel ? (root.reel.reducedMotionFrame || 0) : 0;
         frameTimer.restart();
+        // The timer only runs for multi-frame reels with motion on, so
+        // a non-looping reel that cannot animate must complete here —
+        // asynchronously, so action changes do not recurse into restart.
+        if (root.playing && root.reel && !root.reel.loop
+            && (root.reducedMotion || root.reel.frames.length <= 1))
+            Qt.callLater(root.completeReel);
     }
 
     onActionChanged: restart()
@@ -73,12 +94,7 @@ Item {
                 root.frameIndex = 0;
                 return;
             }
-            frameTimer.stop();
-            root.finished(root.resolvedAction);
-            if (root.reel.next && root.reel.next !== root.action)
-                root.action = root.reel.next;
-            else if (root.action !== "idle")
-                root.action = "idle";
+            root.completeReel();
         }
     }
 

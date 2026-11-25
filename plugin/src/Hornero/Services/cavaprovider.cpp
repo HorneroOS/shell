@@ -2,6 +2,7 @@
 
 #include "audiocollector.hpp"
 #include "audioprovider.hpp"
+#include <pipewire/pipewire.h>
 #include <QLibrary>
 #include <QMetaObject>
 #include <QVector>
@@ -33,6 +34,15 @@ struct CavaApi {
 
 const CavaApi& cavaApi() {
     static const CavaApi api = [] {
+        // Initialize PipeWire before dlopening libcava: libcava's
+        // JACK support pulls in the PipeWire JACK shim, whose
+        // pw_init() runs under the loader lock, while Quickshell's
+        // own PipeWire service may concurrently sit inside pw_init()
+        // dlopening a module — the two locks deadlock and the shell
+        // never finishes loading (seen after the PipeWire 1.6
+        // update). pw_init is refcounted, so doing it here first,
+        // while no loader lock is held, serializes both sides.
+        pw_init(nullptr, nullptr);
         // Intentionally leaked: resolved pointers must stay valid.
         auto* lib = new QLibrary(QStringLiteral("cava"));
         if (!lib->load()) {

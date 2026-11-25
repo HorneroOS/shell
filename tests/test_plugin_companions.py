@@ -254,8 +254,60 @@ def test_companion_import_maps_semantic_actions(tmp_path):
     V.validate_plugin(out)
 
 
-def test_addon_extends_character_without_overwriting():
-    pass  # behaviour asserted by the packs model test below
+def test_addon_package_is_admitted_by_the_validator(tmp_path):
+    """A data-only package declaring companions + companionAddons must
+    validate. Regression: the dataOnly gate once required the
+    contributes set to be exactly {"companions"}, rejecting every
+    add-on package while the contributes validator demanded add-ons
+    sit beside companions — add-ons were inadmissible end to end."""
+    import subprocess
+
+    pytest.importorskip("PIL", reason="companion_import needs Pillow")
+    src = tmp_path / "src"
+    src.mkdir()
+    image = png_bytes()
+    for name in ("shime1.png", "walk2.png", "sleep1.png"):
+        (src / name).write_bytes(image)
+    out = tmp_path / "pkg"
+    proc = subprocess.run(
+        [sys.executable, "scripts/companion_import.py", str(src), str(out),
+         "--character", "friend", "--title", "Friend"],
+        cwd=ROOT, capture_output=True, text=True)
+    assert proc.returncode == 0, proc.stderr
+
+    addon_dir = out / "addons" / "party"
+    addon_dir.mkdir(parents=True)
+    (addon_dir / "party.png").write_bytes(image)
+    (addon_dir / "addon.json").write_text(json.dumps({
+        "schemaVersion": 1,
+        "character": "friend",
+        "skins": {
+            "party": {
+                "names": {"en": "Party"},
+                "animations": {
+                    "idle": {"frames": [{"file": "addons/party/party.png", "ms": 900}]},
+                },
+            },
+        },
+    }), encoding="utf-8")
+
+    manifest_path = out / "plugin.json"
+    if not manifest_path.exists():
+        manifest_path = next(out.glob("*.json"))
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest.setdefault("contributes", {})["companionAddons"] = [{
+        "id": "party",
+        "title": "Party skin",
+        "forCharacter": "friend",
+        "definition": "addons/party/addon.json",
+    }]
+    manifest["files"] = sorted(set(manifest.get("files", [])) | {
+        "addons/party/addon.json",
+        "addons/party/party.png",
+    })
+    manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+
+    V.validate_plugin(out)
 
 
 @NODE

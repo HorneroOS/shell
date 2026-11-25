@@ -851,7 +851,10 @@ def _validate_data_only(manifest: dict, root: Path, safe_files: set[str], declar
     if capabilities.get("processCommands") or capabilities.get("networkHosts") or capabilities.get("settings") or capabilities.get("actions") or capabilities.get("providers"):
         raise ValidationError("dataOnly packages cannot request commands, network hosts, settings, actions or providers")
     contributes = manifest.get("contributes")
-    if not isinstance(contributes, dict) or set(contributes) != {"companions"}:
+    if not isinstance(contributes, dict) or set(contributes) not in (
+        {"companions"},
+        {"companions", "companionAddons"},
+    ):
         raise ValidationError("dataOnly packages may contribute companions only")
     qml_files = [name for name in safe_files if name.lower().endswith(".qml")]
     if qml_files != ["Main.qml"]:

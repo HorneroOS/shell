@@ -17,6 +17,11 @@ Singleton {
 
     property var _definitions: ({})
     property var _addons: ({})
+    // Add-ons whose file loaded before their target definition did;
+    // applied by _applyAddons() once the target exists. Add-on and
+    // definition FileViews race, so ordering loaders is not enough.
+    property var _pendingAddons: []
+    property var _appliedAddons: ({})
     property var _loaders: []
     property string _fingerprint: ""
     property var diagnostics: []
@@ -83,9 +88,43 @@ Singleton {
         return slash >= 0 ? path.slice(0, slash) : path;
     }
 
+    // Apply every pending add-on whose target definition is now
+    // loaded. Called after each definition and each add-on load, so
+    // whichever side of the race finishes last completes the merge.
+    function _applyAddons(): void {
+        for (const pending of root._pendingAddons) {
+            const addon = pending.data;
+            const appliedKey = `${addon.pluginId}:${addon.addonId}`;
+            if (root._appliedAddons[appliedKey])
+                continue;
+            const target = root._definitions[addon.key];
+            if (!target || !target.definition)
+                continue;
+            try {
+                const clean = Packs.sanitizeAddon(JSON.parse(pending.text), target.definition);
+                if (!clean) {
+                    root.diagnostics = root.diagnostics.concat([`${addon.pluginId}:${addon.addonId}: invalid add-on`]);
+                    root._appliedAddons[appliedKey] = true;
+                    continue;
+                }
+                const next = Object.assign({}, root._addons);
+                next[addon.key] = (next[addon.key] || []).concat([clean]);
+                root._addons = next;
+                root._appliedAddons[appliedKey] = true;
+            } catch (e) {
+                root.diagnostics = root.diagnostics.concat([`${addon.pluginId}: unreadable add-on`]);
+                root._appliedAddons[appliedKey] = true;
+            }
+        }
+    }
+
     function refresh(): void {
         const list = Plugins.companionList();
-        const fingerprint = JSON.stringify(list.map(c => [c.key, c.definition, c.version || ""]));
+        const addons = Plugins.companionAddonList();
+        const fingerprint = JSON.stringify([
+            list.map(c => [c.key, c.definition, c.version || ""]),
+            addons.map(a => [a.key, a.addonId, a.definition, a.version || ""])
+        ]);
         if (fingerprint === root._fingerprint)
             return;
         root._fingerprint = fingerprint;
@@ -93,19 +132,22 @@ Singleton {
             loader.destroy();
         root._loaders = [];
         root._definitions = ({});
+        root._addons = ({});
+        root._pendingAddons = [];
+        root._appliedAddons = ({});
         root.diagnostics = [];
-        for (const addon of Plugins.companionAddonList()) {
-            const loader = addonLoader.createObject(root, {
-                "contributionData": addon,
-                "path": `${Plugins.pluginsDir}/${addon.pluginId}/${addon.definition}`
-            });
-            if (loader)
-                root._loaders.push(loader);
-        }
         for (const contribution of list) {
             const loader = definitionLoader.createObject(root, {
                 "contributionData": contribution,
                 "path": `${Plugins.pluginsDir}/${contribution.pluginId}/${contribution.definition}`
+            });
+            if (loader)
+                root._loaders.push(loader);
+        }
+        for (const addon of addons) {
+            const loader = addonLoader.createObject(root, {
+                "contributionData": addon,
+                "path": `${Plugins.pluginsDir}/${addon.pluginId}/${addon.definition}`
             });
             if (loader)
                 root._loaders.push(loader);
@@ -149,6 +191,7 @@ Singleton {
                         basePath: basePath
                     };
                     root._definitions = next;
+                    root._applyAddons();
                 } catch (e) {
                     root.diagnostics = root.diagnostics.concat([`${loader.contributionData.key}: unreadable definition`]);
                 }
@@ -177,24 +220,13 @@ Singleton {
             printErrors: false
 
             onLoaded: {
-                try {
-                    const addon = addonFile.contributionData;
-                    const target = root._definitions[addon.key];
-                    if (!target || !target.definition) {
-                        root.diagnostics = root.diagnostics.concat([`${addon.pluginId}:${addon.addonId}: add-on target not loaded`]);
-                        return;
-                    }
-                    const clean = Packs.sanitizeAddon(JSON.parse(addonFile.text()), target.definition);
-                    if (!clean) {
-                        root.diagnostics = root.diagnostics.concat([`${addon.pluginId}:${addon.addonId}: invalid add-on`]);
-                        return;
-                    }
-                    const next = Object.assign({}, root._addons);
-                    next[addon.key] = (next[addon.key] || []).concat([clean]);
-                    root._addons = next;
-                } catch (e) {
-                    root.diagnostics = root.diagnostics.concat([`${addonFile.contributionData.pluginId}: unreadable add-on`]);
-                }
+                // Stash and let _applyAddons merge once the target
+                // definition exists (the two FileViews race).
+                root._pendingAddons = root._pendingAddons.concat([{
+                    "data": addonFile.contributionData,
+                    "text": addonFile.text()
+                }]);
+                root._applyAddons();
             }
 
             onLoadFailed: root.diagnostics = root.diagnostics.concat([`${addonFile.contributionData.pluginId}: add-on could not be read`])

@@ -7,10 +7,11 @@ Javi's own surface, with no keyboard focus, no exclusive zone of its own
 corner pushes it inward instead of covering it), no taskbar entry and an
 empty input region unless the user gave it a click action.
 
-Art status: the nest frames are a clearly marked placeholder drawn by
-`scripts/companion_nest.py` (`Habitat.ART.status == "placeholder"`, repeated
-in the Control Center). Placement, lighting, modes and the lights below are
-final logic and carry over when the master art lands.
+Art status: final. The illustrated clay-workshop Nest replaced the
+procedural placeholder in shell 1.3.7 (#716, `Habitat.ART.status ==
+"final"`); hero masters are registered candidates with provenance.
+Placement, lighting, modes and the lights below are the final logic
+the art was produced against.
 
 ## Policy
 

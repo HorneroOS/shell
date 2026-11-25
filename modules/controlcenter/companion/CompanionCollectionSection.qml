@@ -246,20 +246,28 @@ ChannelPanel {
                     label: qsTr("Assistant")
                     current: instanceCard.modelData.assistantBinding
                     defaultValue: "none"
-                    options: [
-                        {
-                            "id": "none",
-                            "label": qsTr("None (decorative)")
-                        },
-                        {
-                            "id": "hermes",
-                            "label": qsTr("Hermes")
-                        },
-                        {
-                            "id": "veasel",
-                            "label": qsTr("Veasel")
-                        }
-                    ]
+                    // Only offer what the character declares compatible
+                    // (assistantCompatibility in its definition): a
+                    // character that declares only "none" must not
+                    // present Hermes/Veasel as if they could take effect.
+                    options: {
+                        const compatible = (instanceCard.definition && instanceCard.definition.assistantCompatibility) || ["none"];
+                        const all = [
+                            {
+                                "id": "none",
+                                "label": qsTr("None (decorative)")
+                            },
+                            {
+                                "id": "hermes",
+                                "label": qsTr("Hermes")
+                            },
+                            {
+                                "id": "veasel",
+                                "label": qsTr("Veasel")
+                            }
+                        ];
+                        return all.filter(option => compatible.includes(option.id));
+                    }
                     help: qsTr("Decorative companions use no inference. A binding only takes effect through the trusted assistant contracts; the character package itself gains no tools or permissions.")
                     onPicked: id => CompanionInstances.updateInstance(instanceCard.modelData.id, {
                         "assistantBinding": id

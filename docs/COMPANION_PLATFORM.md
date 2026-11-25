@@ -214,10 +214,12 @@ idempotent and unknown/malformed records sanitize independently.
 3. **Habitats and interactions (shipped):** independent habitat
    surfaces with their own persisted positions, proximity greetings
    bounded per pair, add-on skins/habitats.
-4. **Assistant bindings (shipped as explicit configuration):**
-   per-instance binding preference (none/Hermes/Veasel) over the
-   existing trusted contracts; decorative companions never start a
-   process and packages gain no privileges.
+4. **Assistant bindings (configuration only — no runtime consumer
+   yet):** per-instance binding preference (none/Hermes/Veasel),
+   filtered by each character's `assistantCompatibility`. The
+   preference is persisted, but nothing reads it at runtime today:
+   Javi's Hermes bridge is the only live assistant path. Decorative
+   companions never start a process and packages gain no privileges.
 5. **Catalogue and website (shipped):** official Capi and Bitín
    data-only packages in the catalogue, authoring guide EN/ES, and
    the website living-platform section. Performance: one

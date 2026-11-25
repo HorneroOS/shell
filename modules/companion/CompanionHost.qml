@@ -24,8 +24,10 @@ import QtQuick
 // focus except while the right-click menu is open (Escape dismissal),
 // and a window sized to the sprite (plus bubble/menu only while
 // open), so the companion never steals clicks or keyboard input.
-// Disabled (CompanionStore.enabled == false) unloads every window:
-// zero surfaces, zero timers, zero cost.
+// Disabled (CompanionStore.enabled == false) unloads every Javi
+// window: zero surfaces, zero timers, zero cost. Generic companions
+// are governed by their own per-instance enabled flag instead; a
+// disabled generic instance likewise has no window at all.
 Scope {
     id: root
 

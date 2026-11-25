@@ -292,6 +292,18 @@ def test_player_completes_single_frame_one_shots():
     assert "setReel" in PLAYER
 
 
+def test_generic_companions_are_not_slaved_to_javis_master_switch():
+    # Generic instances are governed by their own per-instance enabled
+    # flag: DataCompanionHost must not gate windows (or its greet
+    # timer) on CompanionStore.enabled (Javi's switch), and disabled
+    # instances must not get a window at all (enabledGenericIds model).
+    host = (COMPANION / "DataCompanionHost.qml").read_text()
+    assert "CompanionStore.enabled" not in host
+    assert "model: CompanionInstances.enabledGenericIds" in host
+    instances = (COMPANION / "CompanionInstances.qml").read_text()
+    assert "enabledGenericIds" in instances and "filter(i => i.enabled)" in instances
+
+
 def test_generic_host_places_instances_via_slot_screen():
     # Regression (graphical validation): every generic instance window
     # sat at 0,0 because placeFromInstance()/commitPosition() read

@@ -26,6 +26,9 @@ Singleton {
     readonly property var instances: document.instances || []
     readonly property var genericInstances: root.instances.filter(i => !i.legacy)
     readonly property var genericIds: root.genericInstances.map(i => i.id)
+    // Windows exist only for enabled instances: a disabled companion
+    // must leave zero surfaces behind (see DataCompanionHost).
+    readonly property var enabledGenericIds: root.genericInstances.filter(i => i.enabled).map(i => i.id)
     readonly property string reactionTarget: document.reactionTarget || "primary"
     readonly property int maxGenericInstances: 6
 

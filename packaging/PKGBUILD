@@ -23,6 +23,10 @@ depends=(
   'python'
   'qt6-base'
   'qt6-declarative'
+  # modules/background/Wallpaper.qml imports QtMultimedia at load time;
+  # without it the whole shell config fails to load. Found by the
+  # Install-on-Arch graphical validation in a clean VM, qa#98.
+  'qt6-multimedia'
   # Hornero Signal typography, RFC 0001 section 3.3; glyphs ship in-tree.
   'ttf-ibm-plex'
   'quickshell>=0.3.2'

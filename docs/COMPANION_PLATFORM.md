@@ -240,4 +240,12 @@ validate against the target canvas, and a habitat applies only
 when the character has none. Cross-package add-ons are deferred.
 The import path for existing sprite folders (Shimeji-style names
 recognized) is `scripts/companion_import.py`, which emits a valid
-data-only package plus unmapped-file diagnostics.
+data-only package plus unmapped-file diagnostics. A poses folder
+(`poses.json` + single-frame stills) imports through
+`scripts/companion_import_poses.py`: poses map onto the closed
+action vocabulary (`cast`→`work`, `reading`→`look`, `happy`→`greet`,
+`sad`→`worry`+`error`), `eyes`/`glow` metadata is reported and
+dropped, and the caller must supply the real rights holder via
+`--author`/`--license`/`--source`/`--attribution` — the converter
+ships no artwork and the resulting package is published by the
+rights holder, never bundled by HorneroOS.

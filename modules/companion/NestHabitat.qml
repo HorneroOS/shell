@@ -30,8 +30,8 @@ import QtQuick
 // Hidden (or Gaming, or no nest built yet) means no surface and no timers:
 // the Variants model is empty, so nothing exists to cost anything.
 //
-// The art is a clearly marked placeholder (Habitat.ART); final art replaces
-// the frames without touching this logic.
+// The art is the final illustrated Nest (Habitat.ART, #716); the
+// frames can be replaced without touching this logic.
 Scope {
     id: root
 

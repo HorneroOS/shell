@@ -19,9 +19,10 @@
 // - A hidden nest is no surface at all (the host unloads it), so a hidden
 //   habitat costs nothing.
 
-// The art in assets/companion/frames/nest-*.png is a placeholder drawn by
-// scripts/companion_nest.py; the final nest awaits the master art.
-var ART = { status: "placeholder", note: "procedural placeholder, final nest art pending" };
+// The art in assets/companion/frames/nest-*.png is the final
+// illustrated clay-workshop Nest (shell 1.3.7, #716), derived through
+// the deterministic art pipeline with registered masters.
+var ART = { status: "final", note: "illustrated clay-workshop nest (#716)" };
 
 var ANCHORS = ["bottom-right", "bottom-left", "top-right", "top-left"];
 var PLACEMENTS = ["anchored", "withJavi"];

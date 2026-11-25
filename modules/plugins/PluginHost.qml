@@ -139,7 +139,9 @@ Scope {
                             }
                             if ((manifest.placement ?? "background") !== "background" || manifest.entrypoint !== "Main.qml"
                                     || (manifest.surfaces && Object.keys(manifest.surfaces).length > 0)
-                                    || !contributes || Object.keys(contributes).length !== 1 || !Array.isArray(contributes.companions)
+                                    || !contributes || !Array.isArray(contributes.companions)
+                                    || Object.keys(contributes).some(k => k !== "companions" && k !== "companionAddons")
+                                    || (contributes.companionAddons !== undefined && !Array.isArray(contributes.companionAddons))
                                     || !capabilities
                                     || (Array.isArray(capabilities.processCommands) && capabilities.processCommands.length > 0)
                                     || (Array.isArray(capabilities.networkHosts) && capabilities.networkHosts.length > 0)

@@ -18,7 +18,7 @@ def test_defaults_validate_and_are_stable():
     r = run_js(M, "console.log(JSON.stringify([defaults(), sanitize(defaults()), sanitize(null), sanitize('x'), sanitize([1])]));")
     assert all(x == r[0] for x in r[1:])
     d = r[0]
-    # no click target on placeholder art until the user asks for one
+    # no click target on nest art until the user asks for one
     assert d["placement"] == "anchored" and d["clickAction"] == "none"
     assert d["modeLevel"] == {"focus": "dim", "everyday": "normal", "signal": "rich", "gaming": "hidden", "studio": "dim"}
 
@@ -156,8 +156,10 @@ def test_surface_wanted_gates():
 
 
 @NODE
-def test_art_is_marked_placeholder():
-    assert run_js(M, "console.log(JSON.stringify(ART));")["status"] == "placeholder"
+def test_art_is_final():
+    # The illustrated clay-workshop Nest replaced the procedural
+    # placeholder in shell 1.3.7 (#716); keep the marker honest.
+    assert run_js(M, "console.log(JSON.stringify(ART));")["status"] == "final"
 
 
 @NODE

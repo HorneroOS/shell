@@ -292,6 +292,19 @@ def test_player_completes_single_frame_one_shots():
     assert "setReel" in PLAYER
 
 
+def test_generic_frame_player_completes_single_frame_one_shots():
+    # Same trap as Player, generic side: the frame timer only runs for
+    # multi-frame reels with motion on, so a non-looping single-frame
+    # (or reduced-motion) reel must complete asynchronously from
+    # restart() or the companion freezes in its one-shot pose forever.
+    # Every one-shot in the official Capi/Bitín packs is single-frame.
+    generic = (COMPANION / "CompanionFramePlayer.qml").read_text()
+    assert "function completeReel" in generic
+    assert "Qt.callLater(root.completeReel)" in generic
+    assert "root.reel.frames.length <= 1" in generic
+    assert "root.reducedMotion" in generic
+
+
 def test_host_window_tracks_content_size():
     # On the supported Quickshell, explicit PanelWindow size is only
     # honored at map time (chat card stayed clipped at sprite size);

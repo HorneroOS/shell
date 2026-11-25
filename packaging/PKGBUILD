@@ -20,6 +20,13 @@ depends=(
   'horneroctl-bin>=0.2.0_preview51'
   'libqalculate'
   'pipewire'
+  # Full session stack: bare pipewire has no session manager, so an
+  # adopted system ends up with no audio devices at all. The ISO
+  # composition masks this; package adopters hit silent audio.
+  # Found by the Install-on-Arch graphical validation, qa#98.
+  'wireplumber'
+  'pipewire-pulse'
+  'pipewire-alsa'
   'python'
   'qt6-base'
   'qt6-declarative'

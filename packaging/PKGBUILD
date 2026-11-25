@@ -22,8 +22,8 @@ depends=(
   'pipewire'
   # Full session stack: bare pipewire has no session manager, so an
   # adopted system ends up with no audio devices at all. The ISO
-  # composition masks this; package adopters hit silent audio
-  # (Install-on-Arch graphical validation in a clean VM, qa#98).
+  # composition masks this; package adopters hit silent audio.
+  # Found by the Install-on-Arch graphical validation, qa#98.
   'wireplumber'
   'pipewire-pulse'
   'pipewire-alsa'

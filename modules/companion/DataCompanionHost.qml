@@ -106,22 +106,22 @@ Scope {
                 mask: stage
 
                 function placeFromInstance(): void {
-                    if (!slot.instance || !win.targetScreen)
+                    if (!slot.instance || !slot.targetScreen)
                         return;
-                    win.px = Math.max(0, Math.min(win.targetScreen.width - win.contentW,
-                        Math.round(slot.instance.posX * win.targetScreen.width - win.contentW / 2)));
-                    win.py = Math.max(0, Math.min(win.targetScreen.height - win.contentH,
-                        Math.round(slot.instance.posY * win.targetScreen.height - win.contentH)));
+                    win.px = Math.max(0, Math.min(slot.targetScreen.width - win.contentW,
+                        Math.round(slot.instance.posX * slot.targetScreen.width - win.contentW / 2)));
+                    win.py = Math.max(0, Math.min(slot.targetScreen.height - win.contentH,
+                        Math.round(slot.instance.posY * slot.targetScreen.height - win.contentH)));
                     win.positioned = true;
                 }
 
                 function commitPosition(): void {
-                    if (!slot.instance || !win.targetScreen)
+                    if (!slot.instance || !slot.targetScreen)
                         return;
                     CompanionInstances.updateInstance(slot.instance.id, {
-                        posX: Math.max(0, Math.min(1, (win.px + win.contentW / 2) / Math.max(1, win.targetScreen.width))),
-                        posY: Math.max(0, Math.min(1, (win.py + win.contentH) / Math.max(1, win.targetScreen.height))),
-                        screenName: win.targetScreen.name
+                        posX: Math.max(0, Math.min(1, (win.px + win.contentW / 2) / Math.max(1, slot.targetScreen.width))),
+                        posY: Math.max(0, Math.min(1, (win.py + win.contentH) / Math.max(1, slot.targetScreen.height))),
+                        screenName: slot.targetScreen.name
                     });
                 }
 
@@ -210,7 +210,7 @@ Scope {
                         playing: win.visible
                         reducedMotion: Appearance.anim.reduced || CompanionStore.reducedMotion
                         accessoryIds: slot.instance ? slot.instance.accessories : []
-                        scale: (win.px + win.contentW / 2) > (win.targetScreen ? win.targetScreen.width / 2 : 0) ? -1 : 1
+                        scale: (win.px + win.contentW / 2) > (slot.targetScreen ? slot.targetScreen.width / 2 : 0) ? -1 : 1
                         Accessible.role: Accessible.Graphic
                         Accessible.name: slot.character ? CompanionRegistry.displayName(slot.character) : ""
                         onFinished: action => {
@@ -228,7 +228,7 @@ Scope {
                         anchors.horizontalCenter: sprite.horizontalCenter
                         text: win.bubbleText
                         theme: CompanionStore.bubbleTheme === "auto" ? (Signal.light ? "light" : "dark") : CompanionStore.bubbleTheme
-                        flip: (win.px + win.contentW / 2) > (win.targetScreen ? win.targetScreen.width / 2 : 0)
+                        flip: (win.px + win.contentW / 2) > (slot.targetScreen ? slot.targetScreen.width / 2 : 0)
                     }
 
                     MouseArea {
@@ -247,8 +247,8 @@ Scope {
                             if (!win.dragging)
                                 return;
                             const global = sprite.mapToGlobal(mouse.x, mouse.y);
-                            win.px = Math.max(0, Math.min(win.targetScreen.width - win.contentW, win.dragStartPx + global.x - win.dragStartGlobalX));
-                            win.py = Math.max(0, Math.min(win.targetScreen.height - win.contentH, win.dragStartPy + global.y - win.dragStartGlobalY));
+                            win.px = Math.max(0, Math.min(slot.targetScreen.width - win.contentW, win.dragStartPx + global.x - win.dragStartGlobalX));
+                            win.py = Math.max(0, Math.min(slot.targetScreen.height - win.contentH, win.dragStartPy + global.y - win.dragStartGlobalY));
                         }
                         onReleased: mouse => {
                             const moved = Math.abs(win.px - win.dragStartPx) + Math.abs(win.py - win.dragStartPy) > 6;

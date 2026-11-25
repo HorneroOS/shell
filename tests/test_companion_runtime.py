@@ -292,6 +292,17 @@ def test_player_completes_single_frame_one_shots():
     assert "setReel" in PLAYER
 
 
+def test_generic_host_places_instances_via_slot_screen():
+    # Regression (graphical validation): every generic instance window
+    # sat at 0,0 because placeFromInstance()/commitPosition() read
+    # `win.targetScreen`, a property that only exists on the slot
+    # Scope — the guard always bailed. The PanelWindow must go through
+    # slot.targetScreen like the habitat window does.
+    host = (COMPANION / "DataCompanionHost.qml").read_text()
+    assert "win.targetScreen" not in host
+    assert "slot.targetScreen" in host
+
+
 def test_generic_frame_player_completes_single_frame_one_shots():
     # Same trap as Player, generic side: the frame timer only runs for
     # multi-frame reels with motion on, so a non-looping single-frame

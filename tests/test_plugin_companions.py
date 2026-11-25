@@ -325,3 +325,59 @@ console.log(JSON.stringify({skins: Object.keys(merged.skins), habitat: merged.ha
     assert result["skins"] == ["default", "party"]
     assert result["habitat"] == "dock2"
     assert result["origSkins"] == ["default"]
+
+
+def test_frieren_poses_import_maps_poses_and_validates(tmp_path):
+    """A Frieren Desk poses folder (poses.json + single-frame stills)
+    converts to a valid data-only package: poses map onto the closed
+    action vocabulary, eyes/glow metadata is reported dropped, and
+    provenance is caller-supplied (the converter ships no artwork)."""
+    import subprocess
+
+    pytest.importorskip("PIL", reason="companion_import_frieren needs Pillow")
+    src = tmp_path / "poses"
+    src.mkdir()
+    image = png_bytes(228, 256)
+    poses = {}
+    for pose in ("idle", "think", "cast", "reading", "happy", "celebrate", "sad", "sleep", "dance"):
+        (src / f"{pose}.png").write_bytes(image)
+        poses[pose] = {"file": f"{pose}.png", "eyes": [[95, 74, 10, 9]], "skin": "#fae7d7", "glow": [59, 116]}
+    (src / "poses.json").write_text(json.dumps({"canvas": [228, 256], "poses": poses}))
+    out = tmp_path / "pkg"
+    proc = subprocess.run(
+        [sys.executable, "scripts/companion_import_frieren.py", str(src), str(out),
+         "--character", "frieren", "--title", "Frieren",
+         "--author", "Frieren Desk contributors",
+         "--license", "LicenseRef-FanArt",
+         "--source", "https://github.com/frieren-labs/frieren-desk",
+         "--attribution", "Character (c) Kanehito Yamada & Tsukasa Abe"],
+        cwd=ROOT, capture_output=True, text=True)
+    assert proc.returncode == 0, proc.stderr
+    assert "unmapped" in proc.stdout and "dance" in proc.stdout
+    assert "eyes/glow" in proc.stdout
+    V.validate_plugin(out)
+    definition_data = json.loads((out / "companions/frieren/companion.json").read_text())
+    assert not list(Draft202012Validator(DEFINITION_SCHEMA).iter_errors(definition_data))
+    actions = set(definition_data["skins"]["default"]["animations"])
+    # cast->work, reading->look, happy->greet, sad->worry+error
+    assert actions == {"idle", "think", "work", "look", "greet", "celebrate", "worry", "error", "sleep"}
+    assert definition_data["assistantCompatibility"] == ["none"]
+    assert definition_data["provenance"]["author"] == "Frieren Desk contributors"
+    assert "Yamada" in definition_data["provenance"]["attribution"]
+
+
+def test_frieren_poses_import_requires_idle_and_poses_file(tmp_path):
+    import subprocess
+
+    pytest.importorskip("PIL", reason="companion_import_frieren needs Pillow")
+    src = tmp_path / "poses"
+    src.mkdir()
+    (src / "think.png").write_bytes(png_bytes(64, 64))
+    (src / "poses.json").write_text(json.dumps({"poses": {"think": {"file": "think.png"}}}))
+    proc = subprocess.run(
+        [sys.executable, "scripts/companion_import_frieren.py", str(src), str(tmp_path / "pkg"),
+         "--character", "frieren", "--title", "Frieren",
+         "--author", "Someone", "--license", "MIT"],
+        cwd=ROOT, capture_output=True, text=True)
+    assert proc.returncode != 0
+    assert "idle" in proc.stderr + proc.stdout

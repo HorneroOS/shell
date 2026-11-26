@@ -1,5 +1,6 @@
 pragma Singleton
 
+import qs.config
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
@@ -15,10 +16,15 @@ Singleton {
             props.enabledSince = new Date();
     }
 
+    Component.onCompleted: {
+        if (props.enabled && isNaN(props.enabledSince.getTime()))
+            props.enabledSince = new Date();
+    }
+
     PersistentProperties {
         id: props
 
-        property bool enabled
+        property bool enabled: Config.general.idle.keepAwake
         property date enabledSince
 
         reloadableId: "idleInhibitor"

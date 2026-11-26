@@ -112,6 +112,7 @@
       ]
     },
     "idle": {
+      "keepAwake": true,
       "lockBeforeSleep": true,
       "inhibitWhenAudio": true,
       "timeouts": [

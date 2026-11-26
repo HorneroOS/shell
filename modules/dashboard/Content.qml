@@ -43,6 +43,10 @@ Item {
     // designed to fit; extension pages scroll inside this height.
     readonly property int paneAvailableHeight: Math.max(280, Screen.height - 220)
     readonly property int paneAvailableWidth: Math.max(640, Screen.width - 260)
+    // Minimum pane footprint so empty/loading tabs (e.g. Extensions) never
+    // collapse the top dashboard drawer or squash the tab bar.
+    readonly property int minPaneWidth: 720
+    readonly property int minPaneHeight: 300
     readonly property var extensionTabs: extStable.list
     // Native labels stay untranslated keys here; Tabs.qml renders
     // them through qsTr (its historical translation context), while
@@ -145,8 +149,8 @@ Item {
 
             flickableDirection: Flickable.HorizontalFlick
 
-            implicitWidth: currentItem.implicitWidth
-            implicitHeight: currentItem.implicitHeight
+            implicitWidth: Math.max(currentItem ? currentItem.implicitWidth : 0, root.minPaneWidth)
+            implicitHeight: Math.max(currentItem ? currentItem.implicitHeight : 0, root.minPaneHeight)
 
             contentX: currentItem.x
             contentWidth: row.implicitWidth

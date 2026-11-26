@@ -67,7 +67,6 @@ FloatingWindow {
         win._requesterAgentName = "";
         if (win.flow !== null) {
             requesterProc.command = [
-                "python3",
                 Qt.resolvedUrl("../../scripts/polkit_requester.py").toString().replace(/^file:\/\//, ""),
                 "--action-id",
                 win.flow.actionId || "",

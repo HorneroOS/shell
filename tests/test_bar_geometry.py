@@ -107,8 +107,8 @@ console.log(JSON.stringify({base: [icon(f), text(f), clock(f), micro(f)], rail: 
 
 def test_content_scale_is_a_schema_key_everywhere():
     default = json.loads((ROOT / "config/shell.default.json").read_text(encoding="utf-8"))
-    assert default["bar"]["sizes"]["contentScale"] == 1
-    assert "property real contentScale: 1" in (ROOT / "config/BarConfig.qml").read_text(encoding="utf-8")
+    assert default["bar"]["sizes"]["contentScale"] == 1.25
+    assert "property real contentScale: 1.25" in (ROOT / "config/BarConfig.qml").read_text(encoding="utf-8")
     assert "contentScale: bar.sizes.contentScale" in (ROOT / "config/Config.qml").read_text(encoding="utf-8")
     assert "Config.bar.sizes.contentScale" in (ROOT / "services/Density.qml").read_text(encoding="utf-8")
 

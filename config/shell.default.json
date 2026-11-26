@@ -163,7 +163,7 @@
     "wallpaperEnabled": true,
     "wallpaperFit": "crop",
     "desktopClock": {
-      "enabled": false,
+      "enabled": true,
       "scale": 1.0,
       "position": "bottom-right",
       "invertColors": false,
@@ -179,7 +179,7 @@
       }
     },
     "visualiser": {
-      "enabled": false,
+      "enabled": true,
       "autoHide": true,
       "blur": false,
       "rounding": 1,
@@ -188,7 +188,7 @@
     "video": {
       "enabled": true,
       "pauseOnFullscreen": true,
-      "pauseOnGameMode": false,
+      "pauseOnGameMode": true,
       "batteryLimitEnabled": false,
       "batteryLimit": 20
     }
@@ -208,11 +208,11 @@
     "perScreen": [],
     "bars": [
       {
-        "edge": "top",
-        "style": "inset",
+        "edge": "left",
+        "style": "attached",
         "reserve": true,
-        "margin": 18,
-        "thickness": 42,
+        "margin": 6,
+        "thickness": 60,
         "density": "values",
         "backdrop": "solid",
         "groups": {
@@ -223,48 +223,21 @@
               "options": {}
             },
             {
-              "id": "quickActions",
+              "id": "workspaces",
               "enabled": true,
-              "options": {
-                "actions": [
-                  "screenshot",
-                  "layoutPicker",
-                  "settings"
-                ]
-              }
-            },
-            {
-              "id": "audioSlider",
-              "enabled": true,
-              "options": {
-                "showValue": true
-              }
-            },
-            {
-              "id": "brightnessSlider",
-              "enabled": true,
-              "options": {
-                "showValue": true
-              }
+              "options": {}
             }
           ],
           "center": [
             {
-              "id": "clock",
-              "enabled": true,
-              "options": {
-                "showDate": true
-              }
-            },
-            {
-              "id": "weather",
+              "id": "activeWindow",
               "enabled": true,
               "options": {}
             }
           ],
           "end": [
             {
-              "id": "modeIndicator",
+              "id": "clock",
               "enabled": true,
               "options": {}
             },
@@ -285,49 +258,6 @@
             },
             {
               "id": "power",
-              "enabled": true,
-              "options": {}
-            }
-          ]
-        },
-        "radius": 11
-      },
-      {
-        "edge": "bottom",
-        "style": "attached",
-        "reserve": true,
-        "margin": 0,
-        "thickness": 28,
-        "density": "values",
-        "backdrop": "solid",
-        "groups": {
-          "start": [
-            {
-              "id": "workspaces",
-              "enabled": true,
-              "options": {}
-            }
-          ],
-          "center": [
-            {
-              "id": "media",
-              "enabled": true,
-              "options": {}
-            }
-          ],
-          "end": [
-            {
-              "id": "kbLayout",
-              "enabled": true,
-              "options": {}
-            },
-            {
-              "id": "resources",
-              "enabled": true,
-              "options": {}
-            },
-            {
-              "id": "battery",
               "enabled": true,
               "options": {}
             }
@@ -387,12 +317,12 @@
     },
     "status": {
       "showAudio": true,
-      "showMicrophone": false,
+      "showMicrophone": true,
       "showKbLayout": false,
       "showNetwork": true,
       "showWifi": true,
       "showBluetooth": true,
-      "showBattery": false,
+      "showBattery": true,
       "showLockStatus": true
     },
     "clock": {
@@ -401,8 +331,8 @@
       "background": false
     },
     "sizes": {
-      "innerWidth": 24,
-      "islandInset": 4,
+      "innerWidth": 44,
+      "islandInset": 6,
       "windowPreviewSize": 400,
       "trayMenuWidth": 300,
       "batteryWidth": 250,
@@ -410,7 +340,7 @@
       "kbLayoutWidth": 320,
       "autoDensity": true,
       "densityScale": 1,
-      "contentScale": 1,
+      "contentScale": 1.25,
       "iconScale": 1,
       "textScale": 1,
       "itemSpacing": 1,
@@ -420,7 +350,7 @@
   },
   "border": {
     "frameEnabled": true,
-    "thickness": 10,
+    "thickness": 6,
     "rounding": 25,
     "edgeWidth": 1,
     "fillet": 6
@@ -498,9 +428,9 @@
     "favouriteApps": [],
     "hiddenApps": [],
     "useFuzzy": {
-      "apps": false,
-      "actions": false,
-      "wallpapers": false
+      "apps": true,
+      "actions": true,
+      "wallpapers": true
     },
     "sizes": {
       "itemWidth": 640,
@@ -754,7 +684,7 @@
     "hideDelay": 2000,
     "align": "center",
     "enableBrightness": true,
-    "enableMicrophone": false,
+    "enableMicrophone": true,
     "sizes": {
       "sliderWidth": 30,
       "sliderHeight": 150
@@ -897,7 +827,7 @@
     "deck": {},
     "toasts": true,
     "auto": {
-      "fullscreenGaming": false,
+      "fullscreenGaming": true,
       "gamePatterns": []
     }
   },

@@ -45,7 +45,7 @@ def test_mode_indicator_is_registered_and_quiet_in_everyday():
 
 
 def test_cockpit_layouts_carry_the_mode_indicator_first_in_the_top_end():
-    for path in ("presets/cockpit.json", "presets/cockpit-clear.json", "config/shell.default.json"):
+    for path in ("presets/cockpit.json", "presets/cockpit-clear.json"):
         data = json.loads((ROOT / path).read_text())
         bars = data["bar"]["bars"] if "bar" in data else data["bars"]
         assert bars[0]["groups"]["end"][0]["id"] == "modeIndicator", path

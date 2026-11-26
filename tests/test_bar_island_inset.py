@@ -49,11 +49,11 @@ return [activeInset(4, 1, 24, 16), activeInset(8, 1, 24, 16), activeInset(0, 1, 
 
 def test_defaults_are_declared_serialised_and_validated():
     cfg = (ROOT / "config/BarConfig.qml").read_text(encoding="utf-8")
-    assert "property int islandInset: 4" in cfg and "property int activeInset: 4" in cfg
+    assert "property int islandInset: 6" in cfg and "property int activeInset: 4" in cfg
     ser = (ROOT / "config/Config.qml").read_text(encoding="utf-8")
     assert "islandInset: bar.sizes.islandInset" in ser and "activeInset: bar.workspaces.activeInset" in ser
     default = json.loads((ROOT / "config/shell.default.json").read_text(encoding="utf-8"))["bar"]
-    assert default["sizes"]["islandInset"] == 4 and default["workspaces"]["activeInset"] == 4
+    assert default["sizes"]["islandInset"] == 6 and default["workspaces"]["activeInset"] == 4
     geo = (ROOT / "modules/controlcenter/taskbar/bargeometry.js").read_text(encoding="utf-8")
     assert "islandInset: { min: 0, max: 12" in geo and "activeInset: { min: 0, max: 8" in geo
 

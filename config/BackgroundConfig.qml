@@ -11,7 +11,7 @@ JsonObject {
     property Video video: Video {}
 
     component DesktopClock: JsonObject {
-        property bool enabled: false
+        property bool enabled: true
         property real scale: 1.0
         property string position: "bottom-right"
         property bool invertColors: false
@@ -34,13 +34,13 @@ JsonObject {
     component Video: JsonObject {
         property bool enabled: true
         property bool pauseOnFullscreen: true
-        property bool pauseOnGameMode: false
+        property bool pauseOnGameMode: true
         property bool batteryLimitEnabled: false
         property int batteryLimit: 20
     }
 
     component Visualiser: JsonObject {
-        property bool enabled: false
+        property bool enabled: true
         property bool autoHide: true
         property bool blur: false
         property real rounding: 1

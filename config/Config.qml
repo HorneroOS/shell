@@ -392,6 +392,7 @@ Singleton {
                 explorer: general.apps.explorer
             },
             idle: {
+                keepAwake: general.idle.keepAwake,
                 lockBeforeSleep: general.idle.lockBeforeSleep,
                 inhibitWhenAudio: general.idle.inhibitWhenAudio,
                 timeouts: general.idle.timeouts

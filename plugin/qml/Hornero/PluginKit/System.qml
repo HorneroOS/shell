@@ -31,4 +31,8 @@ QtObject {
     readonly property bool storageAvailable: (Services.SystemUsage.disks?.length ?? 0) > 0
     // [{ mount, used, total, free, perc }] in KiB, one per physical disk.
     readonly property var disks: Services.SystemUsage.disks ? Services.SystemUsage.disks.map(d => Object.assign({}, d)) : []
+
+    // System uptime in seconds (from /proc/uptime via SystemUsage).
+    readonly property real uptimeSeconds: Services.SystemUsage.uptimeSeconds
+    readonly property real uptime: Services.SystemUsage.uptimeSeconds
 }

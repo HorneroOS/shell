@@ -33,6 +33,9 @@ Singleton {
     property real memTotal
     readonly property real memPerc: memTotal > 0 ? memUsed / memTotal : 0
 
+    // Uptime in seconds from /proc/uptime
+    property real uptimeSeconds: 0
+
     // Storage properties (aggregated)
     readonly property real storagePerc: {
         let totalUsed = 0;
@@ -118,6 +121,7 @@ Singleton {
         onTriggered: {
             stat.reload();
             meminfo.reload();
+            uptimeFile.reload();
             const now = Date.now();
             if (root.due(root._lastSensorsAt, now, root.sensorIntervalMs)) {
                 root._lastSensorsAt = now;
@@ -140,6 +144,18 @@ Singleton {
             const nameMatch = text().match(/model name\s*:\s*(.+)/);
             if (nameMatch)
                 root.cpuName = root.cleanCpuName(nameMatch[1]);
+        }
+    }
+
+    FileView {
+        id: uptimeFile
+
+        path: "/proc/uptime"
+        onLoaded: {
+            const raw = text().trim().split(/\s+/)[0];
+            const parsed = parseFloat(raw);
+            if (isFinite(parsed) && parsed >= 0)
+                root.uptimeSeconds = parsed;
         }
     }
 

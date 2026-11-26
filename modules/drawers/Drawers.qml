@@ -533,9 +533,9 @@ Variants {
                         },
                             disabled: bar.disabled,
                         config: {
-                            bars: Config.bar.barsFor("HDMI-A-1").map(b => ({edge: b.edge, style: b.style})),
-                            styleFor: Config.bar.styleFor("HDMI-A-1"),
-                            floatingFor: Config.bar.isFloatingFor("HDMI-A-1")
+                            bars: Config.bar.barsFor(scope.modelData.name).map(b => ({edge: b.edge, style: b.style})),
+                            styleFor: Config.bar.styleFor(scope.modelData.name),
+                            floatingFor: Config.bar.isFloatingFor(scope.modelData.name)
                         },
                         barFloating: bar.floating,
                         barStyleAttached: bar.styleAttached,

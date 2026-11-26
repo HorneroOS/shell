@@ -122,11 +122,41 @@ console.log(JSON.stringify(cases.map(c => evaluate(c).ok)));
 
 def test_calc_bare_expression_gate():
     out = _run_js(SERVICES / "calcparser.js", """
-console.log(JSON.stringify(["2+3", "42", "firefox", "2+", "(1+2)"].map(c => looksLikeExpression(c))));
+console.log(JSON.stringify(["2+3", "42", "firefox", "2+", "(1+2)", "10 km to mi"].map(c => looksLikeExpression(c))));
 """)
-    assert out == [True, False, False, False, True]
+    assert out == [True, False, False, False, True, True]
     # The gate exists but bare routing is deliberately off (docs).
     assert 'return "apps";' in APPLIST
+
+
+def test_calc_parser_unit_conversions():
+    out = _run_js(SERVICES / "calcparser.js", """
+const cases = [
+    "100 c to f",
+    "32 f in c",
+    "0 c to k",
+    "2 gb to mb",
+    "1024 mb to gb",
+    "1 km to m",
+    "1 kg to g",
+    "2 h to min",
+    "(1+1) gb to mb",
+    "10 km to kg",
+    "10 foo to bar"
+];
+console.log(JSON.stringify(cases.map(c => evaluate(c))));
+""")
+    assert out[0]["ok"] and out[0]["text"] == "212 °F"
+    assert out[1]["ok"] and out[1]["text"] == "0 °C"
+    assert out[2]["ok"] and out[2]["text"] == "273.15 K"
+    assert out[3]["ok"] and out[3]["text"] == "2048 MB"
+    assert out[4]["ok"] and out[4]["text"] == "1 GB"
+    assert out[5]["ok"] and out[5]["text"] == "1000 m"
+    assert out[6]["ok"] and out[6]["text"] == "1000 g"
+    assert out[7]["ok"] and out[7]["text"] == "120 min"
+    assert out[8]["ok"] and out[8]["text"] == "2048 MB"
+    assert not out[9]["ok"], "cross-category conversion must fail"
+    assert not out[10]["ok"], "unknown unit conversion must fail"
 
 
 # --- Windows provider ----------------------------------------------------

@@ -75,11 +75,16 @@ private:
         std::vector<float> stereo;
     };
 
-    Chunk m_buffer1;
-    Chunk m_buffer2;
-    std::atomic<Chunk*> m_readBuffer;
-    std::atomic<Chunk*> m_writeBuffer;
+    static constexpr quint32 READY_NEW_DATA = 4u;
+
+    Chunk m_buffers[3];
+    quint32 m_writeIdx;
+    std::atomic<quint32> m_readyState;
+    quint32 m_readIdx;
+    QMutex m_readMutex;
     quint32 m_sampleCount;
+
+    const Chunk& acquireReadChunk();
 
     void reload();
     void start() override;

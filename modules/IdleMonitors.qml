@@ -6,6 +6,7 @@ import qs.services
 import Hornero.Internal
 import Quickshell
 import Quickshell.Wayland
+import QtQml
 
 Scope {
     id: root
@@ -18,19 +19,21 @@ Scope {
     // the lock owner, while dpms/dispatch actions stay with the main
     // shell's monitors (never executed twice).
     property bool lockOnly: false
+    property bool pendingSleepLock: false
 
     function handleIdleAction(action: var): void {
         if (!action)
             return;
 
-        if (lockOnly && action !== "lock" && action !== "unlock")
+        if (lockOnly && action !== "lock")
             return;
 
         if (action === "lock")
             lock.requestLock();
-        else if (action === "unlock")
-            lock.lock.locked = false;
-        else if (action === "dpms off")
+        else if (action === "unlock") {
+            console.warn("IdleMonitors: ignoring unauthenticated unlock idle action");
+            return;
+        } else if (action === "dpms off")
             Compositor.setMonitorsPowered(false);
         else if (action === "dpms on")
             Compositor.setMonitorsPowered(true);
@@ -43,12 +46,34 @@ Scope {
     }
 
     LogindManager {
+        id: logindManager
+
         onAboutToSleep: {
-            if (Config.general.idle.lockBeforeSleep)
-                root.lock.requestLock();
+            if (Config.general.idle.lockBeforeSleep) {
+                if (root.lock.lock.secure) {
+                    logindManager.releaseSleepInhibitor();
+                } else {
+                    root.pendingSleepLock = true;
+                    root.lock.requestLock();
+                }
+            } else {
+                logindManager.releaseSleepInhibitor();
+            }
         }
+        onResumed: root.pendingSleepLock = false
         onLockRequested: root.lock.requestLock()
         onUnlockRequested: root.lock.lock.unlock()
+    }
+
+    Connections {
+        target: root.lock.lock
+
+        function onSecureChanged(): void {
+            if (root.lock.lock.secure && root.pendingSleepLock) {
+                root.pendingSleepLock = false;
+                logindManager.releaseSleepInhibitor();
+            }
+        }
     }
 
     Variants {

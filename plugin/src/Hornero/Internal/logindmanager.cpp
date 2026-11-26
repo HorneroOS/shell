@@ -10,6 +10,10 @@ namespace hornero::internal {
 
 LogindManager::LogindManager(QObject* parent)
     : QObject(parent) {
+    m_inhibitReleaseTimer.setSingleShot(true);
+    m_inhibitReleaseTimer.setInterval(5000);
+    QObject::connect(&m_inhibitReleaseTimer, &QTimer::timeout, this, &LogindManager::releaseSleepInhibitor);
+
     auto bus = QDBusConnection::systemBus();
     if (!bus.isConnected()) {
         qWarning() << "LogindManager::LogindManager: failed to connect to system bus:" << bus.lastError().message();
@@ -23,6 +27,8 @@ LogindManager::LogindManager(QObject* parent)
         qWarning() << "LogindManager::LogindManager: failed to connect to PrepareForSleep signal:"
             << bus.lastError().message();
     }
+
+    acquireSleepInhibitor();
 
     QDBusInterface login1("org.freedesktop.login1", "/org/freedesktop/login1", "org.freedesktop.login1.Manager", bus);
     const QDBusReply<QDBusObjectPath> reply = login1.call("GetSession", "auto");
@@ -47,10 +53,48 @@ LogindManager::LogindManager(QObject* parent)
     }
 }
 
+LogindManager::~LogindManager() {
+    releaseSleepInhibitor();
+}
+
+void LogindManager::acquireSleepInhibitor() {
+    if (m_sleepInhibitor.isValid()) {
+        return;
+    }
+
+    auto bus = QDBusConnection::systemBus();
+    if (!bus.isConnected()) {
+        return;
+    }
+
+    QDBusInterface login1("org.freedesktop.login1", "/org/freedesktop/login1", "org.freedesktop.login1.Manager", bus);
+    const QDBusReply<QDBusUnixFileDescriptor> reply =
+        login1.call("Inhibit", "sleep", "hornero-shell", "Lock screen before suspend", "delay");
+    if (!reply.isValid()) {
+        qWarning() << "LogindManager::acquireSleepInhibitor: failed to acquire sleep delay inhibitor:"
+            << reply.error().message();
+        return;
+    }
+
+    m_sleepInhibitor = reply.value();
+}
+
+void LogindManager::releaseSleepInhibitor() {
+    m_inhibitReleaseTimer.stop();
+    if (m_sleepInhibitor.isValid()) {
+        m_sleepInhibitor = QDBusUnixFileDescriptor();
+    }
+}
+
 void LogindManager::handlePrepareForSleep(bool sleep) {
     if (sleep) {
+        if (m_sleepInhibitor.isValid()) {
+            m_inhibitReleaseTimer.start();
+        }
         emit aboutToSleep();
     } else {
+        m_inhibitReleaseTimer.stop();
+        acquireSleepInhibitor();
         emit resumed();
     }
 }

@@ -87,7 +87,11 @@ void HyprExtras::applyOptions(const QVariantHash& options) {
 
     QString request = "[[BATCH]]";
     for (auto it = options.constBegin(); it != options.constEnd(); ++it) {
-        request += QString("keyword %1 %2;").arg(it.key(), it.value().toString());
+        QString key = it.key();
+        QString value = it.value().toString();
+        key.remove(';').remove('\n').remove('\r');
+        value.remove(';').remove('\n').remove('\r');
+        request += QString("keyword %1 %2;").arg(key, value);
     }
 
     makeRequest(request, [this](bool success, const QByteArray& res) {
@@ -192,11 +196,21 @@ HyprExtras::SocketPtr HyprExtras::makeRequest(
     }
 
     auto socket = SocketPtr::create(this);
+    auto responseBuffer = QSharedPointer<QByteArray>::create();
+    auto finished = QSharedPointer<bool>::create(false);
 
     QObject::connect(socket.data(), &QLocalSocket::connected, this, [=, this]() {
-        QObject::connect(socket.data(), &QLocalSocket::readyRead, this, [socket, callback]() {
-            const auto response = socket->readAll();
-            callback(true, std::move(response));
+        QObject::connect(socket.data(), &QLocalSocket::readyRead, this, [socket, responseBuffer]() {
+            responseBuffer->append(socket->readAll());
+        });
+
+        QObject::connect(socket.data(), &QLocalSocket::disconnected, this, [socket, responseBuffer, finished, callback]() {
+            if (*finished) {
+                return;
+            }
+            *finished = true;
+            responseBuffer->append(socket->readAll());
+            callback(true, std::move(*responseBuffer));
             socket->close();
         });
 
@@ -205,6 +219,13 @@ HyprExtras::SocketPtr HyprExtras::makeRequest(
     });
 
     QObject::connect(socket.data(), &QLocalSocket::errorOccurred, this, [=](QLocalSocket::LocalSocketError err) {
+        if (err == QLocalSocket::PeerClosedError) {
+            return;
+        }
+        if (*finished) {
+            return;
+        }
+        *finished = true;
         qWarning() << "HyprExtras::makeRequest: error making request:" << err << "| request:" << request;
         callback(false, {});
         socket->close();

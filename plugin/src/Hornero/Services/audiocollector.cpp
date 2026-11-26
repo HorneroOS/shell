@@ -24,7 +24,6 @@ PipeWireWorker::PipeWireWorker(std::stop_token token, AudioCollector* collector)
     m_loop = pw_main_loop_new(nullptr);
     if (!m_loop) {
         qWarning() << "PipeWireWorker::init: failed to create PipeWire main loop";
-        pw_deinit();
         return;
     }
 
@@ -76,7 +75,6 @@ PipeWireWorker::PipeWireWorker(std::stop_token token, AudioCollector* collector)
         qWarning() << "PipeWireWorker::init: failed to connect stream";
         pw_stream_destroy(m_stream);
         pw_main_loop_destroy(m_loop);
-        pw_deinit();
         return;
     }
 
@@ -84,7 +82,6 @@ PipeWireWorker::PipeWireWorker(std::stop_token token, AudioCollector* collector)
 
     pw_stream_destroy(m_stream);
     pw_main_loop_destroy(m_loop);
-    pw_deinit();
 }
 
 void PipeWireWorker::handleTimeout(void* data, uint64_t expirations) {
@@ -138,12 +135,10 @@ void PipeWireWorker::processStream() {
 
     const spa_buffer* buf = buffer->buffer;
     const qint16* samples = reinterpret_cast<const qint16*>(buf->datas[0].data);
-    if (samples == nullptr) {
-        return;
+    if (samples != nullptr && buf->datas[0].chunk != nullptr) {
+        const quint32 count = buf->datas[0].chunk->size / 2;
+        m_collector->loadChunk(samples, count);
     }
-
-    const quint32 count = buf->datas[0].chunk->size / 2;
-    m_collector->loadChunk(samples, count);
 
     pw_stream_queue_buffer(m_stream, buffer);
 }
@@ -170,28 +165,41 @@ AudioCollector& AudioCollector::instance() {
 }
 
 void AudioCollector::clearBuffer() {
-    auto* writeBuffer = m_writeBuffer.load(std::memory_order_relaxed);
-    std::fill(writeBuffer->mono.begin(), writeBuffer->mono.end(), 0.0f);
-    std::fill(writeBuffer->stereo.begin(), writeBuffer->stereo.end(), 0.0f);
+    auto& writeBuffer = m_buffers[m_writeIdx];
+    std::fill(writeBuffer.mono.begin(), writeBuffer.mono.end(), 0.0f);
+    std::fill(writeBuffer.stereo.begin(), writeBuffer.stereo.end(), 0.0f);
 
-    auto* oldRead = m_readBuffer.exchange(writeBuffer, std::memory_order_acq_rel);
-    m_writeBuffer.store(oldRead, std::memory_order_release);
+    const quint32 prev = m_readyState.exchange(m_writeIdx | READY_NEW_DATA, std::memory_order_acq_rel);
+    m_writeIdx = prev & 3u;
 }
 
 void AudioCollector::loadChunk(const qint16* samples, quint32 count) {
     const quint32 frames = std::min(count / ac::CHANNELS, ac::CHUNK_SIZE);
 
-    auto* writeBuffer = m_writeBuffer.load(std::memory_order_relaxed);
+    auto& writeBuffer = m_buffers[m_writeIdx];
     for (quint32 i = 0; i < frames; ++i) {
         const float l = samples[2 * i] / 32768.0f;
         const float r = samples[2 * i + 1] / 32768.0f;
-        writeBuffer->stereo[2 * i] = l;
-        writeBuffer->stereo[2 * i + 1] = r;
-        writeBuffer->mono[i] = 0.5f * (l + r);
+        writeBuffer.stereo[2 * i] = l;
+        writeBuffer.stereo[2 * i + 1] = r;
+        writeBuffer.mono[i] = 0.5f * (l + r);
+    }
+    if (frames < ac::CHUNK_SIZE) {
+        std::fill(writeBuffer.mono.begin() + frames, writeBuffer.mono.end(), 0.0f);
+        std::fill(writeBuffer.stereo.begin() + frames * ac::CHANNELS, writeBuffer.stereo.end(), 0.0f);
     }
 
-    auto* oldRead = m_readBuffer.exchange(writeBuffer, std::memory_order_acq_rel);
-    m_writeBuffer.store(oldRead, std::memory_order_release);
+    const quint32 prev = m_readyState.exchange(m_writeIdx | READY_NEW_DATA, std::memory_order_acq_rel);
+    m_writeIdx = prev & 3u;
+}
+
+const AudioCollector::Chunk& AudioCollector::acquireReadChunk() {
+    const quint32 state = m_readyState.load(std::memory_order_acquire);
+    if (state & READY_NEW_DATA) {
+        const quint32 prev = m_readyState.exchange(m_readIdx, std::memory_order_acq_rel);
+        m_readIdx = prev & 3u;
+    }
+    return m_buffers[m_readIdx];
 }
 
 quint32 AudioCollector::readChunk(float* out, quint32 count) {
@@ -199,8 +207,9 @@ quint32 AudioCollector::readChunk(float* out, quint32 count) {
         count = ac::CHUNK_SIZE;
     }
 
-    auto* readBuffer = m_readBuffer.load(std::memory_order_acquire);
-    std::copy_n(readBuffer->mono.cbegin(), count, out);
+    QMutexLocker lock(&m_readMutex);
+    const auto& readBuffer = acquireReadChunk();
+    std::copy_n(readBuffer.mono.cbegin(), count, out);
 
     return count;
 }
@@ -210,8 +219,9 @@ quint32 AudioCollector::readChunk(double* out, quint32 count) {
         count = ac::CHUNK_SIZE;
     }
 
-    auto* readBuffer = m_readBuffer.load(std::memory_order_acquire);
-    std::transform(readBuffer->mono.cbegin(), readBuffer->mono.cbegin() + count, out, [](float sample) {
+    QMutexLocker lock(&m_readMutex);
+    const auto& readBuffer = acquireReadChunk();
+    std::transform(readBuffer.mono.cbegin(), readBuffer.mono.cbegin() + count, out, [](float sample) {
         return static_cast<double>(sample);
     });
 
@@ -223,8 +233,9 @@ quint32 AudioCollector::readStereoChunk(double* out, quint32 frames) {
         frames = ac::CHUNK_SIZE;
     }
 
-    auto* readBuffer = m_readBuffer.load(std::memory_order_acquire);
-    std::transform(readBuffer->stereo.cbegin(), readBuffer->stereo.cbegin() + frames * ac::CHANNELS, out,
+    QMutexLocker lock(&m_readMutex);
+    const auto& readBuffer = acquireReadChunk();
+    std::transform(readBuffer.stereo.cbegin(), readBuffer.stereo.cbegin() + frames * ac::CHANNELS, out,
         [](float sample) {
             return static_cast<double>(sample);
         });
@@ -234,10 +245,14 @@ quint32 AudioCollector::readStereoChunk(double* out, quint32 frames) {
 
 AudioCollector::AudioCollector(QObject* parent)
     : Service(parent)
-    , m_buffer1 { std::vector<float>(ac::CHUNK_SIZE), std::vector<float>(ac::CHUNK_SIZE * ac::CHANNELS) }
-    , m_buffer2 { std::vector<float>(ac::CHUNK_SIZE), std::vector<float>(ac::CHUNK_SIZE * ac::CHANNELS) }
-    , m_readBuffer(&m_buffer1)
-    , m_writeBuffer(&m_buffer2) {}
+    , m_buffers {
+        Chunk { std::vector<float>(ac::CHUNK_SIZE), std::vector<float>(ac::CHUNK_SIZE * ac::CHANNELS) },
+        Chunk { std::vector<float>(ac::CHUNK_SIZE), std::vector<float>(ac::CHUNK_SIZE * ac::CHANNELS) },
+        Chunk { std::vector<float>(ac::CHUNK_SIZE), std::vector<float>(ac::CHUNK_SIZE * ac::CHANNELS) },
+    }
+    , m_writeIdx(0)
+    , m_readyState(1)
+    , m_readIdx(2) {}
 
 AudioCollector::~AudioCollector() {
     stop();

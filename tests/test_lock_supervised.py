@@ -56,7 +56,7 @@ def test_main_shell_delegates_only_when_opted_in():
 def test_idle_monitors_lock_only_filter():
     src = IDLE_QML.read_text()
     assert "property bool lockOnly: false" in src
-    assert 'action !== "lock" && action !== "unlock"' in src
+    assert 'action !== "lock"' in src
 
 
 def test_supervised_unit():

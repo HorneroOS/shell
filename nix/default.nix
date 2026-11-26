@@ -12,7 +12,6 @@
   lm_sensors,
   swappy,
   wl-clipboard,
-  libqalculate,
   bash,
   hyprland,
   ibm-plex,
@@ -43,7 +42,6 @@
       lm_sensors
       swappy
       wl-clipboard
-      libqalculate
       bash
       hyprland
     ]
@@ -96,7 +94,7 @@
     };
 
     nativeBuildInputs = [cmake ninja pkg-config];
-    buildInputs = [qt6.qtbase qt6.qtdeclarative libqalculate pipewire aubio libcava fftw];
+    buildInputs = [qt6.qtbase qt6.qtdeclarative pipewire aubio libcava fftw];
 
     dontWrapQtApps = true;
     cmakeFlags =

@@ -40,11 +40,13 @@ Scope {
             return;
         }
         root.flightText = text;
-        // No free-text values ever enter this object (enums, booleans,
-        // numbers only), but quote defensively anyway.
-        const quoted = text.replace(/'/g, "'\\''");
-        const path = CompanionStore.stateFilePath;
-        writer.command = ["sh", "-c", `mkdir -p "$(dirname '${path}')" && tmp="$(mktemp "$(dirname '${path}')/.state.XXXXXX")" && printf '%s' '${quoted}' > "$tmp" && mv -f "$tmp" '${path}'`];
+        writer.command = [
+            "sh", "-c",
+            'mkdir -p "$(dirname "$1")" && tmp="$(mktemp "$(dirname "$1")/.state.XXXXXX")" && printf "%s" "$2" > "$tmp" && mv -f "$tmp" "$1"',
+            "--",
+            CompanionStore.stateFilePath,
+            text
+        ];
         writer.running = true;
     }
 

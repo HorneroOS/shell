@@ -378,11 +378,11 @@ def test_declared_process_command_and_network_host_are_accepted(tmp_path):
     plugin = make_plugin(
         tmp_path,
         'import QtQuick\nimport Quickshell.Io\nItem {\n'
-        ' Process { command: ["curl", "https://api.example.test/status"] }\n'
+        ' Process { command: ["gh", "api", "https://api.example.test/status"] }\n'
         ' property string endpoint: "https://api.example.test/status"\n}',
     )
     manifest = json.loads((plugin / "manifest.json").read_text())
-    manifest["capabilities"]["processCommands"] = ["curl"]
+    manifest["capabilities"]["processCommands"] = ["gh"]
     manifest["capabilities"]["networkHosts"] = ["api.example.test"]
     (plugin / "manifest.json").write_text(json.dumps(manifest))
     VALIDATOR.validate_plugin(plugin)

@@ -22,23 +22,15 @@ JsonObject {
     property list<var> perScreen: []
 
     // Every bar is explicit, edge-unique, and grouped into start/center/end.
-    // Factory default is the Cockpit layout (presets/cockpit.json): act on
-    // top, glance below. Hornero Left/Right remain available as presets.
+    // Factory default is the Hornero Left layout (presets/hornero-left.json):
+    // single left attached rail. Cockpit and other layouts remain available as presets.
     property list<var> bars: [{
-        edge: "top", style: "inset", reserve: true, margin: 18, radius: 11,
-        thickness: 42, density: "values", backdrop: "solid",
+        edge: "left", style: "attached", reserve: true, margin: 6,
+        thickness: 60, density: "values", backdrop: "solid",
         groups: {
-            start: [{id: "logo", enabled: true}, {id: "quickActions", enabled: true, options: {actions: ["screenshot", "layoutPicker", "settings"]}}, {id: "audioSlider", enabled: true, options: {showValue: true}}, {id: "brightnessSlider", enabled: true, options: {showValue: true}}],
-            center: [{id: "clock", enabled: true, options: {showDate: true}}, {id: "weather", enabled: true}],
-            end: [{id: "modeIndicator", enabled: true}, {id: "statusIcons", enabled: true}, {id: "tray", enabled: true}, {id: "extensions", enabled: true}, {id: "power", enabled: true}]
-        }
-    }, {
-        edge: "bottom", style: "attached", reserve: true, margin: 0,
-        thickness: 28, density: "values", backdrop: "solid",
-        groups: {
-            start: [{id: "workspaces", enabled: true}],
-            center: [{id: "media", enabled: true}],
-            end: [{id: "kbLayout", enabled: true}, {id: "resources", enabled: true}, {id: "battery", enabled: true}]
+            start: [{id: "logo", enabled: true}, {id: "workspaces", enabled: true}],
+            center: [{id: "activeWindow", enabled: true}],
+            end: [{id: "clock", enabled: true}, {id: "statusIcons", enabled: true}, {id: "tray", enabled: true}, {id: "extensions", enabled: true}, {id: "power", enabled: true}]
         }
     }]
 
@@ -241,15 +233,15 @@ JsonObject {
     }
 
     component Status: JsonObject {
-        // Cockpit factory set: audio in the top rail cluster, battery has
-        // its own bottom-strip segment so it stays out of the cluster.
+        // Hornero Left factory set: audio, microphone, network, bluetooth and
+        // battery all shown in the statusIcons cluster.
         property bool showAudio: true
-        property bool showMicrophone: false
+        property bool showMicrophone: true
         property bool showKbLayout: false
         property bool showNetwork: true
         property bool showWifi: true
         property bool showBluetooth: true
-        property bool showBattery: false
+        property bool showBattery: true
         property bool showLockStatus: true
     }
 
@@ -266,18 +258,18 @@ JsonObject {
     }
 
     component Sizes: JsonObject {
-        property int innerWidth: 24
+        property int innerWidth: 44
         // Island inset: least gap (px at density 1, 0..12) between islands
         // (workspace track, tray, status chips) and the bar's cross-axis
         // edges. Cell size stays the upper bound; the inset only shrinks
         // cells on thin bars. Cockpit Clear ships 0 (no island is drawn).
-        property int islandInset: 4
+        property int islandInset: 6
         // Density (services/Density.qml): follow the screen's logical height,
         // times a user multiplier (0.75..1.5).
         property bool autoDensity: true
         property real densityScale: 1
         // Icon and label size multiplier (0.75..1.5): chunky rails raise it.
-        property real contentScale: 1
+        property real contentScale: 1.25
         // Item style (all multipliers of the density-derived values): icon
         // size, text size, gap between items/segments, and the text weight
         // (300..600) of values, dates and labels.

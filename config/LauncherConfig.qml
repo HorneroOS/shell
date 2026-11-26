@@ -18,9 +18,9 @@ JsonObject {
     property Sizes sizes: Sizes {}
 
     component UseFuzzy: JsonObject {
-        property bool apps: false
-        property bool actions: false
-        property bool wallpapers: false
+        property bool apps: true
+        property bool actions: true
+        property bool wallpapers: true
     }
 
     component Sizes: JsonObject {

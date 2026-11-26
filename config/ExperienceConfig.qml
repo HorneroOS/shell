@@ -20,9 +20,9 @@ JsonObject {
     property var deck: ({})
 
     component Auto: JsonObject {
-        // Automatic switching is off by default and local-only: it reads
-        // the focused window's app id and fullscreen state, nothing else.
-        property bool fullscreenGaming: false
+        // Local-only automatic switching: reads the focused window's app id
+        // and fullscreen state, nothing else.
+        property bool fullscreenGaming: true
         // App id regular expressions treated as games; empty uses the
         // built-in list (Steam app windows, Gamescope, Windows .exe).
         property list<string> gamePatterns: []

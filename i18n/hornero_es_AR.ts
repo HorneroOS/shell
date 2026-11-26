@@ -9859,6 +9859,10 @@ Snapshot del plugin: %3</translation>
         <translation>Administrador</translation>
     </message>
     <message>
+        <source>AI AGENT</source>
+        <translation>AGENTE IA</translation>
+    </message>
+    <message>
         <source>Password</source>
         <translation>Contraseña</translation>
     </message>

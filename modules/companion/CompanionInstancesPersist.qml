@@ -28,9 +28,13 @@ Scope {
         if (writer.running)
             return;
         root.flightText = text;
-        const quoted = text.replace(/'/g, "'\\''");
-        const path = root.filePath;
-        writer.command = ["sh", "-c", `mkdir -p "$(dirname '${path}')" && tmp="$(mktemp "$(dirname '${path}')/.instances.XXXXXX")" && printf '%s' '${quoted}' > "$tmp" && mv -f "$tmp" '${path}'`];
+        writer.command = [
+            "sh", "-c",
+            'mkdir -p "$(dirname "$1")" && tmp="$(mktemp "$(dirname "$1")/.instances.XXXXXX")" && printf "%s" "$2" > "$tmp" && mv -f "$tmp" "$1"',
+            "--",
+            root.filePath,
+            text
+        ];
         writer.running = true;
     }
 

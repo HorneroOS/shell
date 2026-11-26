@@ -31,7 +31,7 @@ Scope {
             } else {
                 buffer = buffer.slice(0, -1);
             }
-        } else if (/^\S$/.test(event.text)) {
+        } else if (event.text.length > 0 && !/[\x00-\x1f\x7f-\x9f]/.test(event.text)) {
             buffer += event.text;
         }
     }
@@ -130,7 +130,7 @@ Scope {
     Process {
         id: availProc
 
-        command: ["sh", "-c", "fprintd-list $USER"]
+        command: ["fprintd-list", Quickshell.env("USER")]
         onExited: code => {
             fprint.available = code === 0;
             fprint.checkAvail();

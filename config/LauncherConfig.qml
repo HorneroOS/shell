@@ -78,7 +78,7 @@ JsonObject {
         {
             name: "Calculator",
             icon: "calculator",
-            description: "Do simple math equations (powered by Qalc)",
+            description: "Do simple math equations",
             command: ["autocomplete", "calc"],
             enabled: true,
             dangerous: false

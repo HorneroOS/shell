@@ -87,7 +87,13 @@ endif()
 
 if("shell" IN_LIST ENABLE_MODULES)
     foreach(dir assets components config i18n modules services utils)
-        install(DIRECTORY ${dir} DESTINATION "${INSTALL_QSCONFDIR}")
+        if(dir STREQUAL "assets")
+            install(DIRECTORY ${dir} DESTINATION "${INSTALL_QSCONFDIR}"
+                PATTERN "companion/sources" EXCLUDE
+                PATTERN "companion/preview" EXCLUDE)
+        else()
+            install(DIRECTORY ${dir} DESTINATION "${INSTALL_QSCONFDIR}")
+        endif()
     endforeach()
     install(FILES shell.qml lock.qml LICENSE.GPL-3.0 NOTICE DESTINATION "${INSTALL_QSCONFDIR}")
     # Bare `qs` resolves the config named "default" (Quickshell scans

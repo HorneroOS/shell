@@ -30,17 +30,29 @@ SAFE_HOST = re.compile(
 SAFE_PATH = re.compile(r"^[A-Za-z0-9._/-]+$")
 IMPORT = re.compile(r"^\s*import\s+([A-Za-z0-9_.]+)(?:\s+[0-9.]+)?", re.MULTILINE)
 PROCESS_COMMAND = re.compile(
-    r"\bProcess\s*\{(?:(?!\bProcess\s*\{).)*?\bcommand\s*:\s*\[\s*['\"]([^'\"]+)['\"]",
+    r'\bProcess\s*\{(?:(?!\bProcess\s*\{).)*?\bcommand\s*:\s*\[\s*"([^"]+)"',
     re.DOTALL,
 )
 URL_LITERAL = re.compile(r"https?://([^/\s'\"\\]+)", re.IGNORECASE)
-FORBIDDEN_COMMANDS = {"sh", "bash", "dash", "zsh", "fish", "sudo", "doas", "su"}
+FORBIDDEN_COMMANDS = {
+    "sh", "bash", "dash", "zsh", "fish", "sudo", "doas", "su",
+    "python", "python2", "python3", "perl", "ruby", "node", "nodejs",
+    "curl", "wget",
+}
+FORBIDDEN_COMMAND_PATTERNS = (
+    re.compile(r"^python\d+(?:\.\d+)*$"),
+)
 FORBIDDEN_MARKERS = (
     re.compile(r"\b(?:sudo|doas|pkexec)\b|\bsu\s+-"),
     re.compile(r"\b(?:sh|bash|dash|zsh|fish)\s+-c\b"),
     re.compile(r"(?:^|[/\\])\.ssh(?:[/\\]|$)"),
     re.compile(r"(?:^|[\s='\"])/etc(?:/|\s|['\"]|$)"),
     re.compile(r"\b(?:HOME|XDG_CONFIG_HOME)\s*[/+]"),
+    re.compile(r"\bQuickshell\s*\.\s*execDetached\b"),
+    re.compile(r"\bQt\s*\.\s*createQmlObject\b"),
+    re.compile(r"\bQt\s*\.\s*createComponent\b"),
+    re.compile(r"\beval\s*\("),
+    re.compile(r"\bFunction\s*\("),
 )
 LOCALE_TAG = re.compile(r"^[a-z]{2,3}(_[A-Z]{2})?$")
 # PluginKit Translations calls with a literal source string, e.g.
@@ -1870,6 +1882,7 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
 
     actual: set[str] = set()
     qml_files: list[Path] = []
+    js_files: list[Path] = []
     for path in root.rglob("*"):
         relative = path.relative_to(root).as_posix()
         if path.is_symlink():
@@ -1888,6 +1901,8 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
         actual.add(relative)
         if path.suffix == ".qml":
             qml_files.append(path)
+        elif path.suffix.lower() in {".js", ".mjs"}:
+            js_files.append(path)
     if actual != set(safe_files):
         missing_files = sorted(actual - set(safe_files))
         absent = sorted(set(safe_files) - actual)
@@ -1949,7 +1964,12 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
             raise ValidationError(f"{path.relative_to(root)} Process must use a literal argv array command")
         for executable in commands_used:
             basename = Path(executable).name
-            if basename != executable or basename in FORBIDDEN_COMMANDS or basename not in commands:
+            if (
+                basename != executable
+                or basename in FORBIDDEN_COMMANDS
+                or any(pat.fullmatch(basename) for pat in FORBIDDEN_COMMAND_PATTERNS)
+                or basename not in commands
+            ):
                 raise ValidationError(f"{path.relative_to(root)} invokes undeclared or disallowed command {executable!r}")
         if re.search(r"\b(?:XMLHttpRequest|WebSocket|NetworkRequest|TcpSocket)\b", source) and not hosts:
             raise ValidationError(f"{path.relative_to(root)} uses network APIs but declares no networkHosts")
@@ -1961,6 +1981,18 @@ def _validate_manifest(manifest: dict, root: Path) -> None:
             )
         _check_signal_contract(path.relative_to(root), source)
         _check_providers(path.relative_to(root), source, declared_providers)
+        for host in URL_LITERAL.findall(source):
+            hostname = host.split(":", 1)[0].lower()
+            if hostname not in {item.lower() for item in hosts}:
+                raise ValidationError(f"{path.relative_to(root)} contains an undeclared network host {hostname}")
+
+    for path in js_files:
+        source = path.read_text(encoding="utf-8")
+        for marker in FORBIDDEN_MARKERS:
+            if marker.search(source):
+                raise ValidationError(f"{path.relative_to(root)} contains a forbidden shell, privilege, or host-path pattern")
+        if re.search(r"\b(?:XMLHttpRequest|WebSocket|NetworkRequest|TcpSocket)\b", source) and not hosts:
+            raise ValidationError(f"{path.relative_to(root)} uses network APIs but declares no networkHosts")
         for host in URL_LITERAL.findall(source):
             hostname = host.split(":", 1)[0].lower()
             if hostname not in {item.lower() for item in hosts}:
@@ -2296,7 +2328,7 @@ def _validate_payload_size(root: Path) -> None:
             continue
         size = path.stat().st_size
         total += size
-        if path.suffix in (".qml", ".js", ".json") and size > MAX_SOURCE_FILE_BYTES:
+        if path.suffix in (".qml", ".js", ".mjs", ".json") and size > MAX_SOURCE_FILE_BYTES:
             raise ValidationError(
                 f"{path.relative_to(root)} is {size // 1024} KiB; source files are limited to "
                 f"{MAX_SOURCE_FILE_BYTES // 1024} KiB (split or trim it)"

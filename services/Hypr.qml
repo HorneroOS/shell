@@ -21,7 +21,9 @@ Singleton {
     readonly property HyprlandMonitor focusedMonitor: Hyprland.focusedMonitor
     readonly property int activeWsId: focusedWorkspace?.id ?? 1
 
-    readonly property HyprKeyboard keyboard: extras.devices.keyboards.find(kb => kb.main) ?? null
+    readonly property bool isHyprlandSession: (Quickshell.env("NIRI_SOCKET") ?? "") === "" && (Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") ?? "") !== ""
+
+    readonly property HyprKeyboard keyboard: extras?.devices?.keyboards?.find(kb => kb.main) ?? null
     readonly property bool capsLock: keyboard?.capsLock ?? false
     readonly property bool numLock: keyboard?.numLock ?? false
     readonly property string defaultKbLayout: keyboard?.layout.split(",")[0] ?? "??"
@@ -29,9 +31,9 @@ Singleton {
     readonly property string kbLayout: kbMap.get(kbLayoutFull) ?? "??"
     readonly property var kbMap: new Map()
 
-    readonly property alias extras: extras
-    readonly property alias options: extras.options
-    readonly property alias devices: extras.devices
+    readonly property var extras: extrasLoader.item
+    readonly property var options: extras?.options ?? null
+    readonly property var devices: extras?.devices ?? null
 
     property bool hadKeyboard
     property string lastSpecialWorkspace: ""
@@ -80,13 +82,14 @@ Singleton {
     }
 
     function reloadDynamicConfs(): void {
-        extras.batchMessage(["keyword bindlni ,Caps_Lock,global,hornero:refreshDevices", "keyword bindlni ,Num_Lock,global,hornero:refreshDevices"]);
+        if (extras)
+            extras.batchMessage(["keyword bindlni ,Caps_Lock,global,hornero:refreshDevices", "keyword bindlni ,Num_Lock,global,hornero:refreshDevices"]);
     }
 
     // HyprExtras can only install bindings while a Hyprland session owns the
     // IPC socket. The singleton is still available to QML in other sessions.
     Component.onCompleted: {
-        if ((Quickshell.env("NIRI_SOCKET") ?? "") === "" && (Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") ?? "") !== "")
+        if (root.isHyprlandSession)
             reloadDynamicConfs();
     }
 
@@ -193,7 +196,7 @@ Singleton {
         target: "hypr"
 
         function refreshDevices(): void {
-            extras.refreshDevices();
+            extras?.refreshDevices();
         }
 
         function cycleSpecialWorkspace(direction: string): void {
@@ -208,11 +211,14 @@ Singleton {
     CustomShortcut {
         name: "refreshDevices"
         description: "Reload devices"
-        onPressed: extras.refreshDevices()
-        onReleased: extras.refreshDevices()
+        onPressed: extras?.refreshDevices()
+        onReleased: extras?.refreshDevices()
     }
 
-    HyprExtras {
-        id: extras
+    Loader {
+        id: extrasLoader
+
+        active: root.isHyprlandSession
+        sourceComponent: HyprExtras {}
     }
 }

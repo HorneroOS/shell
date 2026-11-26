@@ -4,6 +4,8 @@ import Quickshell.Io
 import QtQuick
 
 JsonObject {
+    id: root
+
     property string pluginId: ""
     // Per-instance settings (RFC 0003 section 6): bind this to the host
     // context property `hostInstanceId` of the widget root. Empty (the
@@ -12,6 +14,43 @@ JsonObject {
     // values, still validated against the plugin's declarations.
     property string instanceId: ""
     readonly property string namespaceKey: instanceId !== "" ? `${pluginId}#${instanceId}` : pluginId
+
+    // Emitted whenever a setting in this plugin's namespace changes (via
+    // setValue, resetValue, resetAll, Control Center, or config reload).
+    signal changed(string key, var value)
+
+    property var _lastValues: ({})
+
+    function _snapshotNamespace(): var {
+        const storedSettings = Config.plugins.settings;
+        const storedPlugins = storedSettings && typeof storedSettings === "object" && !Array.isArray(storedSettings) ? storedSettings : null;
+        const candidateValues = storedPlugins && namespaceKey !== "" ? storedPlugins[namespaceKey] : null;
+        if (!candidateValues || typeof candidateValues !== "object" || Array.isArray(candidateValues))
+            return ({});
+        return JSON.parse(JSON.stringify(candidateValues));
+    }
+
+    function _diffAndEmit(): void {
+        const prev = root._lastValues && typeof root._lastValues === "object" ? root._lastValues : ({});
+        const next = root._snapshotNamespace();
+        root._lastValues = next;
+        const keys = new Set([...Object.keys(prev), ...Object.keys(next)]);
+        for (const key of keys) {
+            if (JSON.stringify(prev[key]) !== JSON.stringify(next[key]))
+                root.changed(key, root.value(key, undefined));
+        }
+    }
+
+    Component.onCompleted: _lastValues = _snapshotNamespace()
+    onNamespaceKeyChanged: _lastValues = _snapshotNamespace()
+
+    readonly property Connections _settingsWatcher: Connections {
+        target: Config.plugins
+
+        function onSettingsChanged(): void {
+            root._diffAndEmit();
+        }
+    }
 
     function value(key: string, fallback: var): var {
         if (!validKey(key))

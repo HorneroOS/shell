@@ -5,6 +5,7 @@ import qs.components.controls
 import qs.services
 import qs.config
 import Quickshell
+import Quickshell.Io
 import Quickshell.Services.Polkit
 import QtQuick
 import QtQuick.Controls
@@ -23,6 +24,10 @@ FloatingWindow {
     // AuthFlow is non-creatable in the qmltypes; hold it untyped.
     readonly property var flow: win.agent.flow
     property bool _closing: false
+    property string _requesterLabel: ""
+    property string _requesterDetail: ""
+    property bool _requesterIsAgent: false
+    property string _requesterAgentName: ""
 
     title: qsTr("Authentication required")
     color: Signal.tPalette.base
@@ -56,6 +61,20 @@ FloatingWindow {
     onFlowChanged: {
         win._closing = false;
         win.clearSecret();
+        win._requesterLabel = "";
+        win._requesterDetail = "";
+        win._requesterIsAgent = false;
+        win._requesterAgentName = "";
+        if (win.flow !== null) {
+            requesterProc.command = [
+                Qt.resolvedUrl("../../scripts/polkit_requester.py").toString().replace(/^file:\/\//, ""),
+                "--action-id",
+                win.flow.actionId || "",
+                "--message",
+                win.flow.message || ""
+            ];
+            requesterProc.running = true;
+        }
     }
 
     // FloatingWindow has no closing signal: a hide that is not driven
@@ -88,6 +107,27 @@ FloatingWindow {
 
         function onAuthenticationRequestCancelled(): void {
             win.clearSecret();
+        }
+    }
+
+    Process {
+        id: requesterProc
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const parsed = JSON.parse(this.text.trim());
+                    win._requesterLabel = parsed.label || "";
+                    win._requesterDetail = parsed.detail || "";
+                    win._requesterIsAgent = Boolean(parsed.is_agent);
+                    win._requesterAgentName = parsed.agent_name || "";
+                } catch (e) {
+                    win._requesterLabel = "";
+                    win._requesterDetail = "";
+                    win._requesterIsAgent = false;
+                    win._requesterAgentName = "";
+                }
+            }
         }
     }
 
@@ -126,6 +166,51 @@ FloatingWindow {
                     font.pointSize: Appearance.font.size.large
                     font.weight: Appearance.font.weight.strong
                     Accessible.role: Accessible.Heading
+                }
+            }
+        }
+
+        Well {
+            Layout.fillWidth: true
+            visible: win._requesterLabel !== ""
+            implicitHeight: requesterCol.implicitHeight + Appearance.padding.small * 2
+            outline: win._requesterIsAgent ? Signal.palette.alert : Signal.palette.rule
+
+            ColumnLayout {
+                id: requesterCol
+
+                anchors.fill: parent
+                anchors.margins: Appearance.padding.small
+                spacing: 2
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Appearance.spacing.small
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: win._requesterLabel
+                        font.weight: Appearance.font.weight.strong
+                        color: win._requesterIsAgent ? Signal.palette.alert : Signal.palette.ink
+                        wrapMode: Text.Wrap
+                    }
+
+                    StyledText {
+                        visible: win._requesterIsAgent
+                        text: qsTr("AI AGENT")
+                        font.pointSize: Appearance.font.size.smaller
+                        font.weight: Appearance.font.weight.strong
+                        color: Signal.palette.alert
+                    }
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
+                    visible: win._requesterDetail !== ""
+                    text: win._requesterDetail
+                    color: Signal.palette.inkMuted
+                    font.pointSize: Appearance.font.size.smaller
+                    wrapMode: Text.Wrap
                 }
             }
         }

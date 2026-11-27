@@ -100,6 +100,16 @@ QtObject {
             readonly property list<string> keywords: ["experience", "mode", "modes", "focus", "everyday", "signal", "immersive", "gaming", "studio", "glow", "density", "telemetry"]
         },
         QtObject {
+            readonly property string id: "profiles"
+            readonly property string label: "profiles"
+            readonly property string title: qsTr("Profiles")
+            readonly property string icon: "folders"
+            readonly property string component: "profiles/ProfilesPane.qml"
+            readonly property string category: "look"
+            readonly property string description: qsTr("Universal workspace profiles, snapshots, and companion apps")
+            readonly property list<string> keywords: ["profile", "profiles", "snapshot", "snapshots", "studio", "audio", "restore", "rollback", "backup", "workspace"]
+        },
+        QtObject {
             readonly property string id: "taskbar"
             readonly property string label: "taskbar"
             readonly property string title: qsTr("Bars")

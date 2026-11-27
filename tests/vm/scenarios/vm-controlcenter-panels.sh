@@ -110,6 +110,7 @@ nightlight|Night Light
 accessibility|Accessibility
 customisation|Customisation
 experience|Experience
+profiles|Profiles
 taskbar|Bars
 layout|Layout
 dashboard|Dashboard

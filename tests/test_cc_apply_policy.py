@@ -95,7 +95,7 @@ def test_save_verbs_are_only_create_forms():
 GUARDED = {
     "power/PowerPane.qml", "updates/UpdatesPane.qml", "components/CtlCard.qml",
     "studio/StudioPane.qml", "keybinds/KeybindsPane.qml", "experience/ExperiencePane.qml", "bluetooth/PairingDialog.qml",
-    "extensions/ExtensionsPane.qml",
+    "extensions/ExtensionsPane.qml", "profiles/ProfilesPane.qml",
 }
 
 

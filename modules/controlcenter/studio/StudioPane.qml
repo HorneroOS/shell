@@ -3,12 +3,14 @@ pragma ComponentBehavior: Bound
 import ".."
 import "../components"
 import "../components/doctor.js" as Doctor
+import "../../../services/profiles.js" as Profiles
 import qs.components
 import qs.components.controls
 import qs.components.containers
 import qs.components.effects
 import qs.services
 import qs.config
+import Quickshell
 import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
@@ -90,6 +92,14 @@ Item {
     property string jobInput: ""
     property string jobOutput: ""
     property string armedRunId: ""
+    property bool profilesAvailable: false
+    property string activeProfileId: ""
+    property string activeProfileName: ""
+    property var quickProfiles: []
+    property bool routingAvailable: false
+    property var routingKits: []
+    property string routingError: ""
+    property bool qpwgraphInstalled: false
 
     function refresh(): void {
         if (selectionProc.running || doctorProc.running || modeProc.running || jobsProc.running)
@@ -106,6 +116,62 @@ Item {
         jobsProc.running = true;
         appProc.command = ["horneroctl", "--json", "studio", "app", "show", "artcraft-launcher"];
         appProc.running = true;
+        if (!profileListProc.running) {
+            profileListProc.command = ["horneroctl", "--json", "profile", "list"];
+            profileListProc.running = true;
+        }
+        if (!routingProc.running) {
+            routingProc.command = ["horneroctl", "--json", "studio", "routing", "status"];
+            routingProc.running = true;
+        }
+        if (!qpwgraphProbeProc.running) {
+            qpwgraphProbeProc.command = ["which", "qpwgraph"];
+            qpwgraphProbeProc.running = true;
+        }
+    }
+
+    function kitState(kitId: string): var {
+        for (let i = 0; i < root.routingKits.length; i++) {
+            if (root.routingKits[i].id === kitId)
+                return root.routingKits[i];
+        }
+        return {
+            "id": kitId,
+            "name": kitId,
+            "description": "",
+            "active": false,
+            "external": false,
+            "configFile": ""
+        };
+    }
+
+    function kitTitle(kitId: string): string {
+        if (kitId === "live-call")
+            return qsTr("Live Call Bus");
+        if (kitId === "browser-backing")
+            return qsTr("Browser Backing Sink");
+        if (kitId === "reaper-low-latency")
+            return qsTr("REAPER Low-Latency JACK Rule");
+        return kitId;
+    }
+
+    function kitDescription(kitId: string): string {
+        if (kitId === "live-call")
+            return qsTr("Creates virtual REAPER Lesson Mic, REAPER Program, and Discord Call endpoints.");
+        if (kitId === "browser-backing")
+            return qsTr("Creates an isolated Browser Backing sink to feed backing tracks into your DAW.");
+        if (kitId === "reaper-low-latency")
+            return qsTr("Applies a scoped 256/48000 scheduling period to REAPER via pipewire-jack.");
+        return "";
+    }
+
+    function toggleRoutingKit(kitId: string, enable: bool): void {
+        root.runModeAction(["horneroctl", "--json", "studio", "routing", enable ? "enable" : "disable", kitId, "--yes"]);
+    }
+
+    function captureStudioSnapshot(): void {
+        const slug = "studio-" + Math.floor(Date.now() / 1000);
+        root.runModeAction(["horneroctl", "--json", "profile", "capture", slug, "--name", "Studio Snapshot", "--domains", "experience,audio,power,extensions,apps", "--yes"]);
     }
 
     // Job actions reuse the single fixed-argv writer: cancellation is
@@ -374,6 +440,61 @@ Item {
         }
     }
 
+    Process {
+        id: profileListProc
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const res = Profiles.parseProfileList(text);
+                root.profilesAvailable = res.available;
+                root.activeProfileId = res.active;
+                root.quickProfiles = res.profiles.slice(0, 6);
+                let activeName = "";
+                for (let i = 0; i < res.profiles.length; i++) {
+                    if (res.profiles[i].id === res.active) {
+                        activeName = res.profiles[i].name;
+                        break;
+                    }
+                }
+                root.activeProfileName = activeName;
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            if ((exitCode !== 0 || exitStatus !== 0) && !root.profilesAvailable) {
+                root.quickProfiles = [];
+                root.activeProfileId = "";
+                root.activeProfileName = "";
+            }
+        }
+    }
+
+    Process {
+        id: routingProc
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const res = Profiles.parseRoutingStatus(text);
+                root.routingAvailable = res.available;
+                root.routingKits = res.kits;
+                root.routingError = res.available ? "" : res.error;
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            if ((exitCode !== 0 || exitStatus !== 0) && !root.routingAvailable && root.routingError.length === 0) {
+                root.routingKits = [];
+                root.routingError = qsTr("Routing kits unavailable (is horneroctl updated?).");
+            }
+        }
+    }
+
+    Process {
+        id: qpwgraphProbeProc
+
+        onExited: (exitCode, exitStatus) => {
+            root.qpwgraphInstalled = exitCode === 0 && exitStatus === 0;
+        }
+    }
+
     SplitPaneLayout {
         anchors.fill: parent
 
@@ -414,6 +535,63 @@ Item {
                             Accessible.name: qsTr("Run Studio doctor again")
                             enabled: !root.busy && !root.doctorLoading
                             onClicked: root.refresh()
+                        }
+                    }
+
+                    SectionContainer {
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Workspace Profiles & Snapshots")
+                            font.pointSize: Appearance.font.size.large
+                            font.weight: Appearance.font.weight.strong
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: root.profilesAvailable
+                                ? qsTr("Active profile: %1").arg(root.activeProfileName || root.activeProfileId || qsTr("Custom / Unsaved"))
+                                : qsTr("Workspace profiles unavailable (is horneroctl updated?)")
+                            wrapMode: Text.WordWrap
+                            color: Signal.palette.inkMuted
+                            font.pointSize: Appearance.font.size.small
+                        }
+
+                        Flow {
+                            Layout.fillWidth: true
+                            visible: root.quickProfiles.length > 0
+                            spacing: Appearance.spacing.small
+
+                            Repeater {
+                                model: root.quickProfiles
+
+                                delegate: TextButton {
+                                    required property var modelData
+
+                                    text: modelData.id === root.activeProfileId ? qsTr("%1 (Active)").arg(modelData.name) : modelData.name
+                                    type: modelData.id === root.activeProfileId ? TextButton.Filled : TextButton.Tonal
+                                    disabled: root.busy || modelData.id === root.activeProfileId
+                                    onClicked: root.runModeAction(["horneroctl", "--json", "profile", "apply", modelData.id, "--yes"])
+                                }
+                            }
+                        }
+
+                        Flow {
+                            Layout.fillWidth: true
+                            spacing: Appearance.spacing.small
+
+                            TextButton {
+                                text: qsTr("Capture Studio Snapshot")
+                                Accessible.name: qsTr("Capture Studio Snapshot")
+                                disabled: root.busy || !root.profilesAvailable
+                                onClicked: root.captureStudioSnapshot()
+                            }
+
+                            TextButton {
+                                text: qsTr("Manage Profiles")
+                                Accessible.name: qsTr("Open Profiles pane")
+                                type: TextButton.Tonal
+                                onClicked: root.session.navigateTo("profiles", "")
+                            }
                         }
                     }
 
@@ -589,6 +767,74 @@ Item {
                             wrapMode: Text.WordWrap
                             color: Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.small
+                        }
+                    }
+
+                    SectionContainer {
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: qsTr("Live Audio Routing Kits")
+                            font.pointSize: Appearance.font.size.large
+                            font.weight: Appearance.font.weight.strong
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: root.routingAvailable
+                                ? qsTr("Toggle reversible PipeWire drop-ins under ~/.config/pipewire/ for mic, guitar DI, browser backing, and REAPER.")
+                                : (root.routingError.length > 0 ? root.routingError : qsTr("Routing kits unavailable (is horneroctl updated?)."))
+                            wrapMode: Text.WordWrap
+                            color: Signal.palette.inkMuted
+                            font.pointSize: Appearance.font.size.small
+                        }
+
+                        Repeater {
+                            model: Profiles.ROUTING_KITS
+
+                            delegate: ColumnLayout {
+                                id: kitDelegate
+
+                                required property var modelData
+                                readonly property var state: root.kitState(modelData.id)
+
+                                Layout.fillWidth: true
+                                spacing: Appearance.spacing.smaller
+
+                                SwitchRow {
+                                    label: root.kitTitle(kitDelegate.modelData.id) + (kitDelegate.state.external ? " — " + qsTr("Managed externally (read-only)") : "")
+                                    checked: kitDelegate.state.active
+                                    enabled: !root.busy && root.routingAvailable && !kitDelegate.state.external
+                                    onToggled: checked => root.toggleRoutingKit(kitDelegate.modelData.id, checked)
+                                }
+
+                                StyledText {
+                                    Layout.fillWidth: true
+                                    text: root.kitDescription(kitDelegate.modelData.id)
+                                    wrapMode: Text.WordWrap
+                                    color: Signal.palette.inkMuted
+                                    font.pointSize: Appearance.font.size.small
+                                }
+                            }
+                        }
+
+                        Flow {
+                            Layout.fillWidth: true
+                            spacing: Appearance.spacing.small
+
+                            TextButton {
+                                text: root.qpwgraphInstalled ? qsTr("Open Patchbay (qpwgraph)") : qsTr("Patchbay (qpwgraph not installed)")
+                                Accessible.name: qsTr("Open qpwgraph PipeWire patchbay")
+                                type: TextButton.Tonal
+                                disabled: !root.qpwgraphInstalled
+                                onClicked: Quickshell.execDetached(["qpwgraph"])
+                            }
+
+                            TextButton {
+                                text: qsTr("Open Audio Stream Router")
+                                Accessible.name: qsTr("Open Control Center Audio pane")
+                                type: TextButton.Text
+                                onClicked: root.session.navigateTo("audio", "")
+                            }
                         }
                     }
 

@@ -945,6 +945,18 @@
 <context>
     <name>AudioPane</name>
     <message>
+        <source>Default</source>
+        <translation>Predeterminado</translation>
+    </message>
+    <message>
+        <source>Routing update failed.</source>
+        <translation>Falló la actualización de ruteo.</translation>
+    </message>
+    <message>
+        <source>Routing update failed (exit %1).</source>
+        <translation>Falló la actualización de ruteo (código %1).</translation>
+    </message>
+    <message>
         <source>Output</source>
         <translation>Salida</translation>
     </message>
@@ -1013,6 +1025,30 @@
         <translation>%1 reproduciendo</translation>
     </message>
     <message>
+        <source>Audio stream</source>
+        <translation>Flujo de audio</translation>
+    </message>
+    <message>
+        <source>%1 is at 0% volume</source>
+        <translation>%1 está al 0% de volumen</translation>
+    </message>
+    <message>
+        <source>Restore volume to 100% without changing mute state.</source>
+        <translation>Restaurá el volumen al 100% sin cambiar el estado de silencio.</translation>
+    </message>
+    <message>
+        <source>0% alert</source>
+        <translation>Alerta 0%</translation>
+    </message>
+    <message>
+        <source>Restore 100%</source>
+        <translation>Restaurar al 100%</translation>
+    </message>
+    <message>
+        <source>Restore %1 volume to 100%</source>
+        <translation>Restaurar el volumen de %1 al 100%</translation>
+    </message>
+    <message>
         <source>Volume for %1</source>
         <translation>Volumen de %1</translation>
     </message>
@@ -1021,8 +1057,36 @@
         <translation>Silenciar %1</translation>
     </message>
     <message>
+        <source>Route %1</source>
+        <translation>Rutear %1</translation>
+    </message>
+    <message>
+        <source>Current output: %1</source>
+        <translation>Salida actual: %1</translation>
+    </message>
+    <message>
         <source>No applications currently playing audio</source>
         <translation>Ninguna aplicación está reproduciendo audio</translation>
+    </message>
+    <message>
+        <source>Stream routing</source>
+        <translation>Ruteo de flujos</translation>
+    </message>
+    <message>
+        <source>Route active streams between headphones and virtual Studio sinks.</source>
+        <translation>Ruteá los flujos activos entre auriculares y salidas virtuales de Studio.</translation>
+    </message>
+    <message>
+        <source>Live stream routing is unavailable (is horneroctl updated?).</source>
+        <translation>El ruteo de flujos en vivo no está disponible (¿está actualizado horneroctl?).</translation>
+    </message>
+    <message>
+        <source>Refresh</source>
+        <translation>Actualizar</translation>
+    </message>
+    <message>
+        <source>Refresh audio stream routing</source>
+        <translation>Actualizar el ruteo de flujos de audio</translation>
     </message>
 </context>
 <context>
@@ -9067,6 +9131,14 @@ Snapshot del plugin: %3</translation>
         <translation>Modos de experiencia: Focus, Everyday, Signal, Gaming, Studio</translation>
     </message>
     <message>
+        <source>Profiles</source>
+        <translation>Perfiles</translation>
+    </message>
+    <message>
+        <source>Universal workspace profiles, snapshots, and companion apps</source>
+        <translation>Perfiles universales de espacio de trabajo, instantáneas y apps complementarias</translation>
+    </message>
+    <message>
         <source>Bars</source>
         <translation>Barras</translation>
     </message>
@@ -10193,6 +10265,313 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>%1 on monitor %2 at %3, %4</source>
         <translation>%1 en el monitor %2 en %3, %4</translation>
+    </message>
+</context>
+<context>
+    <name>ProfilesPane</name>
+    <message>
+        <source>Experience</source>
+        <translation>Experiencia</translation>
+    </message>
+    <message>
+        <source>Audio &amp; Routing</source>
+        <translation>Audio y ruteo</translation>
+    </message>
+    <message>
+        <source>Power</source>
+        <translation>Energía</translation>
+    </message>
+    <message>
+        <source>Extensions</source>
+        <translation>Extensiones</translation>
+    </message>
+    <message>
+        <source>Companion Apps</source>
+        <translation>Apps complementarias</translation>
+    </message>
+    <message>
+        <source>Profile service unavailable (is horneroctl updated?).</source>
+        <translation>El servicio de perfiles no está disponible (¿está actualizado horneroctl?).</translation>
+    </message>
+    <message>
+        <source>Could not preview profile changes.</source>
+        <translation>No se pudieron previsualizar los cambios del perfil.</translation>
+    </message>
+    <message>
+        <source>Could not preview profile diff (exit %1).</source>
+        <translation>No se pudo previsualizar la diferencia del perfil (código %1).</translation>
+    </message>
+    <message>
+        <source>Could not activate profile.</source>
+        <translation>No se pudo activar el perfil.</translation>
+    </message>
+    <message>
+        <source>Profile activated.</source>
+        <translation>Perfil activado.</translation>
+    </message>
+    <message>
+        <source>Profile action failed.</source>
+        <translation>Falló la acción del perfil.</translation>
+    </message>
+    <message>
+        <source>Snapshot captured.</source>
+        <translation>Instantánea capturada.</translation>
+    </message>
+    <message>
+        <source>Profile restored.</source>
+        <translation>Perfil restaurado.</translation>
+    </message>
+    <message>
+        <source>Companion apps launched.</source>
+        <translation>Apps complementarias iniciadas.</translation>
+    </message>
+    <message>
+        <source>Profile deleted.</source>
+        <translation>Perfil eliminado.</translation>
+    </message>
+    <message>
+        <source>Profile action failed (exit %1).</source>
+        <translation>Falló la acción del perfil (código %1).</translation>
+    </message>
+    <message>
+        <source>Capture and switch complete workspace snapshots across Experience, Audio &amp; Routing, Power, Extensions, and Companion Apps.</source>
+        <translation>Capturá y cambiá instantáneas completas de tu espacio de trabajo entre Experiencia, Audio y ruteo, Energía, Extensiones y Apps complementarias.</translation>
+    </message>
+    <message>
+        <source>Active profile</source>
+        <translation>Perfil activo</translation>
+    </message>
+    <message>
+        <source>Custom / Unsaved</source>
+        <translation>Personalizado / Sin guardar</translation>
+    </message>
+    <message>
+        <source>Reading profiles…</source>
+        <translation>Leyendo perfiles…</translation>
+    </message>
+    <message>
+        <source>Profile service unavailable</source>
+        <translation>Servicio de perfiles no disponible</translation>
+    </message>
+    <message>
+        <source>ID: %1</source>
+        <translation>ID: %1</translation>
+    </message>
+    <message>
+        <source>Current workspace has unsaved changes or no active profile.</source>
+        <translation>El espacio de trabajo actual tiene cambios sin guardar o ningún perfil activo.</translation>
+    </message>
+    <message>
+        <source>Revert to Previous</source>
+        <translation>Volver al anterior</translation>
+    </message>
+    <message>
+        <source>Restore Baseline</source>
+        <translation>Restaurar base</translation>
+    </message>
+    <message>
+        <source>Refresh</source>
+        <translation>Actualizar</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Error</translation>
+    </message>
+    <message>
+        <source>OK</source>
+        <translation>OK</translation>
+    </message>
+    <message>
+        <source>Safety check</source>
+        <translation>Verificación de seguridad</translation>
+    </message>
+    <message>
+        <source>%1s</source>
+        <translation>%1s</translation>
+    </message>
+    <message>
+        <source>Profile applied. Revert in %1s if audio or layout feels wrong.</source>
+        <translation>Perfil aplicado. Podés revertirlo en %1s si el audio o el diseño no se sienten bien.</translation>
+    </message>
+    <message>
+        <source>PipeWire restarted during activation.</source>
+        <translation>PipeWire se reinició durante la activación.</translation>
+    </message>
+    <message>
+        <source>Keep</source>
+        <translation>Mantener</translation>
+    </message>
+    <message>
+        <source>Revert Now</source>
+        <translation>Revertir ahora</translation>
+    </message>
+    <message>
+        <source>Companion apps</source>
+        <translation>Apps complementarias</translation>
+    </message>
+    <message>
+        <source>%1 not running</source>
+        <translation>%1 sin ejecutar</translation>
+    </message>
+    <message>
+        <source>This profile uses %1 app(s) that are not running: %2</source>
+        <translation>Este perfil usa %1 app(s) que no están corriendo: %2</translation>
+    </message>
+    <message>
+        <source>Launch missing apps in the background without leaving Settings.</source>
+        <translation>Iniciá las apps que faltan en segundo plano sin salir de Configuración.</translation>
+    </message>
+    <message>
+        <source>Launch missing apps</source>
+        <translation>Iniciar apps faltantes</translation>
+    </message>
+    <message>
+        <source>Launch %1</source>
+        <translation>Iniciar %1</translation>
+    </message>
+    <message>
+        <source>Profile preview</source>
+        <translation>Vista previa del perfil</translation>
+    </message>
+    <message>
+        <source>PipeWire restart required</source>
+        <translation>Se requiere reiniciar PipeWire</translation>
+    </message>
+    <message>
+        <source>Activating this profile will restart PipeWire briefly, which may interrupt active audio or calls.</source>
+        <translation>Al activar este perfil se va a reiniciar PipeWire brevemente, lo que puede interrumpir el audio o llamadas activas.</translation>
+    </message>
+    <message>
+        <source>Missing hardware detected</source>
+        <translation>Falta hardware detectado</translation>
+    </message>
+    <message>
+        <source>Companion apps not running</source>
+        <translation>Apps complementarias sin ejecutar</translation>
+    </message>
+    <message>
+        <source>Change</source>
+        <translation>Cambio</translation>
+    </message>
+    <message>
+        <source>No configuration differences reported.</source>
+        <translation>No se detectaron diferencias de configuración.</translation>
+    </message>
+    <message>
+        <source>Ready to switch to %1?</source>
+        <translation>¿Querés cambiar a %1?</translation>
+    </message>
+    <message>
+        <source>Activate now</source>
+        <translation>Activar ahora</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Cancelar</translation>
+    </message>
+    <message>
+        <source>Capture current state</source>
+        <translation>Capturar estado actual</translation>
+    </message>
+    <message>
+        <source>Profile name</source>
+        <translation>Nombre del perfil</translation>
+    </message>
+    <message>
+        <source>Give this snapshot a clear name; its file-safe ID is generated automatically.</source>
+        <translation>Ponéle un nombre claro a esta instantánea; el ID seguro para archivos se genera automáticamente.</translation>
+    </message>
+    <message>
+        <source>Type a profile name above (e.g. Guitar + Discord)</source>
+        <translation>Escribí un nombre arriba (ej. Guitarra + Discord)</translation>
+    </message>
+    <message>
+        <source>Description (optional)</source>
+        <translation>Descripción (opcional)</translation>
+    </message>
+    <message>
+        <source>Profile description</source>
+        <translation>Descripción del perfil</translation>
+    </message>
+    <message>
+        <source>Domains to include</source>
+        <translation>Dominios a incluir</translation>
+    </message>
+    <message>
+        <source>Choose which system domains this snapshot captures and restores.</source>
+        <translation>Elegí qué dominios del sistema captura y restaura esta instantánea.</translation>
+    </message>
+    <message>
+        <source>Create snapshot</source>
+        <translation>Crear instantánea</translation>
+    </message>
+    <message>
+        <source>Reads current state via horneroctl and stores a portable profile.</source>
+        <translation>Lee el estado actual mediante horneroctl y guarda un perfil portable.</translation>
+    </message>
+    <message>
+        <source>Capture Snapshot</source>
+        <translation>Capturar instantánea</translation>
+    </message>
+    <message>
+        <source>Saved profiles</source>
+        <translation>Perfiles guardados</translation>
+    </message>
+    <message>
+        <source>%1 profiles</source>
+        <translation>%1 perfiles</translation>
+    </message>
+    <message>
+        <source>No profiles saved yet</source>
+        <translation>Todavía no hay perfiles guardados</translation>
+    </message>
+    <message>
+        <source>Capture your first snapshot above to save your current setup.</source>
+        <translation>Capturá tu primera instantánea arriba para guardar tu configuración actual.</translation>
+    </message>
+    <message>
+        <source>Active</source>
+        <translation>Activo</translation>
+    </message>
+    <message>
+        <source>Baseline</source>
+        <translation>Base</translation>
+    </message>
+    <message>
+        <source>Hardware OK</source>
+        <translation>Hardware OK</translation>
+    </message>
+    <message>
+        <source>Missing hardware</source>
+        <translation>Falta hardware</translation>
+    </message>
+    <message>
+        <source>Apps %1/%2</source>
+        <translation>Apps %1/%2</translation>
+    </message>
+    <message>
+        <source>Missing hardware: %1</source>
+        <translation>Falta hardware: %1</translation>
+    </message>
+    <message>
+        <source>Activate</source>
+        <translation>Activar</translation>
+    </message>
+    <message>
+        <source>Preview diff</source>
+        <translation>Ver cambios</translation>
+    </message>
+    <message>
+        <source>Launch apps</source>
+        <translation>Iniciar apps</translation>
+    </message>
+    <message>
+        <source>Confirm delete</source>
+        <translation>Confirmar borrado</translation>
+    </message>
+    <message>
+        <source>Delete</source>
+        <translation>Eliminar</translation>
     </message>
 </context>
 <context>
@@ -11437,6 +11816,30 @@ Snapshot del plugin: %3</translation>
         <translation>Experimental — lo gestiona ArtCraft Launcher, solo activación manual</translation>
     </message>
     <message>
+        <source>Live Call Bus</source>
+        <translation>Bus de llamada en vivo</translation>
+    </message>
+    <message>
+        <source>Browser Backing Sink</source>
+        <translation>Salida para pista del navegador</translation>
+    </message>
+    <message>
+        <source>REAPER Low-Latency JACK Rule</source>
+        <translation>Regla JACK de baja latencia para REAPER</translation>
+    </message>
+    <message>
+        <source>Creates virtual REAPER Lesson Mic, REAPER Program, and Discord Call endpoints.</source>
+        <translation>Crea nodos virtuales REAPER Lesson Mic, REAPER Program y Discord Call.</translation>
+    </message>
+    <message>
+        <source>Creates an isolated Browser Backing sink to feed backing tracks into your DAW.</source>
+        <translation>Crea una salida aislada Browser Backing para mandar pistas de acompañamiento a tu DAW.</translation>
+    </message>
+    <message>
+        <source>Applies a scoped 256/48000 scheduling period to REAPER via pipewire-jack.</source>
+        <translation>Aplica un período de scheduling acotado de 256/48000 a REAPER mediante pipewire-jack.</translation>
+    </message>
+    <message>
         <source>Choose an input and an output path first.</source>
         <translation>Primero elegí una ruta de entrada y una de salida.</translation>
     </message>
@@ -11465,6 +11868,10 @@ Snapshot del plugin: %3</translation>
         <translation>Registro del trabajo no disponible (¿está instalado horneroctl?).</translation>
     </message>
     <message>
+        <source>Routing kits unavailable (is horneroctl updated?).</source>
+        <translation>Los kits de ruteo no están disponibles (¿está actualizado horneroctl?).</translation>
+    </message>
+    <message>
         <source>Studio is Planned. Choose the kinds of creative work you do on this computer: Hornero remembers your choice, and installing the related apps is a separate step you review and confirm later.</source>
         <translation>Studio está en planificación. Elegí qué tipo de trabajo creativo hacés en esta computadora: Hornero recuerda tu elección, e instalar las apps relacionadas es un paso aparte que revisás y confirmás después.</translation>
     </message>
@@ -11479,6 +11886,38 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>Run Studio doctor again</source>
         <translation>Volver a ejecutar el doctor de Studio</translation>
+    </message>
+    <message>
+        <source>Workspace Profiles &amp; Snapshots</source>
+        <translation>Perfiles e instantáneas del espacio de trabajo</translation>
+    </message>
+    <message>
+        <source>Active profile: %1</source>
+        <translation>Perfil activo: %1</translation>
+    </message>
+    <message>
+        <source>Custom / Unsaved</source>
+        <translation>Personalizado / Sin guardar</translation>
+    </message>
+    <message>
+        <source>Workspace profiles unavailable (is horneroctl updated?)</source>
+        <translation>Los perfiles del espacio de trabajo no están disponibles (¿está actualizado horneroctl?)</translation>
+    </message>
+    <message>
+        <source>%1 (Active)</source>
+        <translation>%1 (Activo)</translation>
+    </message>
+    <message>
+        <source>Capture Studio Snapshot</source>
+        <translation>Capturar instantánea de Studio</translation>
+    </message>
+    <message>
+        <source>Manage Profiles</source>
+        <translation>Administrar perfiles</translation>
+    </message>
+    <message>
+        <source>Open Profiles pane</source>
+        <translation>Abrir panel de Perfiles</translation>
     </message>
     <message>
         <source>Readiness</source>
@@ -11583,6 +12022,38 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>Effective rate/quantum and XRUN counts are not exposed by this backend, so they are not estimated here. Use Balanced unless you measured otherwise; no audio is recorded by this view.</source>
         <translation>Este backend no expone la tasa/quantum efectivos ni los conteos de XRUN, así que acá no se estiman. Usá Equilibrado salvo que hayas medido otra cosa; esta vista no graba audio.</translation>
+    </message>
+    <message>
+        <source>Live Audio Routing Kits</source>
+        <translation>Kits de ruteo de audio en vivo</translation>
+    </message>
+    <message>
+        <source>Toggle reversible PipeWire drop-ins under ~/.config/pipewire/ for mic, guitar DI, browser backing, and REAPER.</source>
+        <translation>Activá o desactivá configuraciones reversibles de PipeWire en ~/.config/pipewire/ para micrófono, guitarra DI, pista del navegador y REAPER.</translation>
+    </message>
+    <message>
+        <source>Managed externally (read-only)</source>
+        <translation>Gestionado externamente (solo lectura)</translation>
+    </message>
+    <message>
+        <source>Open Patchbay (qpwgraph)</source>
+        <translation>Abrir Patchbay (qpwgraph)</translation>
+    </message>
+    <message>
+        <source>Patchbay (qpwgraph not installed)</source>
+        <translation>Patchbay (qpwgraph no está instalado)</translation>
+    </message>
+    <message>
+        <source>Open qpwgraph PipeWire patchbay</source>
+        <translation>Abrir patchbay PipeWire qpwgraph</translation>
+    </message>
+    <message>
+        <source>Open Audio Stream Router</source>
+        <translation>Abrir ruteador de flujos de audio</translation>
+    </message>
+    <message>
+        <source>Open Control Center Audio pane</source>
+        <translation>Abrir panel de Audio del Centro de Control</translation>
     </message>
     <message>
         <source>Performance</source>

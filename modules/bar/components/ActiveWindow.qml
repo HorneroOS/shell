@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import qs.components
+import qs.components.controls
 import qs.services
 import qs.utils
 import qs.config
@@ -19,6 +20,11 @@ Item {
     Accessible.role: Accessible.StaticText
     Accessible.name: Compositor.activeWindowTitle || qsTr("Desktop")
     Accessible.description: Compositor.activeWindowAppId || qsTr("Current window")
+
+    Tooltip {
+        target: root
+        text: Compositor.activeWindowTitle || qsTr("Desktop")
+    }
 
     readonly property bool vertical: bar.vertical
     readonly property bool compactRail: vertical && Config.bar.popouts.activeWindow

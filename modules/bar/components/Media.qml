@@ -1,4 +1,5 @@
 import qs.components
+import qs.components.controls
 import qs.services
 import qs.config
 import QtQuick
@@ -65,13 +66,22 @@ Item {
         }
 
         BarText {
+            id: trackLabel
+
             visible: !root.vertical && root.title !== ""
             Layout.leftMargin: Appearance.spacing.small
             Layout.maximumWidth: root.maxTitleWidth
+            Layout.alignment: Qt.AlignVCenter
+            verticalAlignment: Text.AlignVCenter
             role: "label"
             text: root.title
             elide: Text.ElideRight
             color: root.tone.ink
+
+            Tooltip {
+                target: trackLabel
+                text: root.title
+            }
         }
     }
 }

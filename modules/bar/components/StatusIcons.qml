@@ -47,23 +47,27 @@ StyledRect {
     GridLayout {
         id: iconGrid
 
-        anchors.left: root.vertical ? parent.left : undefined
-        anchors.right: parent.right
-        anchors.top: root.vertical ? undefined : parent.top
-        anchors.bottom: parent.bottom
-        anchors.rightMargin: root.vertical ? 0 : Appearance.padding.normal
-        anchors.bottomMargin: root.vertical ? Appearance.padding.normal : 0
+        anchors.centerIn: parent
 
         flow: root.vertical ? GridLayout.TopToBottom : GridLayout.LeftToRight
         rows: root.vertical ? -1 : 1
         columns: root.vertical ? 1 : -1
-        rowSpacing: Appearance.spacing.smaller / 2
-        columnSpacing: Appearance.spacing.smaller / 2
+        rowSpacing: Appearance.spacing.small
+        columnSpacing: Appearance.spacing.small
 
         // Lock keys status
         WrappedLoader {
+            id: lockStatusLoader
+
             name: "lockstatus"
             active: Config.bar.status.showLockStatus && Compositor.supports("lockStatus")
+
+            Tooltip {
+                target: lockStatusLoader
+                text: lockStatusLoader.active
+                    ? qsTr("Caps Lock: %1 · Num Lock: %2").arg(Compositor.capsLock ? qsTr("On") : qsTr("Off")).arg(Compositor.numLock ? qsTr("On") : qsTr("Off"))
+                    : ""
+            }
 
             sourceComponent: GridLayout {
                 flow: root.vertical ? GridLayout.TopToBottom : GridLayout.LeftToRight
@@ -177,6 +181,7 @@ StyledRect {
         PopoutTrigger {
             name: "audio"
             accessibleLabel: qsTr("Volume controls")
+            tooltipText: Audio.muted ? qsTr("Audio: Muted") : qsTr("Audio: %1%").arg(Math.round(Audio.volume * 100))
             active: Config.bar.status.showAudio
 
             sourceComponent: Glyph {
@@ -191,6 +196,7 @@ StyledRect {
         PopoutTrigger {
             name: "audio"
             accessibleLabel: qsTr("Microphone controls")
+            tooltipText: Audio.sourceMuted ? qsTr("Microphone: Muted") : qsTr("Microphone: %1%").arg(Math.round(Audio.sourceVolume * 100))
             active: Config.bar.status.showMicrophone
 
             sourceComponent: Glyph {
@@ -205,13 +211,23 @@ StyledRect {
         PopoutTrigger {
             name: "kblayout"
             accessibleLabel: qsTr("Keyboard layout controls")
+            tooltipText: qsTr("Keyboard layout: %1").arg(Compositor.keyboardLayoutName || Compositor.keyboardLayoutShort)
             active: Config.bar.status.showKbLayout && Compositor.supports("keyboardLayoutSwitch")
 
-            sourceComponent: BarText {
-                role: "label"
-                animate: true
-                text: Density.clean ? Compositor.keyboardLayoutShort.toLowerCase() : Compositor.keyboardLayoutShort
-                color: root.colour
+            sourceComponent: Item {
+                implicitWidth: kbLabel.implicitWidth
+                implicitHeight: Math.max(Density.iconPx, kbLabel.implicitHeight)
+
+                BarText {
+                    id: kbLabel
+
+                    anchors.centerIn: parent
+                    verticalAlignment: Text.AlignVCenter
+                    role: "label"
+                    animate: true
+                    text: Density.clean ? Compositor.keyboardLayoutShort.toLowerCase() : Compositor.keyboardLayoutShort
+                    color: root.colour
+                }
             }
         }
 
@@ -219,6 +235,7 @@ StyledRect {
         PopoutTrigger {
             name: "network"
             accessibleLabel: qsTr("Network controls")
+            tooltipText: Network.active ? qsTr("Wi-Fi: %1").arg(Network.active.ssid || qsTr("Connected")) : qsTr("Wi-Fi: Disconnected")
             active: Config.bar.status.showNetwork && (!Network.activeEthernet || Config.bar.status.showWifi)
 
             sourceComponent: Glyph {
@@ -233,6 +250,7 @@ StyledRect {
         PopoutTrigger {
             name: "ethernet"
             accessibleLabel: qsTr("Ethernet controls")
+            tooltipText: qsTr("Ethernet: Connected")
             active: Config.bar.status.showNetwork && Network.activeEthernet
 
             sourceComponent: Glyph {
@@ -250,6 +268,12 @@ StyledRect {
 
             name: "bluetooth"
             accessibleLabel: qsTr("Bluetooth controls")
+            tooltipText: {
+                if (!Bluetooth.defaultAdapter?.enabled)
+                    return qsTr("Bluetooth: Off");
+                const connected = Bluetooth.devices.values.filter(d => d.connected).length;
+                return connected > 0 ? qsTr("Bluetooth: %1 connected").arg(connected) : qsTr("Bluetooth: On");
+            }
             active: Config.bar.status.showBluetooth
 
             sourceComponent: GridLayout {
@@ -320,6 +344,9 @@ StyledRect {
         PopoutTrigger {
             name: "battery"
             accessibleLabel: qsTr("Power controls")
+            tooltipText: UPower.displayDevice.isLaptopBattery
+                ? qsTr("Battery: %1%").arg(Math.round(UPower.displayDevice.percentage * 100))
+                : qsTr("Power profile")
             active: Config.bar.status.showBattery
 
             sourceComponent: Glyph {
@@ -374,12 +401,20 @@ StyledRect {
     // Keep the bar's pointer-driven hit test as the single hover owner while
     // exposing these same popouts to keyboard and assistive technology.
     component PopoutTrigger: WrappedLoader {
+        id: trigger
+
         required property string accessibleLabel
+        property string tooltipText: ""
 
         focus: active
         activeFocusOnTab: active
         Accessible.role: Accessible.Button
         Accessible.name: accessibleLabel
+
+        Tooltip {
+            target: trigger
+            text: trigger.active ? trigger.tooltipText : ""
+        }
 
         onActiveFocusChanged: {
             if (activeFocus)

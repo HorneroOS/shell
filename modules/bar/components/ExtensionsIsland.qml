@@ -246,38 +246,27 @@ StyledRect {
 
         anchors.horizontalCenter: root.vertical ? parent.horizontalCenter : undefined
         anchors.bottom: root.vertical ? parent.bottom : undefined
+        anchors.bottomMargin: root.vertical ? root.padding : 0
         anchors.verticalCenter: root.vertical ? undefined : parent.verticalCenter
         anchors.right: root.vertical ? undefined : parent.right
+        anchors.rightMargin: root.vertical ? 0 : root.padding
 
         active: root.compact && root.count > 0
 
         sourceComponent: Item {
-            implicitWidth: root.vertical ? expandIconInner.implicitWidth : expandIconInner.implicitWidth - Appearance.padding.small * 2
-            implicitHeight: root.vertical ? expandIconInner.implicitHeight - Appearance.padding.small * 2 : expandIconInner.implicitHeight
+            implicitWidth: expandIconInner.implicitWidth
+            implicitHeight: expandIconInner.implicitHeight
 
             Glyph {
                 id: expandIconInner
 
-                anchors.horizontalCenter: root.vertical ? parent.horizontalCenter : undefined
-                anchors.bottom: root.vertical ? parent.bottom : undefined
-                anchors.bottomMargin: root.vertical ? (root.chip ? Appearance.padding.small : -Appearance.padding.small) : 0
-                anchors.verticalCenter: root.vertical ? undefined : parent.verticalCenter
-                anchors.right: root.vertical ? undefined : parent.right
-                anchors.rightMargin: root.vertical ? 0 : (root.chip ? Appearance.padding.small : -Appearance.padding.small)
+                anchors.centerIn: parent
                 name: root.vertical ? "chevron-up" : "chevron-right"
                 color: root.tone.ink
                 font.pointSize: Density.iconPt
                 rotation: root.expanded ? 180 : 0
 
                 Behavior on rotation {
-                    Anim {}
-                }
-
-                Behavior on anchors.bottomMargin {
-                    Anim {}
-                }
-
-                Behavior on anchors.rightMargin {
                     Anim {}
                 }
             }

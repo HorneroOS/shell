@@ -1,4 +1,5 @@
 import qs.components
+import qs.components.controls
 import qs.services
 import qs.config
 import Quickshell.Services.UPower
@@ -28,6 +29,13 @@ Item {
     Accessible.role: Accessible.StaticText
     Accessible.name: qsTr("Battery %1%").arg(Math.round(percent))
 
+    Tooltip {
+        target: root
+        text: root.charging
+            ? qsTr("Battery: %1% (charging)").arg(Math.round(root.percent))
+            : qsTr("Battery: %1%").arg(Math.round(root.percent))
+    }
+
     GridLayout {
         id: layout
 
@@ -44,6 +52,7 @@ Item {
 
         BarText {
             Layout.alignment: Qt.AlignCenter
+            verticalAlignment: Text.AlignVCenter
             visible: root.density === "values" && !root.vertical
             text: `${Math.round(root.percent)}%`
             color: root.low ? root.tone.alert : root.tone.ink

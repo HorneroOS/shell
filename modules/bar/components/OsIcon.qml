@@ -1,3 +1,4 @@
+import qs.components.controls
 import qs.components.effects
 import qs.services
 import qs.config
@@ -10,6 +11,11 @@ Item {
 
     // Region tone: the plain Signal palette, or per-region ink on Cockpit Clear.
     property var tone: ClearInk.neutral
+
+    Tooltip {
+        target: root
+        text: qsTr("Open launcher")
+    }
 
     MouseArea {
         anchors.fill: parent

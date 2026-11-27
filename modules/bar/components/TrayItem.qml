@@ -1,5 +1,6 @@
 pragma ComponentBehavior: Bound
 
+import qs.components.controls
 import qs.components.effects
 import qs.services
 import qs.config
@@ -16,6 +17,11 @@ MouseArea {
 
     Accessible.role: Accessible.Button
     Accessible.name: root.modelData.title || root.modelData.id
+
+    Tooltip {
+        target: root
+        text: root.modelData.tooltipTitle || root.modelData.title || root.modelData.id
+    }
 
     acceptedButtons: Qt.LeftButton | Qt.RightButton
     implicitWidth: Density.iconPx + 4

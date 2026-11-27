@@ -57,6 +57,7 @@ function buildDockItems(pinnedEntries, allEntries, windows, includeRunningUnpinn
     var pinned = Array.isArray(pinnedEntries) ? pinnedEntries : [];
     var winList = Array.isArray(windows) ? windows : [];
     var matchedWinIds = {};
+    var fallbackDesktopEntry = "application-x-executable";
     var items = [];
 
     for (var i = 0; i < pinned.length; i++) {
@@ -79,7 +80,7 @@ function buildDockItems(pinnedEntries, allEntries, windows, includeRunningUnpinn
         items.push({
             id: normalizeAppId(entry.id || entry.name),
             name: entry.name || entry.id || "",
-            icon: entry.icon || "application-x-executable",
+            icon: entry.icon || fallbackDesktopEntry,
             entry: entry,
             windows: matched,
             runningCount: matched.length,
@@ -107,7 +108,7 @@ function buildDockItems(pinnedEntries, allEntries, windows, includeRunningUnpinn
             unpinnedByClass[clsKey] = {
                 id: clsKey,
                 name: (resolved && resolved.name) || win.appClass || win.title || clsKey,
-                icon: (resolved && resolved.icon) || win.appClass || "application-x-executable",
+                icon: (resolved && resolved.icon) || win.appClass || fallbackDesktopEntry,
                 entry: resolved,
                 windows: [],
                 runningCount: 0,

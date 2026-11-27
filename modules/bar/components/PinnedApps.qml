@@ -151,7 +151,7 @@ Item {
 
                             width: tile.active && index === 0 ? 6 : 3
                             height: 3
-                            radius: 1.5
+                            radius: Appearance.rounding.full
                             color: tile.active ? root.tone.signal : root.tone.inkMuted
                         }
                     }

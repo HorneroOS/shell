@@ -1,4 +1,5 @@
 import qs.components
+import qs.components.controls
 import qs.services
 import qs.config
 import QtQuick
@@ -22,6 +23,11 @@ Item {
     Accessible.role: Accessible.StaticText
     Accessible.name: `${Weather.description} ${Weather.temp}`
 
+    Tooltip {
+        target: root
+        text: `${Weather.description} · ${Weather.temp}`
+    }
+
     GridLayout {
         id: layout
 
@@ -38,6 +44,7 @@ Item {
 
         BarText {
             Layout.alignment: Qt.AlignCenter
+            verticalAlignment: Text.AlignVCenter
             visible: root.density === "values" || root.vertical
             text: Weather.temp
             color: root.tone.ink

@@ -264,6 +264,48 @@ Singleton {
             }
         });
         registerProvider({
+            "id": "clip",
+            "prefix": "clip",
+            "aliases": ["clipboard"],
+            "icon": "clipboard",
+            "section": "Clipboard",
+            "query": text => Clipboard.query(text).map(c => ({
+                        "providerId": "clip",
+                        "section": "Clipboard",
+                        "icon": "clipboard",
+                        "title": c.preview,
+                        "subtitle": Clipboard.formatMeta(c),
+                        "payload": c
+                    })),
+            "activate": (result, list) => {
+                const textToCopy = result?.payload?.text ?? "";
+                if (textToCopy.length > 0)
+                    Clipboard.copyText(textToCopy);
+                if (list)
+                    list.visibilities.launcher = false;
+            }
+        });
+        registerProvider({
+            "id": "emoji",
+            "prefix": "emoji",
+            "aliases": ["em"],
+            "icon": "mood-smile",
+            "section": "Emoji",
+            "query": text => Emoji.query(text).map(e => ({
+                        "providerId": "emoji",
+                        "section": "Emoji",
+                        "icon": "mood-smile",
+                        "title": e.name,
+                        "subtitle": e.category,
+                        "payload": e
+                    })),
+            "activate": (result, list) => {
+                Emoji.activate(result?.payload);
+                if (list)
+                    list.visibilities.launcher = false;
+            }
+        });
+        registerProvider({
             "id": "file",
             "prefix": "file",
             "aliases": ["files"],

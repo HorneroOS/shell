@@ -19,11 +19,8 @@ Singleton {
     }
 
     function getMonitor(query: string): var {
-        if (query === "active") {
-            if (Compositor.isNiri)
-                return monitors.find(m => m.modelData.name === Compositor.focusedOutputName);
-            return monitors.find(m => Hypr.monitorFor(m.modelData)?.focused);
-        }
+        if (query === "active")
+            return monitors.find(m => Compositor.isScreenFocused(m.modelData));
 
         if (query.startsWith("model:")) {
             const model = query.slice(6);
@@ -37,7 +34,7 @@ Singleton {
 
         if (query.startsWith("id:")) {
             const id = parseInt(query.slice(3), 10);
-            return monitors.find(m => Hypr.monitorFor(m.modelData)?.id === id);
+            return monitors.find(m => Compositor.screenMatchesId(m.modelData, id));
         }
 
         return monitors.find(m => m.modelData.name === query);

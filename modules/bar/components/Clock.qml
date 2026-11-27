@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import Quickshell
 import qs.components
+import qs.components.controls
 import qs.services
 import qs.config
 import qs.modules.plugins
@@ -33,6 +34,11 @@ Item {
 
     implicitWidth: layout.implicitWidth
     implicitHeight: layout.implicitHeight
+
+    Tooltip {
+        target: root
+        text: Time.format("dddd, d MMMM yyyy")
+    }
 
     StyledRect {
         visible: Config.bar.clock.background && !root.vertical && !root.tone.active

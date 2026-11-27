@@ -1,4 +1,5 @@
 import qs.components
+import qs.components.controls
 import qs.services
 import qs.config
 import QtQuick
@@ -19,9 +20,15 @@ Item {
     Accessible.role: Accessible.StaticText
     Accessible.name: qsTr("Keyboard layout %1").arg(Compositor.keyboardLayoutName)
 
+    Tooltip {
+        target: root
+        text: qsTr("Keyboard layout: %1").arg(Compositor.keyboardLayoutName || Compositor.keyboardLayoutShort)
+    }
+
     GridLayout {
         id: layout
 
+        anchors.centerIn: parent
         flow: root.vertical ? GridLayout.TopToBottom : GridLayout.LeftToRight
         rowSpacing: 0
         columnSpacing: Appearance.spacing.smaller / 2
@@ -35,6 +42,7 @@ Item {
 
         BarText {
             Layout.alignment: Qt.AlignCenter
+            verticalAlignment: Text.AlignVCenter
             role: "label"
             text: Density.clean ? Compositor.keyboardLayoutShort.toLowerCase() : Compositor.keyboardLayoutShort
             color: root.tone.ink

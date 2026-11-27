@@ -46,7 +46,7 @@ def test_daily_panes_use_the_channel_kit_without_raised_cards():
 
 def test_displays_readouts_come_from_screens_and_hypr_not_guesses():
     src = _src(CC / "displays/DisplaysPane.qml")
-    assert "Quickshell.screens.map" in src and "Hypr.monitorFor(s)" in src
+    assert "Quickshell.screens.map" in src and "Compositor.outputMetadataFor(s)" in src
     assert "NaN" in src and "isNaN(outputRow.modelData.hz)" in src
     assert "brightnessAvailable" in src
 

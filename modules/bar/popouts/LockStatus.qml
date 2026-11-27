@@ -8,10 +8,10 @@ ColumnLayout {
     spacing: Appearance.spacing.smaller
 
     StyledText {
-        text: qsTr("Capslock: %1").arg(Hypr.capsLock ? qsTr("Enabled") : qsTr("Disabled"))
+        text: qsTr("Capslock: %1").arg(Compositor.capsLock ? qsTr("Enabled") : qsTr("Disabled"))
     }
 
     StyledText {
-        text: qsTr("Numlock: %1").arg(Hypr.numLock ? qsTr("Enabled") : qsTr("Disabled"))
+        text: qsTr("Numlock: %1").arg(Compositor.numLock ? qsTr("Enabled") : qsTr("Disabled"))
     }
 }

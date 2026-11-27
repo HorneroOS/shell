@@ -68,6 +68,22 @@ JsonObject {
             dangerous: false
         },
         {
+            name: "Clipboard",
+            icon: "clipboard",
+            description: "Browse and copy clipboard history",
+            command: ["autocomplete", "clip"],
+            enabled: true,
+            dangerous: false
+        },
+        {
+            name: "Emoji",
+            icon: "mood-smile",
+            description: "Search and copy emojis and symbols",
+            command: ["autocomplete", "emoji"],
+            enabled: true,
+            dangerous: false
+        },
+        {
             name: "Files",
             icon: "folder-open",
             description: "Find files in your home folders",

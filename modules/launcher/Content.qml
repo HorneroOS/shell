@@ -28,6 +28,8 @@ Item {
                 "actions": qsTr("Command"),
                 "calc": qsTr("Calculate"),
                 "win": qsTr("Windows"),
+                "clip": qsTr("Clipboard"),
+                "emoji": qsTr("Emoji"),
                 "file": qsTr("Files"),
                 "ai": qsTr("Ask"),
                 "appearance": qsTr("Theme"),
@@ -154,7 +156,7 @@ Item {
                         root.visibilities.launcher = false;
                     } else if (text.startsWith(Config.launcher.actionPrefix)) {
                         const routedState = Providers.stateFor(text);
-                        if (routedState === "calc" || routedState === "file")
+                        if (routedState === "calc" || routedState === "file" || routedState === "clip" || routedState === "emoji")
                             currentItem.onClicked();
                         else if (routedState === "ai") {
                             // Inline ask (shell#250 slice 3): activate

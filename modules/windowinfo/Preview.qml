@@ -5,7 +5,6 @@ import qs.services
 import qs.config
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Layouts
 
@@ -13,7 +12,8 @@ Item {
     id: root
 
     required property ShellScreen screen
-    required property HyprlandToplevel client
+    required property var client
+    readonly property var info: Compositor.windowDetails(client)
 
     Layout.preferredWidth: preview.implicitWidth + Appearance.padding.large * 2
     Layout.fillHeight: true
@@ -68,10 +68,12 @@ Item {
 
             anchors.centerIn: parent
 
-            captureSource: root.client?.wayland ?? null
+            captureSource: root.info?.wayland ?? null
             live: true
 
-            constraintSize.width: root.client ? parent.height * Math.min(root.screen.width / root.screen.height, root.client?.lastIpcObject.size[0] / root.client?.lastIpcObject.size[1]) : parent.height
+            constraintSize.width: root.info && root.info.width > 0 && root.info.height > 0
+                ? parent.height * Math.min(root.screen.width / root.screen.height, root.info.width / root.info.height)
+                : parent.height
             constraintSize.height: parent.height
         }
     }
@@ -85,12 +87,11 @@ Item {
 
         animate: true
         text: {
-            const client = root.client;
-            if (!client)
+            const d = root.info;
+            if (!d)
                 return qsTr("No active client");
 
-            const mon = client.monitor;
-            return qsTr("%1 on monitor %2 at %3, %4").arg(client.title).arg(mon.name).arg(client.lastIpcObject.at[0]).arg(client.lastIpcObject.at[1]);
+            return qsTr("%1 on monitor %2 at %3, %4").arg(d.title).arg(d.monitorName).arg(d.x).arg(d.y);
         }
     }
 }

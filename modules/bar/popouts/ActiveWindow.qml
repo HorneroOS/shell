@@ -92,7 +92,7 @@ Item {
             ScreencopyView {
                 id: preview
 
-                captureSource: Compositor.isHyprland ? Hypr.activeToplevel?.wayland ?? null : null
+                captureSource: Compositor.activeWindowWayland
                 live: visible
 
                 constraintSize.width: Config.bar.sizes.windowPreviewSize

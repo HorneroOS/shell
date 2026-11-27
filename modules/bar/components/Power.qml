@@ -1,4 +1,5 @@
 import qs.components
+import qs.components.controls
 import qs.services
 import qs.config
 import Quickshell
@@ -14,6 +15,11 @@ Item {
 
     implicitWidth: icon.implicitHeight + Appearance.padding.small * 2
     implicitHeight: icon.implicitHeight
+
+    Tooltip {
+        target: root
+        text: qsTr("Session menu")
+    }
 
     StateLayer {
         // Cursed workaround to make the height larger than the parent

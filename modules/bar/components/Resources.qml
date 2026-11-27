@@ -1,4 +1,5 @@
 import qs.components
+import qs.components.controls
 import qs.components.misc
 import qs.services
 import qs.config
@@ -74,8 +75,8 @@ Item {
         }
     ].filter(m => show.includes(m.id) && m.available)
 
-    readonly property bool showMeters: density !== "icons" && !vertical && !compact
-    readonly property bool showText: density !== "icons" && !vertical
+    readonly property bool showMeters: density !== "icons" && density !== "glyphs" && !vertical && !compact
+    readonly property bool showText: density !== "icons" && density !== "glyphs" && !vertical
 
     // Nothing readable, nothing drawn: the bar drops the whole segment.
     readonly property bool available: metrics.length > 0
@@ -109,6 +110,11 @@ Item {
                 Accessible.role: Accessible.StaticText
                 Accessible.name: `${modelData.full} ${modelData.text}`
 
+                Tooltip {
+                    target: metric
+                    text: `${metric.modelData.full}: ${metric.modelData.text}`
+                }
+
                 Glyph {
                     visible: !root.showText
                     name: metric.modelData.icon
@@ -118,6 +124,8 @@ Item {
 
                 BarText {
                     visible: root.showText
+                    Layout.alignment: Qt.AlignVCenter
+                    verticalAlignment: Text.AlignVCenter
                     role: "eyebrow"
                     text: metric.modelData.label
                     // Dim by weight of ink, not by a second grey: a muted
@@ -144,7 +152,9 @@ Item {
                     id: valueText
 
                     visible: root.showText
+                    Layout.alignment: Qt.AlignVCenter
                     Layout.preferredWidth: valueMetrics.width
+                    verticalAlignment: Text.AlignVCenter
                     horizontalAlignment: Text.AlignLeft
                     text: metric.modelData.text
                     color: metric.critical ? root.tone.alert : root.tone.ink

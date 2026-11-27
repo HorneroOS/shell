@@ -42,6 +42,7 @@ Singleton {
 
     property var workspaces: null
     property var windows: []
+    property var outputs: ({})
     property var casts: []
     property bool screencastStateKnown: false
     property var focusedWindowId: null
@@ -262,6 +263,30 @@ Singleton {
         return windows.filter(window => window.workspace_id === workspaceId);
     }
 
+    function outputMetadata(name: string): var {
+        const entry = outputs?.[name] ?? null;
+        if (!entry)
+            return { hz: NaN, scale: NaN };
+        let hz = NaN;
+        const modes = entry.modes;
+        const idx = entry.current_mode;
+        if (modes instanceof Array && Number.isInteger(idx) && idx >= 0 && idx < modes.length) {
+            const rawRate = Number(modes[idx]?.refresh_rate);
+            if (isFinite(rawRate) && rawRate > 0)
+                hz = rawRate > 1000 ? rawRate / 1000 : rawRate;
+        }
+        const rawScale = Number(entry.logical?.scale);
+        const scale = isFinite(rawScale) && rawScale > 0 ? rawScale : NaN;
+        return { hz: hz, scale: scale };
+    }
+
+    function refreshOutputs(): void {
+        if (!available || outputsProcess.running)
+            return;
+        outputsProcess.out = "";
+        outputsProcess.running = true;
+    }
+
     function runAction(command: list<string>): bool {
         if (!available || actionQueue.length >= 64)
             return false;
@@ -281,8 +306,10 @@ Singleton {
     }
 
     Component.onCompleted: {
-        if (available)
+        if (available) {
             eventStream.running = true;
+            refreshOutputs();
+        }
     }
 
     Process {
@@ -304,7 +331,10 @@ Singleton {
                     root.lastError = message;
             }
         }
-        onStarted: root.connectionGeneration++
+        onStarted: {
+            root.connectionGeneration++;
+            root.refreshOutputs();
+        }
         onExited: {
             // Discard the last snapshot before retrying. Keeping it marked as
             // connected would let bars and window actions present stale
@@ -312,6 +342,7 @@ Singleton {
             // unavailable.
             root.workspaces = null;
             root.windows = [];
+            root.outputs = ({});
             root.casts = [];
             root.screencastStateKnown = false;
             root.focusedWindowId = null;
@@ -396,6 +427,31 @@ Singleton {
         onTriggered: {
             if (root.available)
                 eventStream.running = true;
+        }
+    }
+
+    Process {
+        id: outputsProcess
+
+        property string out: ""
+
+        running: false
+        command: ["niri", "msg", "--json", "outputs"]
+        stdout: SplitParser {
+            onRead: data => {
+                outputsProcess.out += data;
+            }
+        }
+        onExited: exitCode => {
+            if (exitCode !== 0)
+                return;
+            try {
+                const parsed = JSON.parse(outputsProcess.out.trim());
+                if (parsed && typeof parsed === "object" && !Array.isArray(parsed))
+                    root.outputs = parsed;
+            } catch (error) {
+                console.warn("[Compositor:Niri] Could not parse outputs JSON:", error);
+            }
         }
     }
 }

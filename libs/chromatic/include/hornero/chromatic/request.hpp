@@ -14,7 +14,7 @@
 
 namespace hornero::chromatic {
 
-inline constexpr int kAlgorithm = 2;
+inline constexpr int kAlgorithm = 3;
 inline constexpr int kSchemaVersion = 1;
 inline constexpr const char* kEngineName = "hornero-chromatic";
 inline constexpr const char* kEngineVersion = "1.0.0";
@@ -24,6 +24,7 @@ enum class Variant { Auto, Balanced, Vibrant, Expressive, Faithful, Muted, Monoc
 enum class Mode { Auto, Dark, Light };
 enum class Contrast { Auto, Standard, Boosted, Maximum };
 enum class Depth { Standard, Deep };
+enum class SurfaceTint { Auto, Neutral, Tinted };
 enum class SourceSel { Wallpaper, Image, Seed, House };
 
 // Stable wire names ("high-contrast", "surfaceDepth" values, …).
@@ -31,11 +32,13 @@ enum class SourceSel { Wallpaper, Image, Seed, House };
 [[nodiscard]] QString name(Mode);
 [[nodiscard]] QString name(Contrast);
 [[nodiscard]] QString name(Depth);
+[[nodiscard]] QString name(SurfaceTint);
 [[nodiscard]] QString name(SourceSel);
 [[nodiscard]] std::optional<Variant> parseVariant(const QString&);
 [[nodiscard]] std::optional<Mode> parseMode(const QString&);
 [[nodiscard]] std::optional<Contrast> parseContrast(const QString&);
 [[nodiscard]] std::optional<Depth> parseDepth(const QString&);
+[[nodiscard]] std::optional<SurfaceTint> parseSurfaceTint(const QString&);
 [[nodiscard]] std::optional<SourceSel> parseSource(const QString&);
 
 // The eight concrete variants, in gallery order.
@@ -49,6 +52,7 @@ struct Request {
     Mode mode = Mode::Auto;
     Contrast contrast = Contrast::Standard;
     Depth depth = Depth::Standard;
+    SurfaceTint surfaceTint = SurfaceTint::Auto;
     double chroma = 1.0;   // 0.5..1.5
     double hueShift = 0.0; // -180..180
     std::optional<Mode> currentMode; // hysteresis input only

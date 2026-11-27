@@ -529,7 +529,7 @@ Item {
                                         visible: group.modelData.es !== group.modelData.name
                                         text: "· " + group.modelData.es
                                         font.pointSize: Appearance.font.size.smaller
-                                        color: Signal.palette.inkFaint
+                                        color: Signal.palette.inkMuted
                                     }
 
                                     StyledRect {

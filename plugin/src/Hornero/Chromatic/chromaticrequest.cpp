@@ -13,6 +13,8 @@ QVariantMap ChromaticRequest::toObject() const {
     m.insert(QStringLiteral("mode"), mode);
     m.insert(QStringLiteral("contrast"), contrast);
     m.insert(QStringLiteral("surfaceDepth"), surfaceDepth);
+    if (!surfaceTint.isEmpty() && surfaceTint != QLatin1String("auto"))
+        m.insert(QStringLiteral("surfaceTint"), surfaceTint);
     m.insert(QStringLiteral("chroma"), chroma);
     m.insert(QStringLiteral("hueShift"), hueShift);
     if (!currentMode.isEmpty())
@@ -29,6 +31,7 @@ ChromaticRequest ChromaticRequest::fromObject(const QVariantMap& m) {
     r.mode = m.value(QStringLiteral("mode"), r.mode).toString();
     r.contrast = m.value(QStringLiteral("contrast"), r.contrast).toString();
     r.surfaceDepth = m.value(QStringLiteral("surfaceDepth"), r.surfaceDepth).toString();
+    r.surfaceTint = m.value(QStringLiteral("surfaceTint"), r.surfaceTint).toString();
     r.chroma = m.value(QStringLiteral("chroma"), r.chroma).toDouble();
     r.hueShift = m.value(QStringLiteral("hueShift"), r.hueShift).toDouble();
     r.currentMode = m.value(QStringLiteral("currentMode")).toString();

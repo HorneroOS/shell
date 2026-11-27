@@ -325,7 +325,7 @@ StyledRect {
                         StyledText {
                             visible: itemLoader.modelData.group.es !== itemLoader.modelData.group.name
                             text: "· " + itemLoader.modelData.group.es
-                            color: Signal.palette.inkFaint
+                            color: Signal.palette.inkMuted
                             font.pointSize: Appearance.font.size.smaller
                         }
 

@@ -31,12 +31,12 @@ CLEAR_INK = {
 def test_sets_come_from_the_scheme_when_present_and_fixed_otherwise():
     out = run_js("return [setsFrom(null).light.ink, setsFrom(%s).light.ink, setsFrom(%s).dark.halo]"
                  % (json.dumps(CLEAR_INK), json.dumps(CLEAR_INK)))
-    assert out == ["#ECE6DA", "#FAF5E6", "#FFFDF7"]
+    assert out == ["#E6EBF1", "#FAF5E6", "#FFFDF7"]
 
 
 def test_a_partial_clearink_block_falls_back_per_key():
     out = run_js("return setsFrom({light: {ink: '#FFFFFF'}, dark: {}}).light")
-    assert out["ink"] == "#FFFFFF" and out["halo"] == "#0C0F13"
+    assert out["ink"] == "#FFFFFF" and out["halo"] == "#0C1016"
 
 
 def test_tone_with_scheme_sets_is_foreground_only():

@@ -372,7 +372,7 @@ Item {
             StyledText {
                 mono: true
                 text: counter.position
-                color: root.timed ? Signal.palette.ink : Signal.palette.inkFaint
+                color: root.timed ? Signal.palette.ink : Signal.palette.inkMuted
                 font.pointSize: Appearance.font.size.small
                 font.features: {
                     "tnum": 1

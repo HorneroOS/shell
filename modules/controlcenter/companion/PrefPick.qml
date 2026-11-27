@@ -69,6 +69,6 @@ ColumnLayout {
         text: root.help
         wrapMode: Text.Wrap
         font.pointSize: Appearance.font.size.smaller
-        color: Signal.palette.inkFaint
+        color: Signal.palette.inkMuted
     }
 }

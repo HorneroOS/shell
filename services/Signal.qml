@@ -83,84 +83,84 @@ Singleton {
                 "name": "Hornero Signal Night",
                 "mode": "dark",
                 "palette": {
-                    "ground": "#0C0F13",
-                    "sunken": "#101419",
-                    "base": "#13171D",
-                    "panel": "#181D24",
-                    "raised": "#1F252E",
-                    "lifted": "#283039",
-                    "ink": "#ECE6DA",
-                    "inkMuted": "#A8ABAD",
-                    "inkFaint": "#737980",
-                    "rule": "#2C333C",
-                    "ruleStrong": "#707A85",
-                    "focus": "#7EC1EA",
-                    "signal": "#F2A33A",
-                    "glow": "#FFB650",
-                    "onSignal": "#1A1205",
-                    "signalWell": "#3A2A12",
-                    "onSignalWell": "#FFD9A3",
-                    "cue": "#7EC1EA",
-                    "onCue": "#06151F",
-                    "cueWell": "#16303F",
-                    "onCueWell": "#CDE8F8",
-                    "phosphor": "#8BD49A",
-                    "onPhosphor": "#07170C",
-                    "phosphorWell": "#173222",
-                    "onPhosphorWell": "#CDEFD4",
-                    "alert": "#F0705A",
-                    "onAlert": "#1E0905",
-                    "alertWell": "#3D1A14",
-                    "onAlertWell": "#FFD3CA",
-                    "inverse": "#ECE6DA",
-                    "onInverse": "#181D24",
-                    "inverseSignal": "#8A5200",
+                    "ground": "#0C1016",
+                    "sunken": "#10151C",
+                    "base": "#141B24",
+                    "panel": "#1B2430",
+                    "raised": "#24303D",
+                    "lifted": "#2C3947",
+                    "ink": "#E6EBF1",
+                    "inkMuted": "#A9B7C6",
+                    "inkFaint": "#8999AB",
+                    "rule": "#2D3B4B",
+                    "ruleStrong": "#8393A6",
+                    "focus": "#8BCEF0",
+                    "signal": "#F2AC52",
+                    "glow": "#FFC06B",
+                    "onSignal": "#1E1304",
+                    "signalWell": "#3D2B12",
+                    "onSignalWell": "#FFE0B0",
+                    "cue": "#8BCEF0",
+                    "onCue": "#071A26",
+                    "cueWell": "#163345",
+                    "onCueWell": "#D6EFFC",
+                    "phosphor": "#8DDBAF",
+                    "onPhosphor": "#071D12",
+                    "phosphorWell": "#153425",
+                    "onPhosphorWell": "#D1F5E0",
+                    "alert": "#FF8494",
+                    "onAlert": "#24070C",
+                    "alertWell": "#421922",
+                    "onAlertWell": "#FFD6DC",
+                    "inverse": "#E6EBF1",
+                    "onInverse": "#1B2430",
+                    "inverseSignal": "#864700",
                     "scrim": "#000000",
                     "shadow": "#000000"
                 },
-                "terminal": ["#13171D", "#F0705A", "#8BD49A", "#F2A33A", "#7EC1EA", "#C9A0DC", "#6FD0C5", "#ECE6DA", "#66707B", "#FF8E7A", "#A8E6B4", "#FFC46E", "#A6D6F4", "#DDBDEB", "#9BE3DA", "#FFFFFF"]
+                "terminal": ["#24303D", "#FF8494", "#8DDBAF", "#F2AC52", "#8BCEF0", "#C9A5F5", "#76D8CE", "#C5D0DC", "#8393A6", "#FFA6B2", "#B2EBC9", "#FFC87D", "#B2E0F8", "#DEC4FA", "#A3EAE2", "#E6EBF1"]
             },
             "hornero-signal-day": {
                 "id": "hornero-signal-day",
                 "name": "Hornero Signal Day",
                 "mode": "light",
                 "palette": {
-                    "ground": "#E6E1D5",
-                    "sunken": "#DCD6C8",
-                    "base": "#F2EEE5",
-                    "panel": "#F7F4EE",
-                    "raised": "#FBF9F5",
+                    "ground": "#E8EDF4",
+                    "sunken": "#E0E6EF",
+                    "base": "#EEF2F7",
+                    "panel": "#F5F8FC",
+                    "raised": "#FCFCFE",
                     "lifted": "#FFFFFF",
-                    "ink": "#1B1E22",
-                    "inkMuted": "#4E545B",
-                    "inkFaint": "#7A8086",
-                    "rule": "#D3CCBD",
-                    "ruleStrong": "#736D62",
-                    "focus": "#1A5F88",
-                    "signal": "#8F4B00",
-                    "glow": "#8F4B00",
+                    "ink": "#283344",
+                    "inkMuted": "#505E70",
+                    "inkFaint": "#606D80",
+                    "rule": "#D2DAE6",
+                    "ruleStrong": "#7A8798",
+                    "focus": "#145D86",
+                    "signal": "#864700",
+                    "glow": "#864700",
                     "onSignal": "#FFFFFF",
-                    "signalWell": "#F6DDB8",
-                    "onSignalWell": "#3D2200",
-                    "cue": "#1A5F88",
+                    "signalWell": "#FCE9C8",
+                    "onSignalWell": "#432300",
+                    "cue": "#145D86",
                     "onCue": "#FFFFFF",
-                    "cueWell": "#D3E7F3",
-                    "onCueWell": "#0B2E44",
-                    "phosphor": "#256A3B",
+                    "cueWell": "#D8EEF9",
+                    "onCueWell": "#0B334B",
+                    "phosphor": "#1E6448",
                     "onPhosphor": "#FFFFFF",
-                    "phosphorWell": "#D5EBD9",
-                    "onPhosphorWell": "#0E2E17",
-                    "alert": "#A8341C",
+                    "phosphorWell": "#D6F4E8",
+                    "onPhosphorWell": "#0E3425",
+                    "alert": "#9C293E",
                     "onAlert": "#FFFFFF",
-                    "alertWell": "#F7D7D0",
-                    "onAlertWell": "#4A1209",
-                    "inverse": "#1B1E22",
-                    "onInverse": "#F2EEE5",
-                    "inverseSignal": "#F2A33A",
+                    "alertWell": "#FADDE4",
+                    "onAlertWell": "#4E111E",
+                    "inverse": "#283344",
+                    "onInverse": "#F5F8FC",
+                    "inverseSignal": "#F2AC52",
                     "scrim": "#000000",
                     "shadow": "#000000"
                 },
-                "terminal": ["#1B1E22", "#B0371F", "#2A7341", "#9A5100", "#1D6894", "#7A3E8C", "#126B66", "#DCD6C8", "#4E545B", "#C9482E", "#348A4F", "#B36200", "#2A7DB0", "#8F4FA3", "#188079", "#F2EEE5"]
+                "terminal": ["#283344", "#9C293E", "#1E6448", "#864700", "#145D86", "#6A3FA0", "#11666E", "#505E70", "#606D80", "#C03953", "#237C58", "#A35800", "#1A76A8", "#8450C8", "#14808A", "#384457"]
             },
             "hornero-signal-contrast": {
                 "id": "hornero-signal-contrast",
@@ -680,60 +680,60 @@ Singleton {
     // Content (on*) roles live in a base type: Qt parses `onX: …` beside a
     // property X in one object as X's change handler (see shell#427).
     component SignalInkRoles: QtObject {
-        property color onSignal: "#1A1205"
-        property color onSignalWell: "#FFD9A3"
-        property color onCue: "#06151F"
-        property color onCueWell: "#CDE8F8"
-        property color onPhosphor: "#07170C"
-        property color onPhosphorWell: "#CDEFD4"
-        property color onAlert: "#1E0905"
-        property color onAlertWell: "#FFD3CA"
-        property color onInverse: "#181D24"
+        property color onSignal: "#1E1304"
+        property color onSignalWell: "#FFE0B0"
+        property color onCue: "#071A26"
+        property color onCueWell: "#D6EFFC"
+        property color onPhosphor: "#071D12"
+        property color onPhosphorWell: "#D1F5E0"
+        property color onAlert: "#24070C"
+        property color onAlertWell: "#FFD6DC"
+        property color onInverse: "#1B2430"
     }
 
     // Defaults are Signal Night so the first frame is already on-brand.
     component SignalPalette: SignalInkRoles {
-        property color ground: "#0C0F13"
-        property color sunken: "#101419"
-        property color base: "#13171D"
-        property color panel: "#181D24"
-        property color raised: "#1F252E"
-        property color lifted: "#283039"
-        property color ink: "#ECE6DA"
-        property color inkMuted: "#A8ABAD"
-        property color inkFaint: "#737980"
-        property color rule: "#2C333C"
-        property color ruleStrong: "#707A85"
-        property color focus: "#7EC1EA"
-        property color signal: "#F2A33A"
+        property color ground: "#0C1016"
+        property color sunken: "#10151C"
+        property color base: "#141B24"
+        property color panel: "#1B2430"
+        property color raised: "#24303D"
+        property color lifted: "#2C3947"
+        property color ink: "#E6EBF1"
+        property color inkMuted: "#A9B7C6"
+        property color inkFaint: "#8999AB"
+        property color rule: "#2D3B4B"
+        property color ruleStrong: "#8393A6"
+        property color focus: "#8BCEF0"
+        property color signal: "#F2AC52"
         // Optional luminous accent (amendment 2); themes may omit it.
-        property color glow: "#FFB650"
-        property color signalWell: "#3A2A12"
-        property color cue: "#7EC1EA"
-        property color cueWell: "#16303F"
-        property color phosphor: "#8BD49A"
-        property color phosphorWell: "#173222"
-        property color alert: "#F0705A"
-        property color alertWell: "#3D1A14"
-        property color inverse: "#ECE6DA"
-        property color inverseSignal: "#8A5200"
+        property color glow: "#FFC06B"
+        property color signalWell: "#3D2B12"
+        property color cue: "#8BCEF0"
+        property color cueWell: "#163345"
+        property color phosphor: "#8DDBAF"
+        property color phosphorWell: "#153425"
+        property color alert: "#FF8494"
+        property color alertWell: "#421922"
+        property color inverse: "#E6EBF1"
+        property color inverseSignal: "#864700"
         property color scrim: "#000000"
         property color shadow: "#000000"
-        property color term0: "#13171D"
-        property color term1: "#F0705A"
-        property color term2: "#8BD49A"
-        property color term3: "#F2A33A"
-        property color term4: "#7EC1EA"
-        property color term5: "#C9A0DC"
-        property color term6: "#6FD0C5"
-        property color term7: "#ECE6DA"
-        property color term8: "#66707B"
-        property color term9: "#FF8E7A"
-        property color term10: "#A8E6B4"
-        property color term11: "#FFC46E"
-        property color term12: "#A6D6F4"
-        property color term13: "#DDBDEB"
-        property color term14: "#9BE3DA"
-        property color term15: "#FFFFFF"
+        property color term0: "#24303D"
+        property color term1: "#FF8494"
+        property color term2: "#8DDBAF"
+        property color term3: "#F2AC52"
+        property color term4: "#8BCEF0"
+        property color term5: "#C9A5F5"
+        property color term6: "#76D8CE"
+        property color term7: "#C5D0DC"
+        property color term8: "#8393A6"
+        property color term9: "#FFA6B2"
+        property color term10: "#B2EBC9"
+        property color term11: "#FFC87D"
+        property color term12: "#B2E0F8"
+        property color term13: "#DEC4FA"
+        property color term14: "#A3EAE2"
+        property color term15: "#E6EBF1"
     }
 }

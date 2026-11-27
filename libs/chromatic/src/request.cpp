@@ -55,6 +55,11 @@ constexpr std::array<std::pair<Depth, const char*>, 2> kDepths { {
     { Depth::Standard, "standard" },
     { Depth::Deep, "deep" },
 } };
+constexpr std::array<std::pair<SurfaceTint, const char*>, 3> kSurfaceTints { {
+    { SurfaceTint::Auto, "auto" },
+    { SurfaceTint::Neutral, "neutral" },
+    { SurfaceTint::Tinted, "tinted" },
+} };
 constexpr std::array<std::pair<SourceSel, const char*>, 4> kSources { {
     { SourceSel::Wallpaper, "wallpaper" },
     { SourceSel::Image, "image" },
@@ -84,6 +89,9 @@ QString name(Contrast v) {
 QString name(Depth v) {
     return label(kDepths, v);
 }
+QString name(SurfaceTint v) {
+    return label(kSurfaceTints, v);
+}
 QString name(SourceSel v) {
     return label(kSources, v);
 }
@@ -98,6 +106,9 @@ std::optional<Contrast> parseContrast(const QString& s) {
 }
 std::optional<Depth> parseDepth(const QString& s) {
     return lookup(kDepths, s);
+}
+std::optional<SurfaceTint> parseSurfaceTint(const QString& s) {
+    return lookup(kSurfaceTints, s);
 }
 std::optional<SourceSel> parseSource(const QString& s) {
     return lookup(kSources, s);
@@ -119,6 +130,8 @@ QJsonObject Request::toJson(bool withPath) const {
     o.insert(QStringLiteral("mode"), name(mode));
     o.insert(QStringLiteral("contrast"), name(contrast));
     o.insert(QStringLiteral("surfaceDepth"), name(depth));
+    if (surfaceTint != SurfaceTint::Auto)
+        o.insert(QStringLiteral("surfaceTint"), name(surfaceTint));
     o.insert(QStringLiteral("chroma"), std::round(chroma * 1e4) / 1e4);
     o.insert(QStringLiteral("hueShift"), std::round(hueShift * 1e4) / 1e4);
     return o;
@@ -142,6 +155,7 @@ QByteArray Request::canonicalJson() const {
     out += ",\"seeds\":[" + seedList + ']';
     out += ",\"source\":\"" + name(source).toLatin1() + '"';
     out += ",\"surfaceDepth\":\"" + name(depth).toLatin1() + '"';
+    out += ",\"surfaceTint\":\"" + name(surfaceTint).toLatin1() + '"';
     out += ",\"variant\":\"" + name(variant).toLatin1() + '"';
     out += '}';
     return out;
@@ -191,6 +205,8 @@ Expected<Request> requestFromJson(const QJsonObject& o) {
     if (auto e = parseInto("contrast", parseContrast, r.contrast))
         return *e;
     if (auto e = parseInto("surfaceDepth", parseDepth, r.depth))
+        return *e;
+    if (auto e = parseInto("surfaceTint", parseSurfaceTint, r.surfaceTint))
         return *e;
     if (o.contains(QLatin1String("currentMode")) && !o.value(QLatin1String("currentMode")).isNull()) {
         const auto m = parseMode(text("currentMode"));

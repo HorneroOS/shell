@@ -282,9 +282,107 @@ private slots:
         QCOMPARE(r->source, SourceSel::Image);
         QCOMPARE(r->path, u"/tmp/x.png"_s);
         QCOMPARE(r->variant, Variant::HighContrast);
+        QCOMPARE(r->surfaceTint, SurfaceTint::Auto);
+        QVERIFY(!r->toJson(false).contains(u"surfaceTint"_s));
+        QVERIFY(r->canonicalJson().contains("\"surfaceTint\":\"auto\""));
+
+        const auto tinted = requestFromJson(QJsonObject { { u"source"_s, u"seed"_s },
+            { u"seeds"_s, QJsonArray { u"#3A7FD9"_s } }, { u"surfaceTint"_s, u"tinted"_s } });
+        QVERIFY(tinted);
+        QCOMPARE(tinted->surfaceTint, SurfaceTint::Tinted);
+        QCOMPARE(tinted->toJson(false).value(u"surfaceTint"_s).toString(), u"tinted"_s);
+
+        const auto neutral = requestFromJson(QJsonObject { { u"source"_s, u"seed"_s },
+            { u"seeds"_s, QJsonArray { u"#3A7FD9"_s } }, { u"surfaceTint"_s, u"neutral"_s } });
+        QVERIFY(neutral);
+        QCOMPARE(neutral->surfaceTint, SurfaceTint::Neutral);
+        QCOMPARE(neutral->toJson(false).value(u"surfaceTint"_s).toString(), u"neutral"_s);
+        QVERIFY(neutral->canonicalJson() != tinted->canonicalJson());
+
         QVERIFY(!requestFromJson(QJsonObject { { u"chroma"_s, 3.0 } }).ok());
         QVERIFY(!requestFromJson(QJsonObject { { u"variant"_s, u"tonal"_s } }).ok());
         QVERIFY(!requestFromJson(QJsonObject { { u"source"_s, u"seed"_s } }).ok());
+        QVERIFY(!requestFromJson(QJsonObject { { u"surfaceTint"_s, u"warm"_s } }).ok());
+    }
+
+    void algorithmV3HouseNeutralAndWarmGuard() {
+        Engine e;
+        // Warm amber/brown/olive seeds in balanced Light/Dark must produce clean
+        // Signal ceramic/graphite surfaces rather than brown/cream/olive panels.
+        for (const char* hex : { "#56341F", "#4E3F2D", "#6B6B2A" }) {
+            Request lightReq;
+            lightReq.source = SourceSel::Seed;
+            lightReq.seeds = { QString::fromLatin1(hex) };
+            lightReq.variant = Variant::Balanced;
+            lightReq.mode = Mode::Light;
+            const auto gl = e.generate(lightReq);
+            QVERIFY(gl.ok());
+            const Oklch lightPanel = toOklch(*parseHex(gl->scheme.palette.value(u"panel"_s)));
+            QVERIFY2(lightPanel.C <= 0.004, qPrintable(QStringLiteral("%1 light panel C=%2").arg(QLatin1String(hex)).arg(lightPanel.C)));
+            QCOMPARE(gl->scheme.palette.value(u"lifted"_s), u"#FFFFFF"_s);
+
+            Request darkReq = lightReq;
+            darkReq.mode = Mode::Dark;
+            const auto gd = e.generate(darkReq);
+            QVERIFY(gd.ok());
+            const Oklch darkPanel = toOklch(*parseHex(gd->scheme.palette.value(u"panel"_s)));
+            QVERIFY2(darkPanel.h >= 240.0 && darkPanel.h <= 265.0,
+                qPrintable(QStringLiteral("%1 dark panel h=%2").arg(QLatin1String(hex)).arg(darkPanel.h)));
+
+            // Raising chroma to 1.5 boosts accent chroma without altering Balanced surfaces.
+            Request highChroma = lightReq;
+            highChroma.chroma = 1.5;
+            const auto ghc = e.generate(highChroma);
+            QVERIFY(ghc.ok());
+            for (const QString& role : surfaceRoles())
+                QCOMPARE(ghc->scheme.palette.value(role), gl->scheme.palette.value(role));
+
+            // Vibrant dark must also guard against warm/olive muddy panels.
+            Request vibReq = darkReq;
+            vibReq.variant = Variant::Vibrant;
+            const auto gv = e.generate(vibReq);
+            QVERIFY(gv.ok());
+            const Oklch vibPanel = toOklch(*parseHex(gv->scheme.palette.value(u"panel"_s)));
+            QVERIFY2(vibPanel.h < 35.0 || vibPanel.h > 130.0,
+                qPrintable(QStringLiteral("%1 vibrant dark panel h=%2").arg(QLatin1String(hex)).arg(vibPanel.h)));
+        }
+    }
+
+    void surfaceTintOverrides() {
+        Engine e;
+        // surfaceTint: "tinted" opts Balanced into wallpaper-tinted surfaces on cool/magenta hues.
+        Request tinted;
+        tinted.source = SourceSel::Seed;
+        tinted.seeds = { QStringLiteral("#B73C6E") };
+        tinted.variant = Variant::Balanced;
+        tinted.mode = Mode::Dark;
+        tinted.surfaceTint = SurfaceTint::Tinted;
+        const auto gt = e.generate(tinted);
+        QVERIFY(gt.ok());
+        const Oklch gtPanel = toOklch(*parseHex(gt->scheme.palette.value(u"panel"_s)));
+        QVERIFY(std::abs(hueDiff(gtPanel.h, toOklch(*parseHex(u"#B73C6E")).h)) < 10.0);
+
+        // surfaceTint: "neutral" forces Signal Night graphite / ceramic even on Vibrant.
+        Request neutral;
+        neutral.source = SourceSel::Seed;
+        neutral.seeds = { QStringLiteral("#B73C6E") };
+        neutral.variant = Variant::Vibrant;
+        neutral.mode = Mode::Dark;
+        neutral.surfaceTint = SurfaceTint::Neutral;
+        const auto gn = e.generate(neutral);
+        QVERIFY(gn.ok());
+        const Oklch gnPanel = toOklch(*parseHex(gn->scheme.palette.value(u"panel"_s)));
+        QVERIFY(gnPanel.h >= 240.0 && gnPanel.h <= 265.0);
+
+        // Violet seed in Vibrant dark never produces olive-yellow ink (iC capped).
+        Request violet;
+        violet.source = SourceSel::Seed;
+        violet.seeds = { QStringLiteral("#6E42D9") };
+        violet.variant = Variant::Vibrant;
+        violet.mode = Mode::Dark;
+        const auto gvio = e.generate(violet);
+        QVERIFY(gvio.ok());
+        QVERIFY(toOklch(*parseHex(gvio->scheme.palette.value(u"ink"_s))).C <= 0.008);
     }
 };
 

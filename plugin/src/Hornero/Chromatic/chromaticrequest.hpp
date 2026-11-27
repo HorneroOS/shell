@@ -22,6 +22,7 @@ class ChromaticRequest {
     Q_PROPERTY(QString mode MEMBER mode)
     Q_PROPERTY(QString contrast MEMBER contrast)
     Q_PROPERTY(QString surfaceDepth MEMBER surfaceDepth)
+    Q_PROPERTY(QString surfaceTint MEMBER surfaceTint)
     Q_PROPERTY(double chroma MEMBER chroma)
     Q_PROPERTY(double hueShift MEMBER hueShift)
     Q_PROPERTY(QString currentMode MEMBER currentMode)
@@ -34,6 +35,7 @@ public:
     QString mode = QStringLiteral("auto");
     QString contrast = QStringLiteral("standard");
     QString surfaceDepth = QStringLiteral("standard");
+    QString surfaceTint = QStringLiteral("auto");
     double chroma = 1.0;
     double hueShift = 0.0;
     QString currentMode; // "", "dark" or "light"

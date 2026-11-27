@@ -75,7 +75,7 @@ def test_smooth_transition_runs_at_most_12_steps_and_lands_on_target(tmp_path):
     r, before, after = run_scene(tmp_path, "tween")
     assert r["allowed"] is True and r["active"] is True
     assert 1 <= r["steps"] <= 12
-    assert r["finalGround"].lower() == "#e6e1d5"  # Signal Day ground (the candidate)
+    assert r["finalGround"].lower() == "#e8edf4"  # Signal Day ground (the candidate)
     assert before == after
 
 

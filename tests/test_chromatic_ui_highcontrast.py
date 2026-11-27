@@ -22,5 +22,5 @@ def test_high_contrast_wins_over_a_previewed_chromatic_palette(tmp_path):
     assert r["current"].lower() != hc, "the candidate is still staged underneath"
     assert r["style"] == "contrast"
     # Clear ink falls back to the fixed Night/Day sets, never the scheme's.
-    assert r["inkSets"]["light"]["ink"].lower() == "#ece6da"
+    assert r["inkSets"]["light"]["ink"].lower() == "#e6ebf1"
     assert before == after

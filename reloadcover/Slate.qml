@@ -79,7 +79,7 @@ Item {
         y: root.height - Math.round(Math.min(root.width, root.height) * 0.05) - height - Math.round(36 * root.u)
         visible: root.screenName.length > 0
         text: "OUT · " + root.screenName.toUpperCase()
-        color: root.p.inkFaint
+        color: root.p.inkMuted
         font.family: root.cover.mono
         font.pixelSize: Math.round(11 * root.u)
         font.letterSpacing: 1.5
@@ -224,7 +224,7 @@ Item {
                     }
                     Text {
                         text: root.t("aside") + "  ·  HORNERO SIGNAL"
-                        color: root.p.inkFaint
+                        color: root.p.inkMuted
                         font.family: root.cover.mono
                         font.pixelSize: Math.round(12 * root.u)
                         font.letterSpacing: 3
@@ -346,7 +346,7 @@ Item {
                     id: cmd
 
                     text: "horneroctl shell restart"
-                    color: root.p.inkFaint
+                    color: root.p.inkMuted
                     font.family: root.cover.mono
                     font.pixelSize: Math.round(11 * root.u)
                 }

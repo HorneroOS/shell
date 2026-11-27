@@ -9,12 +9,13 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 COMPANION = ROOT / "modules" / "companion"
+SERVICES = ROOT / "services"
 STORE = (COMPANION / "CompanionStore.qml").read_text()
 PLAYER = (COMPANION / "Player.qml").read_text()
 HOST = (COMPANION / "CompanionHost.qml").read_text()
 BUBBLE = (COMPANION / "Bubble.qml").read_text()
 RESOLVER = (COMPANION / "Companion.qml").read_text()
-BRIDGE = (COMPANION / "AssistantBridge.qml").read_text()
+BRIDGE = (SERVICES / "AssistantBridge.qml").read_text()
 
 BEHAVIOR_STATES = ["hidden", "peeking", "entering", "landing", "idle",
                    "hovering", "talking", "excited", "dragging", "flying",
@@ -118,7 +119,7 @@ def test_store_persists_without_hand_rolled_writes():
     assert "function restore(" in STORE
     assert "markDirty" in STORE
     assert "commitToStore" in (ROOT / "modules" / "companion" / "CompanionHost.qml").read_text()
-    persist = (COMPANION / "CompanionPersist.qml").read_text()
+    persist = (SERVICES / "CompanionPersist.qml").read_text()
     assert "CompanionStore.serialize()" in persist
     assert "CompanionStore.restore(" in persist
     assert "CompanionStore.clearDirty" in persist
@@ -481,3 +482,22 @@ def test_idle_bob_does_not_reconfigure_the_layer_surface():
     assert "y: Math.round(win.bobY)" in HOST
     # ... and it steps (a few commits per second) instead of tweening at 60 fps.
     assert "id: bobTimer" in HOST and "bobAnim" not in HOST
+
+
+def test_companion_module_contains_no_process_blocks():
+    # ADR-002 boundary guard (shell#738): modules/companion/ is strictly
+    # presentation-only; all subprocesses and persistence workers live in
+    # services/ (AssistantBridge.qml, CompanionPersist.qml,
+    # CompanionInstancesPersist.qml).
+    assert (SERVICES / "AssistantBridge.qml").exists()
+    assert not (COMPANION / "AssistantBridge.qml").exists()
+    process_hits = []
+    exec_hits = []
+    for qml in sorted(COMPANION.rglob("*.qml")):
+        stripped = re.sub(r"//[^\n]*", "", qml.read_text(encoding="utf-8"))
+        if re.search(r"\bProcess\s*\{", stripped):
+            process_hits.append(str(qml.relative_to(ROOT)))
+        if "execDetached" in stripped:
+            exec_hits.append(str(qml.relative_to(ROOT)))
+    assert not process_hits, f"ADR-002 violation: Process blocks in modules/companion/: {process_hits}"
+    assert not exec_hits, f"ADR-002 violation: execDetached calls in modules/companion/: {exec_hits}"

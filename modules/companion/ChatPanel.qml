@@ -2,7 +2,6 @@ pragma ComponentBehavior: Bound
 
 import qs.components
 import qs.modules.companion
-import Quickshell.Io
 import qs.components.controls
 import qs.services
 import qs.config
@@ -14,7 +13,7 @@ import Quickshell
 // conversation surface, styled as Hornero 199X retrofuturism —
 // phosphor status light, mono micro-labels, a subtle scanline header —
 // over readable message bubbles. Presentation only: every action
-// goes through AssistantBridge -> `horneroctl assistant ... --json`.
+// goes through services/AssistantBridge -> `horneroctl assistant ... --json`.
 // Approvals/clarifications are explicit user actions, never
 // auto-answered. Reduced motion disables the shimmer; themes keep
 // WCAG contrast in light and dark.
@@ -702,7 +701,7 @@ Item {
                     icon: "paperclip"
                     accessibleName: qsTr("Attach file")
                     type: IconButton.Text
-                    onClicked: fileDialog.open()
+                    onClicked: root.bridge.pickAttachment()
                 }
 
                 IconButton {
@@ -811,38 +810,6 @@ Item {
         bridge: root.bridge
         x: root.cardWidth + Appearance.spacing.normal
         height: card.implicitHeight
-    }
-
-    // File picker: kdialog is the Hornero-standard picker backend on
-    // this stack; absence degrades to an honest bubble message.
-    Process {
-        id: fileDialogProc
-
-        property bool used: false
-
-        stdout: SplitParser {
-            onRead: data => {
-                const path = data.trim().split("\n").pop();
-                if (path !== "" && !fileDialogProc.used) {
-                    fileDialogProc.used = true;
-                    root.bridge.addAttachment(path);
-                }
-            }
-        }
-        onExited: (exitCode, exitStatus) => {
-            if (exitCode !== 0 && !fileDialogProc.used)
-                CompanionStore.say("No file picker available (kdialog missing).", 5000);
-        }
-    }
-
-    QtObject {
-        id: fileDialog
-
-        function open(): void {
-            fileDialogProc.used = false;
-            fileDialogProc.command = ["kdialog", "--getopenfilename", Quickshell.env("HOME"), "Images and text (*.png *.jpg *.jpeg *.webp *.gif *.wav *.mp3 *.ogg *.txt *.md *.log *.json *.yaml *.yml *.v *.py *.js *.sh)"];
-            fileDialogProc.running = true;
-        }
     }
 
     onVisibleChanged: {

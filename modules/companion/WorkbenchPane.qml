@@ -5,14 +5,13 @@ import qs.components.controls
 import qs.modules.companion
 import qs.services
 import qs.config
-import Quickshell
 import QtQuick
 import QtQuick.Layouts
 
 // Level C of Javi's Workbench: the conversation panel expanded with
 // the run's activity timeline, pending approvals, artifacts, history
 // and model/mode controls. It is a VIEW over the same engine as the
-// panel (AssistantRun for run state, AssistantBridge for actions);
+// panel (services/AssistantRun for run state, services/AssistantBridge for actions);
 // it owns no run state of its own, so the two can never disagree.
 //
 // Only what the backend really provides is shown: timeline entries
@@ -319,7 +318,7 @@ Rectangle {
                 visible: AssistantRun.gateway.workspace !== ""
                 text: qsTr("Open workspace folder")
                 type: TextButton.Tonal
-                onClicked: Quickshell.execDetached(["horneroctl", "assistant", "workspace", "reveal"])
+                onClicked: root.bridge.revealWorkspace()
             }
         }
 

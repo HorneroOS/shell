@@ -9,7 +9,7 @@ Hornero 199X retrofuturist chat aesthetic (phosphor status light,
 mono micro-labels, scanline header accent; reduced-motion disables
 the shimmer). The assistant is a separate backend (see
 `docs/adr/002-companion-assistant-boundary.md`) driven over the
-`companion` IPC target. `AssistantBridge.qml` runs
+`companion` IPC target. `services/AssistantBridge.qml` runs
 `horneroctl assistant ask --json --stream` (Hermes Agent via
 horneroctl's consent gates), consuming NDJSON delta lines for live
 streaming and the final CommandResult line for the structured

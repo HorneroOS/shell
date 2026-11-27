@@ -1,8 +1,8 @@
 # Javi's Workbench: audit and contract
 
 Status: implemented in this repo (shell) and HorneroOS/hornero (typed stream
-frames). Sources: `modules/companion/{AssistantBridge,ChatPanel,ApprovalCard,WorkbenchPane}.qml`,
-`services/{AssistantRun.qml,assistantrun.js,AssistantCopy.qml,assistantcopy.js,InlineAsk.qml,inlineask.js}`,
+frames). Sources: `modules/companion/{ChatPanel,ApprovalCard,WorkbenchPane}.qml`,
+`services/{AssistantBridge.qml,AssistantRun.qml,assistantrun.js,AssistantCopy.qml,assistantcopy.js,InlineAsk.qml,inlineask.js}`,
 `docs/COMPANION_ASSISTANT.md`, `docs/adr/002-companion-assistant-boundary.md`,
 and in HorneroOS/hornero `docs/javi-secure-harness.md` plus
 `cli/modules/hornero_core/assistant*.v`.

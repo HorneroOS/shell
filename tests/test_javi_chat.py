@@ -9,7 +9,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 COMPANION = ROOT / "modules" / "companion"
-BRIDGE = (COMPANION / "AssistantBridge.qml").read_text()
+SERVICES = ROOT / "services"
+BRIDGE = (SERVICES / "AssistantBridge.qml").read_text()
 RUNJS = (ROOT / "services" / "assistantrun.js").read_text()
 CARD = (COMPANION / "ApprovalCard.qml").read_text()
 PANEL = (COMPANION / "ChatPanel.qml").read_text()
@@ -85,7 +86,7 @@ def test_pane_assistant_section_and_javi_name():
 
 
 def test_bridge_sessions_and_panel_bar():
-    bridge = (ROOT / "modules/companion/AssistantBridge.qml").read_text()
+    bridge = (SERVICES / "AssistantBridge.qml").read_text()
     assert '"sessions"' in bridge and '"model", "list"' in bridge
     assert '"--session", root.currentSession' in bridge
     assert "X-Hermes" not in bridge  # keys stay inside horneroctl
@@ -94,7 +95,7 @@ def test_bridge_sessions_and_panel_bar():
 
 
 def test_chat_activity_trace_ui_and_bridge():
-    bridge = (ROOT / "modules/companion/AssistantBridge.qml").read_text()
+    bridge = (SERVICES / "AssistantBridge.qml").read_text()
     assert "traceText" in bridge
     assert 'type === "thinking"' in RUNJS
     assert 'type === "tool"' in RUNJS

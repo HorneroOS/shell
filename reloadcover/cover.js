@@ -54,15 +54,15 @@ var CONTRAST = {
     "panel": "#101317",
     "raised": "#181C21",
     "ink": "#FFFFFF",
-    "inkMuted": "#D9DCDF",
-    "inkFaint": "#9DA3A9",
-    "rule": "#5C646D",
+    "inkMuted": "#E2E4E6",
+    "inkFaint": "#A9AEB4",
+    "rule": "#8A939C",
     "ruleStrong": "#FFFFFF",
     "signal": "#FFC247",
     "signalWell": "#3D2C00",
-    "onSignalWell": "#FFE6B0",
+    "onSignalWell": "#FFE3A6",
     "cue": "#8FD3FF",
-    "phosphor": "#8CF0A4",
+    "phosphor": "#9BF0AE",
     "alert": "#FF8A73"
 };
 

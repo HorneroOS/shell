@@ -8,6 +8,9 @@ import QtQuick
 Item {
     id: root
 
+    // Region tone: the plain Signal palette, or per-region ink on Cockpit Clear.
+    property var tone: ClearInk.neutral
+
     MouseArea {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
@@ -27,7 +30,7 @@ Item {
         // host; `bar.mark: "distro"` opts into the base distro logo, in ink.
         source: Config.bar.mark === "distro" ? SysInfo.osLogo : Qt.resolvedUrl(`${Quickshell.shellDir}/assets/mark.svg`)
         implicitSize: Density.iconPx + 2
-        colour: Config.bar.mark === "distro" ? Signal.palette.ink : Signal.palette.signal
+        colour: Config.bar.mark === "distro" ? root.tone.ink : Signal.palette.signal
     }
 
     implicitWidth: Density.iconPx + 2

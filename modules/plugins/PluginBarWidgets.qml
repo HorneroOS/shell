@@ -67,8 +67,12 @@ Repeater {
     // centred across the island like tray items.
     property bool centerChildren: false
     property color iconColour: "transparent"
-    property int iconSize: 0
-    property int textSize: 0
+    property color textColour: "transparent"
+    property real iconSize: 0
+    property real textSize: 0
+    property real microSize: 0
+    property string textFamily: ""
+    property int textWeight: 0
     // Sections whose island is absent from this bar layout: their
     // indicators fall back to this (end) instance instead of vanishing.
     property var fallbackSections: []
@@ -220,8 +224,12 @@ Repeater {
         // bar style for the end section).
         readonly property string hostSection: root.section
         readonly property color hostIconColor: root.iconColour
-        readonly property int hostIconSize: root.iconSize
-        readonly property int hostTextSize: root.textSize
+        readonly property color hostTextColor: root.textColour.a > 0 ? root.textColour : root.iconColour
+        readonly property real hostIconSize: root.iconSize
+        readonly property real hostTextSize: root.textSize
+        readonly property real hostMicroSize: root.microSize > 0 ? root.microSize : (root.textSize > 0 ? root.textSize * 11 / 12 : 0)
+        readonly property string hostTextFamily: root.textFamily
+        readonly property int hostTextWeight: root.textWeight
 
         // Main-axis size last reported by the loaded entrypoint, kept while
         // an overflowed indicator is unloaded so the plan stays stable.
@@ -271,7 +279,9 @@ Repeater {
         anchors.horizontalCenter: root.centerChildren && root.vertical ? parent?.horizontalCenter : undefined
         anchors.verticalCenter: root.centerChildren && !root.vertical ? parent?.verticalCenter : undefined
         width: root.vertical ? pluginLoader.natWidth : Math.min(pluginLoader.natWidth, root.availableMain)
-        height: root.vertical ? Math.min(pluginLoader.natHeight, root.availableMain) : pluginLoader.natHeight
+        height: root.vertical ? Math.min(pluginLoader.natHeight, root.availableMain) : Math.min(pluginLoader.natHeight, root.availableCross)
+        Layout.preferredWidth: root.vertical ? Math.min(pluginLoader.natWidth, root.availableCross) : Math.min(pluginLoader.natWidth, root.availableMain)
+        Layout.preferredHeight: root.vertical ? Math.min(pluginLoader.natHeight, root.availableMain) : Math.min(pluginLoader.natHeight, root.availableCross)
         Layout.maximumWidth: root.availableWidth
         Layout.maximumHeight: root.availableHeight
         // Breathing room for an indicator handed over by another island
@@ -286,15 +296,16 @@ Repeater {
         // Raw Qt Controls an extension uses in its bar popover (TextField,
         // ComboBox, ...) take the shell palette instead of the Basic style's
         // white field, as on the dashboard host.
-        // On a Clear bar the island's region ink (iconColour) is the foreground.
-        palette.windowText: root.iconColour.a > 0 ? root.iconColour : Signal.palette.ink
+        // On a Clear bar the island's region ink (textColour/iconColour) is the foreground.
+        readonly property color resolvedTextColour: root.textColour.a > 0 ? root.textColour : (root.iconColour.a > 0 ? root.iconColour : Signal.palette.ink)
+        palette.windowText: root.textColour.a > 0 ? root.textColour : (root.iconColour.a > 0 ? root.iconColour : Signal.palette.ink)
         palette.window: Signal.palette.panel
         palette.base: Signal.palette.raised
         palette.alternateBase: Signal.palette.lifted
-        palette.text: Signal.palette.ink
+        palette.text: pluginLoader.resolvedTextColour
         palette.placeholderText: Signal.palette.inkMuted
         palette.button: Signal.palette.raised
-        palette.buttonText: Signal.palette.ink
+        palette.buttonText: pluginLoader.resolvedTextColour
         palette.highlight: Signal.palette.signal
         palette.highlightedText: Signal.palette.onSignal
         palette.mid: Signal.palette.ruleStrong

@@ -60,8 +60,12 @@ Item {
             vertical: root.vertical
             section: "actions"
             iconColour: root.tone.ink
+            textColour: root.tone.ink
             iconSize: Density.iconPt
             textSize: Density.textPt
+            microSize: Density.microPt
+            textFamily: Density.dataFamily
+            textWeight: Density.textWeight
             thickness: Density.inner
             screenName: root.screenName
             barEdge: root.barEdge

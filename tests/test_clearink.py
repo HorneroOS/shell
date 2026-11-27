@@ -174,6 +174,18 @@ def test_halo_is_a_glyph_silhouette_shadow_per_entry():
     assert (ROOT / "assets/shaders/clearinkhalo.frag.qsb").is_file()
 
 
+def test_clear_foreground_tone_reaches_fallback_extensions_logo_and_media():
+    # Fallback ExtensionsIsland (used by Horizon clear bottom bar and layouts
+    # without an explicit extensions entry) gets adaptive tone + glyph halo.
+    assert "id: fallbackExtHost" in BAR
+    assert "ClearInkHalo {" in BAR
+    halo_qml = (ROOT / "components/clearink/ClearInkHalo.qml").read_text()
+    assert "clearinkhalo.frag.qsb" in halo_qml
+    assert "property var tone: ClearInk.neutral" in (ROOT / "modules/bar/components/OsIcon.qml").read_text()
+    assert "colour: root.tone.ink" in (ROOT / "modules/bar/components/Media.qml").read_text()
+    assert "textColour: root.tone.ink" in (ROOT / "modules/bar/components/ExtensionsIsland.qml").read_text()
+
+
 def test_popouts_stay_opaque():
     surface = (ROOT / "components" / "placement" / "AnchoredSurface.qml").read_text()
     assert "property color fill: Signal.palette.panel" in surface

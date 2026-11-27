@@ -308,3 +308,34 @@ def test_widest_indicator_slider_shows_pixels():
     pane = (ROOT / "modules/controlcenter/taskbar/TaskbarPane.qml").read_text()
     block = pane[pane.index('key: "itemMaxWidth"'):][:400]
     assert 'suffix: "px"' in block
+
+
+def test_plugin_bar_items_keep_real_type_scale_and_cross_axis_bounds():
+    assert "property real iconSize: 0" in WIDGETS
+    assert "property real textSize: 0" in WIDGETS
+    assert "property real microSize: 0" in WIDGETS
+    assert "readonly property real hostIconSize: root.iconSize" in WIDGETS
+    assert "readonly property real hostTextSize: root.textSize" in WIDGETS
+    assert "readonly property real hostMicroSize:" in WIDGETS
+    assert "Math.min(pluginLoader.natHeight, root.availableCross)" in WIDGETS
+    assert "Layout.preferredWidth:" in WIDGETS and "Layout.preferredHeight:" in WIDGETS
+
+    ui_text = (ROOT / "plugin/qml/Hornero/PluginKit/UiText.qml").read_text()
+    assert '"hostTextSize" in p' in ui_text
+    assert "hostStyle.hostMicroSize" in ui_text
+    assert "root.islandStyled ? Text.AlignVCenter : Text.AlignTop" in ui_text
+
+    ui_button = (ROOT / "plugin/qml/Hornero/PluginKit/UiButton.qml").read_text()
+    assert "hostStyle.hostTextFamily" in ui_button
+    assert "hostStyle.hostAvailableHeight" in ui_button or "hostContext.hostAvailableHeight" in ui_button
+
+
+def test_extensions_island_caps_width_against_start_group():
+    bar = (ROOT / "modules/bar/Bar.qml").read_text()
+    assert "maxExtensionRoom" in bar
+    assert "maxMain: group.maxExtensionRoom" in bar
+    assert "Math.max(s.mainPos + s.mainLen + root.groupSpacing, total - mainLen - m)" in bar
+    island = (ROOT / "modules/bar/components/ExtensionsIsland.qml").read_text()
+    assert "property real maxMain: -1" in island
+    assert "root.maxMain >= 0 ? Math.min(configuredLimit, root.maxMain)" in island
+    assert "root.maxMain >= 0 ? Math.min(rawWidth, root.maxMain)" in island

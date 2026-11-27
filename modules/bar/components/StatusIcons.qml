@@ -219,12 +219,12 @@ StyledRect {
         PopoutTrigger {
             name: "network"
             accessibleLabel: qsTr("Network controls")
-            active: Config.bar.status.showNetwork && (!Nmcli.activeEthernet || Config.bar.status.showWifi)
+            active: Config.bar.status.showNetwork && (!Network.activeEthernet || Config.bar.status.showWifi)
 
             sourceComponent: Glyph {
                 size: Density.iconPt
                 animate: true
-                name: Nmcli.active ? Icons.getNetworkIcon(Nmcli.active.strength ?? 0) : "wifi-off"
+                name: Network.active ? Icons.getNetworkIcon(Network.active.strength ?? 0) : "wifi-off"
                 color: root.colour
             }
         }
@@ -233,7 +233,7 @@ StyledRect {
         PopoutTrigger {
             name: "ethernet"
             accessibleLabel: qsTr("Ethernet controls")
-            active: Config.bar.status.showNetwork && Nmcli.activeEthernet
+            active: Config.bar.status.showNetwork && Network.activeEthernet
 
             sourceComponent: Glyph {
                 size: Density.iconPt
@@ -352,8 +352,12 @@ StyledRect {
             vertical: root.vertical
             section: "status"
             iconColour: root.colour
+            textColour: root.colour
             iconSize: Density.iconPt
             textSize: Density.textPt
+            microSize: Density.microPt
+            textFamily: Density.dataFamily
+            textWeight: Density.textWeight
             thickness: Density.inner
             screenName: root.screen.name
             barEdge: root.barEdge

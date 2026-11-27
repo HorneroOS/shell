@@ -37,6 +37,9 @@ StyledRect {
     property int hostThickness: 0
     property string hostScreenName: ""
 
+    // Main-axis ceiling imposed by neighbouring bar groups (-1 = uncapped).
+    property real maxMain: -1
+
     readonly property bool chip: Config.bar.extensions.background && !clear
     // Overflow guard: many enabled indicators used to run over the bar's
     // other groups (18 text indicators overlapped the left group and the
@@ -44,8 +47,9 @@ StyledRect {
     // it collapses behind the chevron exactly like bar.extensions.compact.
     // The budget is bar.extensions.islandBudget (default 40%). The island is
     // also the overflow sink of the other islands (shell#531).
-    readonly property real crowdedLimit: (root.vertical ? root.screen.height : root.screen.width) * Config.bar.extensions.islandBudget / 100
-    readonly property bool crowded: !Config.bar.extensions.compact && root.count > 1
+    readonly property real configuredLimit: (root.vertical ? root.screen.height : root.screen.width) * Config.bar.extensions.islandBudget / 100
+    readonly property real crowdedLimit: root.maxMain >= 0 ? Math.min(configuredLimit, root.maxMain) : configuredLimit
+    readonly property bool crowded: !Config.bar.extensions.compact && root.count > 0
         && (root.vertical ? layout.implicitHeight : layout.implicitWidth) + root.padding * 2 > root.crowdedLimit
     readonly property bool compact: Config.bar.extensions.compact || root.crowded
     readonly property int padding: root.chip ? Appearance.padding.normal : Appearance.padding.small
@@ -55,16 +59,18 @@ StyledRect {
     // Driven by the bar exactly like Tray.expanded (Bar.closeTray resets it).
     property bool expanded
 
-    readonly property real nonAnimHeight: {
+    readonly property real rawHeight: {
         if (!root.compact)
             return layout.implicitHeight + root.padding * 2;
         return (root.expanded ? expandIcon.implicitHeight + layout.implicitHeight + root.spacing : expandIcon.implicitHeight) + root.padding * 2;
     }
-    readonly property real nonAnimWidth: {
+    readonly property real rawWidth: {
         if (!root.compact)
             return layout.implicitWidth + root.padding * 2;
         return (root.expanded ? expandIcon.implicitWidth + layout.implicitWidth + root.spacing : expandIcon.implicitWidth) + root.padding * 2;
     }
+    readonly property real nonAnimHeight: root.maxMain >= 0 ? Math.min(rawHeight, root.maxMain) : rawHeight
+    readonly property real nonAnimWidth: root.maxMain >= 0 ? Math.min(rawWidth, root.maxMain) : rawWidth
 
     // Island cross-axis size (Density.chip): the cell size, shrunk so the
     // island keeps its inset from the bar edge. Set by Bar.qml.
@@ -164,8 +170,12 @@ StyledRect {
                 // Recolour mirrors the tray: icons take the secondary tint;
                 // without it the island leaves plugin icon colours alone.
                 iconColour: Config.bar.extensions.recolour ? root.tone.ink : "transparent"
+                textColour: root.tone.ink
                 iconSize: Density.iconPt
                 textSize: Density.textPt
+                microSize: Density.microPt
+                textFamily: Density.dataFamily
+                textWeight: Density.textWeight
                 edge: root.hostEdge
                 barEdge: root.barEdge
                 compact: root.hostCompact
@@ -216,8 +226,12 @@ StyledRect {
                 // Recolour mirrors the tray: icons take the secondary tint;
                 // without it the island leaves plugin icon colours alone.
                 iconColour: Config.bar.extensions.recolour ? root.tone.ink : "transparent"
+                textColour: root.tone.ink
                 iconSize: Density.iconPt
                 textSize: Density.textPt
+                microSize: Density.microPt
+                textFamily: Density.dataFamily
+                textWeight: Density.textWeight
                 edge: root.hostEdge
                 barEdge: root.barEdge
                 compact: root.hostCompact

@@ -33,7 +33,7 @@ def test_islands_embed_section_hosts_with_their_style():
         assert f'section: "{section}"' in src, rel
         assert "iconColour:" in src and "iconSize:" in src, rel
     widgets = read("modules/plugins/PluginBarWidgets.qml")
-    assert "readonly property int hostIconSize: root.iconSize" in widgets
+    assert "readonly property real hostIconSize: root.iconSize" in widgets
     assert "root.fallbackSections.includes" in widgets
     assert "fallbackSections:" in read("modules/bar/Bar.qml")
 

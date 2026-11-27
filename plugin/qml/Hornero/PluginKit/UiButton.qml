@@ -50,6 +50,7 @@ Button {
     }
     readonly property bool islandStyled: hostStyle !== null && hostStyle.hostIconSize > 0
     readonly property bool islandColoured: islandStyled && hostStyle.hostIconColor.a > 0
+    readonly property bool islandTextColoured: islandStyled && hostStyle.hostTextColor && hostStyle.hostTextColor.a > 0
     // Tray items and native status glyphs have no hover fill: the popout
     // is the hover feedback. Indicators in those islands match.
     readonly property bool quietHover: root.islandStyled && (root.hostStyle.hostSection === "status" || root.hostStyle.hostSection === "end")
@@ -58,7 +59,7 @@ Button {
     // In a bar every indicator is a quiet segment, whatever its variant.
     readonly property string effectiveVariant: root.inBar ? "quiet" : root.variant
 
-    readonly property color labelColor: !root.enabled ? Theme.palette.inkFaint : root.effectiveVariant === "primary" ? Theme.palette.onSignal : root.effectiveVariant === "danger" ? Theme.palette.onAlertWell : root.islandColoured ? root.hostStyle.hostIconColor : Theme.palette.ink
+    readonly property color labelColor: !root.enabled ? Theme.palette.inkFaint : root.effectiveVariant === "primary" ? Theme.palette.onSignal : root.effectiveVariant === "danger" ? Theme.palette.onAlertWell : (root.text.length > 0 && root.glyph.length === 0 && root.islandTextColoured) ? root.hostStyle.hostTextColor : root.islandColoured ? root.hostStyle.hostIconColor : (root.islandTextColoured ? root.hostStyle.hostTextColor : Theme.palette.ink)
     readonly property color fillColor: {
         const v = root.effectiveVariant;
         if (v === "primary")
@@ -133,8 +134,8 @@ Button {
                 width: root.railCompact ? Math.min(implicitWidth, root.railWidth - root.leftPadding - root.rightPadding) : implicitWidth
                 text: root.text
                 color: root.labelColor
-                font.family: Theme.font.family.sans
-                font.weight: root.effectiveVariant === "primary" ? Font.Medium : Font.Normal
+                font.family: root.islandStyled && root.hostStyle.hostTextFamily && root.hostStyle.hostTextFamily.length > 0 ? root.hostStyle.hostTextFamily : Theme.font.family.sans
+                font.weight: root.effectiveVariant === "primary" ? Font.Medium : (root.islandStyled && root.hostStyle.hostTextWeight > 0 ? root.hostStyle.hostTextWeight : Font.Normal)
                 font.pointSize: root.islandStyled && root.hostStyle.hostTextSize > 0 ? root.hostStyle.hostTextSize : root.railCompact ? Theme.font.size.small : Theme.font.size.smaller
                 font.features: ({
                         "tnum": 1
@@ -152,7 +153,7 @@ Button {
 
     background: Item {
         implicitWidth: 28
-        implicitHeight: 28
+        implicitHeight: root.inBar && root.hostContext.hostAvailableHeight > 0 ? Math.min(28, root.hostContext.hostAvailableHeight) : 28
 
         Rectangle {
             id: surface

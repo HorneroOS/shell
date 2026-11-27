@@ -31,9 +31,14 @@ struct Inference {
 // `analysis` is null for seed sources and for house without a wallpaper.
 [[nodiscard]] Inference infer(const Analysis* analysis, const Request&);
 
+enum class SurfacePolicy { HouseNeutral, WallpaperTinted, PureNeutral };
+
 struct VariantParams {
-    double sC = 0, iC = 0, aCmin = 0, aCmax = 0, cueRot = 165, harm = 0, term = 0;
+    double sC_dark = 0, sC_light = 0, iC_dark = 0, iC_light = 0;
+    double aCmin = 0, aCmax = 0, cueRot = 165, harm = 0, term = 0;
     bool darkOnly = false, highContrast = false, glow = true;
+    SurfacePolicy defaultPolicy = SurfacePolicy::HouseNeutral;
+    bool clampWarmZone = true;
     const char* label = "";
     const char* description = "";
 };

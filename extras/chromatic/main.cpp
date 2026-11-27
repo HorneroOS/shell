@@ -50,6 +50,7 @@ constexpr const char* kSynopsis = R"(usage:
   hornero-chromatic generate (--source PATH | --seed HEX [--seed HEX] | --house) [--wallpaper PATH]
                              [--variant V] [--mode auto|dark|light] [--current-mode dark|light]
                              [--contrast auto|standard|boosted|maximum] [--depth standard|deep]
+                             [--surface-tint auto|neutral|tinted]
                              [--chroma 0.5..1.5] [--hue-shift -180..180] [--request FILE]
                              [--cache-dir DIR | --no-cache] [--pretty]
   hornero-chromatic validate --scheme FILE [--level standard|boosted|maximum] [--pretty]
@@ -132,6 +133,7 @@ int cmdGenerate(const QStringList& args) {
     opt("current-mode", "dark|light (hysteresis).", "M");
     opt("contrast", "auto|standard|boosted|maximum.", "C");
     opt("depth", "standard|deep.", "D");
+    opt("surface-tint", "auto|neutral|tinted.", "T");
     opt("chroma", "Chroma scale 0.5..1.5.", "F");
     opt("hue-shift", "Hue shift in degrees.", "DEG");
     opt("request", "JSON request file (RFC §8.3 keys); flags override.", "FILE");
@@ -200,6 +202,8 @@ int cmdGenerate(const QStringList& args) {
     if (auto e = enumFlag("contrast", parseContrast, r.contrast))
         return usage(*e);
     if (auto e = enumFlag("depth", parseDepth, r.depth))
+        return usage(*e);
+    if (auto e = enumFlag("surface-tint", parseSurfaceTint, r.surfaceTint))
         return usage(*e);
     if (p.isSet(QStringLiteral("current-mode"))) {
         const auto m = parseMode(p.value(QStringLiteral("current-mode")));
@@ -281,7 +285,9 @@ int cmdVariants(const QStringList& args) {
             { QStringLiteral("auto"),
                 v == Variant::Balanced || v == Variant::Vibrant || v == Variant::Expressive || v == Variant::Muted },
             { QStringLiteral("params"),
-                QJsonObject { { QStringLiteral("surfaceChroma"), vp.sC }, { QStringLiteral("inkChroma"), vp.iC },
+                QJsonObject { { QStringLiteral("surfaceChroma"), vp.sC_dark },
+                    { QStringLiteral("surfaceChromaLight"), vp.sC_light }, { QStringLiteral("inkChroma"), vp.iC_dark },
+                    { QStringLiteral("inkChromaLight"), vp.iC_light },
                     { QStringLiteral("accentChroma"), QJsonArray { vp.aCmin, vp.aCmax } },
                     { QStringLiteral("cueRotation"), vp.cueRot }, { QStringLiteral("harmonise"), vp.harm },
                     { QStringLiteral("terminalHarmonise"), vp.term }, { QStringLiteral("glow"), vp.glow },

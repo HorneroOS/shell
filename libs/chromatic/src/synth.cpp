@@ -19,14 +19,45 @@ namespace hornero::chromatic {
 namespace {
 
 // Signal house hues (RFC 0002 §4.4) and the neutral hues of Signal Night
-// surfaces / Signal Day paper (ink takes the opposite hue).
+// graphite / Signal Day white ceramic (algorithm 3).
 constexpr double kHouseSignalHue = 69.0;
 constexpr double kHouseCueHue = 236.0;
 constexpr double kHouseChroma = 0.13;
 constexpr double kHouseNeutralDark = 256.0;
-constexpr double kHouseNeutralLight = 72.0;
+constexpr double kHouseNeutralLight = 248.0;
+constexpr double kHouseInkDark = 85.0;
+constexpr double kHouseInkLight = 256.0;
 constexpr double kAlertAnchor = 29.0;
 constexpr double kPhosphorAnchor = 150.0;
+
+double warmWeight(double h) {
+    const double hw = wrapHue(h);
+    if (hw >= 35.0 && hw <= 115.0)
+        return 0.0;
+    if (hw >= 20.0 && hw < 35.0)
+        return (35.0 - hw) / 15.0;
+    if (hw > 115.0 && hw <= 130.0)
+        return (hw - 115.0) / 15.0;
+    return 1.0;
+}
+
+void warmSafeSurface(double h, bool dark, double baseChroma, double& outH, double& outC) {
+    const double houseH = dark ? kHouseNeutralDark : kHouseNeutralLight;
+    const double floorC = std::min(baseChroma, dark ? 0.010 : 0.004);
+    const double w = warmWeight(h);
+    if (w <= 0.0) {
+        outH = houseH;
+        outC = floorC;
+        return;
+    }
+    if (w >= 1.0) {
+        outH = wrapHue(h);
+        outC = baseChroma;
+        return;
+    }
+    outH = wrapHue(houseH + hueDiff(h, houseH) * w);
+    outC = std::lerp(floorC, baseChroma, w);
+}
 
 struct Col {
     double L = 0, C = 0, h = 0;
@@ -46,7 +77,7 @@ struct Ladder {
 
 constexpr Ladder kDark { .167, .189, .203, .229, .263, .305, .318, .575, .926, .739, .573, .78, .78, .80, .70, .29, .91,
     .18 };
-constexpr Ladder kLight { .910, .877, .950, .968, .983, .995, .847, .537, .234, .443, .597, .49, .47, .47, .50, .915, .28,
+constexpr Ladder kLight { .910, .877, .950, .968, .983, 1.0, .847, .537, .234, .443, .597, .49, .47, .47, .50, .915, .28,
     .995 };
 
 double harmonise(double anchor, double seed, double cap) {
@@ -143,7 +174,7 @@ struct Seeds {
     QStringList reasons;
 };
 
-Seeds resolveSeeds(const Analysis* a, const Request& r, Mode mode, Variant variant) {
+Seeds resolveSeeds(const Analysis* a, const Request& r, Mode mode) {
     Seeds s;
     s.hn = mode == Mode::Light ? kHouseNeutralLight : kHouseNeutralDark;
     const auto house = [&s]() {
@@ -183,7 +214,7 @@ Seeds resolveSeeds(const Analysis* a, const Request& r, Mode mode, Variant varia
         s.hp = p.lch.h;
         s.cp = p.lch.C;
         s.Lp = p.lch.L;
-        s.hn = variant == Variant::Faithful && a->neutralHue ? *a->neutralHue : p.lch.h;
+        s.hn = a->neutralHue ? *a->neutralHue : p.lch.h;
         s.hexes = { p.hex };
         for (qsizetype i = 1; i < a->seeds.size(); ++i) {
             if (std::abs(hueDiff(a->seeds[i].lch.h, p.lch.h)) >= 50.0) {
@@ -195,7 +226,6 @@ Seeds resolveSeeds(const Analysis* a, const Request& r, Mode mode, Variant varia
     } else if (a && a->weakHue) {
         s.hp = *a->weakHue;
         s.cp = 0.06;
-        s.hn = *a->weakHue;
         s.hexes = { toHex(Oklch { 0.7, 0.06, *a->weakHue }) };
         s.reasons << QStringLiteral("achromatic image: faint hue %1° kept at chroma 0.06").arg(num(*a->weakHue, 0));
     } else {
@@ -257,22 +287,29 @@ const QStringList& surfaceRoles() {
 }
 
 const VariantParams& params(Variant v) {
-    // sC, iC, aCmin, aCmax, cueRot, harm, term, darkOnly, highContrast, glow
-    static const VariantParams kBalanced { .016, .014, .09, .15, 165, 10, 10, false, false, true, "Balanced",
-        "Signal Night/Day character re-hued: quiet surfaces, one confident accent" };
-    static const VariantParams kVibrant { .028, .014, .14, .40, 165, 12, 15, false, false, true, "Vibrant",
-        "Stronger accents and tinted chrome" };
-    static const VariantParams kExpressive { .022, .016, .11, .17, 120, 20, 20, false, false, true, "Expressive",
+    // sC_dark, sC_light, iC_dark, iC_light, aCmin, aCmax, cueRot, harm, term,
+    // darkOnly, highContrast, glow, defaultPolicy, clampWarmZone
+    static const VariantParams kBalanced { .012, .004, .012, .007, .09, .15, 165, 10, 10, false, false, true,
+        SurfacePolicy::HouseNeutral, true, "Balanced",
+        "Signal Night/Day character: quiet house surfaces, one confident accent" };
+    static const VariantParams kVibrant { .024, .010, .012, .008, .14, .40, 165, 12, 15, false, false, true,
+        SurfacePolicy::WallpaperTinted, true, "Vibrant", "Stronger accents and tinted chrome" };
+    static const VariantParams kExpressive { .020, .008, .014, .008, .11, .17, 120, 20, 20, false, false, true,
+        SurfacePolicy::WallpaperTinted, true, "Expressive",
         "Triadic cue unless the image has a second hue; more harmonised status colours" };
-    static const VariantParams kFaithful { .020, .012, 0.0, .40, 165, 8, 8, false, false, true, "Faithful",
+    static const VariantParams kFaithful { .020, .012, .010, .008, 0.0, .40, 165, 8, 8, false, false, true,
+        SurfacePolicy::WallpaperTinted, false, "Faithful",
         "Signal is the seed itself when it passes the gates; surfaces take the image's dominant hue" };
-    static const VariantParams kMuted { .008, .008, .05, .08, 165, 5, 5, false, false, true, "Muted",
-        "Near-neutral chrome, soft accents" };
-    static const VariantParams kMonochrome { 0.0, 0.0, .035, .035, 165, 0, 0, false, false, false, "Monochrome",
+    static const VariantParams kMuted { .006, .002, .006, .004, .05, .08, 165, 5, 5, false, false, true,
+        SurfacePolicy::HouseNeutral, true, "Muted", "Near-neutral chrome, soft accents" };
+    static const VariantParams kMonochrome { 0.0, 0.0, 0.0, 0.0, .035, .035, 165, 0, 0, false, false, false,
+        SurfacePolicy::PureNeutral, false, "Monochrome",
         "Neutral chrome and ink; accents whisper the seed hue; status colours keep their meaning" };
-    static const VariantParams kHighContrast { .006, 0.0, .12, .17, 165, 5, 5, false, true, false, "High contrast",
+    static const VariantParams kHighContrast { .005, 0.0, 0.0, 0.0, .12, .17, 165, 5, 5, false, true, false,
+        SurfacePolicy::HouseNeutral, true, "High contrast",
         "Maximum gates, deeper ground, brighter ink; no glow, no translucency" };
-    static const VariantParams kNeon { .030, .020, .16, .40, 180, 0, 0, true, false, true, "Neon",
+    static const VariantParams kNeon { .028, 0.0, .016, 0.0, .16, .40, 180, 0, 0, true, false, true,
+        SurfacePolicy::WallpaperTinted, true, "Neon",
         "Dark only; complementary cue, saturated terminal, glow at gamut" };
     switch (v) {
     case Variant::Vibrant:
@@ -439,15 +476,50 @@ Expected<Generated> synthesise(const Analysis* a, const Request& r, const Infere
     const double margin = table.margin;
 
     const double k = r.chroma;
-    const double sC = V.sC * k;
-    const double iC = V.iC * k;
     const double lo = V.aCmin * k;
     const double hi = V.aCmax * k;
 
-    Seeds seeds = resolveSeeds(a, r, mode, variant);
+    SurfacePolicy policy = (hc && !dark) ? SurfacePolicy::PureNeutral : V.defaultPolicy;
+    if (r.surfaceTint == SurfaceTint::Neutral) {
+        policy = (variant == Variant::Monochrome || (hc && !dark)) ? SurfacePolicy::PureNeutral
+                                                                   : SurfacePolicy::HouseNeutral;
+    } else if (r.surfaceTint == SurfaceTint::Tinted && variant != Variant::Monochrome) {
+        policy = SurfacePolicy::WallpaperTinted;
+    }
+
+    Seeds seeds = resolveSeeds(a, r, mode);
     const double seedH = seeds.hp;
-    const double nh = seeds.hn;
-    const double inkH = wrapHue(nh + 180.0);
+    double nh = dark ? kHouseNeutralDark : kHouseNeutralLight;
+    double inkH = dark ? kHouseInkDark : kHouseInkLight;
+    double sC = 0.0;
+    double iC = 0.0;
+    if (policy == SurfacePolicy::HouseNeutral) {
+        const double maxSC = dark ? 0.012 : 0.004;
+        const double maxIC = dark ? 0.012 : 0.007;
+        sC = r.surfaceTint == SurfaceTint::Neutral ? std::min(dark ? V.sC_dark : V.sC_light, maxSC)
+                                                   : (dark ? V.sC_dark : V.sC_light);
+        iC = r.surfaceTint == SurfaceTint::Neutral ? std::min(dark ? V.iC_dark : V.iC_light, maxIC)
+                                                   : (dark ? V.iC_dark : V.iC_light);
+    } else if (policy == SurfacePolicy::WallpaperTinted) {
+        const double sk = 0.5 + 0.5 * k;
+        double baseSC = dark ? V.sC_dark : V.sC_light;
+        double baseIC = dark ? V.iC_dark : V.iC_light;
+        if (r.surfaceTint == SurfaceTint::Tinted && V.defaultPolicy != SurfacePolicy::WallpaperTinted) {
+            baseSC = dark ? std::max(baseSC, variant == Variant::Muted ? 0.008 : 0.018)
+                          : std::max(baseSC, variant == Variant::Muted ? 0.006 : 0.010);
+            baseIC = dark ? std::max(baseIC, 0.012) : std::max(baseIC, 0.008);
+        }
+        baseSC *= sk;
+        baseIC *= sk;
+        if (V.clampWarmZone) {
+            warmSafeSurface(seeds.hn, dark, baseSC, nh, sC);
+        } else {
+            nh = seeds.hn;
+            sC = baseSC;
+        }
+        inkH = wrapHue(nh + 180.0);
+        iC = (nh >= 240.0 && nh <= 310.0) ? std::min(baseIC, 0.006) : baseIC;
+    }
 
     const Ladder& Ld = dark ? kDark : kLight;
     Ladder lad = Ld;
@@ -466,12 +538,24 @@ Expected<Generated> synthesise(const Analysis* a, const Request& r, const Infere
     }
 
     Palette p;
-    const std::pair<const char*, std::pair<double, double>> ramp[] = { { "ground", { lad.ground, .75 } },
-        { "sunken", { lad.sunken, .85 } }, { "base", { lad.base, 1.0 } }, { "panel", { lad.panel, 1.1 } },
-        { "raised", { lad.raised, 1.25 } }, { "lifted", { lad.lifted, 1.3 } }, { "rule", { lad.rule, 1.3 } },
-        { "ruleStrong", { lad.ruleStrong, 1.4 } } };
-    for (const auto& [role, lk] : ramp)
-        p[QString::fromLatin1(role)] = Col(lk.first, sC * lk.second, nh);
+    struct RampStep {
+        const char* role;
+        double L;
+        double darkMult;
+        double lightMult;
+    };
+    const RampStep ramp[] = {
+        { "ground", lad.ground, .75, 1.00 },
+        { "sunken", lad.sunken, .85, 1.10 },
+        { "base", lad.base, 1.00, .65 },
+        { "panel", lad.panel, 1.10, .35 },
+        { "raised", lad.raised, 1.25, .15 },
+        { "lifted", lad.lifted, 1.30, 0.00 },
+        { "rule", lad.rule, 1.30, 1.20 },
+        { "ruleStrong", lad.ruleStrong, 1.40, 1.00 },
+    };
+    for (const auto& step : ramp)
+        p[QString::fromLatin1(step.role)] = Col(step.L, sC * (dark ? step.darkMult : step.lightMult), nh);
     p[QStringLiteral("ink")] = Col(lad.ink, iC, inkH);
     p[QStringLiteral("inkMuted")] = Col(lad.inkMuted, iC * .5, inkH);
     p[QStringLiteral("inkFaint")] = Col(lad.inkFaint, iC * .5, inkH);
@@ -736,10 +820,14 @@ Expected<Generated> synthesise(const Analysis* a, const Request& r, const Infere
     const double nL = dark ? .77 : .48;
     const double bL = dark ? .87 : .39;
     std::array<Col, 16> term;
+    const double termNeutralC = policy == SurfacePolicy::PureNeutral ? 0.0 : .02;
+    const double termInkC = policy == SurfacePolicy::PureNeutral
+        ? 0.0
+        : (nh >= 240.0 && nh <= 310.0 && policy == SurfacePolicy::WallpaperTinted ? std::min(.02, std::max(.006, iC)) : .02);
     term[0] = Col(dark ? .26 : .23, sC, nh);
-    term[7] = Col(dark ? .82 : .60, .02, inkH);
-    term[8] = Col(dark ? .54 : .44, .02, nh);
-    term[15] = Col(dark ? .95 : .60, .01, inkH);
+    term[7] = Col(dark ? .82 : .60, termInkC, inkH);
+    term[8] = Col(dark ? .54 : .44, termNeutralC, nh);
+    term[15] = Col(dark ? .95 : .60, termInkC * 0.5, inkH);
     for (std::size_t i = 1; i < 7; ++i) {
         term[i] = Col(nL, std::min(tc, maxChroma(nL, th[i])), th[i]);
         term[i + 8] = Col(bL, std::min(tc * .85, maxChroma(bL, th[i])), th[i]);

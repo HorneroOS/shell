@@ -52,7 +52,7 @@ disposable cache.
    0.25), variant (C90 table), contrast (`auto` → `boosted` when detail
    exceeds 0.08), neon suggestion, personality, chroma class, temperature.
    Every decision lists its reason and can be overridden by the request.
-8. **Synthesis** — the RFC §4.5 lightness ladder, variant parameters (§6),
+55: 8. **Synthesis** — the RFC §4.5 lightness ladder, variant parameters (§6),
    surface depth, chroma scale and hue shift; status anchors 29° / 150°
    harmonised toward the seed; cue candidates; wells, on-fills, inverse,
    glow (dark only, never monochrome or high contrast). Cue preference:
@@ -60,6 +60,14 @@ disposable cache.
    then the first qualifying cool candidate (180°–290°), then any
    qualifying candidate outside the olive band, then any qualifying one.
    The unrotated house cue 236° is a candidate after its rotated form.
+   Since algorithm 3, surface synthesis is decoupled from accent chroma via
+   `SurfacePolicy` (`HouseNeutral` 256° Dark graphite / 248° Light white
+   ceramic with a downward Light elevation taper for `balanced`, `muted`,
+   and Dark `high-contrast`; `PureNeutral` for `monochrome` and Light
+   `high-contrast`; `WallpaperTinted` with a `[35°, 115°]` warm/olive
+   surface guard and `[20°, 130°]` shoulder for `vibrant`, `expressive`,
+   and `neon`, or literal `neutralHue` for `faithful`), overridable via
+   `surfaceTint` (`auto` | `neutral` | `tinted`).
 9. **Contrast solver** — surfaces never move; foregrounds move only in
    lightness (30-step bisection) to the level's minimum plus the 0.15
    margin, in a fixed order. Focus reaches its minimum on every surface;
@@ -89,6 +97,7 @@ hornero-chromatic generate (--source PATH | --seed HEX [--seed HEX] | --house) [
                            [--variant auto|balanced|vibrant|expressive|faithful|muted|monochrome|high-contrast|neon]
                            [--mode auto|dark|light] [--current-mode dark|light]
                            [--contrast auto|standard|boosted|maximum] [--depth standard|deep]
+                           [--surface-tint auto|neutral|tinted]
                            [--chroma 0.5..1.5] [--hue-shift -180..180] [--request FILE]
                            [--cache-dir DIR | --no-cache] [--pretty]
 hornero-chromatic validate --scheme FILE [--level standard|boosted|maximum] [--pretty]
@@ -103,9 +112,11 @@ unsupported (including video without `ffmpeg`), `4` gates unreachable
 `{"schemaVersion":1,"engine":{…},"error":{"code":"usage|source-unreadable|gates-unreachable|internal","message":"…"}}`.
 
 - `--request FILE` reads RFC §8.3 keys (`source`, `path`, `seeds`,
-  `variant`, `mode`, `contrast`, `surfaceDepth`, `chroma`, `hueShift`,
-  `currentMode`); unknown keys such as `follow` are ignored; flags override.
-  `source` may also be `image:/abs/path`.
+  `variant`, `mode`, `contrast`, `surfaceDepth`, `surfaceTint`, `chroma`,
+  `hueShift`, `currentMode`); unknown keys such as `follow` are ignored;
+  flags override. `surfaceTint` defaults to `auto` and is omitted from
+  `scheme.chromatic.request` when `auto`. `source` may also be
+  `image:/abs/path`.
 - `generate` output keys: `schemaVersion`, `engine`, `request`,
   `analysis` (`null` for seeds), `inference`, `scheme`, `gates`
   (`{level, passed, rows: [[label, value, min], …]}`), `adjustments`
@@ -134,8 +145,8 @@ and recomputed) and `frames/<key>.png`; 64 MB cap, LRU by mtime.
 import Hornero.Chromatic
 
 ChromaticEngine.available        // true when the module loads
-ChromaticEngine.engineVersion    // "1.0.0+a2"
-ChromaticEngine.algorithm        // 2
+ChromaticEngine.engineVersion    // "1.0.0+a3"
+ChromaticEngine.algorithm        // 3
 ChromaticEngine.cacheDir         // read/write, default $XDG_CACHE_HOME/hornero/chromatic
 ChromaticEngine.analyse(path): ChromaticJob
 ChromaticEngine.generate(request): ChromaticJob   // JS object (keys above) or ChromaticRequest
@@ -173,9 +184,11 @@ repository is C++20, so fallible calls return `Expected<T>`
 ## Determinism and versions
 
 Identical bytes and request give byte-identical JSON across runs, cache
-states and thread counts. `kAlgorithm` (currently 2) changes whenever any
-output byte changes; the same PR regenerates the goldens. Algorithm 2
-changed the cue preference (violet and pink leads used to get an
+states and thread counts. `kAlgorithm` (currently 3) changes whenever any
+output byte changes; the same PR regenerates the goldens. Algorithm 3
+decoupled surface tinting from accent chroma (`SurfacePolicy`, warm/olive
+surface guard, downward Light elevation taper, and `surfaceTint`);
+algorithm 2 changed the cue preference (violet and pink leads used to get an
 olive-yellow cue); it regenerated the goldens
 (`CHROMATIC_UPDATE_GOLDEN=1 pytest tests/test_chromatic_golden.py`).
 Across toolchains the golden test accepts colour drift up to ΔEOK 0.005

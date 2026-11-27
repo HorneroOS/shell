@@ -106,11 +106,11 @@ def test_no_unquoted_sh_c_in_remediated_qml_files():
     pam = (ROOT / "modules" / "lock" / "Pam.qml").read_text(encoding="utf-8")
     assert '["fprintd-list", Quickshell.env("USER")]' in pam
 
-    persist = (ROOT / "modules" / "companion" / "CompanionPersist.qml").read_text(encoding="utf-8")
+    persist = (ROOT / "services" / "CompanionPersist.qml").read_text(encoding="utf-8")
     assert "'${path}'" not in persist
     assert "'${quoted}'" not in persist
 
-    inst = (ROOT / "modules" / "companion" / "CompanionInstancesPersist.qml").read_text(encoding="utf-8")
+    inst = (ROOT / "services" / "CompanionInstancesPersist.qml").read_text(encoding="utf-8")
     assert "'${path}'" not in inst
     assert "'${quoted}'" not in inst
 

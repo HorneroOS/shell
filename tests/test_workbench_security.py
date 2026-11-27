@@ -14,6 +14,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 COMP = ROOT / "modules" / "companion"
+SERVICES = ROOT / "services"
 NODE = pytest.mark.skipif(shutil.which("node") is None, reason="node not installed")
 
 
@@ -21,7 +22,7 @@ def code(path: Path) -> str:
     return re.sub(r"//[^\n]*", "", path.read_text(encoding="utf-8"))
 
 
-BRIDGE = code(COMP / "AssistantBridge.qml")
+BRIDGE = code(SERVICES / "AssistantBridge.qml")
 PANEL = code(COMP / "ChatPanel.qml")
 CLARIFY = code(COMP / "ClarifyCard.qml")
 CARD = code(COMP / "ApprovalCard.qml")

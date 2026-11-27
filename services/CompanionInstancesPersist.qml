@@ -1,5 +1,6 @@
 pragma ComponentBehavior: Bound
 
+import qs.modules.companion
 import qs.utils
 import Quickshell
 import Quickshell.Io

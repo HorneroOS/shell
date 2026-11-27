@@ -7,8 +7,9 @@ import Quickshell
 import Quickshell.Io
 import QtQuick
 
-// Assistant bridge (Javi / Hermes): the only companion-side piece that
-// talks to the assistant backend, through the public horneroctl CLI —
+// Assistant bridge service (Javi / Hermes): lives in services/ so
+// modules/companion/ stays presentation-only (ADR-002). The single piece
+// that talks to the assistant backend, through the public horneroctl CLI —
 // never to Hermes directly, never around horneroctl's consent gates.
 //
 // Chat flow (shell#234): ask() runs
@@ -338,6 +339,18 @@ Scope {
 
     function removeAttachment(path: string): void {
         root.attachments = root.attachments.filter(p => p !== path);
+    }
+
+    // File picker: kdialog is the Hornero-standard picker backend on
+    // this stack; absence degrades to an honest bubble message.
+    function pickAttachment(): void {
+        fileDialogProc.used = false;
+        fileDialogProc.command = ["kdialog", "--getopenfilename", Quickshell.env("HOME"), "Images and text (*.png *.jpg *.jpeg *.webp *.gif *.wav *.mp3 *.ogg *.txt *.md *.log *.json *.yaml *.yml *.v *.py *.js *.sh)"];
+        fileDialogProc.running = true;
+    }
+
+    function revealWorkspace(): void {
+        Quickshell.execDetached(["horneroctl", "assistant", "workspace", "reveal"]);
     }
 
     // Voice: record with pw-record (PipeWire) to a wav in the shell
@@ -1162,6 +1175,26 @@ Scope {
             if (!root.recording)
                 root.removeAllVoiceFiles();
             root.settleRun();
+        }
+    }
+
+    Process {
+        id: fileDialogProc
+
+        property bool used: false
+
+        stdout: SplitParser {
+            onRead: data => {
+                const path = data.trim().split("\n").pop();
+                if (path !== "" && !fileDialogProc.used) {
+                    fileDialogProc.used = true;
+                    root.addAttachment(path);
+                }
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode !== 0 && !fileDialogProc.used)
+                CompanionStore.say("No file picker available (kdialog missing).", 5000);
         }
     }
 

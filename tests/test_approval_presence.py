@@ -17,7 +17,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 JS = ROOT / "services" / "assistantrun.js"
-BRIDGE_SRC = (ROOT / "modules" / "companion" / "AssistantBridge.qml").read_text()
+BRIDGE_SRC = (ROOT / "services" / "AssistantBridge.qml").read_text()
 CARD_SRC = (ROOT / "modules" / "companion" / "ApprovalCard.qml").read_text()
 FAKE = ROOT / "tests" / "fixtures" / "fake-horneroctl.py"
 NODE = pytest.mark.skipif(shutil.which("node") is None, reason="node not installed")

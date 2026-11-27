@@ -42,6 +42,7 @@ Item {
             visible: !root.vertical && (root.player?.canGoPrevious ?? false)
             icon: "player-skip-back"
             label: qsTr("Previous track")
+            colour: root.tone.ink
             iconSize: Density.iconPt
             onActivated: root.player?.previous()
         }
@@ -58,6 +59,7 @@ Item {
             visible: !root.vertical && (root.player?.canGoNext ?? false)
             icon: "player-skip-forward"
             label: qsTr("Next track")
+            colour: root.tone.ink
             iconSize: Density.iconPt
             onActivated: root.player?.next()
         }

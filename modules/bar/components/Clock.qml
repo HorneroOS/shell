@@ -188,8 +188,12 @@ Item {
             vertical: root.vertical
             section: "clock"
             iconColour: root.colour
+            textColour: root.colour
             iconSize: Density.iconPt
             textSize: Density.textPt
+            microSize: Density.microPt
+            textFamily: Density.dataFamily
+            textWeight: Density.textWeight
             thickness: Density.inner
             screenName: root.screen.name
             barEdge: root.barEdge

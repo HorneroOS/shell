@@ -500,8 +500,14 @@ Item {
                 return root.stripInset;
             if (align === "start")
                 return m;
-            if (align === "end")
+            if (align === "end") {
+                if (root.style === "islands") {
+                    const s = neighbour("start");
+                    if (s)
+                        return Math.max(s.mainPos + s.mainLen + root.groupSpacing, total - mainLen - m);
+                }
                 return total - mainLen - m;
+            }
             const ideal = Math.round((total - mainLen) / 2);
             if (root.style !== "islands")
                 return ideal;
@@ -621,6 +627,29 @@ Item {
         // Main-axis positions of the 1 px rule between segments, in this
         // group's coordinates (signal-visual-language §4.1).
         property var separators: []
+
+        readonly property bool hasMaxMain: root.mainLength(root) > 0 && (island.fill || (root.style === "islands" && group.name === "end"))
+        readonly property real maxExtensionRoom: {
+            if (!hasMaxMain)
+                return -1;
+            let totalRoom = 0;
+            if (island.fill) {
+                const startOcc = group.name === "end" && startGroup.visible ? (root.vertical ? startGroup.implicitHeight : startGroup.implicitWidth) + root.groupSpacing : 0;
+                totalRoom = root.mainLength(island) - root.edgePadding * 2 - startOcc;
+            } else {
+                const s = island.neighbour("start");
+                const minStart = s ? s.mainPos + s.mainLen + root.groupSpacing : root.spec.margin;
+                totalRoom = root.mainLength(root) - root.spec.margin - minStart - root.pillPadding * 2 - root.edgePadding * 2;
+            }
+            let others = 0;
+            for (const c of layout.children) {
+                if (!c || !c.visible || root.extensionIslandOf(c) !== null)
+                    continue;
+                const pad = c.isSegment === true ? (c.leadPad + c.trailPad) : 0;
+                others += (root.vertical ? c.implicitHeight : c.implicitWidth) + pad;
+            }
+            return Math.max(0, totalRoom - others);
+        }
 
         // Reads the occupied segments in order, marks icon clusters (one
         // segment, 12 px gap, no rule inside) and rebuilds `separators`.
@@ -748,6 +777,7 @@ Item {
                                 vertical: root.vertical
                                 clear: root.clear
                                 fallbackSections: ["status", "actions", "clock"].filter(s => !root.presentSections.includes(s))
+                                maxMain: group.maxExtensionRoom
                             }
                         }
                     }
@@ -913,25 +943,48 @@ Item {
             // Layouts without an "extensions" entry get the same tray-like
             // island here (shell#441), never a bare stack of indicators,
             // so bar.extensions.* applies in every layout.
-            ExtensionsIsland {
-                Layout.alignment: root.vertical ? Qt.AlignHCenter : Qt.AlignVCenter
+            Item {
+                id: fallbackExtHost
 
-                // Same cross-axis size as every other island, so it keeps the
-                // inset from the bar edge (it used to fill the whole cell).
-                cross: root.islandCross
-                clear: root.clear
-                screen: root.screen
-                vertical: root.vertical
-                surfaceActive: group.name === "end" && !root.presentSections.includes("end")
-                // Islands missing from this layout (shell#439): their
-                // extension indicators render here rather than nowhere.
-                fallbackSections: ["status", "actions", "clock"].filter(s => !root.presentSections.includes(s))
-                // Responsive host context (#372), forwarded to the
-                // island's plugin hosts.
-                hostEdge: root.edge
-                hostThickness: root.spec.thickness
-                hostCompact: root.compact
-                hostScreenName: root.screen.name
+                readonly property alias item: fallbackExt
+                readonly property ClearInkTone regionTone: ClearInkTone {
+                    field: inkField
+                    target: fallbackExtHost
+                }
+
+                Layout.alignment: root.vertical ? Qt.AlignHCenter : Qt.AlignVCenter
+                visible: fallbackExt.visible
+                implicitWidth: fallbackExt.implicitWidth
+                implicitHeight: fallbackExt.implicitHeight
+
+                ClearInkHalo {
+                    active: root.clear && fallbackExt.visible
+                    tone: fallbackExtHost.regionTone
+                    sourceItem: fallbackExt
+                }
+
+                ExtensionsIsland {
+                    id: fallbackExt
+
+                    // Same cross-axis size as every other island, so it keeps the
+                    // inset from the bar edge (it used to fill the whole cell).
+                    cross: root.islandCross
+                    clear: root.clear
+                    tone: root.clear ? fallbackExtHost.regionTone : ClearInk.neutral
+                    screen: root.screen
+                    vertical: root.vertical
+                    surfaceActive: group.name === "end" && !root.presentSections.includes("end")
+                    // Islands missing from this layout (shell#439): their
+                    // extension indicators render here rather than nowhere.
+                    fallbackSections: ["status", "actions", "clock"].filter(s => !root.presentSections.includes(s))
+                    // Responsive host context (#372), forwarded to the
+                    // island's plugin hosts.
+                    hostEdge: root.edge
+                    hostThickness: root.spec.thickness
+                    hostCompact: root.compact
+                    hostScreenName: root.screen.name
+                    maxMain: group.maxExtensionRoom
+                }
             }
         }
     }

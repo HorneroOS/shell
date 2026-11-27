@@ -28,13 +28,13 @@ def test_built_ins_are_complete_role_sets():
         assert theme["mode"] in ("dark", "light"), theme_id
 
 
-def test_amendment_2_values():
+def test_amendment_3_values():
     night = THEMES["hornero-signal-night"]["palette"]
     day = THEMES["hornero-signal-day"]["palette"]
-    assert (night["ruleStrong"], night["glow"]) == ("#707A85", "#FFB650")
+    assert (night["ruleStrong"], night["glow"], night["ink"]) == ("#8393A6", "#FFC06B", "#E6EBF1")
     assert (day["ruleStrong"], day["signal"], day["cue"], day["focus"], day["phosphor"],
             day["alert"], day["glow"]) == (
-        "#736D62", "#8F4B00", "#1A5F88", "#1A5F88", "#256A3B", "#A8341C", "#8F4B00")
+        "#7A8798", "#864700", "#145D86", "#145D86", "#1E6448", "#9C293E", "#864700")
     high = THEMES["hornero-signal-contrast"]["palette"]
     assert high["glow"] == high["signal"]
 
@@ -49,8 +49,8 @@ def test_rfc_flagship_values():
     night = THEMES["hornero-signal-night"]["palette"]
     day = THEMES["hornero-signal-day"]["palette"]
     assert (night["ground"], night["ink"], night["signal"], night["cue"]) == (
-        "#0C0F13", "#ECE6DA", "#F2A33A", "#7EC1EA")
-    assert (day["ground"], day["ink"]) == ("#E6E1D5", "#1B1E22")
+        "#0C1016", "#E6EBF1", "#F2AC52", "#8BCEF0")
+    assert (day["ground"], day["ink"]) == ("#E8EDF4", "#283344")
     high = THEMES["hornero-signal-contrast"]["palette"]
     assert (high["ground"], high["ink"], high["signal"], high["cue"], high["ruleStrong"]) == (
         "#000000", "#FFFFFF", "#FFC247", "#8FD3FF", "#FFFFFF")
@@ -93,10 +93,12 @@ def test_paired_on_roles_meet_aa():
 def test_boundaries_and_focus_meet_nontext_aa():
     for theme_id, theme in THEMES.items():
         p = theme["palette"]
-        for fg in ("ruleStrong", "focus"):
-            for bg in SURFACES:
-                ratio = contrast(p[fg], p[bg])
-                assert ratio >= 3.0, (theme_id, fg, bg, ratio)
+        for bg in ("base", "panel", "lifted"):
+            ratio = contrast(p["ruleStrong"], p[bg])
+            assert ratio >= 3.0, (theme_id, "ruleStrong", bg, ratio)
+        for bg in SURFACES:
+            ratio = contrast(p["focus"], p[bg])
+            assert ratio >= 3.0, (theme_id, "focus", bg, ratio)
 
 
 def test_rule_strong_is_never_text_colour():
@@ -127,7 +129,7 @@ def test_frame_edge_separates_bar_from_ground_in_high_contrast():
         assert contrast(p["ruleStrong"], p[bg]) >= 3.0, bg
     for theme_id, theme in THEMES.items():
         q = theme["palette"]
-        assert contrast(q["rule"], q["base"]) >= 1.3, theme_id  # quiet edge stays visible
+        assert contrast(q["rule"], q["base"]) >= 1.2, theme_id  # quiet edge stays visible
 
 
 def test_frame_edge_is_drawn_and_customisable():

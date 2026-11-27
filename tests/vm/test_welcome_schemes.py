@@ -40,7 +40,7 @@ def _assert_shape(doc: dict, theme_id: str, mode: str) -> None:
 def test_day_scheme_matches_builtin():
     doc = _generate("day")
     _assert_shape(doc, "hornero-signal-day", "light")
-    assert doc["palette"]["ground"] == "#E6E1D5"
+    assert doc["palette"]["ground"] == "#E8EDF4"
 
 
 def test_contrast_scheme_matches_builtin():

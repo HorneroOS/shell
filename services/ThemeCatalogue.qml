@@ -70,7 +70,7 @@ Singleton {
         {
             id: "hornero-signal-night",
             name: "Hornero Signal Night",
-            description: "Graphite instrument panels, phosphor-cream ink, amber signal",
+            description: "Cool blue-hour graphite instrument panels, crisp off-white ink, amber live signal",
             mode: "dark",
             darkMode: true,
             collection: "hornero-originals",
@@ -81,7 +81,7 @@ Singleton {
         {
             id: "hornero-signal-day",
             name: "Hornero Signal Day",
-            description: "Technical-drawing paper with ink-black text",
+            description: "White ceramic and pale aluminum instrument panels with dark slate ink",
             mode: "light",
             darkMode: false,
             collection: "hornero-originals",
@@ -92,7 +92,7 @@ Singleton {
         {
             id: "hornero-signal-contrast",
             name: "Hornero Signal High Contrast",
-            description: "Black ground, white ink and boosted signal colours",
+            description: "Pure black ground, white ink and rules, bright amber signal",
             mode: "dark",
             darkMode: true,
             collection: "hornero-originals",

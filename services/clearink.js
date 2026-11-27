@@ -13,19 +13,19 @@
 // ("dark" ink on bright regions); values mirror services/Signal.qml.
 var LIGHT = {
     polarity: "light",
-    ink: "#ECE6DA",
-    inkMuted: "#A8ABAD",
-    signal: "#FFB650",
-    alert: "#F0705A",
-    halo: "#0C0F13"
+    ink: "#E6EBF1",
+    inkMuted: "#A9B7C6",
+    signal: "#FFC06B",
+    alert: "#FF8494",
+    halo: "#0C1016"
 };
 
 var DARK = {
     polarity: "dark",
-    ink: "#1B1E22",
-    inkMuted: "#4E545B",
-    signal: "#8F4B00",
-    alert: "#A8341C",
+    ink: "#283344",
+    inkMuted: "#505E70",
+    signal: "#864700",
+    alert: "#9C293E",
     halo: "#FFFFFF"
 };
 

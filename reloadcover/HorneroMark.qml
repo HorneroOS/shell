@@ -7,7 +7,7 @@ Canvas {
     id: root
 
     property real size: 48
-    property color color: "#F2A33A"
+    property color color: "#F2AC52"
 
     implicitWidth: size
     implicitHeight: size

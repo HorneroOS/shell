@@ -13,39 +13,39 @@
 var ROLES = ["ground", "sunken", "panel", "raised", "ink", "inkMuted", "inkFaint", "rule", "ruleStrong", "signal", "signalWell", "onSignalWell", "cue", "phosphor", "alert"];
 
 var NIGHT = {
-    "ground": "#0C0F13",
-    "sunken": "#101419",
-    "panel": "#181D24",
-    "raised": "#1F252E",
-    "ink": "#ECE6DA",
-    "inkMuted": "#A8ABAD",
-    "inkFaint": "#737980",
-    "rule": "#2C333C",
-    "ruleStrong": "#707A85",
-    "signal": "#F2A33A",
-    "signalWell": "#3A2A12",
-    "onSignalWell": "#FFD9A3",
-    "cue": "#7EC1EA",
-    "phosphor": "#8BD49A",
-    "alert": "#F0705A"
+    "ground": "#0C1016",
+    "sunken": "#10151C",
+    "panel": "#1B2430",
+    "raised": "#24303D",
+    "ink": "#E6EBF1",
+    "inkMuted": "#A9B7C6",
+    "inkFaint": "#8999AB",
+    "rule": "#2D3B4B",
+    "ruleStrong": "#8393A6",
+    "signal": "#F2AC52",
+    "signalWell": "#3D2B12",
+    "onSignalWell": "#FFE0B0",
+    "cue": "#8BCEF0",
+    "phosphor": "#8DDBAF",
+    "alert": "#FF8494"
 };
 
 var DAY = {
-    "ground": "#E6E1D5",
-    "sunken": "#DCD6C8",
-    "panel": "#F7F4EE",
-    "raised": "#FBF9F5",
-    "ink": "#1B1E22",
-    "inkMuted": "#4E545B",
-    "inkFaint": "#7A8086",
-    "rule": "#D3CCBD",
-    "ruleStrong": "#736D62",
-    "signal": "#8F4B00",
-    "signalWell": "#F6DDB8",
-    "onSignalWell": "#3D2200",
-    "cue": "#1A5F88",
-    "phosphor": "#256A3B",
-    "alert": "#A8341C"
+    "ground": "#E8EDF4",
+    "sunken": "#E0E6EF",
+    "panel": "#F5F8FC",
+    "raised": "#FCFCFE",
+    "ink": "#283344",
+    "inkMuted": "#505E70",
+    "inkFaint": "#606D80",
+    "rule": "#D2DAE6",
+    "ruleStrong": "#7A8798",
+    "signal": "#864700",
+    "signalWell": "#FCE9C8",
+    "onSignalWell": "#432300",
+    "cue": "#145D86",
+    "phosphor": "#1E6448",
+    "alert": "#9C293E"
 };
 
 var CONTRAST = {
@@ -54,15 +54,15 @@ var CONTRAST = {
     "panel": "#101317",
     "raised": "#181C21",
     "ink": "#FFFFFF",
-    "inkMuted": "#E2E4E6",
-    "inkFaint": "#A9AEB4",
-    "rule": "#8A939C",
+    "inkMuted": "#D9DCDF",
+    "inkFaint": "#9DA3A9",
+    "rule": "#5C646D",
     "ruleStrong": "#FFFFFF",
     "signal": "#FFC247",
     "signalWell": "#3D2C00",
-    "onSignalWell": "#FFE3A6",
+    "onSignalWell": "#FFE6B0",
     "cue": "#8FD3FF",
-    "phosphor": "#9BF0AE",
+    "phosphor": "#8CF0A4",
     "alert": "#FF8A73"
 };
 

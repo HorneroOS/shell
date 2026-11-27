@@ -235,7 +235,7 @@ Scope {
                             text: JaviVoice.line("radio.clickToType")
                             wrapMode: Text.Wrap
                             font.pointSize: Appearance.font.size.smaller
-                            color: Signal.palette.inkFaint
+                            color: Signal.palette.inkMuted
                         }
 
                         StyledText {
@@ -244,7 +244,7 @@ Scope {
                             text: JaviVoice.line("radio.hint")
                             wrapMode: Text.Wrap
                             font.pointSize: Appearance.font.size.smaller
-                            color: Signal.palette.inkFaint
+                            color: Signal.palette.inkMuted
                         }
 
                         StyledText {

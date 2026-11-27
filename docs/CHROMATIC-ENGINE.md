@@ -52,7 +52,7 @@ disposable cache.
    0.25), variant (C90 table), contrast (`auto` → `boosted` when detail
    exceeds 0.08), neon suggestion, personality, chroma class, temperature.
    Every decision lists its reason and can be overridden by the request.
-55: 8. **Synthesis** — the RFC §4.5 lightness ladder, variant parameters (§6),
+8. **Synthesis** — the RFC §4.5 lightness ladder, variant parameters (§6),
    surface depth, chroma scale and hue shift; status anchors 29° / 150°
    harmonised toward the seed; cue candidates; wells, on-fills, inverse,
    glow (dark only, never monochrome or high contrast). Cue preference:

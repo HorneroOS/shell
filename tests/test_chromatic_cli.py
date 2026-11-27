@@ -44,6 +44,19 @@ def test_generate_seed_shape():
     assert set(scheme["minSurfaceAlpha"]) == {"sunken", "base", "panel", "raised", "lifted"}
     assert doc["gates"]["passed"] is True and doc["gates"]["rows"]
     assert "path" not in scheme["chromatic"]["request"]
+    assert "surfaceTint" not in scheme["chromatic"]["request"]
+
+
+def test_surface_tint_flag_and_backward_compatibility():
+    _, auto_doc, _ = harness.run("generate", "--seed", "#D98A3A", "--surface-tint", "auto")
+    assert "surfaceTint" not in auto_doc["scheme"]["chromatic"]["request"]
+    _, neutral_doc, _ = harness.run("generate", "--seed", "#B73C6E", "--variant", "vibrant", "--surface-tint", "neutral")
+    assert neutral_doc["scheme"]["chromatic"]["request"]["surfaceTint"] == "neutral"
+    _, tinted_doc, _ = harness.run("generate", "--seed", "#B73C6E", "--variant", "balanced", "--surface-tint", "tinted")
+    assert tinted_doc["scheme"]["chromatic"]["request"]["surfaceTint"] == "tinted"
+    assert neutral_doc["scheme"]["palette"]["panel"] != tinted_doc["scheme"]["palette"]["panel"]
+    rc, err_doc, _ = harness.run("generate", "--seed", "#D98A3A", "--surface-tint", "bogus")
+    assert rc == 2 and err_doc["error"]["code"] == "usage"
 
 
 def test_light_mode_has_no_glow_and_neon_is_dark_only():

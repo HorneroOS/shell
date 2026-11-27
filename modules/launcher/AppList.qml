@@ -63,7 +63,7 @@ StyledListView {
             // action keeps its historic state below. No prefix
             // match anywhere still means the default apps flow.
             const providerState = Providers.stateFor(text);
-            if (providerState === "calc" || providerState === "win" || providerState === "file" || providerState === "ai")
+            if (providerState === "calc" || providerState === "win" || providerState === "clip" || providerState === "emoji" || providerState === "file" || providerState === "ai")
                 return providerState;
             // Plugin-defined providers (surfaces.launcher): any
             // other registered provider id routes to the generic
@@ -71,7 +71,7 @@ StyledListView {
             if (providerState !== "")
                 return "plugin";
 
-            for (const action of ["calc", "win", "file", "ai", "appearance", "theme"])
+            for (const action of ["calc", "win", "clip", "emoji", "file", "ai", "appearance", "theme"])
                 if (text.startsWith(`${prefix}${action} `))
                     return action === "theme" ? "appearance" : action;
 
@@ -124,8 +124,24 @@ StyledListView {
             name: "win"
 
             PropertyChanges {
-                model.values: Windows.query(search.text.slice(`${Config.launcher.actionPrefix}win `.length))
+                model.values: Windows.query(Providers.queryText(search.text))
                 root.delegate: windowItem
+            }
+        },
+        State {
+            name: "clip"
+
+            PropertyChanges {
+                model.values: Clipboard.query(Providers.queryText(search.text))
+                root.delegate: clipboardItem
+            }
+        },
+        State {
+            name: "emoji"
+
+            PropertyChanges {
+                model.values: Emoji.query(Providers.queryText(search.text))
+                root.delegate: emojiItem
             }
         },
         State {
@@ -328,6 +344,22 @@ StyledListView {
         id: windowItem
 
         WindowItem {
+            list: root
+        }
+    }
+
+    Component {
+        id: clipboardItem
+
+        ClipboardItem {
+            list: root
+        }
+    }
+
+    Component {
+        id: emojiItem
+
+        EmojiItem {
             list: root
         }
     }

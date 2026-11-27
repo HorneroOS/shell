@@ -1521,6 +1521,14 @@
         <translation>Batería %1%</translation>
     </message>
     <message>
+        <source>Battery: %1% (charging)</source>
+        <translation>Batería: %1% (cargando)</translation>
+    </message>
+    <message>
+        <source>Battery: %1%</source>
+        <translation>Batería: %1%</translation>
+    </message>
+    <message>
         <source>No battery detected</source>
         <translation>No se detectó ninguna batería</translation>
     </message>
@@ -2743,6 +2751,24 @@
     </message>
 </context>
 <context>
+    <name>Clipboard</name>
+    <message>
+        <source>%1 lines · %2 chars</source>
+        <translation>%1 líneas · %2 car.</translation>
+    </message>
+    <message>
+        <source>%1 chars</source>
+        <translation>%1 car.</translation>
+    </message>
+</context>
+<context>
+    <name>ClipboardItem</name>
+    <message>
+        <source>COPY</source>
+        <translation>COPIAR</translation>
+    </message>
+</context>
+<context>
     <name>ColorFilterBar</name>
     <message>
         <source>Red</source>
@@ -3877,6 +3903,14 @@ Huella de la clave del autor: %3</translation>
         <translation>Ventanas</translation>
     </message>
     <message>
+        <source>Clipboard</source>
+        <translation>Portapapeles</translation>
+    </message>
+    <message>
+        <source>Emoji</source>
+        <translation>Emoji</translation>
+    </message>
+    <message>
         <source>Files</source>
         <translation>Archivos</translation>
     </message>
@@ -4794,6 +4828,10 @@ Huella de la clave del autor: %3</translation>
         <translation>%1 pantalla(s) conectada(s)</translation>
     </message>
     <message>
+        <source>Display arrangement requires Hyprland.</source>
+        <translation>La disposición de pantallas requiere Hyprland.</translation>
+    </message>
+    <message>
         <source>horneroctl monitors unavailable on this system.</source>
         <translation>horneroctl monitors no está disponible en este sistema.</translation>
     </message>
@@ -5010,6 +5048,13 @@ Huella de la clave del autor: %3</translation>
     <message>
         <source>Mode %1 · Cockpit layout</source>
         <translation>Modo %1 · layout Cockpit</translation>
+    </message>
+</context>
+<context>
+    <name>EmojiItem</name>
+    <message>
+        <source>COPY</source>
+        <translation>COPIAR</translation>
     </message>
 </context>
 <context>
@@ -7092,6 +7137,10 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>Keyboard layout %1</source>
         <translation>Distribución de teclado %1</translation>
+    </message>
+    <message>
+        <source>Keyboard layout: %1</source>
+        <translation>Distribución de teclado: %1</translation>
     </message>
     <message>
         <source>Keyboard Layouts</source>
@@ -9527,6 +9576,17 @@ Snapshot del plugin: %3</translation>
     </message>
 </context>
 <context>
+    <name>PinnedApps</name>
+    <message>
+        <source>%1 (%2 windows)</source>
+        <translation>%1 (%2 ventanas)</translation>
+    </message>
+    <message>
+        <source>%1 (running)</source>
+        <translation>%1 (en ejecución)</translation>
+    </message>
+</context>
+<context>
     <name>Players</name>
     <message>
         <source>Now Playing</source>
@@ -9900,6 +9960,13 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>Window preview size</source>
         <translation>Tamaño de la vista previa de ventanas</translation>
+    </message>
+</context>
+<context>
+    <name>Power</name>
+    <message>
+        <source>Session menu</source>
+        <translation>Menú de sesión</translation>
     </message>
 </context>
 <context>
@@ -11157,6 +11224,18 @@ Snapshot del plugin: %3</translation>
 <context>
     <name>StatusIcons</name>
     <message>
+        <source>Caps Lock: %1 · Num Lock: %2</source>
+        <translation>Bloq Mayús: %1 · Bloq Num: %2</translation>
+    </message>
+    <message>
+        <source>On</source>
+        <translation>Activado</translation>
+    </message>
+    <message>
+        <source>Off</source>
+        <translation>Desactivado</translation>
+    </message>
+    <message>
         <source>Screen capture is active</source>
         <translation>Hay una captura de pantalla activa</translation>
     </message>
@@ -11177,28 +11256,84 @@ Snapshot del plugin: %3</translation>
         <translation>Controles de volumen</translation>
     </message>
     <message>
+        <source>Audio: Muted</source>
+        <translation>Audio: Silenciado</translation>
+    </message>
+    <message>
+        <source>Audio: %1%</source>
+        <translation>Audio: %1%</translation>
+    </message>
+    <message>
         <source>Microphone controls</source>
         <translation>Controles del micrófono</translation>
+    </message>
+    <message>
+        <source>Microphone: Muted</source>
+        <translation>Micrófono: Silenciado</translation>
+    </message>
+    <message>
+        <source>Microphone: %1%</source>
+        <translation>Micrófono: %1%</translation>
     </message>
     <message>
         <source>Keyboard layout controls</source>
         <translation>Controles de distribución de teclado</translation>
     </message>
     <message>
+        <source>Keyboard layout: %1</source>
+        <translation>Distribución de teclado: %1</translation>
+    </message>
+    <message>
         <source>Network controls</source>
         <translation>Controles de red</translation>
+    </message>
+    <message>
+        <source>Wi-Fi: %1</source>
+        <translation>Wi-Fi: %1</translation>
+    </message>
+    <message>
+        <source>Connected</source>
+        <translation>Conectado</translation>
+    </message>
+    <message>
+        <source>Wi-Fi: Disconnected</source>
+        <translation>Wi-Fi: Desconectado</translation>
     </message>
     <message>
         <source>Ethernet controls</source>
         <translation>Controles de Ethernet</translation>
     </message>
     <message>
+        <source>Ethernet: Connected</source>
+        <translation>Ethernet: Conectado</translation>
+    </message>
+    <message>
         <source>Bluetooth controls</source>
         <translation>Controles de Bluetooth</translation>
     </message>
     <message>
+        <source>Bluetooth: Off</source>
+        <translation>Bluetooth: Desactivado</translation>
+    </message>
+    <message>
+        <source>Bluetooth: %1 connected</source>
+        <translation>Bluetooth: %1 conectado(s)</translation>
+    </message>
+    <message>
+        <source>Bluetooth: On</source>
+        <translation>Bluetooth: Activado</translation>
+    </message>
+    <message>
         <source>Power controls</source>
         <translation>Controles de energía</translation>
+    </message>
+    <message>
+        <source>Battery: %1%</source>
+        <translation>Batería: %1%</translation>
+    </message>
+    <message>
+        <source>Power profile</source>
+        <translation>Perfil de energía</translation>
     </message>
 </context>
 <context>

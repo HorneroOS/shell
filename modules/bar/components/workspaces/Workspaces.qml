@@ -31,9 +31,7 @@ StyledClippingRect {
     readonly property bool plated: Config.bar.workspaces.occupiedBg && !labels && !clear
     readonly property bool niriMode: Compositor.isNiri
     readonly property bool onSpecial: Compositor.isSpecialWorkspaceActive(screen, Config.bar.workspaces.perMonitorWorkspaces)
-    readonly property var activeWsId: niriMode
-        ? Compositor.activeWorkspaceIdForScreen(screen)
-        : Config.bar.workspaces.perMonitorWorkspaces ? (Hypr.monitorFor(screen).activeWorkspace?.id ?? 1) : Hypr.activeWsId
+    readonly property var activeWsId: Compositor.activeWorkspaceIdForScreen(screen, Config.bar.workspaces.perMonitorWorkspaces)
 
     readonly property var workspaceItems: Compositor.workspacesForScreen(screen)
     readonly property var occupied: workspaceItems.reduce((acc, curr) => {
@@ -47,20 +45,7 @@ StyledClippingRect {
     }, {})
     // §5 visible on another monitor: active on some other output. Niri
     // workspaces are per-output, so this only applies under Hyprland.
-    readonly property var visibleElsewhere: {
-        if (niriMode || !Compositor.isHyprland)
-            return {};
-        const mine = Hypr.monitorFor(screen);
-        const out = {};
-        for (const mon of Hypr.monitors.values) {
-            if (mine && mon.id === mine.id)
-                continue;
-            const id = mon.activeWorkspace?.id;
-            if (id !== undefined && id !== null)
-                out[id] = true;
-        }
-        return out;
-    }
+    readonly property var visibleElsewhere: Compositor.workspacesVisibleElsewhere(screen)
     readonly property int groupOffset: niriMode || activeWsId === null ? 0 : Math.floor((activeWsId - 1) / Config.bar.workspaces.shown) * Config.bar.workspaces.shown
 
     // Special workspace open: the strip recedes (dims to inkMuted and steps

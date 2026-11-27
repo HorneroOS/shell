@@ -3,6 +3,7 @@ pragma Singleton
 import "experience.js" as ExperienceModel
 import Quickshell
 import Quickshell.Io
+import Quickshell.Wayland as Wayland
 import qs.services
 
 /**
@@ -32,6 +33,7 @@ Singleton {
     readonly property string activeWindowAppId: isNiri
         ? activeWindow?.app_id ?? ""
         : isHyprland ? activeWindow?.lastIpcObject?.class ?? "" : ""
+    readonly property var activeWindowWayland: isHyprland ? Hypr.activeToplevel?.wayland ?? null : null
     readonly property string keyboardLayoutName: isNiri
         ? Niri.keyboardLayouts?.names?.[Niri.keyboardLayouts?.current_idx ?? -1] ?? ""
         : isHyprland ? Hypr.kbLayoutFull : ""
@@ -84,10 +86,102 @@ Singleton {
         return isHyprland ? Hypr.workspaces.values : [];
     }
 
-    function activeWorkspaceIdForScreen(screen: var): var {
+    function activeWorkspaceIdForScreen(screen: var, perMonitor: var): var {
         if (isNiri)
             return Niri.activeWorkspaceForOutput(screen.name)?.id ?? null;
-        return isHyprland ? Hypr.monitorFor(screen)?.activeWorkspace?.id ?? Hypr.activeWsId : null;
+        if (!isHyprland)
+            return null;
+        if (perMonitor === false)
+            return Hypr.activeWsId;
+        return Hypr.monitorFor(screen)?.activeWorkspace?.id ?? Hypr.activeWsId;
+    }
+
+    function workspacesVisibleElsewhere(screen: var): var {
+        if (isNiri || !isHyprland)
+            return ({});
+        const mine = Hypr.monitorFor(screen);
+        const out = ({});
+        for (const mon of Hypr.monitors.values) {
+            if (mine && mon.id === mine.id)
+                continue;
+            const id = mon.activeWorkspace?.id;
+            if (id !== undefined && id !== null)
+                out[id] = true;
+        }
+        return out;
+    }
+
+    function windowAppId(window: var): string {
+        if (!window)
+            return "";
+        if (isNiri)
+            return window.app_id ?? "";
+        if (isHyprland)
+            return window.lastIpcObject?.class ?? "";
+        return window.appId ?? "";
+    }
+
+    function workspaceDisplayName(wsId: var, workspaceData: var, capitalisation: string): string {
+        if (isNiri)
+            return workspaceLabel(workspaceData, wsId);
+        if (!isHyprland)
+            return String(wsId ?? "");
+        const ws = Hypr.workspaces.values.find(w => w.id === wsId);
+        const wsName = !ws || ws.name == wsId ? wsId : ws.name[0];
+        const raw = String(wsName);
+        const cap = String(capitalisation ?? "").toLowerCase();
+        if (cap === "upper")
+            return raw.toUpperCase();
+        if (cap === "lower")
+            return raw.toLowerCase();
+        return raw;
+    }
+
+    function allWindowSummaries(): var {
+        if (isNiri) {
+            const wsMap = ({});
+            for (const ws of (Niri.workspaces ?? []))
+                wsMap[ws.id] = ws.name ? String(ws.name) : String(ws.idx);
+            return Niri.windows.map(w => ({
+                        "id": w.id,
+                        "address": String(w.id),
+                        "title": w.title ?? "",
+                        "appClass": w.app_id ?? "",
+                        "workspaceId": w.workspace_id ?? null,
+                        "workspaceName": wsMap[w.workspace_id] ?? "?",
+                        "activated": w.is_focused === true || Niri.focusedWindowId === w.id,
+                        "floating": w.is_floating === true,
+                        "isNiri": true,
+                        "wayland": null
+                    }));
+        }
+        if (isHyprland) {
+            return Hypr.toplevels.values.map(w => ({
+                        "id": w.address,
+                        "address": w.address,
+                        "title": w.title ?? "",
+                        "appClass": w.lastIpcObject?.class ?? "",
+                        "workspaceId": w.workspace?.id ?? null,
+                        "workspaceName": w.workspace?.name ?? "?",
+                        "activated": w.wayland?.activated === true,
+                        "floating": w.lastIpcObject?.floating === true,
+                        "isNiri": false,
+                        "wayland": w.wayland ?? null
+                    }));
+        }
+        const tl = Wayland.ToplevelManager?.toplevels?.values ?? [];
+        return tl.map((w, idx) => ({
+                    "id": w,
+                    "address": String(idx),
+                    "title": w.title ?? "",
+                    "appClass": w.appId ?? "",
+                    "workspaceId": null,
+                    "workspaceName": "?",
+                    "activated": w.activated === true,
+                    "floating": false,
+                    "isNiri": false,
+                    "wayland": w
+                }));
     }
 
     function windowsForWorkspace(workspaceId: var): var {
@@ -154,13 +248,18 @@ Singleton {
     function focusWindow(windowId: var): bool {
         if (isNiri)
             return Niri.focusWindow(windowId);
-        if (!isHyprland)
-            return false;
-        const address = hyprlandAddress(windowId);
-        if (address === "")
-            return false;
-        Hypr.dispatch(`focuswindow address:${address}`);
-        return true;
+        if (isHyprland) {
+            const address = hyprlandAddress(windowId);
+            if (address === "")
+                return false;
+            Hypr.dispatch(`focuswindow address:${address}`);
+            return true;
+        }
+        if (windowId && typeof windowId.activate === "function") {
+            windowId.activate();
+            return true;
+        }
+        return false;
     }
 
     function closeWindow(windowId: var): bool {
@@ -298,6 +397,203 @@ Singleton {
             return true;
         const windows = windowsForWorkspace(workspaceId);
         return windows.every(window => isNiri ? window.is_floating : window.lastIpcObject?.floating);
+    }
+
+    function scrollWorkspace(screen: var, perMonitor: bool, deltaY: real): bool {
+        if (deltaY === 0)
+            return false;
+        if (isNiri)
+            return focusWorkspaceDirection(deltaY > 0 ? -1 : 1);
+        if (!isHyprland)
+            return false;
+        const mon = perMonitor ? Hypr.monitorFor(screen) : Hypr.focusedMonitor;
+        const specialWs = mon?.lastIpcObject?.specialWorkspace?.name ?? "";
+        if (specialWs.length > 0) {
+            Hypr.dispatch(`togglespecialworkspace ${specialWs.slice(8)}`);
+            return true;
+        }
+        if (deltaY < 0 || (perMonitor ? (mon?.activeWorkspace?.id ?? 1) : Hypr.activeWsId) > 1) {
+            Hypr.dispatch(`workspace r${deltaY > 0 ? "-" : "+"}1`);
+            return true;
+        }
+        return false;
+    }
+
+    function activeSpecialWorkspaceName(screen: var, perMonitor: bool): string {
+        if (!isHyprland)
+            return "";
+        const mon = perMonitor ? Hypr.monitorFor(screen) : Hypr.focusedMonitor;
+        return mon?.lastIpcObject?.specialWorkspace?.name ?? "";
+    }
+
+    function toggleSpecialWorkspaceByName(name: string): bool {
+        if (!supports("specialWorkspaces") || !name)
+            return false;
+        const shortName = name.startsWith("special:") ? name.slice("special:".length) : name;
+        Hypr.dispatch(`togglespecialworkspace ${shortName}`);
+        return true;
+    }
+
+    function renameWorkspace(wsId: var, name: string): bool {
+        const trimmed = String(name ?? "").trim();
+        if (!supports("workspaceRename") || trimmed === "")
+            return false;
+        Hypr.dispatch(`workspace name:${trimmed}:${wsId}`);
+        return true;
+    }
+
+    function createEmptyWorkspace(): bool {
+        if (!supports("workspaceCreate"))
+            return false;
+        Hypr.dispatch("workspace empty");
+        return true;
+    }
+
+    function pinWindowFor(window: var): bool {
+        if (!isHyprland)
+            return false;
+        const address = hyprlandAddress(windowIdFor(window));
+        if (address === "")
+            return false;
+        Hypr.dispatch(`pin address:${address}`);
+        return true;
+    }
+
+    function moveWindowToWorkspace(window: var, wsId: var, follow: bool): bool {
+        const id = windowIdFor(window);
+        if (id === null)
+            return false;
+        if (isNiri)
+            return Niri.moveWindowToWorkspace(id, wsId, follow === true);
+        if (!isHyprland)
+            return false;
+        const address = hyprlandAddress(id);
+        if (address === "")
+            return false;
+        Hypr.dispatch(`movetoworkspace ${wsId},address:${address}`);
+        return true;
+    }
+
+    function isScreenFocused(screen: var): bool {
+        if (!screen)
+            return false;
+        if (isNiri)
+            return screen.name === focusedOutputName;
+        if (isHyprland)
+            return Hypr.monitorFor(screen)?.focused === true;
+        return false;
+    }
+
+    function screenMatchesId(screen: var, id: int): bool {
+        if (!screen || !isHyprland)
+            return false;
+        return Hypr.monitorFor(screen)?.id === id;
+    }
+
+    function outputMetadataFor(screen: var): var {
+        if (!screen)
+            return { hz: NaN, scale: NaN };
+        if (isNiri)
+            return Niri.outputMetadata(screen.name);
+        if (isHyprland) {
+            const ipc = Hypr.monitorFor(screen)?.lastIpcObject ?? null;
+            const hz = ipc && ipc.refreshRate !== undefined ? Number(ipc.refreshRate) : NaN;
+            const scale = ipc && ipc.scale !== undefined ? Number(ipc.scale) : NaN;
+            return { hz: hz, scale: scale };
+        }
+        return { hz: NaN, scale: NaN };
+    }
+
+    function pickerClientsForScreen(screen: var): var {
+        if (!isHyprland || !screen)
+            return [];
+        const mon = Hypr.monitorFor(screen);
+        if (!mon)
+            return [];
+        const special = mon.lastIpcObject.specialWorkspace;
+        const wsId = special.name ? special.id : mon.activeWorkspace.id;
+        return Hypr.toplevels.values.filter(c => c.workspace?.id === wsId).sort((a, b) => {
+            const ac = a.lastIpcObject;
+            const bc = b.lastIpcObject;
+            return (bc.pinned - ac.pinned) || ((bc.fullscreen !== 0) - (ac.fullscreen !== 0)) || (bc.floating - ac.floating);
+        });
+    }
+
+    function borderWidth(onClient: bool): real {
+        if (!onClient)
+            return 2;
+        return isHyprland ? (Hypr.options?.["general:border_size"] ?? 1) : 1;
+    }
+
+    function borderRounding(onClient: bool): real {
+        if (!onClient)
+            return 0;
+        return isHyprland ? (Hypr.options?.["decoration:rounding"] ?? 0) : 0;
+    }
+
+    function refreshOptions(): void {
+        if (isHyprland && Hypr.extras)
+            Hypr.extras.refreshOptions();
+    }
+
+    function activeWorkspaceBaseId(): int {
+        return isHyprland ? Hypr.activeWsId : 1;
+    }
+
+    function windowDetails(window: var): var {
+        if (!window)
+            return null;
+        if (isNiri) {
+            const ws = Niri.workspaces?.find(w => w.id === window.workspace_id) ?? null;
+            return {
+                "title": window.title ?? "",
+                "appClass": window.app_id ?? "",
+                "address": String(window.id ?? ""),
+                "x": -1,
+                "y": -1,
+                "width": -1,
+                "height": -1,
+                "workspaceName": ws ? workspaceLabel(ws, ws.id) : "?",
+                "workspaceId": window.workspace_id ?? -1,
+                "monitorName": ws?.output ?? "unknown",
+                "monitorId": -1,
+                "monitorX": 0,
+                "monitorY": 0,
+                "initialTitle": window.title ?? "unknown",
+                "initialClass": window.app_id ?? "unknown",
+                "pid": window.pid ?? -1,
+                "floating": window.is_floating === true,
+                "xwayland": false,
+                "pinned": false,
+                "fullscreen": -1,
+                "wayland": null
+            };
+        }
+        const ipc = window.lastIpcObject ?? ({});
+        const mon = window.monitor ?? null;
+        return {
+            "title": window.title ?? "",
+            "appClass": ipc.class ?? "",
+            "address": window.address ? `0x${window.address}` : "unknown",
+            "x": ipc.at?.[0] ?? -1,
+            "y": ipc.at?.[1] ?? -1,
+            "width": ipc.size?.[0] ?? -1,
+            "height": ipc.size?.[1] ?? -1,
+            "workspaceName": window.workspace?.name ?? -1,
+            "workspaceId": window.workspace?.id ?? -1,
+            "monitorName": mon?.name ?? "",
+            "monitorId": mon?.id ?? -1,
+            "monitorX": mon?.x ?? 0,
+            "monitorY": mon?.y ?? 0,
+            "initialTitle": ipc.initialTitle ?? "unknown",
+            "initialClass": ipc.initialClass ?? "unknown",
+            "pid": ipc.pid ?? -1,
+            "floating": ipc.floating === true,
+            "xwayland": ipc.xwayland === true,
+            "pinned": ipc.pinned === true,
+            "fullscreen": ipc.fullscreen ?? -1,
+            "wayland": window.wayland ?? null
+        };
     }
 
     Process {

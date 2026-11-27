@@ -4,12 +4,9 @@ import qs.services
 import qs.config
 import QtQuick
 
-// Launcher window provider (shell#250 slice 1): `>win <query>` lists
-// open windows from the compositor toplevels and focuses the chosen
-// one through the Windows provider's activation (Hypr.dispatch, the
-// shell's existing window-activation path). Hyprland-only today —
-// the toplevel source is Hypr.toplevels; Niri rows arrive with its
-// window read model.
+// Launcher window provider (shell#250 slice 1, multi-compositor #736):
+// `>win <query>` lists open windows from Compositor.allWindowSummaries()
+// and focuses the chosen one through Windows.activate (Compositor.focusWindow).
 LauncherRow {
     id: root
 

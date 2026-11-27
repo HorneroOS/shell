@@ -39,13 +39,11 @@ Item {
     property string animCurrent: ""
 
     // Real output inventory: Quickshell's screens (compositor-agnostic geometry)
-    // joined with Hyprland's own monitor record for refresh rate and scale.
-    // A field the session does not report stays empty and renders as an em
-    // dash, never as a guess.
+    // joined with the active compositor backend's metadata for refresh rate
+    // and scale (Hyprland or Niri). A field the session does not report stays
+    // empty and renders as an em dash, never as a guess.
     readonly property var outputs: Quickshell.screens.map(s => {
-        const ipc = Hypr.monitorFor(s)?.lastIpcObject ?? null;
-        const hz = ipc && ipc.refreshRate !== undefined ? Number(ipc.refreshRate) : NaN;
-        const scale = ipc && ipc.scale !== undefined ? Number(ipc.scale) : NaN;
+        const meta = Compositor.outputMetadataFor(s);
         return {
             "name": s.name,
             "model": s.model || "",
@@ -53,8 +51,8 @@ Item {
             "height": s.height,
             "x": s.x,
             "y": s.y,
-            "hz": hz,
-            "scale": scale
+            "hz": meta.hz,
+            "scale": meta.scale
         };
     })
 
@@ -63,6 +61,12 @@ Item {
             brightProc.out = "";
             brightProc.command = ["horneroctl", "--json", "hardware", "brightness", "status"];
             brightProc.running = true;
+        }
+        if (!Compositor.isHyprland) {
+            root.layoutCurrent = "";
+            root.animProfiles = [];
+            root.animCurrent = "";
+            return;
         }
         if (!layoutProc.running) {
             layoutProc.out = "";
@@ -109,6 +113,11 @@ Item {
     }
 
     function refresh(): void {
+        if (!Compositor.isHyprland) {
+            root.monitors = Quickshell.screens.map(s => ({ "label": s.name }));
+            root.statusText = qsTr("%1 display(s) connected").arg(root.monitors.length);
+            return;
+        }
         listProc.out = "";
         listProc.command = ["horneroctl", "hypr", "monitors", "list", "--json"];
         listProc.running = true;
@@ -125,6 +134,10 @@ Item {
     property bool arrangeStarted: false
 
     function applyMode(mode: string): void {
+        if (!Compositor.isHyprland) {
+            root.actionText = qsTr("Display arrangement requires Hyprland.");
+            return;
+        }
         if (snapProc.running || setProc.running) {
             root.arrangeQueued = mode;
             return;

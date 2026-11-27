@@ -9,6 +9,7 @@ ColumnLayout {
     id: root
 
     required property var client
+    readonly property var info: Compositor.windowDetails(client)
     property bool moveToWsExpanded
 
     anchors.fill: parent
@@ -78,8 +79,8 @@ ColumnLayout {
 
                 Button {
                     required property int index
-                    readonly property int wsId: Math.floor((Hypr.activeWsId - 1) / 10) * 10 + index + 1
-                    readonly property bool isCurrent: root.client?.workspace.id === wsId
+                    readonly property int wsId: Math.floor((Compositor.activeWorkspaceBaseId() - 1) / 10) * 10 + index + 1
+                    readonly property bool isCurrent: root.info?.workspaceId === wsId
 
                     color: isCurrent ? Signal.tPalette.lifted : Signal.palette.phosphorWell
                     onColor: isCurrent ? Signal.palette.ink : Signal.palette.onPhosphorWell
@@ -87,7 +88,7 @@ ColumnLayout {
                     disabled: isCurrent
 
                     function onClicked(): void {
-                        Hypr.dispatch(`movetoworkspace ${wsId},address:0x${root.client?.address}`);
+                        Compositor.moveWindowToWorkspace(root.client, wsId, false);
                     }
                 }
             }
@@ -104,20 +105,20 @@ ColumnLayout {
         Layout.rightMargin: Appearance.padding.large
         Layout.bottomMargin: Appearance.padding.large
 
-        spacing: root.client?.lastIpcObject.floating ? Appearance.spacing.normal : Appearance.spacing.small
+        spacing: root.info?.floating ? Appearance.spacing.normal : Appearance.spacing.small
 
         Button {
             color: Signal.palette.cueWell
             onColor: Signal.palette.onCueWell
-            text: root.client?.lastIpcObject.floating ? qsTr("Tile") : qsTr("Float")
+            text: root.info?.floating ? qsTr("Tile") : qsTr("Float")
 
             function onClicked(): void {
-                Hypr.dispatch(`togglefloating address:0x${root.client?.address}`);
+                Compositor.toggleWindowFloating(root.client);
             }
         }
 
         Loader {
-            active: root.client?.lastIpcObject.floating
+            active: root.info?.floating === true && Compositor.isHyprland
             Layout.fillWidth: active
             Layout.leftMargin: active ? 0 : -parent.spacing
             Layout.rightMargin: active ? 0 : -parent.spacing
@@ -125,10 +126,10 @@ ColumnLayout {
             sourceComponent: Button {
                 color: Signal.palette.cueWell
                 onColor: Signal.palette.onCueWell
-                text: root.client?.lastIpcObject.pinned ? qsTr("Unpin") : qsTr("Pin")
+                text: root.info?.pinned ? qsTr("Unpin") : qsTr("Pin")
 
                 function onClicked(): void {
-                    Hypr.dispatch(`pin address:0x${root.client?.address}`);
+                    Compositor.pinWindowFor(root.client);
                 }
             }
         }
@@ -139,7 +140,7 @@ ColumnLayout {
             text: qsTr("Kill")
 
             function onClicked(): void {
-                Hypr.dispatch(`killwindow address:0x${root.client?.address}`);
+                Compositor.closeWindowFor(root.client);
             }
         }
     }

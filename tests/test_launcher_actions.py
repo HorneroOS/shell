@@ -58,19 +58,20 @@ def test_ask_hornero_action_and_ai_prompt_route():
 APPLIST = (ROOT / "modules" / "launcher" / "AppList.qml").read_text()
 
 
-def test_windows_provider_shipped_and_focuses_via_hypr():
+def test_windows_provider_shipped_and_focuses_via_compositor():
     m = re.search(r'name:\s*"Windows".*?command:\s*\[(.*?)\]',
                   DEFAULTS, re.DOTALL)
     assert m and '"autocomplete", "win"' in m.group(1)
     # `>win <query>` state is routed by the provider registry
     # (shell#250 slice 1); filtering moved from AppList into the
-    # Windows provider, which still reads compositor toplevels…
+    # Windows provider, which reads compositor-agnostic window summaries…
     assert '"win"' in APPLIST
     assert "Windows.query" in APPLIST
     windows = (ROOT / "modules" / "launcher" / "services" / "Windows.qml").read_text()
-    assert "Hypr.toplevels" in windows
-    # …and activation focuses through the Hypr service only.
-    assert "focuswindow address:0x" in windows
+    assert "Compositor.allWindowSummaries()" in windows
+    # …and activation focuses through the Compositor service only.
+    assert "Compositor.focusWindow(" in windows
+    assert "Hypr." not in windows
     item = (ROOT / "modules" / "launcher" / "items" / "WindowItem.qml").read_text()
     assert "Windows.activate" in item
     assert "horneroctl" not in item and "horneroctl" not in windows

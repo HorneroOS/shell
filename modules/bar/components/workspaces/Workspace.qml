@@ -103,8 +103,7 @@ Item {
     readonly property Item numeral: indicator
 
     function iconForWindow(window: var): string {
-        const appId = niriMode ? window.app_id : window.lastIpcObject.class;
-        return Icons.getAppCategoryIcon(appId, "terminal");
+        return Icons.getAppCategoryIcon(Compositor.windowAppId(window), "terminal");
     }
 
     visible: !root.hidden
@@ -146,14 +145,7 @@ Item {
                 const nativeLabel = Compositor.workspaceLabel(root.workspaceData, root.ws);
                 return root.labels ? nativeLabel : root.isActive ? (Config.bar.workspaces.activeLabel || nativeLabel) : root.isOccupied ? (Config.bar.workspaces.occupiedLabel || Config.bar.workspaces.label || nativeLabel) : (Config.bar.workspaces.label || nativeLabel);
             }
-            const ws = Hypr.workspaces.values.find(w => w.id === root.ws);
-            const wsName = !ws || ws.name == root.ws ? root.ws : ws.name[0];
-            let displayName = wsName.toString();
-            if (Config.bar.workspaces.capitalisation.toLowerCase() === "upper") {
-                displayName = displayName.toUpperCase();
-            } else if (Config.bar.workspaces.capitalisation.toLowerCase() === "lower") {
-                displayName = displayName.toLowerCase();
-            }
+            const displayName = Compositor.workspaceDisplayName(root.ws, root.workspaceData, Config.bar.workspaces.capitalisation);
             if (root.labels)
                 return displayName;
             const label = Config.bar.workspaces.label || displayName;

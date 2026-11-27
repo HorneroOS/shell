@@ -4,7 +4,6 @@ import qs.components
 import qs.components.controls
 import qs.services
 import qs.config
-import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Layouts
 
@@ -73,7 +72,7 @@ Item {
                         focus: root.renameActive
                         onAccepted: {
                             if (text.trim().length > 0)
-                                Hypr.dispatch(`workspace name:${text.trim()}:${root.wsId}`)
+                                Compositor.renameWorkspace(root.wsId, text.trim());
                             text = ""
                             root.renameActive = false
                         }
@@ -93,7 +92,7 @@ Item {
 
                     onClicked: {
                         if (renameField.text.trim().length > 0)
-                            Hypr.dispatch(`workspace name:${renameField.text.trim()}:${root.wsId}`)
+                            Compositor.renameWorkspace(root.wsId, renameField.text.trim());
                         renameField.text = ""
                         root.renameActive = false
                     }
@@ -123,7 +122,7 @@ Item {
             font.pointSize: Appearance.font.size.small
 
             visible: Compositor.capabilities.workspaceCreate === true
-            onClicked: Hypr.dispatch("workspace empty")
+            onClicked: Compositor.createEmptyWorkspace()
         }
 
         // Close all windows in this WS

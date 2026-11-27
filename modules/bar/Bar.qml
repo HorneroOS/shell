@@ -401,17 +401,7 @@ Item {
         const ch = entryAt(lx, ly)?.loader ?? null;
         const pos = vertical ? ly : lx;
         if (ch?.id === "workspaces" && Config.bar.scrollActions.workspaces) {
-            if (Compositor.isNiri) {
-                if (angleDelta.y !== 0)
-                    Compositor.focusWorkspaceDirection(angleDelta.y > 0 ? -1 : 1);
-                return;
-            }
-            const mon = (Config.bar.workspaces.perMonitorWorkspaces ? Hypr.monitorFor(screen) : Hypr.focusedMonitor);
-            const specialWs = mon?.lastIpcObject.specialWorkspace.name;
-            if (specialWs?.length > 0)
-                Hypr.dispatch(`togglespecialworkspace ${specialWs.slice(8)}`);
-            else if (angleDelta.y < 0 || (Config.bar.workspaces.perMonitorWorkspaces ? mon.activeWorkspace?.id : Hypr.activeWsId) > 1)
-                Hypr.dispatch(`workspace r${angleDelta.y > 0 ? "-" : "+"}1`);
+            Compositor.scrollWorkspace(screen, Config.bar.workspaces.perMonitorWorkspaces, angleDelta.y);
         } else if (pos < mainLength(root) / 2 && Config.bar.scrollActions.volume) {
             if (angleDelta.y > 0)
                 Audio.incrementVolume();
@@ -900,6 +890,8 @@ Item {
 
                             sourceComponent: PinnedApps {
                                 vertical: root.vertical
+                                dock: root.style === "dock"
+                                edge: root.edge
                                 options: pinnedLoader.options
                             }
                         }

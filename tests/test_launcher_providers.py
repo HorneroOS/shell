@@ -183,9 +183,10 @@ console.log(JSON.stringify({
     }
 
 
-def test_windows_activation_uses_existing_hypr_path():
+def test_windows_activation_uses_compositor_path():
     windows = (SERVICES / "Windows.qml").read_text()
-    assert "Hypr.dispatch(`focuswindow address:0x${result.address}`)" in windows
+    assert "Compositor.allWindowSummaries()" in windows
+    assert "Compositor.focusWindow(" in windows
     assert "horneroctl" not in windows and "Process {" not in windows
     item = (ROOT / "modules" / "launcher" / "items" / "WindowItem.qml").read_text()
     assert "Windows.activate(root.modelData)" in item

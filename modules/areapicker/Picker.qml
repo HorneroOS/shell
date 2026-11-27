@@ -17,8 +17,8 @@ MouseArea {
 
     property bool onClient
 
-    property real realBorderWidth: onClient ? (Hypr.options["general:border_size"] ?? 1) : 2
-    property real realRounding: onClient ? (Hypr.options["decoration:rounding"] ?? 0) : 0
+    property real realBorderWidth: Compositor.borderWidth(onClient)
+    property real realRounding: Compositor.borderRounding(onClient)
 
     property real ssx
     property real ssy
@@ -33,21 +33,7 @@ MouseArea {
     property real sw: Math.abs(sx - ex)
     property real sh: Math.abs(sy - ey)
 
-    property list<var> clients: {
-        const mon = Hypr.monitorFor(screen);
-        if (!mon)
-            return [];
-
-        const special = mon.lastIpcObject.specialWorkspace;
-        const wsId = special.name ? special.id : mon.activeWorkspace.id;
-
-        return Hypr.toplevels.values.filter(c => c.workspace?.id === wsId).sort((a, b) => {
-            // Pinned first, then fullscreen, then floating, then any other
-            const ac = a.lastIpcObject;
-            const bc = b.lastIpcObject;
-            return (bc.pinned - ac.pinned) || ((bc.fullscreen !== 0) - (ac.fullscreen !== 0)) || (bc.floating - ac.floating);
-        });
-    }
+    property list<var> clients: Compositor.pickerClientsForScreen(screen)
 
     function checkClientRects(x: real, y: real): void {
         for (const client of clients) {
@@ -92,7 +78,7 @@ MouseArea {
     cursorShape: Qt.CrossCursor
 
     Component.onCompleted: {
-        Hypr.extras.refreshOptions();
+        Compositor.refreshOptions();
 
         // Break binding if frozen
         if (loader.freeze)

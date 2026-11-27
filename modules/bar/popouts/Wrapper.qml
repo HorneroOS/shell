@@ -251,7 +251,7 @@ AnchoredSurface {
 
         sourceComponent: WindowInfo {
             screen: root.screen
-            client: Hypr.activeToplevel
+            client: Compositor.activeWindow
         }
     }
 

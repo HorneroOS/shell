@@ -39,9 +39,7 @@ Item {
         return regularWorkspaces.find(w => w.id === root.selectedWsId) ?? null;
     }
 
-    readonly property string activeSpecialName: Compositor.isSpecialWorkspaceActive({ name: Compositor.focusedOutputName }, true)
-        ? Hypr.focusedMonitor?.lastIpcObject?.specialWorkspace?.name ?? ""
-        : ""
+    readonly property string activeSpecialName: Compositor.activeSpecialWorkspaceName({ name: Compositor.focusedOutputName }, true)
 
     Component.onCompleted: root.selectedWsId = Compositor.activeWorkspaceIdForScreen({ name: Compositor.focusedOutputName }) ?? nativeWorkspaces[0]?.id ?? 1
 
@@ -150,7 +148,7 @@ Item {
                             isActive: modelData.name === root.activeSpecialName
 
                             onClicked: {
-                                Hypr.dispatch(`togglespecialworkspace ${modelData.name.slice("special:".length)}`);
+                                Compositor.toggleSpecialWorkspaceByName(modelData.name);
                             }
                         }
                     }

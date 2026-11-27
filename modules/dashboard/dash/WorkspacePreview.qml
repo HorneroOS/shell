@@ -5,7 +5,6 @@ import qs.services
 import qs.utils
 import qs.config
 import Quickshell
-import Quickshell.Hyprland
 import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
@@ -17,8 +16,8 @@ Item {
 
     required property int wsId
 
-    readonly property var wsToplevels: Hypr.toplevels.values.filter(t => t.workspace?.id === root.wsId)
-    readonly property HyprlandToplevel focusedToplevel: {
+    readonly property var wsToplevels: Compositor.windowsForWorkspace(root.wsId)
+    readonly property var focusedToplevel: {
         return root.wsToplevels.find(t => t.wayland?.activated) ?? root.wsToplevels[0] ?? null;
     }
 

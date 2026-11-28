@@ -122,6 +122,7 @@ cockpit preset and Signal Night theme itself).
 |---|---|---|
 | `drawers` | `modules/Shortcuts.qml` | `toggle(drawer)`, `list()`, `state(drawer)` |
 | `controlCenter` | `modules/Shortcuts.qml` | `open([pane])`, `close()` |
+| `apps` | `modules/Shortcuts.qml` (controller `modules/apps/AppsStore.qml`) | `open([appIdOrView])`, `close()`, `toggle([appIdOrView])`, `status()` |
 | `welcome` | `modules/Shortcuts.qml` (controller `modules/welcome/Welcome.qml`) | `open([page])`, `close()`, `status()` |
 | `toaster` | `modules/Shortcuts.qml` | `info/success/warn/error(title, message, icon)` |
 | `picker` | `modules/areapicker/AreaPicker.qml` | `open()`, `openFreeze()` (+ close variants per file) |
@@ -149,9 +150,14 @@ returns `opened` or `opened: <pane>`. An unknown pane returns an
 `error:` result and does not open Settings. The shell pane registry is the
 single validity source used by `horneroctl config gui --pane`. `welcome open [page]`
 opens the Welcome Center (`start`, `navigate`, `shell`, `workspaces`,
-`personalize`, `tools`, `system`, `learn`, `shortcuts`; unknown pages open `start`
+`personalize`, `tools`, `apps`, `system`, `learn`, `shortcuts`; unknown pages open `start`
 with a warning); `welcome close()` closes it; `welcome status()`
 prints JSON (`{"open": bool, "page": string, "showOnLogin": bool}`).
+`apps open [appIdOrView]` opens Hornero Apps (to a view such as `discover`,
+`ai`, `categories`, `collections`, `installed`, `updates`, `queue`, `sources`,
+or directly to an app detail view); `apps close()` closes it;
+`apps toggle [appIdOrView]` toggles it; `apps status()` prints JSON
+(`{"open": bool, "view": string, "selectedAppId": string, "busy": bool, "queueCount": int}`).
 `controlCenter close()` destroys every open Settings window (a no-op when
 none is open). Repeated `controlCenter open` calls reuse the single
 window and switch its pane instead of stacking duplicates, and the

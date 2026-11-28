@@ -42,6 +42,14 @@ JsonObject {
             dangerous: false
         },
         {
+            name: "Hornero Apps",
+            icon: "apps",
+            description: "Discover, install, and manage applications",
+            command: ["quickshell", "ipc", "call", "apps", "open", "discover"],
+            enabled: true,
+            dangerous: false
+        },
+        {
             name: "Javi Radio",
             icon: "feather",
             description: "Ask Javi a quick question (read-only, nothing runs without you)",

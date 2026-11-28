@@ -4,6 +4,7 @@ import "services"
 import qs.components
 import qs.components.atmosphere
 import qs.components.controls
+import qs.modules.apps
 import qs.modules.instruments as Instruments
 import qs.services
 import qs.config
@@ -167,6 +168,9 @@ Item {
                             currentItem.onClicked();
                         } else
                             currentItem.modelData.onClicked(list.currentList);
+                    } else if (currentItem.isCatalog) {
+                        AppsStore.open(currentItem.modelData.id);
+                        root.visibilities.launcher = false;
                     } else {
                         Apps.launch(currentItem.modelData);
                         root.visibilities.launcher = false;

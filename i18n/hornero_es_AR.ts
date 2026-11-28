@@ -395,10 +395,276 @@
     </message>
 </context>
 <context>
+    <name>AppCard</name>
+    <message>
+        <source>Official Vendor</source>
+        <translation>Proveedor oficial</translation>
+    </message>
+    <message>
+        <source>Arch Official</source>
+        <translation>Arch oficial</translation>
+    </message>
+    <message>
+        <source>Hornero Official</source>
+        <translation>Hornero oficial</translation>
+    </message>
+    <message>
+        <source>Flathub Verified</source>
+        <translation>Flathub verificado</translation>
+    </message>
+    <message>
+        <source>Community Flathub</source>
+        <translation>Flathub comunitario</translation>
+    </message>
+    <message>
+        <source>Community AUR</source>
+        <translation>AUR comunitario</translation>
+    </message>
+    <message>
+        <source>Official Web App</source>
+        <translation>App web oficial</translation>
+    </message>
+    <message>
+        <source>Guided Setup</source>
+        <translation>Instalación guiada</translation>
+    </message>
+    <message>
+        <source>Local AppImage</source>
+        <translation>AppImage local</translation>
+    </message>
+    <message>
+        <source>Unverified</source>
+        <translation>Sin verificar</translation>
+    </message>
+    <message>
+        <source>Update available</source>
+        <translation>Actualización disponible</translation>
+    </message>
+    <message>
+        <source>Installed</source>
+        <translation>Instalada</translation>
+    </message>
+    <message>
+        <source>Queued</source>
+        <translation>En cola</translation>
+    </message>
+    <message>
+        <source>Guided setup</source>
+        <translation>Instalación guiada</translation>
+    </message>
+    <message>
+        <source>Blocked by policy</source>
+        <translation>Bloqueada por política</translation>
+    </message>
+    <message>
+        <source>Available</source>
+        <translation>Disponible</translation>
+    </message>
+    <message>
+        <source>No description provided.</source>
+        <translation>Sin descripción disponible.</translation>
+    </message>
+    <message>
+        <source>Proprietary</source>
+        <translation>Propietaria</translation>
+    </message>
+</context>
+<context>
+    <name>AppDetailView</name>
+    <message>
+        <source>Back to catalog</source>
+        <translation>Volver al catálogo</translation>
+    </message>
+    <message>
+        <source>Add to Queue</source>
+        <translation>Agregar a la cola</translation>
+    </message>
+    <message>
+        <source>Loading application details…</source>
+        <translation>Cargando detalles de la aplicación…</translation>
+    </message>
+    <message>
+        <source>Retry</source>
+        <translation>Reintentar</translation>
+    </message>
+    <message>
+        <source>By %1</source>
+        <translation>Por %1</translation>
+    </message>
+    <message>
+        <source>This application is proprietary software (%1). Confirm below to acknowledge its license before installing.</source>
+        <translation>Esta aplicación es software propietario (%1). Confirmá abajo para aceptar su licencia antes de instalar.</translation>
+    </message>
+    <message>
+        <source>Proprietary</source>
+        <translation>Propietaria</translation>
+    </message>
+    <message>
+        <source>I accept</source>
+        <translation>Acepto</translation>
+    </message>
+    <message>
+        <source>Community AUR package — PKGBUILD review required</source>
+        <translation>Paquete comunitario de AUR — requiere revisar el PKGBUILD</translation>
+    </message>
+    <message>
+        <source>AUR packages are community-maintained scripts built locally as your user (never as root). Inspect the PKGBUILD before confirming installation.</source>
+        <translation>Los paquetes de AUR son scripts mantenidos por la comunidad que se compilan localmente con tu usuario (nunca como root). Revisá el PKGBUILD antes de confirmar la instalación.</translation>
+    </message>
+    <message>
+        <source>Review AUR PKGBUILD</source>
+        <translation>Revisar PKGBUILD de AUR</translation>
+    </message>
+    <message>
+        <source>I reviewed the PKGBUILD</source>
+        <translation>Revisé el PKGBUILD</translation>
+    </message>
+    <message>
+        <source>Open</source>
+        <translation>Abrir</translation>
+    </message>
+    <message>
+        <source>Update</source>
+        <translation>Actualizar</translation>
+    </message>
+    <message>
+        <source>Install</source>
+        <translation>Instalar</translation>
+    </message>
+    <message>
+        <source>Please confirm the proprietary license notice before installing.</source>
+        <translation>Confirmá el aviso de licencia propietaria antes de instalar.</translation>
+    </message>
+    <message>
+        <source>Install from AUR</source>
+        <translation>Instalar desde AUR</translation>
+    </message>
+    <message>
+        <source>Confirm that you reviewed the PKGBUILD first.</source>
+        <translation>Confirmá primero que revisaste el PKGBUILD.</translation>
+    </message>
+    <message>
+        <source>Open Web App</source>
+        <translation>Abrir app web</translation>
+    </message>
+    <message>
+        <source>Pin as Isolated Web App</source>
+        <translation>Fijar como app web aislada</translation>
+    </message>
+    <message>
+        <source>View Setup Guide</source>
+        <translation>Ver guía de instalación</translation>
+    </message>
+    <message>
+        <source>Blocked by software policy</source>
+        <translation>Bloqueada por política de software</translation>
+    </message>
+    <message>
+        <source>Confirm Remove</source>
+        <translation>Confirmar desinstalación</translation>
+    </message>
+    <message>
+        <source>Remove</source>
+        <translation>Desinstalar</translation>
+    </message>
+    <message>
+        <source>User data is preserved: removing an application keeps your configuration and personal files intact.</source>
+        <translation>Tus datos se conservan: desinstalar una aplicación mantiene intactos tu configuración y archivos personales.</translation>
+    </message>
+    <message>
+        <source>Working…</source>
+        <translation>Procesando…</translation>
+    </message>
+    <message>
+        <source>Guided setup instructions</source>
+        <translation>Instrucciones de instalación guiada</translation>
+    </message>
+    <message>
+        <source>This software requires vendor download or manual licensing outside automatic package repositories. Follow the official upstream guide.</source>
+        <translation>Este software requiere descarga del proveedor o licencia manual fuera de los repositorios automáticos. Seguí la guía oficial.</translation>
+    </message>
+    <message>
+        <source>Open official instructions</source>
+        <translation>Abrir instrucciones oficiales</translation>
+    </message>
+    <message>
+        <source>About this application</source>
+        <translation>Acerca de esta aplicación</translation>
+    </message>
+    <message>
+        <source>No detailed description available.</source>
+        <translation>No hay una descripción detallada disponible.</translation>
+    </message>
+    <message>
+        <source>Wayland support: %1</source>
+        <translation>Soporte para Wayland: %1</translation>
+    </message>
+    <message>
+        <source>GPU &amp; acceleration: %1</source>
+        <translation>GPU y aceleración: %1</translation>
+    </message>
+    <message>
+        <source>Recommended source &amp; provenance</source>
+        <translation>Origen recomendado y procedencia</translation>
+    </message>
+    <message>
+        <source>%1 via %2</source>
+        <translation>%1 vía %2</translation>
+    </message>
+    <message>
+        <source>Recommended</source>
+        <translation>Recomendada</translation>
+    </message>
+    <message>
+        <source>Selected by HorneroOS catalog policy for reliability, security updates, and native Wayland integration.</source>
+        <translation>Elegida por la política del catálogo de HorneroOS por confiabilidad, actualizaciones de seguridad e integración nativa con Wayland.</translation>
+    </message>
+    <message>
+        <source>Package / ref: %1</source>
+        <translation>Paquete / ref: %1</translation>
+    </message>
+    <message>
+        <source>Alternative sources</source>
+        <translation>Orígenes alternativos</translation>
+    </message>
+    <message>
+        <source>Permissions &amp; sandbox</source>
+        <translation>Permisos y aislamiento</translation>
+    </message>
+    <message>
+        <source>Manage in Flatseal</source>
+        <translation>Gestionar en Flatseal</translation>
+    </message>
+    <message>
+        <source>Not sandboxed by default. AppImages run directly under your user account; verify checksums and origin before launching.</source>
+        <translation>Sin aislamiento por defecto. Los AppImage se ejecutan directamente con tu cuenta de usuario; verificá la suma de comprobación y el origen antes de abrirlos.</translation>
+    </message>
+    <message>
+        <source>Sandboxed with Flatpak portals. Review or adjust filesystem, network, and device permissions in Flatseal.</source>
+        <translation>Aislada con portales de Flatpak. Revisá o ajustá los permisos de archivos, red y dispositivos en Flatseal.</translation>
+    </message>
+    <message>
+        <source>Runs inside an isolated browser application profile.</source>
+        <translation>Se ejecuta dentro de un perfil aislado de aplicación web del navegador.</translation>
+    </message>
+    <message>
+        <source>Native package managed by pacman with standard user permissions.</source>
+        <translation>Paquete nativo gestionado por pacman con permisos estándar de usuario.</translation>
+    </message>
+</context>
+<context>
     <name>AppItem</name>
+    <message>
+        <source>Available in Hornero Apps · %1</source>
+        <translation>Disponible en Hornero Apps · %1</translation>
+    </message>
     <message>
         <source>FAV</source>
         <translation>FAV</translation>
+    </message>
+    <message>
+        <source>APP</source>
+        <translation>APP</translation>
     </message>
 </context>
 <context>
@@ -699,6 +965,610 @@
     <message>
         <source>Tool</source>
         <translation>Herramienta</translation>
+    </message>
+</context>
+<context>
+    <name>AppsPage</name>
+    <message>
+        <source>Set up your apps</source>
+        <translation>Configurá tus aplicaciones</translation>
+    </message>
+    <message>
+        <source>Pick an optional workstation profile to preview and queue curated applications. You can skip this and install apps anytime from Hornero Apps.</source>
+        <translation>Elegí un perfil opcional de estación de trabajo para previsualizar y poner en cola aplicaciones seleccionadas. Podés saltear este paso e instalar apps cuando quieras desde Hornero Apps.</translation>
+    </message>
+    <message>
+        <source>Open Hornero Apps</source>
+        <translation>Abrir Hornero Apps</translation>
+    </message>
+    <message>
+        <source>Browse all curated collections, AI tools, verified Flatpaks, and native Arch packages.</source>
+        <translation>Explorá todas las colecciones seleccionadas, herramientas de IA, Flatpaks verificados y paquetes nativos de Arch.</translation>
+    </message>
+</context>
+<context>
+    <name>AppsProfilePanel</name>
+    <message>
+        <source>Loading workstation profiles…</source>
+        <translation>Cargando perfiles de estación de trabajo…</translation>
+    </message>
+    <message>
+        <source>Retry</source>
+        <translation>Reintentar</translation>
+    </message>
+    <message>
+        <source>%1 (Installed)</source>
+        <translation>%1 (Instalada)</translation>
+    </message>
+    <message>
+        <source>Queueing…</source>
+        <translation>Agregando a la cola…</translation>
+    </message>
+    <message>
+        <source>Queue selected (%1)</source>
+        <translation>Encolar seleccionadas (%1)</translation>
+    </message>
+    <message>
+        <source>Open Queue in Hornero Apps</source>
+        <translation>Abrir cola en Hornero Apps</translation>
+    </message>
+</context>
+<context>
+    <name>AppsStore</name>
+    <message>
+        <source>Installing %1…</source>
+        <translation>Instalando %1…</translation>
+    </message>
+    <message>
+        <source>Removing %1…</source>
+        <translation>Desinstalando %1…</translation>
+    </message>
+    <message>
+        <source>Updating %1…</source>
+        <translation>Actualizando %1…</translation>
+    </message>
+    <message>
+        <source>Updating all applications…</source>
+        <translation>Actualizando todas las aplicaciones…</translation>
+    </message>
+    <message>
+        <source>Adding %1 app(s) to queue…</source>
+        <translation>Agregando %1 app(s) a la cola…</translation>
+    </message>
+    <message>
+        <source>Running installation queue…</source>
+        <translation>Ejecutando cola de instalación…</translation>
+    </message>
+    <message>
+        <source>Clearing installation queue…</source>
+        <translation>Vaciando cola de instalación…</translation>
+    </message>
+    <message>
+        <source>Importing AppImage…</source>
+        <translation>Importando AppImage…</translation>
+    </message>
+    <message>
+        <source>Creating Web App %1…</source>
+        <translation>Creando app web %1…</translation>
+    </message>
+    <message>
+        <source>Updating software policy…</source>
+        <translation>Actualizando política de software…</translation>
+    </message>
+    <message>
+        <source>Exporting application manifest…</source>
+        <translation>Exportando manifiesto de aplicaciones…</translation>
+    </message>
+    <message>
+        <source>Importing application manifest…</source>
+        <translation>Importando manifiesto de aplicaciones…</translation>
+    </message>
+    <message>
+        <source>Opening %1…</source>
+        <translation>Abriendo %1…</translation>
+    </message>
+    <message>
+        <source>Flatseal is not installed. Search for Flatseal in Hornero Apps to manage Flatpak permissions visually.</source>
+        <translation>Flatseal no está instalado. Buscá Flatseal en Hornero Apps para gestionar permisos de Flatpak de forma visual.</translation>
+    </message>
+    <message>
+        <source>Hornero Apps backend is unavailable (horneroctl store exited %1).</source>
+        <translation>El motor de Hornero Apps no está disponible (horneroctl store salió con código %1).</translation>
+    </message>
+    <message>
+        <source>Could not load application details.</source>
+        <translation>No se pudieron cargar los detalles de la aplicación.</translation>
+    </message>
+    <message>
+        <source>Could not load application details (exit %1).</source>
+        <translation>No se pudieron cargar los detalles de la aplicación (salida %1).</translation>
+    </message>
+    <message>
+        <source>Workstation profiles unavailable (exit %1).</source>
+        <translation>Perfiles de estación de trabajo no disponibles (salida %1).</translation>
+    </message>
+    <message>
+        <source>Could not check installed applications.</source>
+        <translation>No se pudieron consultar las aplicaciones instaladas.</translation>
+    </message>
+    <message>
+        <source>Could not check for application updates.</source>
+        <translation>No se pudieron consultar las actualizaciones de aplicaciones.</translation>
+    </message>
+    <message>
+        <source>Action failed.</source>
+        <translation>La acción falló.</translation>
+    </message>
+    <message>
+        <source>Completed.</source>
+        <translation>Completado.</translation>
+    </message>
+    <message>
+        <source>Operation failed (exit %1).</source>
+        <translation>La operación falló (salida %1).</translation>
+    </message>
+</context>
+<context>
+    <name>AppsWindow</name>
+    <message>
+        <source>Hornero Apps</source>
+        <translation>Hornero Apps</translation>
+    </message>
+    <message>
+        <source>Discover</source>
+        <translation>Descubrir</translation>
+    </message>
+    <message>
+        <source>AI &amp; Agents</source>
+        <translation>IA y Agentes</translation>
+    </message>
+    <message>
+        <source>Categories</source>
+        <translation>Categorías</translation>
+    </message>
+    <message>
+        <source>Collections</source>
+        <translation>Colecciones</translation>
+    </message>
+    <message>
+        <source>Installed</source>
+        <translation>Instaladas</translation>
+    </message>
+    <message>
+        <source>Updates</source>
+        <translation>Actualizaciones</translation>
+    </message>
+    <message>
+        <source>Queue</source>
+        <translation>Cola</translation>
+    </message>
+    <message>
+        <source>Sources &amp; Policy</source>
+        <translation>Orígenes y política</translation>
+    </message>
+    <message>
+        <source>Everyday Essentials</source>
+        <translation>Esenciales diarios</translation>
+    </message>
+    <message>
+        <source>Browsers, messaging, media, and daily productivity.</source>
+        <translation>Navegadores, mensajería, multimedia y productividad diaria.</translation>
+    </message>
+    <message>
+        <source>AI Workstation</source>
+        <translation>Estación de IA</translation>
+    </message>
+    <message>
+        <source>Local LLMs, AI coding editors, and agentic workflows.</source>
+        <translation>Modelos locales, editores con IA y flujos agénticos.</translation>
+    </message>
+    <message>
+        <source>Start Coding</source>
+        <translation>Empezar a programar</translation>
+    </message>
+    <message>
+        <source>Editors, terminals, containers, and SDKs.</source>
+        <translation>Editores, terminales, contenedores y SDKs.</translation>
+    </message>
+    <message>
+        <source>Create Something</source>
+        <translation>Crear algo</translation>
+    </message>
+    <message>
+        <source>Illustration, photo editing, vector design, and video.</source>
+        <translation>Ilustración, edición de fotos, diseño vectorial y video.</translation>
+    </message>
+    <message>
+        <source>Make Music</source>
+        <translation>Hacer música</translation>
+    </message>
+    <message>
+        <source>DAWs, synthesizers, and low-latency PipeWire studio tools.</source>
+        <translation>DAWs, sintetizadores y herramientas de estudio con PipeWire de baja latencia.</translation>
+    </message>
+    <message>
+        <source>Ready to Game</source>
+        <translation>Listo para jugar</translation>
+    </message>
+    <message>
+        <source>Launchers, compatibility layers, and overlays.</source>
+        <translation>Lanzadores, capas de compatibilidad y overlays.</translation>
+    </message>
+    <message>
+        <source>Protect Your Privacy</source>
+        <translation>Protegé tu privacidad</translation>
+    </message>
+    <message>
+        <source>Password managers, encrypted messaging, and VPN tools.</source>
+        <translation>Gestores de contraseñas, mensajería cifrada y herramientas VPN.</translation>
+    </message>
+    <message>
+        <source>Search apps by name, category, publisher, or tag (/ or Ctrl+F)</source>
+        <translation>Buscá apps por nombre, categoría, editor o etiqueta (/ o Ctrl+F)</translation>
+    </message>
+    <message>
+        <source>Search applications</source>
+        <translation>Buscar aplicaciones</translation>
+    </message>
+    <message>
+        <source>Queue (%1)</source>
+        <translation>Cola (%1)</translation>
+    </message>
+    <message>
+        <source>Refresh catalog</source>
+        <translation>Actualizar catálogo</translation>
+    </message>
+    <message>
+        <source>Close Hornero Apps</source>
+        <translation>Cerrar Hornero Apps</translation>
+    </message>
+    <message>
+        <source>Hornero Apps sections</source>
+        <translation>Secciones de Hornero Apps</translation>
+    </message>
+    <message>
+        <source>Search results for “%1”</source>
+        <translation>Resultados de búsqueda para “%1”</translation>
+    </message>
+    <message>
+        <source>Clear search</source>
+        <translation>Limpiar búsqueda</translation>
+    </message>
+    <message>
+        <source>No applications matched your query and active policy filters.</source>
+        <translation>Ninguna aplicación coincidió con tu búsqueda ni con los filtros de política activos.</translation>
+    </message>
+    <message>
+        <source>Hornero Apps catalog is currently unavailable.</source>
+        <translation>El catálogo de Hornero Apps no está disponible en este momento.</translation>
+    </message>
+    <message>
+        <source>Retry</source>
+        <translation>Reintentar</translation>
+    </message>
+    <message>
+        <source>Hornero Apps Software Center</source>
+        <translation>Centro de software Hornero Apps</translation>
+    </message>
+    <message>
+        <source>Find the apps you know. Discover the apps you&apos;ll love.</source>
+        <translation>Encontrá las apps que ya conocés. Descubrí las que te van a encantar.</translation>
+    </message>
+    <message>
+        <source>Verified native Arch packages, Flathub apps, official vendor channels, isolated Web Apps, and guided setup — with transparent provenance on every card.</source>
+        <translation>Paquetes nativos verificados de Arch, apps de Flathub, canales oficiales de proveedores, apps web aisladas e instalación guiada — con procedencia transparente en cada tarjeta.</translation>
+    </message>
+    <message>
+        <source>Explore AI &amp; Agents</source>
+        <translation>Explorar IA y Agentes</translation>
+    </message>
+    <message>
+        <source>Browse Collections</source>
+        <translation>Ver colecciones</translation>
+    </message>
+    <message>
+        <source>Workstation Profiles Quick Setup</source>
+        <translation>Configuración rápida de perfiles de trabajo</translation>
+    </message>
+    <message>
+        <source>Queue curated stacks across %1 optional workstation profiles in Hornero Welcome.</source>
+        <translation>Encolá paquetes seleccionados entre %1 perfiles opcionales de estación de trabajo en Hornero Welcome.</translation>
+    </message>
+    <message>
+        <source>Preview and queue optional workstation app bundles in Hornero Welcome.</source>
+        <translation>Previsualizá y encolá paquetes opcionales de aplicaciones en Hornero Welcome.</translation>
+    </message>
+    <message>
+        <source>Set up apps</source>
+        <translation>Configurar apps</translation>
+    </message>
+    <message>
+        <source>Curated collections</source>
+        <translation>Colecciones seleccionadas</translation>
+    </message>
+    <message>
+        <source>Featured applications</source>
+        <translation>Aplicaciones destacadas</translation>
+    </message>
+    <message>
+        <source>No featured applications loaded yet. Check Sources &amp; Policy or click Refresh.</source>
+        <translation>Todavía no se cargaron aplicaciones destacadas. Revisá Orígenes y política o hacé clic en Actualizar.</translation>
+    </message>
+    <message>
+        <source>AI Workstation &amp; Agentic Tools</source>
+        <translation>Estación de IA y herramientas agénticas</translation>
+    </message>
+    <message>
+        <source>Local models, AI coding editors, and agentic CLIs</source>
+        <translation>Modelos locales, editores de código con IA y CLIs agénticos</translation>
+    </message>
+    <message>
+        <source>Install verified runtimes like Ollama, LM Studio, Jan, Antigravity, Cursor, Zed, Claude Code, OpenCode, Veasel, and Agent Toolkit. Configure active agents and Javi in Control Center.</source>
+        <translation>Instalá entornos verificados como Ollama, LM Studio, Jan, Antigravity, Cursor, Zed, Claude Code, OpenCode, Veasel y Agent Toolkit. Configurá agentes activos y a Javi en el Centro de control.</translation>
+    </message>
+    <message>
+        <source>Open Hornero Agents</source>
+        <translation>Abrir Agentes de Hornero</translation>
+    </message>
+    <message>
+        <source>Open Javi Companion</source>
+        <translation>Abrir compañero Javi</translation>
+    </message>
+    <message>
+        <source>No AI &amp; Agent entries available in the current catalog snapshot.</source>
+        <translation>No hay entradas de IA y Agentes disponibles en la instantánea actual del catálogo.</translation>
+    </message>
+    <message>
+        <source>Browse by category</source>
+        <translation>Explorar por categoría</translation>
+    </message>
+    <message>
+        <source>Verified only</source>
+        <translation>Solo verificadas</translation>
+    </message>
+    <message>
+        <source>Open source only</source>
+        <translation>Solo código abierto</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Todas</translation>
+    </message>
+    <message>
+        <source>No applications in this category match your active filters.</source>
+        <translation>Ninguna aplicación en esta categoría coincide con los filtros activos.</translation>
+    </message>
+    <message>
+        <source>All collections</source>
+        <translation>Todas las colecciones</translation>
+    </message>
+    <message>
+        <source>No applications found for this collection.</source>
+        <translation>No se encontraron aplicaciones para esta colección.</translation>
+    </message>
+    <message>
+        <source>Installed applications (%1)</source>
+        <translation>Aplicaciones instaladas (%1)</translation>
+    </message>
+    <message>
+        <source>Refresh</source>
+        <translation>Actualizar</translation>
+    </message>
+    <message>
+        <source>Includes catalog apps and externally detected system/Flatpak applications. User data is preserved if you remove an app.</source>
+        <translation>Incluye aplicaciones del catálogo y aplicaciones del sistema o Flatpak detectadas externamente. Tus datos se conservan si desinstalás una app.</translation>
+    </message>
+    <message>
+        <source>No managed applications detected yet.</source>
+        <translation>Todavía no se detectaron aplicaciones gestionadas.</translation>
+    </message>
+    <message>
+        <source>Details</source>
+        <translation>Detalles</translation>
+    </message>
+    <message>
+        <source>Open</source>
+        <translation>Abrir</translation>
+    </message>
+    <message>
+        <source>Confirm remove</source>
+        <translation>Confirmar</translation>
+    </message>
+    <message>
+        <source>Remove</source>
+        <translation>Desinstalar</translation>
+    </message>
+    <message>
+        <source>Available updates (%1)</source>
+        <translation>Actualizaciones disponibles (%1)</translation>
+    </message>
+    <message>
+        <source>Check updates</source>
+        <translation>Buscar actualizaciones</translation>
+    </message>
+    <message>
+        <source>Update All</source>
+        <translation>Actualizar todo</translation>
+    </message>
+    <message>
+        <source>All tracked applications are up to date.</source>
+        <translation>Todas las aplicaciones seguidas están al día.</translation>
+    </message>
+    <message>
+        <source>Update</source>
+        <translation>Actualizar</translation>
+    </message>
+    <message>
+        <source>Installation queue (%1)</source>
+        <translation>Cola de instalación (%1)</translation>
+    </message>
+    <message>
+        <source>Clear</source>
+        <translation>Vaciar</translation>
+    </message>
+    <message>
+        <source>Run Queue</source>
+        <translation>Ejecutar cola</translation>
+    </message>
+    <message>
+        <source>No applications queued. Queue apps from Hornero Welcome profiles or any app detail view.</source>
+        <translation>No hay aplicaciones en cola. Agregá apps desde los perfiles de Hornero Welcome o desde cualquier detalle de aplicación.</translation>
+    </message>
+    <message>
+        <source>Import local AppImage</source>
+        <translation>Importar AppImage local</translation>
+    </message>
+    <message>
+        <source>Integrates a local .AppImage into your user application directory and desktop launcher. AppImages are not sandboxed by default.</source>
+        <translation>Integra un archivo .AppImage local en tu carpeta de aplicaciones de usuario y en el lanzador. Los AppImage no tienen aislamiento por defecto.</translation>
+    </message>
+    <message>
+        <source>Path to .AppImage file (e.g. ~/Downloads/Tool.AppImage)</source>
+        <translation>Ruta al archivo .AppImage (ej. ~/Downloads/Tool.AppImage)</translation>
+    </message>
+    <message>
+        <source>AppImage file path</source>
+        <translation>Ruta del archivo AppImage</translation>
+    </message>
+    <message>
+        <source>Application display name (optional)</source>
+        <translation>Nombre visible de la aplicación (opcional)</translation>
+    </message>
+    <message>
+        <source>AppImage display name</source>
+        <translation>Nombre visible del AppImage</translation>
+    </message>
+    <message>
+        <source>Create isolated Web App</source>
+        <translation>Crear app web aislada</translation>
+    </message>
+    <message>
+        <source>Create a desktop entry for an HTTPS web application with an isolated browser profile.</source>
+        <translation>Creá una entrada de escritorio para una aplicación web HTTPS con un perfil aislado del navegador.</translation>
+    </message>
+    <message>
+        <source>Web App name (e.g. Linear)</source>
+        <translation>Nombre de la app web (ej. Linear)</translation>
+    </message>
+    <message>
+        <source>Web App name</source>
+        <translation>Nombre de la app web</translation>
+    </message>
+    <message>
+        <source>HTTPS URL (e.g. https://linear.app)</source>
+        <translation>URL HTTPS (ej. https://linear.app)</translation>
+    </message>
+    <message>
+        <source>Web App URL</source>
+        <translation>URL de la app web</translation>
+    </message>
+    <message>
+        <source>Profile slug (optional)</source>
+        <translation>Identificador del perfil (opcional)</translation>
+    </message>
+    <message>
+        <source>Web App profile</source>
+        <translation>Perfil de la app web</translation>
+    </message>
+    <message>
+        <source>Create Web App</source>
+        <translation>Crear app web</translation>
+    </message>
+    <message>
+        <source>Software trust policy</source>
+        <translation>Política de confianza de software</translation>
+    </message>
+    <message>
+        <source>Verified sources only (Official Vendor, Arch Official, Hornero Official, Flathub Verified)</source>
+        <translation>Solo orígenes verificados (Proveedor oficial, Arch oficial, Hornero oficial, Flathub verificado)</translation>
+    </message>
+    <message>
+        <source>Open source software only</source>
+        <translation>Solo software de código abierto</translation>
+    </message>
+    <message>
+        <source>Community AUR policy</source>
+        <translation>Política de AUR comunitario</translation>
+    </message>
+    <message>
+        <source>Explicit opt-in requires PKGBUILD inspection; disabled hides/blocks AUR installs.</source>
+        <translation>La activación explícita requiere revisar el PKGBUILD; desactivado oculta o bloquea instalaciones desde AUR.</translation>
+    </message>
+    <message>
+        <source>Opt-in</source>
+        <translation>Activación explícita</translation>
+    </message>
+    <message>
+        <source>Disabled</source>
+        <translation>Desactivado</translation>
+    </message>
+    <message>
+        <source>Proprietary software policy</source>
+        <translation>Política de software propietario</translation>
+    </message>
+    <message>
+        <source>Explicit consent prompts before installing non-FOSS apps.</source>
+        <translation>Pide consentimiento explícito antes de instalar aplicaciones que no son de código abierto.</translation>
+    </message>
+    <message>
+        <source>Explicit consent</source>
+        <translation>Consentimiento explícito</translation>
+    </message>
+    <message>
+        <source>Application manifest (Team &amp; Workstation Provisioning)</source>
+        <translation>Manifiesto de aplicaciones (provisión de equipos y estaciones)</translation>
+    </message>
+    <message>
+        <source>Manifest JSON path (e.g. ~/hornero-apps-manifest.json)</source>
+        <translation>Ruta del manifiesto JSON (ej. ~/hornero-apps-manifest.json)</translation>
+    </message>
+    <message>
+        <source>Manifest file path</source>
+        <translation>Ruta del archivo de manifiesto</translation>
+    </message>
+    <message>
+        <source>Export Manifest</source>
+        <translation>Exportar manifiesto</translation>
+    </message>
+    <message>
+        <source>Import Manifest</source>
+        <translation>Importar manifiesto</translation>
+    </message>
+    <message>
+        <source>Backend capabilities</source>
+        <translation>Capacidades de los orígenes</translation>
+    </message>
+    <message>
+        <source>No backend source diagnostics returned yet.</source>
+        <translation>Todavía no hay diagnósticos de los orígenes de software.</translation>
+    </message>
+    <message>
+        <source>Scope: %1</source>
+        <translation>Ámbito: %1</translation>
+    </message>
+    <message>
+        <source>Ready</source>
+        <translation>Listo</translation>
+    </message>
+    <message>
+        <source>Unavailable</source>
+        <translation>No disponible</translation>
+    </message>
+    <message>
+        <source>Store health checks</source>
+        <translation>Controles de salud de la tienda</translation>
+    </message>
+    <message>
+        <source>No doctor checks reported.</source>
+        <translation>No se informaron controles de diagnóstico.</translation>
+    </message>
+    <message>
+        <source>Pass</source>
+        <translation>OK</translation>
+    </message>
+    <message>
+        <source>Check</source>
+        <translation>Revisar</translation>
     </message>
 </context>
 <context>
@@ -14179,6 +15049,10 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>Tools</source>
         <translation>Herramientas</translation>
+    </message>
+    <message>
+        <source>Apps</source>
+        <translation>Aplicaciones</translation>
     </message>
     <message>
         <source>Javi</source>

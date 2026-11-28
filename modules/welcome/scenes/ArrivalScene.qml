@@ -119,7 +119,7 @@ Item {
                 Rectangle {
                     width: 8
                     height: 8
-                    radius: 4
+                    radius: width / 2
                     color: Signal.palette.signal
                 }
 

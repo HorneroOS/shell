@@ -102,7 +102,7 @@ Well {
                         visible: tabCell.showUnreadDot
                         width: 6
                         height: 6
-                        radius: 3
+                        radius: width / 2
                         color: Signal.palette.signal
                     }
                 }

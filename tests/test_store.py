@@ -282,7 +282,7 @@ def test_apps_ui_and_integration_contracts():
     assert "Available in Hornero Apps" in launcher_item
     assert "AppsStore.open" in launcher_item
 
-    welcome_page = (ROOT / "modules" / "welcome" / "pages" / "AppsPage.qml").read_text(encoding="utf-8")
+    welcome_page = (ROOT / "modules" / "welcome" / "scenes" / "WorkstationScene.qml").read_text(encoding="utf-8")
     welcome_panel = (ROOT / "modules" / "welcome" / "AppsProfilePanel.qml").read_text(encoding="utf-8")
     assert "AppsProfilePanel" in welcome_page
     assert "Actions.queueAppIds" in welcome_panel

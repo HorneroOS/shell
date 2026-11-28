@@ -9,8 +9,13 @@ WELCOME_QML = ROOT / "modules" / "welcome" / "Welcome.qml"
 FACTORY = ROOT / "modules" / "controlcenter" / "WindowFactory.qml"
 REGISTRY = ROOT / "modules" / "controlcenter" / "PaneRegistry.qml"
 
-WELCOME_PAGES = ["start", "navigate", "shell", "workspaces",
-                 "personalize", "tools", "apps", "system", "learn", "shortcuts"]
+WELCOME_PAGES = [
+    "start", "navigate", "shell", "workspaces", "personalize", "tools",
+    "apps", "javi", "settings", "system", "learn", "shortcuts",
+    "first-flight", "explore", "whats-new",
+    "arrival", "workstation", "companion", "practice", "extensions",
+    "showcase", "trust", "ready",
+]
 
 
 def _handler_block(text, target):
@@ -32,13 +37,12 @@ def test_welcome_ipc_target_handlers():
 def test_welcome_controller_shape():
     text = WELCOME_QML.read_text()
     for fn in ("function open(", "function close(", "function toggle(",
-               "function status(", "function pageValid("):
+               "function status(", "function pageValid(", "function setMode(",
+               "function goToScene(", "function nextScene(", "function prevScene("):
         assert fn in text, f"Welcome.qml missing {fn}"
     for page in WELCOME_PAGES:
         assert f'"{page}"' in text, f"Welcome.qml missing page {page}"
-    assert len(WELCOME_PAGES) == 10
-    # status() exposes open/page; unknown pages fall back, never throw.
-    assert "open: " in text and "page: " in text
+    assert "open: " in text and "page: " in text and "mode: " in text
     assert "console.warn" in text
 
 
@@ -47,7 +51,6 @@ def test_controlcenter_open_accepts_pane():
     assert "function open(pane" in block
     assert "PaneRegistry.resolveTarget" in block
     assert "WindowFactory.create" in block
-    # Invalid pane = default window + warning, never a crash.
     assert "console.warn" in block
     assert "throw" not in block
 

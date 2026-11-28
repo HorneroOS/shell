@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "currentReleaseVersion": "1.6.0",
+  "releases": [
+    {
+      "version": "1.6.0",
+      "date": "2026-11-28",
+      "title": "Hornero Apps & Signal Flight Welcome",
+      "summary": "Native software discovery with transparent provenance and a calmer, 3-mode onboarding experience.",
+      "highlights": [
+        {
+          "id": "hornero-apps-launch",
+          "title": "Hornero Apps Software Center",
+          "summary": "Discover curated software, workstation profiles, and install queues with clear Arch, Flatpak, AppImage, and Web App badges.",
+          "availability": "supported",
+          "icon": "apps",
+          "action": { "type": "apps", "target": "discover", "section": "" }
+        },
+        {
+          "id": "welcome-signal-flight",
+          "title": "Signal Flight Editorial Welcome",
+          "summary": "Reimagined 3-mode Welcome with First Flight, Explore Hornero unified search, and What's New.",
+          "availability": "supported",
+          "icon": "compass",
+          "action": { "type": "welcome", "target": "explore", "section": "" }
+        },
+        {
+          "id": "reversible-live-preview",
+          "title": "Reversible Live Preview Transactions",
+          "summary": "Try Day/Night themes, licensed Argentine wallpapers, and bar layouts live with explicit Apply, Revert, and crash recovery.",
+          "availability": "supported",
+          "icon": "palette",
+          "action": { "type": "welcome", "target": "personalize", "section": "" }
+        }
+      ]
+    },
+    {
+      "version": "1.5.0",
+      "date": "2026-11-20",
+      "title": "Universal Profiles, Snapshots & Studio Routing Kits",
+      "summary": "Atomic 5-domain workspace switching with rollback protection and PipeWire Studio live routing.",
+      "highlights": [
+        {
+          "id": "profiles-5-domain",
+          "title": "5-Domain Universal Profiles",
+          "summary": "Capture and switch Experience, Audio, Power, Extensions, and Companion Apps in one safe transaction.",
+          "availability": "supported",
+          "icon": "folders",
+          "action": { "type": "controlCenter", "target": "profiles", "section": "" }
+        },
+        {
+          "id": "studio-routing-kits",
+          "title": "Studio Audio & Routing Kits",
+          "summary": "Live-call, browser backing, and low-latency REAPER PipeWire profiles when Studio Audio is installed.",
+          "availability": "edition-dependent",
+          "requires": "studioAudio",
+          "icon": "music",
+          "action": { "type": "controlCenter", "target": "studio", "section": "" }
+        }
+      ]
+    },
+    {
+      "version": "1.4.0",
+      "date": "2026-11-10",
+      "title": "Signal Light Renaissance, Chromatic v3 & PluginKit 3",
+      "summary": "White Ceramic Signal Day, Blue-Hour Graphite Night, Surface Policy v3, and sandbox-honest PluginKit 3.",
+      "highlights": [
+        {
+          "id": "signal-day-night-140",
+          "title": "White Ceramic Day & Blue-Hour Night",
+          "summary": "WCAG 2.2 AA Signal palettes across every shell instrument, drawer, and Settings pane.",
+          "availability": "supported",
+          "icon": "contrast",
+          "action": { "type": "controlCenter", "target": "appearance", "section": "themes" }
+        },
+        {
+          "id": "chromatic-surface-v3",
+          "title": "Chromatic Surface Policy v3",
+          "summary": "Wallpaper-derived accents with clean ceramic and graphite surfaces.",
+          "availability": "supported",
+          "icon": "rainbow",
+          "action": { "type": "controlCenter", "target": "appearance", "section": "chromatic" }
+        },
+        {
+          "id": "pluginkit-v3",
+          "title": "PluginKit 3 & Extension Store",
+          "summary": "Curated shell extensions with explicit trust metadata and Safe Mode recovery.",
+          "availability": "supported",
+          "icon": "puzzle",
+          "action": { "type": "controlCenter", "target": "extensions", "section": "" }
+        }
+      ]
+    }
+  ]
+}

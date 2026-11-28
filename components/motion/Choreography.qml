@@ -28,12 +28,38 @@ Singleton {
     readonly property bool stagger: morph
     readonly property bool travel: level !== "off"
     readonly property bool animated: level !== "off"
+    readonly property bool reducedMotion: Appearance.anim.reduced
 
     // User duration scale (appearance.anim.durations.scale).
     readonly property real _scale: Math.max(0, Appearance.anim.durations.scale)
 
     function _ms(base: real): int {
         return animated ? Math.round(base * _scale) : 0;
+    }
+
+    // Shared Signal motion tokens (editorial & welcome choreography).
+    readonly property int instantMs: 90
+    readonly property int microMs: 160
+    readonly property int standardMs: 240
+    readonly property int sceneMs: 320
+    readonly property int arrivalMs: 360
+    readonly property int staggerMs: 40
+    readonly property real sceneTravelPx: 16
+    readonly property int reducedFadeMs: 90
+
+    function effectiveDuration(ms: int, reduced: var): int {
+        const isReduced = (reduced === true) || Appearance.anim.reduced || !animated;
+        if (isReduced)
+            return 0;
+        const factor = level === "reduced" ? _scale * 0.5 : _scale;
+        return Math.max(0, Math.round(ms * factor));
+    }
+
+    function effectiveTravel(px: real, reduced: var): real {
+        const isReduced = (reduced === true) || Appearance.anim.reduced || !travel;
+        if (isReduced)
+            return 0;
+        return morph ? px : Math.min(px, scanTravel);
     }
 
     // Spatial durations (0 when off).

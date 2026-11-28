@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "wallpapers": [
+    {
+      "id": "buenos-aires-nocturno",
+      "title": "Buenos Aires after dark",
+      "place": "Puerto Madero, Buenos Aires",
+      "photographer": "Luis Argerich",
+      "license": "CC BY 2.0",
+      "tone": "dark",
+      "path": "/usr/share/hornero/wallpapers/buenos-aires-nocturno/buenos-aires-skyline-night.jpg",
+      "filename": "buenos-aires-skyline-night.jpg",
+      "themeId": "buenos-aires-nocturno"
+    },
+    {
+      "id": "fin-del-mundo",
+      "title": "Blue hour on the Beagle Channel",
+      "place": "Tierra del Fuego, Argentina",
+      "photographer": "RAYANDBEE",
+      "license": "CC BY 2.0",
+      "tone": "dark",
+      "path": "/usr/share/hornero/wallpapers/fin-del-mundo/beagle-channel-ship-dusk.jpg",
+      "filename": "beagle-channel-ship-dusk.jpg",
+      "themeId": "fin-del-mundo"
+    },
+    {
+      "id": "sierras",
+      "title": "Golden hour over Quebrada del Condorito",
+      "place": "Córdoba, Argentina",
+      "photographer": "Kevin Jones",
+      "license": "CC BY 2.0",
+      "tone": "light",
+      "path": "/usr/share/hornero/wallpapers/sierras/condorito-sierra-panorama.jpg",
+      "filename": "condorito-sierra-panorama.jpg",
+      "themeId": "sierras"
+    },
+    {
+      "id": "hornero-signal-night",
+      "title": "Signal Night Grid",
+      "place": "HorneroOS Original",
+      "photographer": "HorneroOS Artwork",
+      "license": "MIT",
+      "tone": "dark",
+      "path": "/usr/share/hornero/wallpapers/hornero-signal-night/signal-grid-night.png",
+      "filename": "signal-grid-night.png",
+      "themeId": "hornero-signal-night"
+    },
+    {
+      "id": "hornero-signal-day",
+      "title": "Signal Day Ceramic",
+      "place": "HorneroOS Original",
+      "photographer": "HorneroOS Artwork",
+      "license": "MIT",
+      "tone": "light",
+      "path": "/usr/share/hornero/wallpapers/hornero-signal-day/signal-grid-day.png",
+      "filename": "signal-grid-day.png",
+      "themeId": "hornero-signal-day"
+    }
+  ]
+}

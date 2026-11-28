@@ -32,6 +32,31 @@ var COMMUNITY_AUR_PROVENANCES = {
     "community_package": true
 };
 
+var ICON_ALIASES = {
+    "gamepad-2": "device-gamepad-2",
+    "award": "star",
+    "bot": "robot",
+    "globe": "world",
+    "message-circle": "message",
+    "code-2": "code",
+    "play-circle": "player-play",
+    "wrench": "tool",
+    "shield-check": "shield-lock",
+    "graduation-cap": "school"
+};
+
+function _isSpanishLocale(locale) {
+    return String(locale || "").trim().toLowerCase().indexOf("es") === 0;
+}
+
+function _normalizeIcon(icon, fallback) {
+    var raw = String(icon || "").trim();
+    if (raw.length === 0)
+        return fallback || "apps";
+    var lower = raw.toLowerCase();
+    return ICON_ALIASES[lower] || raw;
+}
+
 function _parseEnvelope(rawJson) {
     if (rawJson === null || rawJson === undefined)
         return null;
@@ -158,7 +183,7 @@ function provenanceBadgeTone(prov) {
 
 function backendLabel(backend) {
     var key = String(backend || "").trim().toLowerCase();
-    if (key === "pacman" || key === "arch" || key === "arch_official")
+    if (key === "pacman" || key === "arch" || key === "arch_official" || key === "arch_native")
         return "Arch / pacman";
     if (key === "flatpak" || key === "flathub")
         return "Flatpak";
@@ -168,7 +193,7 @@ function backendLabel(backend) {
         return "Web App";
     if (key === "aur")
         return "Community AUR";
-    if (key === "vendor" || key === "vendor_official" || key === "hornero")
+    if (key === "vendor" || key === "vendor_official" || key === "vendor_repo" || key === "hornero")
         return "Vendor Channel";
     if (key === "guided" || key === "guided_setup")
         return "Guided Setup";
@@ -179,7 +204,7 @@ function backendLabel(backend) {
 
 function backendShortPill(backend) {
     var key = String(backend || "").trim().toLowerCase();
-    if (key === "pacman" || key === "arch" || key === "arch_official")
+    if (key === "pacman" || key === "arch" || key === "arch_official" || key === "arch_native")
         return "ARCH";
     if (key === "flatpak" || key === "flathub")
         return "FLATPAK";
@@ -189,7 +214,7 @@ function backendShortPill(backend) {
         return "WEBAPP";
     if (key === "aur")
         return "AUR";
-    if (key === "vendor" || key === "vendor_official" || key === "hornero")
+    if (key === "vendor" || key === "vendor_official" || key === "vendor_repo" || key === "hornero")
         return "VENDOR";
     if (key === "guided" || key === "guided_setup")
         return "GUIDE";
@@ -224,22 +249,23 @@ function isVerifiedProvenance(prov) {
     return VERIFIED_PROVENANCES[key] === true;
 }
 
-function _normalizeSource(raw, isRecommended) {
+function _normalizeSource(raw, isRecommended, locale) {
     if (!raw || typeof raw !== "object")
         return null;
+    var isEs = _isSpanishLocale(locale);
     var backend = String(raw.backend || raw.type || "").trim().toLowerCase();
     var provenance = String(raw.provenance || raw.trust || "").trim().toLowerCase();
-    var sourceId = String(raw.id || raw.source_id || raw.package || raw.ref || backend || "");
+    var sourceId = String(raw.id || raw.source_id || raw.package_id || raw.package || raw.ref || backend || "");
     if (sourceId.length === 0 && backend.length === 0)
         return null;
     return {
         id: sourceId,
         backend: backend,
         provenance: provenance,
-        packageName: String(raw.package || raw.ref || raw.app_id || raw.id || ""),
+        packageName: String(raw.package_id || raw.package || raw.ref || raw.app_id || raw.id || ""),
         remote: String(raw.remote || raw.repo || ""),
         scope: String(raw.scope || ""),
-        reason: String(raw.reason || raw.why || ""),
+        reason: String((isEs && (raw.recommended_reason_es || raw.reason_es)) || raw.recommended_reason || raw.reason || raw.why || ""),
         url: String(raw.url || raw.pkgbuild_url || raw.guide_url || ""),
         checksum: String(raw.sha256 || raw.checksum || ""),
         verified: raw.verified !== undefined ? _parseBool(raw.verified, false) : isVerifiedProvenance(provenance),
@@ -247,34 +273,68 @@ function _normalizeSource(raw, isRecommended) {
     };
 }
 
-function _normalizeApp(raw) {
+function _normalizeApp(raw, locale) {
     if (!raw || typeof raw !== "object")
         return null;
+    var isEs = _isSpanishLocale(locale);
     var id = String(raw.id || raw.app_id || raw.slug || "").trim();
     if (id.length === 0)
         return null;
-    var name = String(raw.name || raw.title || id);
+    var name = String((isEs && raw.name_es) || raw.name || raw.title || id);
+    var summary = String((isEs && raw.summary_es) || raw.summary || raw.tagline || "");
+    var description = String((isEs && raw.description_es) || raw.description || summary || "");
 
-    var recSrc = _normalizeSource(_parseJsonObject(raw.recommended_source !== undefined ? raw.recommended_source : raw.recommendedSource), true);
+    var recRaw = raw.recommended_source !== undefined ? raw.recommended_source : raw.recommendedSource;
+    var parsedRecObj = _parseJsonObject(recRaw);
+    var recSrc = parsedRecObj ? _normalizeSource(parsedRecObj, true, locale) : null;
     var altRaw = _parseJsonArray(raw.alternative_sources !== undefined ? raw.alternative_sources : (raw.alternativeSources !== undefined ? raw.alternativeSources : raw.sources));
     var altSources = [];
     for (var i = 0; i < altRaw.length; i++) {
-        var norm = _normalizeSource(altRaw[i], false);
+        var norm = _normalizeSource(altRaw[i], false, locale);
         if (norm)
             altSources.push(norm);
     }
 
-    var backend = String(raw.backend || (recSrc ? recSrc.backend : "") || "").trim().toLowerCase();
+    if (!recSrc && typeof recRaw === "string") {
+        var recKey = recRaw.trim().toLowerCase();
+        if (recKey.length > 0 && altSources.length > 0) {
+            var matchedIdx = -1;
+            for (var ri = 0; ri < altSources.length; ri++) {
+                if (altSources[ri].backend === recKey || altSources[ri].id.toLowerCase() === recKey) {
+                    matchedIdx = ri;
+                    break;
+                }
+            }
+            if (matchedIdx === -1)
+                matchedIdx = 0;
+            var chosen = altSources[matchedIdx];
+            recSrc = {
+                id: chosen.id,
+                backend: chosen.backend,
+                provenance: chosen.provenance,
+                packageName: chosen.packageName,
+                remote: chosen.remote,
+                scope: chosen.scope,
+                reason: chosen.reason,
+                url: chosen.url,
+                checksum: chosen.checksum,
+                verified: chosen.verified,
+                recommended: true
+            };
+        }
+    }
+
+    var backend = String(raw.backend || (recSrc ? recSrc.backend : "") || (typeof recRaw === "string" && !parsedRecObj ? recRaw : "") || "").trim().toLowerCase();
     var provenance = String(raw.provenance || (recSrc ? recSrc.provenance : "") || "").trim().toLowerCase();
     if (!recSrc && (backend.length > 0 || provenance.length > 0)) {
         recSrc = {
-            id: String(raw.package || raw.ref || id),
+            id: String(raw.package_id || raw.package || raw.ref || id),
             backend: backend,
             provenance: provenance,
-            packageName: String(raw.package || raw.ref || id),
+            packageName: String(raw.package_id || raw.package || raw.ref || id),
             remote: String(raw.remote || ""),
             scope: String(raw.scope || ""),
-            reason: String(raw.recommended_reason || raw.why_recommended || ""),
+            reason: String((isEs && raw.recommended_reason_es) || raw.recommended_reason || raw.why_recommended || ""),
             url: String(raw.url || raw.web_app_url || raw.setup_guide_url || ""),
             checksum: String(raw.sha256 || ""),
             verified: raw.verified !== undefined ? _parseBool(raw.verified, false) : isVerifiedProvenance(provenance),
@@ -327,8 +387,8 @@ function _normalizeApp(raw) {
     return {
         id: id,
         name: name,
-        summary: String(raw.summary || raw.tagline || ""),
-        description: String(raw.description || raw.summary || ""),
+        summary: summary,
+        description: description,
         publisher: String(raw.publisher || raw.developer || raw.vendor || ""),
         icon: String(raw.icon || ""),
         categories: categories,
@@ -536,7 +596,7 @@ function filterUninstalledForLauncher(catalogApps, installedEntries, query, limi
     });
 }
 
-function parseStoreList(rawJson) {
+function parseStoreList(rawJson, locale) {
     var env = _parseEnvelope(rawJson);
     if (!env) {
         return {
@@ -558,7 +618,7 @@ function parseStoreList(rawJson) {
     var rawApps = _parseJsonArray(data.apps !== undefined ? data.apps : (data.items !== undefined ? data.items : data.results));
     var apps = [];
     for (var i = 0; i < rawApps.length; i++) {
-        var norm = _normalizeApp(rawApps[i]);
+        var norm = _normalizeApp(rawApps[i], locale);
         if (norm)
             apps.push(norm);
     }
@@ -570,11 +630,11 @@ function parseStoreList(rawJson) {
     };
 }
 
-function parseStoreSearch(rawJson) {
-    return parseStoreList(rawJson);
+function parseStoreSearch(rawJson, locale) {
+    return parseStoreList(rawJson, locale);
 }
 
-function parseStoreShow(rawJson) {
+function parseStoreShow(rawJson, locale) {
     var env = _parseEnvelope(rawJson);
     if (!env) {
         return {
@@ -603,7 +663,7 @@ function parseStoreShow(rawJson) {
         if (Object.prototype.hasOwnProperty.call(data, dk) && dk !== "app" && merged[dk] === undefined)
             merged[dk] = data[dk];
     }
-    var app = _normalizeApp(merged);
+    var app = _normalizeApp(merged, locale);
     if (!app) {
         return {
             available: false,
@@ -618,12 +678,13 @@ function parseStoreShow(rawJson) {
     };
 }
 
-function parseStoreCategories(rawJson) {
+function parseStoreCategories(rawJson, locale) {
     var env = _parseEnvelope(rawJson);
     if (!env)
         return { available: false, categories: [], error: "horneroctl store is unavailable" };
     if (env.ok !== true)
         return { available: false, categories: [], error: _firstLine(env.message, "store categories failed") };
+    var isEs = _isSpanishLocale(locale);
     var data = env.data || {};
     var rawList = _parseJsonArray(data.categories);
     var categories = rawList.map(function (c) {
@@ -636,21 +697,22 @@ function parseStoreCategories(rawJson) {
             return null;
         return {
             id: id,
-            name: String(c.name || c.title || id),
-            description: String(c.description || ""),
-            icon: String(c.icon || "category"),
+            name: String((isEs && c.name_es) || c.name || c.title || id),
+            description: String((isEs && c.description_es) || c.description || ""),
+            icon: _normalizeIcon(c.icon, "category"),
             count: _parseIntOr(c.count, 0)
         };
     }).filter(function (c) { return c !== null; });
     return { available: true, categories: categories, error: "" };
 }
 
-function parseStoreCollections(rawJson) {
+function parseStoreCollections(rawJson, locale) {
     var env = _parseEnvelope(rawJson);
     if (!env)
         return { available: false, collections: [], error: "horneroctl store is unavailable" };
     if (env.ok !== true)
         return { available: false, collections: [], error: _firstLine(env.message, "store collections failed") };
+    var isEs = _isSpanishLocale(locale);
     var data = env.data || {};
     var rawList = _parseJsonArray(data.collections);
     var collections = rawList.map(function (c) {
@@ -663,9 +725,9 @@ function parseStoreCollections(rawJson) {
             return null;
         return {
             id: id,
-            name: String(c.name || c.title || id),
-            description: String(c.description || ""),
-            icon: String(c.icon || "folders"),
+            name: String((isEs && c.name_es) || c.name || c.title || id),
+            description: String((isEs && c.description_es) || c.description || ""),
+            icon: _normalizeIcon(c.icon, "folders"),
             apps: _stringList(c.apps)
         };
     }).filter(function (c) { return c !== null; });
@@ -716,8 +778,8 @@ function parseStoreProfiles(rawJson) {
     return { available: true, profiles: profiles, error: "" };
 }
 
-function parseStoreInstalled(rawJson) {
-    var res = parseStoreList(rawJson);
+function parseStoreInstalled(rawJson, locale) {
+    var res = parseStoreList(rawJson, locale);
     if (!res.available)
         return res;
     res.apps = res.apps.map(function (a) {

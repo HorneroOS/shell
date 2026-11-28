@@ -68,7 +68,10 @@ Item {
         StyledFlickable {
             id: leftFlick
 
-            Layout.preferredWidth: parent.width * 0.44
+            Layout.fillWidth: false
+            Layout.minimumWidth: 340
+            Layout.maximumWidth: Math.round(parent.width * 0.46)
+            Layout.preferredWidth: Math.round(parent.width * 0.44)
             Layout.fillHeight: true
             flickableDirection: Flickable.VerticalFlick
             contentHeight: leftCol.implicitHeight
@@ -308,6 +311,7 @@ Item {
         // Right 56% live desktop mini-canvas + preview transaction bar
         ColumnLayout {
             Layout.fillWidth: true
+            Layout.preferredWidth: 0
             Layout.fillHeight: true
             spacing: Appearance.spacing.normal
 

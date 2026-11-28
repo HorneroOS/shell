@@ -91,6 +91,7 @@ Item {
                 readonly property bool emphasized: WelcomeModule.State.selectedInterests.length === 0 || WelcomeModule.State.hasInterest("creative")
 
                 Layout.fillWidth: true
+                Layout.preferredWidth: 0
                 Layout.fillHeight: true
                 radius: Appearance.rounding.normal
                 color: Signal.palette.panel
@@ -142,6 +143,7 @@ Item {
                 readonly property bool emphasized: WelcomeModule.State.selectedInterests.length === 0 || WelcomeModule.State.hasInterest("dev")
 
                 Layout.fillWidth: true
+                Layout.preferredWidth: 0
                 Layout.fillHeight: true
                 radius: Appearance.rounding.normal
                 color: Signal.palette.panel
@@ -204,6 +206,7 @@ Item {
                 readonly property bool emphasized: WelcomeModule.State.selectedInterests.length === 0 || WelcomeModule.State.hasInterest("gaming")
 
                 Layout.fillWidth: true
+                Layout.preferredWidth: 0
                 Layout.fillHeight: true
                 radius: Appearance.rounding.normal
                 color: Signal.palette.panel

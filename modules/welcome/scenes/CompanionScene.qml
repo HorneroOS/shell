@@ -83,7 +83,10 @@ Item {
 
         // Left: Intimate Spotlight Stage
         StyledRect {
-            Layout.preferredWidth: parent.width * 0.45
+            Layout.fillWidth: false
+            Layout.minimumWidth: 340
+            Layout.maximumWidth: Math.round(parent.width * 0.48)
+            Layout.preferredWidth: Math.round(parent.width * 0.45)
             Layout.fillHeight: true
             radius: Appearance.rounding.normal
             color: Signal.palette.sunken
@@ -192,6 +195,7 @@ Item {
         // Right: Honest disclosure, quick questions & Companion settings
         ColumnLayout {
             Layout.fillWidth: true
+            Layout.preferredWidth: 0
             Layout.fillHeight: true
             spacing: Appearance.spacing.normal
 

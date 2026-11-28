@@ -224,7 +224,7 @@ FloatingWindow {
 
                     Layout.fillWidth: true
                     Layout.maximumWidth: 460
-                    placeholderText: qsTr("Search apps by name, category, publisher, or tag (/ or Ctrl+F)")
+                    placeholderText: qsTr("Search apps, categories, tags… (/)")
                     Accessible.name: qsTr("Search applications")
                     onTextChanged: searchDebounce.restart()
                     onAccepted: AppsStore.searchCatalog(searchField.text)
@@ -385,324 +385,567 @@ FloatingWindow {
                 Layout.fillHeight: true
                 Layout.margins: Appearance.padding.large
 
-                // Detail drawer/sheet when an app is selected
-                AppDetailView {
+                // Detail drawer/sheet when an app is selected (lazy-loaded)
+                Loader {
                     anchors.fill: parent
-                    visible: AppsStore.selectedApp !== null || AppsStore.detailLoading || AppsStore.detailError !== ""
-                    app: AppsStore.selectedApp
-                    loading: AppsStore.detailLoading
-                    error: AppsStore.detailError
+                    active: AppsStore.selectedApp !== null || AppsStore.detailLoading || AppsStore.detailError !== ""
+                    visible: active
                     z: 10
-                }
 
-                // Search results overlay when searching (and no detail sheet open)
-                StyledFlickable {
-                    id: searchFlick
-
-                    anchors.fill: parent
-                    visible: AppsStore.selectedApp === null && !AppsStore.detailLoading && AppsStore.detailError === "" && AppsStore.searchActive
-                    flickableDirection: Flickable.VerticalFlick
-                    contentHeight: searchCol.implicitHeight
-                    clip: true
-
-                    StyledScrollBar.vertical: StyledScrollBar {
-                        flickable: searchFlick
-                    }
-
-                    ColumnLayout {
-                        id: searchCol
-
-                        width: searchFlick.width
-                        spacing: Appearance.spacing.large
-
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: Appearance.spacing.normal
-
-                            StyledText {
-                                Layout.fillWidth: true
-                                text: qsTr("Search results for “%1”").arg(AppsStore.searchQuery)
-                                font.family: Appearance.font.family.display
-                                font.pointSize: Appearance.font.size.large
-                                font.weight: Appearance.font.weight.strong
-                            }
-
-                            TextButton {
-                                text: qsTr("Clear search")
-                                type: TextButton.Tonal
-                                onClicked: {
-                                    searchField.clear();
-                                    AppsStore.searchCatalog("");
-                                }
-                            }
-                        }
-
-                        StyledText {
-                            visible: !AppsStore.searchLoading && win.filteredCatalogApps().length === 0
-                            Layout.fillWidth: true
-                            text: qsTr("No applications matched your query and active policy filters.")
-                            color: Signal.palette.inkMuted
-                        }
-
-                        GridLayout {
-                            Layout.fillWidth: true
-                            columns: searchFlick.width >= 760 ? 2 : 1
-                            columnSpacing: Appearance.spacing.normal
-                            rowSpacing: Appearance.spacing.normal
-
-                            Repeater {
-                                model: win.filteredCatalogApps()
-
-                                delegate: AppCard {
-                                    required property var modelData
-                                    Layout.fillWidth: true
-                                    app: modelData
-                                    policy: AppsStore.policy
-                                    onSelected: appId => AppsStore.selectApp(appId)
-                                }
-                            }
+                    sourceComponent: Component {
+                        AppDetailView {
+                            app: AppsStore.selectedApp
+                            loading: AppsStore.detailLoading
+                            error: AppsStore.detailError
                         }
                     }
                 }
 
-                // Primary StackLayout for the 8 nav views
-                StackLayout {
+                // Search results overlay when searching (lazy + virtualized GridView)
+                Loader {
                     anchors.fill: parent
-                    visible: AppsStore.selectedApp === null && !AppsStore.detailLoading && AppsStore.detailError === "" && !AppsStore.searchActive
-                    currentIndex: win.viewIndex(AppsStore.currentView)
+                    active: AppsStore.selectedApp === null && !AppsStore.detailLoading && AppsStore.detailError === "" && AppsStore.searchActive
+                    visible: active
 
-                    // ── 0: Discover ──────────────────────────────────────────
-                    StyledFlickable {
-                        id: discoverFlick
-
-                        flickableDirection: Flickable.VerticalFlick
-                        contentHeight: discoverCol.implicitHeight
-                        clip: true
-
-                        StyledScrollBar.vertical: StyledScrollBar {
-                            flickable: discoverFlick
-                        }
-
+                    sourceComponent: Component {
                         ColumnLayout {
-                            id: discoverCol
+                            id: searchCol
 
-                            width: discoverFlick.width
                             spacing: Appearance.spacing.large
 
-                            // Offline / Unavailable / Error banner
-                            StyledRect {
-                                visible: !AppsStore.catalogAvailable || AppsStore.catalogError !== ""
+                            RowLayout {
                                 Layout.fillWidth: true
-                                implicitHeight: catErrRow.implicitHeight + Appearance.padding.normal * 2
-                                radius: Appearance.rounding.small
-                                color: Signal.palette.alertWell
-                                border.width: 1
-                                border.color: Signal.palette.alert
+                                spacing: Appearance.spacing.normal
 
-                                RowLayout {
-                                    id: catErrRow
+                                StyledText {
+                                    Layout.fillWidth: true
+                                    text: qsTr("Search results for “%1”").arg(AppsStore.searchQuery)
+                                    font.family: Appearance.font.family.display
+                                    font.pointSize: Appearance.font.size.large
+                                    font.weight: Appearance.font.weight.strong
+                                }
 
-                                    anchors.fill: parent
-                                    anchors.margins: Appearance.padding.normal
-                                    spacing: Appearance.spacing.normal
-
-                                    Glyph {
-                                        name: "alert-triangle"
-                                        color: Signal.palette.onAlertWell
-                                    }
-
-                                    StyledText {
-                                        Layout.fillWidth: true
-                                        text: AppsStore.catalogError || qsTr("Hornero Apps catalog is currently unavailable.")
-                                        color: Signal.palette.onAlertWell
-                                        wrapMode: Text.WordWrap
-                                    }
-
-                                    TextButton {
-                                        text: qsTr("Retry")
-                                        type: TextButton.Tonal
-                                        onClicked: AppsStore.refreshAll()
+                                TextButton {
+                                    text: qsTr("Clear search")
+                                    type: TextButton.Tonal
+                                    onClicked: {
+                                        searchField.clear();
+                                        AppsStore.searchCatalog("");
                                     }
                                 }
                             }
 
-                            // Hero Banner
-                            StyledRect {
+                            StyledText {
+                                visible: !AppsStore.searchLoading && win.filteredCatalogApps().length === 0
                                 Layout.fillWidth: true
-                                implicitHeight: heroContent.implicitHeight + Appearance.padding.large * 2
-                                radius: Appearance.rounding.small
-                                color: Signal.palette.panel
-                                border.width: 1
-                                border.color: Signal.palette.rule
+                                text: qsTr("No applications matched your query and active policy filters.")
+                                color: Signal.palette.inkMuted
+                            }
+
+                            GridView {
+                                id: searchGrid
+
+                                readonly property int cols: width >= 760 ? 2 : 1
+                                readonly property int colGap: Appearance.spacing.normal
+
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                                visible: win.filteredCatalogApps().length > 0
+                                clip: true
+                                cellWidth: cols === 2 ? Math.floor((width + colGap) / 2) : width
+                                cellHeight: 176
+                                cacheBuffer: 360
+                                model: win.filteredCatalogApps()
+
+                                StyledScrollBar.vertical: StyledScrollBar {
+                                    flickable: searchGrid
+                                }
+
+                                delegate: Item {
+                                    id: searchCell
+
+                                    required property var modelData
+
+                                    width: searchGrid.cellWidth
+                                    height: searchGrid.cellHeight
+
+                                    AppCard {
+                                        anchors.left: parent.left
+                                        anchors.top: parent.top
+                                        width: searchGrid.cols === 2 ? searchGrid.cellWidth - searchGrid.colGap : searchGrid.cellWidth
+                                        height: searchGrid.cellHeight - searchGrid.colGap
+                                        app: searchCell.modelData
+                                        policy: AppsStore.policy
+                                        onSelected: appId => AppsStore.selectApp(appId)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Lazy-loaded view container for the 8 nav views (only the active tab is instantiated)
+                Item {
+                    anchors.fill: parent
+                    visible: AppsStore.selectedApp === null && !AppsStore.detailLoading && AppsStore.detailError === "" && !AppsStore.searchActive
+
+                    // ── 0: Discover ──────────────────────────────────────────
+                    Loader {
+                        anchors.fill: parent
+                        active: AppsStore.currentView === "discover"
+                        visible: active
+
+                        sourceComponent: Component {
+                            StyledFlickable {
+                                id: discoverFlick
+
+                                flickableDirection: Flickable.VerticalFlick
+                                contentHeight: discoverCol.implicitHeight
+                                clip: true
+
+                                StyledScrollBar.vertical: StyledScrollBar {
+                                    flickable: discoverFlick
+                                }
 
                                 ColumnLayout {
-                                    id: heroContent
+                                    id: discoverCol
 
-                                    anchors.fill: parent
-                                    anchors.margins: Appearance.padding.large
-                                    spacing: Appearance.spacing.small
+                                    width: discoverFlick.width
+                                    spacing: Appearance.spacing.large
 
-                                    Eyebrow {
-                                        label: qsTr("Hornero Apps Software Center")
-                                    }
-
-                                    StyledText {
+                                    // Offline / Unavailable / Error banner
+                                    StyledRect {
+                                        visible: !AppsStore.catalogAvailable || AppsStore.catalogError !== ""
                                         Layout.fillWidth: true
-                                        text: qsTr("Find the apps you know. Discover the apps you'll love.")
-                                        font.family: Appearance.font.family.display
-                                        font.pointSize: Appearance.font.size.extraLarge
-                                        font.weight: Appearance.font.weight.strong
-                                        wrapMode: Text.WordWrap
+                                        implicitHeight: catErrRow.implicitHeight + Appearance.padding.normal * 2
+                                        radius: Appearance.rounding.small
+                                        color: Signal.palette.alertWell
+                                        border.width: 1
+                                        border.color: Signal.palette.alert
+
+                                        RowLayout {
+                                            id: catErrRow
+
+                                            anchors.fill: parent
+                                            anchors.margins: Appearance.padding.normal
+                                            spacing: Appearance.spacing.normal
+
+                                            Glyph {
+                                                name: "alert-triangle"
+                                                color: Signal.palette.onAlertWell
+                                            }
+
+                                            StyledText {
+                                                Layout.fillWidth: true
+                                                text: AppsStore.catalogError || qsTr("Hornero Apps catalog is currently unavailable.")
+                                                color: Signal.palette.onAlertWell
+                                                wrapMode: Text.WordWrap
+                                            }
+
+                                            TextButton {
+                                                text: qsTr("Retry")
+                                                type: TextButton.Tonal
+                                                onClicked: AppsStore.refreshAll()
+                                            }
+                                        }
                                     }
 
-                                    StyledText {
+                                    // Hero Banner
+                                    StyledRect {
                                         Layout.fillWidth: true
-                                        text: qsTr("Verified native Arch packages, Flathub apps, official vendor channels, isolated Web Apps, and guided setup — with transparent provenance on every card.")
-                                        color: Signal.palette.inkMuted
-                                        wrapMode: Text.WordWrap
+                                        implicitHeight: heroContent.implicitHeight + Appearance.padding.large * 2
+                                        radius: Appearance.rounding.small
+                                        color: Signal.palette.panel
+                                        border.width: 1
+                                        border.color: Signal.palette.rule
+
+                                        ColumnLayout {
+                                            id: heroContent
+
+                                            anchors.fill: parent
+                                            anchors.margins: Appearance.padding.large
+                                            spacing: Appearance.spacing.small
+
+                                            Eyebrow {
+                                                label: qsTr("Hornero Apps Software Center")
+                                            }
+
+                                            StyledText {
+                                                Layout.fillWidth: true
+                                                text: qsTr("Find the apps you know. Discover the apps you'll love.")
+                                                font.family: Appearance.font.family.display
+                                                font.pointSize: Appearance.font.size.extraLarge
+                                                font.weight: Appearance.font.weight.strong
+                                                wrapMode: Text.WordWrap
+                                            }
+
+                                            StyledText {
+                                                Layout.fillWidth: true
+                                                text: qsTr("Verified native Arch packages, Flathub apps, official vendor channels, isolated Web Apps, and guided setup — with transparent provenance on every card.")
+                                                color: Signal.palette.inkMuted
+                                                wrapMode: Text.WordWrap
+                                            }
+
+                                            Flow {
+                                                Layout.fillWidth: true
+                                                spacing: Appearance.spacing.small
+
+                                                IconTextButton {
+                                                    icon: "sparkles"
+                                                    text: qsTr("Explore AI & Agents")
+                                                    onClicked: AppsStore.currentView = "ai"
+                                                }
+
+                                                IconTextButton {
+                                                    icon: "folders"
+                                                    text: qsTr("Browse Collections")
+                                                    type: IconTextButton.Tonal
+                                                    onClicked: AppsStore.currentView = "collections"
+                                                }
+                                            }
+                                        }
                                     }
 
-                                    Flow {
+                                    // Workstation Profiles Quick-Setup Banner
+                                    StyledRect {
+                                        Layout.fillWidth: true
+                                        implicitHeight: profBanner.implicitHeight + Appearance.padding.normal * 2
+                                        radius: Appearance.rounding.small
+                                        color: Signal.palette.cueWell
+                                        border.width: 1
+                                        border.color: Signal.palette.cue
+
+                                        RowLayout {
+                                            id: profBanner
+
+                                            anchors.fill: parent
+                                            anchors.margins: Appearance.padding.normal
+                                            spacing: Appearance.spacing.normal
+
+                                            Glyph {
+                                                name: "apps"
+                                                color: Signal.palette.onCueWell
+                                                font.pointSize: Appearance.font.size.large
+                                            }
+
+                                            ColumnLayout {
+                                                Layout.fillWidth: true
+                                                spacing: 2
+
+                                                StyledText {
+                                                    Layout.fillWidth: true
+                                                    text: qsTr("Workstation Profiles Quick Setup")
+                                                    font.weight: Appearance.font.weight.strong
+                                                    color: Signal.palette.onCueWell
+                                                }
+
+                                                StyledText {
+                                                    Layout.fillWidth: true
+                                                    text: AppsStore.profiles.length > 0
+                                                        ? qsTr("Queue curated stacks across %1 optional workstation profiles in Hornero Welcome.").arg(AppsStore.profiles.length)
+                                                        : qsTr("Preview and queue optional workstation app bundles in Hornero Welcome.")
+                                                    color: Signal.palette.onCueWell
+                                                    font.pointSize: Appearance.font.size.smaller
+                                                    wrapMode: Text.WordWrap
+                                                }
+                                            }
+
+                                            TextButton {
+                                                text: qsTr("Set up apps")
+                                                type: TextButton.Filled
+                                                onClicked: Welcome.open("apps")
+                                            }
+                                        }
+                                    }
+
+                                    // Curated Collections Rail
+                                    ColumnLayout {
                                         Layout.fillWidth: true
                                         spacing: Appearance.spacing.small
 
-                                        IconTextButton {
-                                            icon: "sparkles"
-                                            text: qsTr("Explore AI & Agents")
-                                            onClicked: AppsStore.currentView = "ai"
+                                        Eyebrow {
+                                            label: qsTr("Curated collections")
                                         }
 
-                                        IconTextButton {
-                                            icon: "folders"
-                                            text: qsTr("Browse Collections")
-                                            type: IconTextButton.Tonal
-                                            onClicked: AppsStore.currentView = "collections"
+                                        Flow {
+                                            Layout.fillWidth: true
+                                            spacing: Appearance.spacing.small
+
+                                            Repeater {
+                                                model: AppsStore.collections.length > 0 ? AppsStore.collections : win.curatedCollectionMeta
+
+                                                delegate: IconTextButton {
+                                                    required property var modelData
+                                                    icon: modelData.icon || "folders"
+                                                    text: modelData.name
+                                                    type: IconTextButton.Tonal
+                                                    onClicked: {
+                                                        win.selectedCollection = modelData.id;
+                                                        AppsStore.currentView = "collections";
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
-                                }
-                            }
 
-                            // Workstation Profiles Quick-Setup Banner
-                            StyledRect {
-                                Layout.fillWidth: true
-                                implicitHeight: profBanner.implicitHeight + Appearance.padding.normal * 2
-                                radius: Appearance.rounding.small
-                                color: Signal.palette.cueWell
-                                border.width: 1
-                                border.color: Signal.palette.cue
-
-                                RowLayout {
-                                    id: profBanner
-
-                                    anchors.fill: parent
-                                    anchors.margins: Appearance.padding.normal
-                                    spacing: Appearance.spacing.normal
-
-                                    Glyph {
-                                        name: "apps"
-                                        color: Signal.palette.onCueWell
-                                        font.pointSize: Appearance.font.size.large
-                                    }
-
+                                    // Featured Applications Grid
                                     ColumnLayout {
                                         Layout.fillWidth: true
-                                        spacing: 2
+                                        spacing: Appearance.spacing.small
 
-                                        StyledText {
+                                        RowLayout {
                                             Layout.fillWidth: true
-                                            text: qsTr("Workstation Profiles Quick Setup")
-                                            font.weight: Appearance.font.weight.strong
-                                            color: Signal.palette.onCueWell
+
+                                            Eyebrow {
+                                                Layout.fillWidth: true
+                                                label: qsTr("Featured applications")
+                                            }
+
+                                            CircularIndicator {
+                                                visible: AppsStore.catalogLoading
+                                                running: AppsStore.catalogLoading
+                                            }
                                         }
 
                                         StyledText {
+                                            visible: !AppsStore.catalogLoading && win.featuredApps().length === 0
                                             Layout.fillWidth: true
-                                            text: AppsStore.profiles.length > 0
-                                                ? qsTr("Queue curated stacks across %1 optional workstation profiles in Hornero Welcome.").arg(AppsStore.profiles.length)
-                                                : qsTr("Preview and queue optional workstation app bundles in Hornero Welcome.")
-                                            color: Signal.palette.onCueWell
-                                            font.pointSize: Appearance.font.size.smaller
-                                            wrapMode: Text.WordWrap
+                                            text: qsTr("No featured applications loaded yet. Check Sources & Policy or click Refresh.")
+                                            color: Signal.palette.inkMuted
                                         }
-                                    }
 
-                                    TextButton {
-                                        text: qsTr("Set up apps")
-                                        type: TextButton.Tonal
-                                        onClicked: Welcome.open("apps")
+                                        GridLayout {
+                                            Layout.fillWidth: true
+                                            columns: discoverFlick.width >= 760 ? 2 : 1
+                                            columnSpacing: Appearance.spacing.normal
+                                            rowSpacing: Appearance.spacing.normal
+
+                                            Repeater {
+                                                model: win.featuredApps()
+
+                                                delegate: AppCard {
+                                                    required property var modelData
+                                                    Layout.fillWidth: true
+                                                    app: modelData
+                                                    policy: AppsStore.policy
+                                                    onSelected: appId => AppsStore.selectApp(appId)
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
+                        }
+                    }
 
-                            // Curated Collections Rail
+                    // ── 1: AI & Agents ───────────────────────────────────────
+                    Loader {
+                        anchors.fill: parent
+                        active: AppsStore.currentView === "ai"
+                        visible: active
+
+                        sourceComponent: Component {
+                            StyledFlickable {
+                                id: aiFlick
+
+                                flickableDirection: Flickable.VerticalFlick
+                                contentHeight: aiCol.implicitHeight
+                                clip: true
+
+                                StyledScrollBar.vertical: StyledScrollBar {
+                                    flickable: aiFlick
+                                }
+
+                                ColumnLayout {
+                                    id: aiCol
+
+                                    width: aiFlick.width
+                                    spacing: Appearance.spacing.large
+
+                                    StyledRect {
+                                        Layout.fillWidth: true
+                                        implicitHeight: aiHero.implicitHeight + Appearance.padding.large * 2
+                                        radius: Appearance.rounding.small
+                                        color: Signal.palette.panel
+                                        border.width: 1
+                                        border.color: Signal.palette.rule
+
+                                        ColumnLayout {
+                                            id: aiHero
+
+                                            anchors.fill: parent
+                                            anchors.margins: Appearance.padding.large
+                                            spacing: Appearance.spacing.small
+
+                                            Eyebrow {
+                                                label: qsTr("AI Workstation & Agentic Tools")
+                                            }
+
+                                            StyledText {
+                                                Layout.fillWidth: true
+                                                text: qsTr("Local models, AI coding editors, and agentic CLIs")
+                                                font.family: Appearance.font.family.display
+                                                font.pointSize: Appearance.font.size.extraLarge
+                                                font.weight: Appearance.font.weight.strong
+                                                wrapMode: Text.WordWrap
+                                            }
+
+                                            StyledText {
+                                                Layout.fillWidth: true
+                                                text: qsTr("Install verified runtimes like Ollama, LM Studio, Jan, Antigravity, Cursor, Zed, Claude Code, OpenCode, Veasel, and Agent Toolkit. Configure active agents and Javi in Control Center.")
+                                                color: Signal.palette.inkMuted
+                                                wrapMode: Text.WordWrap
+                                            }
+
+                                            Flow {
+                                                Layout.fillWidth: true
+                                                spacing: Appearance.spacing.small
+
+                                                IconTextButton {
+                                                    icon: "robot"
+                                                    text: qsTr("Open Hornero Agents")
+                                                    type: IconTextButton.Tonal
+                                                    onClicked: WindowFactory.create(null, { pane: "agents" })
+                                                }
+
+                                                IconTextButton {
+                                                    icon: "feather"
+                                                    text: qsTr("Open Javi Companion")
+                                                    type: IconTextButton.Tonal
+                                                    onClicked: WindowFactory.create(null, { pane: "companion" })
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    StyledText {
+                                        visible: !AppsStore.catalogLoading && win.aiApps().length === 0
+                                        Layout.fillWidth: true
+                                        text: qsTr("No AI & Agent entries available in the current catalog snapshot.")
+                                        color: Signal.palette.inkMuted
+                                    }
+
+                                    GridLayout {
+                                        Layout.fillWidth: true
+                                        columns: aiFlick.width >= 760 ? 2 : 1
+                                        columnSpacing: Appearance.spacing.normal
+                                        rowSpacing: Appearance.spacing.normal
+
+                                        Repeater {
+                                            model: win.aiApps()
+
+                                            delegate: AppCard {
+                                                required property var modelData
+                                                Layout.fillWidth: true
+                                                app: modelData
+                                                policy: AppsStore.policy
+                                                onSelected: appId => AppsStore.selectApp(appId)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // ── 2: Categories (virtualized GridView) ─────────────────
+                    Loader {
+                        anchors.fill: parent
+                        active: AppsStore.currentView === "categories"
+                        visible: active
+
+                        sourceComponent: Component {
                             ColumnLayout {
-                                Layout.fillWidth: true
-                                spacing: Appearance.spacing.small
+                                id: catCol
 
-                                Eyebrow {
-                                    label: qsTr("Curated collections")
+                                spacing: Appearance.spacing.large
+
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: Appearance.spacing.small
+
+                                    Eyebrow {
+                                        Layout.fillWidth: true
+                                        label: qsTr("Browse by category")
+                                    }
+
+                                    ToggleButton {
+                                        toggled: win.filterVerifiedOnly
+                                        icon: "rosette-discount-check"
+                                        label: qsTr("Verified only")
+                                        onClicked: win.filterVerifiedOnly = !win.filterVerifiedOnly
+                                    }
+
+                                    ToggleButton {
+                                        toggled: win.filterOpenSourceOnly
+                                        icon: "code"
+                                        label: qsTr("Open source only")
+                                        onClicked: win.filterOpenSourceOnly = !win.filterOpenSourceOnly
+                                    }
                                 }
 
                                 Flow {
                                     Layout.fillWidth: true
                                     spacing: Appearance.spacing.small
 
+                                    ToggleButton {
+                                        toggled: win.selectedCategory === "all"
+                                        label: qsTr("All")
+                                        onClicked: win.selectedCategory = "all"
+                                    }
+
                                     Repeater {
-                                        model: AppsStore.collections.length > 0 ? AppsStore.collections : win.curatedCollectionMeta
+                                        model: win.availableCategories()
 
-                                        delegate: IconTextButton {
+                                        delegate: ToggleButton {
                                             required property var modelData
-                                            icon: modelData.icon || "folders"
-                                            text: modelData.name
-                                            type: IconTextButton.Tonal
-                                            onClicked: {
-                                                win.selectedCollection = modelData.id;
-                                                AppsStore.currentView = "collections";
-                                            }
+                                            toggled: win.selectedCategory === modelData.id
+                                            label: modelData.count > 0 ? `${modelData.name} (${modelData.count})` : modelData.name
+                                            onClicked: win.selectedCategory = modelData.id
                                         }
-                                    }
-                                }
-                            }
-
-                            // Featured Applications Grid
-                            ColumnLayout {
-                                Layout.fillWidth: true
-                                spacing: Appearance.spacing.small
-
-                                RowLayout {
-                                    Layout.fillWidth: true
-
-                                    Eyebrow {
-                                        Layout.fillWidth: true
-                                        label: qsTr("Featured applications")
-                                    }
-
-                                    CircularIndicator {
-                                        visible: AppsStore.catalogLoading
-                                        running: AppsStore.catalogLoading
                                     }
                                 }
 
                                 StyledText {
-                                    visible: !AppsStore.catalogLoading && win.featuredApps().length === 0
+                                    visible: !AppsStore.catalogLoading && win.filteredCatalogApps().length === 0
                                     Layout.fillWidth: true
-                                    text: qsTr("No featured applications loaded yet. Check Sources & Policy or click Refresh.")
+                                    text: qsTr("No applications in this category match your active filters.")
                                     color: Signal.palette.inkMuted
                                 }
 
-                                GridLayout {
+                                GridView {
+                                    id: catGrid
+
+                                    readonly property int cols: width >= 760 ? 2 : 1
+                                    readonly property int colGap: Appearance.spacing.normal
+
                                     Layout.fillWidth: true
-                                    columns: discoverFlick.width >= 760 ? 2 : 1
-                                    columnSpacing: Appearance.spacing.normal
-                                    rowSpacing: Appearance.spacing.normal
+                                    Layout.fillHeight: true
+                                    visible: win.filteredCatalogApps().length > 0
+                                    clip: true
+                                    cellWidth: cols === 2 ? Math.floor((width + colGap) / 2) : width
+                                    cellHeight: 176
+                                    cacheBuffer: 360
+                                    model: win.filteredCatalogApps()
 
-                                    Repeater {
-                                        model: win.featuredApps()
+                                    StyledScrollBar.vertical: StyledScrollBar {
+                                        flickable: catGrid
+                                    }
 
-                                        delegate: AppCard {
-                                            required property var modelData
-                                            Layout.fillWidth: true
-                                            app: modelData
+                                    delegate: Item {
+                                        id: catCell
+
+                                        required property var modelData
+
+                                        width: catGrid.cellWidth
+                                        height: catGrid.cellHeight
+
+                                        AppCard {
+                                            anchors.left: parent.left
+                                            anchors.top: parent.top
+                                            width: catGrid.cols === 2 ? catGrid.cellWidth - catGrid.colGap : catGrid.cellWidth
+                                            height: catGrid.cellHeight - catGrid.colGap
+                                            app: catCell.modelData
                                             policy: AppsStore.policy
                                             onSelected: appId => AppsStore.selectApp(appId)
                                         }
@@ -712,267 +955,88 @@ FloatingWindow {
                         }
                     }
 
-                    // ── 1: AI & Agents ───────────────────────────────────────
-                    StyledFlickable {
-                        id: aiFlick
+                    // ── 3: Collections (virtualized GridView) ────────────────
+                    Loader {
+                        anchors.fill: parent
+                        active: AppsStore.currentView === "collections"
+                        visible: active
 
-                        flickableDirection: Flickable.VerticalFlick
-                        contentHeight: aiCol.implicitHeight
-                        clip: true
+                        sourceComponent: Component {
+                            ColumnLayout {
+                                id: colLayout
 
-                        StyledScrollBar.vertical: StyledScrollBar {
-                            flickable: aiFlick
-                        }
-
-                        ColumnLayout {
-                            id: aiCol
-
-                            width: aiFlick.width
-                            spacing: Appearance.spacing.large
-
-                            StyledRect {
-                                Layout.fillWidth: true
-                                implicitHeight: aiHero.implicitHeight + Appearance.padding.large * 2
-                                radius: Appearance.rounding.small
-                                color: Signal.palette.panel
-                                border.width: 1
-                                border.color: Signal.palette.rule
-
-                                ColumnLayout {
-                                    id: aiHero
-
-                                    anchors.fill: parent
-                                    anchors.margins: Appearance.padding.large
-                                    spacing: Appearance.spacing.small
-
-                                    Eyebrow {
-                                        label: qsTr("AI Workstation & Agentic Tools")
-                                    }
-
-                                    StyledText {
-                                        Layout.fillWidth: true
-                                        text: qsTr("Local models, AI coding editors, and agentic CLIs")
-                                        font.family: Appearance.font.family.display
-                                        font.pointSize: Appearance.font.size.extraLarge
-                                        font.weight: Appearance.font.weight.strong
-                                        wrapMode: Text.WordWrap
-                                    }
-
-                                    StyledText {
-                                        Layout.fillWidth: true
-                                        text: qsTr("Install verified runtimes like Ollama, LM Studio, Jan, Antigravity, Cursor, Zed, Claude Code, OpenCode, Veasel, and Agent Toolkit. Configure active agents and Javi in Control Center.")
-                                        color: Signal.palette.inkMuted
-                                        wrapMode: Text.WordWrap
-                                    }
-
-                                    Flow {
-                                        Layout.fillWidth: true
-                                        spacing: Appearance.spacing.small
-
-                                        IconTextButton {
-                                            icon: "robot"
-                                            text: qsTr("Open Hornero Agents")
-                                            type: IconTextButton.Tonal
-                                            onClicked: WindowFactory.create(null, { pane: "agents" })
-                                        }
-
-                                        IconTextButton {
-                                            icon: "feather"
-                                            text: qsTr("Open Javi Companion")
-                                            type: IconTextButton.Tonal
-                                            onClicked: WindowFactory.create(null, { pane: "companion" })
-                                        }
-                                    }
-                                }
-                            }
-
-                            StyledText {
-                                visible: !AppsStore.catalogLoading && win.aiApps().length === 0
-                                Layout.fillWidth: true
-                                text: qsTr("No AI & Agent entries available in the current catalog snapshot.")
-                                color: Signal.palette.inkMuted
-                            }
-
-                            GridLayout {
-                                Layout.fillWidth: true
-                                columns: aiFlick.width >= 760 ? 2 : 1
-                                columnSpacing: Appearance.spacing.normal
-                                rowSpacing: Appearance.spacing.normal
-
-                                Repeater {
-                                    model: win.aiApps()
-
-                                    delegate: AppCard {
-                                        required property var modelData
-                                        Layout.fillWidth: true
-                                        app: modelData
-                                        policy: AppsStore.policy
-                                        onSelected: appId => AppsStore.selectApp(appId)
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // ── 2: Categories ────────────────────────────────────────
-                    StyledFlickable {
-                        id: catFlick
-
-                        flickableDirection: Flickable.VerticalFlick
-                        contentHeight: catCol.implicitHeight
-                        clip: true
-
-                        StyledScrollBar.vertical: StyledScrollBar {
-                            flickable: catFlick
-                        }
-
-                        ColumnLayout {
-                            id: catCol
-
-                            width: catFlick.width
-                            spacing: Appearance.spacing.large
-
-                            RowLayout {
-                                Layout.fillWidth: true
-                                spacing: Appearance.spacing.small
+                                spacing: Appearance.spacing.large
 
                                 Eyebrow {
+                                    label: qsTr("Curated collections")
+                                }
+
+                                Flow {
                                     Layout.fillWidth: true
-                                    label: qsTr("Browse by category")
-                                }
+                                    spacing: Appearance.spacing.small
 
-                                ToggleButton {
-                                    toggled: win.filterVerifiedOnly
-                                    icon: "rosette-discount-check"
-                                    label: qsTr("Verified only")
-                                    onClicked: win.filterVerifiedOnly = !win.filterVerifiedOnly
-                                }
+                                    ToggleButton {
+                                        toggled: win.selectedCollection === "all"
+                                        label: qsTr("All collections")
+                                        onClicked: win.selectedCollection = "all"
+                                    }
 
-                                ToggleButton {
-                                    toggled: win.filterOpenSourceOnly
-                                    icon: "code"
-                                    label: qsTr("Open source only")
-                                    onClicked: win.filterOpenSourceOnly = !win.filterOpenSourceOnly
-                                }
-                            }
+                                    Repeater {
+                                        model: AppsStore.collections.length > 0 ? AppsStore.collections : win.curatedCollectionMeta
 
-                            Flow {
-                                Layout.fillWidth: true
-                                spacing: Appearance.spacing.small
-
-                                ToggleButton {
-                                    toggled: win.selectedCategory === "all"
-                                    label: qsTr("All")
-                                    onClicked: win.selectedCategory = "all"
-                                }
-
-                                Repeater {
-                                    model: win.availableCategories()
-
-                                    delegate: ToggleButton {
-                                        required property var modelData
-                                        toggled: win.selectedCategory === modelData.id
-                                        label: modelData.count > 0 ? `${modelData.name} (${modelData.count})` : modelData.name
-                                        onClicked: win.selectedCategory = modelData.id
+                                        delegate: ToggleButton {
+                                            required property var modelData
+                                            toggled: win.selectedCollection === modelData.id
+                                            icon: modelData.icon || "folders"
+                                            label: modelData.name
+                                            onClicked: win.selectedCollection = modelData.id
+                                        }
                                     }
                                 }
-                            }
 
-                            StyledText {
-                                visible: !AppsStore.catalogLoading && win.filteredCatalogApps().length === 0
-                                Layout.fillWidth: true
-                                text: qsTr("No applications in this category match your active filters.")
-                                color: Signal.palette.inkMuted
-                            }
+                                StyledText {
+                                    visible: !AppsStore.catalogLoading && win.filteredCatalogApps().length === 0
+                                    Layout.fillWidth: true
+                                    text: qsTr("No applications found for this collection.")
+                                    color: Signal.palette.inkMuted
+                                }
 
-                            GridLayout {
-                                Layout.fillWidth: true
-                                columns: catFlick.width >= 760 ? 2 : 1
-                                columnSpacing: Appearance.spacing.normal
-                                rowSpacing: Appearance.spacing.normal
+                                GridView {
+                                    id: colGrid
 
-                                Repeater {
+                                    readonly property int cols: width >= 760 ? 2 : 1
+                                    readonly property int colGap: Appearance.spacing.normal
+
+                                    Layout.fillWidth: true
+                                    Layout.fillHeight: true
+                                    visible: win.filteredCatalogApps().length > 0
+                                    clip: true
+                                    cellWidth: cols === 2 ? Math.floor((width + colGap) / 2) : width
+                                    cellHeight: 176
+                                    cacheBuffer: 360
                                     model: win.filteredCatalogApps()
 
-                                    delegate: AppCard {
-                                        required property var modelData
-                                        Layout.fillWidth: true
-                                        app: modelData
-                                        policy: AppsStore.policy
-                                        onSelected: appId => AppsStore.selectApp(appId)
+                                    StyledScrollBar.vertical: StyledScrollBar {
+                                        flickable: colGrid
                                     }
-                                }
-                            }
-                        }
-                    }
 
-                    // ── 3: Collections ───────────────────────────────────────
-                    StyledFlickable {
-                        id: colFlick
+                                    delegate: Item {
+                                        id: colCell
 
-                        flickableDirection: Flickable.VerticalFlick
-                        contentHeight: colLayout.implicitHeight
-                        clip: true
-
-                        StyledScrollBar.vertical: StyledScrollBar {
-                            flickable: colFlick
-                        }
-
-                        ColumnLayout {
-                            id: colLayout
-
-                            width: colFlick.width
-                            spacing: Appearance.spacing.large
-
-                            Eyebrow {
-                                label: qsTr("Curated collections")
-                            }
-
-                            Flow {
-                                Layout.fillWidth: true
-                                spacing: Appearance.spacing.small
-
-                                ToggleButton {
-                                    toggled: win.selectedCollection === "all"
-                                    label: qsTr("All collections")
-                                    onClicked: win.selectedCollection = "all"
-                                }
-
-                                Repeater {
-                                    model: AppsStore.collections.length > 0 ? AppsStore.collections : win.curatedCollectionMeta
-
-                                    delegate: ToggleButton {
                                         required property var modelData
-                                        toggled: win.selectedCollection === modelData.id
-                                        icon: modelData.icon || "folders"
-                                        label: modelData.name
-                                        onClicked: win.selectedCollection = modelData.id
-                                    }
-                                }
-                            }
 
-                            StyledText {
-                                visible: !AppsStore.catalogLoading && win.filteredCatalogApps().length === 0
-                                Layout.fillWidth: true
-                                text: qsTr("No applications found for this collection.")
-                                color: Signal.palette.inkMuted
-                            }
+                                        width: colGrid.cellWidth
+                                        height: colGrid.cellHeight
 
-                            GridLayout {
-                                Layout.fillWidth: true
-                                columns: colFlick.width >= 760 ? 2 : 1
-                                columnSpacing: Appearance.spacing.normal
-                                rowSpacing: Appearance.spacing.normal
-
-                                Repeater {
-                                    model: win.filteredCatalogApps()
-
-                                    delegate: AppCard {
-                                        required property var modelData
-                                        Layout.fillWidth: true
-                                        app: modelData
-                                        policy: AppsStore.policy
-                                        onSelected: appId => AppsStore.selectApp(appId)
+                                        AppCard {
+                                            anchors.left: parent.left
+                                            anchors.top: parent.top
+                                            width: colGrid.cols === 2 ? colGrid.cellWidth - colGrid.colGap : colGrid.cellWidth
+                                            height: colGrid.cellHeight - colGrid.colGap
+                                            app: colCell.modelData
+                                            policy: AppsStore.policy
+                                            onSelected: appId => AppsStore.selectApp(appId)
+                                        }
                                     }
                                 }
                             }
@@ -980,102 +1044,110 @@ FloatingWindow {
                     }
 
                     // ── 4: Installed ─────────────────────────────────────────
-                    StyledFlickable {
-                        id: instFlick
+                    Loader {
+                        anchors.fill: parent
+                        active: AppsStore.currentView === "installed"
+                        visible: active
 
-                        flickableDirection: Flickable.VerticalFlick
-                        contentHeight: instCol.implicitHeight
-                        clip: true
+                        sourceComponent: Component {
+                            StyledFlickable {
+                                id: instFlick
 
-                        StyledScrollBar.vertical: StyledScrollBar {
-                            flickable: instFlick
-                        }
+                                flickableDirection: Flickable.VerticalFlick
+                                contentHeight: instCol.implicitHeight
+                                clip: true
 
-                        ColumnLayout {
-                            id: instCol
-
-                            width: instFlick.width
-                            spacing: Appearance.spacing.large
-
-                            RowLayout {
-                                Layout.fillWidth: true
-
-                                Eyebrow {
-                                    Layout.fillWidth: true
-                                    label: qsTr("Installed applications (%1)").arg(AppsStore.installedApps.length)
+                                StyledScrollBar.vertical: StyledScrollBar {
+                                    flickable: instFlick
                                 }
 
-                                TextButton {
-                                    text: qsTr("Refresh")
-                                    type: TextButton.Tonal
-                                    disabled: AppsStore.installedLoading
-                                    onClicked: AppsStore.refreshInstalled()
-                                }
-                            }
+                                ColumnLayout {
+                                    id: instCol
 
-                            StyledText {
-                                Layout.fillWidth: true
-                                text: qsTr("Includes catalog apps and externally detected system/Flatpak applications. User data is preserved if you remove an app.")
-                                color: Signal.palette.inkMuted
-                                font.pointSize: Appearance.font.size.smaller
-                                wrapMode: Text.WordWrap
-                            }
+                                    width: instFlick.width
+                                    spacing: Appearance.spacing.large
 
-                            StyledText {
-                                visible: AppsStore.installedError !== ""
-                                Layout.fillWidth: true
-                                text: AppsStore.installedError
-                                color: Signal.palette.alert
-                                wrapMode: Text.WordWrap
-                            }
+                                    RowLayout {
+                                        Layout.fillWidth: true
 
-                            StyledText {
-                                visible: !AppsStore.installedLoading && AppsStore.installedError === "" && AppsStore.installedApps.length === 0
-                                Layout.fillWidth: true
-                                text: qsTr("No managed applications detected yet.")
-                                color: Signal.palette.inkMuted
-                            }
+                                        Eyebrow {
+                                            Layout.fillWidth: true
+                                            label: qsTr("Installed applications (%1)").arg(AppsStore.installedApps.length)
+                                        }
 
-                            SectionContainer {
-                                visible: AppsStore.installedApps.length > 0
+                                        TextButton {
+                                            text: qsTr("Refresh")
+                                            type: TextButton.Tonal
+                                            disabled: AppsStore.installedLoading
+                                            onClicked: AppsStore.refreshInstalled()
+                                        }
+                                    }
 
-                                Repeater {
-                                    model: AppsStore.installedApps
+                                    StyledText {
+                                        Layout.fillWidth: true
+                                        text: qsTr("Includes catalog apps and externally detected system/Flatpak applications. User data is preserved if you remove an app.")
+                                        color: Signal.palette.inkMuted
+                                        font.pointSize: Appearance.font.size.smaller
+                                        wrapMode: Text.WordWrap
+                                    }
 
-                                    delegate: SettingRow {
-                                        id: instRow
-                                        required property var modelData
-                                        property bool removeArmed: false
+                                    StyledText {
+                                        visible: AppsStore.installedError !== ""
+                                        Layout.fillWidth: true
+                                        text: AppsStore.installedError
+                                        color: Signal.palette.alert
+                                        wrapMode: Text.WordWrap
+                                    }
 
-                                        label: modelData.name
-                                        description: `${Store.backendLabel(modelData.backend)} · ${modelData.installedVersion || Store.provenanceLabel(modelData.provenance)}`
+                                    StyledText {
+                                        visible: !AppsStore.installedLoading && AppsStore.installedError === "" && AppsStore.installedApps.length === 0
+                                        Layout.fillWidth: true
+                                        text: qsTr("No managed applications detected yet.")
+                                        color: Signal.palette.inkMuted
+                                    }
 
-                                        RowLayout {
-                                            spacing: Appearance.spacing.small
+                                    SectionContainer {
+                                        visible: AppsStore.installedApps.length > 0
 
-                                            TextButton {
-                                                text: qsTr("Details")
-                                                type: TextButton.Text
-                                                onClicked: AppsStore.selectApp(instRow.modelData.id)
-                                            }
+                                        Repeater {
+                                            model: AppsStore.installedApps
 
-                                            TextButton {
-                                                text: qsTr("Open")
-                                                type: TextButton.Tonal
-                                                onClicked: AppsStore.launchApp(instRow.modelData)
-                                            }
+                                            delegate: SettingRow {
+                                                id: instRow
+                                                required property var modelData
+                                                property bool removeArmed: false
 
-                                            TextButton {
-                                                text: instRow.removeArmed ? qsTr("Confirm remove") : qsTr("Remove")
-                                                type: instRow.removeArmed ? TextButton.Filled : TextButton.Tonal
-                                                disabled: AppsStore.busy
-                                                onClicked: {
-                                                    if (!instRow.removeArmed) {
-                                                        instRow.removeArmed = true;
-                                                        return;
+                                                label: modelData.name
+                                                description: `${Store.backendLabel(modelData.backend)} · ${modelData.installedVersion || Store.provenanceLabel(modelData.provenance)}`
+
+                                                RowLayout {
+                                                    spacing: Appearance.spacing.small
+
+                                                    TextButton {
+                                                        text: qsTr("Details")
+                                                        type: TextButton.Text
+                                                        onClicked: AppsStore.selectApp(instRow.modelData.id)
                                                     }
-                                                    instRow.removeArmed = false;
-                                                    AppsStore.removeApp(instRow.modelData.id);
+
+                                                    TextButton {
+                                                        text: qsTr("Open")
+                                                        type: TextButton.Tonal
+                                                        onClicked: AppsStore.launchApp(instRow.modelData)
+                                                    }
+
+                                                    TextButton {
+                                                        text: instRow.removeArmed ? qsTr("Confirm remove") : qsTr("Remove")
+                                                        type: instRow.removeArmed ? TextButton.Filled : TextButton.Tonal
+                                                        disabled: AppsStore.busy
+                                                        onClicked: {
+                                                            if (!instRow.removeArmed) {
+                                                                instRow.removeArmed = true;
+                                                                return;
+                                                            }
+                                                            instRow.removeArmed = false;
+                                                            AppsStore.removeApp(instRow.modelData.id);
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }
@@ -1086,79 +1158,87 @@ FloatingWindow {
                     }
 
                     // ── 5: Updates ───────────────────────────────────────────
-                    StyledFlickable {
-                        id: updFlick
+                    Loader {
+                        anchors.fill: parent
+                        active: AppsStore.currentView === "updates"
+                        visible: active
 
-                        flickableDirection: Flickable.VerticalFlick
-                        contentHeight: updCol.implicitHeight
-                        clip: true
+                        sourceComponent: Component {
+                            StyledFlickable {
+                                id: updFlick
 
-                        StyledScrollBar.vertical: StyledScrollBar {
-                            flickable: updFlick
-                        }
+                                flickableDirection: Flickable.VerticalFlick
+                                contentHeight: updCol.implicitHeight
+                                clip: true
 
-                        ColumnLayout {
-                            id: updCol
-
-                            width: updFlick.width
-                            spacing: Appearance.spacing.large
-
-                            RowLayout {
-                                Layout.fillWidth: true
-                                spacing: Appearance.spacing.small
-
-                                Eyebrow {
-                                    Layout.fillWidth: true
-                                    label: qsTr("Available updates (%1)").arg(AppsStore.updates.length)
+                                StyledScrollBar.vertical: StyledScrollBar {
+                                    flickable: updFlick
                                 }
 
-                                TextButton {
-                                    text: qsTr("Check updates")
-                                    type: TextButton.Tonal
-                                    disabled: AppsStore.updatesLoading || AppsStore.busy
-                                    onClicked: AppsStore.refreshUpdates()
-                                }
+                                ColumnLayout {
+                                    id: updCol
 
-                                TextButton {
-                                    visible: AppsStore.updates.length > 0
-                                    text: AppsStore.busy ? AppsStore.activeJobLabel : qsTr("Update All")
-                                    disabled: AppsStore.busy
-                                    onClicked: AppsStore.updateAll()
-                                }
-                            }
+                                    width: updFlick.width
+                                    spacing: Appearance.spacing.large
 
-                            StyledText {
-                                visible: AppsStore.updatesError !== ""
-                                Layout.fillWidth: true
-                                text: AppsStore.updatesError
-                                color: Signal.palette.alert
-                                wrapMode: Text.WordWrap
-                            }
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: Appearance.spacing.small
 
-                            StyledText {
-                                visible: !AppsStore.updatesLoading && AppsStore.updatesError === "" && AppsStore.updates.length === 0
-                                Layout.fillWidth: true
-                                text: qsTr("All tracked applications are up to date.")
-                                color: Signal.palette.inkMuted
-                            }
-
-                            SectionContainer {
-                                visible: AppsStore.updates.length > 0
-
-                                Repeater {
-                                    model: AppsStore.updates
-
-                                    delegate: SettingRow {
-                                        required property var modelData
-
-                                        label: modelData.name
-                                        description: `${Store.backendLabel(modelData.backend)}${modelData.currentVersion || modelData.nextVersion ? ` · ${modelData.currentVersion} → ${modelData.nextVersion}` : ""}`
+                                        Eyebrow {
+                                            Layout.fillWidth: true
+                                            label: qsTr("Available updates (%1)").arg(AppsStore.updates.length)
+                                        }
 
                                         TextButton {
-                                            text: qsTr("Update")
+                                            text: qsTr("Check updates")
                                             type: TextButton.Tonal
+                                            disabled: AppsStore.updatesLoading || AppsStore.busy
+                                            onClicked: AppsStore.refreshUpdates()
+                                        }
+
+                                        TextButton {
+                                            visible: AppsStore.updates.length > 0
+                                            text: AppsStore.busy ? AppsStore.activeJobLabel : qsTr("Update All")
                                             disabled: AppsStore.busy
-                                            onClicked: AppsStore.updateApp(modelData.id)
+                                            onClicked: AppsStore.updateAll()
+                                        }
+                                    }
+
+                                    StyledText {
+                                        visible: AppsStore.updatesError !== ""
+                                        Layout.fillWidth: true
+                                        text: AppsStore.updatesError
+                                        color: Signal.palette.alert
+                                        wrapMode: Text.WordWrap
+                                    }
+
+                                    StyledText {
+                                        visible: !AppsStore.updatesLoading && AppsStore.updatesError === "" && AppsStore.updates.length === 0
+                                        Layout.fillWidth: true
+                                        text: qsTr("All tracked applications are up to date.")
+                                        color: Signal.palette.inkMuted
+                                    }
+
+                                    SectionContainer {
+                                        visible: AppsStore.updates.length > 0
+
+                                        Repeater {
+                                            model: AppsStore.updates
+
+                                            delegate: SettingRow {
+                                                required property var modelData
+
+                                                label: modelData.name
+                                                description: `${Store.backendLabel(modelData.backend)}${modelData.currentVersion || modelData.nextVersion ? ` · ${modelData.currentVersion} → ${modelData.nextVersion}` : ""}`
+
+                                                TextButton {
+                                                    text: qsTr("Update")
+                                                    type: TextButton.Tonal
+                                                    disabled: AppsStore.busy
+                                                    onClicked: AppsStore.updateApp(modelData.id)
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -1167,190 +1247,198 @@ FloatingWindow {
                     }
 
                     // ── 6: Queue & AppImage / WebApp Tools ───────────────────
-                    StyledFlickable {
-                        id: queueFlick
+                    Loader {
+                        anchors.fill: parent
+                        active: AppsStore.currentView === "queue"
+                        visible: active
 
-                        flickableDirection: Flickable.VerticalFlick
-                        contentHeight: queueCol.implicitHeight
-                        clip: true
+                        sourceComponent: Component {
+                            StyledFlickable {
+                                id: queueFlick
 
-                        StyledScrollBar.vertical: StyledScrollBar {
-                            flickable: queueFlick
-                        }
+                                flickableDirection: Flickable.VerticalFlick
+                                contentHeight: queueCol.implicitHeight
+                                clip: true
 
-                        ColumnLayout {
-                            id: queueCol
+                                StyledScrollBar.vertical: StyledScrollBar {
+                                    flickable: queueFlick
+                                }
 
-                            width: queueFlick.width
-                            spacing: Appearance.spacing.large
+                                ColumnLayout {
+                                    id: queueCol
 
-                            // Queue card
-                            SectionContainer {
-                                RowLayout {
-                                    Layout.fillWidth: true
-                                    spacing: Appearance.spacing.small
+                                    width: queueFlick.width
+                                    spacing: Appearance.spacing.large
 
-                                    Eyebrow {
-                                        Layout.fillWidth: true
-                                        label: qsTr("Installation queue (%1)").arg(AppsStore.queueItems.length)
+                                    // Queue card
+                                    SectionContainer {
+                                        RowLayout {
+                                            Layout.fillWidth: true
+                                            spacing: Appearance.spacing.small
+
+                                            Eyebrow {
+                                                Layout.fillWidth: true
+                                                label: qsTr("Installation queue (%1)").arg(AppsStore.queueItems.length)
+                                            }
+
+                                            TextButton {
+                                                visible: AppsStore.queueItems.length > 0
+                                                text: qsTr("Clear")
+                                                type: TextButton.Text
+                                                disabled: AppsStore.busy
+                                                onClicked: AppsStore.queueClear()
+                                            }
+
+                                            TextButton {
+                                                visible: AppsStore.queueItems.length > 0
+                                                text: AppsStore.busy ? AppsStore.activeJobLabel : qsTr("Run Queue")
+                                                disabled: AppsStore.busy
+                                                onClicked: AppsStore.queueRun()
+                                            }
+                                        }
+
+                                        StyledText {
+                                            visible: AppsStore.queueItems.length === 0
+                                            Layout.fillWidth: true
+                                            text: qsTr("No applications queued. Queue apps from Hornero Welcome profiles or any app detail view.")
+                                            color: Signal.palette.inkMuted
+                                            wrapMode: Text.WordWrap
+                                        }
+
+                                        Repeater {
+                                            model: AppsStore.queueItems
+
+                                            delegate: SettingRow {
+                                                required property var modelData
+                                                label: modelData.name
+                                                description: `${modelData.action} · ${Store.statusLabel(modelData.status)}`
+                                            }
+                                        }
                                     }
 
-                                    TextButton {
-                                        visible: AppsStore.queueItems.length > 0
-                                        text: qsTr("Clear")
-                                        type: TextButton.Text
-                                        disabled: AppsStore.busy
-                                        onClicked: AppsStore.queueClear()
+                                    // Import local AppImage
+                                    SectionContainer {
+                                        Eyebrow {
+                                            label: qsTr("Import local AppImage")
+                                        }
+
+                                        StyledText {
+                                            Layout.fillWidth: true
+                                            text: qsTr("Integrates a local .AppImage into your user application directory and desktop launcher. AppImages are not sandboxed by default.")
+                                            color: Signal.palette.inkMuted
+                                            font.pointSize: Appearance.font.size.smaller
+                                            wrapMode: Text.WordWrap
+                                        }
+
+                                        StyledText {
+                                            Layout.fillWidth: true
+                                            text: qsTr("Path to .AppImage file (e.g. ~/Downloads/Tool.AppImage)")
+                                            color: Signal.palette.inkMuted
+                                            font.pointSize: Appearance.font.size.smaller
+                                        }
+
+                                        StyledInputField {
+                                            Layout.fillWidth: true
+                                            horizontalAlignment: TextInput.AlignLeft
+                                            text: win.appImagePath
+                                            Accessible.name: qsTr("AppImage file path")
+                                            onTextEdited: t => win.appImagePath = t
+                                        }
+
+                                        StyledText {
+                                            Layout.fillWidth: true
+                                            text: qsTr("Application display name (optional)")
+                                            color: Signal.palette.inkMuted
+                                            font.pointSize: Appearance.font.size.smaller
+                                        }
+
+                                        StyledInputField {
+                                            Layout.fillWidth: true
+                                            horizontalAlignment: TextInput.AlignLeft
+                                            text: win.appImageName
+                                            Accessible.name: qsTr("AppImage display name")
+                                            onTextEdited: t => win.appImageName = t
+                                        }
+
+                                        IconTextButton {
+                                            icon: "file-download"
+                                            text: qsTr("Import local AppImage")
+                                            type: IconTextButton.Tonal
+                                            onClicked: {
+                                                if (!AppsStore.busy && win.appImagePath.trim() !== "")
+                                                    AppsStore.importAppImage(win.appImagePath, win.appImageName);
+                                            }
+                                        }
                                     }
 
-                                    TextButton {
-                                        visible: AppsStore.queueItems.length > 0
-                                        text: AppsStore.busy ? AppsStore.activeJobLabel : qsTr("Run Queue")
-                                        disabled: AppsStore.busy
-                                        onClicked: AppsStore.queueRun()
-                                    }
-                                }
+                                    // Create Web App
+                                    SectionContainer {
+                                        Eyebrow {
+                                            label: qsTr("Create isolated Web App")
+                                        }
 
-                                StyledText {
-                                    visible: AppsStore.queueItems.length === 0
-                                    Layout.fillWidth: true
-                                    text: qsTr("No applications queued. Queue apps from Hornero Welcome profiles or any app detail view.")
-                                    color: Signal.palette.inkMuted
-                                    wrapMode: Text.WordWrap
-                                }
+                                        StyledText {
+                                            Layout.fillWidth: true
+                                            text: qsTr("Create a desktop entry for an HTTPS web application with an isolated browser profile.")
+                                            color: Signal.palette.inkMuted
+                                            font.pointSize: Appearance.font.size.smaller
+                                            wrapMode: Text.WordWrap
+                                        }
 
-                                Repeater {
-                                    model: AppsStore.queueItems
+                                        StyledText {
+                                            Layout.fillWidth: true
+                                            text: qsTr("Web App name (e.g. Linear)")
+                                            color: Signal.palette.inkMuted
+                                            font.pointSize: Appearance.font.size.smaller
+                                        }
 
-                                    delegate: SettingRow {
-                                        required property var modelData
-                                        label: modelData.name
-                                        description: `${modelData.action} · ${Store.statusLabel(modelData.status)}`
-                                    }
-                                }
-                            }
+                                        StyledInputField {
+                                            Layout.fillWidth: true
+                                            horizontalAlignment: TextInput.AlignLeft
+                                            text: win.webAppName
+                                            Accessible.name: qsTr("Web App name")
+                                            onTextEdited: t => win.webAppName = t
+                                        }
 
-                            // Import local AppImage
-                            SectionContainer {
-                                Eyebrow {
-                                    label: qsTr("Import local AppImage")
-                                }
+                                        StyledText {
+                                            Layout.fillWidth: true
+                                            text: qsTr("HTTPS URL (e.g. https://linear.app)")
+                                            color: Signal.palette.inkMuted
+                                            font.pointSize: Appearance.font.size.smaller
+                                        }
 
-                                StyledText {
-                                    Layout.fillWidth: true
-                                    text: qsTr("Integrates a local .AppImage into your user application directory and desktop launcher. AppImages are not sandboxed by default.")
-                                    color: Signal.palette.inkMuted
-                                    font.pointSize: Appearance.font.size.smaller
-                                    wrapMode: Text.WordWrap
-                                }
+                                        StyledInputField {
+                                            Layout.fillWidth: true
+                                            horizontalAlignment: TextInput.AlignLeft
+                                            text: win.webAppUrl
+                                            Accessible.name: qsTr("Web App URL")
+                                            onTextEdited: t => win.webAppUrl = t
+                                        }
 
-                                StyledText {
-                                    Layout.fillWidth: true
-                                    text: qsTr("Path to .AppImage file (e.g. ~/Downloads/Tool.AppImage)")
-                                    color: Signal.palette.inkMuted
-                                    font.pointSize: Appearance.font.size.smaller
-                                }
+                                        StyledText {
+                                            Layout.fillWidth: true
+                                            text: qsTr("Profile slug (optional)")
+                                            color: Signal.palette.inkMuted
+                                            font.pointSize: Appearance.font.size.smaller
+                                        }
 
-                                StyledInputField {
-                                    Layout.fillWidth: true
-                                    horizontalAlignment: TextInput.AlignLeft
-                                    text: win.appImagePath
-                                    Accessible.name: qsTr("AppImage file path")
-                                    onTextEdited: t => win.appImagePath = t
-                                }
+                                        StyledInputField {
+                                            Layout.fillWidth: true
+                                            horizontalAlignment: TextInput.AlignLeft
+                                            text: win.webAppProfile
+                                            Accessible.name: qsTr("Web App profile")
+                                            onTextEdited: t => win.webAppProfile = t
+                                        }
 
-                                StyledText {
-                                    Layout.fillWidth: true
-                                    text: qsTr("Application display name (optional)")
-                                    color: Signal.palette.inkMuted
-                                    font.pointSize: Appearance.font.size.smaller
-                                }
-
-                                StyledInputField {
-                                    Layout.fillWidth: true
-                                    horizontalAlignment: TextInput.AlignLeft
-                                    text: win.appImageName
-                                    Accessible.name: qsTr("AppImage display name")
-                                    onTextEdited: t => win.appImageName = t
-                                }
-
-                                IconTextButton {
-                                    icon: "file-download"
-                                    text: qsTr("Import local AppImage")
-                                    type: IconTextButton.Tonal
-                                    onClicked: {
-                                        if (!AppsStore.busy && win.appImagePath.trim() !== "")
-                                            AppsStore.importAppImage(win.appImagePath, win.appImageName);
-                                    }
-                                }
-                            }
-
-                            // Create Web App
-                            SectionContainer {
-                                Eyebrow {
-                                    label: qsTr("Create isolated Web App")
-                                }
-
-                                StyledText {
-                                    Layout.fillWidth: true
-                                    text: qsTr("Create a desktop entry for an HTTPS web application with an isolated browser profile.")
-                                    color: Signal.palette.inkMuted
-                                    font.pointSize: Appearance.font.size.smaller
-                                    wrapMode: Text.WordWrap
-                                }
-
-                                StyledText {
-                                    Layout.fillWidth: true
-                                    text: qsTr("Web App name (e.g. Linear)")
-                                    color: Signal.palette.inkMuted
-                                    font.pointSize: Appearance.font.size.smaller
-                                }
-
-                                StyledInputField {
-                                    Layout.fillWidth: true
-                                    horizontalAlignment: TextInput.AlignLeft
-                                    text: win.webAppName
-                                    Accessible.name: qsTr("Web App name")
-                                    onTextEdited: t => win.webAppName = t
-                                }
-
-                                StyledText {
-                                    Layout.fillWidth: true
-                                    text: qsTr("HTTPS URL (e.g. https://linear.app)")
-                                    color: Signal.palette.inkMuted
-                                    font.pointSize: Appearance.font.size.smaller
-                                }
-
-                                StyledInputField {
-                                    Layout.fillWidth: true
-                                    horizontalAlignment: TextInput.AlignLeft
-                                    text: win.webAppUrl
-                                    Accessible.name: qsTr("Web App URL")
-                                    onTextEdited: t => win.webAppUrl = t
-                                }
-
-                                StyledText {
-                                    Layout.fillWidth: true
-                                    text: qsTr("Profile slug (optional)")
-                                    color: Signal.palette.inkMuted
-                                    font.pointSize: Appearance.font.size.smaller
-                                }
-
-                                StyledInputField {
-                                    Layout.fillWidth: true
-                                    horizontalAlignment: TextInput.AlignLeft
-                                    text: win.webAppProfile
-                                    Accessible.name: qsTr("Web App profile")
-                                    onTextEdited: t => win.webAppProfile = t
-                                }
-
-                                IconTextButton {
-                                    icon: "world"
-                                    text: qsTr("Create Web App")
-                                    type: IconTextButton.Tonal
-                                    onClicked: {
-                                        if (!AppsStore.busy && win.webAppName.trim() !== "" && win.webAppUrl.trim() !== "")
-                                            AppsStore.addWebApp(win.webAppName, win.webAppUrl, win.webAppProfile);
+                                        IconTextButton {
+                                            icon: "world"
+                                            text: qsTr("Create Web App")
+                                            type: IconTextButton.Tonal
+                                            onClicked: {
+                                                if (!AppsStore.busy && win.webAppName.trim() !== "" && win.webAppUrl.trim() !== "")
+                                                    AppsStore.addWebApp(win.webAppName, win.webAppUrl, win.webAppProfile);
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -1358,202 +1446,210 @@ FloatingWindow {
                     }
 
                     // ── 7: Sources & Policy ──────────────────────────────────
-                    StyledFlickable {
-                        id: srcFlick
+                    Loader {
+                        anchors.fill: parent
+                        active: AppsStore.currentView === "sources"
+                        visible: active
 
-                        flickableDirection: Flickable.VerticalFlick
-                        contentHeight: srcCol.implicitHeight
-                        clip: true
+                        sourceComponent: Component {
+                            StyledFlickable {
+                                id: srcFlick
 
-                        StyledScrollBar.vertical: StyledScrollBar {
-                            flickable: srcFlick
-                        }
+                                flickableDirection: Flickable.VerticalFlick
+                                contentHeight: srcCol.implicitHeight
+                                clip: true
 
-                        ColumnLayout {
-                            id: srcCol
-
-                            width: srcFlick.width
-                            spacing: Appearance.spacing.large
-
-                            // Enterprise / Team Trust Policy Controls
-                            SectionContainer {
-                                Eyebrow {
-                                    label: qsTr("Software trust policy")
+                                StyledScrollBar.vertical: StyledScrollBar {
+                                    flickable: srcFlick
                                 }
 
-                                SwitchRow {
-                                    label: qsTr("Verified sources only (Official Vendor, Arch Official, Hornero Official, Flathub Verified)")
-                                    checked: AppsStore.policy.verifiedOnly === true
-                                    enabled: !AppsStore.busy
-                                    onToggled: val => {
-                                        const next = Object.assign({}, AppsStore.policy);
-                                        next.verifiedOnly = val;
-                                        AppsStore.updatePolicy(next);
-                                    }
-                                }
+                                ColumnLayout {
+                                    id: srcCol
 
-                                SwitchRow {
-                                    label: qsTr("Open source software only")
-                                    checked: AppsStore.policy.openSourceOnly === true
-                                    enabled: !AppsStore.busy
-                                    onToggled: val => {
-                                        const next = Object.assign({}, AppsStore.policy);
-                                        next.openSourceOnly = val;
-                                        AppsStore.updatePolicy(next);
-                                    }
-                                }
+                                    width: srcFlick.width
+                                    spacing: Appearance.spacing.large
 
-                                SettingRow {
-                                    label: qsTr("Community AUR policy")
-                                    description: qsTr("Explicit opt-in requires PKGBUILD inspection; disabled hides/blocks AUR installs.")
-
-                                    SegmentedControl {
-                                        accessibleName: qsTr("Community AUR policy")
-                                        model: [qsTr("Opt-in"), qsTr("Disabled")]
-                                        currentIndex: AppsStore.policy.aurPolicy === "disabled" ? 1 : 0
-                                        disabled: AppsStore.busy
-                                        onActivated: idx => {
-                                            const next = Object.assign({}, AppsStore.policy);
-                                            next.aurPolicy = idx === 1 ? "disabled" : "explicit_opt_in";
-                                            AppsStore.updatePolicy(next);
+                                    // Enterprise / Team Trust Policy Controls
+                                    SectionContainer {
+                                        Eyebrow {
+                                            label: qsTr("Software trust policy")
                                         }
-                                    }
-                                }
 
-                                SettingRow {
-                                    label: qsTr("Proprietary software policy")
-                                    description: qsTr("Explicit consent prompts before installing non-FOSS apps.")
-
-                                    SegmentedControl {
-                                        accessibleName: qsTr("Proprietary software policy")
-                                        model: [qsTr("Explicit consent"), qsTr("Disabled")]
-                                        currentIndex: AppsStore.policy.proprietaryPolicy === "disabled" ? 1 : 0
-                                        disabled: AppsStore.busy
-                                        onActivated: idx => {
-                                            const next = Object.assign({}, AppsStore.policy);
-                                            next.proprietaryPolicy = idx === 1 ? "disabled" : "explicit_consent";
-                                            AppsStore.updatePolicy(next);
+                                        SwitchRow {
+                                            label: qsTr("Verified sources only (Official Vendor, Arch Official, Hornero Official, Flathub Verified)")
+                                            checked: AppsStore.policy.verifiedOnly === true
+                                            enabled: !AppsStore.busy
+                                            onToggled: val => {
+                                                const next = Object.assign({}, AppsStore.policy);
+                                                next.verifiedOnly = val;
+                                                AppsStore.updatePolicy(next);
+                                            }
                                         }
-                                    }
-                                }
-                            }
 
-                            // Manifest Export / Import
-                            SectionContainer {
-                                Eyebrow {
-                                    label: qsTr("Application manifest (Team & Workstation Provisioning)")
-                                }
+                                        SwitchRow {
+                                            label: qsTr("Open source software only")
+                                            checked: AppsStore.policy.openSourceOnly === true
+                                            enabled: !AppsStore.busy
+                                            onToggled: val => {
+                                                const next = Object.assign({}, AppsStore.policy);
+                                                next.openSourceOnly = val;
+                                                AppsStore.updatePolicy(next);
+                                            }
+                                        }
 
-                                StyledText {
-                                    Layout.fillWidth: true
-                                    text: qsTr("Manifest JSON path (e.g. ~/hornero-apps-manifest.json)")
-                                    color: Signal.palette.inkMuted
-                                    font.pointSize: Appearance.font.size.smaller
-                                }
+                                        SettingRow {
+                                            label: qsTr("Community AUR policy")
+                                            description: qsTr("Explicit opt-in requires PKGBUILD inspection; disabled hides/blocks AUR installs.")
 
-                                StyledInputField {
-                                    Layout.fillWidth: true
-                                    horizontalAlignment: TextInput.AlignLeft
-                                    text: win.manifestPath
-                                    Accessible.name: qsTr("Manifest file path")
-                                    onTextEdited: t => win.manifestPath = t
-                                }
+                                            SegmentedControl {
+                                                accessibleName: qsTr("Community AUR policy")
+                                                model: [qsTr("Opt-in"), qsTr("Disabled")]
+                                                currentIndex: AppsStore.policy.aurPolicy === "disabled" ? 1 : 0
+                                                disabled: AppsStore.busy
+                                                onActivated: idx => {
+                                                    const next = Object.assign({}, AppsStore.policy);
+                                                    next.aurPolicy = idx === 1 ? "disabled" : "explicit_opt_in";
+                                                    AppsStore.updatePolicy(next);
+                                                }
+                                            }
+                                        }
 
-                                Flow {
-                                    Layout.fillWidth: true
-                                    spacing: Appearance.spacing.small
+                                        SettingRow {
+                                            label: qsTr("Proprietary software policy")
+                                            description: qsTr("Explicit consent prompts before installing non-FOSS apps.")
 
-                                    IconTextButton {
-                                        icon: "upload"
-                                        text: qsTr("Export Manifest")
-                                        type: IconTextButton.Tonal
-                                        onClicked: {
-                                            if (!AppsStore.busy)
-                                                AppsStore.exportManifest(win.manifestPath.trim() || `${Paths.home}/hornero-apps-manifest.json`);
+                                            SegmentedControl {
+                                                accessibleName: qsTr("Proprietary software policy")
+                                                model: [qsTr("Explicit consent"), qsTr("Disabled")]
+                                                currentIndex: AppsStore.policy.proprietaryPolicy === "disabled" ? 1 : 0
+                                                disabled: AppsStore.busy
+                                                onActivated: idx => {
+                                                    const next = Object.assign({}, AppsStore.policy);
+                                                    next.proprietaryPolicy = idx === 1 ? "disabled" : "explicit_consent";
+                                                    AppsStore.updatePolicy(next);
+                                                }
+                                            }
                                         }
                                     }
 
-                                    IconTextButton {
-                                        icon: "file-download"
-                                        text: qsTr("Import Manifest")
-                                        type: IconTextButton.Tonal
-                                        onClicked: {
-                                            if (!AppsStore.busy && win.manifestPath.trim() !== "")
-                                                AppsStore.importManifest(win.manifestPath);
+                                    // Manifest Export / Import
+                                    SectionContainer {
+                                        Eyebrow {
+                                            label: qsTr("Application manifest (Team & Workstation Provisioning)")
+                                        }
+
+                                        StyledText {
+                                            Layout.fillWidth: true
+                                            text: qsTr("Manifest JSON path (e.g. ~/hornero-apps-manifest.json)")
+                                            color: Signal.palette.inkMuted
+                                            font.pointSize: Appearance.font.size.smaller
+                                        }
+
+                                        StyledInputField {
+                                            Layout.fillWidth: true
+                                            horizontalAlignment: TextInput.AlignLeft
+                                            text: win.manifestPath
+                                            Accessible.name: qsTr("Manifest file path")
+                                            onTextEdited: t => win.manifestPath = t
+                                        }
+
+                                        Flow {
+                                            Layout.fillWidth: true
+                                            spacing: Appearance.spacing.small
+
+                                            IconTextButton {
+                                                icon: "upload"
+                                                text: qsTr("Export Manifest")
+                                                type: IconTextButton.Tonal
+                                                onClicked: {
+                                                    if (!AppsStore.busy)
+                                                        AppsStore.exportManifest(win.manifestPath.trim() || `${Paths.home}/hornero-apps-manifest.json`);
+                                                }
+                                            }
+
+                                            IconTextButton {
+                                                icon: "file-download"
+                                                text: qsTr("Import Manifest")
+                                                type: IconTextButton.Tonal
+                                                onClicked: {
+                                                    if (!AppsStore.busy && win.manifestPath.trim() !== "")
+                                                        AppsStore.importManifest(win.manifestPath);
+                                                }
+                                            }
                                         }
                                     }
-                                }
-                            }
 
-                            // Backend Sources Matrix
-                            SectionContainer {
-                                RowLayout {
-                                    Layout.fillWidth: true
+                                    // Backend Sources Matrix
+                                    SectionContainer {
+                                        RowLayout {
+                                            Layout.fillWidth: true
 
-                                    Eyebrow {
-                                        Layout.fillWidth: true
-                                        label: qsTr("Backend capabilities")
-                                    }
+                                            Eyebrow {
+                                                Layout.fillWidth: true
+                                                label: qsTr("Backend capabilities")
+                                            }
 
-                                    TextButton {
-                                        text: qsTr("Refresh")
-                                        type: TextButton.Text
-                                        onClicked: {
-                                            AppsStore.refreshSources();
-                                            AppsStore.refreshDoctor();
+                                            TextButton {
+                                                text: qsTr("Refresh")
+                                                type: TextButton.Text
+                                                onClicked: {
+                                                    AppsStore.refreshSources();
+                                                    AppsStore.refreshDoctor();
+                                                }
+                                            }
+                                        }
+
+                                        StyledText {
+                                            visible: AppsStore.sources.length === 0
+                                            Layout.fillWidth: true
+                                            text: AppsStore.sourcesError || qsTr("No backend source diagnostics returned yet.")
+                                            color: Signal.palette.inkMuted
+                                        }
+
+                                        Repeater {
+                                            model: AppsStore.sources
+
+                                            delegate: SettingRow {
+                                                required property var modelData
+                                                label: modelData.name
+                                                description: modelData.detail || (modelData.scope !== "" ? qsTr("Scope: %1").arg(modelData.scope) : "")
+
+                                                ProvenancePill {
+                                                    text: modelData.ready ? qsTr("Ready") : qsTr("Unavailable")
+                                                    icon: modelData.ready ? "circle-check" : "alert-triangle"
+                                                    tone: modelData.ready ? "phosphor" : "alert"
+                                                }
+                                            }
                                         }
                                     }
-                                }
 
-                                StyledText {
-                                    visible: AppsStore.sources.length === 0
-                                    Layout.fillWidth: true
-                                    text: AppsStore.sourcesError || qsTr("No backend source diagnostics returned yet.")
-                                    color: Signal.palette.inkMuted
-                                }
-
-                                Repeater {
-                                    model: AppsStore.sources
-
-                                    delegate: SettingRow {
-                                        required property var modelData
-                                        label: modelData.name
-                                        description: modelData.detail || (modelData.scope !== "" ? qsTr("Scope: %1").arg(modelData.scope) : "")
-
-                                        ProvenancePill {
-                                            text: modelData.ready ? qsTr("Ready") : qsTr("Unavailable")
-                                            icon: modelData.ready ? "circle-check" : "alert-triangle"
-                                            tone: modelData.ready ? "phosphor" : "alert"
+                                    // Store Doctor Checks
+                                    SectionContainer {
+                                        Eyebrow {
+                                            label: qsTr("Store health checks")
                                         }
-                                    }
-                                }
-                            }
 
-                            // Store Doctor Checks
-                            SectionContainer {
-                                Eyebrow {
-                                    label: qsTr("Store health checks")
-                                }
+                                        StyledText {
+                                            visible: AppsStore.doctorReport.checks.length === 0
+                                            Layout.fillWidth: true
+                                            text: AppsStore.doctorReport.error || qsTr("No doctor checks reported.")
+                                            color: Signal.palette.inkMuted
+                                        }
 
-                                StyledText {
-                                    visible: AppsStore.doctorReport.checks.length === 0
-                                    Layout.fillWidth: true
-                                    text: AppsStore.doctorReport.error || qsTr("No doctor checks reported.")
-                                    color: Signal.palette.inkMuted
-                                }
+                                        Repeater {
+                                            model: AppsStore.doctorReport.checks
 
-                                Repeater {
-                                    model: AppsStore.doctorReport.checks
+                                            delegate: SettingRow {
+                                                required property var modelData
+                                                label: modelData.name
+                                                description: modelData.detail
 
-                                    delegate: SettingRow {
-                                        required property var modelData
-                                        label: modelData.name
-                                        description: modelData.detail
-
-                                        ProvenancePill {
-                                            text: modelData.ok ? qsTr("Pass") : qsTr("Check")
-                                            icon: modelData.ok ? "circle-check" : "alert-triangle"
-                                            tone: modelData.ok ? "phosphor" : "signal"
+                                                ProvenancePill {
+                                                    text: modelData.ok ? qsTr("Pass") : qsTr("Check")
+                                                    icon: modelData.ok ? "circle-check" : "alert-triangle"
+                                                    tone: modelData.ok ? "phosphor" : "signal"
+                                                }
+                                            }
                                         }
                                     }
                                 }

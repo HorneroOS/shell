@@ -38,7 +38,10 @@ Item {
 
         // Left 38%: Experience Mode Selector
         ColumnLayout {
-            Layout.preferredWidth: parent.width * 0.38
+            Layout.fillWidth: false
+            Layout.minimumWidth: 340
+            Layout.maximumWidth: Math.round(parent.width * 0.42)
+            Layout.preferredWidth: Math.round(parent.width * 0.38)
             Layout.fillHeight: true
             spacing: Appearance.spacing.normal
 
@@ -165,6 +168,7 @@ Item {
                     spacing: 4
 
                     StyledText {
+                        Layout.fillWidth: true
                         text: qsTr("Motion: %1 · Density: %2 · Rate: %3 Hz")
                             .arg(root.inspectedProfile.fields.motion)
                             .arg(root.inspectedProfile.fields.density)
@@ -172,15 +176,18 @@ Item {
                         mono: true
                         font.pointSize: Appearance.font.size.small
                         color: Signal.palette.ink
+                        wrapMode: Text.WordWrap
                     }
 
                     StyledText {
+                        Layout.fillWidth: true
                         text: Experience.studioAudioAvailable
                             ? qsTr("Studio Audio: Ready")
                             : qsTr("Studio Audio: Optional profile not installed")
                         mono: true
                         font.pointSize: Appearance.font.size.small
                         color: Signal.palette.inkMuted
+                        wrapMode: Text.WordWrap
                     }
                 }
             }
@@ -193,6 +200,7 @@ Item {
             id: rightFlick
 
             Layout.fillWidth: true
+            Layout.preferredWidth: 0
             Layout.fillHeight: true
             flickableDirection: Flickable.VerticalFlick
             contentHeight: rightCol.implicitHeight

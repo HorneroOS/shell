@@ -75,6 +75,7 @@ Item {
             // Left column: Health & Updates
             StyledRect {
                 Layout.fillWidth: true
+                Layout.preferredWidth: 0
                 Layout.fillHeight: true
                 radius: Appearance.rounding.normal
                 color: Signal.palette.panel
@@ -162,6 +163,7 @@ Item {
             // Right column: Profiles vs OS Btrfs Recovery Readiness
             StyledRect {
                 Layout.fillWidth: true
+                Layout.preferredWidth: 0
                 Layout.fillHeight: true
                 radius: Appearance.rounding.normal
                 color: Signal.palette.panel

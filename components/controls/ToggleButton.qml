@@ -13,9 +13,29 @@ StyledRect {
     required property bool toggled
     property string icon
     property string label
-    // Signal accent role: "signal", "cue" or "phosphor".
+    // Signal accent role: "signal", "cue", "phosphor", or "alert".
     property string accent: "cue"
     readonly property string onAccent: `on${accent.charAt(0).toUpperCase()}${accent.slice(1)}`
+
+    readonly property color resolvedBg: {
+        if (root.accent === "signal" || root.accent === "caution")
+            return root.toggled ? Signal.palette.signal : Signal.palette.signalWell;
+        if (root.accent === "phosphor")
+            return root.toggled ? Signal.palette.phosphor : Signal.palette.phosphorWell;
+        if (root.accent === "alert" || root.accent === "fault")
+            return root.toggled ? Signal.palette.alert : Signal.palette.alertWell;
+        return root.toggled ? Signal.palette.cue : Signal.palette.cueWell;
+    }
+
+    readonly property color resolvedFg: {
+        if (root.accent === "signal" || root.accent === "caution")
+            return root.toggled ? Signal.palette.onSignal : Signal.palette.onSignalWell;
+        if (root.accent === "phosphor")
+            return root.toggled ? Signal.palette.onPhosphor : Signal.palette.onPhosphorWell;
+        if (root.accent === "alert" || root.accent === "fault")
+            return root.toggled ? Signal.palette.onAlert : Signal.palette.onAlertWell;
+        return root.toggled ? Signal.palette.onCue : Signal.palette.onCueWell;
+    }
     property real iconSize: Appearance.font.size.large
     property real horizontalPadding: Appearance.padding.large
     property real verticalPadding: Appearance.padding.normal
@@ -51,13 +71,13 @@ StyledRect {
 
     // Signal Bezel: rectangular channel cells, radius `small` in every state.
     radius: Appearance.rounding.small
-    color: toggled ? Signal.palette[accent] : Signal.palette[`${accent}Well`]
+    color: root.resolvedBg
     opacity: root.disabled ? 0.5 : 1
 
     Interactive {
         id: toggleStateLayer
 
-        color: root.toggled ? Signal.palette[root.onAccent] : Signal.palette[`${root.onAccent}Well`]
+        color: root.resolvedFg
         disabled: root.disabled
 
         function onClicked(): void {
@@ -76,7 +96,7 @@ StyledRect {
 
             visible: !!text
             name: root.icon
-            color: root.toggled ? Signal.palette[root.onAccent] : Signal.palette[`${root.onAccent}Well`]
+            color: root.resolvedFg
             font.pointSize: root.iconSize
         }
 
@@ -86,7 +106,7 @@ StyledRect {
 
             sourceComponent: StyledText {
                 text: root.label
-                color: root.toggled ? Signal.palette[root.onAccent] : Signal.palette[`${root.onAccent}Well`]
+                color: root.resolvedFg
             }
         }
     }

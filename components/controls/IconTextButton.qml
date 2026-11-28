@@ -32,9 +32,23 @@ StyledRect {
 
     property bool internalChecked
     property color activeColour: type === IconTextButton.Filled ? Signal.palette.signal : Signal.palette.cue
-    property color inactiveColour: type === IconTextButton.Filled ? Signal.tPalette.panel : Signal.palette.cueWell
-    property color activeOnColour: type === IconTextButton.Filled ? Signal.palette.onSignal : Signal.palette.onCue
-    property color inactiveOnColour: type === IconTextButton.Filled ? Signal.palette.ink : Signal.palette.onCueWell
+    property color inactiveColour: {
+        if (!toggle && type === IconTextButton.Filled)
+            return Signal.palette.signal;
+        return type === IconTextButton.Filled ? Signal.tPalette.panel : Signal.palette.cueWell;
+    }
+    property color activeOnColour: {
+        if (type === IconTextButton.Text)
+            return Signal.palette.signal;
+        return type === IconTextButton.Filled ? Signal.palette.onSignal : Signal.palette.onCue;
+    }
+    property color inactiveOnColour: {
+        if (!toggle && type === IconTextButton.Filled)
+            return Signal.palette.onSignal;
+        if (type === IconTextButton.Text)
+            return Signal.palette.signal;
+        return type === IconTextButton.Filled ? Signal.palette.ink : Signal.palette.onCueWell;
+    }
 
     signal clicked
 

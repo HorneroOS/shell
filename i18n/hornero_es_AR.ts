@@ -1184,8 +1184,8 @@
         <translation>Gestores de contraseñas, mensajería cifrada y herramientas VPN.</translation>
     </message>
     <message>
-        <source>Search apps by name, category, publisher, or tag (/ or Ctrl+F)</source>
-        <translation>Buscá apps por nombre, categoría, editor o etiqueta (/ o Ctrl+F)</translation>
+        <source>Search apps, categories, tags… (/)</source>
+        <translation>Buscá apps, categorías, etiquetas… (/)</translation>
     </message>
     <message>
         <source>Search applications</source>

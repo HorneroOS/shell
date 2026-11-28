@@ -43,10 +43,12 @@ def test_provenance_and_backend_labels_and_tones():
             ],
             backends: [
                 backendLabel("pacman"),
+                backendLabel("arch_native"),
                 backendLabel("flatpak"),
                 backendLabel("appimage"),
                 backendLabel("webapp"),
                 backendLabel("aur"),
+                backendLabel("vendor_repo"),
                 backendLabel("guided")
             ],
             statuses: [
@@ -71,10 +73,12 @@ def test_provenance_and_backend_labels_and_tones():
     assert out["tones"] == ["phosphor", "phosphor", "cue", "signal", "signal", "alert"]
     assert out["backends"] == [
         "Arch / pacman",
+        "Arch / pacman",
         "Flatpak",
         "AppImage",
         "Web App",
         "Community AUR",
+        "Vendor Channel",
         "Guided Setup",
     ]
     assert out["statuses"] == [
@@ -257,6 +261,7 @@ def test_apps_ui_and_integration_contracts():
     assert '"horneroctl", "--json", "store", "show"' in store_qml
     assert '"horneroctl", "--json", "store", "profiles"' in store_qml
     assert '"horneroctl", "--json", "store", "installed"' in store_qml
+    assert '"horneroctl", "--json", "store", "update", "--all", "--dry-run"' in store_qml
     assert '"horneroctl", "--json", "store", "queue", "add"' in store_qml
     assert '"horneroctl", "--json", "store", "policy", "set"' in store_qml
     assert '"horneroctl", "--json", "store", "appimage", "import"' in store_qml
@@ -287,4 +292,105 @@ def test_apps_ui_and_integration_contracts():
     assert "AppsProfilePanel" in welcome_page
     assert "Actions.queueAppIds" in welcome_panel
     assert 'Actions.openApps("queue")' in welcome_panel
+
+
+def test_real_horneroctl_list_show_collections_schema_and_locale():
+    list_env = {
+        "command": "store list",
+        "ok": True,
+        "message": "ok",
+        "data": {
+            "apps": json.dumps([
+                {
+                    "id": "firefox",
+                    "name": "Firefox",
+                    "name_es": "Firefox ES",
+                    "summary": "Fast privacy browser",
+                    "summary_es": "Navegador rápido y privado",
+                    "recommended_source": "arch_native",
+                    "sources": [
+                        {
+                            "backend": "arch_native",
+                            "provenance": "arch_official",
+                            "package_id": "firefox",
+                            "verified": True,
+                            "recommended_reason": "Official Arch repo",
+                            "recommended_reason_es": "Repositorio oficial de Arch",
+                        },
+                        {
+                            "backend": "flatpak",
+                            "provenance": "flathub_verified",
+                            "package_id": "org.mozilla.firefox",
+                            "verified": True,
+                        },
+                    ],
+                },
+                {
+                    "id": "chatgpt-desktop",
+                    "name": "ChatGPT Desktop",
+                    "summary": "Official desktop app",
+                    "recommended_source": "vendor_repo",
+                    "is_open_source": False,
+                    "sources": [
+                        {
+                            "backend": "vendor_repo",
+                            "provenance": "vendor_official",
+                            "package_id": "chatgpt-bin",
+                            "remote": "openai-chatgpt",
+                            "verified": True,
+                            "recommended_reason": "Vendor-signed official Arch repository package (chatgpt-bin).",
+                            "recommended_reason_es": "Repositorio oficial firmado por el proveedor (chatgpt-bin).",
+                        },
+                        {
+                            "backend": "aur",
+                            "provenance": "community_package",
+                            "package_id": "chatgpt-desktop",
+                            "verified": False,
+                        },
+                    ],
+                },
+            ])
+        },
+    }
+    col_env = {
+        "command": "store collections",
+        "ok": True,
+        "message": "ok",
+        "data": {
+            "collections": json.dumps([
+                {"id": "ready-to-game", "name": "Ready to Game", "name_es": "Listo para jugar", "icon": "gamepad-2"},
+                {"id": "editors-picks", "name": "Hornero Editors' Picks", "name_es": "Selección del Hornero", "icon": "award"},
+            ])
+        },
+    }
+    out = run_js(f"""
+        return {{
+            enList: parseStoreList({json.dumps(list_env)}, "en"),
+            esList: parseStoreList({json.dumps(list_env)}, "es_AR"),
+            enCols: parseStoreCollections({json.dumps(col_env)}, "en"),
+            esCols: parseStoreCollections({json.dumps(col_env)}, "es_AR")
+        }};
+    """)
+    ff = out["enList"]["apps"][0]
+    assert ff["backend"] == "arch_native"
+    assert ff["provenance"] == "arch_official"
+    assert ff["verified"] is True
+    assert ff["recommendedSource"]["recommended"] is True
+    assert ff["recommendedSource"]["packageName"] == "firefox"
+    assert ff["recommendedSource"]["reason"] == "Official Arch repo"
+
+    cg = out["enList"]["apps"][1]
+    assert cg["backend"] == "vendor_repo"
+    assert cg["provenance"] == "vendor_official"
+    assert cg["verified"] is True
+    assert cg["recommendedSource"]["packageName"] == "chatgpt-bin"
+    assert len(cg["alternativeSources"]) == 2
+
+    ff_es = out["esList"]["apps"][0]
+    assert ff_es["name"] == "Firefox ES"
+    assert ff_es["summary"] == "Navegador rápido y privado"
+    assert ff_es["recommendedSource"]["reason"] == "Repositorio oficial de Arch"
+
+    assert [c["icon"] for c in out["enCols"]["collections"]] == ["device-gamepad-2", "star"]
+    assert [c["name"] for c in out["esCols"]["collections"]] == ["Listo para jugar", "Selección del Hornero"]
 

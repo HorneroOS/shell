@@ -195,16 +195,25 @@ StyledRect {
                         border.color: Signal.palette.rule
 
                         IconImage {
+                            id: detailIconImg
+
                             anchors.centerIn: parent
-                            visible: root.app && (root.app.icon || "") !== ""
-                            source: (root.app && root.app.icon) ? Quickshell.iconPath(root.app.icon, "application-x-executable") : ""
+                            readonly property string resolvedSource: {
+                                if (!root.app)
+                                    return "";
+                                const desktopIcon = DesktopEntries.byId(root.app.desktopId || root.app.id)?.icon || "";
+                                const key = root.app.icon || desktopIcon || root.app.id || "";
+                                return key !== "" ? Quickshell.iconPath(key, true) : "";
+                            }
+                            visible: resolvedSource !== ""
+                            source: resolvedSource
                             implicitSize: 48
                             asynchronous: true
                         }
 
                         Glyph {
                             anchors.centerIn: parent
-                            visible: !root.app || (root.app.icon || "") === ""
+                            visible: !detailIconImg.visible
                             name: "apps"
                             color: Signal.palette.signal
                             font.pointSize: Appearance.font.size.extraLarge

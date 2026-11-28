@@ -62,6 +62,9 @@ Item {
 
         // Left release history rail
         ColumnLayout {
+            Layout.fillWidth: false
+            Layout.minimumWidth: 230
+            Layout.maximumWidth: 230
             Layout.preferredWidth: 230
             Layout.fillHeight: true
             spacing: Appearance.spacing.small
@@ -148,6 +151,7 @@ Item {
             id: relFlick
 
             Layout.fillWidth: true
+            Layout.preferredWidth: 0
             Layout.fillHeight: true
             flickableDirection: Flickable.VerticalFlick
             contentHeight: relCol.implicitHeight

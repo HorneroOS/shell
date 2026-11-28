@@ -311,7 +311,7 @@ Singleton {
             return;
         root.updatesLoading = true;
         root.updatesError = "";
-        updatesProc.command = ["horneroctl", "--json", "store", "update", "--dry-run"];
+        updatesProc.command = ["horneroctl", "--json", "store", "update", "--all", "--dry-run"];
         updatesProc.running = true;
     }
 
@@ -522,13 +522,13 @@ Singleton {
 
         stdout: StdioCollector {
             onStreamFinished: {
-                const res = Store.parseStoreList(text);
-                root.catalogLoading = false;
-                root.catalogLoaded = true;
+                const res = Store.parseStoreList(text, Language.uiLocale);
                 root.catalogAvailable = res.available;
                 root.catalogError = res.available ? "" : res.error;
                 if (res.available)
                     root.catalogApps = res.apps;
+                root.catalogLoaded = true;
+                root.catalogLoading = false;
             }
         }
         onExited: (exitCode, exitStatus) => {
@@ -549,7 +549,7 @@ Singleton {
             onStreamFinished: {
                 if (searchProc.targetQuery !== root.searchQuery)
                     return;
-                const res = Store.parseStoreSearch(text);
+                const res = Store.parseStoreSearch(text, Language.uiLocale);
                 root.searchLoading = false;
                 if (res.available)
                     root.searchResults = res.apps;
@@ -569,7 +569,7 @@ Singleton {
             onStreamFinished: {
                 if (showProc.targetId !== root.selectedAppId)
                     return;
-                const res = Store.parseStoreShow(text);
+                const res = Store.parseStoreShow(text, Language.uiLocale);
                 root.detailLoading = false;
                 if (res.available && res.app) {
                     root.selectedApp = res.app;
@@ -605,7 +605,7 @@ Singleton {
 
         stdout: StdioCollector {
             onStreamFinished: {
-                const res = Store.parseStoreCategories(text);
+                const res = Store.parseStoreCategories(text, Language.uiLocale);
                 if (res.available)
                     root.categories = res.categories;
             }
@@ -617,7 +617,7 @@ Singleton {
 
         stdout: StdioCollector {
             onStreamFinished: {
-                const res = Store.parseStoreCollections(text);
+                const res = Store.parseStoreCollections(text, Language.uiLocale);
                 if (res.available)
                     root.collections = res.collections;
             }
@@ -651,7 +651,7 @@ Singleton {
 
         stdout: StdioCollector {
             onStreamFinished: {
-                const res = Store.parseStoreInstalled(text);
+                const res = Store.parseStoreInstalled(text, Language.uiLocale);
                 root.installedLoading = false;
                 if (res.available) {
                     root.installedApps = res.apps;

@@ -1,4 +1,5 @@
 import qs.components.misc
+import qs.modules.apps
 import qs.modules.controlcenter
 import qs.modules.welcome
 import qs.services
@@ -208,6 +209,26 @@ Scope {
 
         function status(): string {
             return JSON.stringify(Welcome.status());
+        }
+    }
+
+    IpcHandler {
+        target: "apps"
+
+        function open(target: string): void {
+            AppsStore.open((target ?? "").toString());
+        }
+
+        function close(): void {
+            AppsStore.close();
+        }
+
+        function toggle(target: string): void {
+            AppsStore.toggle((target ?? "").toString());
+        }
+
+        function status(): string {
+            return JSON.stringify(AppsStore.status());
         }
     }
 

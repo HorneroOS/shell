@@ -71,6 +71,11 @@ FloatingWindow {
             label: qsTr("Tools")
         },
         {
+            id: "apps",
+            icon: "apps",
+            label: qsTr("Apps")
+        },
+        {
             id: "javi",
             icon: "feather",
             label: qsTr("Javi")
@@ -299,6 +304,7 @@ FloatingWindow {
                 WorkspacesPage {}
                 PersonalizePage {}
                 ToolsPage {}
+                AppsPage {}
                 JaviPage {}
                 SettingsPage {}
                 SystemPage {}

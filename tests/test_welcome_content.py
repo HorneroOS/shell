@@ -29,6 +29,7 @@ EXPECTED_PAGES = [
     "WorkspacesPage",
     "PersonalizePage",
     "ToolsPage",
+    "AppsPage",
     "JaviPage",
     "SettingsPage",
     "SystemPage",
@@ -104,7 +105,8 @@ def test_actions_allowlist_shape():
     funcs = re.findall(r"function\s+([a-zA-Z]+)\s*\(", text)
     expected = ["openLauncher", "openDashboard", "openSessionMenu", "openUtilities",
                 "openLayoutPicker", "openControlCenter", "shellQuote", "openTerminal",
-                "openWelcome"]
+                "openWelcome", "openApps", "ensureAppProfiles", "refreshAppProfiles",
+                "queueAppIds"]
     assert funcs == expected, f"Actions.qml must expose exactly {expected}, got {funcs}"
     for token in ("horneroctl", "Process {", "openUrlExternally", "XMLHttpRequest"):
         assert token not in text, f"Actions.qml: banned token {token!r}"
@@ -146,4 +148,4 @@ def test_page_set_matches_nav():
     order = re.findall(r"^\s{16}([A-Z][A-Za-z]*Page)\s*\{\s*\}", stack, re.MULTILINE)
     assert order == EXPECTED_PAGES, f"StackLayout order must follow nav, got {order}"
     nav_ids = re.findall(r'id:\s*"([a-z]+)"', window.split("navPages", 1)[1].split("]", 1)[0])
-    assert nav_ids == ["start", "navigate", "shell", "workspaces", "personalize", "tools", "javi", "settings", "system", "learn", "shortcuts"]
+    assert nav_ids == ["start", "navigate", "shell", "workspaces", "personalize", "tools", "apps", "javi", "settings", "system", "learn", "shortcuts"]

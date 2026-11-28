@@ -1,6 +1,7 @@
 pragma Singleton
 
 import qs.config
+import qs.modules.apps
 import qs.modules.controlcenter
 import qs.modules.welcome as WelcomeModule
 import qs.services
@@ -18,6 +19,14 @@ Singleton {
     // Fullscreen guard shared by drawer toggles (mirrors Shortcuts.qml):
     // opening drawers over an exclusive fullscreen surface is refused.
     readonly property bool hasFullscreen: Compositor.hasFullscreenOnFocusedOutput()
+
+    // Reactive store profile bindings for AppsPage.qml (read-only view into AppsStore).
+    readonly property var appProfiles: AppsStore.profiles
+    readonly property bool appProfilesLoading: AppsStore.profilesLoading
+    readonly property string appProfilesError: AppsStore.profilesError
+    readonly property bool appsBusy: AppsStore.busy
+    readonly property string appsLastError: AppsStore.lastError
+    readonly property string appsLastSuccess: AppsStore.lastSuccess
 
     function openLauncher(): void {
         if (root.hasFullscreen)
@@ -86,5 +95,22 @@ Singleton {
 
     function openWelcome(page: string): void {
         Welcome.open(page ?? "start");
+    }
+
+    function openApps(viewOrAppId: string): void {
+        AppsStore.open(viewOrAppId ?? "discover");
+    }
+
+    function ensureAppProfiles(): void {
+        if (AppsStore.profiles.length === 0 && !AppsStore.profilesLoading)
+            AppsStore.refreshProfiles();
+    }
+
+    function refreshAppProfiles(): void {
+        AppsStore.refreshProfiles();
+    }
+
+    function queueAppIds(appIds: var): void {
+        AppsStore.queueAdd(appIds);
     }
 }

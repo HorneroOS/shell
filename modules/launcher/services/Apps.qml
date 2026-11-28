@@ -1,6 +1,7 @@
 pragma Singleton
 
 import qs.config
+import qs.modules.apps
 import qs.utils
 import Hornero
 import Quickshell
@@ -21,7 +22,13 @@ Searcher {
         });
     }
 
-    function launch(entry: DesktopEntry): void {
+    function launch(entry: var): void {
+        if (!entry)
+            return;
+        if (entry.isCatalogEntry === true) {
+            AppsStore.open(entry.id);
+            return;
+        }
         appDb.incrementFrequency(entry.id);
 
         if (entry.runInTerminal) {
@@ -63,8 +70,11 @@ Searcher {
             keys = ["name"];
             weights = [1];
 
-            if (!search.startsWith(`${prefix}t `))
-                return query(search).map(e => e.entry);
+            if (!search.startsWith(`${prefix}t `)) {
+                const installed = query(search).map(e => e.entry);
+                const catalog = CatalogApps.search(search, appDb.entries);
+                return catalog.length > 0 ? [...installed, ...catalog] : installed;
+            }
         }
 
         const results = query(search.slice(prefix.length + 2)).map(e => e.entry);

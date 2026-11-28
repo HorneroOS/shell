@@ -25,16 +25,16 @@ consumer. It does not provide the capture path itself: portal capture still
 depends on a running Niri session, PipeWire, and the GNOME ScreenCast portal,
 as described in [Niri's screencasting guide](https://niri-wm.github.io/niri/Screencasting.html).
 
-This experimental integration now has a passing single-output graphical
-baseline in the disposable Hornero QA guest, but that acceptance does not
-make every Shell feature or hardware topology available under Niri.
-Several functions still rely on Hyprland-specific APIs, including output
-metadata and brightness targeting, area picking, native window thumbnails,
-game mode, lock-state indicators, session startup, and some layout actions.
-Niri does not currently report fullscreen state through its event stream, so
-the Shell offers the fullscreen action but does not claim fullscreen-state
-parity. Session configuration, portals, lock behavior, and graphical QA must
-be covered together before Niri can be called supported.
+The Niri integration has a passing single-output graphical baseline in the
+disposable Hornero QA guest, while keeping backend capability differences
+explicit rather than emulating unsupported Hyprland-only features. Several
+functions still rely on Hyprland-specific APIs, including output metadata and
+brightness targeting, area picking, native window thumbnails, game mode,
+lock-state indicators, session startup, and some layout actions. Niri does
+not currently report fullscreen state through its event stream, so the Shell
+offers the fullscreen action but does not claim fullscreen-state parity.
+Multi-output, HiDPI, live OBS capture, notifications, and recovery matrix
+coverage remain tracked alongside those capability boundaries.
 
 ## Niri session adapter
 

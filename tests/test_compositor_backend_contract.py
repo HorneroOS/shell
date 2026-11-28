@@ -85,7 +85,7 @@ def test_niri_backend_does_not_claim_hyprland_only_capabilities():
         "fullscreenState: false",
     ):
         assert capability in NIRI
-    assert "experimental integration" in COMPOSITOR_DOC
+    assert "Hyprland-specific APIs" in COMPOSITOR_DOC
 
 
 def _qml_function(source: str, name: str) -> str:

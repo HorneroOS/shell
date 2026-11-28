@@ -24,13 +24,11 @@ read-only inputs; they are never modified by a running session.
 
 ## Compositor integration
 
-Hyprland remains the production backend today, but it is an implementation
+Hyprland is the primary production backend today, but it is an implementation
 choice rather than Hornero Shell's identity. A capability-aware compositor
-facade and experimental Niri adapter route shared workspace, window,
-keyboard-layout, idle display-power, and layer-focus behavior. Remaining
-backend-specific dependencies and acceptance gaps are tracked in
-[Compositor integration](COMPOSITORS.md). Do not expose Niri as supported
-until the complete session has graphical acceptance.
+facade and Niri adapter route shared workspace, window, keyboard-layout, idle
+display-power, and layer-focus behavior. Backend-specific differences and
+capability boundaries are tracked in [Compositor integration](COMPOSITORS.md).
 
 ## Configuration and paths
 

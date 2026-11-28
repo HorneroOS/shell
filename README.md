@@ -3,9 +3,9 @@
 [![CI](https://github.com/HorneroOS/shell/actions/workflows/ci.yml/badge.svg)](https://github.com/HorneroOS/shell/actions/workflows/ci.yml)
 
 Hornero Shell is the official HorneroOS desktop shell for Wayland, built with
-[Quickshell](https://quickshell.org/), QML, and Qt 6. Hyprland is the supported
-compositor; Niri has a passing single-output graphical baseline and remains
-experimental while its broader capability and recovery matrix is completed.
+[Quickshell](https://quickshell.org/), QML, and Qt 6. Hyprland is the primary
+compositor; Niri is supported via a capability-aware compositor adapter (with
+documented feature boundaries in [Compositor integration](docs/COMPOSITORS.md)).
 The shell provides bars,
 launcher, dashboard, Control Center, notifications, lock screen, and
 wallpaper/theme pipeline, plus a native `Hornero` C++ plugin for
@@ -42,10 +42,11 @@ are that machine's, not requirements.</sub></p>
 
 ## Status
 
-Under active development; shell changes ship through reviewed HorneroOS
-preview candidates. Operating-system operations use the Hornero CLI contract,
-and Appearance uses the shared Hornero pipeline. Extraction history and
-upstream attribution are documented in `docs/PROVENANCE.md`.
+Daily-driven across physical workstations and validated in UEFI and BIOS KVM
+environments; shell changes ship through reviewed HorneroOS releases and AUR
+packages. Operating-system operations use the Hornero CLI contract, and
+Appearance uses the shared Hornero pipeline. Extraction history and upstream
+attribution are documented in `docs/PROVENANCE.md`.
 
 ## Build
 

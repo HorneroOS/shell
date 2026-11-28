@@ -40,7 +40,7 @@ so an `unlock` IPC function would be unauthenticated unlock
 (shell#257). The lock IPC target exposes only `lock` (request) and
 `isLocked` (read-only state).
 
-## Standalone lock process (opt-in, experimental)
+## Standalone lock process (opt-in)
 
 `lock.qml` is a lock-only quickshell entrypoint (Lock + lock-only
 idle/logind monitors, nothing else) supervised by the shipped
@@ -102,8 +102,8 @@ failure in #255, which forced a reboot on a development host.
 Rules:
 
 - `horneroctl shell stop` and `horneroctl shell restart` refuse while
-  a lock is engaged (hyprlock process or logind `LockedHint`), since
-  horneroctl preview21+; unlock first, then restart.
+  a lock is engaged (hyprlock process or logind `LockedHint`);
+  unlock first, then restart.
 - Never `pkill quickshell` (or kill the process by hand) while locked,
   in scripts, runbooks, or debugging sessions. Check lock state first
   (`qs ipc call lock isLocked` or `loginctl show-session`).

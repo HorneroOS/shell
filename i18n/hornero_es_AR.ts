@@ -968,25 +968,6 @@
     </message>
 </context>
 <context>
-    <name>AppsPage</name>
-    <message>
-        <source>Set up your apps</source>
-        <translation>Configurá tus aplicaciones</translation>
-    </message>
-    <message>
-        <source>Pick an optional workstation profile to preview and queue curated applications. You can skip this and install apps anytime from Hornero Apps.</source>
-        <translation>Elegí un perfil opcional de estación de trabajo para previsualizar y poner en cola aplicaciones seleccionadas. Podés saltear este paso e instalar apps cuando quieras desde Hornero Apps.</translation>
-    </message>
-    <message>
-        <source>Open Hornero Apps</source>
-        <translation>Abrir Hornero Apps</translation>
-    </message>
-    <message>
-        <source>Browse all curated collections, AI tools, verified Flatpaks, and native Arch packages.</source>
-        <translation>Explorá todas las colecciones seleccionadas, herramientas de IA, Flatpaks verificados y paquetes nativos de Arch.</translation>
-    </message>
-</context>
-<context>
     <name>AppsProfilePanel</name>
     <message>
         <source>Loading workstation profiles…</source>
@@ -1203,8 +1184,8 @@
         <translation>Gestores de contraseñas, mensajería cifrada y herramientas VPN.</translation>
     </message>
     <message>
-        <source>Search apps by name, category, publisher, or tag (/ or Ctrl+F)</source>
-        <translation>Buscá apps por nombre, categoría, editor o etiqueta (/ o Ctrl+F)</translation>
+        <source>Search apps, categories, tags… (/)</source>
+        <translation>Buscá apps, categorías, etiquetas… (/)</translation>
     </message>
     <message>
         <source>Search applications</source>
@@ -1572,6 +1553,57 @@
     </message>
 </context>
 <context>
+    <name>ArrivalScene</name>
+    <message>
+        <source>Golden hour over Quebrada del Condorito</source>
+        <translation>Hora dorada en la Quebrada del Condorito</translation>
+    </message>
+    <message>
+        <source>Córdoba, Argentina</source>
+        <translation>Córdoba, Argentina</translation>
+    </message>
+    <message>
+        <source>Buenos Aires after dark</source>
+        <translation>Buenos Aires de noche</translation>
+    </message>
+    <message>
+        <source>Buenos Aires, Argentina</source>
+        <translation>Buenos Aires, Argentina</translation>
+    </message>
+    <message>
+        <source>%1 · %2 · v%3</source>
+        <translation>%1 · %2 · v%3</translation>
+    </message>
+    <message>
+        <source>Welcome to Hornero.</source>
+        <translation>Te damos la bienvenida a Hornero.</translation>
+    </message>
+    <message>
+        <source>A new place to call your own.</source>
+        <translation>Un nuevo lugar que podés hacer tuyo.</translation>
+    </message>
+    <message>
+        <source>Take a calm two-minute flight to tune your look, workstation apps, and Javi companion — or jump straight into your desktop anytime.</source>
+        <translation>Hacé un vuelo tranquilo de dos minutos para ajustar tu estilo, las apps de trabajo y a Javi — o pasá directo al escritorio cuando quieras.</translation>
+    </message>
+    <message>
+        <source>Set up my desktop</source>
+        <translation>Configurar mi escritorio</translation>
+    </message>
+    <message>
+        <source>Explore Hornero</source>
+        <translation>Explorar Hornero</translation>
+    </message>
+    <message>
+        <source>Start using Hornero</source>
+        <translation>Empezar a usar Hornero</translation>
+    </message>
+    <message>
+        <source>Javi says hola</source>
+        <translation>Javi te saluda</translation>
+    </message>
+</context>
+<context>
     <name>AssistantBridge</name>
     <message>
         <source>Chat %1</source>
@@ -1747,6 +1779,17 @@
     <message>
         <source>Reset every atmosphere setting to its factory value</source>
         <translation>Restablecer cada ajuste de la atmósfera a su valor de fábrica</translation>
+    </message>
+</context>
+<context>
+    <name>AttributionChip</name>
+    <message>
+        <source>%1 · %2 · %3</source>
+        <translation>%1 · %2 · %3</translation>
+    </message>
+    <message>
+        <source>%1 · %2</source>
+        <translation>%1 · %2</translation>
     </message>
 </context>
 <context>
@@ -1957,6 +2000,33 @@
     <message>
         <source>Refresh audio stream routing</source>
         <translation>Actualizar el ruteo de flujos de audio</translation>
+    </message>
+</context>
+<context>
+    <name>AvailabilityPill</name>
+    <message>
+        <source>Unavailable</source>
+        <translation>No disponible</translation>
+    </message>
+    <message>
+        <source>Optional</source>
+        <translation>Opcional</translation>
+    </message>
+    <message>
+        <source>Edition-dependent</source>
+        <translation>Según edición</translation>
+    </message>
+    <message>
+        <source>Read-only probe</source>
+        <translation>Sondeo de solo lectura</translation>
+    </message>
+    <message>
+        <source>Preview</source>
+        <translation>Vista previa</translation>
+    </message>
+    <message>
+        <source>Supported</source>
+        <translation>Soportado</translation>
     </message>
 </context>
 <context>
@@ -4635,6 +4705,121 @@ Huella de la clave del autor: %3</translation>
     </message>
 </context>
 <context>
+    <name>CompanionScene</name>
+    <message>
+        <source>Ask me anything about shortcuts, themes, or where settings live.</source>
+        <translation>Preguntame lo que quieras sobre atajos, temas o dónde está cada ajuste.</translation>
+    </message>
+    <message>
+        <source>Classic</source>
+        <translation>Clásico</translation>
+    </message>
+    <message>
+        <source>Argentina</source>
+        <translation>Argentina</translation>
+    </message>
+    <message>
+        <source>Gaucho</source>
+        <translation>Gaucho</translation>
+    </message>
+    <message>
+        <source>Blue &amp; Gold</source>
+        <translation>Azul y Oro</translation>
+    </message>
+    <message>
+        <source>Nocturnal</source>
+        <translation>Nocturno</translation>
+    </message>
+    <message>
+        <source>Retro CRT</source>
+        <translation>CRT Retro</translation>
+    </message>
+    <message>
+        <source>Mono</source>
+        <translation>Mono</translation>
+    </message>
+    <message>
+        <source>Greet</source>
+        <translation>Saludar</translation>
+    </message>
+    <message>
+        <source>Think</source>
+        <translation>Pensar</translation>
+    </message>
+    <message>
+        <source>Work</source>
+        <translation>Trabajar</translation>
+    </message>
+    <message>
+        <source>Sleep</source>
+        <translation>Dormir</translation>
+    </message>
+    <message>
+        <source>How do I open apps?</source>
+        <translation>¿Cómo abro las apps?</translation>
+    </message>
+    <message>
+        <source>Press %1 for the Launcher, or open Hornero Apps from the bar.</source>
+        <translation>Apretá %1 para abrir el Lanzador, o abrí Hornero Apps desde la barra.</translation>
+    </message>
+    <message>
+        <source>Can I turn Javi off?</source>
+        <translation>¿Puedo desactivar a Javi?</translation>
+    </message>
+    <message>
+        <source>Yes — toggle Javi off right here or anytime in Settings › Javi.</source>
+        <translation>Sí — podés desactivar a Javi acá mismo o cuando quieras en Ajustes › Javi.</translation>
+    </message>
+    <message>
+        <source>Is AI sent to the cloud?</source>
+        <translation>¿La IA se envía a la nube?</translation>
+    </message>
+    <message>
+        <source>Never by default. Javi&apos;s desktop animations are 100% local, and the optional Hermes gateway stays off until you enable it.</source>
+        <translation>Nunca por defecto. Las animaciones de escritorio de Javi son 100 % locales y la pasarela opcional de Hermes queda apagada hasta que la actives.</translation>
+    </message>
+    <message>
+        <source>JAVI EL HORNERO</source>
+        <translation>JAVI EL HORNERO</translation>
+    </message>
+    <message>
+        <source>Mascot active</source>
+        <translation>Mascota activa</translation>
+    </message>
+    <message>
+        <source>Javi the Hornero companion</source>
+        <translation>Javi, el compañero de Hornero</translation>
+    </message>
+    <message>
+        <source>A calm desktop sidekick — never intrusive</source>
+        <translation>Un compañero tranquilo para tu escritorio — nunca invasivo</translation>
+    </message>
+    <message>
+        <source>Hermes Assistant: Local gateway enabled</source>
+        <translation>Asistente Hermes: pasarela local activada</translation>
+    </message>
+    <message>
+        <source>Local-only mascot · Optional AI off by default</source>
+        <translation>Mascota solo local · IA opcional apagada por defecto</translation>
+    </message>
+    <message>
+        <source>Javi&apos;s animations and status reactions run 100% locally. Optional Hermes AI requires explicit consent per action and refuses secret files.</source>
+        <translation>Las animaciones y reacciones de estado de Javi corren 100 % en local. La IA opcional de Hermes pide confirmación explícita en cada acción y rechaza archivos con secretos.</translation>
+    </message>
+    <message>
+        <source>Try a local quick question</source>
+        <translation>Probá una pregunta rápida local</translation>
+    </message>
+    <message>
+        <source>Javi Settings</source>
+        <translation>Ajustes de Javi</translation>
+    </message>
+    <message>
+        <source>Agent &amp; Hermes Center</source>
+        <translation>Centro de Agentes y Hermes</translation>
+    </message>
+</context>
+<context>
     <name>CompanionStore</name>
     <message>
         <source>Mode looks reset</source>
@@ -6478,6 +6663,85 @@ Huella de la clave del autor: %3</translation>
     </message>
 </context>
 <context>
+    <name>ExploreView</name>
+    <message>
+        <source>All</source>
+        <translation>Todo</translation>
+    </message>
+    <message>
+        <source>Appearance</source>
+        <translation>Apariencia</translation>
+    </message>
+    <message>
+        <source>Desktop &amp; Bars</source>
+        <translation>Escritorio y barras</translation>
+    </message>
+    <message>
+        <source>Apps</source>
+        <translation>Apps</translation>
+    </message>
+    <message>
+        <source>Profiles</source>
+        <translation>Perfiles</translation>
+    </message>
+    <message>
+        <source>Workloads</source>
+        <translation>Cargas de trabajo</translation>
+    </message>
+    <message>
+        <source>Javi</source>
+        <translation>Javi</translation>
+    </message>
+    <message>
+        <source>Extensions</source>
+        <translation>Extensiones</translation>
+    </message>
+    <message>
+        <source>Keybinds</source>
+        <translation>Atajos</translation>
+    </message>
+    <message>
+        <source>Recovery</source>
+        <translation>Recuperación</translation>
+    </message>
+    <message>
+        <source>Accessibility</source>
+        <translation>Accesibilidad</translation>
+    </message>
+    <message>
+        <source>EXPLORE HORNERO</source>
+        <translation>EXPLORAR HORNERO</translation>
+    </message>
+    <message>
+        <source>Every capability, shortcut, and setting in one place</source>
+        <translation>Cada capacidad, atajo y ajuste en un solo lugar</translation>
+    </message>
+    <message>
+        <source>Back to Hub</source>
+        <translation>Volver al centro</translation>
+    </message>
+    <message>
+        <source>Full Shortcuts Sheet</source>
+        <translation>Guía completa de atajos</translation>
+    </message>
+    <message>
+        <source>Optional guided setup is paused at %1.</source>
+        <translation>La configuración guiada opcional quedó pausada en %1.</translation>
+    </message>
+    <message>
+        <source>Resume First Flight</source>
+        <translation>Retomar Primer Vuelo</translation>
+    </message>
+    <message>
+        <source>Search features, settings, shortcuts, apps, or extensions…</source>
+        <translation>Buscá funciones, ajustes, atajos, apps o extensiones…</translation>
+    </message>
+    <message>
+        <source>%1 (%2)</source>
+        <translation>%1 (%2)</translation>
+    </message>
+</context>
+<context>
     <name>ExtensionStore</name>
     <message>
         <source>Catalogue unavailable (network or horneroctl).</source>
@@ -7025,6 +7289,69 @@ Snapshot del plugin: %3</translation>
     </message>
 </context>
 <context>
+    <name>ExtensionsScene</name>
+    <message>
+        <source>OPTIONAL EXTENSIONS</source>
+        <translation>EXTENSIONES OPCIONALES</translation>
+    </message>
+    <message>
+        <source>Extend your Hornero</source>
+        <translation>Extendé tu Hornero</translation>
+    </message>
+    <message>
+        <source>PluginKit 3 lets community extensions add bar modules, dashboard tabs, and launcher providers.</source>
+        <translation>PluginKit 3 permite que extensiones de la comunidad sumen módulos en la barra, pestañas en el panel y proveedores al lanzador.</translation>
+    </message>
+    <message>
+        <source>Refresh</source>
+        <translation>Actualizar</translation>
+    </message>
+    <message>
+        <source>Open Marketplace</source>
+        <translation>Abrir tienda de extensiones</translation>
+    </message>
+    <message>
+        <source>Plugins run inside Quickshell with your user privileges and are not sandboxed. Safe Mode (HORNERO_SAFE_MODE=1) disables all plugins for recovery.</source>
+        <translation>Los plugins corren dentro de Quickshell con tus privilegios de usuario y no están aislados. El Modo Seguro (HORNERO_SAFE_MODE=1) desactiva todos los plugins para recuperar el sistema.</translation>
+    </message>
+    <message>
+        <source>Loading extension catalogue…</source>
+        <translation>Cargando catálogo de extensiones…</translation>
+    </message>
+    <message>
+        <source>No extensions in catalogue right now. Open Marketplace anytime to manage local plugins.</source>
+        <translation>No hay extensiones en el catálogo por ahora. Podés abrir la tienda en cualquier momento para gestionar plugins locales.</translation>
+    </message>
+    <message>
+        <source>community</source>
+        <translation>comunidad</translation>
+    </message>
+    <message>
+        <source>Community shell extension</source>
+        <translation>Extensión comunitaria del shell</translation>
+    </message>
+    <message>
+        <source>By %1</source>
+        <translation>Por %1</translation>
+    </message>
+    <message>
+        <source>Publisher unverified</source>
+        <translation>Autor sin verificar</translation>
+    </message>
+    <message>
+        <source>Confirm Install</source>
+        <translation>Confirmar instalación</translation>
+    </message>
+    <message>
+        <source>Install</source>
+        <translation>Instalar</translation>
+    </message>
+    <message>
+        <source>Manage</source>
+        <translation>Gestionar</translation>
+    </message>
+</context>
+<context>
     <name>ExtraIndicator</name>
     <message>
         <source>+%1</source>
@@ -7059,6 +7386,89 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>Search timed out — partial results</source>
         <translation>La búsqueda tardó demasiado — resultados parciales</translation>
+    </message>
+</context>
+<context>
+    <name>FlightRail</name>
+    <message>
+        <source>Arrival</source>
+        <translation>Llegada</translation>
+    </message>
+    <message>
+        <source>Personalize</source>
+        <translation>Personalizar</translation>
+    </message>
+    <message>
+        <source>Workstation</source>
+        <translation>Estación</translation>
+    </message>
+    <message>
+        <source>Javi</source>
+        <translation>Javi</translation>
+    </message>
+    <message>
+        <source>Practice</source>
+        <translation>Práctica</translation>
+    </message>
+    <message>
+        <source>Extensions</source>
+        <translation>Extensiones</translation>
+    </message>
+    <message>
+        <source>Showcase</source>
+        <translation>Usos</translation>
+    </message>
+    <message>
+        <source>Trust</source>
+        <translation>Confianza</translation>
+    </message>
+    <message>
+        <source>Ready</source>
+        <translation>Listo</translation>
+    </message>
+    <message>
+        <source>Show Welcome on login</source>
+        <translation>Mostrar Bienvenida al iniciar sesión</translation>
+    </message>
+    <message>
+        <source>Show on login</source>
+        <translation>Mostrar al iniciar</translation>
+    </message>
+    <message>
+        <source>Chapter %1: %2</source>
+        <translation>Capítulo %1: %2</translation>
+    </message>
+    <message>
+        <source>Core 5</source>
+        <translation>5 esenciales</translation>
+    </message>
+    <message>
+        <source>+4 Deep Dives</source>
+        <translation>+4 en detalle</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>Atrás</translation>
+    </message>
+    <message>
+        <source>Skip to Ready</source>
+        <translation>Ir al cierre</translation>
+    </message>
+    <message>
+        <source>Enter my desktop</source>
+        <translation>Entrar a mi escritorio</translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation>Continuar</translation>
+    </message>
+    <message>
+        <source>Done</source>
+        <translation>Listo</translation>
+    </message>
+    <message>
+        <source>Preference kept for this session only</source>
+        <translation>Preferencia guardada solo para esta sesión</translation>
     </message>
 </context>
 <context>
@@ -8016,57 +8426,6 @@ Snapshot del plugin: %3</translation>
     </message>
 </context>
 <context>
-    <name>JaviPage</name>
-    <message>
-        <source>Javi, your assistant</source>
-        <translation>Javi, tu asistente</translation>
-    </message>
-    <message>
-        <source>El Hornero: a sidekick that can chat, look at your system, and help — always asking first.</source>
-        <translation>El Hornero: un compañero que charla, mira tu sistema y te da una mano, siempre preguntando antes.</translation>
-    </message>
-    <message>
-        <source>Chat with Javi</source>
-        <translation>Charlá con Javi</translation>
-    </message>
-    <message>
-        <source>Ask anything: updates, disk, themes. Javi reads the system through horneroctl and answers in the chat panel, streaming live.</source>
-        <translation>Preguntá lo que quieras: actualizaciones, disco, temas. Javi lee el sistema con horneroctl y responde en el panel de chat, en vivo.</translation>
-    </message>
-    <message>
-        <source>Talk, don&apos;t type</source>
-        <translation>Hablá, no escribas</translation>
-    </message>
-    <message>
-        <source>Hold a voice note from the mic button: Hermes transcribes it and treats it as your message.</source>
-        <translation>Mantené apretado el botón del micrófono para dejar una nota de voz: Hermes la transcribe y la toma como tu mensaje.</translation>
-    </message>
-    <message>
-        <source>Attach files</source>
-        <translation>Adjuntar archivos</translation>
-    </message>
-    <message>
-        <source>Screenshots, logs and notes can ride along. Secret-looking files (keys, .env) are refused before anything is sent.</source>
-        <translation>Podés sumar capturas, logs y notas. Los archivos que parecen secretos (claves, .env) se rechazan antes de enviar nada.</translation>
-    </message>
-    <message>
-        <source>Nothing changes without your OK</source>
-        <translation>Nada cambia sin tu OK</translation>
-    </message>
-    <message>
-        <source>When Javi wants to change something, the chat shows exactly what and waits. Approve or deny — it is never auto-answered.</source>
-        <translation>Cuando Javi quiere cambiar algo, el chat te muestra exactamente qué y espera. Aprobá o rechazá: nunca se responde solo.</translation>
-    </message>
-    <message>
-        <source>Make Javi yours</source>
-        <translation>Hacé tuyo a Javi</translation>
-    </message>
-    <message>
-        <source>Skin, size, streaming and history live in Control Center › Javi. Hermes is optional, local-only (loopback), and off unless you enable it.</source>
-        <translation>Aspecto, tamaño, streaming e historial están en Centro de control › Javi. Hermes es opcional, solo local (loopback) y está desactivado hasta que lo actives.</translation>
-    </message>
-</context>
-<context>
     <name>KbLayout</name>
     <message>
         <source>Keyboard layout %1</source>
@@ -8569,38 +8928,10 @@ Snapshot del plugin: %3</translation>
     </message>
 </context>
 <context>
-    <name>LearnPage</name>
+    <name>LiveDesktopMini</name>
     <message>
-        <source>Learn</source>
-        <translation>Aprender</translation>
-    </message>
-    <message>
-        <source>Hornero teaches itself. Keep this window around as a reference.</source>
-        <translation>Hornero se explica solo. Tené esta ventana a mano como referencia.</translation>
-    </message>
-    <message>
-        <source>Every shortcut</source>
-        <translation>Todos los atajos</translation>
-    </message>
-    <message>
-        <source>A searchable cheatsheet of every key, one key away.</source>
-        <translation>Una guía con todas las teclas, con búsqueda, a una tecla de distancia.</translation>
-    </message>
-    <message>
-        <source>Restart the tour</source>
-        <translation>Repetir el recorrido</translation>
-    </message>
-    <message>
-        <source>Walk the eight sections again from the beginning.</source>
-        <translation>Recorré las ocho secciones otra vez desde el principio.</translation>
-    </message>
-    <message>
-        <source>Reopen anytime</source>
-        <translation>Volvé cuando quieras</translation>
-    </message>
-    <message>
-        <source>Launcher → Hornero Welcome, Control Center → System, or run: horneroctl welcome open</source>
-        <translation>Lanzador → Hornero Welcome, Centro de control → Sistema, o ejecutá: horneroctl welcome open</translation>
+        <source>Signal Canvas</source>
+        <translation>Lienzo Signal</translation>
     </message>
 </context>
 <context>
@@ -9061,6 +9392,25 @@ Snapshot del plugin: %3</translation>
     </message>
 </context>
 <context>
+    <name>ModeSwitcher</name>
+    <message>
+        <source>First Flight</source>
+        <translation>Primer Vuelo</translation>
+    </message>
+    <message>
+        <source>Explore Hornero</source>
+        <translation>Explorar Hornero</translation>
+    </message>
+    <message>
+        <source>What&apos;s New</source>
+        <translation>Novedades</translation>
+    </message>
+    <message>
+        <source>Welcome modes</source>
+        <translation>Modos de bienvenida</translation>
+    </message>
+</context>
+<context>
     <name>NavRail</name>
     <message>
         <source>OSD</source>
@@ -9085,41 +9435,6 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>Open the %1 Settings page</source>
         <translation>Abrir la página %1 de Ajustes</translation>
-    </message>
-</context>
-<context>
-    <name>NavigatePage</name>
-    <message>
-        <source>Navigate</source>
-        <translation>Navegar</translation>
-    </message>
-    <message>
-        <source>Move around Hornero with the keyboard — or the mouse. These three cover almost everything.</source>
-        <translation>Movete por Hornero con el teclado, o con el mouse. Con estos tres cubrís casi todo.</translation>
-    </message>
-    <message>
-        <source>Launcher</source>
-        <translation>Lanzador</translation>
-    </message>
-    <message>
-        <source>Search apps, run commands and switch windows from one place.</source>
-        <translation>Buscá apps, ejecutá comandos y cambiá de ventana desde un solo lugar.</translation>
-    </message>
-    <message>
-        <source>Dashboard</source>
-        <translation>Dashboard</translation>
-    </message>
-    <message>
-        <source>Calendar, media and quick toggles in a single glance.</source>
-        <translation>Calendario, multimedia y accesos rápidos de un vistazo.</translation>
-    </message>
-    <message>
-        <source>Workspace overview</source>
-        <translation>Vista general de espacios de trabajo</translation>
-    </message>
-    <message>
-        <source>Zoom out to every workspace, then pick one. Works from anywhere.</source>
-        <translation>Alejate para ver todos los espacios de trabajo y elegí uno. Funciona desde cualquier lado.</translation>
     </message>
 </context>
 <context>
@@ -10483,38 +10798,134 @@ Snapshot del plugin: %3</translation>
     </message>
 </context>
 <context>
-    <name>PersonalizePage</name>
+    <name>PersonalizeScene</name>
     <message>
-        <source>Personalize</source>
-        <translation>Personalizar</translation>
+        <source>Signal Night</source>
+        <translation>Signal Noche</translation>
     </message>
     <message>
-        <source>Make Hornero yours. Everything previews live, nothing needs a restart.</source>
-        <translation>Hacé tuyo a Hornero. Todo se ve en vivo y nada necesita reiniciar.</translation>
+        <source>Signal Day</source>
+        <translation>Signal Día</translation>
     </message>
     <message>
-        <source>Look and feel</source>
-        <translation>Aspecto</translation>
+        <source>High Contrast</source>
+        <translation>Alto Contraste</translation>
     </message>
     <message>
-        <source>Themes, wallpaper, colors and dark or light mode.</source>
-        <translation>Temas, fondo de pantalla, colores y modo oscuro o claro.</translation>
+        <source>Blue-Hour Night</source>
+        <translation>Noche Hora Azul</translation>
     </message>
     <message>
-        <source>Taskbar and dock</source>
-        <translation>Barra de tareas y dock</translation>
+        <source>White Ceramic Day</source>
+        <translation>Día Cerámica Blanca</translation>
     </message>
     <message>
-        <source>What the bar shows, and where it lives.</source>
-        <translation>Qué muestra la barra y dónde va.</translation>
+        <source>AAA Contrast</source>
+        <translation>Contraste AAA</translation>
     </message>
     <message>
-        <source>Bar layout</source>
-        <translation>Layout de la barra</translation>
+        <source>Jacarandá</source>
+        <translation>Jacarandá</translation>
     </message>
     <message>
-        <source>Move and reshape the shell around your workflow.</source>
-        <translation>Mové y acomodá el shell a tu manera de trabajar.</translation>
+        <source>Glaciar</source>
+        <translation>Glaciar</translation>
+    </message>
+    <message>
+        <source>Ceibo</source>
+        <translation>Ceibo</translation>
+    </message>
+    <message>
+        <source>Buenos Aires Night</source>
+        <translation>Buenos Aires Nocturno</translation>
+    </message>
+    <message>
+        <source>Beagle Channel</source>
+        <translation>Canal Beagle</translation>
+    </message>
+    <message>
+        <source>Quebrada del Condorito</source>
+        <translation>Quebrada del Condorito</translation>
+    </message>
+    <message>
+        <source>Signal Night Grid</source>
+        <translation>Grilla Signal Noche</translation>
+    </message>
+    <message>
+        <source>Signal Day Grid</source>
+        <translation>Grilla Signal Día</translation>
+    </message>
+    <message>
+        <source>Hornero Left</source>
+        <translation>Hornero Izquierda</translation>
+    </message>
+    <message>
+        <source>Hornero Right</source>
+        <translation>Hornero Derecha</translation>
+    </message>
+    <message>
+        <source>Cockpit</source>
+        <translation>Cockpit</translation>
+    </message>
+    <message>
+        <source>Clear</source>
+        <translation>Despejado</translation>
+    </message>
+    <message>
+        <source>Balanced</source>
+        <translation>Equilibrado</translation>
+    </message>
+    <message>
+        <source>Vibrant</source>
+        <translation>Vibrante</translation>
+    </message>
+    <message>
+        <source>Muted</source>
+        <translation>Suave</translation>
+    </message>
+    <message>
+        <source>MAKE IT YOURS</source>
+        <translation>HACELO TUYO</translation>
+    </message>
+    <message>
+        <source>Surface, light, and geometry</source>
+        <translation>Superficie, luz y geometría</translation>
+    </message>
+    <message>
+        <source>Everything previews live on your desktop. Apply to keep, or Revert anytime.</source>
+        <translation>Todo se previsualiza en vivo en tu escritorio. Aplicá para conservarlo o revertí cuando quieras.</translation>
+    </message>
+    <message>
+        <source>Polarity &amp; contrast</source>
+        <translation>Polaridad y contraste</translation>
+    </message>
+    <message>
+        <source>Palettes &amp; Argentine Originals</source>
+        <translation>Paletas y Originales Argentinos</translation>
+    </message>
+    <message>
+        <source>Chromatic accent</source>
+        <translation>Acento Chromatic</translation>
+    </message>
+    <message>
+        <source>Licensed Argentine landscapes</source>
+        <translation>Paisajes argentinos con licencia</translation>
+    </message>
+    <message>
+        <source>Shell bar layout</source>
+        <translation>Disposición de la barra</translation>
+    </message>
+    <message>
+        <source>Reduced motion</source>
+        <translation>Movimiento reducido</translation>
+    </message>
+    <message>
+        <source>Need deeper palette or font tuning later? Appearance settings are one click away.</source>
+        <translation>¿Querés ajustar paletas o tipografías más a fondo después? Los ajustes de Apariencia están a un clic.</translation>
+    </message>
+    <message>
+        <source>Open Layout Picker</source>
+        <translation>Abrir selector de diseño</translation>
     </message>
 </context>
 <context>
@@ -10971,6 +11382,89 @@ Snapshot del plugin: %3</translation>
     </message>
 </context>
 <context>
+    <name>PracticeScene</name>
+    <message>
+        <source>Summon Launcher</source>
+        <translation>Abrir Lanzador</translation>
+    </message>
+    <message>
+        <source>Search installed apps, files, and Hornero Apps catalog entries.</source>
+        <translation>Buscá apps instaladas, archivos y entradas del catálogo de Hornero Apps.</translation>
+    </message>
+    <message>
+        <source>Try Launcher</source>
+        <translation>Probar Lanzador</translation>
+    </message>
+    <message>
+        <source>Peek Dashboard</source>
+        <translation>Mirar el Panel</translation>
+    </message>
+    <message>
+        <source>Check system telemetry, weather, and media playback.</source>
+        <translation>Revisá telemetría del sistema, clima y reproducción multimedia.</translation>
+    </message>
+    <message>
+        <source>Try Dashboard</source>
+        <translation>Probar Panel</translation>
+    </message>
+    <message>
+        <source>Switch Workspace</source>
+        <translation>Cambiar de espacio</translation>
+    </message>
+    <message>
+        <source>Move cleanly between focused workspaces without overlapping clutter.</source>
+        <translation>Movete limpio entre espacios de trabajo enfocados sin ventanas superpuestas.</translation>
+    </message>
+    <message>
+        <source>Next Workspace</source>
+        <translation>Siguiente espacio</translation>
+    </message>
+    <message>
+        <source>Open Settings</source>
+        <translation>Abrir Ajustes</translation>
+    </message>
+    <message>
+        <source>Launch Hornero Settings directly when you want fine-grained control.</source>
+        <translation>Abrí Ajustes de Hornero directo cuando necesites control fino.</translation>
+    </message>
+    <message>
+        <source>Try Settings</source>
+        <translation>Probar Ajustes</translation>
+    </message>
+    <message>
+        <source>OPTIONAL INTERACTIVE PRACTICE</source>
+        <translation>PRÁCTICA INTERACTIVA OPCIONAL</translation>
+    </message>
+    <message>
+        <source>A different way to work</source>
+        <translation>Una forma distinta de trabajar</translation>
+    </message>
+    <message>
+        <source>Missions check off only when the real shell or compositor event fires. Skip anytime — nothing here traps you.</source>
+        <translation>Las misiones se marcan recién cuando ocurre el evento real del shell o del compositor. Podés saltearlo cuando quieras.</translation>
+    </message>
+    <message>
+        <source>All Shortcuts</source>
+        <translation>Todos los atajos</translation>
+    </message>
+    <message>
+        <source>Live compositor events are unavailable in this session; workspace switching cannot auto-verify here.</source>
+        <translation>Los eventos en vivo del compositor no están disponibles en esta sesión; el cambio de espacio no se puede verificar automáticamente acá.</translation>
+    </message>
+    <message>
+        <source>Unbound — use button</source>
+        <translation>Sin atajo — usá el botón</translation>
+    </message>
+    <message>
+        <source>Verified</source>
+        <translation>Verificado</translation>
+    </message>
+    <message>
+        <source>Bonus Hyprland scratchpad: keep a floating terminal or notes one key away.</source>
+        <translation>Extra de Hyprland: tené una terminal flotante o notas a una tecla de distancia.</translation>
+    </message>
+</context>
+<context>
     <name>PrefPick</name>
     <message>
         <source>Reset</source>
@@ -11135,6 +11629,68 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>%1 on monitor %2 at %3, %4</source>
         <translation>%1 en el monitor %2 en %3, %4</translation>
+    </message>
+</context>
+<context>
+    <name>PreviewTransaction</name>
+    <message>
+        <source>Previewing %1</source>
+        <translation>Previsualizando %1</translation>
+    </message>
+    <message>
+        <source>Previewing wallpaper</source>
+        <translation>Previsualizando fondo de pantalla</translation>
+    </message>
+    <message>
+        <source>Previewing layout %1</source>
+        <translation>Previsualizando diseño %1</translation>
+    </message>
+    <message>
+        <source>Previewing Chromatic (%1)</source>
+        <translation>Previsualizando Chromatic (%1)</translation>
+    </message>
+    <message>
+        <source>Changes applied</source>
+        <translation>Cambios aplicados</translation>
+    </message>
+    <message>
+        <source>Hornero Welcome</source>
+        <translation>Bienvenida de Hornero</translation>
+    </message>
+    <message>
+        <source>Desktop personalization applied.</source>
+        <translation>Personalización del escritorio aplicada.</translation>
+    </message>
+    <message>
+        <source>Reverted to previous look</source>
+        <translation>Se restauró el aspecto anterior</translation>
+    </message>
+    <message>
+        <source>Restored your previous desktop look after an interrupted Welcome preview.</source>
+        <translation>Se restauró tu aspecto anterior tras una vista previa interrumpida de Bienvenida.</translation>
+    </message>
+</context>
+<context>
+    <name>PreviewTxBar</name>
+    <message>
+        <source>Live preview active</source>
+        <translation>Vista previa en vivo activa</translation>
+    </message>
+    <message>
+        <source>Changes apply live on your desktop. Revert restores your previous look safely.</source>
+        <translation>Los cambios se ven en vivo en tu escritorio. Revertir restaura tu aspecto anterior sin riesgos.</translation>
+    </message>
+    <message>
+        <source>Revert</source>
+        <translation>Revertir</translation>
+    </message>
+    <message>
+        <source>Applying…</source>
+        <translation>Aplicando…</translation>
+    </message>
+    <message>
+        <source>Apply &amp; Keep</source>
+        <translation>Aplicar y guardar</translation>
     </message>
 </context>
 <context>
@@ -11593,6 +12149,85 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>unavailable</source>
         <translation>no disponible</translation>
+    </message>
+</context>
+<context>
+    <name>ReadyScene</name>
+    <message>
+        <source>Theme</source>
+        <translation>Tema</translation>
+    </message>
+    <message>
+        <source>High Contrast</source>
+        <translation>Alto Contraste</translation>
+    </message>
+    <message>
+        <source>Layout Preset</source>
+        <translation>Diseño de barra</translation>
+    </message>
+    <message>
+        <source>Active shell default</source>
+        <translation>Predeterminado activo del shell</translation>
+    </message>
+    <message>
+        <source>Experience Mode</source>
+        <translation>Modo de Experiencia</translation>
+    </message>
+    <message>
+        <source>Javi Companion</source>
+        <translation>Javi Compañero</translation>
+    </message>
+    <message>
+        <source>Active (%1)</source>
+        <translation>Activo (%1)</translation>
+    </message>
+    <message>
+        <source>Disabled</source>
+        <translation>Desactivado</translation>
+    </message>
+    <message>
+        <source>Tutorials Verified</source>
+        <translation>Prácticas verificadas</translation>
+    </message>
+    <message>
+        <source>%1 of 4 completed</source>
+        <translation>%1 de 4 completadas</translation>
+    </message>
+    <message>
+        <source>Hornero Apps Queue</source>
+        <translation>Cola de Hornero Apps</translation>
+    </message>
+    <message>
+        <source>Running in background</source>
+        <translation>En ejecución en segundo plano</translation>
+    </message>
+    <message>
+        <source>Ready in Hornero Apps</source>
+        <translation>Lista en Hornero Apps</translation>
+    </message>
+    <message>
+        <source>FIRST FLIGHT COMPLETE</source>
+        <translation>PRIMER VUELO COMPLETO</translation>
+    </message>
+    <message>
+        <source>You&apos;re ready to fly</source>
+        <translation>Ya estás listo para volar</translation>
+    </message>
+    <message>
+        <source>Your desktop reflects the choices below. Any background app or extension installs continue peacefully on their own.</source>
+        <translation>Tu escritorio ya refleja las elecciones de abajo. Cualquier instalación de apps o extensiones en segundo plano sigue sola sin trabarte.</translation>
+    </message>
+    <message>
+        <source>Enter my desktop</source>
+        <translation>Entrar a mi escritorio</translation>
+    </message>
+    <message>
+        <source>Open Explore Hornero</source>
+        <translation>Abrir Explorar Hornero</translation>
+    </message>
+    <message>
+        <source>Open Launcher</source>
+        <translation>Abrir Lanzador</translation>
     </message>
 </context>
 <context>
@@ -12113,73 +12748,6 @@ Snapshot del plugin: %3</translation>
     </message>
 </context>
 <context>
-    <name>SettingsPage</name>
-    <message>
-        <source>Control Center</source>
-        <translation>Centro de control</translation>
-    </message>
-    <message>
-        <source>Everything configurable lives in one place — and it is all searchable.</source>
-        <translation>Todo lo que se puede configurar está en un solo lugar, y se puede buscar.</translation>
-    </message>
-    <message>
-        <source>Search any setting</source>
-        <translation>Buscar cualquier ajuste</translation>
-    </message>
-    <message>
-        <source>The Control Center search jumps straight to a setting: try “gtk”, “sleep” or “vpn”. Every pane and section is indexed.</source>
-        <translation>La búsqueda del Centro de control te lleva directo a un ajuste: probá “gtk”, “sleep” o “vpn”. Todas las páginas y secciones están indexadas.</translation>
-    </message>
-    <message>
-        <source>Personalization</source>
-        <translation>Personalización</translation>
-    </message>
-    <message>
-        <source>Appearance and Hornero themes, bars and layout, launcher, dashboard — and Javi, your companion.</source>
-        <translation>Apariencia y temas de Hornero, barras y layout, lanzador, dashboard, y Javi, tu compañero.</translation>
-    </message>
-    <message>
-        <source>Connectivity &amp; sound</source>
-        <translation>Conectividad y sonido</translation>
-    </message>
-    <message>
-        <source>Network, Bluetooth and VPN; audio, notifications and on-screen displays.</source>
-        <translation>Red, Bluetooth y VPN; audio, notificaciones e indicadores en pantalla.</translation>
-    </message>
-    <message>
-        <source>System</source>
-        <translation>Sistema</translation>
-    </message>
-    <message>
-        <source>System info, extensions and plugins, updates, terminal and power — including lock screen and session behavior.</source>
-        <translation>Información del sistema, extensiones y plugins, actualizaciones, terminal y energía, incluido el comportamiento de la pantalla de bloqueo y la sesión.</translation>
-    </message>
-    <message>
-        <source>Comfort first</source>
-        <translation>Primero, la comodidad</translation>
-    </message>
-    <message>
-        <source>Text size, calmer motion and transparency live under Accessibility — Javi honors them too.</source>
-        <translation>El tamaño del texto, el movimiento más calmo y la transparencia están en Accesibilidad, y Javi también los respeta.</translation>
-    </message>
-    <message>
-        <source>Extensions &amp; plugins</source>
-        <translation>Extensiones y plugins</translation>
-    </message>
-    <message>
-        <source>Community plugins and their widgets are managed in Extensions. Plugins run as your user — enable only ones you trust.</source>
-        <translation>Los plugins de la comunidad y sus widgets se administran en Extensiones. Los plugins corren con tu usuario: activá solo los que sean de confianza.</translation>
-    </message>
-    <message>
-        <source>Changes apply instantly</source>
-        <translation>Los cambios se aplican al instante</translation>
-    </message>
-    <message>
-        <source>Most settings take effect as you toggle them, with no restart and no config files to edit by hand.</source>
-        <translation>La mayoría de los ajustes se aplican apenas los cambiás, sin reiniciar y sin editar archivos de configuración a mano.</translation>
-    </message>
-</context>
-<context>
     <name>SettingsSearch</name>
     <message>
         <source>Find a setting</source>
@@ -12227,33 +12795,6 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>Session</source>
         <translation>Sesión</translation>
-    </message>
-</context>
-<context>
-    <name>ShellPage</name>
-    <message>
-        <source>Shell</source>
-        <translation>Shell</translation>
-    </message>
-    <message>
-        <source>A terminal is always one key away, in the workspace where you need it.</source>
-        <translation>Siempre tenés una terminal a una tecla de distancia, en el espacio de trabajo donde la necesitás.</translation>
-    </message>
-    <message>
-        <source>Open a terminal</source>
-        <translation>Abrir una terminal</translation>
-    </message>
-    <message>
-        <source>Your configured terminal, ready in the current workspace.</source>
-        <translation>Tu terminal configurada, lista en el espacio de trabajo actual.</translation>
-    </message>
-    <message>
-        <source>Yazi in the configured terminal</source>
-        <translation>Yazi en la terminal configurada</translation>
-    </message>
-    <message>
-        <source>Browse files in a separate window with the terminal you selected.</source>
-        <translation>Explorá archivos en una ventana aparte con la terminal que elegiste.</translation>
     </message>
 </context>
 <context>
@@ -12308,14 +12849,97 @@ Snapshot del plugin: %3</translation>
     </message>
 </context>
 <context>
-    <name>ShortcutsPage</name>
+    <name>ShortcutsView</name>
     <message>
-        <source>Shortcuts</source>
-        <translation>Atajos</translation>
+        <source>Shortcuts reference</source>
+        <translation>Referencia de atajos</translation>
+    </message>
+</context>
+<context>
+    <name>ShowcaseScene</name>
+    <message>
+        <source>Creative Studio</source>
+        <translation>Estudio Creativo</translation>
     </message>
     <message>
-        <source>Every key, one search away. Type to filter, pick a group to narrow.</source>
-        <translation>Todas las teclas, a una búsqueda de distancia. Escribí para filtrar o elegí un grupo para acotar.</translation>
+        <source>AI &amp; Engineering</source>
+        <translation>IA e Ingeniería</translation>
+    </message>
+    <message>
+        <source>PC Gaming</source>
+        <translation>Gaming en PC</translation>
+    </message>
+    <message>
+        <source>ADAPTIVE WORKLOADS</source>
+        <translation>CARGAS DE TRABAJO ADAPTATIVAS</translation>
+    </message>
+    <message>
+        <source>Create, build, and play</source>
+        <translation>Creá, desarrollá y jugá</translation>
+    </message>
+    <message>
+        <source>Highlight what you use this machine for — we&apos;ll surface relevant guides in Explore Hornero.</source>
+        <translation>Marcá para qué usás esta compu — vamos a priorizar guías relevantes en Explorar Hornero.</translation>
+    </message>
+    <message>
+        <source>CREATE · STUDIO</source>
+        <translation>CREAR · STUDIO</translation>
+    </message>
+    <message>
+        <source>Low-latency audio &amp; routing kits</source>
+        <translation>Audio de baja latencia y kits de ruteo</translation>
+    </message>
+    <message>
+        <source>PipeWire Studio Audio is ready: live-call, browser backing, and REAPER routing kits are available.</source>
+        <translation>PipeWire Studio Audio está listo: tenés kits de ruteo para llamadas en vivo, pistas de navegador y REAPER.</translation>
+    </message>
+    <message>
+        <source>Studio Audio profile is optional and not active yet. Open Studio settings to inspect PipeWire readiness.</source>
+        <translation>El perfil de Studio Audio es opcional y todavía no está activo. Abrí los ajustes de Studio para revisar el estado de PipeWire.</translation>
+    </message>
+    <message>
+        <source>Open Studio Settings</source>
+        <translation>Abrir ajustes de Studio</translation>
+    </message>
+    <message>
+        <source>BUILD · ENGINEERING</source>
+        <translation>CONSTRUIR · INGENIERÍA</translation>
+    </message>
+    <message>
+        <source>Terminal, Agents &amp; Tooling</source>
+        <translation>Terminal, Agentes y Herramientas</translation>
+    </message>
+    <message>
+        <source>Configured terminal: %1. Inspect local coding agents, sandbox rules, and Hermes readiness in Agent Center.</source>
+        <translation>Terminal configurada: %1. Revisá agentes locales, reglas de sandbox y el estado de Hermes en el Centro de Agentes.</translation>
+    </message>
+    <message>
+        <source>Terminal</source>
+        <translation>Terminal</translation>
+    </message>
+    <message>
+        <source>Agent Center</source>
+        <translation>Centro de Agentes</translation>
+    </message>
+    <message>
+        <source>PLAY · GAMING</source>
+        <translation>JUGAR · GAMING</translation>
+    </message>
+    <message>
+        <source>Zero-distraction fullscreen focus</source>
+        <translation>Foco en pantalla completa sin distracciones</translation>
+    </message>
+    <message>
+        <source>Gaming mode pauses background shell glow and holds popups during fullscreen play. Check Gamescope and MangoHud readiness honestly before launching.</source>
+        <translation>El modo Gaming pausa los brillos del shell y retiene avisos mientras jugás en pantalla completa. Revisá el estado real de Gamescope y MangoHud antes de lanzar.</translation>
+    </message>
+    <message>
+        <source>Auto fullscreen gaming</source>
+        <translation>Modo Gaming automático en pantalla completa</translation>
+    </message>
+    <message>
+        <source>Gaming Readiness</source>
+        <translation>Estado de Gaming</translation>
     </message>
 </context>
 <context>
@@ -12418,41 +13042,6 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>More options</source>
         <translation>Más opciones</translation>
-    </message>
-</context>
-<context>
-    <name>StartPage</name>
-    <message>
-        <source>Welcome to Hornero</source>
-        <translation>Te damos la bienvenida a Hornero</translation>
-    </message>
-    <message>
-        <source>Your desktop is ready. Take the short tour, or open the launcher to start anything. You can switch off automatic opening at the bottom whenever you like.</source>
-        <translation>Tu escritorio está listo. Hacé el recorrido corto o abrí el lanzador para arrancar con lo que quieras. Podés desactivar la apertura automática abajo cuando quieras.</translation>
-    </message>
-    <message>
-        <source>Take the tour</source>
-        <translation>Hacer el recorrido</translation>
-    </message>
-    <message>
-        <source>Eight short sections: navigation, shell, workspaces, look and feel, tools, system and learning.</source>
-        <translation>Ocho secciones cortas: navegación, shell, espacios de trabajo, aspecto, herramientas, sistema y aprendizaje.</translation>
-    </message>
-    <message>
-        <source>Open the launcher</source>
-        <translation>Abrir el lanzador</translation>
-    </message>
-    <message>
-        <source>Every app, action and setting, one key away.</source>
-        <translation>Todas las apps, acciones y ajustes, a una tecla de distancia.</translation>
-    </message>
-    <message>
-        <source>Choose a mode</source>
-        <translation>Elegir un modo</translation>
-    </message>
-    <message>
-        <source>Everyday is the default. Focus, Signal, Studio and Gaming are set in Settings.</source>
-        <translation>Everyday es el predeterminado. Focus, Signal, Studio y Gaming se eligen en Ajustes.</translation>
     </message>
 </context>
 <context>
@@ -13087,57 +13676,6 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>OFF</source>
         <translation>NO</translation>
-    </message>
-</context>
-<context>
-    <name>SystemPage</name>
-    <message>
-        <source>System</source>
-        <translation>Sistema</translation>
-    </message>
-    <message>
-        <source>Power, sessions and settings live here.</source>
-        <translation>Energía, sesiones y ajustes están acá.</translation>
-    </message>
-    <message>
-        <source>System settings</source>
-        <translation>Ajustes del sistema</translation>
-    </message>
-    <message>
-        <source>Network, sound, power — and this Welcome Center.</source>
-        <translation>Red, sonido, energía, y este Centro de bienvenida.</translation>
-    </message>
-    <message>
-        <source>Lock the screen</source>
-        <translation>Bloquear la pantalla</translation>
-    </message>
-    <message>
-        <source>One key locks; your session waits for you.</source>
-        <translation>Una tecla bloquea; tu sesión te espera.</translation>
-    </message>
-    <message>
-        <source>Power and session</source>
-        <translation>Energía y sesión</translation>
-    </message>
-    <message>
-        <source>Quick power menu: log out, suspend, reboot or shut down.</source>
-        <translation>Menú rápido de energía: cerrar sesión, suspender, reiniciar o apagar.</translation>
-    </message>
-    <message>
-        <source>Power controls</source>
-        <translation>Controles de energía</translation>
-    </message>
-    <message>
-        <source>Steady power actions with a confirm step, plus backend state.</source>
-        <translation>Acciones de energía con un paso de confirmación, más el estado del backend.</translation>
-    </message>
-    <message>
-        <source>Updates &amp; backups</source>
-        <translation>Actualizaciones y copias de seguridad</translation>
-    </message>
-    <message>
-        <source>Pending system updates and config backups, in one place.</source>
-        <translation>Actualizaciones pendientes del sistema y copias de la configuración, en un solo lugar.</translation>
     </message>
 </context>
 <context>
@@ -14056,49 +14594,6 @@ Snapshot del plugin: %3</translation>
     </message>
 </context>
 <context>
-    <name>ToolsPage</name>
-    <message>
-        <source>Tools</source>
-        <translation>Herramientas</translation>
-    </message>
-    <message>
-        <source>Small utilities, exactly where you expect them.</source>
-        <translation>Pequeñas utilidades, justo donde las esperás.</translation>
-    </message>
-    <message>
-        <source>Screenshot</source>
-        <translation>Captura de pantalla</translation>
-    </message>
-    <message>
-        <source>Capture a screen, a window or a selection.</source>
-        <translation>Capturá la pantalla, una ventana o una selección.</translation>
-    </message>
-    <message>
-        <source>Clipboard history</source>
-        <translation>Historial del portapapeles</translation>
-    </message>
-    <message>
-        <source>Everything you copied, searchable.</source>
-        <translation>Todo lo que copiaste, con búsqueda.</translation>
-    </message>
-    <message>
-        <source>Power menu</source>
-        <translation>Menú de energía</translation>
-    </message>
-    <message>
-        <source>Suspend, reboot or shut down without leaving the keyboard.</source>
-        <translation>Suspendé, reiniciá o apagá sin soltar el teclado.</translation>
-    </message>
-    <message>
-        <source>Utilities drawer</source>
-        <translation>Cajón de utilidades</translation>
-    </message>
-    <message>
-        <source>Timers, converters and quick tools from the bar.</source>
-        <translation>Temporizadores, conversores y herramientas rápidas desde la barra.</translation>
-    </message>
-</context>
-<context>
     <name>TranslatableData</name>
     <message>
         <source>Maximum space, quiet motion, notifications held.</source>
@@ -14245,6 +14740,112 @@ Snapshot del plugin: %3</translation>
     <message>
         <source>Back</source>
         <translation>Volver</translation>
+    </message>
+</context>
+<context>
+    <name>TrustDiagnostics</name>
+    <message>
+        <source>horneroctl doctor unavailable</source>
+        <translation>horneroctl doctor no disponible</translation>
+    </message>
+</context>
+<context>
+    <name>TrustScene</name>
+    <message>
+        <source>DIAGNOSTICS &amp; RECOVERY</source>
+        <translation>DIAGNÓSTICO Y RECUPERACIÓN</translation>
+    </message>
+    <message>
+        <source>A system you can trust</source>
+        <translation>Un sistema en el que podés confiar</translation>
+    </message>
+    <message>
+        <source>Read-only telemetry from horneroctl. Config profiles and OS-level filesystem snapshots are tracked separately so nothing is overstated.</source>
+        <translation>Telemetría de solo lectura desde horneroctl. Los perfiles de configuración y las instantáneas del sistema de archivos se muestran por separado para no prometer de más.</translation>
+    </message>
+    <message>
+        <source>Checking…</source>
+        <translation>Revisando…</translation>
+    </message>
+    <message>
+        <source>Run Checks</source>
+        <translation>Ejecutar chequeos</translation>
+    </message>
+    <message>
+        <source>System &amp; Store Diagnostics</source>
+        <translation>Diagnóstico del sistema y tienda</translation>
+    </message>
+    <message>
+        <source>Probing horneroctl doctor…</source>
+        <translation>Consultando horneroctl doctor…</translation>
+    </message>
+    <message>
+        <source>horneroctl doctor: %1 / %2 checks passed</source>
+        <translation>horneroctl doctor: %1 / %2 chequeos aprobados</translation>
+    </message>
+    <message>
+        <source>Doctor summary unavailable</source>
+        <translation>Resumen de diagnóstico no disponible</translation>
+    </message>
+    <message>
+        <source>Pending updates: %1 Hornero package(s), %2 system package(s)</source>
+        <translation>Actualizaciones pendientes: %1 paquete(s) de Hornero, %2 paquete(s) del sistema</translation>
+    </message>
+    <message>
+        <source>Package update probe pending or unavailable</source>
+        <translation>Consulta de actualizaciones pendiente o no disponible</translation>
+    </message>
+    <message>
+        <source>Hornero Apps backend: Ready</source>
+        <translation>Backend de Hornero Apps: Listo</translation>
+    </message>
+    <message>
+        <source>Hornero Apps backend: Checked on demand</source>
+        <translation>Backend de Hornero Apps: Consultado a pedido</translation>
+    </message>
+    <message>
+        <source>System Diagnostics</source>
+        <translation>Diagnóstico del sistema</translation>
+    </message>
+    <message>
+        <source>Updates &amp; Backups</source>
+        <translation>Actualizaciones y respaldos</translation>
+    </message>
+    <message>
+        <source>Profiles &amp; OS Recovery</source>
+        <translation>Perfiles y recuperación del SO</translation>
+    </message>
+    <message>
+        <source>Universal Profiles saved: %1 (Baseline recorded: %2)</source>
+        <translation>Perfiles universales guardados: %1 (Línea base registrada: %2)</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>Sí</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>No</translation>
+    </message>
+    <message>
+        <source>OS Btrfs Snapshots: Configured (%1)</source>
+        <translation>Instantáneas Btrfs del SO: Configuradas (%1)</translation>
+    </message>
+    <message>
+        <source>OS Btrfs Snapshots: Not configured (%1)</source>
+        <translation>Instantáneas Btrfs del SO: No configuradas (%1)</translation>
+    </message>
+    <message>
+        <source>probe</source>
+        <translation>sondeo</translation>
+    </message>
+    <message>
+        <source>Config backups and Universal Profiles roll back Hornero settings only — they do not replace full OS filesystem snapshots.</source>
+        <translation>Los respaldos de configuración y Perfiles Universales revierten solo ajustes de Hornero — no reemplazan instantáneas completas del sistema de archivos.</translation>
+    </message>
+    <message>
+        <source>Manage Universal Profiles</source>
+        <translation>Gestionar Perfiles Universales</translation>
     </message>
 </context>
 <context>
@@ -15021,78 +15622,108 @@ Snapshot del plugin: %3</translation>
     </message>
 </context>
 <context>
+    <name>WelcomeChrome</name>
+    <message>
+        <source>Hornero logo</source>
+        <translation>Logo de Hornero</translation>
+    </message>
+    <message>
+        <source>Hornero Welcome</source>
+        <translation>Bienvenida de Hornero</translation>
+    </message>
+    <message>
+        <source>First Flight · %1 / 09</source>
+        <translation>Primer Vuelo · %1 / 09</translation>
+    </message>
+    <message>
+        <source>Discovery Hub</source>
+        <translation>Centro de Descubrimiento</translation>
+    </message>
+    <message>
+        <source>Release Notes</source>
+        <translation>Notas de la versión</translation>
+    </message>
+    <message>
+        <source>ES</source>
+        <translation>ES</translation>
+    </message>
+    <message>
+        <source>EN</source>
+        <translation>EN</translation>
+    </message>
+    <message>
+        <source>Switch language to English</source>
+        <translation>Cambiar idioma a Inglés</translation>
+    </message>
+    <message>
+        <source>Cambiar idioma a Español (Argentina)</source>
+        <translation>Cambiar idioma a Español (Argentina)</translation>
+    </message>
+    <message>
+        <source>Motion</source>
+        <translation>Movimiento</translation>
+    </message>
+    <message>
+        <source>Reduced motion is on</source>
+        <translation>Movimiento reducido activado</translation>
+    </message>
+    <message>
+        <source>Toggle reduced motion</source>
+        <translation>Alternar movimiento reducido</translation>
+    </message>
+    <message>
+        <source>Enter Desktop</source>
+        <translation>Ir al escritorio</translation>
+    </message>
+</context>
+<context>
+    <name>WhatsNewView</name>
+    <message>
+        <source>RELEASES</source>
+        <translation>VERSIONES</translation>
+    </message>
+    <message>
+        <source>Version %1</source>
+        <translation>Versión %1</translation>
+    </message>
+    <message>
+        <source>v%1</source>
+        <translation>v%1</translation>
+    </message>
+    <message>
+        <source>CURRENT</source>
+        <translation>ACTUAL</translation>
+    </message>
+    <message>
+        <source>RELEASE v%1 · %2</source>
+        <translation>VERSIÓN v%1 · %2</translation>
+    </message>
+    <message>
+        <source>No release selected</source>
+        <translation>Ninguna versión seleccionada</translation>
+    </message>
+    <message>
+        <source>Mark seen</source>
+        <translation>Marcar vista</translation>
+    </message>
+    <message>
+        <source>Seen</source>
+        <translation>Vista</translation>
+    </message>
+    <message>
+        <source>Try it</source>
+        <translation>Probalo</translation>
+    </message>
+</context>
+<context>
     <name>Window</name>
     <message>
         <source>Hornero Welcome</source>
         <translation>Hornero Welcome</translation>
     </message>
     <message>
-        <source>Start</source>
-        <translation>Inicio</translation>
-    </message>
-    <message>
-        <source>Navigate</source>
-        <translation>Navegar</translation>
-    </message>
-    <message>
-        <source>Shell</source>
-        <translation>Shell</translation>
-    </message>
-    <message>
-        <source>Workspaces</source>
-        <translation>Espacios de trabajo</translation>
-    </message>
-    <message>
-        <source>Personalize</source>
-        <translation>Personalizar</translation>
-    </message>
-    <message>
-        <source>Tools</source>
-        <translation>Herramientas</translation>
-    </message>
-    <message>
-        <source>Apps</source>
-        <translation>Aplicaciones</translation>
-    </message>
-    <message>
-        <source>Javi</source>
-        <translation>Javi</translation>
-    </message>
-    <message>
-        <source>Settings</source>
-        <translation>Ajustes</translation>
-    </message>
-    <message>
-        <source>System</source>
-        <translation>Sistema</translation>
-    </message>
-    <message>
-        <source>Learn</source>
-        <translation>Aprender</translation>
-    </message>
-    <message>
-        <source>Shortcuts</source>
-        <translation>Atajos</translation>
-    </message>
-    <message>
-        <source>Hornero logo</source>
-        <translation>Logo de Hornero</translation>
-    </message>
-    <message>
         <source>Close Welcome</source>
         <translation>Cerrar Bienvenida</translation>
-    </message>
-    <message>
-        <source>Show on login</source>
-        <translation>Mostrar al iniciar sesión</translation>
-    </message>
-    <message>
-        <source>Preference kept for this session only</source>
-        <translation>Preferencia guardada solo para esta sesión</translation>
-    </message>
-    <message>
-        <source>Done</source>
-        <translation>Listo</translation>
     </message>
 </context>
 <context>
@@ -15641,38 +16272,98 @@ Snapshot del plugin: %3</translation>
     </message>
 </context>
 <context>
-    <name>WorkspacesPage</name>
+    <name>WorkstationScene</name>
     <message>
-        <source>Workspaces</source>
-        <translation>Espacios de trabajo</translation>
+        <source>Everyday</source>
+        <translation>Cotidiano</translation>
     </message>
     <message>
-        <source>One workspace per task. The keys never change, in every session.</source>
-        <translation>Un espacio de trabajo por tarea. Las teclas nunca cambian, en ninguna sesión.</translation>
+        <source>Balanced Cockpit layout, standard motion, clear values.</source>
+        <translation>Diseño Cockpit equilibrado, movimiento estándar y valores claros.</translation>
     </message>
     <message>
-        <source>Switch workspace</source>
-        <translation>Cambiar de espacio de trabajo</translation>
+        <source>Focus</source>
+        <translation>Foco</translation>
     </message>
     <message>
-        <source>Jump straight to any numbered workspace.</source>
-        <translation>Saltá directo a cualquier espacio de trabajo numerado.</translation>
+        <source>Quiet motion, minimal chrome, notifications held for deep work.</source>
+        <translation>Movimiento sereno, bordes mínimos y notificaciones retenidas para concentrarte.</translation>
     </message>
     <message>
-        <source>Send a window</source>
-        <translation>Mandar una ventana</translation>
+        <source>Signal</source>
+        <translation>Signal</translation>
     </message>
     <message>
-        <source>Move the focused window to a workspace, following it yourself.</source>
-        <translation>Mové la ventana activa a un espacio de trabajo y andá con ella.</translation>
+        <source>2 Hz telemetry, desktop instrument deck, subtle scanlines.</source>
+        <translation>Telemetría a 2 Hz, panel de instrumentos en el escritorio y líneas sutiles.</translation>
     </message>
     <message>
-        <source>Scratchpad</source>
-        <translation>Scratchpad</translation>
+        <source>Studio</source>
+        <translation>Studio</translation>
     </message>
     <message>
-        <source>Park a window off-grid and summon it over any workspace.</source>
-        <translation>Guardá una ventana fuera de la cuadrícula y traela sobre cualquier espacio de trabajo.</translation>
+        <source>Creative workflow with optional low-latency PipeWire audio.</source>
+        <translation>Flujo creativo con audio PipeWire opcional de baja latencia.</translation>
+    </message>
+    <message>
+        <source>Gaming</source>
+        <translation>Gaming</translation>
+    </message>
+    <message>
+        <source>Zero shell overhead and fullscreen gaming focus.</source>
+        <translation>Cero carga visual en el shell y foco total al jugar en pantalla completa.</translation>
+    </message>
+    <message>
+        <source>WORKSTATION CADENCE</source>
+        <translation>RITMO DE TRABAJO</translation>
+    </message>
+    <message>
+        <source>Build your workstation</source>
+        <translation>Armá tu estación de trabajo</translation>
+    </message>
+    <message>
+        <source>Pick an Experience Mode for how the desktop behaves, then queue your apps.</source>
+        <translation>Elegí un Modo de Experiencia para el comportamiento del escritorio y después sumá tus apps a la cola.</translation>
+    </message>
+    <message>
+        <source>ACTIVE</source>
+        <translation>ACTIVO</translation>
+    </message>
+    <message>
+        <source>Motion: %1 · Density: %2 · Rate: %3 Hz</source>
+        <translation>Movimiento: %1 · Densidad: %2 · Frecuencia: %3 Hz</translation>
+    </message>
+    <message>
+        <source>Studio Audio: Ready</source>
+        <translation>Studio Audio: Listo</translation>
+    </message>
+    <message>
+        <source>Studio Audio: Optional profile not installed</source>
+        <translation>Studio Audio: Perfil opcional no instalado</translation>
+    </message>
+    <message>
+        <source>WORKSTATION SOFTWARE</source>
+        <translation>SOFTWARE DE TRABAJO</translation>
+    </message>
+    <message>
+        <source>Curated app bundles via Hornero Apps</source>
+        <translation>Paquetes curados desde Hornero Apps</translation>
+    </message>
+    <message>
+        <source>Open Hornero Apps</source>
+        <translation>Abrir Hornero Apps</translation>
+    </message>
+    <message>
+        <source>Browse full catalog or import a team manifest</source>
+        <translation>Explorá el catálogo completo o importá un manifiesto de equipo</translation>
+    </message>
+    <message>
+        <source>Hornero Apps tracks Arch, Flatpak, AppImage, and Web App provenance cleanly in the background.</source>
+        <translation>Hornero Apps registra el origen de cada paquete Arch, Flatpak, AppImage y Web App en segundo plano.</translation>
+    </message>
+    <message>
+        <source>Sources &amp; Policy</source>
+        <translation>Fuentes y políticas</translation>
     </message>
 </context>
 <context>

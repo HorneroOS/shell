@@ -1,30 +1,56 @@
+pragma ComponentBehavior: Bound
+
 import qs.components
 import qs.components.atmosphere
 import qs.components.controls
-import qs.services
-import qs.config
+import qs.components.motion
 import qs.modules.welcome
 import qs.modules.welcome as WelcomeModule
+import qs.modules.welcome.components
+import qs.services
+import qs.config
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
-import "pages"
 
+// Hornero Welcome 3-mode editorial window ("Signal Flight — Editorial Observatory").
+// Hosts Mode 1 (First Flight, 9 lazy-loaded scenes), Mode 2 (Explore Hornero),
+// and Mode 3 (What's New), with pause-when-hidden and full keyboard navigation.
 FloatingWindow {
     id: win
 
     title: qsTr("Hornero Welcome")
     color: Signal.palette.base
 
-    implicitWidth: 1024
-    implicitHeight: 640
+    implicitWidth: 1080
+    implicitHeight: 680
     minimumSize.width: 960
     minimumSize.height: 600
-
     visible: true
-    // FloatingWindow has no closing signal (that belongs to QML Window):
-    // sync state when the surface hides, following the FileDialog /
-    // WindowFactory onVisibleChanged pattern.
+
+    readonly property bool windowActive: win.visible && Qt.application.state === Qt.ApplicationActive
+    property bool _navReady: false
+
+    readonly property var sceneFiles: ({
+            "arrival": "scenes/ArrivalScene.qml",
+            "personalize": "scenes/PersonalizeScene.qml",
+            "workstation": "scenes/WorkstationScene.qml",
+            "companion": "scenes/CompanionScene.qml",
+            "practice": "scenes/PracticeScene.qml",
+            "extensions": "scenes/ExtensionsScene.qml",
+            "showcase": "scenes/ShowcaseScene.qml",
+            "trust": "scenes/TrustScene.qml",
+            "ready": "scenes/ReadyScene.qml"
+        })
+
+    readonly property string activeContentSource: {
+        if (Welcome.mode === "explore")
+            return "views/ExploreView.qml";
+        if (Welcome.mode === "whats-new")
+            return "views/WhatsNewView.qml";
+        return win.sceneFiles[Welcome.currentScene] ?? "scenes/ArrivalScene.qml";
+    }
+
     onVisibleChanged: {
         if (!visible && Welcome.opened)
             Welcome.close();
@@ -34,104 +60,32 @@ FloatingWindow {
         CAnim {}
     }
 
-    // Nav entries in StackLayout order. Labels stay translatable; page
-    // content lives in pages/*.qml and actions in Actions.qml.
-    // Creation guard: ListView fires currentIndex changes while the
-    // window builds; the nav handler ignores them until first paint.
-    property bool _navReady: false
-    readonly property var navPages: [
-        {
-            id: "start",
-            icon: "hand-stop",
-            label: qsTr("Start")
-        },
-        {
-            id: "navigate",
-            icon: "compass",
-            label: qsTr("Navigate")
-        },
-        {
-            id: "shell",
-            icon: "terminal",
-            label: qsTr("Shell")
-        },
-        {
-            id: "workspaces",
-            icon: "dashboard",
-            label: qsTr("Workspaces")
-        },
-        {
-            id: "personalize",
-            icon: "palette",
-            label: qsTr("Personalize")
-        },
-        {
-            id: "tools",
-            icon: "tools",
-            label: qsTr("Tools")
-        },
-        {
-            id: "apps",
-            icon: "apps",
-            label: qsTr("Apps")
-        },
-        {
-            id: "javi",
-            icon: "feather",
-            label: qsTr("Javi")
-        },
-        {
-            id: "settings",
-            icon: "adjustments-horizontal",
-            label: qsTr("Settings")
-        },
-        {
-            id: "system",
-            icon: "settings",
-            label: qsTr("System")
-        },
-        {
-            id: "learn",
-            icon: "school",
-            label: qsTr("Learn")
-        },
-        {
-            id: "shortcuts",
-            icon: "keyboard",
-            label: qsTr("Shortcuts")
-        }
-    ]
-
-    function pageIndex(id: string): int {
-        for (let i = 0; i < win.navPages.length; i++) {
-            if (win.navPages[i].id === id)
-                return i;
-        }
-        return 0;
-    }
-
     Shortcut {
         sequences: ["Escape"]
         context: Qt.WindowShortcut
         onActivated: Welcome.close()
     }
 
-    // NOTE: nav sync runs first and unconditionally. FloatingWindow has
-    // no x/y (the compositor positions it), so any client-side centering
-    // throws and would abort this block before _navReady is set — which
-    // silently disables ALL sidebar navigation (see onCurrentIndexChanged
-    // guard). Do not add fallible statements above the _navReady line.
-    Component.onCompleted: {
-        navList.currentIndex = win.pageIndex(Welcome.currentPage);
-        win._navReady = true;
-        navList.forceActiveFocus();
+    Shortcut {
+        sequences: ["Alt+Left"]
+        context: Qt.WindowShortcut
+        onActivated: {
+            if (Welcome.mode === "first-flight")
+                Welcome.prevScene();
+        }
     }
 
-    Connections {
-        target: Welcome
-        function onCurrentPageChanged(): void {
-            navList.currentIndex = win.pageIndex(Welcome.currentPage);
+    Shortcut {
+        sequences: ["Alt+Right"]
+        context: Qt.WindowShortcut
+        onActivated: {
+            if (Welcome.mode === "first-flight")
+                Welcome.nextScene();
         }
+    }
+
+    Component.onCompleted: {
+        win._navReady = true;
     }
 
     AtmosphereTexture {}
@@ -140,260 +94,76 @@ FloatingWindow {
         anchors.fill: parent
         spacing: 0
 
-        // ── Header ───────────────────────────────────────────────────
-        StyledRect {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 60
-            color: Signal.palette.panel
+        WelcomeChrome {
+            id: chrome
 
-            Rectangle {
-                anchors.bottom: parent.bottom
-                width: parent.width
-                height: 1
-                color: Signal.palette.rule
-            }
-
-            RowLayout {
-                anchors.fill: parent
-                anchors.leftMargin: Appearance.padding.large
-                anchors.rightMargin: Appearance.padding.normal
-                spacing: Appearance.spacing.normal
-
-                // The official logo is graphite on transparent: on
-                // the dark header it vanished. It sits on a warm paper
-                // tile (same in both themes), like an app-icon chip.
-                Rectangle {
-                    Layout.preferredWidth: 34
-                    Layout.preferredHeight: 34
-                    radius: Appearance.rounding.small
-                    color: Signal.palette.inverse
-
-                    Image {
-                        anchors.centerIn: parent
-                        width: 26
-                        height: 26
-                        source: Qt.resolvedUrl(`${Quickshell.shellDir}/assets/logo.svg`)
-                        fillMode: Image.PreserveAspectFit
-                        Accessible.name: qsTr("Hornero logo")
-                    }
-                }
-
-                StyledText {
-                    text: qsTr("Hornero Welcome")
-                    font.pointSize: Appearance.font.size.large
-                    font.weight: Appearance.font.weight.strong
-                }
-
-                Item {
-                    Layout.fillWidth: true
-                }
-
-                IconButton {
-                    type: IconButton.Text
-                    icon: "x"
-                    accessibleName: qsTr("Close Welcome")
-                    onClicked: Welcome.close()
-                }
-            }
+            currentMode: Welcome.mode
+            hasUnseenWhatsNew: WelcomeModule.State.hasUnseenRelease
         }
 
-        // ── Body ─────────────────────────────────────────────────────
-        RowLayout {
+        // Lazy-loaded editorial stage with Signal motion tokens
+        Item {
+            id: stage
+
             Layout.fillWidth: true
             Layout.fillHeight: true
-            spacing: 0
+            clip: true
 
-            // Nav rail: arrow keys move, Enter follows automatically.
-            ListView {
-                id: navList
+            Loader {
+                id: sceneLoader
 
-                Layout.fillHeight: true
-                Layout.preferredWidth: 232
-                Layout.topMargin: Appearance.padding.normal
-                Layout.bottomMargin: Appearance.padding.normal
-                Layout.leftMargin: Appearance.padding.normal
-
-                keyNavigationWraps: true
-                activeFocusOnTab: true
-                spacing: Appearance.spacing.smaller
-                highlightMoveDuration: Appearance.anim.durations.medium
-                clip: true
-
-                model: win.navPages
-
-                // Creation fires currentIndex changes (-1 to 0, then the
-                // onCompleted sync) before the requested page is settled;
-                // navigating on those would clobber every fresh open back
-                // to start. Only user/programmatic changes past first
-                // paint navigate.
-                onCurrentIndexChanged: {
-                    if (!win._navReady)
-                        return;
-                    const entry = win.navPages[currentIndex];
-                    if (entry && entry.id !== Welcome.currentPage)
-                        Welcome.open(entry.id);
-                }
-
-                // Selected row: `raised` fill plus the on-air bar on the edge
-                // facing the content; keyboard focus adds the 2 px focus ring.
-                highlight: StyledRect {
-                    radius: Appearance.rounding.small
-                    color: Signal.palette.raised
-                    border.width: navList.activeFocus ? 2 : 0
-                    border.color: Signal.palette.focus
-
-                    OnAirBar {
-                        edge: "right"
-                    }
-                }
-
-                delegate: StyledRect {
-                    id: navItem
-
-                    required property var modelData
-                    required property int index
-
-                    readonly property bool isCurrent: ListView.isCurrentItem
-
-                    width: ListView.view.width
-                    implicitHeight: 44
-                    radius: Appearance.rounding.small
-                    color: isCurrent ? "transparent" : navMouse.containsMouse ? Qt.alpha(Signal.palette.raised, 0.6) : "transparent"
-
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: Appearance.padding.normal
-                        anchors.rightMargin: Appearance.padding.normal
-                        spacing: Appearance.spacing.normal
-
-                        Glyph {
-                            name: navItem.modelData.icon
-                            color: navItem.isCurrent ? Signal.palette.ink : Signal.palette.inkMuted
-                        }
-
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: navItem.modelData.label
-                            font.weight: navItem.isCurrent ? 600 : 400
-                            color: navItem.isCurrent ? Signal.palette.ink : Signal.palette.inkMuted
-                            elide: Text.ElideRight
-                        }
-                    }
-
-                    MouseArea {
-                        id: navMouse
-
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onClicked: navList.currentIndex = navItem.index
-                    }
-                }
-            }
-
-            StackLayout {
-                id: pages
-
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                Layout.margins: Appearance.padding.large
-                currentIndex: win.pageIndex(Welcome.currentPage)
-
-                StartPage {}
-                NavigatePage {}
-                ShellPage {}
-                WorkspacesPage {}
-                PersonalizePage {}
-                ToolsPage {}
-                AppsPage {}
-                JaviPage {}
-                SettingsPage {}
-                SystemPage {}
-                LearnPage {}
-                ShortcutsPage {}
-            }
-        }
-
-        // ── Footer ───────────────────────────────────────────────────
-        StyledRect {
-            Layout.fillWidth: true
-            Layout.preferredHeight: WelcomeModule.State.writeFailed ? 88 : 64
-            color: Signal.palette.panel
-
-            Rectangle {
-                anchors.top: parent.top
-                width: parent.width
-                height: 1
-                color: Signal.palette.rule
-            }
-
-            RowLayout {
                 anchors.fill: parent
-                anchors.leftMargin: Appearance.padding.large
-                anchors.rightMargin: Appearance.padding.large
-                spacing: Appearance.spacing.normal
+                source: Qt.resolvedUrl(win.activeContentSource)
+                asynchronous: false
 
-                StyledText {
-                    text: qsTr("Show on login")
+                onLoaded: {
+                    if (item && item.hasOwnProperty("windowActive"))
+                        item.windowActive = Qt.binding(() => win.windowActive);
+                    stageEnter.restart();
+                }
+            }
+
+            ParallelAnimation {
+                id: stageEnter
+
+                NumberAnimation {
+                    target: sceneLoader
+                    property: "opacity"
+                    from: 0.0
+                    to: 1.0
+                    duration: Appearance.anim.reduced
+                        ? Choreography.reducedFadeMs
+                        : Math.max(Choreography.reducedFadeMs, Choreography.effectiveDuration(Choreography.standardMs, Appearance.anim.reduced))
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Choreography.curves.enter
                 }
 
-                StyledSwitch {
-                    id: loginSwitch
-
-                    focusPolicy: Qt.TabFocus
-                    checked: WelcomeModule.State.showOnLogin
-                    onToggled: WelcomeModule.State.writeShowOnLogin(checked)
-                }
-
-                StyledRect {
-                    Layout.preferredWidth: 20
-                    Layout.preferredHeight: 20
-                    radius: Appearance.rounding.small
-                    visible: loginSwitch.activeFocus
-                    color: "transparent"
-                    border.width: 2
-                    border.color: Signal.palette.signal
-                }
-
-                StyledText {
-                    visible: WelcomeModule.State.writeFailed
-                    text: WelcomeModule.State.lastWriteError !== "" ? WelcomeModule.State.lastWriteError : qsTr("Preference kept for this session only")
-                    color: Signal.palette.alert
-                    font.pointSize: Appearance.font.size.smaller
-                    elide: Text.ElideRight
-                }
-
-                Item {
-                    Layout.fillWidth: true
-                }
-
-                Item {
-                    id: doneWrap
-
-                    Layout.preferredWidth: doneButton.implicitWidth + 8
-                    Layout.preferredHeight: doneButton.implicitHeight + 8
-                    activeFocusOnTab: true
-
-                    Keys.onReturnPressed: Welcome.close()
-                    Keys.onSpacePressed: Welcome.close()
-
-                    StyledRect {
-                        anchors.fill: parent
-                        radius: Appearance.rounding.small + 2
-                        color: "transparent"
-                        border.width: doneWrap.activeFocus ? 2 : 0
-                        border.color: Signal.palette.signal
-                    }
-
-                    TextButton {
-                        id: doneButton
-
-                        anchors.centerIn: parent
-                        text: qsTr("Done")
-                        onClicked: Welcome.close()
-                    }
+                NumberAnimation {
+                    target: sceneLoader
+                    property: "x"
+                    from: Welcome.navDirection * Choreography.effectiveTravel(Choreography.sceneTravelPx, Appearance.anim.reduced)
+                    to: 0
+                    duration: Choreography.effectiveDuration(Choreography.sceneMs, Appearance.anim.reduced)
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Choreography.curves.enter
                 }
             }
         }
+
+        FlightRail {
+            currentScene: Welcome.currentScene
+            sceneIndex: Welcome.sceneIndex
+        }
+    }
+
+    // Hosted in WelcomeChrome's trailing slot so Close Welcome stays owned by Window.qml.
+    IconButton {
+        parent: chrome.trailingSlotTarget ?? win.contentItem
+        anchors.centerIn: parent
+        type: IconButton.Text
+        icon: "x"
+        accessibleName: qsTr("Close Welcome")
+        onClicked: Welcome.close()
     }
 
     AtmosphereLayer {

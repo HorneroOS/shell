@@ -1,0 +1,214 @@
+{
+  "schemaVersion": 1,
+  "features": [
+    {
+      "id": "signal-themes",
+      "title": "Signal Day, Night & Contrast",
+      "summary": "Zero-restart White Ceramic Day, Blue-Hour Graphite Night, AAA High Contrast, and Argentine Originals palettes.",
+      "category": "Appearance",
+      "icon": "palette",
+      "keywords": ["theme", "day", "night", "ceramic", "contrast", "dark", "light"],
+      "requires": "none",
+      "availability": "supported",
+      "action": { "type": "welcome", "target": "personalize", "section": "" }
+    },
+    {
+      "id": "chromatic-v3",
+      "title": "Chromatic Dynamic Accent v3",
+      "summary": "Extract wallpaper-harmonized accents with strict contrast gates while keeping ceramic and graphite panels clean.",
+      "category": "Appearance",
+      "icon": "rainbow",
+      "keywords": ["chromatic", "accent", "color", "wallpaper", "harmony"],
+      "requires": "none",
+      "availability": "supported",
+      "action": { "type": "controlCenter", "target": "appearance", "section": "chromatic" }
+    },
+    {
+      "id": "atmosphere-lamp",
+      "title": "Atmosphere & Warm Lamp",
+      "summary": "Subtle film grain, corner lamp warmth, and microcopy tone controls tuned for Signal surfaces.",
+      "category": "Appearance",
+      "icon": "bulb",
+      "keywords": ["atmosphere", "lamp", "grain", "warmth", "cozy"],
+      "requires": "none",
+      "availability": "supported",
+      "action": { "type": "controlCenter", "target": "appearance", "section": "atmosphere" }
+    },
+    {
+      "id": "shell-layouts",
+      "title": "Shell Bar Layouts",
+      "summary": "Switch between Hornero Left, Hornero Right, Cockpit, Islands, and Clear bar topologies live.",
+      "category": "Desktop & Bars",
+      "icon": "layout-dashboard",
+      "keywords": ["layout", "bar", "dock", "cockpit", "rail", "preset"],
+      "requires": "none",
+      "availability": "supported",
+      "action": { "type": "drawer", "target": "layoutPicker", "section": "" }
+    },
+    {
+      "id": "experience-modes",
+      "title": "Experience Modes",
+      "summary": "Adapt motion, glow budget, notification hold, and telemetry cadence across Everyday, Focus, Signal, Studio, and Gaming.",
+      "category": "Desktop & Bars",
+      "icon": "wave-sine",
+      "keywords": ["experience", "focus", "signal", "studio", "gaming", "everyday", "mode"],
+      "requires": "none",
+      "availability": "supported",
+      "action": { "type": "controlCenter", "target": "experience", "section": "" }
+    },
+    {
+      "id": "hornero-apps-store",
+      "title": "Hornero Apps Software Center",
+      "summary": "Browse curated software with clear Arch, Flatpak, AppImage, and Web App provenance badges and safe policy rules.",
+      "category": "Apps & Packages",
+      "icon": "apps",
+      "keywords": ["apps", "store", "install", "flatpak", "pacman", "catalog"],
+      "requires": "none",
+      "availability": "supported",
+      "action": { "type": "apps", "target": "discover", "section": "" }
+    },
+    {
+      "id": "workstation-profiles",
+      "title": "Workstation App Profiles",
+      "summary": "Queue curated application bundles tailored to your workflow or import a team manifest.",
+      "category": "Apps & Packages",
+      "icon": "checklist",
+      "keywords": ["profile", "bundle", "queue", "workstation", "apps", "onboarding"],
+      "requires": "none",
+      "availability": "supported",
+      "action": { "type": "welcome", "target": "workstation", "section": "" }
+    },
+    {
+      "id": "universal-profiles",
+      "title": "Universal Profiles & Snapshots",
+      "summary": "Capture and switch 5-domain workspace profiles (experience, audio, power, extensions, apps) with rollback safety.",
+      "category": "Profiles & Snapshots",
+      "icon": "folders",
+      "keywords": ["profiles", "snapshots", "rollback", "workspace", "baseline"],
+      "requires": "none",
+      "availability": "supported",
+      "action": { "type": "controlCenter", "target": "profiles", "section": "" }
+    },
+    {
+      "id": "studio-audio-routing",
+      "title": "Studio Audio & Live Routing",
+      "summary": "PipeWire low-latency profile and preset routing kits for calls, backing tracks, and REAPER sessions.",
+      "category": "Create, Build & Play",
+      "icon": "music",
+      "keywords": ["studio", "audio", "pipewire", "reaper", "routing", "low-latency"],
+      "requires": "studioAudio",
+      "availability": "edition-dependent",
+      "action": { "type": "controlCenter", "target": "studio", "section": "" }
+    },
+    {
+      "id": "agent-center",
+      "title": "Agent Center & Dev Terminal",
+      "summary": "Inspect local coding agents, sandboxing configuration, and launch your configured terminal.",
+      "category": "Create, Build & Play",
+      "icon": "robot",
+      "keywords": ["agent", "ai", "terminal", "dev", "build", "sandbox"],
+      "requires": "none",
+      "availability": "supported",
+      "action": { "type": "controlCenter", "target": "agents", "section": "" }
+    },
+    {
+      "id": "gaming-mode",
+      "title": "Gaming Focus & GameMode",
+      "summary": "Automatic fullscreen gaming focus, reduced idle overhead, and Gamescope / MangoHud readiness checks.",
+      "category": "Create, Build & Play",
+      "icon": "device-gamepad-2",
+      "keywords": ["gaming", "gamemode", "gamescope", "mangohud", "steam", "fullscreen"],
+      "requires": "none",
+      "availability": "edition-dependent",
+      "action": { "type": "controlCenter", "target": "gaming", "section": "" }
+    },
+    {
+      "id": "javi-companion",
+      "title": "Javi el Hornero Companion",
+      "summary": "Your native desktop sidekick with expressive skins, subtle reactions, and zero-telemetry local presence.",
+      "category": "Javi & Companion",
+      "icon": "feather",
+      "keywords": ["javi", "companion", "mascot", "hornero", "skins", "nest"],
+      "requires": "companion",
+      "availability": "supported",
+      "action": { "type": "controlCenter", "target": "companion", "section": "" }
+    },
+    {
+      "id": "javi-assistant-hermes",
+      "title": "Javi Assistant (Local Hermes)",
+      "summary": "Optional local-only assistant gateway with secret-safe attachment checks and explicit approval gates.",
+      "category": "Javi & Companion",
+      "icon": "message",
+      "keywords": ["assistant", "hermes", "chat", "ai", "approval", "voice"],
+      "requires": "assistantGateway",
+      "availability": "optional",
+      "action": { "type": "controlCenter", "target": "agents", "section": "" }
+    },
+    {
+      "id": "pluginkit-extensions",
+      "title": "Extensions & PluginKit v3",
+      "summary": "Curated bar, dashboard, and desktop extensions with trust verification and HORNERO_SAFE_MODE recovery.",
+      "category": "Extensions",
+      "icon": "puzzle",
+      "keywords": ["extensions", "plugins", "pluginkit", "safe mode", "marketplace"],
+      "requires": "none",
+      "availability": "supported",
+      "action": { "type": "controlCenter", "target": "extensions", "section": "" }
+    },
+    {
+      "id": "launcher-and-dashboard",
+      "title": "Launcher & Live Dashboard",
+      "summary": "Summon apps, files, and catalog search from the Launcher or check system telemetry on the Dashboard.",
+      "category": "Keybinds & Navigation",
+      "icon": "compass",
+      "keywords": ["launcher", "dashboard", "navigation", "apps", "search"],
+      "requires": "none",
+      "availability": "supported",
+      "action": { "type": "drawer", "target": "launcher", "section": "" }
+    },
+    {
+      "id": "keybinds-overlay",
+      "title": "Keybindings & SUPER-Hold Hints",
+      "summary": "Inspect live effective keybindings, practice core flows, and rebind keys safely.",
+      "category": "Keybinds & Navigation",
+      "icon": "keyboard",
+      "keywords": ["keybinds", "shortcuts", "super", "rebind", "overlay"],
+      "requires": "none",
+      "availability": "supported",
+      "action": { "type": "welcome", "target": "shortcuts", "section": "" }
+    },
+    {
+      "id": "updates-and-backups",
+      "title": "Config Backups & System Updates",
+      "summary": "Inspect Hornero config snapshots, pending updates, and run read-only health diagnostics.",
+      "category": "Updates & Recovery",
+      "icon": "shield",
+      "keywords": ["updates", "backups", "snapshots", "doctor", "diagnostics", "trust"],
+      "requires": "none",
+      "availability": "supported",
+      "action": { "type": "controlCenter", "target": "updates", "section": "" }
+    },
+    {
+      "id": "os-recovery-probe",
+      "title": "OS Snapshot & Btrfs Probe",
+      "summary": "Honest read-only probe checking whether snapper and top-level Btrfs snapshots are configured.",
+      "category": "Updates & Recovery",
+      "icon": "stethoscope",
+      "keywords": ["btrfs", "snapper", "recovery", "rollback", "probe"],
+      "requires": "btrfsSnapshots",
+      "availability": "probe-only",
+      "action": { "type": "welcome", "target": "trust", "section": "" }
+    },
+    {
+      "id": "accessibility-and-motion",
+      "title": "Accessibility & Reduced Motion",
+      "summary": "Global High Contrast override, Reduced Motion toggles, font scaling, and keyboard-first focus rings.",
+      "category": "Accessibility",
+      "icon": "accessible",
+      "keywords": ["accessibility", "a11y", "reduced motion", "high contrast", "keyboard"],
+      "requires": "none",
+      "availability": "supported",
+      "action": { "type": "controlCenter", "target": "accessibility", "section": "" }
+    }
+  ]
+}

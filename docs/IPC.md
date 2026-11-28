@@ -148,11 +148,7 @@ suppressed while a fullscreen window has focus.
 `controlCenter open [pane]` deep-links into a Control Center pane and
 returns `opened` or `opened: <pane>`. An unknown pane returns an
 `error:` result and does not open Settings. The shell pane registry is the
-single validity source used by `horneroctl config gui --pane`. `welcome open [page]`
-opens the Welcome Center (`start`, `navigate`, `shell`, `workspaces`,
-`personalize`, `tools`, `apps`, `system`, `learn`, `shortcuts`; unknown pages open `start`
-with a warning); `welcome close()` closes it; `welcome status()`
-prints JSON (`{"open": bool, "page": string, "showOnLogin": bool}`).
+single validity source used by `horneroctl config gui --pane`. `welcome open [page]` opens the Welcome Center (`first-flight`, `explore`, `whats-new`, `arrival`, `workstation`, `companion`, `practice`, `extensions`, `showcase`, `trust`, `ready`, plus legacy aliases `start`, `navigate`, `shell`, `workspaces`, `personalize`, `tools`, `apps`, `javi`, `settings`, `system`, `learn`, `shortcuts`; unknown pages open `arrival` with a warning); `welcome close()` closes it; `welcome status()` prints JSON (`{"open": bool, "mode": string, "scene": string, "page": string, "showOnLogin": bool, "firstRunCompleted": bool, "previewDirty": bool}`).
 `apps open [appIdOrView]` opens Hornero Apps (to a view such as `discover`,
 `ai`, `categories`, `collections`, `installed`, `updates`, `queue`, `sources`,
 or directly to an app detail view); `apps close()` closes it;

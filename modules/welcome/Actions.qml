@@ -1,32 +1,40 @@
 pragma Singleton
 
+import "../../services/welcome_model.js" as WelcomeModel
 import qs.config
 import qs.modules.apps
+import qs.modules.companion
 import qs.modules.controlcenter
 import qs.modules.welcome as WelcomeModule
 import qs.services
 import Quickshell
 import QtQuick
 
-// Allowlisted in-shell actions for the Welcome Center. Pages must trigger
-// ONLY these functions: no ad-hoc execDetached, no Process, no horneroctl,
-// no URLs. Everything here stays inside the running shell except
-// openTerminal, which mirrors the launcher's app2unit launch shape
-// (modules/launcher/services/Apps.qml) using the configured terminal.
+// Allowlisted in-shell actions and typed deep-link dispatcher for the
+// Welcome Center. Scenes and views trigger ONLY these functions: no ad-hoc
+// execDetached, no Process, no arbitrary shell commands, no external URLs.
 Singleton {
     id: root
 
-    // Fullscreen guard shared by drawer toggles (mirrors Shortcuts.qml):
-    // opening drawers over an exclusive fullscreen surface is refused.
     readonly property bool hasFullscreen: Compositor.hasFullscreenOnFocusedOutput()
 
-    // Reactive store profile bindings for AppsPage.qml (read-only view into AppsStore).
+    // Reactive Hornero Apps bindings (read-only view into AppsStore).
     readonly property var appProfiles: AppsStore.profiles
     readonly property bool appProfilesLoading: AppsStore.profilesLoading
     readonly property string appProfilesError: AppsStore.profilesError
     readonly property bool appsBusy: AppsStore.busy
     readonly property string appsLastError: AppsStore.lastError
     readonly property string appsLastSuccess: AppsStore.lastSuccess
+    readonly property var catalogApps: AppsStore.catalogApps
+    readonly property var storeCollections: AppsStore.collections
+    readonly property var storeDoctor: AppsStore.doctorReport
+
+    // Reactive Extensions bindings.
+    readonly property var extensionCatalogue: ExtensionStore.catalogue
+    readonly property bool extensionCatalogueLoading: ExtensionStore.catalogueLoading
+    readonly property string extensionCatalogueError: ExtensionStore.catalogueError
+    readonly property bool extensionBusy: ExtensionStore.busy
+    readonly property var installedPlugins: Plugins.entries
 
     function openLauncher(): void {
         if (root.hasFullscreen)
@@ -68,15 +76,23 @@ Singleton {
             v.layoutPicker = true;
     }
 
-    // Pane ids are validated against PaneRegistry (same rule as the
-    // `controlCenter` IPC target): unknown panes open the default view.
-    function openControlCenter(pane: string): void {
-        const id = (pane ?? "").toString().trim();
-        const opened = id !== "" && PaneRegistry.getById(id)
-            ? WindowFactory.create(null, { pane: id })
+    function openControlCenter(pane: string, keepWelcomeOpen: bool): void {
+        const raw = (pane ?? "").toString().trim();
+        const resolved = raw !== "" ? PaneRegistry.resolveTarget(raw) : null;
+        const opened = resolved
+            ? WindowFactory.create(null, { pane: resolved.pane, section: resolved.section })
             : WindowFactory.create();
-        // Welcome is a top-level onboarding surface. Close it only after
-        // Settings exists so an allocation failure leaves onboarding usable.
+        if (opened && !keepWelcomeOpen)
+            WelcomeModule.Welcome.close();
+    }
+
+    function openControlCenterSection(pane: string, section: string): void {
+        const p = (pane ?? "").toString().trim();
+        const s = (section ?? "").toString().trim();
+        const valid = p !== "" && PaneRegistry.getById(p);
+        const opened = valid
+            ? WindowFactory.create(null, { pane: p, section: s })
+            : WindowFactory.create();
         if (opened)
             WelcomeModule.Welcome.close();
     }
@@ -94,7 +110,7 @@ Singleton {
     }
 
     function openWelcome(page: string): void {
-        Welcome.open(page ?? "start");
+        WelcomeModule.Welcome.open(page ?? "start");
     }
 
     function openApps(viewOrAppId: string): void {
@@ -104,13 +120,135 @@ Singleton {
     function ensureAppProfiles(): void {
         if (AppsStore.profiles.length === 0 && !AppsStore.profilesLoading)
             AppsStore.refreshProfiles();
+        if (AppsStore.collections.length === 0)
+            AppsStore.refreshCollections();
     }
 
     function refreshAppProfiles(): void {
         AppsStore.refreshProfiles();
     }
 
+    function ensureCatalogApps(): void {
+        AppsStore.ensureCatalogLoaded();
+    }
+
     function queueAppIds(appIds: var): void {
         AppsStore.queueAdd(appIds);
+    }
+
+    function importAppsManifest(filePath: string): void {
+        AppsStore.importManifest(filePath);
+    }
+
+    function ensureExtensionsLoaded(): void {
+        if (ExtensionStore.catalogue.length === 0 && !ExtensionStore.catalogueLoading)
+            ExtensionStore.refreshCatalogue();
+    }
+
+    function refreshExtensions(): void {
+        ExtensionStore.refreshCatalogue();
+    }
+
+    function installExtension(pluginId: string, name: string): bool {
+        return ExtensionStore.run("install", pluginId, name);
+    }
+
+    function toggleExtension(pluginId: string, enable: bool, name: string): bool {
+        return ExtensionStore.run(enable ? "enable" : "disable", pluginId, name);
+    }
+
+    function openKeybindsOverlay(query: string): void {
+        Keybinds.openOverlay(query ?? "");
+    }
+
+    function setExperienceMode(modeId: string): string {
+        return Experience.set(modeId, "welcome");
+    }
+
+    function setLanguage(langCode: string): void {
+        const next = (langCode ?? "").trim();
+        if (next !== "en" && next !== "es_AR" && next !== "auto")
+            return;
+        Config.general.language = next;
+        Config.save();
+    }
+
+    function setReducedMotion(enabled: bool): void {
+        Config.appearance.reducedMotion = enabled === true;
+        Config.save();
+    }
+
+    function setHighContrast(enabled: bool): void {
+        Config.appearance.highContrast = enabled === true;
+        Config.save();
+    }
+
+    function setMascotEnabled(enabled: bool): void {
+        CompanionStore.enabled = enabled === true;
+        CompanionStore.markDirty();
+        WelcomeModule.State.setMascotEnabled(enabled === true);
+    }
+
+    function setCompanionSkin(skinId: string): void {
+        if (Companion.isKnownSkin(skinId)) {
+            CompanionStore.skin = skinId;
+            CompanionStore.markDirty();
+        }
+    }
+
+    function setFullscreenGamingAuto(enabled: bool): void {
+        Experience.setAuto(enabled === true);
+    }
+
+    function refreshStoreDoctor(): void {
+        AppsStore.refreshDoctor();
+    }
+
+    function executeTypedAction(actionOrUri: var): bool {
+        const parsed = WelcomeModel.validateTypedAction(actionOrUri);
+        if (!parsed.valid) {
+            console.warn("[welcome] Rejected typed action:", parsed.reason);
+            return false;
+        }
+        if (parsed.type === "welcome") {
+            root.openWelcome(parsed.target);
+            return true;
+        }
+        if (parsed.type === "controlCenter") {
+            if (parsed.section !== "")
+                root.openControlCenterSection(parsed.target, parsed.section);
+            else
+                root.openControlCenter(parsed.target, false);
+            return true;
+        }
+        if (parsed.type === "drawer") {
+            if (parsed.target === "launcher")
+                root.openLauncher();
+            else if (parsed.target === "dashboard")
+                root.openDashboard();
+            else if (parsed.target === "utilities")
+                root.openUtilities();
+            else if (parsed.target === "session")
+                root.openSessionMenu();
+            else if (parsed.target === "layoutPicker")
+                root.openLayoutPicker();
+            return true;
+        }
+        if (parsed.type === "apps") {
+            root.openApps(parsed.target);
+            return true;
+        }
+        if (parsed.type === "action") {
+            if (parsed.target === "openTerminal")
+                root.openTerminal();
+            else if (parsed.target === "openKeybindsOverlay")
+                root.openKeybindsOverlay("");
+            else if (parsed.target === "openApps")
+                root.openApps("discover");
+            else if (parsed.target === "refreshDiagnostics")
+                root.refreshStoreDoctor();
+            return true;
+        }
+        return false;
     }
 }

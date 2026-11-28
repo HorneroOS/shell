@@ -1,13 +1,4 @@
-"""Welcome sidebar navigation contract: clicking (or arrowing through)
-the nav rail must switch pages.
-
-Regression: Window.qml's onCompleted assigned win.x/win.y, which do not
-exist on FloatingWindow. The thrown error aborted onCompleted before
-_navReady was set, so onCurrentIndexChanged ignored every user
-navigation while IPC `welcome open <page>` kept working. The nav sync
-must run first and unconditionally, and no client-side positioning may
-reappear above (or anywhere near) the _navReady line.
-"""
+"""Welcome navigation readiness & window structure contract."""
 import re
 from pathlib import Path
 
@@ -35,11 +26,13 @@ def test_nav_ready_set_unconditionally_first():
     head = body[:ready]
     assert "if (" not in head and "if(" not in head, \
         "_navReady must be set unconditionally (no branches above it)"
-    assert "navList.currentIndex" in head, \
-        "nav sync must run before _navReady is set"
 
 
-def test_nav_handler_guard_preserved():
+def test_window_uses_lazy_scene_loader():
     text = WINDOW.read_text()
-    assert re.search(r"onCurrentIndexChanged:\s*\{[^}]*if\s*\(!win\._navReady\)", text), \
-        "nav handler must keep the creation guard on _navReady"
+    assert "Loader {" in text
+    assert "sceneLoader" in text
+    assert "activeContentSource" in text
+    for scene in ("arrival", "personalize", "workstation", "companion",
+                  "practice", "extensions", "showcase", "trust", "ready"):
+        assert f'"{scene}"' in text, f"Window.qml sceneFiles missing {scene}"

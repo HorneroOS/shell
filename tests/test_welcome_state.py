@@ -1,15 +1,9 @@
-"""Welcome state contract: tolerant parse/default matrix plus the
-single-writer and session-guard static guarantees.
-
-The Python mirrors below (welcome_parse, sanitize_session) reimplement the
-exact rules in modules/welcome/State.qml and modules/welcome/Session.qml,
-which themselves mirror the Hornero-wide contract owned by
-HorneroOS/hornero (state schema + tolerant decode). Fixture cases cover
-the full matrix: missing / true / false / malformed / wrong version /
-missing keys / wrong types / extra keys.
-"""
+"""Welcome state contract: tolerant parse/default matrix, v1->v2 migration,
+single-writer horneroctl discipline, and session-guard static guarantees."""
 import json
 import re
+import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -18,26 +12,28 @@ ROOT = Path(__file__).resolve().parent.parent
 WELCOME = ROOT / "modules" / "welcome"
 STATE_QML = WELCOME / "State.qml"
 SESSION_QML = WELCOME / "Session.qml"
+MODEL_JS = ROOT / "services" / "welcome_model.js"
 
 SCHEMA_VERSION = 1
 DEFAULT_REVISION = "p1"
 
 
+def _run_model_parse(raw):
+    node = shutil.which("node")
+    assert node, "node is required to test services/welcome_model.js"
+    src = MODEL_JS.read_text(encoding="utf-8").replace(".pragma library", "", 1)
+    arg = json.dumps(raw)
+    proc = subprocess.run(
+        [node, "-e", f"{src}\nconst st = parseState({arg}); console.log(JSON.stringify(st));"],
+        capture_output=True, text=True, check=True,
+    )
+    return json.loads(proc.stdout)
+
+
 def welcome_parse(raw):
-    """Python mirror of State.qml parse() / hornero welcome_parse()."""
-    show, rev, seen = True, DEFAULT_REVISION, ""
-    try:
-        o = json.loads(raw)
-    except (ValueError, TypeError):
-        return show, rev, seen
-    if not isinstance(o, dict) or o.get("schemaVersion") != SCHEMA_VERSION:
-        return show, rev, seen
-    if "showOnLogin" not in o or not isinstance(o["showOnLogin"], bool):
-        return True, DEFAULT_REVISION, ""
-    show = o["showOnLogin"]
-    rev = o["contentRevision"] if isinstance(o.get("contentRevision"), str) else DEFAULT_REVISION
-    seen = o["lastSeenContentRevision"] if isinstance(o.get("lastSeenContentRevision"), str) else ""
-    return show, rev, seen
+    """Python mirror / bridge to welcome_model.js parseState() for v1 matrix."""
+    st = _run_model_parse("" if raw is None else raw)
+    return st["showOnLogin"], st["contentRevision"], st["lastSeenContentRevision"]
 
 
 def sanitize_session(raw):
@@ -52,8 +48,6 @@ def sanitize_session(raw):
 
 
 def encode_canonical(show, rev="p1", seen="", first="", last=""):
-    """Canonical file bytes (hornero-owned writer format; the shell only
-    asserts it never produces these itself)."""
     return (
         "{\n"
         f'  "schemaVersion": {SCHEMA_VERSION},\n'
@@ -67,20 +61,19 @@ def encode_canonical(show, rev="p1", seen="", first="", last=""):
 
 
 PARSE_CASES = [
-    # (name, raw, expected (show, rev, seen))
-    ("missing_file", None, (True, "p1", "")),
-    ("empty_file", "", (True, "p1", "")),
+    ("missing_file", None, (True, "p2", "")),
+    ("empty_file", "", (True, "p2", "")),
     ("explicit_true", encode_canonical(True), (True, "p1", "")),
     ("explicit_false", encode_canonical(False), (False, "p1", "")),
-    ("malformed", "{not json", (True, "p1", "")),
-    ("json_array", "[1, 2]", (True, "p1", "")),
-    ("json_null", "null", (True, "p1", "")),
-    ("json_string", '"hello"', (True, "p1", "")),
-    ("wrong_version", encode_canonical(True).replace('"schemaVersion": 1', '"schemaVersion": 2'), (True, "p1", "")),
-    ("missing_version", '{"showOnLogin": false}', (True, "p1", "")),
-    ("missing_show", '{"schemaVersion": 1}', (True, "p1", "")),
-    ("show_wrong_type", '{"schemaVersion": 1, "showOnLogin": "yes"}', (True, "p1", "")),
-    ("show_null", '{"schemaVersion": 1, "showOnLogin": null}', (True, "p1", "")),
+    ("malformed", "{not json", (True, "p2", "")),
+    ("json_array", "[1, 2]", (True, "p2", "")),
+    ("json_null", "null", (True, "p2", "")),
+    ("json_string", '"hello"', (True, "p2", "")),
+    ("wrong_version", '{"schemaVersion": 99, "showOnLogin": false}', (True, "p2", "")),
+    ("missing_version", '{"showOnLogin": false}', (True, "p2", "")),
+    ("missing_show", '{"schemaVersion": 1}', (True, "p2", "")),
+    ("show_wrong_type", '{"schemaVersion": 1, "showOnLogin": "yes"}', (True, "p2", "")),
+    ("show_null", '{"schemaVersion": 1, "showOnLogin": null}', (True, "p2", "")),
     ("extra_keys_ignored", '{"schemaVersion": 1, "showOnLogin": false, "future": {"x": 1}, "v": 2}', (False, "p1", "")),
     ("revision_missing_keeps_show", '{"schemaVersion": 1, "showOnLogin": false}', (False, "p1", "")),
     ("revision_wrong_type_keeps_show", '{"schemaVersion": 1, "showOnLogin": false, "contentRevision": 7}', (False, "p1", "")),
@@ -128,17 +121,12 @@ def test_session_env_fallback_order():
     assert sanitize_session(["", "wayland-1", "default"]) == "wayland-1"
 
 
-# ── Static guarantees on the QML implementation ──────────────────────────
-
 def test_state_qml_tolerant_reader():
     text = STATE_QML.read_text()
     assert "FileView" in text
     assert 'Paths.state' in text and '/welcome/state.json' in text
-    for marker in ("try {", "catch", "schemaVersion", "JSON.parse",
-                   "showOnLogin", "contentRevision"):
-        assert marker in text, f"State.qml missing tolerant-parse marker: {marker}"
-    # Defaults on any failure path.
-    assert text.count("defaultContentRevision") >= 3
+    assert "welcome_model.js" in text
+    assert "WelcomeModel.parseState" in text
 
 
 def _strip_comments(text):
@@ -148,15 +136,9 @@ def _strip_comments(text):
 
 def test_state_qml_single_writer_only_horneroctl():
     text = _strip_comments(STATE_QML.read_text())
-    # The shell never writes state.json itself: no file-writing APIs, only
-    # horneroctl argv may reach a process spawner. Comments may discuss
-    # the contract, so they are stripped before scanning.
     for banned in ("rename", "writeFile", "write(", "DataStream", "TextStream",
                    "openUrl", "state.json\" +", "state.json' +"):
         assert banned not in text, f"State.qml must not write directly ({banned})"
-    # All writes flow through the single-writer queue: the only argv
-    # literals enqueued must be `horneroctl welcome … --yes`, and the only
-    # place a process command is assigned is the queue pump.
     assert "execDetached" not in text, "State.qml must use the queued Process writer"
     enqueued = re.findall(r"_enqueue\(\s*\[(.*?)\]", text, re.DOTALL)
     assert enqueued, "expected horneroctl writes enqueued in State.qml"
@@ -168,32 +150,18 @@ def test_state_qml_single_writer_only_horneroctl():
     assert len(pumps) == 1, f"single writer must assign command exactly once, found {len(pumps)}"
 
 
-def test_state_qml_qml_parse_matches_python_mirror():
-    # The QML decoder must implement the same rules the matrix asserts:
-    # strict version check, boolean-typed showOnLogin, string revisions,
-    # extra keys ignored (no key enumeration beyond the known three).
-    text = STATE_QML.read_text()
-    assert "o.schemaVersion === 1" in text
-    assert 'typeof o.showOnLogin === "boolean"' in text
-    assert 'typeof o.contentRevision === "string"' in text
-    assert 'typeof o.lastSeenContentRevision === "string"' in text
-
-
 def test_session_qml_guard_shape():
     text = _strip_comments(SESSION_QML.read_text())
     assert "FileView" in text
-    assert "seen-" in text, "runtime marker name must contain seen-<session>"
+    assert "seen-" in text
     assert "XDG_SESSION_ID" in text
     assert "WAYLAND_DISPLAY" in text
     assert "shouldAutoOpen" in text
     assert "noteAlreadySeen" in text
     assert "showOnLogin" in text
-    assert "[^A-Za-z0-9_-]" in text, "sanitize character class must match the tested mirror"
-    # The guard's only process use is the queued runtime-marker writer
-    # (touch/install of a session-scoped file under $XDG_RUNTIME_DIR).
-    # No shell evaluation, no destructive commands, no horneroctl writes.
+    assert "[^A-Za-z0-9_-]" in text
     assert "execDetached" not in text
-    assert "Process" in text, "marker write requires the queued Process writer"
+    assert "Process" in text
     for banned in ("rm ", "rm\"", "sudo", "sh -c", "bash -c", "eval ", "$("):
         assert banned not in text, f"Session.qml must not run {banned!r}"
     assert "horneroctl" not in text

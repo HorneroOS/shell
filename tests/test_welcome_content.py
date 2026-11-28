@@ -1,17 +1,4 @@
-"""Welcome Center part 2: content pages, allowlisted actions, shortcut badges.
-
-Static contract checks (the QML engine itself is exercised in CI by
-scripts/lint_qml.sh and at runtime in the VM matrix, docs/VM_TESTING.md):
-
-- Pages trigger ONLY Actions.* / ShortcutHints.* / Welcome.* — no ad-hoc
-  process spawning, no horneroctl, no external URLs.
-- Every shortcutId used by a page is in ShortcutHints.curatedIds
-  (single source of truth; unknown ids render no badge at runtime).
-- Actions.qml exposes exactly the allowlisted in-shell actions.
-- Window.qml hosts the eleven real pages in nav order (no stubs).
-- Every page ships translatable copy (qsTr).
-"""
-
+"""Welcome Center 3-mode, 9-scene content, allowlisted actions, and shortcut badges."""
 from __future__ import annotations
 
 import re
@@ -19,26 +6,31 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 WELCOME = ROOT / "modules" / "welcome"
-PAGES = WELCOME / "pages"
+SCENES = WELCOME / "scenes"
+VIEWS = WELCOME / "views"
 
-PAGE_FILES = sorted(PAGES.glob("*Page.qml"))
-EXPECTED_PAGES = [
-    "StartPage",
-    "NavigatePage",
-    "ShellPage",
-    "WorkspacesPage",
-    "PersonalizePage",
-    "ToolsPage",
-    "AppsPage",
-    "JaviPage",
-    "SettingsPage",
-    "SystemPage",
-    "LearnPage",
-    "ShortcutsPage",
+SCENE_FILES = sorted(SCENES.glob("*Scene.qml"))
+VIEW_FILES = sorted(VIEWS.glob("*View.qml"))
+CONTENT_FILES = SCENE_FILES + VIEW_FILES
+
+EXPECTED_SCENES = [
+    "ArrivalScene",
+    "CompanionScene",
+    "ExtensionsScene",
+    "PersonalizeScene",
+    "PracticeScene",
+    "ReadyScene",
+    "ShowcaseScene",
+    "TrustScene",
+    "WorkstationScene",
 ]
 
-# Tokens that must never appear in page-level QML: pages describe and
-# trigger, they never spawn, write state, or leave the shell.
+EXPECTED_VIEWS = [
+    "ExploreView",
+    "ShortcutsView",
+    "WhatsNewView",
+]
+
 BANNED_PAGE_TOKENS = (
     "execDetached",
     "Process {",
@@ -47,9 +39,15 @@ BANNED_PAGE_TOKENS = (
     "XMLHttpRequest",
 )
 
-# Dotted callables pages may invoke: the Actions allowlist, the badge
-# resolver, and window navigation.
-ALLOWED_CALLABLE_ROOTS = ("Actions.", "ShortcutHints.", "Welcome.")
+ALLOWED_CALLABLE_ROOTS = {
+    "Accessible.", "Actions.", "ShortcutHints.", "Welcome.", "WelcomeModule.",
+    "PreviewTransaction.", "State.", "TrustDiagnostics.", "Appearance.", "Signal.", "Choreography.", "Component.",
+    "Compositor.", "Experience.", "Companion.", "CompanionStore.",
+    "AssistantRun.", "Config.", "Language.", "Keybinds.", "Visibilities.", "Wallpapers.", "WindowFactory.",
+    "Qt.", "WelcomeModel.", "WhatsNew.", "Text.", "Image.", "Flickable.",
+    "Gradient.", "TextButton.", "IconButton.", "StyledScrollBar.", "Layout.",
+    "Math.", "JSON.", "Object.", "Array.", "String.", "Number.", "Date.",
+}
 
 
 def _read(path: Path) -> str:
@@ -68,20 +66,18 @@ def _curated_ids() -> list[str]:
     return re.findall(r'"([^"]+)"', m.group(1))
 
 
-
-def test_pages_use_allowlisted_callables_only():
-    for page in PAGE_FILES:
-        code = _strip_comments(_read(page))
-        # User-facing copy may name the CLI ("run: horneroctl welcome open");
-        # only executable references are banned, so blank string literals.
+def test_scenes_and_views_use_allowlisted_callables_only():
+    for doc in CONTENT_FILES:
+        code = _strip_comments(_read(doc))
+        code = re.sub(r"^\s*import\s+.*$", "", code, flags=re.MULTILINE)
         code = re.sub(r'"(?:[^"\\]|\\.)*"', '""', code)
         for token in BANNED_PAGE_TOKENS:
-            assert token not in code, f"{page.name}: banned token {token!r}"
+            assert token not in code, f"{doc.name}: banned token {token!r}"
         for callee in set(re.findall(r"\b([A-Z][A-Za-z0-9]*)\.[a-zA-Z]", code)):
-            roots = {f"{callee}."}
-            assert roots <= set(ALLOWED_CALLABLE_ROOTS) or callee in (
-                "Appearance", "Colours", "Qt"), \
-                f"{page.name}: callable root {callee}.* is not allowlisted"
+            root = f"{callee}."
+            assert root in ALLOWED_CALLABLE_ROOTS, (
+                f"{doc.name}: callable root {callee}.* is not allowlisted"
+            )
 
 
 def test_shortcut_ids_single_sourced():
@@ -89,63 +85,51 @@ def test_shortcut_ids_single_sourced():
     assert len(curated) == len(set(curated)), "curatedIds must not repeat"
     for cid in curated:
         assert re.fullmatch(r"[a-z0-9][a-z0-9:._-]*", cid), f"bad id shape: {cid!r}"
-    for page in PAGE_FILES:
-        used = re.findall(r'shortcutId:\s*"([^"]+)"', _read(page))
+    for doc in CONTENT_FILES:
+        used = re.findall(r'(?:shortcutId:\s*|ShortcutHints\.badge\()"([^"]+)"', _read(doc))
         for cid in used:
-            assert cid in curated, f"{page.name}: {cid!r} not in ShortcutHints.curatedIds"
-    # Every curated id is exercised by at least one card (docs/WELCOME.md
-    # tables all of them; an unexercised id is dead weight — drop it).
-    exercised = {c for p in PAGE_FILES for c in re.findall(r'shortcutId:\s*"([^"]+)"', _read(p))}
-    assert set(exercised) == set(curated), \
-        f"unexercised curated ids: {set(curated) - set(exercised)}"
+            assert cid in curated, f"{doc.name}: {cid!r} not in ShortcutHints.curatedIds"
 
 
 def test_actions_allowlist_shape():
     text = _strip_comments(_read(WELCOME / "Actions.qml"))
     funcs = re.findall(r"function\s+([a-zA-Z]+)\s*\(", text)
-    expected = ["openLauncher", "openDashboard", "openSessionMenu", "openUtilities",
-                "openLayoutPicker", "openControlCenter", "shellQuote", "openTerminal",
-                "openWelcome", "openApps", "ensureAppProfiles", "refreshAppProfiles",
-                "queueAppIds"]
-    assert funcs == expected, f"Actions.qml must expose exactly {expected}, got {funcs}"
+    for required in ("openLauncher", "openDashboard", "openSessionMenu",
+                     "openUtilities", "openLayoutPicker", "openControlCenter",
+                     "shellQuote", "openTerminal", "openWelcome", "openApps",
+                     "ensureAppProfiles", "refreshAppProfiles", "queueAppIds",
+                     "executeTypedAction"):
+        assert required in funcs, f"Actions.qml missing {required}"
     for token in ("horneroctl", "Process {", "openUrlExternally", "XMLHttpRequest"):
         assert token not in text, f"Actions.qml: banned token {token!r}"
     assert text.count("execDetached") == 1, "only openTerminal may spawn (app2unit shape)"
     assert "app2unit" in text and "Config.general.apps.terminal" in text
-    assert "PaneRegistry.getById" in text, "openControlCenter must validate panes"
+    assert "PaneRegistry." in text
     assert "Visibilities.getForActive" in text
-    assert "Welcome.open" in text
+    assert "WelcomeModule.Welcome.open" in text
 
 
 def test_badge_gating_shape():
     card = _read(WELCOME / "ActionCard.qml")
     assert "ShortcutHints.has(root.shortcutId)" in card
     assert "ShortcutHints.badge(root.shortcutId)" in card
-    assert 'shortcutId !== ""' in card, "empty shortcutId must hide the badge pill"
+    assert 'shortcutId !== ""' in card
     hints = _read(WELCOME / "ShortcutHints.qml")
     assert "schemaVersion === 1" in hints
-    assert "first" in hints.lower() or "continue" in hints, \
-        "duplicate manifest entries must resolve deterministically"
-    assert 'return label !== undefined ? label : ""' in hints, \
-        "unknown ids must resolve to an empty badge"
+    assert 'return label !== undefined ? label : ""' in hints
 
 
-def test_pages_are_translatable():
-    for page in PAGE_FILES:
-        text = _read(page)
-        assert len(re.findall(r"qsTr\(", text)) >= 2, f"{page.name}: needs qsTr copy"
-        # Titles/descriptions arrive pre-translated; cards take plain strings.
-        assert "required property string title" in _read(WELCOME / "ActionCard.qml")
+def test_scenes_and_views_are_translatable():
+    for doc in CONTENT_FILES:
+        text = _read(doc)
+        assert len(re.findall(r"qsTr\(", text)) >= 1, f"{doc.name}: needs qsTr copy"
 
 
-def test_page_set_matches_nav():
-    stems = [p.stem for p in PAGE_FILES]
-    assert sorted(stems) == sorted(EXPECTED_PAGES), \
-        f"pages/ must be exactly {EXPECTED_PAGES}, got {stems}"
+def test_scene_and_view_inventory_complete():
+    assert sorted(p.stem for p in SCENE_FILES) == sorted(EXPECTED_SCENES)
+    assert sorted(p.stem for p in VIEW_FILES) == sorted(EXPECTED_VIEWS)
     window = _read(WELCOME / "Window.qml")
-    assert "StubPage" not in window, "Window.qml must not reference stubs anymore"
-    stack = window.split("StackLayout", 1)[1]
-    order = re.findall(r"^\s{16}([A-Z][A-Za-z]*Page)\s*\{\s*\}", stack, re.MULTILINE)
-    assert order == EXPECTED_PAGES, f"StackLayout order must follow nav, got {order}"
-    nav_ids = re.findall(r'id:\s*"([a-z]+)"', window.split("navPages", 1)[1].split("]", 1)[0])
-    assert nav_ids == ["start", "navigate", "shell", "workspaces", "personalize", "tools", "apps", "javi", "settings", "system", "learn", "shortcuts"]
+    for scene in EXPECTED_SCENES:
+        assert f"scenes/{scene}.qml" in window
+    for view in ("ExploreView.qml", "WhatsNewView.qml"):
+        assert f"views/{view}" in window

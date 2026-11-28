@@ -24,8 +24,8 @@ MouseArea {
     }
 
     acceptedButtons: Qt.LeftButton | Qt.RightButton
-    implicitWidth: Density.iconPx + 4
-    implicitHeight: Density.iconPx + 4
+    implicitWidth: Density.iconPx
+    implicitHeight: Density.iconPx
 
     onClicked: event => {
         if (event.button === Qt.LeftButton)
@@ -38,6 +38,7 @@ MouseArea {
         id: icon
 
         anchors.fill: parent
+        implicitSize: Density.iconPx
         source: Icons.getTrayIcon(root.modelData.id, root.modelData.icon)
         colour: root.tone.ink
         layer.enabled: Config.bar.tray.recolour

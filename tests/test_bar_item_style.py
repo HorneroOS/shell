@@ -86,3 +86,11 @@ def test_slider_rule_track_is_a_thin_line_with_a_tick():
     sl = (ROOT / "components/controls/StyledSlider.qml").read_text()
     assert "property color trackColour" in sl and "root.trackColour" in sl
     assert "radius: root.ruleTrack ? 0" in sl
+
+
+def test_tray_icons_match_bar_icon_size_by_default():
+    tray_item = (BAR / "TrayItem.qml").read_text()
+    assert "implicitWidth: Density.iconPx\n" in tray_item
+    assert "implicitHeight: Density.iconPx\n" in tray_item
+    assert "implicitSize: Density.iconPx\n" in tray_item
+    assert "Density.iconPx + 4" not in tray_item
